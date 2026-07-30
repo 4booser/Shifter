@@ -1,0 +1,7 @@
+﻿services:
+  shifter:
+    image: shifter
+    build:
+      context: .
+      dockerfile: Dockerfile
+

@@ -12,8 +12,12 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="src\Api\" />
-      <Folder Include="src\Infrastructure\" />
+      <Folder Include="src\Api\Controllers\" />
+      <Folder Include="src\Infrastructure\Persistence\DbContexts\" />
+      <Folder Include="src\Infrastructure\Persistence\Migrations\" />
+      <Folder Include="src\Infrastructure\Repositories\Commands\" />
+      <Folder Include="src\Infrastructure\Repositories\Interfaces\" />
+      <Folder Include="src\Infrastructure\Repositories\Queries\" />
     </ItemGroup>
 
 </Project>

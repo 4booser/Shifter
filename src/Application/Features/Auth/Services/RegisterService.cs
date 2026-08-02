@@ -1,21 +1,29 @@
 using System.Security.Claims;
+using Shifter.Application.Common.Exceptions;
 using Shifter.Application.Features.Auth.DTOs;
 using Shifter.Application.Features.Auth.Services.Interfaces;
 using Shifter.Domain.Entities;
+using Shifter.Infrastructure.Repositories.Interfaces;
 
 namespace Shifter.Application.Features.Auth.Services;
 
 public class RegisterService : IRegisterService
 {
     private readonly JwtService _jwtService;
+    private readonly IUserCommand _userCommand;
     
-    public RegisterService(JwtService jwtService)
+    public RegisterService(
+        JwtService jwtService,
+        IUserCommand userCommand)
     {
         _jwtService = jwtService;
+        _userCommand = userCommand;
     }
     
-    public AuthResponseDTO Handle(RegisterDTO request, CancellationToken ct)
+    public async Task<AuthResponseDTO> Handle(RegisterDTO request, CancellationToken ct)
     {
+        DateTime now = DateTime.UtcNow;
+        
         User user = new User()
         {
             Id = 1,
@@ -23,10 +31,13 @@ public class RegisterService : IRegisterService
             LastName = request.last_name,
             Login = request.login,
             PasswordHash = request.password,
-            CreatedAt = DateTime.UtcNow,
-            LastLogin = DateTime.UtcNow
+            CreatedAt = now,
+            LastLogin = now
         };
 
+        if (! await _userCommand.AddAsync(user, ct))
+            throw new ForbiddenException("Can`t add user.");
+        
         Claim[] claims =
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
@@ -35,7 +46,7 @@ public class RegisterService : IRegisterService
         
         string accessToken = _jwtService.GenerateAccessToken(claims);
         string refreshToken = _jwtService.GenerateRefreshToken();
-        DateTime expires = DateTime.UtcNow.AddMinutes(15);
+        DateTime expires = now.AddMinutes(15);
 
         return new AuthResponseDTO(
             accessToken,

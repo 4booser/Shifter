@@ -8,15 +8,20 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.10"/>
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.10" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.10">
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+          <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+        <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.22.0" />
+        <PackageReference Include="Microsoft.IdentityModel.Tokens.Saml" Version="8.22.0" />
+        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
+        <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.22.0" />
     </ItemGroup>
 
     <ItemGroup>
       <Folder Include="src\Api\Controllers\" />
-      <Folder Include="src\Infrastructure\Persistence\DbContexts\" />
       <Folder Include="src\Infrastructure\Persistence\Migrations\" />
-      <Folder Include="src\Infrastructure\Repositories\Commands\" />
-      <Folder Include="src\Infrastructure\Repositories\Interfaces\" />
       <Folder Include="src\Infrastructure\Repositories\Queries\" />
     </ItemGroup>
 

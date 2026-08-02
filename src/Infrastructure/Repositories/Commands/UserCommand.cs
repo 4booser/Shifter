@@ -1,0 +1,19 @@
+using Shifter.Domain.Entities;
+using Shifter.Infrastructure.Persistence.DbContexts;
+using Shifter.Infrastructure.Repositories.Interfaces;
+
+namespace Shifter.Infrastructure.Repositories.Commands;
+
+public class UserCommand : IUserCommand
+{
+    private readonly ShifterDbContext _db;
+    
+    public UserCommand(ShifterDbContext db)
+        => _db = db;
+
+    public async Task<bool> AddAsync(User user, CancellationToken ct)
+    {
+        _db.Users.Add(user);
+        return await _db.SaveChangesAsync(ct) > 0;
+    }
+}

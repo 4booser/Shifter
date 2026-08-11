@@ -96,7 +96,7 @@ public class RegisterHandler : IRequestHandler<RegisterDTO, AuthResponseDTO>
         if (! await _tokenCommand.AddAsync(token, ct))
             throw new ForbiddenException("Can`t add token.");
         
-        return new AuthResponsseDTO(
+        return new AuthResponseDTO(
             accessToken,
             refreshToken,
             expires

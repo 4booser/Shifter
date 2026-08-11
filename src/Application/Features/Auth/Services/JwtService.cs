@@ -10,7 +10,7 @@ public class JwtService : IJwtService
 {
     private readonly IConfiguration _config;
     
-    private JwtService(IConfiguration config)
+    public JwtService(IConfiguration config)
     {
         _config = config;
     }

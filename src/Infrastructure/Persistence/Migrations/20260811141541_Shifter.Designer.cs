@@ -2,18 +2,21 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Shifter.Infrastructure.Persistence.DbContexts;
 
 #nullable disable
 
-namespace Shifter.Migrations
+namespace Shifter.Src.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(ShifterDbContext))]
-    partial class ShifterDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260811141541_Shifter")]
+    partial class Shifter
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

@@ -4,16 +4,16 @@ using Shifter.Infrastructure.Repositories.Interfaces;
 
 namespace Shifter.Infrastructure.Repositories.Commands;
 
-public class UserCommand : IUserCommand
+public class TokenCommand : ITokenCommand
 {
-    private readonly ShifterDbContext _db;
+    private readonly TokensDbContext _db;
     
-    public UserCommand(ShifterDbContext db)
+    public TokenCommand(TokensDbContext db)
         => _db = db;
-
-    public async Task<bool> AddAsync(User user, CancellationToken ct)
+    
+    public async Task<bool> AddAsync(JwtToken token, CancellationToken ct)
     {
-        await _db.Users.AddAsync(user);
+        await _db.AddAsync(token, ct);
         return await _db.SaveChangesAsync(ct) > 0;
     }
 }

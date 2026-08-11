@@ -1,6 +1,5 @@
 using System.Text.Json;
 using Shifter.Application.Common.Exceptions;
-using ValidationException = System.ComponentModel.DataAnnotations.ValidationException;
 
 namespace Shifter.Api.Middlewares;
 

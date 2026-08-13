@@ -1,0 +1,45 @@
+<main class="auth-page">
+  <form class="auth-card" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <header class="auth-header">
+      <h1>Sign in</h1>
+      <p>Welcome back to Shifter.</p>
+    </header>
+
+    @if (error(); as text) {
+      <p class="alert" role="alert">{{ text }}</p>
+    }
+
+    <label class="field">
+      <span class="field-label">Login</span>
+      <input
+        type="text"
+        formControlName="login"
+        autocomplete="username"
+        spellcheck="false"
+      />
+      @if (fieldError(form.controls.login, 'Login'); as text) {
+        <small class="field-error">{{ text }}</small>
+      }
+    </label>
+
+    <label class="field">
+      <span class="field-label">Password</span>
+      <input
+        type="password"
+        formControlName="password"
+        autocomplete="current-password"
+      />
+      @if (fieldError(form.controls.password, 'Password'); as text) {
+        <small class="field-error">{{ text }}</small>
+      }
+    </label>
+
+    <button type="submit" class="submit" [disabled]="pending()">
+      {{ pending() ? 'Signing in…' : 'Sign in' }}
+    </button>
+
+    <p class="switch">
+      No account yet? <a routerLink="/register">Create one</a>
+    </p>
+  </form>
+</main>

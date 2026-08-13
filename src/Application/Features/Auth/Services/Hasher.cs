@@ -1,5 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.Extensions.Options;
+using Shifter.Application.Common.Options;
 using Shifter.Application.Features.Auth.Services.Interfaces;
 
 namespace Shifter.Application.Features.Auth.Services;
@@ -8,12 +10,11 @@ public class Hasher : IHasher
 {
     private readonly string _secretKey;
 
-    public Hasher(IConfiguration _config)
-    { 
-        _secretKey = _config["TokenOptions:Key"] 
-                     ?? throw new ArgumentNullException("TokenOptions:Key configuration is missing.");
+    public Hasher(IOptions<TokenOptions> options)
+    {
+        _secretKey = options.Value.Key;
     }
-    
+
     public string Hash(string creds)
     {
         var keyBytes = Encoding.UTF8.GetBytes(_secretKey);

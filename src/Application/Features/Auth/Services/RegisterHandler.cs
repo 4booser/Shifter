@@ -1,6 +1,8 @@
 using System.Security.Claims;
 using MediatR;
+using Microsoft.Extensions.Options;
 using Shifter.Application.Common.Exceptions;
+using Shifter.Application.Common.Options;
 using Shifter.Application.Features.Auth.DTOs;
 using Shifter.Application.Features.Auth.Services.Interfaces;
 using Shifter.Domain.Entities;
@@ -16,6 +18,7 @@ public class RegisterHandler : IRequestHandler<RegisterDTO, AuthResponseDTO>
     private readonly ITokenCommand _tokenCommand;
     private readonly ILogger<RegisterHandler> _logger;
     private readonly IHasher _hasher;
+    private readonly TokenOptions _tokenOptions;
 
     public RegisterHandler(
         IJwtService jwtService,
@@ -23,7 +26,8 @@ public class RegisterHandler : IRequestHandler<RegisterDTO, AuthResponseDTO>
         IUserQuery userQuery,
         ITokenCommand tokenCommand,
         ILogger<RegisterHandler> logger,
-        IHasher hasher)
+        IHasher hasher,
+        IOptions<TokenOptions> tokenOptions)
     {
         _jwtService = jwtService;
         _userCommand = userCommand;
@@ -31,6 +35,7 @@ public class RegisterHandler : IRequestHandler<RegisterDTO, AuthResponseDTO>
         _tokenCommand = tokenCommand;
         _logger = logger;
         _hasher = hasher;
+        _tokenOptions = tokenOptions.Value;
     }
     
     public async Task<AuthResponseDTO> Handle(RegisterDTO request, CancellationToken ct)
@@ -84,22 +89,27 @@ public class RegisterHandler : IRequestHandler<RegisterDTO, AuthResponseDTO>
         
         string accessToken = _jwtService.GenerateAccessToken(claims);
         string refreshToken = _hasher.Hash(_jwtService.GenerateRefreshToken());
-        DateTime expires = now.AddMinutes(15);
+
+        // The two tokens expire on different schedules: the access token must
+        // match what JwtService stamped into the JWT, while the stored refresh
+        // token is what keeps the session alive after that.
+        DateTime accessExpires = now.AddMinutes(_tokenOptions.AccessTokenLifetimeMinutes);
+        DateTime refreshExpires = now.AddDays(_tokenOptions.RefreshTokenLifetimeDays);
 
         JwtToken token = new JwtToken()
         {
             UserId = user.Id,
             Token = refreshToken,
-            ExpiresAt = expires
+            ExpiresAt = refreshExpires
         };
-        
+
         if (! await _tokenCommand.AddAsync(token, ct))
             throw new ForbiddenException("Can`t add token.");
-        
+
         return new AuthResponseDTO(
             accessToken,
             refreshToken,
-            expires
+            accessExpires
         );
     }
 }

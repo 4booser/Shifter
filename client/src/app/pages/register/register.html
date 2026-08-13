@@ -1,0 +1,67 @@
+<main class="auth-page">
+  <form class="auth-card" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <header class="auth-header">
+      <h1>Create account</h1>
+      <p>Set up your Shifter account.</p>
+    </header>
+
+    @if (error(); as text) {
+      <p class="alert" role="alert">{{ text }}</p>
+    }
+
+    <div class="field-row">
+      <label class="field">
+        <span class="field-label">First name</span>
+        <input type="text" formControlName="first_name" autocomplete="given-name" />
+        @if (fieldError(form.controls.first_name, 'First name'); as text) {
+          <small class="field-error">{{ text }}</small>
+        }
+      </label>
+
+      <label class="field">
+        <span class="field-label">Last name</span>
+        <input type="text" formControlName="last_name" autocomplete="family-name" />
+        @if (fieldError(form.controls.last_name, 'Last name'); as text) {
+          <small class="field-error">{{ text }}</small>
+        }
+      </label>
+    </div>
+
+    <label class="field">
+      <span class="field-label">Login</span>
+      <input
+        type="text"
+        formControlName="login"
+        autocomplete="username"
+        spellcheck="false"
+      />
+      @if (fieldError(form.controls.login, 'Login'); as text) {
+        <small class="field-error">{{ text }}</small>
+      } @else {
+        <small class="field-hint">4–20 characters: letters, digits, @ . _ -</small>
+      }
+    </label>
+
+    <label class="field">
+      <span class="field-label">Password</span>
+      <input
+        type="password"
+        formControlName="password"
+        autocomplete="new-password"
+      />
+      @if (fieldError(form.controls.password, 'Password'); as text) {
+        <small class="field-error">{{ text }}</small>
+      } @else {
+        <small class="field-hint">8–20 characters: letters, digits, @ . _ -</small>
+      }
+    </label>
+
+    <button type="submit" class="submit" [disabled]="pending()">
+      {{ pending() ? 'Creating…' : 'Create account' }}
+    </button>
+
+    <p class="switch">
+      Already registered? <a routerLink="/login">Sign in</a>
+    </p>
+  </form>
+</main>

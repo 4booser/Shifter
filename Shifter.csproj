@@ -10,6 +10,7 @@
     <ItemGroup>
         <PackageReference Include="BCrypt.Net-Next" Version="4.2.0" />
         <PackageReference Include="MediatR" Version="14.2.0" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.10" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.10" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.10">
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -27,5 +28,39 @@
     <ItemGroup>
       <Folder Include="src\Infrastructure\Persistence\Migrations\" />
     </ItemGroup>
+
+    <!-- ==== Angular client (client/) ==== -->
+
+    <PropertyGroup>
+        <ClientDir>client</ClientDir>
+        <!-- Set to true to publish a prebuilt wwwroot without invoking npm.
+             The Dockerfile does this: it builds the SPA in its own stage. -->
+        <SkipClientBuild Condition="'$(SkipClientBuild)' == ''">false</SkipClientBuild>
+    </PropertyGroup>
+
+    <!-- wwwroot is generated, so it is empty when the project is evaluated.
+         PublishClientAssets adds it explicitly; without this Remove, a second
+         publish would find the same files twice and fail with NETSDK1152. -->
+    <ItemGroup>
+        <Content Remove="wwwroot\**" />
+    </ItemGroup>
+
+    <Target Name="RestoreClient" Condition="'$(SkipClientBuild)' != 'true' AND !Exists('$(ClientDir)\node_modules')">
+        <Exec Command="npm ci" WorkingDirectory="$(ClientDir)" />
+    </Target>
+
+    <Target Name="BuildClient" BeforeTargets="PublishClientAssets" DependsOnTargets="RestoreClient" Condition="'$(SkipClientBuild)' != 'true'">
+        <Exec Command="npm run build" WorkingDirectory="$(ClientDir)" />
+    </Target>
+
+    <Target Name="PublishClientAssets" AfterTargets="ComputeFilesToPublish">
+        <ItemGroup>
+            <_ClientAsset Include="wwwroot\**\*" />
+            <ResolvedFileToPublish Include="@(_ClientAsset)">
+                <RelativePath>wwwroot\%(RecursiveDir)%(Filename)%(Extension)</RelativePath>
+                <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+            </ResolvedFileToPublish>
+        </ItemGroup>
+    </Target>
 
 </Project>

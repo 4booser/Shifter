@@ -9,6 +9,8 @@ public class ShifterDbContext : DbContext
         : base(options) { }
     
     public DbSet<User> Users => Set<User>();
+    public DbSet<Day> Days => Set<Day>();
+    public DbSet<Shift> Shifts => Set<Shift>();
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

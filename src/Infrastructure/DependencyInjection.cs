@@ -29,6 +29,9 @@ public static class DependencyInjection
 
         services.AddScoped<ITokenCommand, TokenCommand>();
         
+        services.AddScoped<IShifterCommand, ShifterCommand>();
+        services.AddScoped<IShifterQuery, ShifterQuery>();
+        
         return services;
     }
 }

@@ -6,4 +6,5 @@ public class Sales
     
     public required string Name { get; set; }
     public required decimal Price { get; set; }
+    public decimal? Percentage { get; set; }
 }

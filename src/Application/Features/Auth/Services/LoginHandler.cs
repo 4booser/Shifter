@@ -39,15 +39,28 @@ public class LoginHandler : IRequestHandler<LoginDto, AuthResponseDto>
     {
         if (string.IsNullOrWhiteSpace(request.login) || string.IsNullOrWhiteSpace(request.password))
             throw new ValidationException("Login or password is empty.");
+        
+        const string AlowedChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@._-";
+
+        if (request.login.Length < 4 || request.login.Length > 20)
+            throw new ValidationException("Login length must be between 4 and 20 characters.");
+        
+        if (request.login.Any(c => !AlowedChars.Contains(c)))
+            throw new ValidationException("Login must contain only letters, numbers and special characters.");
+        
+        if (request.password.Length < 8 || request.password.Length > 20)
+            throw new ValidationException("Password length must be between 8 and 20 characters.");
+        
+        if (request.password.Any(c => !AlowedChars.Contains(c)))
+            throw new ValidationException("Password must contain only letters, numbers and special characters.");
 
         User? user = await _userQuery.GetByLoginAsync(request.login, ct);
-
-        // One message for both failures: telling them apart would let a caller
-        // enumerate which logins exist.
-        if (user is null || !BCrypt.Net.BCrypt.Verify(request.password, user.PasswordHash))
+        
+        if (user != null) throw new ConflictException("User with this login already exists.");
+        
+        if (!BCrypt.Net.BCrypt.Verify(request.password, user.PasswordHash))
         {
             _logger.LogWarning("Failed sign-in attempt for login {Login}.", request.login);
-
             throw new UnauthorizedException("Invalid login or password.");
         }
 

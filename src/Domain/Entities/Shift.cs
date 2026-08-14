@@ -5,7 +5,7 @@ namespace Shifter.Domain.Entities;
 public sealed class Shift
 {
     [Key]
-    private int Id { get; set; }
+    public int Id { get; set; }
     
     public required string Name { get; set; }
     

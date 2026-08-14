@@ -26,7 +26,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="src\Application\Features\business\Services\Interfaces\" />
+      <Folder Include="src\Infrastructure\Persistence\Configurations\" />
       <Folder Include="src\Infrastructure\Persistence\Migrations\" />
     </ItemGroup>
 

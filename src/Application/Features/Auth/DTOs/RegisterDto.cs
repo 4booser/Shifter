@@ -2,9 +2,9 @@ using MediatR;
 
 namespace Shifter.Application.Features.Auth.DTOs;
 
-public record RegisterDTO(
+public record RegisterDto(
     string login,
     string password,
     string first_name,
     string? last_name
-    ) : IRequest<AuthResponseDTO>;
+    ) : IRequest<AuthResponseDto>;

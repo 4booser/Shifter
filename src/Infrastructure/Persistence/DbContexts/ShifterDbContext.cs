@@ -15,6 +15,4 @@ public class ShifterDbContext : DbContext
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ShifterDbContext).Assembly);
         base.OnModelCreating(modelBuilder);
     } 
-    
-    
 }

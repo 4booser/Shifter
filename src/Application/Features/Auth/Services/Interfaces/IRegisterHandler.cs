@@ -4,7 +4,7 @@ namespace Shifter.Application.Features.Auth.Services.Interfaces;
 
 public interface IRegisterHandler
 {
-    public Task<AuthResponseDTO> Handle(RegisterDTO request, CancellationToken ct);
+    public Task<AuthResponseDto> Handle(RegisterDto request, CancellationToken ct);
     
     
 }

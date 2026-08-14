@@ -1,3 +1,3 @@
 namespace Shifter.Application.Features.Auth.DTOs;
 
-public record JwtTokenDTO();
+public record JwtTokenDto();

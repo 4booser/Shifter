@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Shifter.Domain.Entities;
 
-public class User
+public sealed class User
 {
     [Key]
     public int Id { get; set; }
@@ -12,6 +12,8 @@ public class User
     
     public required string Login { get; set; }
     public required string PasswordHash { get; set; }
+    
+    public List<CalendarDay>? CalendarDays { get; set; }
     
     private bool IsActive { get; set; } = true;
     public DateTime CreatedAt { get; set; }

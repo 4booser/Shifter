@@ -22,8 +22,8 @@ public class AuthController : Controller
     [HttpPost]
     [AllowAnonymous]
     [Route("user/register")]
-    public async Task<ActionResult<AuthResponseDTO>> Register(
-        [FromBody] RegisterDTO request,
+    public async Task<ActionResult<AuthResponseDto>> Register(
+        [FromBody] RegisterDto request,
         CancellationToken ct)
     {
         var result = await _mediator.Send(request, ct);
@@ -34,8 +34,8 @@ public class AuthController : Controller
     [HttpPost]
     [AllowAnonymous]
     [Route("user/login")]
-    public async Task<ActionResult<AuthResponseDTO>> Login(
-        [FromBody] LoginDTO request,
+    public async Task<ActionResult<AuthResponseDto>> Login(
+        [FromBody] LoginDto request,
         CancellationToken ct)
     {
         var result = await _mediator.Send(request, ct);

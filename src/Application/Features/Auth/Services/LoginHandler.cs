@@ -10,7 +10,7 @@ using Shifter.Infrastructure.Repositories.Interfaces;
 
 namespace Shifter.Application.Features.Auth.Services;
 
-public class LoginHandler : IRequestHandler<LoginDTO, AuthResponseDTO>
+public class LoginHandler : IRequestHandler<LoginDto, AuthResponseDto>
 {
     private readonly IJwtService _jwtService;
     private readonly IUserQuery _userQuery;
@@ -35,7 +35,7 @@ public class LoginHandler : IRequestHandler<LoginDTO, AuthResponseDTO>
         _tokenOptions = tokenOptions.Value;
     }
 
-    public async Task<AuthResponseDTO> Handle(LoginDTO request, CancellationToken ct)
+    public async Task<AuthResponseDto> Handle(LoginDto request, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(request.login) || string.IsNullOrWhiteSpace(request.password))
             throw new ValidationException("Login or password is empty.");
@@ -77,7 +77,7 @@ public class LoginHandler : IRequestHandler<LoginDTO, AuthResponseDTO>
         if (! await _tokenCommand.AddAsync(token, ct))
             throw new ForbiddenException("Can`t add token.");
 
-        return new AuthResponseDTO(
+        return new AuthResponseDto(
             accessToken,
             refreshToken,
             accessExpires

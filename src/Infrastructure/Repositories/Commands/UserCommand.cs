@@ -13,7 +13,13 @@ public class UserCommand : IUserCommand
 
     public async Task<bool> AddAsync(User user, CancellationToken ct)
     {
-        await _db.Users.AddAsync(user);
+        await _db.Users.AddAsync(user, ct);
         return await _db.SaveChangesAsync(ct) > 0;
+    }
+
+    public async Task DeleteAsync(User user, CancellationToken ct)
+    {
+        _db.Users.Remove(user);
+        await _db.SaveChangesAsync(ct);
     }
 }

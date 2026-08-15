@@ -2,7 +2,7 @@ namespace Shifter.Domain.Entities;
 
 public sealed class Break
 {
-    private int Id { get; set; }
+    public int Id { get; set; }
     public Shift? Shift { get; set; }
     
     public TimeSpan? Duration { get; set; }

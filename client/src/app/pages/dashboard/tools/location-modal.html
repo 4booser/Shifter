@@ -1,0 +1,183 @@
+<app-modal [open]="open()" [title]="title()" (closed)="close()">
+  <div class="modal-form">
+    @if (locations().length > 0) {
+      <section>
+        <h3 class="block-title">Your places</h3>
+
+        <ul class="position-list">
+          @for (location of locations(); track location.id) {
+            <li class="palette-row">
+              <span class="position-item">
+                <span class="palette-name">
+                  <span class="location-dot" [style.background]="location.colour"></span>
+                  {{ location.name }}
+                </span>
+                <span class="position-rate">
+                  {{ location.current_period_from }} – {{ location.current_period_to }}
+                </span>
+              </span>
+              <span class="row-actions">
+                <button
+                  type="button"
+                  class="icon-button is-small"
+                  [attr.aria-label]="'Edit ' + location.name"
+                  (click)="edit(location)"
+                >
+                  <app-icon name="brush" [size]="13" />
+                </button>
+                <button
+                  type="button"
+                  class="icon-button is-small"
+                  [attr.aria-label]="'Archive ' + location.name"
+                  (click)="archive(location, true)"
+                >
+                  <app-icon name="close" [size]="13" />
+                </button>
+              </span>
+            </li>
+          }
+        </ul>
+      </section>
+    }
+
+    <label class="field">
+      <span class="field-label">Name</span>
+      <input type="text" [ngModel]="name()" (ngModelChange)="name.set($event)" placeholder="Bar" />
+    </label>
+
+    <label class="field">
+      <span class="field-label">Address</span>
+      <input type="text" [ngModel]="address()" (ngModelChange)="address.set($event)" />
+    </label>
+
+    <div class="field">
+      <span class="field-label">Colour</span>
+      <div class="swatch-row">
+        @for (preset of colours; track preset.value) {
+          <button
+            type="button"
+            class="swatch"
+            [class.is-active]="colour() === preset.value"
+            [style.background]="preset.value"
+            [attr.aria-label]="preset.label"
+            (click)="colour.set(preset.value)"
+          ></button>
+        }
+        <input
+          type="color"
+          class="swatch-picker"
+          [ngModel]="colour()"
+          (ngModelChange)="colour.set($event)"
+          aria-label="Custom colour"
+        />
+      </div>
+    </div>
+
+    <div class="field">
+      <span class="field-label">Pays</span>
+      <div class="segmented" role="group" aria-label="Pay period">
+        @for (option of periods; track option.value) {
+          <button
+            type="button"
+            class="segment"
+            [class.is-active]="period() === option.value"
+            (click)="period.set(option.value)"
+          >
+            {{ option.label }}
+          </button>
+        }
+      </div>
+    </div>
+
+    @if (needsPayDay()) {
+      <label class="field">
+        <span class="field-label">Payday</span>
+        <input
+          type="number"
+          min="1"
+          max="28"
+          [ngModel]="payDay()"
+          (ngModelChange)="payDay.set(+$event)"
+        />
+        <small class="field-hint">
+          Day of the month a period starts. 1 gives plain calendar months.
+        </small>
+      </label>
+    }
+
+    @if (needsAnchor()) {
+      <label class="field">
+        <span class="field-label">A date the cycle passed through</span>
+        <input type="date" [ngModel]="anchor()" (ngModelChange)="anchor.set($event)" />
+        <small class="field-hint">Any past payday works; the cycle counts from it.</small>
+      </label>
+    }
+
+    <div class="field-row">
+      <label class="field">
+        <span class="field-label">Overtime after, hours a week</span>
+        <input
+          type="number"
+          min="1"
+          max="168"
+          [ngModel]="overtimeHours()"
+          (ngModelChange)="overtimeHours.set(+$event)"
+        />
+      </label>
+
+      <label class="field">
+        <span class="field-label">Paid at</span>
+        <input
+          type="number"
+          min="1"
+          max="5"
+          step="0.1"
+          [ngModel]="overtimeMultiplier()"
+          (ngModelChange)="overtimeMultiplier.set(+$event)"
+        />
+      </label>
+    </div>
+
+    <p class="field-hint">
+      Hours past the weekly threshold earn the multiplier. Only hourly rates take
+      part — a per-day or per-month wage has no hourly base to multiply.
+    </p>
+
+    @if (archived().length > 0) {
+      <section>
+        <h3 class="block-title">Archived</h3>
+        <ul class="position-list archive-list">
+          @for (location of archived(); track location.id) {
+            <li class="palette-row">
+              <span class="position-item">
+                <span class="palette-name">{{ location.name }}</span>
+              </span>
+              <span class="row-actions">
+                <button
+                  type="button"
+                  class="icon-button is-small"
+                  [attr.aria-label]="'Restore ' + location.name"
+                  (click)="archive(location, false)"
+                >
+                  <app-icon name="check" [size]="13" />
+                </button>
+              </span>
+            </li>
+          }
+        </ul>
+      </section>
+    }
+
+    <div class="modal-actions">
+      <button type="button" class="button is-quiet" (click)="close()">Close</button>
+      <button
+        type="button"
+        class="button is-primary"
+        [disabled]="name().trim() === ''"
+        (click)="submit()"
+      >
+        {{ editing() === null ? 'Add place' : 'Save changes' }}
+      </button>
+    </div>
+  </div>
+</app-modal>

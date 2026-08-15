@@ -3,6 +3,8 @@ using System.Text;
 using Shifter.Application.Common.Options;
 using Shifter.Application.Features.Auth.Services;
 using Shifter.Application.Features.Auth.Services.Interfaces;
+using Shifter.Application.Features.business.Services;
+using Shifter.Application.Features.business.Services.Interfaces;
 
 namespace Shifter.Application.Features;
 
@@ -17,8 +19,30 @@ public static class DependencyInjection
 
         // ValidateOnStart turns a misconfigured signing key into a startup
         // failure instead of tokens that silently fail to validate at runtime.
+        // The committed appsettings value is a development placeholder. Anyone
+        // with the repository can mint a token for any account with it, so the
+        // real key comes from the environment.
+        const string committedKey = "SAkjhgaksituKJDAFJG742thjgkLES&Gg3ksd";
+        string? fromEnvironment = configuration["SHIFTER_JWT_KEY"];
+
         services.AddOptions<TokenOptions>()
             .Bind(configuration.GetSection(TokenOptions.SectionName))
+            .PostConfigure(options =>
+            {
+                if (!string.IsNullOrWhiteSpace(fromEnvironment))
+                {
+                    options.Key = fromEnvironment;
+
+                    return;
+                }
+
+                if (options.Key == committedKey)
+                {
+                    Serilog.Log.Warning(
+                        "Using the signing key committed to source control. Set "
+                        + "SHIFTER_JWT_KEY before running anywhere real.");
+                }
+            })
             .Validate(
                 options => Encoding.UTF8.GetByteCount(options.Key) >= 32,
                 "TokenOptions:Key must be at least 32 bytes for HMAC-SHA256.")
@@ -38,6 +62,13 @@ public static class DependencyInjection
 
         services.AddScoped<IJwtService, JwtService>();
         services.AddSingleton<IHasher, Hasher>();
+        services.AddScoped<IAuthTokenIssuer, AuthTokenIssuer>();
+
+        services.AddScoped<IShiftHandler, ShiftHandler>();
+        services.AddScoped<ISalesHandler, SalesHandler>();
+        services.AddScoped<IDayHandler, DayHandler>();
+        services.AddScoped<IPayoutHandler, PayoutHandler>();
+        services.AddScoped<ILocationHandler, LocationHandler>();
 
         return services;
     }

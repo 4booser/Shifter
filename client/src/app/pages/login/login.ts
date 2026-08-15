@@ -53,7 +53,7 @@ export class Login {
   private returnUrl(): string {
     const target = this.route.snapshot.queryParamMap.get('returnUrl');
 
-    if (!target || !target.startsWith('/') || target.startsWith('//')) return '/';
+    if (!target || !target.startsWith('/') || target.startsWith('//')) return '/dashboard';
 
     return target;
   }

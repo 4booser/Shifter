@@ -1,0 +1,136 @@
+<section class="calendar" (window:pointerup)="onPointerUp()">
+  <header class="calendar-bar">
+    <h2 class="calendar-title">{{ label() }}</h2>
+
+    <div class="segmented view-switch" role="group" aria-label="Calendar view">
+      <button
+        type="button"
+        class="segment"
+        [class.is-active]="view() === 'week'"
+        (click)="setView('week')"
+      >
+        Week
+      </button>
+      <button
+        type="button"
+        class="segment"
+        [class.is-active]="view() === 'month'"
+        (click)="setView('month')"
+      >
+        Month
+      </button>
+      <button
+        type="button"
+        class="segment"
+        [class.is-active]="view() === 'year'"
+        (click)="setView('year')"
+      >
+        Year
+      </button>
+    </div>
+
+    <button type="button" class="button is-quiet" (click)="today()">
+      <app-icon name="calendar" />
+      Today
+    </button>
+
+    <button type="button" class="nav" (click)="previous()" aria-label="Previous">
+      <app-icon name="chevron-left" [size]="18" />
+    </button>
+    <button type="button" class="nav" (click)="next()" aria-label="Next">
+      <app-icon name="chevron-right" [size]="18" />
+    </button>
+  </header>
+
+  @if (brush(); as template) {
+    <p class="brush-bar">
+      <app-icon name="brush" />
+      <span class="palette-symbol">
+        {{ template.symbol ?? template.name.charAt(0) }}
+      </span>
+      <strong>{{ template.name }}</strong> — click a day, or drag across several
+      <button type="button" class="button is-quiet" (click)="clearBrush()">
+        <app-icon name="check" />
+        Done
+      </button>
+    </p>
+  }
+
+  @if (view() === 'year') {
+    <div class="year-grid">
+      @for (month of yearMonths(); track month.month) {
+        <button type="button" class="year-month" (click)="openMonth(month.month)">
+          <span class="year-month-label">{{ month.label }}</span>
+
+          <span class="year-days">
+            @for (week of month.weeks; track $index) {
+              @for (day of week; track day.key) {
+                <span
+                  class="year-day"
+                  [class.is-outside]="!day.inCurrentMonth"
+                  [class.is-filled]="marks(day.key).length > 0"
+                  [class.is-today]="day.isToday"
+                  [style.--mark-colour]="marks(day.key)[0]?.colour"
+                ></span>
+              }
+            }
+          </span>
+        </button>
+      }
+    </div>
+  } @else {
+    <div class="calendar-grid" [class.is-dragging]="dragging().size > 0">
+      @for (name of weekdays(); track name) {
+        <div class="weekday">{{ name }}</div>
+      }
+
+      @for (week of weeks(); track $index) {
+        @for (day of week; track day.key) {
+          <button
+            type="button"
+            class="day"
+            [class.outside]="!day.inCurrentMonth"
+            [class.is-today]="day.isToday"
+            [class.is-selected]="day.key === selected()"
+            [class.is-painting]="brush() !== null"
+            [class.is-dragged]="isDragged(day.key)"
+            [attr.aria-pressed]="day.key === selected()"
+            (pointerdown)="onPointerDown(day.key, $event)"
+            (pointerenter)="onPointerEnter(day.key)"
+          >
+            <span class="day-number">{{ day.dayOfMonth }}</span>
+
+            @if (extras(day.key)) {
+              <span class="day-extra" aria-label="Has sales, tips or a note">•••</span>
+            }
+
+            @if (marks(day.key).length > 0) {
+              <span class="day-body">
+                @for (mark of marks(day.key); track $index) {
+                  <span class="day-shift">
+                    <span
+                      class="day-mark"
+                      [class.is-planned]="!mark.worked"
+                      [attr.data-colour]="mark.colour"
+                      [style.--mark-colour]="mark.colour"
+                    >
+                      {{ mark.symbol }}
+                    </span>
+                    <span class="day-shift-name">{{ mark.name }}</span>
+                  </span>
+                }
+
+                <span class="day-hours">
+                  {{ hoursOf(day.key) }} h
+                  @if (showEarnings() && earned(day.key) > 0) {
+                    · {{ earned(day.key) }}
+                  }
+                </span>
+              </span>
+            }
+          </button>
+        }
+      }
+    </div>
+  }
+</section>

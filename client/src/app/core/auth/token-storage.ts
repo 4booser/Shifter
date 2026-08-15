@@ -15,6 +15,10 @@ export class TokenStorage {
     return this._session()?.accessToken ?? null;
   }
 
+  get refreshToken(): string | null {
+    return this._session()?.refreshToken ?? null;
+  }
+
   save(response: AuthResponse): AuthSession {
     const session: AuthSession = {
       accessToken: response.access_token,

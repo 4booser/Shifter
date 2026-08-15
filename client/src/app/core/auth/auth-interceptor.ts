@@ -1,36 +1,49 @@
-import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
+import { HttpErrorResponse, HttpInterceptorFn, HttpRequest } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { catchError, throwError } from 'rxjs';
+import { catchError, switchMap, throwError } from 'rxjs';
 
-import { AUTH_API } from './auth';
+import { AUTH_API, Auth } from './auth';
 import { TokenStorage } from './token-storage';
 
-/** Attaches the bearer token to API calls only, never to third-party hosts. */
+/**
+ * Attaches the bearer token to API calls, and renews the session in place when
+ * the access token has expired. Without this the 15-minute access lifetime
+ * would throw the user back to the login page mid-shift.
+ */
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   if (!req.url.startsWith('/shifter/')) return next(req);
 
+  const auth = inject(Auth);
   const storage = inject(TokenStorage);
   const router = inject(Router);
 
-  const token = storage.accessToken;
+  // A 401 from a credential check or from refresh itself is the answer, not a
+  // stale token: retrying those would loop.
+  const isAuthCall =
+    req.url.startsWith(`${AUTH_API}/user/`) || req.url === `${AUTH_API}/refresh`;
 
-  const authorized = token
-    ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } })
-    : req;
-
-  return next(authorized).pipe(
+  return next(withToken(req, storage.accessToken)).pipe(
     catchError((error: HttpErrorResponse) => {
-      // A 401 from register or login means "wrong credentials" and belongs to
-      // the form. Anywhere else it means the session died, so drop it.
-      const isCredentialsCheck = req.url.startsWith(`${AUTH_API}/user/`);
+      if (error.status !== 401 || isAuthCall) return throwError(() => error);
 
-      if (error.status === 401 && !isCredentialsCheck) {
-        storage.clear();
-        router.navigate(['/login']);
-      }
+      return auth.refreshOnce().pipe(
+        // Read the token again rather than closing over the old one: refresh
+        // has just replaced it.
+        switchMap(() => next(withToken(req, storage.accessToken))),
+        catchError((refreshError: unknown) => {
+          storage.clear();
+          router.navigate(['/login']);
 
-      return throwError(() => error);
+          return throwError(() => refreshError);
+        }),
+      );
     }),
   );
 };
+
+function withToken(req: HttpRequest<unknown>, token: string | null): HttpRequest<unknown> {
+  return token === null
+    ? req
+    : req.clone({ setHeaders: { Authorization: `Bearer ${token}` } });
+}

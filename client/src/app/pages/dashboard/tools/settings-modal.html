@@ -1,0 +1,159 @@
+<app-modal [open]="open()" title="Appearance" (closed)="close()">
+  <div class="modal-form">
+    <div class="field">
+      <span class="field-label">Theme</span>
+      <div class="segmented" role="group" aria-label="Theme">
+        @for (theme of themes; track theme.value) {
+          <button
+            type="button"
+            class="segment"
+            [class.is-active]="settings().theme === theme.value"
+            (click)="setTheme(theme.value)"
+          >
+            {{ theme.label }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <div class="field">
+      <span class="field-label">Accent</span>
+      <div class="swatch-row">
+        @for (accent of accents; track accent.value) {
+          <button
+            type="button"
+            class="swatch"
+            [class.is-active]="settings().accent === accent.value"
+            [style.background]="accent.value"
+            [attr.aria-label]="accent.label"
+            (click)="setAccent(accent.value)"
+          ></button>
+        }
+        <input
+          type="color"
+          class="swatch-picker"
+          [ngModel]="settings().accent"
+          (ngModelChange)="setAccent($event)"
+          aria-label="Custom accent"
+        />
+      </div>
+    </div>
+
+    <div class="field">
+      <span class="field-label">Currency</span>
+      <div class="quick-row">
+        @for (currency of currencies; track currency) {
+          <button
+            type="button"
+            class="quick"
+            [class.is-active]="settings().currency === currency"
+            (click)="setCurrency(currency)"
+          >
+            {{ currency }}
+          </button>
+        }
+      </div>
+      <button type="button" class="toggle-row" (click)="toggleCurrencyBefore()">
+        <span class="toggle" [class.is-on]="settings().currencyBefore"></span>
+        Symbol before the amount
+      </button>
+    </div>
+
+    <div class="field">
+      <span class="field-label">Default calendar view</span>
+      <div class="segmented" role="group" aria-label="Calendar view">
+        @for (view of views; track view.value) {
+          <button
+            type="button"
+            class="segment"
+            [class.is-active]="settings().view === view.value"
+            (click)="setView(view.value)"
+          >
+            {{ view.label }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <div class="field">
+      <span class="field-label">Density</span>
+      <div class="segmented" role="group" aria-label="Density">
+        @for (density of densities; track density.value) {
+          <button
+            type="button"
+            class="segment"
+            [class.is-active]="settings().density === density.value"
+            (click)="setDensity(density.value)"
+          >
+            {{ density.label }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <div class="field">
+      <span class="field-label">Calendar</span>
+      <button type="button" class="toggle-row" (click)="toggleMondayFirst()">
+        <span class="toggle" [class.is-on]="settings().mondayFirst"></span>
+        Week starts on Monday
+      </button>
+      <button type="button" class="toggle-row" (click)="toggleEarnings()">
+        <span class="toggle" [class.is-on]="settings().showEarningsInCells"></span>
+        Show earnings inside day cells
+      </button>
+      <button type="button" class="toggle-row" (click)="toggle('showShiftNamesInCells')">
+        <span class="toggle" [class.is-on]="settings().showShiftNamesInCells"></span>
+        Show shift names inside day cells
+      </button>
+      <button type="button" class="toggle-row" (click)="toggle('highlightWeekends')">
+        <span class="toggle" [class.is-on]="settings().highlightWeekends"></span>
+        Tint weekends
+      </button>
+    </div>
+
+    <div class="field">
+      <span class="field-label">Shape</span>
+      <label class="slider-row">
+        <span>Corners</span>
+        <input
+          type="range"
+          min="0"
+          max="20"
+          step="2"
+          [ngModel]="settings().roundness"
+          (ngModelChange)="setRoundness(+$event)"
+        />
+        <span class="slider-value">{{ settings().roundness }}px</span>
+      </label>
+      <label class="slider-row">
+        <span>Text size</span>
+        <input
+          type="range"
+          min="13"
+          max="18"
+          step="1"
+          [ngModel]="settings().fontScale"
+          (ngModelChange)="setFontScale(+$event)"
+        />
+        <span class="slider-value">{{ settings().fontScale }}px</span>
+      </label>
+    </div>
+
+    <div class="field">
+      <span class="field-label">Behaviour</span>
+      <button type="button" class="toggle-row" (click)="toggle('confirmBulk')">
+        <span class="toggle" [class.is-on]="settings().confirmBulk"></span>
+        Ask before filling a dragged range
+      </button>
+      <button type="button" class="toggle-row" (click)="toggle('reduceMotion')">
+        <span class="toggle" [class.is-on]="settings().reduceMotion"></span>
+        Reduce motion
+      </button>
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" class="button is-quiet" (click)="reset()">Reset</button>
+      <button type="button" class="button is-primary" (click)="close()">Done</button>
+    </div>
+  </div>
+</app-modal>

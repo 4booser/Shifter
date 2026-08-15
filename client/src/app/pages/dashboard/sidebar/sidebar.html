@@ -1,0 +1,320 @@
+<aside class="sidebar">
+  <section>
+    <div class="block-head">
+      <h2 class="block-title">Places</h2>
+      <button
+        type="button"
+        class="icon-button"
+        aria-label="Places of work"
+        (click)="locationModalOpen.set(true)"
+      >
+        <app-icon name="plus" [size]="15" />
+      </button>
+    </div>
+
+    @if (locations().length === 0) {
+      <p class="empty-note">No places yet. Add one to group shifts and set a payday.</p>
+    } @else {
+      <ul class="position-list">
+        @for (location of locations(); track location.id) {
+          <li class="position-item">
+            <span class="palette-name">
+              <span class="location-dot" [style.background]="location.colour"></span>
+              {{ location.name }}
+            </span>
+            <span class="position-rate">{{ location.pay_period }}</span>
+          </li>
+        }
+      </ul>
+    }
+  </section>
+
+  <section>
+    <div class="block-head">
+      <h2 class="block-title">Shifts</h2>
+      <button type="button" class="icon-button" aria-label="New shift" (click)="newShift()">
+        <app-icon name="plus" [size]="15" />
+      </button>
+    </div>
+
+    @if (templates().length === 0) {
+      <p class="empty-note">None yet. Add one, then click or drag across days.</p>
+    } @else {
+      <ul class="palette">
+        @for (template of templates(); track template.id) {
+          <li class="palette-row">
+            <button
+              type="button"
+              class="palette-item"
+              [class.is-active]="brush()?.id === template.id"
+              [attr.aria-pressed]="brush()?.id === template.id"
+              (click)="pick(template)"
+            >
+              <span class="palette-symbol">
+                {{ template.symbol ?? template.name.charAt(0) }}
+              </span>
+              <span class="palette-name">{{ template.name }}</span>
+              <span class="palette-meta">
+                {{ template.start_time }}–{{ template.end_time }} ·
+                {{ template.hours }}h · {{ rate(template) }}
+              </span>
+            </button>
+
+            <span class="row-actions">
+              <button
+                type="button"
+                class="icon-button is-small"
+                [attr.aria-label]="'Edit ' + template.name"
+                (click)="editShift(template)"
+              >
+                <app-icon name="brush" [size]="13" />
+              </button>
+              <button
+                type="button"
+                class="icon-button is-small"
+                [attr.aria-label]="'Archive ' + template.name"
+                (click)="archiveShift(template, true)"
+              >
+                <app-icon name="close" [size]="13" />
+              </button>
+            </span>
+          </li>
+        }
+      </ul>
+
+      <div class="stack">
+        <button type="button" class="button is-block" (click)="rotationModalOpen.set(true)">
+          <app-icon name="repeat" />
+          Fill a rota
+        </button>
+        <button type="button" class="button is-block" (click)="copyWeek()">
+          <app-icon name="calendar" />
+          Repeat last week
+        </button>
+      </div>
+    }
+  </section>
+
+  <section>
+    <div class="block-head">
+      <h2 class="block-title">Sales</h2>
+      <button
+        type="button"
+        class="icon-button"
+        aria-label="New sales position"
+        (click)="newPosition()"
+      >
+        <app-icon name="plus" [size]="15" />
+      </button>
+    </div>
+
+    @if (positions().length === 0) {
+      <p class="empty-note">Nothing to sell yet.</p>
+    } @else {
+      <ul class="position-list">
+        @for (position of positions(); track position.id) {
+          <li class="palette-row">
+            <span class="position-item">
+              <span class="palette-name">{{ position.name }}</span>
+              <span class="position-rate">
+                {{ position.price }} · {{ position.percentage ?? 0 }}%
+              </span>
+            </span>
+
+            <span class="row-actions">
+              <button
+                type="button"
+                class="icon-button is-small"
+                [attr.aria-label]="'Edit ' + position.name"
+                (click)="editPosition(position)"
+              >
+                <app-icon name="brush" [size]="13" />
+              </button>
+              <button
+                type="button"
+                class="icon-button is-small"
+                [attr.aria-label]="'Archive ' + position.name"
+                (click)="archivePosition(position, true)"
+              >
+                <app-icon name="close" [size]="13" />
+              </button>
+            </span>
+          </li>
+        }
+      </ul>
+    }
+  </section>
+
+  @if (archivedTemplates().length > 0 || archivedPositions().length > 0) {
+    <section>
+      <button
+        type="button"
+        class="button is-quiet is-block"
+        (click)="showArchive.set(!showArchive())"
+      >
+        {{ showArchive() ? 'Hide' : 'Show' }} archived
+        ({{ archivedTemplates().length + archivedPositions().length }})
+      </button>
+
+      @if (showArchive()) {
+        <ul class="position-list archive-list">
+          @for (template of archivedTemplates(); track template.id) {
+            <li class="palette-row">
+              <span class="position-item">
+                <span class="palette-name">{{ template.name }}</span>
+                <span class="position-rate">shift</span>
+              </span>
+              <span class="row-actions">
+                <button
+                  type="button"
+                  class="icon-button is-small"
+                  [attr.aria-label]="'Restore ' + template.name"
+                  (click)="archiveShift(template, false)"
+                >
+                  <app-icon name="check" [size]="13" />
+                </button>
+              </span>
+            </li>
+          }
+          @for (position of archivedPositions(); track position.id) {
+            <li class="palette-row">
+              <span class="position-item">
+                <span class="palette-name">{{ position.name }}</span>
+                <span class="position-rate">sales</span>
+              </span>
+              <span class="row-actions">
+                <button
+                  type="button"
+                  class="icon-button is-small"
+                  [attr.aria-label]="'Restore ' + position.name"
+                  (click)="archivePosition(position, false)"
+                >
+                  <app-icon name="check" [size]="13" />
+                </button>
+              </span>
+            </li>
+          }
+        </ul>
+
+        <p class="empty-note">
+          Archived items stay out of the way but keep everything they earned.
+        </p>
+      }
+    </section>
+  }
+
+  <section>
+    <h2 class="block-title">Earnings</h2>
+
+    <div class="period-switch">
+      @for (period of periods; track period.value) {
+        <button
+          type="button"
+          class="period-option"
+          [class.is-active]="summaryPeriod() === period.value"
+          (click)="setPeriod(period.value)"
+        >
+          {{ period.label }}
+        </button>
+      }
+    </div>
+
+    <dl class="summary">
+      <div class="summary-row">
+        <dt>Days worked</dt>
+        <dd>{{ summary().days_worked }}</dd>
+      </div>
+      <div class="summary-row">
+        <dt>Hours</dt>
+        <dd>{{ summary().hours | number: '1.0-2' }}</dd>
+      </div>
+      <div class="summary-row">
+        <dt>Shifts</dt>
+        <dd>{{ summary().shifts_earned | number: '1.0-2' }}</dd>
+      </div>
+      @if (summary().overtime_hours > 0) {
+        <div class="summary-row">
+          <dt>Overtime · {{ summary().overtime_hours | number: '1.0-1' }} h</dt>
+          <dd>+{{ summary().overtime_earned | number: '1.0-2' }}</dd>
+        </div>
+      }
+      @if (summary().period_earned > 0) {
+        <div class="summary-row">
+          <dt>Salary</dt>
+          <dd>{{ summary().period_earned | number: '1.0-2' }}</dd>
+        </div>
+      }
+      <div class="summary-row">
+        <dt>Sales</dt>
+        <dd>{{ summary().sales_earned | number: '1.0-2' }}</dd>
+      </div>
+      <div class="summary-row">
+        <dt>Tips</dt>
+        <dd>{{ summary().tips_earned | number: '1.0-2' }}</dd>
+      </div>
+      <div class="summary-row is-total">
+        <dt>Earned</dt>
+        <dd>{{ summary().total_earned | number: '1.0-2' }}</dd>
+      </div>
+      @if (summary().planned_earned > 0) {
+        <div class="summary-row">
+          <dt>Still planned</dt>
+          <dd>{{ summary().planned_earned | number: '1.0-2' }}</dd>
+        </div>
+      }
+      @if (summary().paid > 0) {
+        <div class="summary-row">
+          <dt>Paid</dt>
+          <dd>{{ summary().paid | number: '1.0-2' }}</dd>
+        </div>
+        <div class="summary-row" [class.is-short]="summary().difference < 0">
+          <dt>Difference</dt>
+          <dd>{{ summary().difference | number: '1.0-2' }}</dd>
+        </div>
+      }
+    </dl>
+
+    @if (summary().by_location.length > 1) {
+      <dl class="summary by-location">
+        @for (place of summary().by_location; track place.location_id) {
+          <div class="summary-row">
+            <dt>
+              <span class="location-dot" [style.background]="place.colour"></span>
+              {{ place.name }}
+            </dt>
+            <dd>{{ place.hours | number: '1.0-1' }} h · {{ place.earned | number: '1.0-2' }}</dd>
+          </div>
+        }
+      </dl>
+    }
+
+    <div class="stack">
+      <button type="button" class="button is-block" (click)="payoutModalOpen.set(true)">
+        <app-icon name="wallet" />
+        {{ summary().paid > 0 ? 'Payments' : 'Record a payment' }}
+      </button>
+      <button type="button" class="button is-quiet is-block" (click)="exportCsv()">
+        <app-icon name="note" />
+        Export CSV
+      </button>
+    </div>
+  </section>
+</aside>
+
+<app-shift-modal
+  [open]="shiftModalOpen()"
+  [editing]="editingShift()"
+  (closed)="shiftModalOpen.set(false)"
+/>
+<app-sales-modal
+  [open]="salesModalOpen()"
+  [editing]="editingPosition()"
+  (closed)="salesModalOpen.set(false)"
+/>
+<app-rotation-modal
+  [open]="rotationModalOpen()"
+  (closed)="rotationModalOpen.set(false)"
+/>
+<app-payout-modal [open]="payoutModalOpen()" (closed)="payoutModalOpen.set(false)" />
+<app-location-modal [open]="locationModalOpen()" (closed)="locationModalOpen.set(false)" />
+

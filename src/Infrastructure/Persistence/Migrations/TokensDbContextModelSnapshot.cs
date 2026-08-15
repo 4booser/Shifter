@@ -42,6 +42,11 @@ namespace Shifter.Src.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Token")
+                        .IsUnique();
+
+                    b.HasIndex("UserId", "ExpiresAt");
+
                     b.ToTable("Tokens");
                 });
 #pragma warning restore 612, 618

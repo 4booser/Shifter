@@ -28,6 +28,7 @@ public static class DependencyInjection
         services.AddScoped<IUserQuery, UserQuery>();
 
         services.AddScoped<ITokenCommand, TokenCommand>();
+        services.AddScoped<ITokenQuery, TokenQuery>();
         
         services.AddScoped<IShifterCommand, ShifterCommand>();
         services.AddScoped<IShifterQuery, ShifterQuery>();

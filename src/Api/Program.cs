@@ -55,7 +55,14 @@ try
         app.UseSwaggerUI();
     }
 
-    app.UseHttpsRedirection();
+    // Skipped in development: under the https launch profile this answers the
+    // dev-server's proxied call with a 307 to :7172, and the browser refuses
+    // that cross-origin hop to an untrusted dev certificate. The SPA then sees
+    // a status 0 and reports the server as unreachable.
+    if (!app.Environment.IsDevelopment())
+    {
+        app.UseHttpsRedirection();
+    }
 
     // Serves the Angular bundle that `dotnet publish` builds into wwwroot.
     // In development the SPA is normally served by `ng serve` instead.

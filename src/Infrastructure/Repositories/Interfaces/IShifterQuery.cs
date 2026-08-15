@@ -4,7 +4,25 @@ namespace Shifter.Infrastructure.Repositories.Interfaces;
 
 public interface IShifterQuery
 {
-    Task<Day[]> GetDaysByUserIdAsync(int userId, CancellationToken ct);
-    Task<Day?> GetDayByIdAsync(int id, CancellationToken ct);
-    Task<Shift?> GetShiftByIdAsync(int id, CancellationToken ct);
+    Task<Shift[]> GetShiftsByIdsAsync(int userId, int[] ids, CancellationToken ct);
+
+    /// <summary>Palette contents. Archived templates are included only on request.</summary>
+    Task<Shift[]> GetShiftsAsync(int userId, bool includeArchived, CancellationToken ct);
+    Task<Sales[]> GetSalesAsync(int userId, bool includeArchived, CancellationToken ct);
+
+    /// <summary>
+    /// Owner-scoped single fetch for editing. Archived rows come back too,
+    /// otherwise they could never be restored.
+    /// </summary>
+    Task<Shift?> GetShiftAsync(int userId, int id, CancellationToken ct);
+    Task<Sales?> GetSalesItemAsync(int userId, int id, CancellationToken ct);
+
+    Task<Sales[]> GetSalesByIdsAsync(int userId, int[] ids, CancellationToken ct);
+    Task<Day[]> GetDaysInRangeAsync(int userId, DateOnly from, DateOnly to, CancellationToken ct);
+
+    Task<Location[]> GetLocationsAsync(int userId, bool includeArchived, CancellationToken ct);
+    Task<Location?> GetLocationAsync(int userId, int id, CancellationToken ct);
+
+    Task<Payout[]> GetPayoutsAsync(int userId, DateOnly from, DateOnly to, CancellationToken ct);
+    Task<Payout?> GetPayoutAsync(int userId, int id, CancellationToken ct);
 }

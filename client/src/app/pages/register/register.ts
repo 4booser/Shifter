@@ -65,7 +65,7 @@ export class Register {
     this.error.set(null);
 
     this.auth.register(this.form.getRawValue()).subscribe({
-      next: () => this.router.navigateByUrl('/'),
+      next: () => this.router.navigateByUrl('/dashboard'),
       error: (error: unknown) => {
         this.pending.set(false);
         this.error.set(apiErrorMessage(error));

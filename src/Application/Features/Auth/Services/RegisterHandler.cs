@@ -1,8 +1,5 @@
-using System.Security.Claims;
 using MediatR;
-using Microsoft.Extensions.Options;
 using Shifter.Application.Common.Exceptions;
-using Shifter.Application.Common.Options;
 using Shifter.Application.Features.Auth.DTOs;
 using Shifter.Application.Features.Auth.Services.Interfaces;
 using Shifter.Domain.Entities;
@@ -12,30 +9,21 @@ namespace Shifter.Application.Features.Auth.Services;
 
 public class RegisterHandler : IRequestHandler<RegisterDto, AuthResponseDto>
 {
-    private readonly IJwtService _jwtService;
+    private readonly IAuthTokenIssuer _issuer;
     private readonly IUserCommand _userCommand;
     private readonly IUserQuery _userQuery;
-    private readonly ITokenCommand _tokenCommand;
     private readonly ILogger<RegisterHandler> _logger;
-    private readonly IHasher _hasher;
-    private readonly TokenOptions _tokenOptions;
 
     public RegisterHandler(
-        IJwtService jwtService,
+        IAuthTokenIssuer issuer,
         IUserCommand userCommand,
         IUserQuery userQuery,
-        ITokenCommand tokenCommand,
-        ILogger<RegisterHandler> logger,
-        IHasher hasher,
-        IOptions<TokenOptions> tokenOptions)
+        ILogger<RegisterHandler> logger)
     {
-        _jwtService = jwtService;
+        _issuer = issuer;
         _userCommand = userCommand;
         _userQuery = userQuery;
-        _tokenCommand = tokenCommand;
         _logger = logger;
-        _hasher = hasher;
-        _tokenOptions = tokenOptions.Value;
     }
     
     public async Task<AuthResponseDto> Handle(RegisterDto request, CancellationToken ct)
@@ -81,35 +69,18 @@ public class RegisterHandler : IRequestHandler<RegisterDto, AuthResponseDto>
         
         _logger.LogInformation("User {UserId} registered with login {Login}.", user.Id, user.Login);
         
-        Claim[] claims =
+        try
         {
-            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new Claim(ClaimTypes.Name, user.Login)
-        };
-        
-        string accessToken = _jwtService.GenerateAccessToken(claims);
-        string refreshToken = _hasher.Hash(_jwtService.GenerateRefreshToken());
-
-        // The two tokens expire on different schedules: the access token must
-        // match what JwtService stamped into the JWT, while the stored refresh
-        // token is what keeps the session alive after that.
-        DateTime accessExpires = now.AddMinutes(_tokenOptions.AccessTokenLifetimeMinutes);
-        DateTime refreshExpires = now.AddDays(_tokenOptions.RefreshTokenLifetimeDays);
-
-        JwtToken token = new JwtToken()
+            return await _issuer.IssueAsync(user.Id, user.Login, ct);
+        }
+        catch
         {
-            UserId = user.Id,
-            Token = refreshToken,
-            ExpiresAt = refreshExpires
-        };
+            // Without this the account exists but has no session, and signing
+            // up again hits the unique login index: the person is locked out of
+            // a name they cannot use or reclaim.
+            await _userCommand.DeleteAsync(user, ct);
 
-        if (! await _tokenCommand.AddAsync(token, ct))
-            throw new ForbiddenException("Can`t add token.");
-
-        return new AuthResponseDto(
-            accessToken,
-            refreshToken,
-            accessExpires
-        );
+            throw;
+        }
     }
 }

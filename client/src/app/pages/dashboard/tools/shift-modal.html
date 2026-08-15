@@ -1,0 +1,111 @@
+<app-modal [open]="open()" [title]="title()" (closed)="close()">
+  <form class="modal-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <div class="field-row">
+      <label class="field">
+        <span class="field-label">Name</span>
+        <input type="text" formControlName="name" placeholder="Night" />
+        @if (fieldError(form.controls.name, 'Name'); as text) {
+          <small class="field-error">{{ text }}</small>
+        }
+      </label>
+
+      <label class="field">
+        <span class="field-label">Badge</span>
+        <input type="text" formControlName="symbol" maxlength="4" placeholder="N" />
+      </label>
+    </div>
+
+    <div class="field">
+      <span class="field-label">Or pick an icon</span>
+      <div class="emoji-picker">
+        @for (group of emojiGroups; track group.label) {
+          <div class="emoji-group">
+            <span class="emoji-group-label">{{ group.label }}</span>
+            <div class="emoji-row">
+              @for (emoji of group.emojis; track emoji) {
+                <button
+                  type="button"
+                  class="emoji"
+                  [class.is-active]="form.controls.symbol.value === emoji"
+                  (click)="pickEmoji(emoji)"
+                >
+                  {{ emoji }}
+                </button>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    @if (locations().length > 0) {
+      <label class="field">
+        <span class="field-label">Place of work</span>
+        <select formControlName="location_id">
+          <option [ngValue]="null">No place</option>
+          @for (location of locations(); track location.id) {
+            <option [ngValue]="location.id">{{ location.name }}</option>
+          }
+        </select>
+      </label>
+    }
+
+    <div class="field-row">
+      <label class="field">
+        <span class="field-label">Starts</span>
+        <input type="time" formControlName="start_time" />
+        @if (fieldError(form.controls.start_time, 'Start'); as text) {
+          <small class="field-error">{{ text }}</small>
+        }
+      </label>
+
+      <label class="field">
+        <span class="field-label">Ends</span>
+        <input type="time" formControlName="end_time" />
+        @if (fieldError(form.controls.end_time, 'End'); as text) {
+          <small class="field-error">{{ text }}</small>
+        }
+      </label>
+    </div>
+
+    <p class="field-hint">An end before the start means the shift runs past midnight.</p>
+
+    <div class="field">
+      <span class="field-label">Paid per</span>
+
+      <div class="segmented" role="group" aria-label="Pay period">
+        @for (period of periods; track period.value) {
+          <button
+            type="button"
+            class="segment"
+            [class.is-active]="form.controls.salary_period.value === period.value"
+            [attr.aria-pressed]="form.controls.salary_period.value === period.value"
+            (click)="pickPeriod(period.value)"
+          >
+            {{ period.label }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <label class="field">
+      <span class="field-label">Amount</span>
+      <input type="number" formControlName="salary_amount" min="0" step="1" />
+      <small class="field-hint">{{ periodHint }}</small>
+    </label>
+
+    @if (editing() !== null) {
+      <p class="field-hint">
+        Changing the rate also changes every day this shift is already on. To
+        leave history alone, archive this one and create a replacement.
+      </p>
+    }
+
+    <div class="modal-actions">
+      <button type="button" class="button is-quiet" (click)="close()">Cancel</button>
+      <button type="submit" class="button is-primary">
+        {{ editing() === null ? 'Create shift' : 'Save changes' }}
+      </button>
+    </div>
+  </form>
+</app-modal>

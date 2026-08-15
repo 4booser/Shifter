@@ -43,6 +43,22 @@ public class AuthController : Controller
         return Ok(result);
     }
 
+    /// <summary>
+    /// Trades a refresh token for a new pair. Anonymous by design: it runs
+    /// precisely when the access token has already expired.
+    /// </summary>
+    [HttpPost]
+    [AllowAnonymous]
+    [Route("refresh")]
+    public async Task<ActionResult<AuthResponseDto>> Refresh(
+        [FromBody] RefreshDto request,
+        CancellationToken ct)
+    {
+        var result = await _mediator.Send(request, ct);
+
+        return Ok(result);
+    }
+
     /// <summary>Returns the identity carried by the bearer token.</summary>
     [HttpGet]
     [Route("me")]

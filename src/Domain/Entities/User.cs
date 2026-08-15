@@ -16,7 +16,7 @@ public sealed class User
     public List<Day>? CalendarDays { get; set; }
     public List<Sales>? Sales {get; set;}
     
-    private bool IsActive { get; set; } = true;
+    public bool IsActive { get; set; } = true;
     public DateTime CreatedAt { get; set; }
     public DateTime? LastLogin { get; set; }
 }

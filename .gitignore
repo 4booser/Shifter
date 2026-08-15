@@ -4,5 +4,6 @@ obj/
 riderModule.iml
 /_ReSharper.Caches/
 logs/
+/./
 # Build output of the Angular app in client/.
 wwwroot/

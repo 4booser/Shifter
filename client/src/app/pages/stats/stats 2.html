@@ -1,0 +1,555 @@
+<div class="shell">
+  <header class="topbar">
+    <a routerLink="/dashboard" class="button is-quiet">
+      <app-icon name="chevron-left" />
+      {{ 'Back to calendar' | t }}
+    </a>
+
+    <span class="brand">{{ 'Statistics' | t }}</span>
+
+    <span class="who">{{ range().from }} — {{ range().to }}</span>
+  </header>
+
+  @if (error(); as text) {
+    <p class="alert shell-alert" role="alert">{{ text }}</p>
+  }
+
+  <div class="stats-page" [class.is-loading]="loading()">
+    <!-- ==== Period picker ==== -->
+    <div class="period-bar card-lite">
+      <span class="block-title">{{ 'Period' | t }}</span>
+
+      <div class="quick-row">
+        @for (option of presets; track option.id) {
+          <button
+            type="button"
+            class="quick"
+            [class.is-active]="preset() === option.id"
+            (click)="pick(option.id)"
+          >
+            {{ option.label | t }}
+          </button>
+        }
+      </div>
+
+      <div class="export-row">
+        <button type="button" class="button" [disabled]="exporting()" (click)="exportPng()">
+          <app-icon name="chart" />
+          {{ 'Export PNG' | t }}
+        </button>
+        <button type="button" class="button" (click)="exportXlsx()">
+          <app-icon name="note" />
+          {{ 'Export Excel' | t }}
+        </button>
+      </div>
+
+      <div class="period-custom">
+        <label class="field is-inline">
+          <span class="field-label">{{ 'From' | t }}</span>
+          <input type="date" [ngModel]="customFrom()"
+            (ngModelChange)="setCustom($event, '')" />
+        </label>
+        <label class="field is-inline">
+          <span class="field-label">{{ 'To' | t }}</span>
+          <input type="date" [ngModel]="customTo()"
+            (ngModelChange)="setCustom('', $event)" />
+        </label>
+      </div>
+    </div>
+
+    <!-- ==== Goal meter ==== -->
+    <section class="stat-card goal-card">
+      <div class="goal-head">
+        <h3 class="block-title">{{ 'Monthly goal' | t }}</h3>
+
+        @if (editingGoal()) {
+          <span class="goal-edit">
+            <input type="number" min="0" step="1000" class="goal-input"
+              [ngModel]="goalDraft()"
+              (ngModelChange)="goalDraft.set($event === '' ? null : +$event)" />
+            <button type="button" class="button is-primary" (click)="saveGoal()">
+              {{ 'Save changes' | t }}
+            </button>
+            <button type="button" class="button is-quiet" (click)="editingGoal.set(false)">
+              {{ 'Cancel' | t }}
+            </button>
+          </span>
+        } @else {
+          <button type="button" class="button is-quiet" (click)="editingGoal.set(true)">
+            <app-icon name="sliders" />
+            {{ goalProgress() ? ('Change' | t) : ('Set a goal' | t) }}
+          </button>
+        }
+      </div>
+
+      @if (goalProgress(); as progress) {
+        <div class="meter" [class.is-reached]="progress.reached">
+          <span class="meter-fill" [style.width.%]="progress.percent"></span>
+        </div>
+
+        <div class="goal-legend">
+          <span class="goal-now">{{ progress.earned | money }}</span>
+          <span class="goal-of">{{ 'of' | t }} {{ progress.goal | money }}</span>
+          @if (progress.reached) {
+            <span class="goal-badge">{{ 'Goal reached' | t }}</span>
+          } @else {
+            <span class="goal-left">
+              {{ progress.remaining | money }} {{ 'to go' | t }}
+            </span>
+          }
+        </div>
+      } @else {
+        <p class="empty-note">
+          {{ 'Set a target and every period shows how close you are.' | t }}
+        </p>
+      }
+    </section>
+
+    <!-- ==== KPI ==== -->
+    <div class="kpi-row">
+      <div class="kpi">
+        <span class="kpi-label">{{ 'Earned' | t }}</span>
+        <span class="kpi-value is-hero">{{ summary().total_earned | money }}</span>
+        <span class="kpi-foot">
+          <app-delta [percent]="earnedDelta()" />
+          @if (summary().planned_earned > 0) {
+            <span class="kpi-hint">
+              +{{ summary().planned_earned | money }} {{ 'planned' | t }}
+            </span>
+          }
+        </span>
+      </div>
+
+      <div class="kpi">
+        <span class="kpi-label">{{ 'Hours' | t }}</span>
+        <span class="kpi-value">{{ summary().hours }}</span>
+        <span class="kpi-foot">
+          <app-delta [percent]="hoursDelta()" />
+          @if (summary().overtime_hours > 0) {
+            <span class="kpi-hint">
+              {{ summary().overtime_hours }} {{ 'overtime' | t }}
+            </span>
+          }
+        </span>
+      </div>
+
+      <div class="kpi">
+        <span class="kpi-label">{{ 'Per worked day' | t }}</span>
+        <span class="kpi-value">{{ averagePerDay() | money }}</span>
+        <span class="kpi-foot">
+          <app-delta [percent]="perDayDelta()" />
+          <span class="kpi-hint">{{ summary().days_worked }} {{ 'days' | t }}</span>
+        </span>
+      </div>
+
+      <div class="kpi">
+        <span class="kpi-label">{{ 'Average hourly' | t }}</span>
+        <span class="kpi-value">{{ averageHourly() | money }}</span>
+        <span class="kpi-hint">{{ 'shift pay only' | t }}</span>
+      </div>
+
+      <div class="kpi">
+        <span class="kpi-label">{{ 'Best day' | t }}</span>
+        <span class="kpi-value">{{ (bestDay()?.earned ?? 0) | money }}</span>
+        <span class="kpi-hint">{{ bestDay()?.date ?? '—' }}</span>
+      </div>
+
+      <div class="kpi">
+        <span class="kpi-label">{{ 'Median day' | t }}</span>
+        <span class="kpi-value">{{ median() | money }}</span>
+        <span class="kpi-hint">{{ 'typical, not average' | t }}</span>
+      </div>
+
+      <div class="kpi">
+        <span class="kpi-label">{{ 'Longest streak' | t }}</span>
+        <span class="kpi-value">{{ streak() }}</span>
+        <span class="kpi-hint">{{ 'days in a row' | t }}</span>
+      </div>
+
+      <div class="kpi">
+        <span class="kpi-label">{{ 'Longest shift' | t }}</span>
+        <span class="kpi-value">{{ longestShift()?.hours ?? 0 }} h</span>
+        <span class="kpi-hint">{{ longestShift()?.name ?? '—' }}</span>
+      </div>
+
+      <div class="kpi">
+        <span class="kpi-label">{{ 'Tips' | t }}</span>
+        <span class="kpi-value">{{ summary().tips_earned | money }}</span>
+        <span class="kpi-hint">{{ tipsShare() | number: '1.0-0' }}% {{ 'of earnings' | t }}</span>
+      </div>
+
+      <div class="kpi">
+        <span class="kpi-label">{{ 'Sales' | t }}</span>
+        <span class="kpi-value">{{ summary().sales_earned | money }}</span>
+        <span class="kpi-hint">
+          {{ salesUnits() }} {{ 'units sold' | t }}
+        </span>
+      </div>
+
+      <div class="kpi">
+        <span class="kpi-label">{{ 'Deductions' | t }}</span>
+        <span class="kpi-value" [class.is-short]="withheld() > 0">
+          {{ withheld() > 0 ? '−' : '' }}{{ withheld() | money }}
+        </span>
+        <span class="kpi-hint">{{ 'tip-out, meals, fines' | t }}</span>
+      </div>
+
+      <div class="kpi">
+        <span class="kpi-label">{{ 'Paid' | t }}</span>
+        <span class="kpi-value">{{ summary().paid | money }}</span>
+        <span class="kpi-hint" [class.is-short]="summary().difference < 0">
+          @if (summary().paid > 0) {
+            {{ summary().difference | money }}
+          } @else {
+            {{ 'nothing recorded' | t }}
+          }
+        </span>
+      </div>
+    </div>
+
+    <!-- ==== Averages: what one day, one hour and one shift are worth ==== -->
+    <section class="stat-card">
+      <h2 class="card-title">
+        <app-icon name="target" [size]="16" />
+        {{ 'What a shift is worth' | t }}
+      </h2>
+
+      <div class="avg-row">
+        <div class="avg tint-green">
+          <span class="kpi-label">{{ 'Per working day' | t }}</span>
+          <span class="avg-value">{{ averages().perDay | money }}</span>
+          <app-delta [percent]="perDayDelta()" />
+        </div>
+
+        <div class="avg tint-teal">
+          <span class="kpi-label">{{ 'Per hour' | t }}</span>
+          <span class="avg-value">{{ averages().perHour | money }}</span>
+          <app-delta [percent]="perHourDelta()" />
+        </div>
+
+        <div class="avg tint-indigo">
+          <span class="kpi-label">{{ 'Per shift' | t }}</span>
+          <span class="avg-value">{{ averages().perShift | money }}</span>
+          <app-delta [percent]="perShiftDelta()" />
+        </div>
+
+        <div class="avg tint-amber">
+          <span class="kpi-label">{{ 'Tips a day' | t }}</span>
+          <span class="avg-value">{{ averages().tipsPerDay | money }}</span>
+          <app-delta [percent]="tipsPerDayDelta()" />
+        </div>
+
+        <div class="avg tint-violet">
+          <span class="kpi-label">{{ 'Sales a day' | t }}</span>
+          <span class="avg-value">{{ averages().salesPerDay | money }}</span>
+          <app-delta [percent]="salesPerDayDelta()" />
+        </div>
+
+        <div class="avg tint-cyan">
+          <span class="kpi-label">{{ 'Hours a day' | t }}</span>
+          <span class="avg-value">{{ averages().hoursPerDay | number: '1.0-1' }}</span>
+          <app-delta [percent]="hoursPerDayDelta()" [invert]="true" />
+        </div>
+      </div>
+
+      <p class="field-hint">
+        {{ 'Compared with the same length of time just before this one.' | t }}
+      </p>
+    </section>
+
+    @if (forecast().live) {
+      <section class="stat-card forecast-card">
+        <div class="forecast-main">
+          <span class="kpi-label">{{ 'Projected by period end' | t }}</span>
+          <span class="kpi-value is-hero" [appCountUp]="forecast().projected"></span>
+          <span class="kpi-foot">
+            <app-delta [percent]="projectionDelta()" />
+            <span class="kpi-hint">{{ 'vs previous' | t }}</span>
+          </span>
+        </div>
+
+        <dl class="forecast-rows">
+          <div class="summary-row">
+            <dt>{{ 'Earned so far' | t }}</dt>
+            <dd>{{ forecast().earnedSoFar | money }}</dd>
+          </div>
+          <div class="summary-row">
+            <dt>{{ 'Already booked ahead' | t }}</dt>
+            <dd>{{ forecast().plannedAhead | money }}</dd>
+          </div>
+          <div class="summary-row">
+            <dt>{{ 'At current pace' | t }}</dt>
+            <dd>{{ forecast().runRate | money }}</dd>
+          </div>
+          <div class="summary-row">
+            <dt>{{ 'Per day so far' | t }}</dt>
+            <dd>{{ forecast().perDay | money }}</dd>
+          </div>
+          <div class="summary-row">
+            <dt>{{ 'Days left' | t }}</dt>
+            <dd>{{ forecast().remaining }}</dd>
+          </div>
+        </dl>
+      </section>
+    }
+
+    @if (summary().days.length === 0 && !loading()) {
+      <div class="stat-card is-empty">
+        <app-icon name="chart" [size]="28" />
+        <p class="empty-note">{{ 'Nothing recorded in this period yet.' | t }}</p>
+      </div>
+    } @else {
+      <!-- ==== Cumulative ==== -->
+      <section class="stat-card">
+        <header class="chart-head">
+          <h3 class="block-title">{{ 'Running total' | t }}</h3>
+          <span class="chart-legend">
+            <span class="legend-key">{{ 'Cumulative earnings across the period' | t }}</span>
+          </span>
+        </header>
+
+        <app-area-chart
+          [points]="cumulative()"
+          [projection]="projection()"
+          [goal]="goal()"
+        />
+      </section>
+
+      <!-- ==== Earnings columns ==== -->
+      <section class="stat-card">
+        <header class="chart-head">
+          <h3 class="block-title">
+            @switch (granularity()) {
+              @case ('day') { {{ 'By day' | t }} }
+              @case ('week') { {{ 'By week' | t }} }
+              @default { {{ 'By month' | t }} }
+            }
+          </h3>
+          <span class="chart-legend">
+            <span class="legend-key"><span class="legend-swatch"></span>{{ 'Earned' | t }}</span>
+            <span class="legend-key">
+              <span class="legend-swatch is-planned"></span>{{ 'Planned' | t }}
+            </span>
+          </span>
+        </header>
+
+        <app-column-chart
+          [columns]="earningsColumns()"
+          [ticks]="earningsTicks()"
+          [labelEvery]="earningsLabelEvery()"
+          [labelAll]="true"
+        />
+
+        @if (granularity() !== 'day') {
+          <p class="field-hint">
+            {{ 'Shift pay, sales and tips; period wages and overtime are not split by day.' | t }}
+          </p>
+        }
+      </section>
+
+      <!-- ==== Heatmap ==== -->
+      <section class="stat-card">
+        <h3 class="block-title">{{ 'Activity' | t }}</h3>
+        <app-heatmap [values]="heatValues()" [from]="range().from" [to]="range().to" />
+      </section>
+
+      <div class="bento">
+        @if (goalProgress(); as progress) {
+          <section class="stat-card bento-ring">
+            <h3 class="block-title">{{ 'Pace to goal' | t }}</h3>
+
+            <div class="ring-wrap">
+              <app-progress-ring [percent]="goalPercent()" />
+              <span class="ring-centre">
+                <strong>{{ goalPercent() | number: '1.0-0' }}%</strong>
+                <span>{{ 'of goal' | t }}</span>
+              </span>
+            </div>
+
+            @if (pace(); as needed) {
+              <p class="field-hint" [class.is-short]="!needed.reachable">
+                @if (needed.ahead) {
+                  {{ 'On track — the projection clears it.' | t }}
+                } @else {
+                  {{ needed.perDay | money }} {{ 'per remaining day needed' | t }}
+                }
+              </p>
+            }
+          </section>
+        }
+
+        <section class="stat-card bento-streak">
+          <h3 class="block-title">{{ 'Streak' | t }}</h3>
+
+          <div class="streak-row">
+            <span class="streak-flame">🔥</span>
+            <span class="streak-value" [appCountUp]="currentStreak()"
+              [countFormat]="plain"></span>
+            <span class="streak-unit">{{ 'days now' | t }}</span>
+          </div>
+
+          <p class="field-hint">
+            {{ 'Longest streak' | t }}: {{ streak() }}
+          </p>
+        </section>
+
+        <section class="stat-card bento-activity">
+          <h3 class="block-title">{{ 'Recent days' | t }}</h3>
+
+          @if (activity().length === 0) {
+            <p class="empty-note">{{ 'Nothing recorded in this period yet.' | t }}</p>
+          } @else {
+            <ul class="activity-list">
+              @for (day of activity(); track day.date) {
+                <li class="activity-row">
+                  <span class="activity-date">{{ day.date.slice(5) }}</span>
+                  <span class="activity-shifts">
+                    @for (entry of day.shifts; track entry.shift_id) {
+                      <span class="activity-chip"
+                        [class.is-planned]="!entry.worked"
+                        [style.--mark-colour]="entry.colour">
+                        {{ entry.symbol ?? entry.name.charAt(0) }}
+                      </span>
+                    }
+                  </span>
+                  <span class="activity-value">{{ day.earned | money }}</span>
+                </li>
+              }
+            </ul>
+          }
+        </section>
+      </div>
+
+      @if (comparison(); as data) {
+        <section class="stat-card">
+          <h3 class="block-title">{{ 'Places side by side' | t }}</h3>
+
+          <div class="compare-scroll">
+            <table class="compare">
+              <thead>
+                <tr>
+                  <th>{{ 'Place of work' | t }}</th>
+                  <th>{{ 'Days worked' | t }}</th>
+                  <th>{{ 'Hours' | t }}</th>
+                  <th>{{ 'Per hour' | t }}</th>
+                  <th>{{ 'Tips' | t }}</th>
+                  <th>{{ 'Sales' | t }}</th>
+                  <th>{{ 'Tip-out' | t }}</th>
+                  <th>{{ 'Earned' | t }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (place of data.places; track place.location_id) {
+                  <tr>
+                    <th scope="row">
+                      <span class="location-dot" [style.background]="place.colour"></span>
+                      {{ place.name }}
+                    </th>
+                    <td [class.is-best]="place.days_worked === data.best.days">
+                      {{ place.days_worked }}
+                    </td>
+                    <td [class.is-best]="place.hours === data.best.hours">
+                      {{ place.hours | number: '1.0-1' }}
+                    </td>
+                    <td [class.is-best]="place.per_hour === data.best.perHour">
+                      {{ place.per_hour | money }}
+                    </td>
+                    <td [class.is-best]="place.tips === data.best.tips">
+                      {{ place.tips | money }}
+                    </td>
+                    <td>{{ place.sales | money }}</td>
+                    <td [class.is-short]="place.tip_out > 0">
+                      @if (place.tip_out > 0) { −{{ place.tip_out | money }} } @else { — }
+                    </td>
+                    <td [class.is-best]="place.earned === data.best.earned">
+                      <strong>{{ place.earned | money }}</strong>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          <p class="field-hint">
+            {{ 'Tips and sales are shared out by the hours each place got that day.' | t }}
+          </p>
+        </section>
+      }
+
+      <div class="stat-grid">
+        <!-- ==== Weekday ==== -->
+        <section class="stat-card">
+          <h3 class="block-title">{{ 'By weekday' | t }}</h3>
+          <div class="bars">
+            @for (row of weekdays(); track row.name) {
+              <div class="bar-row">
+                <span class="bar-name">{{ row.name | t }}</span>
+                <span class="bar-track">
+                  <span class="bar-fill" [style.width.%]="row.share"></span>
+                </span>
+                <span class="bar-value">{{ row.value | money }}</span>
+              </div>
+            }
+          </div>
+        </section>
+
+        <!-- ==== Sources ==== -->
+        @if (sources().length > 0) {
+          <section class="stat-card">
+            <h3 class="block-title">{{ 'Where it came from' | t }}</h3>
+            <div class="bars">
+              @for (row of sources(); track row.name) {
+                <div class="bar-row">
+                  <span class="bar-name">{{ row.name | t }}</span>
+                  <span class="bar-track">
+                    <span class="bar-fill" [style.width.%]="row.share"></span>
+                  </span>
+                  <span class="bar-value">{{ row.value | money }}</span>
+                </div>
+              }
+            </div>
+          </section>
+        }
+
+        <!-- ==== Top shifts ==== -->
+        @if (topShifts().length > 0) {
+          <section class="stat-card">
+            <h3 class="block-title">{{ 'Top shifts' | t }}</h3>
+            <div class="bars">
+              @for (row of topShifts(); track row.name) {
+                <div class="bar-row">
+                  <span class="bar-name">{{ row.name }}</span>
+                  <span class="bar-track">
+                    <span class="bar-fill" [style.width.%]="row.share"></span>
+                  </span>
+                  <span class="bar-value">
+                    {{ row.value | money }} · {{ row.hours }} h
+                  </span>
+                </div>
+              }
+            </div>
+          </section>
+        }
+
+        <!-- ==== Places ==== -->
+        @if (places().length > 0) {
+          <section class="stat-card">
+            <h3 class="block-title">{{ 'By place of work' | t }}</h3>
+            <div class="bars">
+              @for (row of places(); track row.name) {
+                <div class="bar-row">
+                  <span class="bar-name">{{ row.name }}</span>
+                  <span class="bar-track">
+                    <span class="bar-fill" [style.width.%]="row.share"
+                      [style.background]="row.colour"></span>
+                  </span>
+                  <span class="bar-value">{{ row.value | money }}</span>
+                </div>
+              }
+            </div>
+          </section>
+        }
+      </div>
+    }
+  </div>
+</div>

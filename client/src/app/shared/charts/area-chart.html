@@ -1,0 +1,69 @@
+<div class="chart-frame">
+  <svg [attr.viewBox]="viewBox" class="chart" role="img">
+    <defs>
+      <linearGradient id="area-wash" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" class="wash-top" />
+        <stop offset="1" class="wash-bottom" />
+      </linearGradient>
+    </defs>
+
+    @for (tick of ticks(); track tick.value) {
+      <line class="gridline" x1="42" [attr.x2]="chartWidth - 6"
+        [attr.y1]="tick.y" [attr.y2]="tick.y" />
+      <text class="axis-text" x="36" [attr.y]="tick.y + 3" text-anchor="end">
+        {{ format(tick.value) }}
+      </text>
+    }
+
+    @if (goalY(); as y) {
+      <line class="goal-line" x1="42" [attr.x2]="chartWidth - 6"
+        [attr.y1]="y" [attr.y2]="y" />
+      <text class="axis-text goal-text" [attr.x]="chartWidth - 8" [attr.y]="y - 4"
+        text-anchor="end">{{ 'Goal' | t }}</text>
+    }
+
+    @for (key of [renderKey()]; track key) {
+      @if (coords().length > 1) {
+        <path class="area-fill" [attr.d]="areaPath()" fill="url(#area-wash)" />
+        <path class="area-line" [attr.d]="linePath()" pathLength="1" />
+      }
+    }
+
+    @if (projectionEnd(); as end) {
+      <path class="area-line is-projection" [attr.d]="projectionPath()" pathLength="1" />
+      <circle class="area-dot is-projection" [attr.cx]="end.x" [attr.cy]="end.y" r="4" />
+      <text class="value-text is-peak" [attr.x]="end.x - 6" [attr.y]="end.y - 8"
+        text-anchor="end">{{ format(end.value) }}</text>
+    }
+
+    @for (point of coords(); track $index; let index = $index) {
+      @if (labelVisible(index)) {
+        <text class="axis-text" [attr.x]="point.x" [attr.y]="plotBottom + 14"
+          text-anchor="middle">{{ point.label }}</text>
+      }
+
+      @if (hovered() === index) {
+        <line class="crosshair" [attr.x1]="point.x" [attr.x2]="point.x"
+          y1="10" [attr.y2]="plotBottom" />
+        <circle class="area-dot" [attr.cx]="point.x" [attr.cy]="point.y" r="4.5" />
+      }
+
+      <rect class="hit" [attr.x]="point.x - slotWidth() / 2" y="0"
+        [attr.width]="slotWidth()" [attr.height]="plotBottom"
+        (pointerenter)="hovered.set(index)"
+        (pointerleave)="hovered.set(null)" />
+    }
+
+    @if (coords().length > 1) {
+      <circle class="area-dot is-end" [attr.cx]="coords()[coords().length - 1].x"
+        [attr.cy]="coords()[coords().length - 1].y" r="4.5" />
+    }
+  </svg>
+
+  @if (hovered() !== null && coords()[hovered()!]; as point) {
+    <div class="chart-tooltip" [style.left]="tooltipLeft(point.x)">
+      <strong>{{ point.label }}</strong>
+      <span>{{ format(point.value) }}</span>
+    </div>
+  }
+</div>

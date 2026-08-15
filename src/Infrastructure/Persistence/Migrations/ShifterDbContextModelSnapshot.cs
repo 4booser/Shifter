@@ -17,7 +17,7 @@ namespace Shifter.Src.Infrastructure.Persistence.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.10")
+                .HasAnnotation("ProductVersion", "10.0.11")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -46,7 +46,7 @@ namespace Shifter.Src.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("ShiftId");
 
-                    b.ToTable("Break");
+                    b.ToTable("Break", (string)null);
                 });
 
             modelBuilder.Entity("Shifter.Domain.Entities.Day", b =>
@@ -60,10 +60,16 @@ namespace Shifter.Src.Infrastructure.Persistence.Migrations
                     b.Property<DateOnly>("Date")
                         .HasColumnType("date");
 
+                    b.Property<decimal?>("Deductions")
+                        .HasColumnType("numeric");
+
                     b.Property<string>("Note")
                         .HasColumnType("text");
 
                     b.Property<decimal?>("Tips")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal?>("TipsCash")
                         .HasColumnType("numeric");
 
                     b.Property<int>("UserId")
@@ -74,7 +80,7 @@ namespace Shifter.Src.Infrastructure.Persistence.Migrations
                     b.HasIndex("UserId", "Date")
                         .IsUnique();
 
-                    b.ToTable("Days");
+                    b.ToTable("Days", (string)null);
                 });
 
             modelBuilder.Entity("Shifter.Domain.Entities.DaySale", b =>
@@ -107,7 +113,7 @@ namespace Shifter.Src.Infrastructure.Persistence.Migrations
                     b.HasIndex("DayId", "SalesId")
                         .IsUnique();
 
-                    b.ToTable("DaySales");
+                    b.ToTable("DaySales", (string)null);
                 });
 
             modelBuilder.Entity("Shifter.Domain.Entities.DayShift", b =>
@@ -149,7 +155,7 @@ namespace Shifter.Src.Infrastructure.Persistence.Migrations
                     b.HasIndex("DayId", "ShiftId")
                         .IsUnique();
 
-                    b.ToTable("DayShifts");
+                    b.ToTable("DayShifts", (string)null);
                 });
 
             modelBuilder.Entity("Shifter.Domain.Entities.Location", b =>
@@ -170,6 +176,9 @@ namespace Shifter.Src.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<decimal>("MealDeduction")
+                        .HasColumnType("numeric");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
@@ -189,6 +198,12 @@ namespace Shifter.Src.Infrastructure.Persistence.Migrations
                     b.Property<int>("PayPeriod")
                         .HasColumnType("integer");
 
+                    b.Property<decimal>("TipOutOfSalesPercent")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("TipOutOfTipsPercent")
+                        .HasColumnType("numeric");
+
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
 
@@ -196,7 +211,7 @@ namespace Shifter.Src.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Locations");
+                    b.ToTable("Locations", (string)null);
                 });
 
             modelBuilder.Entity("Shifter.Domain.Entities.Payout", b =>
@@ -229,7 +244,7 @@ namespace Shifter.Src.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("UserId", "PeriodFrom", "PeriodTo");
 
-                    b.ToTable("Payouts");
+                    b.ToTable("Payouts", (string)null);
                 });
 
             modelBuilder.Entity("Shifter.Domain.Entities.Sales", b =>
@@ -260,7 +275,7 @@ namespace Shifter.Src.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Sales");
+                    b.ToTable("Sales", (string)null);
                 });
 
             modelBuilder.Entity("Shifter.Domain.Entities.Shift", b =>
@@ -305,7 +320,7 @@ namespace Shifter.Src.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Shifts");
+                    b.ToTable("Shifts", (string)null);
                 });
 
             modelBuilder.Entity("Shifter.Domain.Entities.User", b =>
@@ -323,6 +338,9 @@ namespace Shifter.Src.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("GoogleSubject")
+                        .HasColumnType("text");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
@@ -336,16 +354,22 @@ namespace Shifter.Src.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<decimal?>("MonthlyGoal")
+                        .HasColumnType("numeric");
+
                     b.Property<string>("PasswordHash")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("GoogleSubject")
+                        .IsUnique()
+                        .HasFilter("\"GoogleSubject\" IS NOT NULL");
+
                     b.HasIndex("Login")
                         .IsUnique();
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("Shifter.Domain.Entities.Break", b =>

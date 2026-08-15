@@ -1,8 +1,8 @@
 <main class="auth-page">
   <form class="auth-card" [formGroup]="form" (ngSubmit)="submit()" novalidate>
     <header class="auth-header">
-      <h1>Sign in</h1>
-      <p>Welcome back to Shifter.</p>
+      <h1>{{ 'Sign in' | t }}</h1>
+      <p>{{ 'Welcome back to Shifter.' | t }}</p>
     </header>
 
     @if (error(); as text) {
@@ -23,7 +23,7 @@
     </label>
 
     <label class="field">
-      <span class="field-label">Password</span>
+      <span class="field-label">{{ 'Password' | t }}</span>
       <input
         type="password"
         formControlName="password"
@@ -34,12 +34,45 @@
       }
     </label>
 
+    @if (googleAvailable() !== null) {
+      <div class="google-block">
+        <div #googleButton class="google-button"></div>
+        <span class="or-line"><span>{{ 'or' | t }}</span></span>
+      </div>
+    }
+
     <button type="submit" class="submit" [disabled]="pending()">
-      {{ pending() ? 'Signing in…' : 'Sign in' }}
+      {{ (pending() ? 'Signing in…' : 'Sign in') | t }}
     </button>
 
     <p class="switch">
-      No account yet? <a routerLink="/register">Create one</a>
+      {{ 'No account yet?' | t }} <a routerLink="/register">{{ 'Create one' | t }}</a>
     </p>
   </form>
+
+  @if (needsName(); as credential) {
+    <div class="auth-card name-prompt">
+      <header class="auth-header">
+        <h1>{{ 'Almost there' | t }}</h1>
+        <p>{{ 'Google did not share a name — add one to finish.' | t }}</p>
+      </header>
+
+      <label class="field">
+        <span class="field-label">{{ 'First name' | t }}</span>
+        <input type="text" [ngModel]="firstName()" (ngModelChange)="firstName.set($event)"
+          [ngModelOptions]="{ standalone: true }" autocomplete="given-name" />
+      </label>
+
+      <label class="field">
+        <span class="field-label">{{ 'Last name' | t }}</span>
+        <input type="text" [ngModel]="lastName()" (ngModelChange)="lastName.set($event)"
+          [ngModelOptions]="{ standalone: true }" autocomplete="family-name" />
+      </label>
+
+      <button type="button" class="submit" [disabled]="firstName().trim() === ''"
+        (click)="submitName()">
+        {{ 'Continue' | t }}
+      </button>
+    </div>
+  }
 </main>

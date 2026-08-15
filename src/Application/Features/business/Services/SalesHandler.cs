@@ -84,6 +84,24 @@ public class SalesHandler : ISalesHandler
         return ToDto(sales);
     }
 
+    public async Task DeleteAsync(int userId, int id, CancellationToken ct)
+    {
+        Sales sales = await _shifterQuery.GetSalesItemAsync(userId, id, ct)
+            ?? throw new NotFoundException("Sales position does not exist.");
+
+        int used = await _shifterCommand.CountSalesUsageAsync(id, ct);
+
+        // The recorded days hold their own copy of the price, but the rows
+        // themselves would cascade away and take the earnings with them.
+        if (used > 0)
+        {
+            throw new ConflictException(
+                $"{used} recorded days use this position. Archive it instead.");
+        }
+
+        await _shifterCommand.DeleteSalesAsync(sales, ct);
+    }
+
     private static void Apply(SalesCreateDto request, Sales sales)
     {
         if (string.IsNullOrWhiteSpace(request.name))

@@ -35,6 +35,28 @@ public class ShifterCommand : IShifterCommand
         return await _db.SaveChangesAsync(ct) > 0;
     }
 
+    public async Task<int> CountShiftsAtLocationAsync(int locationId, CancellationToken ct)
+    {
+        return await _db.Shifts.CountAsync(shift => shift.LocationId == locationId, ct);
+    }
+
+    public async Task DeleteLocationAsync(Location location, CancellationToken ct)
+    {
+        _db.Locations.Remove(location);
+        await _db.SaveChangesAsync(ct);
+    }
+
+    public async Task<int> CountSalesUsageAsync(int salesId, CancellationToken ct)
+    {
+        return await _db.DaySales.CountAsync(entry => entry.SalesId == salesId, ct);
+    }
+
+    public async Task DeleteSalesAsync(Sales sales, CancellationToken ct)
+    {
+        _db.Sales.Remove(sales);
+        await _db.SaveChangesAsync(ct);
+    }
+
     public async Task<bool> AddPayoutAsync(Payout payout, CancellationToken ct)
     {
         await _db.Payouts.AddAsync(payout, ct);

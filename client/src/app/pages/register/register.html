@@ -1,8 +1,8 @@
 <main class="auth-page">
   <form class="auth-card" [formGroup]="form" (ngSubmit)="submit()" novalidate>
     <header class="auth-header">
-      <h1>Create account</h1>
-      <p>Set up your Shifter account.</p>
+      <h1>{{ 'Create account' | t }}</h1>
+      <p>{{ 'Set up your Shifter account.' | t }}</p>
     </header>
 
     @if (error(); as text) {
@@ -11,7 +11,7 @@
 
     <div class="field-row">
       <label class="field">
-        <span class="field-label">First name</span>
+        <span class="field-label">{{ 'First name' | t }}</span>
         <input type="text" formControlName="first_name" autocomplete="given-name" />
         @if (fieldError(form.controls.first_name, 'First name'); as text) {
           <small class="field-error">{{ text }}</small>
@@ -19,7 +19,7 @@
       </label>
 
       <label class="field">
-        <span class="field-label">Last name</span>
+        <span class="field-label">{{ 'Last name' | t }}</span>
         <input type="text" formControlName="last_name" autocomplete="family-name" />
         @if (fieldError(form.controls.last_name, 'Last name'); as text) {
           <small class="field-error">{{ text }}</small>
@@ -43,7 +43,7 @@
     </label>
 
     <label class="field">
-      <span class="field-label">Password</span>
+      <span class="field-label">{{ 'Password' | t }}</span>
       <input
         type="password"
         formControlName="password"
@@ -56,12 +56,14 @@
       }
     </label>
 
+    <p class="field-hint">{{ 'Or use the Google button on the sign-in page.' | t }}</p>
+
     <button type="submit" class="submit" [disabled]="pending()">
-      {{ pending() ? 'Creating…' : 'Create account' }}
+      {{ (pending() ? 'Creating…' : 'Create account') | t }}
     </button>
 
     <p class="switch">
-      Already registered? <a routerLink="/login">Sign in</a>
+      {{ 'Already registered?' | t }} <a routerLink="/login">{{ 'Sign in' | t }}</a>
     </p>
   </form>
 </main>

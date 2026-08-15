@@ -1,7 +1,23 @@
 <app-modal [open]="open()" title="Appearance" (closed)="close()">
   <div class="modal-form">
     <div class="field">
-      <span class="field-label">Theme</span>
+      <span class="field-label">{{ 'Language' | t }}</span>
+      <div class="segmented" role="group" aria-label="Language">
+        @for (lang of langs; track lang.value) {
+          <button
+            type="button"
+            class="segment"
+            [class.is-active]="settings().language === lang.value"
+            (click)="setLanguage(lang.value)"
+          >
+            {{ lang.label }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <div class="field">
+      <span class="field-label">{{ 'Theme' | t }}</span>
       <div class="segmented" role="group" aria-label="Theme">
         @for (theme of themes; track theme.value) {
           <button
@@ -10,14 +26,14 @@
             [class.is-active]="settings().theme === theme.value"
             (click)="setTheme(theme.value)"
           >
-            {{ theme.label }}
+            {{ theme.label | t }}
           </button>
         }
       </div>
     </div>
 
     <div class="field">
-      <span class="field-label">Accent</span>
+      <span class="field-label">{{ 'Accent' | t }}</span>
       <div class="swatch-row">
         @for (accent of accents; track accent.value) {
           <button
@@ -40,7 +56,7 @@
     </div>
 
     <div class="field">
-      <span class="field-label">Currency</span>
+      <span class="field-label">{{ 'Currency' | t }}</span>
       <div class="quick-row">
         @for (currency of currencies; track currency) {
           <button
@@ -55,12 +71,12 @@
       </div>
       <button type="button" class="toggle-row" (click)="toggleCurrencyBefore()">
         <span class="toggle" [class.is-on]="settings().currencyBefore"></span>
-        Symbol before the amount
+        {{ 'Symbol before the amount' | t }}
       </button>
     </div>
 
     <div class="field">
-      <span class="field-label">Default calendar view</span>
+      <span class="field-label">{{ 'Default calendar view' | t }}</span>
       <div class="segmented" role="group" aria-label="Calendar view">
         @for (view of views; track view.value) {
           <button
@@ -69,14 +85,14 @@
             [class.is-active]="settings().view === view.value"
             (click)="setView(view.value)"
           >
-            {{ view.label }}
+            {{ view.label | t }}
           </button>
         }
       </div>
     </div>
 
     <div class="field">
-      <span class="field-label">Density</span>
+      <span class="field-label">{{ 'Density' | t }}</span>
       <div class="segmented" role="group" aria-label="Density">
         @for (density of densities; track density.value) {
           <button
@@ -85,36 +101,36 @@
             [class.is-active]="settings().density === density.value"
             (click)="setDensity(density.value)"
           >
-            {{ density.label }}
+            {{ density.label | t }}
           </button>
         }
       </div>
     </div>
 
     <div class="field">
-      <span class="field-label">Calendar</span>
+      <span class="field-label">{{ 'Calendar' | t }}</span>
       <button type="button" class="toggle-row" (click)="toggleMondayFirst()">
         <span class="toggle" [class.is-on]="settings().mondayFirst"></span>
-        Week starts on Monday
+        {{ 'Week starts on Monday' | t }}
       </button>
       <button type="button" class="toggle-row" (click)="toggleEarnings()">
         <span class="toggle" [class.is-on]="settings().showEarningsInCells"></span>
-        Show earnings inside day cells
+        {{ 'Show earnings inside day cells' | t }}
       </button>
       <button type="button" class="toggle-row" (click)="toggle('showShiftNamesInCells')">
         <span class="toggle" [class.is-on]="settings().showShiftNamesInCells"></span>
-        Show shift names inside day cells
+        {{ 'Show shift names inside day cells' | t }}
       </button>
       <button type="button" class="toggle-row" (click)="toggle('highlightWeekends')">
         <span class="toggle" [class.is-on]="settings().highlightWeekends"></span>
-        Tint weekends
+        {{ 'Tint weekends' | t }}
       </button>
     </div>
 
     <div class="field">
-      <span class="field-label">Shape</span>
+      <span class="field-label">{{ 'Shape' | t }}</span>
       <label class="slider-row">
-        <span>Corners</span>
+        <span>{{ 'Corners' | t }}</span>
         <input
           type="range"
           min="0"
@@ -126,7 +142,19 @@
         <span class="slider-value">{{ settings().roundness }}px</span>
       </label>
       <label class="slider-row">
-        <span>Text size</span>
+        <span>{{ 'Animation' | t }}</span>
+        <input
+          type="range"
+          min="0"
+          max="2"
+          step="0.25"
+          [ngModel]="settings().motionSpeed"
+          (ngModelChange)="setMotion(+$event)"
+        />
+        <span class="slider-value">{{ settings().motionSpeed }}×</span>
+      </label>
+      <label class="slider-row">
+        <span>{{ 'Text size' | t }}</span>
         <input
           type="range"
           min="13"
@@ -140,20 +168,36 @@
     </div>
 
     <div class="field">
-      <span class="field-label">Behaviour</span>
+      <span class="field-label">{{ 'Behaviour' | t }}</span>
       <button type="button" class="toggle-row" (click)="toggle('confirmBulk')">
         <span class="toggle" [class.is-on]="settings().confirmBulk"></span>
-        Ask before filling a dragged range
+        {{ 'Ask before filling a dragged range' | t }}
+      </button>
+      <button type="button" class="toggle-row" (click)="toggle('hideAmounts')">
+        <span class="toggle" [class.is-on]="settings().hideAmounts"></span>
+        {{ 'Hide amounts' | t }}
+      </button>
+      <button type="button" class="toggle-row" (click)="toggle('glass')">
+        <span class="toggle" [class.is-on]="settings().glass"></span>
+        {{ 'Frosted cards' | t }}
+      </button>
+      <button type="button" class="toggle-row" (click)="toggle('compactSidebar')">
+        <span class="toggle" [class.is-on]="settings().compactSidebar"></span>
+        {{ 'Narrow sidebar' | t }}
+      </button>
+      <button type="button" class="toggle-row" (click)="toggle('remindUnclosed')">
+        <span class="toggle" [class.is-on]="settings().remindUnclosed"></span>
+        {{ 'Remind me to close days' | t }}
       </button>
       <button type="button" class="toggle-row" (click)="toggle('reduceMotion')">
         <span class="toggle" [class.is-on]="settings().reduceMotion"></span>
-        Reduce motion
+        {{ 'Reduce motion' | t }}
       </button>
     </div>
 
     <div class="modal-actions">
-      <button type="button" class="button is-quiet" (click)="reset()">Reset</button>
-      <button type="button" class="button is-primary" (click)="close()">Done</button>
+      <button type="button" class="button is-quiet" (click)="reset()">{{ 'Reset' | t }}</button>
+      <button type="button" class="button is-primary" (click)="close()">{{ 'Done' | t }}</button>
     </div>
   </div>
 </app-modal>

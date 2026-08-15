@@ -12,11 +12,15 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        var shifterDb = configuration.GetConnectionString("Shifter") 
-                        ?? throw new InvalidOperationException("Connection string 'Shifter' is missing.");
-        
+        // Credentials are not committed: outside development these arrive as
+        // ConnectionStrings__Shifter and ConnectionStrings__Tokens.
+        var shifterDb = configuration.GetConnectionString("Shifter")
+                        ?? throw new InvalidOperationException(
+                            "No 'Shifter' connection string. Set ConnectionStrings__Shifter.");
+
         var tokenDb = configuration.GetConnectionString("Tokens")
-                        ?? throw new InvalidOperationException("Connection string 'Tokens' is missing.");
+                        ?? throw new InvalidOperationException(
+                            "No 'Tokens' connection string. Set ConnectionStrings__Tokens.");
         
         services.AddDbContext<ShifterDbContext>(options =>
             options.UseNpgsql(shifterDb));

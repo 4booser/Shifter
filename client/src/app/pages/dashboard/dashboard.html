@@ -3,8 +3,28 @@
     <span class="brand">Shifter</span>
 
     @if (user(); as current) {
+      <span class="avatar" aria-hidden="true">{{ current.login.charAt(0) }}</span>
       <span class="who">{{ current.login }}</span>
     }
+
+    <button
+      type="button"
+      class="icon-button"
+      aria-label="Hide amounts"
+      (click)="togglePrivacy()"
+    >
+      <app-icon [name]="appearance.hideAmounts() ? 'eye-off' : 'eye'" [size]="15" />
+    </button>
+
+    <a routerLink="/wrapped" class="button is-quiet">
+      <app-icon name="trophy" />
+      {{ 'Your year' | t }}
+    </a>
+
+    <a routerLink="/stats" class="button is-quiet">
+      <app-icon name="chart" />
+      {{ 'Stats' | t }}
+    </a>
 
     <button
       type="button"
@@ -17,7 +37,7 @@
 
     <button type="button" class="button is-quiet" (click)="logout()">
       <app-icon name="logout" />
-      Sign out
+      {{ 'Sign out' | t }}
     </button>
   </header>
 
@@ -29,6 +49,21 @@
     <p class="alert shell-alert" role="alert">
       {{ text }}
       <button type="button" class="button is-quiet" (click)="dismiss()">Dismiss</button>
+    </p>
+  }
+
+  @if (remind() && unclosed().length > 0 && !dismissedReminder()) {
+    <p class="reminder shell-alert" role="status">
+      <app-icon name="clock" />
+      <span>
+        {{ unclosed().length }} {{ 'worked days have no tips or sales recorded' | t }}
+      </span>
+      <button type="button" class="button is-quiet" (click)="openUnclosed()">
+        {{ 'Open the oldest' | t }}
+      </button>
+      <button type="button" class="button is-quiet" (click)="dismissedReminder.set(true)">
+        {{ 'Dismiss' | t }}
+      </button>
     </p>
   }
 

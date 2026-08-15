@@ -1,4 +1,5 @@
 import { Component, computed, effect, inject, input, output } from '@angular/core';
+import { TPipe } from '../../../core/i18n/i18n';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { CalendarStore } from '../../../core/calendar/calendar-store';
@@ -20,12 +21,13 @@ const DEFAULTS = {
   end_time: '18:00',
   salary_period: 'hour' as SalaryPeriod,
   salary_amount: null as number | null,
+  break_minutes: 0,
   location_id: null as number | null,
 };
 
 @Component({
   selector: 'app-shift-modal',
-  imports: [ReactiveFormsModule, Modal],
+  imports: [TPipe, ReactiveFormsModule, Modal],
   templateUrl: './shift-modal.html',
 })
 export class ShiftModal {
@@ -57,6 +59,7 @@ export class ShiftModal {
     end_time: ['18:00', [Validators.required, Validators.pattern(TIME_PATTERN)]],
     salary_period: ['hour' as SalaryPeriod, [Validators.required]],
     salary_amount: [null as number | null, [Validators.min(0)]],
+    break_minutes: [0, [Validators.min(0), Validators.max(720)]],
     location_id: [null as number | null],
   });
 
@@ -78,6 +81,7 @@ export class ShiftModal {
               end_time: template.end_time,
               salary_period: template.salary_period,
               salary_amount: template.salary_amount,
+              break_minutes: template.break_minutes,
               location_id: template.location_id,
             },
       );
@@ -124,6 +128,7 @@ export class ShiftModal {
         end_time: value.end_time,
         salary_period: value.salary_period,
         salary_amount: value.salary_amount,
+        break_minutes: value.break_minutes,
         location_id: value.location_id,
       },
       this.editing()?.id ?? null,

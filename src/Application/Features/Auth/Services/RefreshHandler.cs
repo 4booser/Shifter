@@ -42,9 +42,32 @@ public class RefreshHandler : IRequestHandler<RefreshDto, AuthResponseDto>
 
         // Unknown and expired get the same answer: a caller probing for valid
         // tokens learns nothing from the difference.
-        if (stored is null || stored.ExpiresAt <= DateTime.UtcNow)
+        if (stored is null)
         {
-            _logger.LogWarning("Refresh attempted with an unusable token.");
+            _logger.LogWarning("Refresh attempted with an unknown token.");
+
+            throw new UnauthorizedException("Refresh token is invalid or expired.");
+        }
+
+        // A second use of a token that was already spent means the value
+        // reached someone it should not have: the legitimate client has one
+        // rotation ahead of it, so every session for this user is dropped and
+        // both parties are made to sign in again.
+        if (stored.RevokedAt is not null)
+        {
+            int killed = await _tokenCommand.RevokeAllAsync(stored.UserId, ct);
+
+            _logger.LogWarning(
+                "Refresh token replayed for user {UserId}; revoked {Count} sessions.",
+                stored.UserId,
+                killed);
+
+            throw new UnauthorizedException("Refresh token is invalid or expired.");
+        }
+
+        if (stored.ExpiresAt <= DateTime.UtcNow)
+        {
+            _logger.LogWarning("Refresh attempted with an expired token.");
 
             throw new UnauthorizedException("Refresh token is invalid or expired.");
         }
@@ -56,7 +79,7 @@ public class RefreshHandler : IRequestHandler<RefreshDto, AuthResponseDto>
 
         // Rotation: the presented token is spent before a new one is minted, so
         // a stolen copy stops working the moment the real client refreshes.
-        await _tokenCommand.DeleteAsync(stored, ct);
+        await _tokenCommand.RevokeAsync(stored, ct);
 
         _logger.LogInformation("User {UserId} refreshed their session.", user.Id);
 

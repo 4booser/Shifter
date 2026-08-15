@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Shifter.Domain.Entities;
 using Shifter.Infrastructure.Persistence.DbContexts;
 using Shifter.Infrastructure.Repositories.Interfaces;
@@ -21,5 +22,15 @@ public class UserCommand : IUserCommand
     {
         _db.Users.Remove(user);
         await _db.SaveChangesAsync(ct);
+    }
+
+    public async Task SaveAsync(CancellationToken ct)
+        => await _db.SaveChangesAsync(ct);
+
+    public async Task SetMonthlyGoalAsync(int userId, decimal? goal, CancellationToken ct)
+    {
+        await _db.Users
+            .Where(user => user.Id == userId)
+            .ExecuteUpdateAsync(set => set.SetProperty(user => user.MonthlyGoal, goal), ct);
     }
 }

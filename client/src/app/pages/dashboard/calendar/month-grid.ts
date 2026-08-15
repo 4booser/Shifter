@@ -1,17 +1,22 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { TPipe } from '../../../core/i18n/i18n';
 
 import {
   WEEKDAY_LABELS,
+  todayKey,
+  weekBounds,
+  keysBetween as allKeys,
   WEEKDAY_LABELS_SUNDAY,
   keysBetween,
 } from '../../../core/calendar/calendar-date';
 import { CalendarStore } from '../../../core/calendar/calendar-store';
 import { SettingsStore } from '../../../core/settings/settings-store';
 import { Icon } from '../../../shared/icon/icon';
+import { MoneyPipe } from '../../../shared/money/money-pipe';
 
 @Component({
   selector: 'app-month-grid',
-  imports: [Icon],
+  imports: [TPipe, Icon, MoneyPipe],
   templateUrl: './month-grid.html',
 })
 export class MonthGrid {
@@ -24,6 +29,17 @@ export class MonthGrid {
   protected readonly view = this.store.view;
   protected readonly yearMonths = this.store.yearMonths;
   protected readonly showEarnings = this.settings.showEarningsInCells;
+
+  /** What the current week has earned so far — the number checked most often. */
+  protected readonly weekEarned = computed(() => {
+    const { from, to } = weekBounds(todayKey());
+    const days = this.store.days();
+
+    return allKeys(from, to).reduce(
+      (total, key) => total + (days.get(key)?.earned ?? 0),
+      0,
+    );
+  });
 
   protected earned(key: string): number {
     return this.store.days().get(key)?.earned ?? 0;
@@ -96,6 +112,15 @@ export class MonthGrid {
     this.dragging.set(new Set());
 
     if (template === null || keys.length === 0) return;
+
+    // Opt-in guard: a stray drag over a month is easy to do by accident.
+    if (
+      keys.length > 1 &&
+      this.settings.confirmBulk() &&
+      !window.confirm(`Apply "${template.name}" to ${keys.length} days?`)
+    ) {
+      return;
+    }
 
     this.store.applyToDates(keys, template);
   }

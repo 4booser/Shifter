@@ -10,6 +10,16 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/dashboard/dashboard').then((m) => m.Dashboard),
   },
   {
+    path: 'stats',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/stats/stats').then((m) => m.Stats),
+  },
+  {
+    path: 'wrapped',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/wrapped/wrapped').then((m) => m.Wrapped),
+  },
+  {
     path: 'login',
     canActivate: [anonymousGuard],
     loadComponent: () => import('./pages/login/login').then((m) => m.Login),

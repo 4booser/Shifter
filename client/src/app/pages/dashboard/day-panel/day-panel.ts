@@ -1,10 +1,11 @@
-import { DecimalPipe } from '@angular/common';
+import { TPipe } from '../../../core/i18n/i18n';
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { formatDayLabel } from '../../../core/calendar/calendar-date';
 import { CalendarStore } from '../../../core/calendar/calendar-store';
 import { NOTE_MAX_LENGTH } from '../../../core/calendar/calendar.models';
+import { MoneyPipe } from '../../../shared/money/money-pipe';
 import { Icon } from '../../../shared/icon/icon';
 
 /** Round numbers people actually get tipped, so the keyboard stays shut. */
@@ -15,7 +16,7 @@ const QUANTITY_STEPS = [1, 3, 5, 10];
 
 @Component({
   selector: 'app-day-panel',
-  imports: [FormsModule, DecimalPipe, Icon],
+  imports: [TPipe, FormsModule, Icon, MoneyPipe],
   templateUrl: './day-panel.html',
 })
 export class DayPanel {
@@ -39,6 +40,10 @@ export class DayPanel {
   /** Draft state, so typing does not fire a request on every keystroke. */
   protected readonly quantities = signal<Record<number, number>>({});
   protected readonly tips = signal<number | null>(null);
+  /** The cash half of the tips; the card half is whatever is left. */
+  protected readonly tipsCash = signal<number | null>(null);
+  /** Fines, breakages, till shortfalls. */
+  protected readonly deductions = signal<number | null>(null);
   protected readonly note = signal<string>('');
 
   protected readonly shifts = computed(() => this.day()?.shifts ?? []);
@@ -84,6 +89,8 @@ export class DayPanel {
       JSON.stringify(currentWorked) !== JSON.stringify(savedWorked) ||
       JSON.stringify(current) !== JSON.stringify(savedQuantities) ||
       (this.tips() ?? null) !== (saved?.tips ?? null) ||
+      (this.tipsCash() ?? null) !== (saved?.tips_cash ?? null) ||
+      (this.deductions() ?? null) !== (saved?.deductions ?? null) ||
       this.note() !== (saved?.note ?? '')
     );
   });
@@ -114,6 +121,8 @@ export class DayPanel {
       this.quantities.set(quantities);
       this.worked.set(worked);
       this.tips.set(day?.tips ?? null);
+      this.tipsCash.set(day?.tips_cash ?? null);
+      this.deductions.set(day?.deductions ?? null);
       this.note.set(day?.note ?? '');
     });
 
@@ -170,7 +179,30 @@ export class DayPanel {
 
   protected clearTips(): void {
     this.tips.set(null);
+    this.tipsCash.set(null);
   }
+
+  protected bumpDeductions(by: number): void {
+    this.deductions.set((this.deductions() ?? 0) + by);
+  }
+
+  protected clearDeductions(): void {
+    this.deductions.set(null);
+  }
+
+  protected bumpCash(by: number): void {
+    const next = (this.tipsCash() ?? 0) + by;
+
+    this.tipsCash.set(next);
+
+    // Cash is part of the total, so raising it past the total lifts that too.
+    if (next > (this.tips() ?? 0)) this.tips.set(next);
+  }
+
+  /** Whatever was not taken in cash. */
+  protected readonly tipsCard = computed(() =>
+    Math.max(0, (this.tips() ?? 0) - (this.tipsCash() ?? 0)),
+  );
 
   protected save(): void {
     const key = this.store.selectedDate();
@@ -187,6 +219,8 @@ export class DayPanel {
         .map(([salesId, quantity]) => ({ sales_id: Number(salesId), quantity }))
         .filter((entry) => entry.quantity > 0),
       tips: this.tips(),
+      tips_cash: this.tipsCash(),
+      deductions: this.deductions(),
       note: this.note().trim() === '' ? null : this.note(),
     });
   }

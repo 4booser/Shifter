@@ -30,12 +30,18 @@
   --danger-surface: #fcf0ee;
 
   --ring: rgb(31 58 95 / 16%);
-  --shadow-sm: 0 1px 2px rgb(16 24 40 / 5%);
-  --shadow-md: 0 2px 4px rgb(16 24 40 / 5%), 0 8px 20px rgb(16 24 40 / 7%);
-  --shadow-lg: 0 8px 16px rgb(16 24 40 / 8%), 0 24px 56px rgb(16 24 40 / 14%);
+  /* Layered rather than one blur: a hairline ring reads as an edge, the near
+     shadow gives the lift, the far one grounds the card. */
+  --shadow-sm: 0 0 0 1px rgb(16 24 40 / 3%), 0 1px 2px rgb(16 24 40 / 6%);
+  --shadow-md:
+    0 0 0 1px rgb(16 24 40 / 3%), 0 2px 4px rgb(16 24 40 / 5%),
+    0 10px 24px rgb(16 24 40 / 9%);
+  --shadow-lg:
+    0 0 0 1px rgb(16 24 40 / 4%), 0 10px 20px rgb(16 24 40 / 10%),
+    0 30px 64px rgb(16 24 40 / 18%);
 
-  --radius: 10px;
-  --radius-lg: 14px;
+  --radius: 12px;
+  --radius-lg: 18px;
   --font-size: 15px;
 }
 
@@ -1598,4 +1604,2164 @@ body {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ==== Statistics ==== */
+
+.stats {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+@media (width <= 62rem) {
+  .kpi-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (width <= 42rem) {
+  .kpi-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding: 0.75rem 0.875rem;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.kpi-label {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+/* Proportional figures on purpose: tabular digits look loose at this size. */
+.kpi-value {
+  font-size: 1.25rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.kpi-value.is-hero {
+  font-size: 1.625rem;
+  color: var(--accent);
+}
+
+.kpi-hint {
+  color: var(--text-faint);
+  font-size: 0.75rem;
+}
+
+.chart-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.chart-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.chart-legend {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.legend-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3125rem;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.legend-swatch {
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 3px;
+  background: var(--accent);
+
+  &.is-planned {
+    background: color-mix(in srgb, var(--accent) 25%, var(--surface));
+  }
+}
+
+.chart-frame {
+  position: relative;
+}
+
+.chart {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Recessive scaffolding: hairline, solid, one step off the surface. */
+.gridline {
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.axis-text {
+  fill: var(--text-faint);
+  font-size: 10px;
+}
+
+.value-text {
+  fill: var(--text-muted);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.col {
+  fill: var(--accent);
+
+  &.is-hovered {
+    fill: var(--accent-hover);
+  }
+
+  &.is-planned {
+    fill: color-mix(in srgb, var(--accent) 25%, var(--surface));
+  }
+}
+
+.hit {
+  fill: transparent;
+}
+
+.chart-tooltip {
+  position: absolute;
+  top: 0;
+  transform: translate(-50%, -0.25rem);
+  display: flex;
+  flex-direction: column;
+  padding: 0.375rem 0.625rem;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  font-size: 0.75rem;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 2;
+}
+
+.tooltip-muted {
+  color: var(--text-muted);
+}
+
+.bars {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4375rem;
+}
+
+.bar-row {
+  display: grid;
+  grid-template-columns: 6rem minmax(0, 1fr) auto;
+  gap: 0.625rem;
+  align-items: center;
+}
+
+.bar-name {
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bar-track {
+  height: 0.875rem;
+  background: var(--surface-sunken);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  display: block;
+  height: 100%;
+  min-width: 2px;
+  background: var(--accent);
+  border-radius: 0 4px 4px 0;
+}
+
+.bar-value {
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.modal.is-wide {
+  width: min(46rem, calc(100vw - 2rem));
+}
+
+/* ==== Responsive ==== */
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  backdrop-filter: blur(8px);
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+}
+
+/* Drags must not scroll the page on touch screens, or pointerenter never
+   fires on the next cell and painting breaks. Scoped to painting mode so
+   normal scrolling over the calendar keeps working. */
+.day.is-painting {
+  touch-action: none;
+}
+
+/* Sunday-first moves the weekend to the edges of the row. */
+:root[data-weekstart="sun"][data-weekends="on"]
+  .calendar-grid
+  .day:nth-child(7n + 6),
+:root[data-weekstart="sun"][data-weekends="on"]
+  .calendar-grid
+  .day:nth-child(7n + 7) {
+  background: var(--surface-sunken);
+}
+
+:root[data-weekstart="sun"][data-weekends="on"]
+  .calendar-grid
+  .day:nth-child(7n + 1),
+:root[data-weekstart="sun"][data-weekends="on"]
+  .calendar-grid
+  .day:nth-child(7n) {
+  background: color-mix(in srgb, var(--accent) 4%, var(--surface-sunken));
+}
+
+@media (width <= 48rem) {
+  .dashboard {
+    gap: 0.75rem;
+    padding: 0.625rem 0.625rem 1.25rem;
+  }
+
+  /* The calendar is what a phone visit is for; tools drop below it. */
+  .dashboard app-month-grid {
+    order: -1;
+  }
+
+  .topbar {
+    padding: 0.5rem 0.75rem;
+  }
+
+  .calendar {
+    padding: 0.75rem;
+  }
+
+  .calendar-bar {
+    flex-wrap: wrap;
+  }
+
+  .calendar-title {
+    min-width: 0;
+    flex: 1 1 100%;
+  }
+
+  .view-switch {
+    margin-left: 0;
+  }
+
+  .day {
+    min-height: 2.75rem;
+    padding: 0.25rem;
+  }
+
+  /* Names don't fit a phone cell; symbol and hours carry the day. */
+  .day-shift-name,
+  .day-extra {
+    display: none;
+  }
+
+  .field-row {
+    grid-template-columns: 1fr;
+  }
+
+  .kpi-row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .bar-row {
+    grid-template-columns: 4.5rem minmax(0, 1fr) auto;
+  }
+
+  /* Modals become bottom sheets: reachable with a thumb, natural to dismiss. */
+  .modal,
+  .modal.is-wide {
+    width: 100vw;
+    max-width: 100vw;
+    margin: auto 0 0;
+    padding: 0;
+  }
+
+  .modal-card {
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    border-bottom: none;
+    max-height: 92dvh;
+    overflow-y: auto;
+  }
+}
+
+/* Fingers need bigger targets than cursors, whatever the screen width. */
+@media (pointer: coarse) {
+  .icon-button {
+    width: 2rem;
+    height: 2rem;
+  }
+
+  .icon-button.is-small {
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+
+  .quick,
+  .period-option,
+  .segment {
+    padding-top: 0.375rem;
+    padding-bottom: 0.375rem;
+  }
+
+  .row-actions {
+    opacity: 1;
+  }
+}
+
+/* ==== Stats page ==== */
+
+.stats-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 62rem;
+  width: 100%;
+  margin: 0 auto;
+  padding: 1rem 1.25rem 2rem;
+  box-sizing: border-box;
+  transition: opacity 150ms ease;
+
+  &.is-loading {
+    opacity: 0.6;
+  }
+}
+
+.card-lite {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.period-custom {
+  display: flex;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+.field.is-inline {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.375rem;
+
+  input {
+    width: auto;
+    padding: 0.3125rem 0.5rem;
+    font-size: 0.8125rem;
+  }
+}
+
+.stat-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  padding: 1rem 1.125rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 160ms ease, transform 160ms ease;
+
+  &:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+  }
+
+  &.is-empty {
+    align-items: center;
+    padding: 2.5rem 1rem;
+    color: var(--text-faint);
+  }
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  align-items: start;
+}
+
+.kpi-hint.is-short {
+  color: var(--danger);
+}
+
+/* ==== Heatmap ==== */
+
+.heatmap-frame {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.heatmap {
+  display: flex;
+  gap: 3px;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+}
+
+.heatmap-week {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: none;
+}
+
+/* A sequential ramp of the accent: one hue, light to dark, since the cell
+   encodes magnitude only. */
+.heatmap-cell {
+  width: 0.6875rem;
+  height: 0.6875rem;
+  border-radius: 3px;
+  background: var(--surface-sunken);
+  box-shadow: inset 0 0 0 1px var(--border);
+
+  &[data-level="1"] { background: color-mix(in srgb, var(--accent) 25%, var(--surface)); box-shadow: none; }
+  &[data-level="2"] { background: color-mix(in srgb, var(--accent) 45%, var(--surface)); box-shadow: none; }
+  &[data-level="3"] { background: color-mix(in srgb, var(--accent) 70%, var(--surface)); box-shadow: none; }
+  &[data-level="4"] { background: var(--accent); box-shadow: none; }
+
+  &.is-void {
+    background: transparent;
+    box-shadow: none;
+  }
+
+  &.is-hovered {
+    outline: 2px solid var(--text);
+    outline-offset: 1px;
+  }
+}
+
+.heatmap-legend {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  align-self: flex-end;
+  color: var(--text-faint);
+  font-size: 0.6875rem;
+
+  span:first-child { margin-right: 0.25rem; }
+  span:last-child { margin-left: 0.25rem; }
+}
+
+/* ==== Motion layer ==== */
+
+/* Bars grow into place; width is data, so the motion draws the eye to it. */
+.bar-fill {
+  transition: width 420ms cubic-bezier(0.25, 0.9, 0.3, 1);
+}
+
+.kpi,
+.stat-card {
+  animation: rise 240ms cubic-bezier(0.2, 0.8, 0.3, 1) backwards;
+}
+
+/* Staggered, but only the first handful: past that the delays read as lag. */
+.kpi:nth-child(2) { animation-delay: 40ms; }
+.kpi:nth-child(3) { animation-delay: 80ms; }
+.kpi:nth-child(4) { animation-delay: 120ms; }
+.kpi:nth-child(5) { animation-delay: 160ms; }
+.kpi:nth-child(6) { animation-delay: 200ms; }
+
+.palette li,
+.position-list li {
+  animation: rise 200ms ease backwards;
+}
+
+.palette li:nth-child(2),
+.position-list li:nth-child(2) { animation-delay: 30ms; }
+.palette li:nth-child(3),
+.position-list li:nth-child(3) { animation-delay: 60ms; }
+.palette li:nth-child(4),
+.position-list li:nth-child(4) { animation-delay: 90ms; }
+.palette li:nth-child(n + 5),
+.position-list li:nth-child(n + 5) { animation-delay: 120ms; }
+
+/* Cross-page morph: the shells fade-slide past each other. */
+::view-transition-old(root) {
+  animation: fade 180ms ease reverse;
+}
+
+::view-transition-new(root) {
+  animation: rise 220ms cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+
+/* ==== Topbar avatar ==== */
+
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 1.625rem;
+  height: 1.625rem;
+  margin-left: auto;
+  background: var(--accent-soft);
+  border-radius: 50%;
+  color: var(--accent);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.avatar + .who {
+  margin-left: 0;
+}
+
+@media (width <= 48rem) {
+  .stat-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .period-custom {
+    margin-left: 0;
+    flex-wrap: wrap;
+  }
+
+  .stats-page {
+    padding: 0.75rem 0.625rem 1.5rem;
+  }
+}
+
+/* ==== Goal meter ==== */
+
+.goal-card {
+  gap: 0.75rem;
+}
+
+.goal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.goal-edit {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  flex-wrap: wrap;
+}
+
+.goal-input {
+  width: 8rem;
+  padding: 0.375rem 0.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  color: inherit;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+
+  &:focus-visible {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--ring);
+  }
+}
+
+/* The unfilled track is a lighter step of the same ramp, so state reads
+   across the whole bar rather than only where the fill stops. */
+.meter {
+  height: 0.75rem;
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.meter-fill {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-hover), var(--accent));
+  border-radius: 999px;
+  transition: width 600ms cubic-bezier(0.25, 0.9, 0.3, 1);
+}
+
+.meter.is-reached .meter-fill {
+  background: linear-gradient(90deg, var(--positive), var(--positive));
+}
+
+.goal-legend {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.goal-now {
+  font-size: 1.125rem;
+  font-weight: 650;
+}
+
+.goal-of,
+.goal-left {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.goal-badge {
+  padding: 0.125rem 0.5rem;
+  background: color-mix(in srgb, var(--positive) 14%, var(--surface));
+  border-radius: 999px;
+  color: var(--positive);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* ==== Deltas ==== */
+
+.kpi-foot {
+  display: flex;
+  align-items: baseline;
+  gap: 0.375rem;
+  flex-wrap: wrap;
+}
+
+/* Up is good here — this is income, not latency. */
+.delta {
+  color: var(--positive);
+  font-size: 0.75rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+
+  &.is-down {
+    color: var(--danger);
+  }
+}
+
+/* ==== Area chart ==== */
+
+.area-line {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.wash-top {
+  stop-color: var(--accent);
+  stop-opacity: 0.18;
+}
+
+.wash-bottom {
+  stop-color: var(--accent);
+  stop-opacity: 0;
+}
+
+.area-dot {
+  fill: var(--accent);
+  /* The surface ring keeps the dot legible where it crosses the line. */
+  stroke: var(--surface);
+  stroke-width: 2;
+}
+
+.crosshair {
+  stroke: var(--border-strong);
+  stroke-width: 1;
+}
+
+.goal-line {
+  stroke: var(--positive);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 4;
+}
+
+.goal-text {
+  fill: var(--positive);
+  font-weight: 600;
+}
+
+/* ==== Overlap fixes ==== */
+
+/* Every bar that mixes a title, controls and navigation wraps instead of
+   letting its children collide at narrow widths. */
+.topbar,
+.calendar-bar,
+.block-head,
+.chart-head,
+.period-bar {
+  flex-wrap: wrap;
+  row-gap: 0.5rem;
+  min-width: 0;
+}
+
+.calendar-title,
+.brand,
+.block-title,
+.panel-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* The identity text is the first thing to give up room. */
+.who {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Icon + label pairs never break between the glyph and its word. */
+.button,
+.quick,
+.segment,
+.period-option,
+.worked-toggle,
+.legend-key,
+.toggle-row {
+  white-space: nowrap;
+}
+
+/* Groups of controls get their own row rather than squeezing the title. */
+.calendar-bar .view-switch {
+  order: 3;
+  flex: 1 1 auto;
+  min-width: 12rem;
+}
+
+.calendar-bar .nav {
+  flex: none;
+}
+
+.quick-row,
+.swatch-row,
+.emoji-row {
+  min-width: 0;
+}
+
+/* ==== Current-week chip ==== */
+
+.week-chip {
+  padding: 0.125rem 0.5rem;
+  background: var(--accent-soft);
+  border-radius: 999px;
+  color: var(--accent);
+  font-size: 0.6875rem;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+/* The peak keeps full weight; the rest recede so the caps stay scannable. */
+.value-text {
+  fill: var(--text-faint);
+  font-weight: 500;
+
+  &.is-peak {
+    fill: var(--text);
+    font-weight: 700;
+  }
+}
+
+/* ==== Bento grid ==== */
+
+/* Tiles of different weight on one 12-column field: the hero claims the room
+   the eye should land on first, the rest fill in around it. */
+.bento {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 1rem;
+  align-items: stretch;
+}
+
+.bento > * {
+  grid-column: span 4;
+  min-width: 0;
+}
+
+.bento-ring { grid-column: span 3; }
+.bento-streak { grid-column: span 3; }
+.bento-activity { grid-column: span 6; }
+
+.forecast-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+  gap: 1.25rem;
+  align-items: center;
+}
+
+.forecast-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.forecast-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3125rem;
+  margin: 0;
+  padding-left: 1.25rem;
+  border-left: 1px solid var(--border);
+}
+
+/* ==== Progress ring ==== */
+
+.ring-wrap {
+  position: relative;
+  display: grid;
+  place-items: center;
+  margin: 0 auto;
+}
+
+.ring {
+  width: 7.5rem;
+  height: 7.5rem;
+  /* Start the arc at twelve o'clock rather than three. */
+  transform: rotate(-90deg);
+}
+
+.ring-track {
+  fill: none;
+  stroke: color-mix(in srgb, var(--accent) 12%, var(--surface));
+}
+
+.ring-fill {
+  fill: none;
+  stroke: var(--accent);
+  stroke-linecap: round;
+  transition: stroke-dashoffset 700ms cubic-bezier(0.25, 0.9, 0.3, 1);
+
+  &.is-complete {
+    stroke: var(--positive);
+  }
+}
+
+.ring-centre {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.2;
+
+  strong {
+    font-size: 1.375rem;
+    font-weight: 700;
+  }
+
+  span {
+    color: var(--text-muted);
+    font-size: 0.6875rem;
+  }
+}
+
+/* ==== Streak ==== */
+
+.streak-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.streak-flame {
+  font-size: 1.75rem;
+  line-height: 1;
+  animation: flicker 2.4s ease-in-out infinite;
+}
+
+@keyframes flicker {
+  0%, 100% { transform: scale(1) rotate(-2deg); }
+  50% { transform: scale(1.08) rotate(2deg); }
+}
+
+.streak-value {
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.streak-unit {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+/* ==== Activity feed ==== */
+
+.activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.activity-row {
+  display: grid;
+  grid-template-columns: 3rem minmax(0, 1fr) auto;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.25rem 0.375rem;
+  border-radius: 8px;
+  transition: background-color 130ms ease;
+
+  &:hover {
+    background: var(--surface-sunken);
+  }
+}
+
+.activity-date {
+  color: var(--text-faint);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.activity-shifts {
+  display: flex;
+  gap: 0.1875rem;
+  flex-wrap: wrap;
+}
+
+.activity-chip {
+  padding: 0.0625rem 0.3125rem;
+  background: var(--mark-colour, var(--accent));
+  border-radius: 5px;
+  color: var(--on-accent);
+  font-size: 0.6875rem;
+  font-weight: 600;
+
+  &.is-planned {
+    background: transparent;
+    border: 1px dashed var(--mark-colour, var(--accent));
+    color: var(--mark-colour, var(--accent));
+  }
+}
+
+.activity-value {
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==== Projection ==== */
+
+/* Dashed and lighter: a forecast must never look like a recorded fact. */
+.area-line.is-projection {
+  stroke: var(--accent);
+  stroke-dasharray: 5 4;
+  opacity: 0.7;
+}
+
+.area-dot.is-projection {
+  fill: var(--surface);
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+
+/* ==== Motion, everywhere ==== */
+
+/* The line draws itself in: the eye follows the growth rather than finding a
+   finished shape already sitting there. */
+/* The paths carry pathLength="1", so one unit is the whole line whatever its
+   real length. */
+@keyframes draw {
+  from { stroke-dashoffset: 1; }
+  to { stroke-dashoffset: 0; }
+}
+
+.area-line {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: draw 1100ms cubic-bezier(0.3, 0.8, 0.3, 1) forwards;
+}
+
+.area-line.is-projection {
+  stroke-dasharray: 0.012 0.01;
+  stroke-dashoffset: 0;
+  animation: fade 700ms 600ms ease backwards;
+}
+
+.area-fill {
+  animation: fade 700ms 200ms ease backwards;
+}
+
+/* Columns rise from the baseline in a short cascade. */
+@keyframes grow {
+  from { transform: scaleY(0); }
+}
+
+/* transform-box is what makes transform-origin mean "this shape" rather than
+   "the whole SVG viewport" — without it the columns scaled from the canvas
+   corner and the growth was invisible. */
+.col {
+  transform-box: fill-box;
+  transform-origin: center bottom;
+  animation: grow 520ms cubic-bezier(0.22, 0.9, 0.28, 1) backwards;
+}
+
+.col:nth-of-type(1) { animation-delay: 0ms; }
+.col:nth-of-type(2) { animation-delay: 25ms; }
+.col:nth-of-type(3) { animation-delay: 50ms; }
+.col:nth-of-type(4) { animation-delay: 75ms; }
+.col:nth-of-type(5) { animation-delay: 100ms; }
+.col:nth-of-type(6) { animation-delay: 125ms; }
+.col:nth-of-type(7) { animation-delay: 150ms; }
+.col:nth-of-type(8) { animation-delay: 175ms; }
+.col:nth-of-type(n + 9) { animation-delay: 200ms; }
+
+/* Heatmap cells fade in as a wave across the year. */
+.heatmap-week {
+  animation: fade 320ms ease backwards;
+}
+
+.heatmap-week:nth-child(4n) { animation-delay: 40ms; }
+.heatmap-week:nth-child(4n + 1) { animation-delay: 80ms; }
+.heatmap-week:nth-child(4n + 2) { animation-delay: 120ms; }
+
+.heatmap-cell {
+  transform-origin: center;
+  transition: transform 120ms ease, background-color 200ms ease;
+
+  &:hover {
+    transform: scale(1.35);
+  }
+}
+
+/* Bento tiles stagger in. */
+.bento > *:nth-child(1) { animation-delay: 0ms; }
+.bento > *:nth-child(2) { animation-delay: 60ms; }
+.bento > *:nth-child(3) { animation-delay: 120ms; }
+
+.forecast-card {
+  animation: rise 260ms cubic-bezier(0.2, 0.8, 0.3, 1) backwards;
+}
+
+/* Period chips settle when picked. */
+.quick.is-active,
+.period-option.is-active,
+.segment.is-active {
+  animation: pop 200ms cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+
+/* Day cells lift under the cursor; the selected one stays raised. */
+.day:hover {
+  transform: translateY(-1px);
+}
+
+.day.is-selected {
+  animation: pop 180ms cubic-bezier(0.2, 0.9, 0.3, 1.15);
+}
+
+/* Rows in the sidebar and lists slide as they arrive. */
+.shift-row,
+.sold-block,
+.activity-row {
+  animation: rise 200ms ease backwards;
+}
+
+.activity-row:nth-child(2) { animation-delay: 40ms; }
+.activity-row:nth-child(3) { animation-delay: 80ms; }
+.activity-row:nth-child(4) { animation-delay: 120ms; }
+.activity-row:nth-child(n + 5) { animation-delay: 160ms; }
+
+/* Icons nudge on their button's hover. */
+.button:hover .icon,
+.icon-button:hover .icon {
+  transform: scale(1.1);
+}
+
+.icon {
+  transition: transform 140ms cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+
+/* Toggle knob eases across instead of jumping. */
+.toggle::after {
+  transition: transform 200ms cubic-bezier(0.2, 0.9, 0.3, 1.3);
+}
+
+/* The whole stats page settles in when the route lands. */
+.stats-page > * {
+  animation: rise 300ms cubic-bezier(0.2, 0.8, 0.3, 1) backwards;
+}
+
+.stats-page > *:nth-child(2) { animation-delay: 50ms; }
+.stats-page > *:nth-child(3) { animation-delay: 100ms; }
+.stats-page > *:nth-child(4) { animation-delay: 150ms; }
+.stats-page > *:nth-child(n + 5) { animation-delay: 200ms; }
+
+/* ==== More overlap guards ==== */
+
+/* Anything holding a figure beside a label wraps rather than colliding. */
+.summary-row,
+.goal-legend,
+.kpi-foot,
+.forecast-rows .summary-row {
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.summary-row dt,
+.summary-row dd {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.bar-value,
+.activity-value,
+.position-rate {
+  white-space: nowrap;
+}
+
+.kpi-value,
+.streak-value,
+.goal-now {
+  overflow-wrap: anywhere;
+}
+
+@media (width <= 68rem) {
+  .bento > *,
+  .bento-ring,
+  .bento-streak,
+  .bento-activity {
+    grid-column: span 6;
+  }
+}
+
+@media (width <= 48rem) {
+  .bento > *,
+  .bento-ring,
+  .bento-streak,
+  .bento-activity {
+    grid-column: span 12;
+  }
+
+  .forecast-card {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .forecast-rows {
+    padding-left: 0;
+    padding-top: 0.75rem;
+    border-left: none;
+    border-top: 1px solid var(--border);
+  }
+}
+
+/* ==== Comparison table ==== */
+
+.compare-scroll {
+  overflow-x: auto;
+}
+
+.compare {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  white-space: nowrap;
+}
+
+.compare th,
+.compare td {
+  padding: 0.5rem 0.625rem;
+  text-align: right;
+  border-bottom: 1px solid var(--border);
+}
+
+.compare thead th {
+  color: var(--text-faint);
+  font-size: 0.6875rem;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.compare th:first-child,
+.compare tbody th {
+  display: table-cell;
+  text-align: left;
+  font-weight: 550;
+}
+
+.compare tbody th {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.compare tbody tr {
+  transition: background-color 130ms ease;
+}
+
+.compare tbody tr:hover {
+  background: var(--surface-sunken);
+}
+
+.compare td {
+  font-variant-numeric: tabular-nums;
+}
+
+/* The strongest cell in each column, so the comparison reads without maths. */
+.compare td.is-best {
+  color: var(--positive);
+  font-weight: 650;
+}
+
+.compare td.is-short {
+  color: var(--danger);
+}
+
+.export-row {
+  display: flex;
+  gap: 0.375rem;
+  flex-wrap: wrap;
+}
+
+/* ==== Cash / card split ==== */
+
+.split-row {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  margin-top: 0.375rem;
+  flex-wrap: wrap;
+}
+
+.split-row .field.is-inline input {
+  width: 5.5rem;
+}
+
+.split-rest {
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==== Close-the-day reminder ==== */
+
+.reminder {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  flex-wrap: wrap;
+  margin: 1rem 1.25rem 0;
+  padding: 0.625rem 0.875rem;
+  background: color-mix(in srgb, var(--accent) 7%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
+  border-radius: var(--radius);
+  font-size: 0.875rem;
+  animation: rise 200ms ease;
+
+  .icon {
+    color: var(--accent);
+  }
+
+  span {
+    flex: 1;
+    min-width: 8rem;
+  }
+}
+
+/* Money leaving the total reads red wherever it appears. */
+.summary-row dd.is-negative,
+.kpi-value.is-short {
+  color: var(--danger);
+}
+
+/* ==== Google sign-in ==== */
+
+.google-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.google-button {
+  display: flex;
+  justify-content: center;
+  min-height: 2.5rem;
+}
+
+/* A rule with the word sitting in a gap, rather than a line drawn twice. */
+.or-line {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--text-faint);
+  font-size: 0.8125rem;
+
+  &::before,
+  &::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+}
+
+.name-prompt {
+  margin-top: 1rem;
+  animation: rise 220ms cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+
+.icon-button.is-danger:hover {
+  background: var(--danger-surface);
+  color: var(--danger);
+}
+
+/* ==== Year in review ==== */
+
+.wrapped-shell {
+  background:
+    radial-gradient(
+      70rem 40rem at 20% -10%,
+      color-mix(in srgb, var(--accent) 14%, transparent),
+      transparent 70%
+    ),
+    var(--ground);
+}
+
+.wrapped {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  max-width: 62rem;
+  width: 100%;
+  margin: 0 auto;
+  padding: 2rem 1.25rem 3rem;
+  box-sizing: border-box;
+  transition: opacity 200ms ease;
+
+  &.is-loading {
+    opacity: 0.5;
+  }
+}
+
+.year-switch {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+
+.wrap-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.125rem;
+  padding: 2.5rem 1rem;
+  text-align: center;
+  animation: rise 400ms cubic-bezier(0.2, 0.8, 0.3, 1) backwards;
+}
+
+.wrap-label {
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* Deliberately oversized: this is the one number the page is built around. */
+.wrap-number {
+  background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-size: clamp(3.5rem, 12vw, 6.5rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  animation: pop 600ms cubic-bezier(0.2, 0.9, 0.3, 1.1) 120ms backwards;
+}
+
+.wrap-unit {
+  font-size: 1.375rem;
+  font-weight: 650;
+}
+
+.wrap-sub {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.wrap-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.wrap-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition: transform 200ms cubic-bezier(0.2, 0.8, 0.3, 1), box-shadow 200ms ease;
+  animation: rise 320ms cubic-bezier(0.2, 0.8, 0.3, 1) backwards;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+  }
+
+  /* Tinted by the place's own colour where one applies. */
+  &[style*="--wrap-tint"] {
+    border-color: color-mix(in srgb, var(--wrap-tint) 40%, var(--border));
+  }
+
+  &.is-feature {
+    grid-column: span 2;
+    background: linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--accent) 10%, var(--surface)),
+      var(--surface)
+    );
+  }
+}
+
+.wrap-card:nth-child(1) { animation-delay: 60ms; }
+.wrap-card:nth-child(2) { animation-delay: 120ms; }
+.wrap-card:nth-child(3) { animation-delay: 180ms; }
+.wrap-card:nth-child(4) { animation-delay: 240ms; }
+.wrap-card:nth-child(5) { animation-delay: 300ms; }
+.wrap-card:nth-child(6) { animation-delay: 360ms; }
+.wrap-card:nth-child(n + 7) { animation-delay: 420ms; }
+
+.wrap-badge {
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  margin: 0.375rem 0;
+  background: var(--accent);
+  border-radius: 14px;
+  color: var(--on-accent);
+  font-size: 1.5rem;
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", system-ui, sans-serif;
+}
+
+.wrap-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  overflow-wrap: anywhere;
+
+  &.is-money {
+    color: var(--accent);
+  }
+}
+
+.wrap-foot {
+  text-align: center;
+}
+
+@media (width <= 62rem) {
+  .wrap-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (width <= 42rem) {
+  .wrap-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .wrap-card.is-feature {
+    grid-column: span 1;
+  }
+}
+
+/* ==== Motion speed ==== */
+
+:root {
+  --motion: 1;
+}
+
+/* Animation-heavy elements read the multiplier, so one slider tunes the feel
+   of the whole app instead of each rule being edited separately. */
+.kpi,
+.stat-card,
+.wrap-card,
+.col,
+.area-line,
+.bento > *,
+.activity-row,
+.palette li,
+.position-list li {
+  animation-duration: calc(var(--anim-base, 300ms) * var(--motion));
+}
+
+.col { --anim-base: 520ms; }
+.area-line { --anim-base: 1100ms; }
+.wrap-card { --anim-base: 320ms; }
+
+/* ==== Frosted cards ==== */
+
+:root[data-glass="on"] {
+  .sidebar,
+  .calendar,
+  .day-panel,
+  .stat-card,
+  .wrap-card,
+  .card-lite,
+  .modal-card {
+    background: color-mix(in srgb, var(--surface) 78%, transparent);
+    backdrop-filter: blur(14px) saturate(1.4);
+  }
+}
+
+/* ==== Narrow sidebar ==== */
+
+:root[data-sidebar="compact"] .dashboard {
+  grid-template-columns: 12.5rem minmax(0, 1fr) 17rem;
+}
+
+@media (width <= 68rem) {
+  :root[data-sidebar="compact"] .dashboard {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ==== Final overlap guards ==== */
+
+/* Row actions used to sit on top of a long name; the name now yields first. */
+.palette-row {
+  min-width: 0;
+}
+
+.palette-row .palette-name,
+.palette-row .position-item {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.row-actions {
+  flex: none;
+}
+
+/* Top bars carry a growing number of buttons; they wrap and the identity
+   text is the first thing allowed to shrink. */
+.topbar > * {
+  flex: none;
+}
+
+.topbar .who {
+  flex: 0 1 auto;
+}
+
+.topbar .brand {
+  flex: 0 1 auto;
+}
+
+.year-switch {
+  flex: none;
+}
+
+/* Sliders: the label column can no longer squash the value out of view. */
+.slider-row {
+  grid-template-columns: minmax(4.5rem, 6rem) minmax(0, 1fr) 3.5rem;
+}
+
+/* Modal actions stack rather than overflow on a narrow sheet. */
+@media (width <= 30rem) {
+  .modal-actions {
+    flex-direction: column-reverse;
+
+    .button {
+      width: 100%;
+    }
+  }
+
+  .goal-edit {
+    width: 100%;
+
+    .goal-input {
+      flex: 1;
+      width: auto;
+    }
+  }
+}
+
+/* ==== Metric tints ====
+   Eight hues, validated for colour-vision deficiency against both surfaces
+   (adjacent-pair ΔE >= 8 deutan, contrast >= 3:1). Every tinted tile also
+   carries its own label, so the colour is decoration on top of text and never
+   the only thing carrying meaning. */
+
+:root {
+  --tint-teal: #0d9488;
+  --tint-rose: #e11d48;
+  --tint-amber: #d97706;
+  --tint-indigo: #4f46e5;
+  --tint-green: #16a34a;
+  --tint-violet: #9333ea;
+  --tint-orange: #ea580c;
+  --tint-cyan: #0284c7;
+}
+
+@mixin dark-tints {
+  /* Indigo is the one step that loses contrast on the dark surface. */
+  --tint-indigo: #6366f1;
+}
+
+:root[data-theme="dark"] {
+  @include dark-tints;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    @include dark-tints;
+  }
+}
+
+.tint-teal { --wrap-tint: var(--tint-teal); }
+.tint-rose { --wrap-tint: var(--tint-rose); }
+.tint-amber { --wrap-tint: var(--tint-amber); }
+.tint-indigo { --wrap-tint: var(--tint-indigo); }
+.tint-green { --wrap-tint: var(--tint-green); }
+.tint-violet { --wrap-tint: var(--tint-violet); }
+.tint-orange { --wrap-tint: var(--tint-orange); }
+.tint-cyan { --wrap-tint: var(--tint-cyan); }
+
+/* ==== Change arrows ==== */
+
+.delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.1875rem;
+  flex: none;
+  padding: 0.125rem 0.375rem;
+  border-radius: 999px;
+  color: var(--text-faint);
+  background: var(--surface-sunken);
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.35;
+  white-space: nowrap;
+  animation: deltaIn calc(360ms * var(--motion)) cubic-bezier(0.2, 0.9, 0.3, 1.2) backwards;
+
+  &.is-up {
+    color: var(--tint-green);
+    background: color-mix(in srgb, var(--tint-green) 12%, transparent);
+  }
+
+  &.is-down {
+    color: var(--tint-rose);
+    background: color-mix(in srgb, var(--tint-rose) 12%, transparent);
+  }
+
+  app-icon {
+    display: inline-flex;
+    /* The arrow leads the number in by a beat, so the direction registers. */
+    animation: arrowIn calc(420ms * var(--motion)) cubic-bezier(0.2, 0.9, 0.3, 1.3) backwards;
+  }
+
+  &.is-down app-icon {
+    animation-name: arrowInDown;
+  }
+}
+
+.delta-flat {
+  opacity: 0.6;
+}
+
+@keyframes deltaIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+}
+
+@keyframes arrowIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+@keyframes arrowInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+/* ==== Year in review ==== */
+
+.wrap-tier {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  padding: 0.375rem 0.875rem 0.375rem 0.5rem;
+  border: 1px solid color-mix(in srgb, var(--tint-amber) 35%, var(--border));
+  border-radius: 999px;
+  /* A slow sheen travelling across the badge — the one thing on the page that
+     never stops moving, which is what makes it read as an award. */
+  background:
+    linear-gradient(
+      110deg,
+      transparent 30%,
+      color-mix(in srgb, var(--tint-amber) 18%, transparent) 50%,
+      transparent 70%
+    ),
+    color-mix(in srgb, var(--tint-amber) 8%, var(--surface));
+  background-size: 250% 100%, auto;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  animation: sheen calc(4s * var(--motion)) linear infinite;
+}
+
+.wrap-tier-emoji {
+  font-size: 1.125rem;
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", system-ui, sans-serif;
+}
+
+@keyframes sheen {
+  from { background-position: 250% 0, 0 0; }
+  to { background-position: -150% 0, 0 0; }
+}
+
+/* The headline number cycles the full tint set rather than one accent. */
+.wrap-number {
+  background: linear-gradient(
+    100deg,
+    var(--tint-indigo),
+    var(--tint-violet),
+    var(--tint-rose),
+    var(--tint-orange),
+    var(--tint-amber),
+    var(--tint-green),
+    var(--tint-teal),
+    var(--tint-indigo)
+  );
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation:
+    pop calc(600ms * var(--motion)) cubic-bezier(0.2, 0.9, 0.3, 1.1) backwards,
+    drift calc(12s * var(--motion)) linear infinite;
+}
+
+@keyframes drift {
+  from { background-position: 0 0; }
+  to { background-position: 300% 0; }
+}
+
+.wrap-vs {
+  color: var(--text-faint);
+}
+
+.wrap-sub {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* ==== Twelve months, one strip ==== */
+
+.wrap-months {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.375rem;
+  height: 4.5rem;
+  margin-top: 1.75rem;
+  padding: 0 0.5rem;
+}
+
+.wrap-month {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.375rem;
+  justify-content: flex-end;
+  width: 1.75rem;
+  height: 100%;
+}
+
+.wrap-month-bar {
+  width: 100%;
+  min-height: 2px;
+  border-radius: 4px 4px 2px 2px;
+  background: linear-gradient(
+    to top,
+    color-mix(in srgb, var(--tint-indigo) 35%, transparent),
+    var(--tint-indigo)
+  );
+  transform-origin: bottom;
+  animation: grow calc(700ms * var(--motion)) cubic-bezier(0.2, 0.8, 0.3, 1) backwards;
+  transition: filter 150ms ease;
+}
+
+.wrap-month.is-peak .wrap-month-bar {
+  background: linear-gradient(
+    to top,
+    color-mix(in srgb, var(--tint-amber) 40%, transparent),
+    var(--tint-amber)
+  );
+  box-shadow: 0 0 12px color-mix(in srgb, var(--tint-amber) 45%, transparent);
+}
+
+.wrap-month:hover .wrap-month-bar {
+  filter: brightness(1.15);
+}
+
+.wrap-month-name {
+  color: var(--text-faint);
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+@for $i from 1 through 12 {
+  .wrap-month:nth-child(#{$i}) .wrap-month-bar {
+    animation-delay: calc(#{$i * 45}ms * var(--motion));
+  }
+}
+
+/* ==== The forecast band ==== */
+
+.wrap-band {
+  padding: 1.5rem;
+  border: 1px solid color-mix(in srgb, var(--tint-indigo) 25%, var(--border));
+  border-radius: var(--radius-lg);
+  background:
+    radial-gradient(
+      40rem 20rem at 10% 0%,
+      color-mix(in srgb, var(--tint-violet) 10%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      36rem 18rem at 90% 100%,
+      color-mix(in srgb, var(--tint-cyan) 10%, transparent),
+      transparent 70%
+    ),
+    var(--surface);
+  box-shadow: var(--shadow-sm);
+  animation: rise calc(420ms * var(--motion)) cubic-bezier(0.2, 0.8, 0.3, 1) 200ms backwards;
+}
+
+.wrap-band-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+  color: var(--tint-indigo);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+
+  app-icon {
+    /* A slow breathing pulse: the only hint that this half is a guess. */
+    animation: breathe calc(2.6s * var(--motion)) ease-in-out infinite;
+  }
+}
+
+@keyframes breathe {
+  0%, 100% { opacity: 0.55; transform: scale(0.92); }
+  50% { opacity: 1; transform: scale(1.08); }
+}
+
+.wrap-band-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.wrap-figure {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1875rem;
+  min-width: 0;
+  animation: rise calc(360ms * var(--motion)) cubic-bezier(0.2, 0.8, 0.3, 1) backwards;
+
+  .wrap-sub {
+    justify-content: flex-start;
+  }
+}
+
+.wrap-figure:nth-child(1) { animation-delay: calc(260ms * var(--motion)); }
+.wrap-figure:nth-child(2) { animation-delay: calc(320ms * var(--motion)); }
+.wrap-figure:nth-child(3) { animation-delay: calc(380ms * var(--motion)); }
+.wrap-figure:nth-child(4) { animation-delay: calc(440ms * var(--motion)); }
+
+.wrap-figure-value {
+  font-size: 1.5rem;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.wrap-heading {
+  margin: 1.25rem 0 0;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.wrap-grid.is-tight {
+  gap: 0.75rem;
+}
+
+/* ==== Tinted cards ==== */
+
+.wrap-card {
+  position: relative;
+  overflow: hidden;
+
+  /* A soft wash of the tile's own hue, and a bar down the leading edge so the
+     colour is legible even where the wash is nearly white. */
+  &[style*="--wrap-tint"],
+  &[class*="tint-"] {
+    border-color: color-mix(in srgb, var(--wrap-tint) 30%, var(--border));
+    background:
+      linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--wrap-tint) 9%, transparent),
+        transparent 60%
+      ),
+      var(--surface);
+
+    &::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 3px;
+      background: var(--wrap-tint);
+      transform: scaleY(0);
+      transform-origin: top;
+      animation: grow calc(500ms * var(--motion)) cubic-bezier(0.2, 0.8, 0.3, 1) 200ms forwards;
+    }
+
+    .wrap-label {
+      color: color-mix(in srgb, var(--wrap-tint) 70%, var(--text-muted));
+    }
+
+    .wrap-badge {
+      background: var(--wrap-tint);
+    }
+
+    &:hover {
+      box-shadow:
+        var(--shadow-md),
+        0 12px 28px color-mix(in srgb, var(--wrap-tint) 18%, transparent);
+    }
+  }
+
+  .wrap-title.is-money {
+    color: var(--wrap-tint, var(--accent));
+  }
+}
+
+.wrap-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3125rem;
+}
+
+.wrap-title small {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+/* Value on the left, arrow on the right, never stacked on top of each other. */
+.wrap-foot-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.25rem;
+}
+
+@media (width <= 62rem) {
+  .wrap-band-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (width <= 42rem) {
+  .wrap-months {
+    gap: 0.25rem;
+  }
+
+  .wrap-month {
+    width: auto;
+    flex: 1;
+  }
+
+  .wrap-band-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ==== Averages strip ==== */
+
+.avg-row {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 0.75rem 0 0.5rem;
+}
+
+.avg {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+  min-width: 0;
+  padding: 0.75rem 0.875rem;
+  border-radius: var(--radius);
+  border: 1px solid color-mix(in srgb, var(--wrap-tint) 25%, var(--border));
+  background: color-mix(in srgb, var(--wrap-tint) 7%, var(--surface));
+  animation: rise calc(320ms * var(--motion)) cubic-bezier(0.2, 0.8, 0.3, 1) backwards;
+  transition: transform 180ms cubic-bezier(0.2, 0.8, 0.3, 1);
+
+  &:hover {
+    transform: translateY(-2px);
+  }
+
+  .kpi-label {
+    color: color-mix(in srgb, var(--wrap-tint) 70%, var(--text-muted));
+  }
+}
+
+.avg:nth-child(1) { animation-delay: calc(40ms * var(--motion)); }
+.avg:nth-child(2) { animation-delay: calc(80ms * var(--motion)); }
+.avg:nth-child(3) { animation-delay: calc(120ms * var(--motion)); }
+.avg:nth-child(4) { animation-delay: calc(160ms * var(--motion)); }
+.avg:nth-child(5) { animation-delay: calc(200ms * var(--motion)); }
+.avg:nth-child(6) { animation-delay: calc(240ms * var(--motion)); }
+
+.avg-value {
+  font-size: 1.125rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+}
+
+@media (width <= 68rem) {
+  .avg-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (width <= 38rem) {
+  .avg-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Two averages under the sidebar totals; the arrow sits on its own line so a
+   long amount never collides with it. */
+.avg-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin: 0.75rem 0 0.25rem;
+}
+
+.summary-row dd {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+/* ==== Colour in the totals ====
+   A small tinted dot beside each line: the summary reads as a legend rather
+   than a wall of grey, and the label beside it still carries the meaning. */
+
+.summary-row[class*="tint-"] dt::before {
+  content: "";
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 0.5rem;
+  border-radius: 50%;
+  background: var(--wrap-tint);
+  vertical-align: 0.05em;
+  /* Grows into place with the row, so the eye catches the colour arriving. */
+  animation: dotIn calc(320ms * var(--motion)) cubic-bezier(0.2, 0.9, 0.3, 1.4) backwards;
+}
+
+@keyframes dotIn {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+}
+
+.summary-row {
+  animation: rowIn calc(280ms * var(--motion)) cubic-bezier(0.2, 0.8, 0.3, 1) backwards;
+}
+
+@keyframes rowIn {
+  from {
+    opacity: 0;
+    transform: translateX(-6px);
+  }
+}
+
+.summary-row:nth-child(1) { animation-delay: calc(20ms * var(--motion)); }
+.summary-row:nth-child(2) { animation-delay: calc(50ms * var(--motion)); }
+.summary-row:nth-child(3) { animation-delay: calc(80ms * var(--motion)); }
+.summary-row:nth-child(4) { animation-delay: calc(110ms * var(--motion)); }
+.summary-row:nth-child(5) { animation-delay: calc(140ms * var(--motion)); }
+.summary-row:nth-child(6) { animation-delay: calc(170ms * var(--motion)); }
+.summary-row:nth-child(7) { animation-delay: calc(200ms * var(--motion)); }
+.summary-row:nth-child(n + 8) { animation-delay: calc(230ms * var(--motion)); }
+
+.summary-row[class*="tint-"] dt::before,
+.summary-row:nth-child(1) dt::before { animation-delay: inherit; }
+
+/* The total keeps its weight but now carries the accent it deserves. */
+.summary-row.is-total dt::before {
+  width: 9px;
+  height: 9px;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--wrap-tint) 18%, transparent);
 }

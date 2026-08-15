@@ -1,4 +1,5 @@
 import { Component, computed, effect, inject, input, output, signal } from '@angular/core';
+import { TPipe } from '../../../core/i18n/i18n';
 import { FormsModule } from '@angular/forms';
 
 import { CalendarStore } from '../../../core/calendar/calendar-store';
@@ -8,12 +9,13 @@ import {
   WorkLocation,
 } from '../../../core/calendar/calendar.models';
 import { ACCENT_PRESETS } from '../../../core/settings/settings-store';
+import { I18n } from '../../../core/i18n/i18n';
 import { Icon } from '../../../shared/icon/icon';
 import { Modal } from '../../../shared/modal/modal';
 
 @Component({
   selector: 'app-location-modal',
-  imports: [FormsModule, Modal, Icon],
+  imports: [TPipe, FormsModule, Modal, Icon],
   templateUrl: './location-modal.html',
 })
 export class LocationModal {
@@ -21,6 +23,7 @@ export class LocationModal {
   readonly closed = output<void>();
 
   private readonly store = inject(CalendarStore);
+  private readonly i18n = inject(I18n);
 
   protected readonly periods = PAY_PERIODS;
   protected readonly colours = ACCENT_PRESETS;
@@ -36,6 +39,9 @@ export class LocationModal {
   protected readonly anchor = signal('');
   protected readonly overtimeHours = signal(40);
   protected readonly overtimeMultiplier = signal(1.5);
+  protected readonly tipOutTips = signal(0);
+  protected readonly tipOutSales = signal(0);
+  protected readonly mealDeduction = signal(0);
 
   protected readonly title = computed(() =>
     this.editing() === null ? 'New place of work' : 'Edit place',
@@ -66,6 +72,19 @@ export class LocationModal {
     this.anchor.set(location.pay_anchor);
     this.overtimeHours.set(location.overtime_weekly_hours);
     this.overtimeMultiplier.set(location.overtime_multiplier);
+    this.tipOutTips.set(location.tip_out_of_tips_percent);
+    this.tipOutSales.set(location.tip_out_of_sales_percent);
+    this.mealDeduction.set(location.meal_deduction);
+  }
+
+  protected remove(location: WorkLocation): void {
+    if (window.confirm(`${location.name} — ${this.deletePrompt}`)) {
+      this.store.deleteLocation(location.id);
+    }
+  }
+
+  protected get deletePrompt(): string {
+    return this.i18n.t('Delete this? It cannot be undone.');
   }
 
   protected archive(location: WorkLocation, archived: boolean): void {
@@ -85,6 +104,9 @@ export class LocationModal {
         pay_anchor: this.needsAnchor() && this.anchor() !== '' ? this.anchor() : null,
         overtime_weekly_hours: this.overtimeHours(),
         overtime_multiplier: this.overtimeMultiplier(),
+        tip_out_of_tips_percent: this.tipOutTips(),
+        tip_out_of_sales_percent: this.tipOutSales(),
+        meal_deduction: this.mealDeduction(),
       },
       this.editing()?.id ?? null,
       () => this.reset(),
@@ -105,5 +127,8 @@ export class LocationModal {
     this.anchor.set(new Date().toISOString().slice(0, 10));
     this.overtimeHours.set(40);
     this.overtimeMultiplier.set(1.5);
+    this.tipOutTips.set(0);
+    this.tipOutSales.set(0);
+    this.mealDeduction.set(0);
   }
 }

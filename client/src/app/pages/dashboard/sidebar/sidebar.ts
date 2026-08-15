@@ -1,5 +1,6 @@
 import { DecimalPipe } from '@angular/common';
-import { Component, inject, signal } from '@angular/core';
+import { I18n, TPipe } from '../../../core/i18n/i18n';
+import { Component, computed, inject, signal } from '@angular/core';
 
 import {
   CalendarStore,
@@ -12,7 +13,10 @@ import {
   rateLabel,
 } from '../../../core/calendar/calendar.models';
 import { daysToCsv, downloadCsv } from '../../../core/calendar/csv-export';
+import { MoneyPipe } from '../../../shared/money/money-pipe';
 import { Icon } from '../../../shared/icon/icon';
+import { Delta } from '../../../shared/delta/delta';
+import { averagesFor, change } from '../../../core/calendar/insights';
 import { LocationModal } from '../tools/location-modal';
 import { PayoutModal } from '../tools/payout-modal';
 import { RotationModal } from '../tools/rotation-modal';
@@ -21,7 +25,7 @@ import { ShiftModal } from '../tools/shift-modal';
 
 @Component({
   selector: 'app-sidebar',
-  imports: [
+  imports: [TPipe, Delta, 
     ShiftModal,
     SalesModal,
     RotationModal,
@@ -29,11 +33,13 @@ import { ShiftModal } from '../tools/shift-modal';
     LocationModal,
     DecimalPipe,
     Icon,
+    MoneyPipe,
   ],
   templateUrl: './sidebar.html',
 })
 export class Sidebar {
   private readonly store = inject(CalendarStore);
+  private readonly i18n = inject(I18n);
 
   protected readonly periods = SUMMARY_PERIODS;
   protected readonly templates = this.store.templates;
@@ -43,6 +49,26 @@ export class Sidebar {
   protected readonly brush = this.store.brush;
   protected readonly summary = this.store.summary;
   protected readonly summaryPeriod = this.store.summaryPeriod;
+
+  /** Per-unit figures and how each moved against the window just before. */
+  protected readonly averages = computed(() => averagesFor(this.summary()));
+  private readonly before = computed(() => averagesFor(this.store.previousSummary()));
+
+  protected readonly earnedChange = computed(() =>
+    change(this.summary().total_earned, this.store.previousSummary().total_earned),
+  );
+  protected readonly hoursChange = computed(() =>
+    change(this.summary().hours, this.store.previousSummary().hours),
+  );
+  protected readonly tipsChange = computed(() =>
+    change(this.summary().tips_earned, this.store.previousSummary().tips_earned),
+  );
+  protected readonly perDayChange = computed(() =>
+    change(this.averages().perDay, this.before().perDay),
+  );
+  protected readonly perHourChange = computed(() =>
+    change(this.averages().perHour, this.before().perHour),
+  );
   protected readonly locations = this.store.locations;
 
   protected readonly shiftModalOpen = signal(false);
@@ -88,6 +114,12 @@ export class Sidebar {
 
   protected archiveShift(template: ShiftTemplate, archived: boolean): void {
     this.store.archiveShift(template.id, archived);
+  }
+
+  protected removePosition(position: SalesPosition): void {
+    if (window.confirm(`${position.name} — ${this.i18n.t('Delete this? It cannot be undone.')}`)) {
+      this.store.deletePosition(position.id);
+    }
   }
 
   protected archivePosition(position: SalesPosition, archived: boolean): void {

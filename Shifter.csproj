@@ -9,6 +9,7 @@
 
     <ItemGroup>
         <PackageReference Include="BCrypt.Net-Next" Version="4.2.0" />
+        <PackageReference Include="Google.Apis.Auth" Version="1.75.0" />
         <PackageReference Include="MediatR" Version="14.2.0" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.10" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.10" />
@@ -16,6 +17,7 @@
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
           <PrivateAssets>all</PrivateAssets>
         </PackageReference>
+        <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="10.0.11" />
         <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.22.0" />
         <PackageReference Include="Microsoft.IdentityModel.Tokens.Saml" Version="8.22.0" />
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
@@ -23,6 +25,15 @@
         <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="10.2.3" />
         <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="10.2.3" />
         <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.22.0" />
+    </ItemGroup>
+
+    <!-- The test project lives under tests/ and has its own csproj; without
+         this the Web SDK's default glob would compile it into the API. -->
+    <ItemGroup>
+        <Compile Remove="tests\**" />
+        <Content Remove="tests\**" />
+        <None Remove="tests\**" />
+        <EmbeddedResource Remove="tests\**" />
     </ItemGroup>
 
     <ItemGroup>

@@ -17,6 +17,18 @@ public class UserQuery : IUserQuery
         return await _db.Users.FirstOrDefaultAsync(u => u.Login == login, ct);
     }
 
+    public async Task<User?> GetByGoogleSubjectAsync(string subject, CancellationToken ct)
+    {
+        return await _db.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.GoogleSubject == subject, ct);
+    }
+
+    public async Task<User?> GetForUpdateAsync(int id, CancellationToken ct)
+    {
+        return await _db.Users.FirstOrDefaultAsync(u => u.Id == id, ct);
+    }
+
     public async Task<User?> GetByIdAsync(int id, CancellationToken ct)
     {
         return await _db.Users

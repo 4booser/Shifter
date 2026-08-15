@@ -70,7 +70,27 @@ export class Auth {
     return this.http.get<CurrentUser>(`${AUTH_API}/me`);
   }
 
+  /**
+   * Revokes the refresh token server-side, then clears the session. The local
+   * clear happens either way: a failed call must not leave someone stuck
+   * signed in on a shared machine.
+   */
   logout(): void {
+    const token = this.storage.refreshToken;
+
+    if (token !== null) {
+      this.http
+        .post(`${AUTH_API}/logout`, { refresh_token: token })
+        .subscribe({ error: () => undefined });
+    }
+
     this.storage.clear();
+  }
+
+  /** Kills every session on every device; needs a live access token. */
+  logoutEverywhere(): Observable<{ revoked: number }> {
+    return this.http
+      .post<{ revoked: number }>(`${AUTH_API}/logout/all`, {})
+      .pipe(tap(() => this.storage.clear()));
   }
 }

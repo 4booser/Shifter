@@ -2,6 +2,10 @@
   <header class="calendar-bar">
     <h2 class="calendar-title">{{ label() }}</h2>
 
+    @if (weekEarned() > 0) {
+      <span class="week-chip">{{ 'This week' | t }}: {{ weekEarned() | money }}</span>
+    }
+
     <div class="segmented view-switch" role="group" aria-label="Calendar view">
       <button
         type="button"
@@ -9,7 +13,7 @@
         [class.is-active]="view() === 'week'"
         (click)="setView('week')"
       >
-        Week
+        {{ 'Week' | t }}
       </button>
       <button
         type="button"
@@ -17,7 +21,7 @@
         [class.is-active]="view() === 'month'"
         (click)="setView('month')"
       >
-        Month
+        {{ 'Month' | t }}
       </button>
       <button
         type="button"
@@ -25,13 +29,13 @@
         [class.is-active]="view() === 'year'"
         (click)="setView('year')"
       >
-        Year
+        {{ 'Year' | t }}
       </button>
     </div>
 
     <button type="button" class="button is-quiet" (click)="today()">
       <app-icon name="calendar" />
-      Today
+      {{ 'Today' | t }}
     </button>
 
     <button type="button" class="nav" (click)="previous()" aria-label="Previous">
@@ -48,10 +52,10 @@
       <span class="palette-symbol">
         {{ template.symbol ?? template.name.charAt(0) }}
       </span>
-      <strong>{{ template.name }}</strong> — click a day, or drag across several
+      {{ 'Placing' | t }} <strong>{{ template.name }}</strong> — {{ 'click a day, or drag across several' | t }}
       <button type="button" class="button is-quiet" (click)="clearBrush()">
         <app-icon name="check" />
-        Done
+        {{ 'Done' | t }}
       </button>
     </p>
   }
@@ -81,7 +85,7 @@
   } @else {
     <div class="calendar-grid" [class.is-dragging]="dragging().size > 0">
       @for (name of weekdays(); track name) {
-        <div class="weekday">{{ name }}</div>
+        <div class="weekday">{{ name | t }}</div>
       }
 
       @for (week of weeks(); track $index) {

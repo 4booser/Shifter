@@ -1,4 +1,4 @@
-<dialog #dialog class="modal" (close)="onClose()" (click)="onBackdrop($event)">
+<dialog #dialog class="modal" [class.is-wide]="wide()" (close)="onClose()" (click)="onBackdrop($event)">
   <div class="modal-card">
     <header class="modal-head">
       <h2 class="modal-title">{{ title() }}</h2>

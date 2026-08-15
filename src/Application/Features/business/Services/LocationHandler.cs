@@ -80,6 +80,25 @@ public partial class LocationHandler : ILocationHandler
         return ToDto(location);
     }
 
+    public async Task DeleteAsync(int userId, int id, CancellationToken ct)
+    {
+        Location location = await _shifterQuery.GetLocationAsync(userId, id, ct)
+            ?? throw new NotFoundException("Location does not exist.");
+
+        int shifts = await _shifterCommand.CountShiftsAtLocationAsync(id, ct);
+
+        // Deleting would strip the place off every shift that used it and
+        // silently change what those days are worth. Archiving keeps the
+        // history and gets it out of the way, which is what is actually wanted.
+        if (shifts > 0)
+        {
+            throw new ConflictException(
+                $"{shifts} shifts still use this place. Archive it instead.");
+        }
+
+        await _shifterCommand.DeleteLocationAsync(location, ct);
+    }
+
     private static void Apply(LocationCreateDto request, Location location)
     {
         if (string.IsNullOrWhiteSpace(request.name))
@@ -113,6 +132,20 @@ public partial class LocationHandler : ILocationHandler
 
         location.OvertimeWeeklyHours = request.overtime_weekly_hours;
         location.OvertimeMultiplier = request.overtime_multiplier;
+
+        if (request.tip_out_of_tips_percent is < 0 or > 100
+            || request.tip_out_of_sales_percent is < 0 or > 100)
+        {
+            throw new ValidationException("Tip-out must be between 0 and 100 percent.");
+        }
+
+        location.TipOutOfTipsPercent = request.tip_out_of_tips_percent;
+        location.TipOutOfSalesPercent = request.tip_out_of_sales_percent;
+
+        if (request.meal_deduction < 0)
+            throw new ValidationException("Meal deduction cannot be negative.");
+
+        location.MealDeduction = request.meal_deduction;
     }
 
     internal static LocationDto ToDto(Location location)
@@ -132,6 +165,9 @@ public partial class LocationHandler : ILocationHandler
             to,
             location.OvertimeWeeklyHours,
             location.OvertimeMultiplier,
+            location.TipOutOfTipsPercent,
+            location.TipOutOfSalesPercent,
+            location.MealDeduction,
             location.Archived
         );
     }

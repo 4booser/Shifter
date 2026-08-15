@@ -2,7 +2,7 @@
   <form class="modal-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
     <div class="field-row">
       <label class="field">
-        <span class="field-label">Name</span>
+        <span class="field-label">{{ 'Name' | t }}</span>
         <input type="text" formControlName="name" placeholder="Night" />
         @if (fieldError(form.controls.name, 'Name'); as text) {
           <small class="field-error">{{ text }}</small>
@@ -10,13 +10,13 @@
       </label>
 
       <label class="field">
-        <span class="field-label">Badge</span>
+        <span class="field-label">{{ 'Badge' | t }}</span>
         <input type="text" formControlName="symbol" maxlength="4" placeholder="N" />
       </label>
     </div>
 
     <div class="field">
-      <span class="field-label">Or pick an icon</span>
+      <span class="field-label">{{ 'Or pick an icon' | t }}</span>
       <div class="emoji-picker">
         @for (group of emojiGroups; track group.label) {
           <div class="emoji-group">
@@ -40,9 +40,9 @@
 
     @if (locations().length > 0) {
       <label class="field">
-        <span class="field-label">Place of work</span>
+        <span class="field-label">{{ 'Place of work' | t }}</span>
         <select formControlName="location_id">
-          <option [ngValue]="null">No place</option>
+          <option [ngValue]="null">{{ 'No place' | t }}</option>
           @for (location of locations(); track location.id) {
             <option [ngValue]="location.id">{{ location.name }}</option>
           }
@@ -52,7 +52,7 @@
 
     <div class="field-row">
       <label class="field">
-        <span class="field-label">Starts</span>
+        <span class="field-label">{{ 'Starts' | t }}</span>
         <input type="time" formControlName="start_time" />
         @if (fieldError(form.controls.start_time, 'Start'); as text) {
           <small class="field-error">{{ text }}</small>
@@ -60,7 +60,7 @@
       </label>
 
       <label class="field">
-        <span class="field-label">Ends</span>
+        <span class="field-label">{{ 'Ends' | t }}</span>
         <input type="time" formControlName="end_time" />
         @if (fieldError(form.controls.end_time, 'End'); as text) {
           <small class="field-error">{{ text }}</small>
@@ -68,10 +68,16 @@
       </label>
     </div>
 
-    <p class="field-hint">An end before the start means the shift runs past midnight.</p>
+    <p class="field-hint">{{ 'An end before the start means the shift runs past midnight.' | t }}</p>
 
     <div class="field">
-      <span class="field-label">Paid per</span>
+      <label class="field">
+        <span class="field-label">{{ 'Unpaid break, minutes' | t }}</span>
+        <input type="number" formControlName="break_minutes" min="0" max="720" step="5" />
+        <span class="field-hint">{{ 'Taken off the paid hours.' | t }}</span>
+      </label>
+
+      <span class="field-label">{{ 'Paid per' | t }}</span>
 
       <div class="segmented" role="group" aria-label="Pay period">
         @for (period of periods; track period.value) {
@@ -82,14 +88,14 @@
             [attr.aria-pressed]="form.controls.salary_period.value === period.value"
             (click)="pickPeriod(period.value)"
           >
-            {{ period.label }}
+            {{ period.label | t }}
           </button>
         }
       </div>
     </div>
 
     <label class="field">
-      <span class="field-label">Amount</span>
+      <span class="field-label">{{ 'Amount' | t }}</span>
       <input type="number" formControlName="salary_amount" min="0" step="1" />
       <small class="field-hint">{{ periodHint }}</small>
     </label>
@@ -102,9 +108,9 @@
     }
 
     <div class="modal-actions">
-      <button type="button" class="button is-quiet" (click)="close()">Cancel</button>
+      <button type="button" class="button is-quiet" (click)="close()">{{ 'Cancel' | t }}</button>
       <button type="submit" class="button is-primary">
-        {{ editing() === null ? 'Create shift' : 'Save changes' }}
+        {{ (editing() === null ? 'Create shift' : 'Save changes') | t }}
       </button>
     </div>
   </form>

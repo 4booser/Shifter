@@ -1,4 +1,5 @@
 import { DecimalPipe } from '@angular/common';
+import { TPipe } from '../../../core/i18n/i18n';
 import { Component, computed, effect, inject, input, output } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
@@ -9,7 +10,7 @@ import { Modal } from '../../../shared/modal/modal';
 
 @Component({
   selector: 'app-sales-modal',
-  imports: [ReactiveFormsModule, Modal, DecimalPipe],
+  imports: [TPipe, ReactiveFormsModule, Modal, DecimalPipe],
   templateUrl: './sales-modal.html',
 })
 export class SalesModal {

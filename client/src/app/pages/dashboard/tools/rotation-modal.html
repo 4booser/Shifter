@@ -1,12 +1,12 @@
 <app-modal [open]="open()" title="Fill a rota" (closed)="close()">
   @if (templates().length === 0) {
-    <p class="empty-note">Create a shift first — a rota needs something to place.</p>
+    <p class="empty-note">{{ 'Create a shift first — a rota needs something to place.' | t }}</p>
   } @else {
     <div class="modal-form">
       <label class="field">
-        <span class="field-label">Shift</span>
+        <span class="field-label">{{ 'Shift' | t }}</span>
         <select [ngModel]="templateId()" (ngModelChange)="templateId.set(+$event)">
-          <option [ngValue]="null" disabled>Pick one</option>
+          <option [ngValue]="null" disabled>{{ 'Pick one' | t }}</option>
           @for (template of templates(); track template.id) {
             <option [ngValue]="template.id">
               {{ template.name }} · {{ template.start_time }}–{{ template.end_time }}
@@ -16,7 +16,7 @@
       </label>
 
       <div class="field">
-        <span class="field-label">Pattern</span>
+        <span class="field-label">{{ 'Pattern' | t }}</span>
 
         <div class="quick-row">
           @for (preset of presets; track preset.label) {
@@ -34,46 +34,46 @@
 
       <div class="field-row">
         <label class="field">
-          <span class="field-label">Days on</span>
+          <span class="field-label">{{ 'Days on' | t }}</span>
           <input type="number" min="1" max="31" [ngModel]="on()" (ngModelChange)="on.set(+$event)" />
         </label>
 
         <label class="field">
-          <span class="field-label">Days off</span>
+          <span class="field-label">{{ 'Days off' | t }}</span>
           <input type="number" min="0" max="31" [ngModel]="off()" (ngModelChange)="off.set(+$event)" />
         </label>
       </div>
 
       <div class="field-row">
         <label class="field">
-          <span class="field-label">Starting</span>
+          <span class="field-label">{{ 'Starting' | t }}</span>
           <input type="date" [ngModel]="start()" (ngModelChange)="start.set($event)" />
         </label>
 
         <label class="field">
-          <span class="field-label">For, days</span>
+          <span class="field-label">{{ 'For, days' | t }}</span>
           <input type="number" min="1" max="400" [ngModel]="span()" (ngModelChange)="span.set(+$event)" />
         </label>
       </div>
 
       @if (preview(); as summary) {
         <p class="field-hint">
-          Places <strong>{{ summary.count }}</strong> shifts, {{ summary.first }} to
+          {{ 'Adds' | t }} <strong>{{ summary.count }}</strong> {{ 'shifts' | t }} · {{ summary.first }} —
           {{ summary.last }}.
         </p>
       } @else {
-        <p class="field-hint">Nothing to place with these numbers.</p>
+        <p class="field-hint">{{ 'Nothing to place with these numbers.' | t }}</p>
       }
 
       <div class="modal-actions">
-        <button type="button" class="button is-quiet" (click)="close()">Cancel</button>
+        <button type="button" class="button is-quiet" (click)="close()">{{ 'Cancel' | t }}</button>
         <button
           type="button"
           class="button is-primary"
           [disabled]="chosen() === null || preview() === null || saving()"
           (click)="apply()"
         >
-          Fill calendar
+          {{ 'Fill calendar' | t }}
         </button>
       </div>
     </div>

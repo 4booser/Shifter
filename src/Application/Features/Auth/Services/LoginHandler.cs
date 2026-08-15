@@ -46,7 +46,11 @@ public class LoginHandler : IRequestHandler<LoginDto, AuthResponseDto>
         
         // One message for both failures: telling them apart would let a caller
         // enumerate which logins exist.
-        if (user is null || !BCrypt.Net.BCrypt.Verify(request.password, user.PasswordHash))
+        // A Google-only account has no hash to verify against; the same answer
+        // as a wrong password, so nothing is revealed about which it was.
+        if (user is null
+            || string.IsNullOrEmpty(user.PasswordHash)
+            || !BCrypt.Net.BCrypt.Verify(request.password, user.PasswordHash))
         {
             _logger.LogWarning("Failed sign-in attempt for login {Login}.", request.login);
             throw new UnauthorizedException("Invalid login or password.");

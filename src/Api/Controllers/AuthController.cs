@@ -2,6 +2,8 @@ using System.Security.Claims;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
+using Shifter.Api.Extensions;
 using Shifter.Application.Common.Exceptions;
 using Shifter.Application.Features.Auth.DTOs;
 
@@ -11,6 +13,9 @@ namespace Shifter.Api.Controllers;
 // with [AllowAnonymous], so a new endpoint cannot be left open by forgetting an
 // attribute.
 [Authorize]
+// Credentials are guessable by definition, so this whole controller is held to
+// the stricter limit rather than the one the rest of the API runs under.
+[EnableRateLimiting(HardeningExtensions.AuthPolicy)]
 [Route("shifter/v1/auth")]
 public class AuthController : Controller
 {
@@ -57,6 +62,99 @@ public class AuthController : Controller
         var result = await _mediator.Send(request, ct);
 
         return Ok(result);
+    }
+
+    /// <summary>
+    /// One button for both cases: an unknown Google account is created, a known
+    /// one is signed in. Anonymous, like the other entry points.
+    /// </summary>
+    [HttpPost]
+    [AllowAnonymous]
+    [Route("google")]
+    public async Task<ActionResult<AuthResponseDto>> Google(
+        [FromBody] GoogleSignInDto request,
+        CancellationToken ct)
+    {
+        var result = await _mediator.Send(request, ct);
+
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Ends this session. Anonymous because it is the right thing to do with an
+    /// access token that has already expired: the refresh token in the body is
+    /// what identifies the session, and revoking it is never harmful.
+    /// </summary>
+    [HttpPost]
+    [AllowAnonymous]
+    [Route("logout")]
+    public async Task<ActionResult<LogoutResultDto>> Logout(
+        [FromBody] LogoutDto request,
+        CancellationToken ct)
+    {
+        var result = await _mediator.Send(request, ct);
+
+        return Ok(result);
+    }
+
+    /// <summary>Ends every session on every device. Requires a live token.</summary>
+    [HttpPost]
+    [Route("logout/all")]
+    public async Task<ActionResult<LogoutResultDto>> LogoutEverywhere(CancellationToken ct)
+    {
+        var result = await _mediator.Send(new LogoutEverywhereDto(CurrentUserId()), ct);
+
+        return Ok(result);
+    }
+
+    /// <summary>Lets the client know whether to render the Google button.</summary>
+    [HttpGet]
+    [AllowAnonymous]
+    [Route("google/config")]
+    public IActionResult GoogleConfig([FromServices] IConfiguration configuration)
+        => Ok(new { client_id = configuration["Google:ClientId"] });
+
+    [HttpGet]
+    [Route("goal")]
+    public async Task<IActionResult> GetGoal(
+        [FromServices] Shifter.Infrastructure.Repositories.Interfaces.IUserQuery users,
+        CancellationToken ct)
+    {
+        var user = await users.GetByIdAsync(CurrentUserId(), ct)
+            ?? throw new UnauthorizedException("Token is missing the required claims.");
+
+        return Ok(new { monthly_goal = user.MonthlyGoal });
+    }
+
+    public record GoalDto(decimal? monthly_goal);
+
+    [HttpPut]
+    [Route("goal")]
+    public async Task<IActionResult> SetGoal(
+        [FromBody] GoalDto request,
+        [FromServices] Shifter.Infrastructure.Repositories.Interfaces.IUserCommand users,
+        [FromServices] Shifter.Infrastructure.Repositories.Interfaces.IUserQuery query,
+        CancellationToken ct)
+    {
+        if (request.monthly_goal < 0)
+            throw new Shifter.Application.Common.Exceptions.ValidationException(
+                "Goal cannot be negative.");
+
+        await users.SetMonthlyGoalAsync(CurrentUserId(), request.monthly_goal, ct);
+
+        return Ok(new { monthly_goal = request.monthly_goal });
+    }
+
+    /// <summary>
+    /// The caller's id, straight from the token. Never taken from the body:
+    /// that would let anyone edit anyone else's data by changing a number.
+    /// </summary>
+    private int CurrentUserId()
+    {
+        if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int id))
+            throw new UnauthorizedException("Token is missing the required claims.");
+
+        return id;
     }
 
     /// <summary>Returns the identity carried by the bearer token.</summary>

@@ -6,10 +6,10 @@
     </h2>
 
     <section>
-      <h3 class="block-title">Shifts</h3>
+      <h3 class="block-title">{{ 'Shifts' | t }}</h3>
 
       @if (shifts().length === 0) {
-        <p class="empty-note">None. Pick a shift on the left, then click this day.</p>
+        <p class="empty-note">{{ 'None. Pick a shift on the left, then click this day.' | t }}</p>
       } @else {
         <ul class="shift-list">
           @for (entry of shifts(); track entry.shift_id) {
@@ -18,7 +18,7 @@
                 <span class="palette-name">{{ entry.name }}</span>
                 <span class="position-rate">
                   {{ entry.start_time }}–{{ entry.end_time }} · {{ entry.hours }} h ·
-                  {{ entry.earned | number: '1.0-2' }}
+                  {{ entry.earned | money }}
                 </span>
               </span>
 
@@ -29,7 +29,7 @@
                 (click)="toggleWorked(entry.shift_id)"
               >
                 <app-icon [name]="isWorked(entry.shift_id) ? 'check' : 'clock'" [size]="13" />
-                {{ isWorked(entry.shift_id) ? 'Worked' : 'Planned' }}
+                {{ (isWorked(entry.shift_id) ? 'Worked' : 'Planned') | t }}
               </button>
             </li>
           }
@@ -41,7 +41,7 @@
       <section>
         <h3 class="block-title">
           <app-icon name="bag" [size]="13" />
-          Sold today
+          {{ 'Sold today' | t }}
         </h3>
 
         <ul class="sold-list">
@@ -84,7 +84,7 @@
         </ul>
 
         @if (draftSales() > 0) {
-          <p class="field-hint">Sales so far: {{ draftSales() | number: '1.0-2' }}</p>
+          <p class="field-hint">{{ 'Sales so far:' | t }} {{ draftSales() | money }}</p>
         }
       </section>
     }
@@ -92,7 +92,7 @@
     <div class="field">
       <span class="field-label">
         <app-icon name="coins" [size]="13" />
-        Tips
+        {{ 'Tips' | t }}
       </span>
       <input type="number" min="0" step="1" [(ngModel)]="tips" />
 
@@ -101,7 +101,48 @@
           <button type="button" class="quick" (click)="bumpTips(step)">+{{ step }}</button>
         }
         @if ((tips() ?? 0) > 0) {
-          <button type="button" class="quick is-clear" (click)="clearTips()">Clear</button>
+          <button type="button" class="quick is-clear" (click)="clearTips()">{{ 'Clear' | t }}</button>
+        }
+      </div>
+
+      @if ((tips() ?? 0) > 0) {
+        <div class="split-row">
+          <label class="field is-inline">
+            <span class="field-label">{{ 'Of that, cash' | t }}</span>
+            <input type="number" min="0" step="1" [ngModel]="tipsCash()"
+              (ngModelChange)="tipsCash.set($event === '' ? null : +$event)" />
+          </label>
+          <span class="split-rest">{{ 'Card' | t }}: {{ tipsCard() | money }}</span>
+        </div>
+
+        <div class="quick-row">
+          @for (step of tipSteps; track step) {
+            <button type="button" class="quick" (click)="bumpCash(step)">
+              {{ 'cash' | t }} +{{ step }}
+            </button>
+          }
+        </div>
+      }
+    </div>
+
+    <div class="field">
+      <span class="field-label">
+        <app-icon name="wallet" [size]="13" />
+        {{ 'Fines and shortfalls' | t }}
+      </span>
+      <input type="number" min="0" step="1" [ngModel]="deductions()"
+        (ngModelChange)="deductions.set($event === '' ? null : +$event)" />
+
+      <div class="quick-row">
+        @for (step of tipSteps; track step) {
+          <button type="button" class="quick" (click)="bumpDeductions(step)">
+            −{{ step }}
+          </button>
+        }
+        @if ((deductions() ?? 0) > 0) {
+          <button type="button" class="quick is-clear" (click)="clearDeductions()">
+            {{ 'Clear' | t }}
+          </button>
         }
       </div>
     </div>
@@ -109,7 +150,7 @@
     <label class="field">
       <span class="field-label">
         <app-icon name="note" [size]="13" />
-        Note
+        {{ 'Note' | t }}
       </span>
       <textarea rows="3" [maxlength]="noteMaxLength" [(ngModel)]="note"></textarea>
       <small class="field-hint">{{ note().length }} / {{ noteMaxLength }}</small>
@@ -122,7 +163,7 @@
       (click)="save()"
     >
       <app-icon name="check" />
-      {{ saving() ? 'Saving…' : dirty() ? 'Save day' : 'Saved' }}
+      {{ (saving() ? 'Saving…' : dirty() ? 'Save day' : 'Saved') | t }}
     </button>
 
     @if (day(); as saved) {
@@ -130,23 +171,35 @@
         @for (entry of saved.sales; track entry.sales_id) {
           <div class="summary-row">
             <dt>{{ entry.name }} × {{ entry.quantity }}</dt>
-            <dd>{{ entry.earned | number: '1.0-2' }}</dd>
+            <dd>{{ entry.earned | money }}</dd>
+          </div>
+        }
+        @if (saved.tip_out > 0) {
+          <div class="summary-row">
+            <dt>{{ 'Tip-out' | t }}</dt>
+            <dd class="is-negative">−{{ saved.tip_out | money }}</dd>
+          </div>
+        }
+        @if (saved.deductions > 0) {
+          <div class="summary-row">
+            <dt>{{ 'Deductions' | t }}</dt>
+            <dd class="is-negative">−{{ saved.deductions | money }}</dd>
           </div>
         }
         <div class="summary-row is-total">
-          <dt>Earned</dt>
-          <dd>{{ saved.earned | number: '1.0-2' }}</dd>
+          <dt>{{ 'Earned' | t }}</dt>
+          <dd>{{ saved.earned | money }}</dd>
         </div>
         @if (saved.planned > 0) {
           <div class="summary-row">
-            <dt>Still planned</dt>
-            <dd>{{ saved.planned | number: '1.0-2' }}</dd>
+            <dt>{{ 'Still planned' | t }}</dt>
+            <dd>{{ saved.planned | money }}</dd>
           </div>
         }
       </dl>
     }
   } @else {
-    <h2 class="panel-title">No day selected</h2>
-    <p class="empty-note">Pick a day in the calendar.</p>
+    <h2 class="panel-title">{{ 'No day selected' | t }}</h2>
+    <p class="empty-note">{{ 'Pick a day in the calendar.' | t }}</p>
   }
 </aside>

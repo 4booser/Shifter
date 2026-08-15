@@ -1,4 +1,5 @@
 import { Component, computed, inject, input, output, signal } from '@angular/core';
+import { TPipe } from '../../../core/i18n/i18n';
 import { FormsModule } from '@angular/forms';
 
 import { formatDayLabel, rotationKeys, todayKey } from '../../../core/calendar/calendar-date';
@@ -15,7 +16,7 @@ const PRESETS = [
 
 @Component({
   selector: 'app-rotation-modal',
-  imports: [FormsModule, Modal],
+  imports: [TPipe, FormsModule, Modal],
   templateUrl: './rotation-modal.html',
 })
 export class RotationModal {

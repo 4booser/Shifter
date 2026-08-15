@@ -18,6 +18,8 @@ import {
 export class Modal {
   readonly open = input.required<boolean>();
   readonly title = input('');
+  /** Charts need width a form never does. */
+  readonly wide = input(false);
   readonly closed = output<void>();
 
   private readonly dialog = viewChild<ElementRef<HTMLDialogElement>>('dialog');

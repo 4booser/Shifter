@@ -13,6 +13,8 @@ public record ShiftDto(
     string end_time,
     string salary_period,
     decimal? salary_amount,
+    /// <summary>Unpaid minutes inside the shift; already taken off hours.</summary>
+    int break_minutes,
     double hours,
     int? location_id,
     string? location_name,
@@ -28,5 +30,6 @@ public record ShiftCreateDto(
     string start_time,
     string end_time,
     string salary_period,
-    decimal? salary_amount
+    decimal? salary_amount,
+    int break_minutes
     );

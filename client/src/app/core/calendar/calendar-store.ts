@@ -1,4 +1,5 @@
 import { Service, computed, effect, inject, signal } from '@angular/core';
+import { forkJoin } from 'rxjs';
 
 import { apiErrorMessage } from '../auth/api-error';
 import { CalendarApi } from './calendar-api';
@@ -57,12 +58,14 @@ export class CalendarStore {
   private readonly _positions = signal<SalesPosition[]>([]);
   private readonly _days = signal<ReadonlyMap<string, CalendarDayData>>(new Map());
   private readonly _summary = signal<DaysResponse>(EMPTY_SUMMARY);
+  private readonly _previousSummary = signal<DaysResponse>(EMPTY_SUMMARY);
   private readonly _summaryPeriod = signal<SummaryPeriod>('month');
   private readonly _brush = signal<ShiftTemplate | null>(null);
   private readonly _error = signal<string | null>(null);
   private readonly _saving = signal(false);
   private readonly _payouts = signal<Payout[]>([]);
   private readonly _locations = signal<WorkLocation[]>([]);
+  private readonly _trend = signal<MonthTotal[]>([]);
 
   readonly month = this._month.asReadonly();
   readonly selectedDate = this._selectedDate.asReadonly();
@@ -90,6 +93,9 @@ export class CalendarStore {
   readonly error = this._error.asReadonly();
   readonly saving = this._saving.asReadonly();
   readonly payouts = this._payouts.asReadonly();
+  readonly trend = this._trend.asReadonly();
+  /** The equivalent window just before the one on screen, for the arrows. */
+  readonly previousSummary = this._previousSummary.asReadonly();
 
   readonly locations = computed(() =>
     this._locations().filter((location) => !location.archived),
@@ -116,6 +122,25 @@ export class CalendarStore {
 
   readonly view = computed(() => this.settings.view());
   readonly label = computed(() => monthLabel(this._month()));
+
+  /**
+   * Past days with a worked shift and nothing else recorded. Tips and sales are
+   * entered at the end of a shift and are the easiest thing to forget, so the
+   * dashboard nudges rather than letting the month quietly under-report.
+   */
+  readonly unclosedDays = computed(() => {
+    const today = todayKey();
+
+    return [...this._days().values()]
+      .filter(
+        (day) =>
+          day.date < today &&
+          day.shifts.some((entry) => entry.worked) &&
+          (day.tips ?? 0) === 0 &&
+          day.sales.length === 0,
+      )
+      .sort((a, b) => b.date.localeCompare(a.date));
+  });
 
   readonly selectedDay = computed(() => {
     const key = this._selectedDate();
@@ -202,6 +227,37 @@ export class CalendarStore {
 
   select(key: string): void {
     this._selectedDate.set(key);
+  }
+
+  /**
+   * Six months of totals ending at the month on screen. One summary request per
+   * month rather than one big range: overtime and period wages are computed per
+   * range, so a single span would smear them across month boundaries.
+   */
+  loadTrend(): void {
+    const anchor = this._month();
+    const months = Array.from({ length: 6 }, (_, index) => addMonths(anchor, index - 5));
+
+    forkJoin(
+      months.map((month) => {
+        const { from, to } = monthBounds(
+          `${month.year}-${`${month.month}`.padStart(2, '0')}-01`,
+        );
+
+        return this.api.days(from, to);
+      }),
+    ).subscribe({
+      next: (responses) =>
+        this._trend.set(
+          responses.map((response, index) => ({
+            label: monthShortLabel(months[index]),
+            earned: response.total_earned,
+            planned: response.planned_earned,
+            hours: response.hours,
+          })),
+        ),
+      error: (error: unknown) => this._error.set(apiErrorMessage(error)),
+    });
   }
 
   /** The dates the totals cover, for anything that needs to name them. */
@@ -350,6 +406,9 @@ export class CalendarStore {
               : current.filter((entry) => entry.shift_id !== template.id),
           sales: day?.sales ?? [],
           tips: day?.tips ?? null,
+          tips_cash: day?.tips_cash ?? null,
+          tip_out: day?.tip_out ?? 0,
+          deductions: day?.deductions ?? 0,
           note: day?.note ?? null,
           // Left at the previous value: the server owns the pay and hour
           // rules, and guessing them here is how the two drift.
@@ -488,6 +547,27 @@ export class CalendarStore {
     });
   }
 
+  /** The server refuses when history points at it, and says so. */
+  deleteLocation(id: number): void {
+    this._error.set(null);
+
+    this.api.deleteLocation(id).subscribe({
+      next: () =>
+        this._locations.update((list) => list.filter((item) => item.id !== id)),
+      error: (error: unknown) => this._error.set(apiErrorMessage(error)),
+    });
+  }
+
+  deletePosition(id: number): void {
+    this._error.set(null);
+
+    this.api.deleteSales(id).subscribe({
+      next: () =>
+        this._positions.update((list) => list.filter((item) => item.id !== id)),
+      error: (error: unknown) => this._error.set(apiErrorMessage(error)),
+    });
+  }
+
   archiveLocation(id: number, archived: boolean): void {
     this._error.set(null);
 
@@ -520,11 +600,34 @@ export class CalendarStore {
       error: (error: unknown) => this._error.set(apiErrorMessage(error)),
     });
 
+    // The window of the same length immediately before, so every figure on
+    // screen can say which way it moved. A failure here only costs the arrows.
+    const span = keysBetween(from, to).length;
+    const previousTo = shiftDays(from, -1);
+
+    this.api.days(shiftDays(previousTo, -(span - 1)), previousTo).subscribe({
+      next: (response) => this._previousSummary.set(response),
+      error: () => this._previousSummary.set(EMPTY_SUMMARY),
+    });
+
     this.api.payouts(from, to).subscribe({
       next: (payouts) => this._payouts.set(payouts),
       error: (error: unknown) => this._error.set(apiErrorMessage(error)),
     });
   }
+}
+
+export interface MonthTotal {
+  label: string;
+  earned: number;
+  planned: number;
+  hours: number;
+}
+
+function monthShortLabel({ year, month }: YearMonth): string {
+  return new Intl.DateTimeFormat('en', { month: 'short' }).format(
+    new Date(year, month - 1, 1),
+  );
 }
 
 function firstOfMonth({ year, month }: YearMonth): string {

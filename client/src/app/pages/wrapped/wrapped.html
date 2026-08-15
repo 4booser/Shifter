@@ -1,0 +1,295 @@
+<div class="shell wrapped-shell">
+  <header class="topbar">
+    <a routerLink="/dashboard" class="button is-quiet">
+      <app-icon name="chevron-left" />
+      {{ 'Back to calendar' | t }}
+    </a>
+
+    <span class="brand">{{ 'Your year' | t }}</span>
+
+    <span class="year-switch">
+      <button type="button" class="nav" (click)="shiftYear(-1)" aria-label="Previous">
+        <app-icon name="chevron-left" [size]="18" />
+      </button>
+      <strong>{{ year() }}</strong>
+      <button type="button" class="nav" (click)="shiftYear(1)" aria-label="Next">
+        <app-icon name="chevron-right" [size]="18" />
+      </button>
+    </span>
+  </header>
+
+  @if (error(); as text) {
+    <p class="alert shell-alert" role="alert">{{ text }}</p>
+  }
+
+  <div class="wrapped" [class.is-loading]="loading()">
+    @if (!hasData() && !loading()) {
+      <div class="stat-card is-empty">
+        <app-icon name="trophy" [size]="28" />
+        <p class="empty-note">{{ 'Nothing recorded in this period yet.' | t }}</p>
+      </div>
+    } @else {
+      <!-- The headline: minutes, because it lands harder than hours. -->
+      <section class="wrap-hero">
+        <span class="wrap-tier">
+          <span class="wrap-tier-emoji">{{ tier().emoji }}</span>
+          {{ tier().name | t }}
+        </span>
+
+        <span class="wrap-label">{{ 'You worked' | t }}</span>
+        <span class="wrap-number" [appCountUp]="minutes()" [countFormat]="plain">0</span>
+        <span class="wrap-unit">{{ 'minutes' | t }}</span>
+
+        <span class="wrap-sub">
+          {{ summary().hours | number: '1.0-0' }} {{ 'hours across' | t }}
+          {{ totalShifts() }} {{ 'shifts' | t }}
+          @if (hasPrevious()) {
+            <app-delta [percent]="hoursChange()" />
+            <span class="wrap-vs">{{ 'vs' | t }} {{ year() - 1 }}</span>
+          }
+        </span>
+
+        <!-- Twelve months at a glance; the bars grow on load. -->
+        <div class="wrap-months" role="img" [attr.aria-label]="'Biggest month' | t">
+          @for (month of monthBars(); track $index) {
+            <span class="wrap-month" [class.is-peak]="month.peak" [title]="month.title">
+              <span class="wrap-month-bar" [style.height.%]="month.height"></span>
+              <span class="wrap-month-name">{{ month.label }}</span>
+            </span>
+          }
+        </div>
+      </section>
+
+      @if (live()) {
+        <!-- The other half: where the year lands if nothing changes. -->
+        <section class="wrap-band">
+          <span class="wrap-band-title">
+            <app-icon name="spark" [size]="18" />
+            {{ 'Where this year lands' | t }}
+          </span>
+
+          <div class="wrap-band-grid">
+            <span class="wrap-figure">
+              <span class="wrap-label">{{ 'By 31 December' | t }}</span>
+              <strong class="wrap-figure-value" [appCountUp]="forecast().projected">0</strong>
+              <span class="wrap-sub">
+                {{ 'at your current pace' | t }}
+              </span>
+            </span>
+
+            <span class="wrap-figure">
+              <span class="wrap-label">{{ 'Still ahead' | t }}</span>
+              <strong class="wrap-figure-value">{{ stillAhead() | money }}</strong>
+              <span class="wrap-sub">
+                {{ monthsLeft() }} {{ 'months to go' | t }}
+              </span>
+            </span>
+
+            <span class="wrap-figure">
+              <span class="wrap-label">{{ 'Minutes by year end' | t }}</span>
+              <strong class="wrap-figure-value">{{ projectedMinutes() | number }}</strong>
+              <span class="wrap-sub">
+                {{ projectedHours() | number: '1.0-0' }} {{ 'hours' | t }}
+              </span>
+            </span>
+
+            <span class="wrap-figure">
+              <span class="wrap-label">{{ 'A full year at this pace' | t }}</span>
+              <strong class="wrap-figure-value">{{ nextYearPace() | money }}</strong>
+              <span class="wrap-sub">{{ 'if nothing changes' | t }}</span>
+            </span>
+          </div>
+        </section>
+      }
+
+      <!-- Per-unit numbers: what one day, one hour and one shift are worth. -->
+      <h2 class="wrap-heading">{{ 'What a shift is worth' | t }}</h2>
+
+      <div class="wrap-grid is-tight">
+        <section class="wrap-card tint-green">
+          <span class="wrap-label">{{ 'Per working day' | t }}</span>
+          <span class="wrap-title is-money">{{ averages().perDay | money }}</span>
+          <span class="wrap-foot-row">
+            <app-delta [percent]="perDayChange()" />
+            <span class="wrap-sub">{{ averages().daysWorked }} {{ 'days' | t }}</span>
+          </span>
+        </section>
+
+        <section class="wrap-card tint-teal">
+          <span class="wrap-label">{{ 'Per hour' | t }}</span>
+          <span class="wrap-title is-money">{{ averages().perHour | money }}</span>
+          <span class="wrap-foot-row">
+            <app-delta [percent]="perHourChange()" />
+            <span class="wrap-sub">
+              {{ averages().hoursPerDay | number: '1.0-1' }} {{ 'h a day' | t }}
+            </span>
+          </span>
+        </section>
+
+        <section class="wrap-card tint-indigo">
+          <span class="wrap-label">{{ 'Per shift' | t }}</span>
+          <span class="wrap-title is-money">{{ averages().perShift | money }}</span>
+          <span class="wrap-foot-row">
+            <app-delta [percent]="perShiftChange()" />
+            <span class="wrap-sub">
+              {{ averages().hoursPerShift | number: '1.0-1' }} {{ 'h each' | t }}
+            </span>
+          </span>
+        </section>
+
+        <section class="wrap-card tint-amber">
+          <span class="wrap-label">{{ 'Tips a day' | t }}</span>
+          <span class="wrap-title is-money">{{ averages().tipsPerDay | money }}</span>
+          <span class="wrap-foot-row">
+            <app-delta [percent]="tipsPerDayChange()" />
+            <span class="wrap-sub">
+              {{ averages().tipsPerHour | money }} / {{ 'h' | t }}
+            </span>
+          </span>
+        </section>
+
+        <section class="wrap-card tint-violet">
+          <span class="wrap-label">{{ 'Sales a day' | t }}</span>
+          <span class="wrap-title is-money">{{ averages().salesPerDay | money }}</span>
+          <span class="wrap-foot-row">
+            <app-delta [percent]="salesPerDayChange()" />
+            <span class="wrap-sub">
+              {{ 'Tips share' | t }} {{ averages().tipShare | number: '1.0-0' }}%
+            </span>
+          </span>
+        </section>
+
+        <section class="wrap-card tint-cyan">
+          <span class="wrap-label">{{ 'Shifts worked' | t }}</span>
+          <span class="wrap-title">{{ totalShifts() }}</span>
+          <span class="wrap-foot-row">
+            <app-delta [percent]="shiftsChange()" />
+            <span class="wrap-sub">
+              {{ fullTimeWeeks() | number: '1.0-0' }} {{ 'full-time weeks' | t }}
+            </span>
+          </span>
+        </section>
+      </div>
+
+      <h2 class="wrap-heading">{{ 'Your year in records' | t }}</h2>
+
+      <div class="wrap-grid">
+        @if (favouriteShift(); as shift) {
+          <section class="wrap-card is-feature tint-teal">
+            <span class="wrap-label">{{ 'Your top shift' | t }}</span>
+            <span class="wrap-badge">{{ shift.symbol ?? shift.name.charAt(0) }}</span>
+            <span class="wrap-title">{{ shift.name }}</span>
+            <span class="wrap-sub">
+              {{ shift.count }} {{ 'times' | t }} · {{ shift.hours | number: '1.0-0' }} h
+            </span>
+          </section>
+        }
+
+        @if (topPlace(); as place) {
+          <section class="wrap-card" [style.--wrap-tint]="place.colour">
+            <span class="wrap-label">{{ 'Top place' | t }}</span>
+            <span class="wrap-title">{{ place.name }}</span>
+            <span class="wrap-sub">
+              {{ place.earned | money }} · {{ place.days_worked }} {{ 'days' | t }}
+            </span>
+          </section>
+        }
+
+        <section class="wrap-card tint-green">
+          <span class="wrap-label">{{ 'You earned' | t }}</span>
+          <span class="wrap-title is-money" [appCountUp]="summary().total_earned">0</span>
+          <span class="wrap-foot-row">
+            <app-delta [percent]="earnedChange()" />
+            <span class="wrap-sub">{{ 'Tips' | t }} {{ summary().tips_earned | money }}</span>
+          </span>
+        </section>
+
+        @if (best(); as day) {
+          <section class="wrap-card tint-amber">
+            <span class="wrap-label">{{ 'Best single day' | t }}</span>
+            <span class="wrap-title is-money">{{ day.value | money }}</span>
+            <span class="wrap-sub">{{ day.label }}</span>
+          </section>
+        }
+
+        @if (week(); as span) {
+          <section class="wrap-card tint-orange">
+            <span class="wrap-label">{{ 'Best week' | t }}</span>
+            <span class="wrap-title is-money">{{ span.value | money }}</span>
+            <span class="wrap-sub">{{ span.label }}</span>
+          </section>
+        }
+
+        @if (busiestMonth(); as month) {
+          <section class="wrap-card tint-indigo">
+            <span class="wrap-label">{{ 'Biggest month' | t }}</span>
+            <span class="wrap-title">{{ month.label }}</span>
+            <span class="wrap-sub">{{ month.earned | money }}</span>
+          </section>
+        }
+
+        @if (streak(); as run) {
+          <section class="wrap-card tint-rose">
+            <span class="wrap-label">{{ 'Longest streak' | t }}</span>
+            <span class="wrap-title">
+              {{ run.length }} <small>{{ 'days in a row' | t }}</small>
+            </span>
+            <span class="wrap-sub">{{ run.label }}</span>
+          </section>
+        }
+
+        @if (favouriteWeekday(); as weekday) {
+          <section class="wrap-card tint-violet">
+            <span class="wrap-label">{{ 'Your day' | t }}</span>
+            <span class="wrap-title">{{ weekday.name | t }}</span>
+            <span class="wrap-sub">{{ weekday.count }} {{ 'times' | t }}</span>
+          </section>
+        }
+
+        @if (topSale(); as sale) {
+          <section class="wrap-card tint-cyan">
+            <span class="wrap-label">{{ 'Most sold' | t }}</span>
+            <span class="wrap-title">{{ sale.name }}</span>
+            <span class="wrap-sub">
+              {{ sale.quantity }} {{ 'units sold' | t }} · {{ sale.earned | money }}
+            </span>
+          </section>
+        }
+
+        <section class="wrap-card tint-indigo">
+          <span class="wrap-label">
+            <app-icon name="moon" [size]="14" />
+            {{ 'Night owl score' | t }}
+          </span>
+          <span class="wrap-title">{{ nightShare() | number: '1.0-0' }}%</span>
+          <span class="wrap-sub">{{ 'of shifts started after 8pm' | t }}</span>
+        </section>
+
+        @if (earliestStart(); as earliest) {
+          <section class="wrap-card tint-amber">
+            <span class="wrap-label">
+              <app-icon name="sunrise" [size]="14" />
+              {{ 'Earliest start' | t }}
+            </span>
+            <span class="wrap-title">{{ earliest }}</span>
+            <span class="wrap-sub">{{ 'that is dedication' | t }}</span>
+          </section>
+        }
+
+        <section class="wrap-card tint-green">
+          <span class="wrap-label">{{ 'Days off' | t }}</span>
+          <span class="wrap-title">{{ rest() }}</span>
+          <span class="wrap-sub">{{ 'you earned every one of them' | t }}</span>
+        </section>
+      </div>
+
+      <p class="field-hint wrap-foot">
+        @if (live()) {
+          {{ 'Records are what you logged; the forecast is your own pace carried forward.' | t }}
+        } @else {
+          {{ 'Built from what you recorded — the year is closed.' | t }}
+        }
+      </p>
+    }
+  </div>
+</div>

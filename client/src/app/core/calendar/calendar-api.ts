@@ -75,6 +75,16 @@ export class CalendarApi {
     return this.http.put<CalendarDayData>(`${API}/days/${date}`, request);
   }
 
+  goal(): Observable<{ monthly_goal: number | null }> {
+    return this.http.get<{ monthly_goal: number | null }>('/shifter/v1/auth/goal');
+  }
+
+  setGoal(value: number | null): Observable<{ monthly_goal: number | null }> {
+    return this.http.put<{ monthly_goal: number | null }>('/shifter/v1/auth/goal', {
+      monthly_goal: value,
+    });
+  }
+
   locations(): Observable<WorkLocation[]> {
     return this.http.get<WorkLocation[]>(`${API}/locations`, {
       params: new HttpParams().set('archived', true),
@@ -93,6 +103,14 @@ export class CalendarApi {
     return this.http.post<WorkLocation>(`${API}/locations/${id}/archived`, null, {
       params: new HttpParams().set('value', archived),
     });
+  }
+
+  deleteLocation(id: number): Observable<void> {
+    return this.http.delete<void>(`${API}/locations/${id}`);
+  }
+
+  deleteSales(id: number): Observable<void> {
+    return this.http.delete<void>(`${API}/sales/${id}`);
   }
 
   payouts(from: string, to: string): Observable<Payout[]> {

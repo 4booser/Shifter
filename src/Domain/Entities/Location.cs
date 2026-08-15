@@ -40,6 +40,21 @@ public sealed class Location
     public double OvertimeWeeklyHours { get; set; } = 40;
     public decimal OvertimeMultiplier { get; set; } = 1.5m;
 
+    /// <summary>
+    /// Share of tips handed to support staff. Standard in restaurants, and it
+    /// comes straight off take-home, so the totals have to know about it.
+    /// </summary>
+    public decimal TipOutOfTipsPercent { get; set; }
+
+    /// <summary>Share of sales tipped out, the other common house rule.</summary>
+    public decimal TipOutOfSalesPercent { get; set; }
+
+    /// <summary>
+    /// Withheld for a staff meal, once per day worked here. Common in kitchens
+    /// and dining rooms, and it comes off take-home like any other deduction.
+    /// </summary>
+    public decimal MealDeduction { get; set; }
+
     public bool Archived { get; private set; }
 
     public void ToArchive() => Archived = true;

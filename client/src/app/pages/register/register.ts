@@ -1,4 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
+import { TPipe } from '../../core/i18n/i18n';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 
@@ -15,7 +16,7 @@ import { validationMessage } from '../../core/forms/validation-message';
 
 @Component({
   selector: 'app-register',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [TPipe, ReactiveFormsModule, RouterLink],
   templateUrl: './register.html',
 })
 export class Register {

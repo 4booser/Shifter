@@ -32,6 +32,11 @@ public record DayDto(
     DayShiftDto[] shifts,
     DaySaleDto[] sales,
     decimal? tips,
+    decimal? tips_cash,
+    /// <summary>Handed to support staff; already deducted from earned.</summary>
+    decimal tip_out,
+    /// <summary>Meal withholding plus fines; already deducted from earned.</summary>
+    decimal deductions,
     string? note,
     /// <summary>Paid hours of the shifts marked worked.</summary>
     double hours,
@@ -64,6 +69,10 @@ public record DaysDto(
     decimal paid,
     /// <summary>paid minus total_earned: negative means short.</summary>
     decimal difference,
+    /// <summary>Total handed to support staff across the range.</summary>
+    decimal tip_out,
+    /// <summary>Meals withheld plus fines across the range.</summary>
+    decimal deductions,
     /// <summary>Hours and money per place of work, worked shifts only.</summary>
     LocationTotalDto[] by_location,
     /// <summary>Hours past the weekly threshold.</summary>
@@ -80,6 +89,8 @@ public record DaySaveDto(
     DayShiftSaveDto[]? shifts,
     DaySaleSaveDto[]? sales,
     decimal? tips,
+    decimal? tips_cash,
+    decimal? deductions,
     string? note
     );
 

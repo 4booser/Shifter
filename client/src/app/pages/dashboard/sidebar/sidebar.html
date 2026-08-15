@@ -1,7 +1,7 @@
 <aside class="sidebar">
   <section>
     <div class="block-head">
-      <h2 class="block-title">Places</h2>
+      <h2 class="block-title">{{ 'Places' | t }}</h2>
       <button
         type="button"
         class="icon-button"
@@ -13,7 +13,7 @@
     </div>
 
     @if (locations().length === 0) {
-      <p class="empty-note">No places yet. Add one to group shifts and set a payday.</p>
+      <p class="empty-note">{{ 'No places yet. Add one to group shifts and set a payday.' | t }}</p>
     } @else {
       <ul class="position-list">
         @for (location of locations(); track location.id) {
@@ -31,14 +31,14 @@
 
   <section>
     <div class="block-head">
-      <h2 class="block-title">Shifts</h2>
+      <h2 class="block-title">{{ 'Shifts' | t }}</h2>
       <button type="button" class="icon-button" aria-label="New shift" (click)="newShift()">
         <app-icon name="plus" [size]="15" />
       </button>
     </div>
 
     @if (templates().length === 0) {
-      <p class="empty-note">None yet. Add one, then click or drag across days.</p>
+      <p class="empty-note">{{ 'None yet. Add one, then click or drag across days.' | t }}</p>
     } @else {
       <ul class="palette">
         @for (template of templates(); track template.id) {
@@ -85,11 +85,11 @@
       <div class="stack">
         <button type="button" class="button is-block" (click)="rotationModalOpen.set(true)">
           <app-icon name="repeat" />
-          Fill a rota
+          {{ 'Fill a rota' | t }}
         </button>
         <button type="button" class="button is-block" (click)="copyWeek()">
           <app-icon name="calendar" />
-          Repeat last week
+          {{ 'Repeat last week' | t }}
         </button>
       </div>
     }
@@ -97,7 +97,7 @@
 
   <section>
     <div class="block-head">
-      <h2 class="block-title">Sales</h2>
+      <h2 class="block-title">{{ 'Sales' | t }}</h2>
       <button
         type="button"
         class="icon-button"
@@ -109,7 +109,7 @@
     </div>
 
     @if (positions().length === 0) {
-      <p class="empty-note">Nothing to sell yet.</p>
+      <p class="empty-note">{{ 'Nothing to sell yet.' | t }}</p>
     } @else {
       <ul class="position-list">
         @for (position of positions(); track position.id) {
@@ -138,6 +138,14 @@
               >
                 <app-icon name="close" [size]="13" />
               </button>
+              <button
+                type="button"
+                class="icon-button is-small is-danger"
+                [attr.aria-label]="'Delete ' + position.name"
+                (click)="removePosition(position)"
+              >
+                <app-icon name="trash" [size]="13" />
+              </button>
             </span>
           </li>
         }
@@ -152,7 +160,7 @@
         class="button is-quiet is-block"
         (click)="showArchive.set(!showArchive())"
       >
-        {{ showArchive() ? 'Hide' : 'Show' }} archived
+        {{ (showArchive() ? 'Hide archived' : 'Show archived') | t }}
         ({{ archivedTemplates().length + archivedPositions().length }})
       </button>
 
@@ -197,14 +205,14 @@
         </ul>
 
         <p class="empty-note">
-          Archived items stay out of the way but keep everything they earned.
+          {{ 'Archived items stay out of the way but keep everything they earned.' | t }}
         </p>
       }
     </section>
   }
 
   <section>
-    <h2 class="block-title">Earnings</h2>
+    <h2 class="block-title">{{ 'Earnings' | t }}</h2>
 
     <div class="period-switch">
       @for (period of periods; track period.value) {
@@ -214,65 +222,87 @@
           [class.is-active]="summaryPeriod() === period.value"
           (click)="setPeriod(period.value)"
         >
-          {{ period.label }}
+          {{ period.label | t }}
         </button>
       }
     </div>
 
     <dl class="summary">
-      <div class="summary-row">
-        <dt>Days worked</dt>
+      <div class="summary-row tint-cyan">
+        <dt>{{ 'Days worked' | t }}</dt>
         <dd>{{ summary().days_worked }}</dd>
       </div>
-      <div class="summary-row">
-        <dt>Hours</dt>
-        <dd>{{ summary().hours | number: '1.0-2' }}</dd>
+      <div class="summary-row tint-teal">
+        <dt>{{ 'Hours' | t }}</dt>
+        <dd>
+          {{ summary().hours | number: '1.0-2' }}
+          <app-delta [percent]="hoursChange()" />
+        </dd>
       </div>
-      <div class="summary-row">
-        <dt>Shifts</dt>
-        <dd>{{ summary().shifts_earned | number: '1.0-2' }}</dd>
+      <div class="summary-row tint-indigo">
+        <dt>{{ 'Shifts' | t }}</dt>
+        <dd>{{ summary().shifts_earned | money }}</dd>
       </div>
       @if (summary().overtime_hours > 0) {
-        <div class="summary-row">
-          <dt>Overtime · {{ summary().overtime_hours | number: '1.0-1' }} h</dt>
-          <dd>+{{ summary().overtime_earned | number: '1.0-2' }}</dd>
+        <div class="summary-row tint-rose">
+          <dt>{{ 'Overtime' | t }} · {{ summary().overtime_hours | number: '1.0-1' }} h</dt>
+          <dd>+{{ summary().overtime_earned | money }}</dd>
         </div>
       }
       @if (summary().period_earned > 0) {
-        <div class="summary-row">
-          <dt>Salary</dt>
-          <dd>{{ summary().period_earned | number: '1.0-2' }}</dd>
+        <div class="summary-row tint-green">
+          <dt>{{ 'Salary' | t }}</dt>
+          <dd>{{ summary().period_earned | money }}</dd>
         </div>
       }
-      <div class="summary-row">
-        <dt>Sales</dt>
-        <dd>{{ summary().sales_earned | number: '1.0-2' }}</dd>
+      <div class="summary-row tint-violet">
+        <dt>{{ 'Sales' | t }}</dt>
+        <dd>{{ summary().sales_earned | money }}</dd>
       </div>
-      <div class="summary-row">
-        <dt>Tips</dt>
-        <dd>{{ summary().tips_earned | number: '1.0-2' }}</dd>
+      <div class="summary-row tint-amber">
+        <dt>{{ 'Tips' | t }}</dt>
+        <dd>
+          {{ summary().tips_earned | money }}
+          <app-delta [percent]="tipsChange()" />
+        </dd>
       </div>
-      <div class="summary-row is-total">
-        <dt>Earned</dt>
-        <dd>{{ summary().total_earned | number: '1.0-2' }}</dd>
+      <div class="summary-row tint-green is-total">
+        <dt>{{ 'Earned' | t }}</dt>
+        <dd>
+          {{ summary().total_earned | money }}
+          <app-delta [percent]="earnedChange()" />
+        </dd>
       </div>
       @if (summary().planned_earned > 0) {
-        <div class="summary-row">
-          <dt>Still planned</dt>
-          <dd>{{ summary().planned_earned | number: '1.0-2' }}</dd>
+        <div class="summary-row tint-orange">
+          <dt>{{ 'Still planned' | t }}</dt>
+          <dd>{{ summary().planned_earned | money }}</dd>
         </div>
       }
       @if (summary().paid > 0) {
-        <div class="summary-row">
-          <dt>Paid</dt>
-          <dd>{{ summary().paid | number: '1.0-2' }}</dd>
+        <div class="summary-row tint-green">
+          <dt>{{ 'Paid' | t }}</dt>
+          <dd>{{ summary().paid | money }}</dd>
         </div>
-        <div class="summary-row" [class.is-short]="summary().difference < 0">
-          <dt>Difference</dt>
-          <dd>{{ summary().difference | number: '1.0-2' }}</dd>
+        <div class="summary-row tint-rose" [class.is-short]="summary().difference < 0">
+          <dt>{{ 'Difference' | t }}</dt>
+          <dd>{{ summary().difference | money }}</dd>
         </div>
       }
     </dl>
+
+    <div class="avg-pair">
+      <span class="avg tint-green">
+        <span class="kpi-label">{{ 'Per working day' | t }}</span>
+        <span class="avg-value">{{ averages().perDay | money }}</span>
+        <app-delta [percent]="perDayChange()" />
+      </span>
+      <span class="avg tint-teal">
+        <span class="kpi-label">{{ 'Per hour' | t }}</span>
+        <span class="avg-value">{{ averages().perHour | money }}</span>
+        <app-delta [percent]="perHourChange()" />
+      </span>
+    </div>
 
     @if (summary().by_location.length > 1) {
       <dl class="summary by-location">
@@ -282,7 +312,7 @@
               <span class="location-dot" [style.background]="place.colour"></span>
               {{ place.name }}
             </dt>
-            <dd>{{ place.hours | number: '1.0-1' }} h · {{ place.earned | number: '1.0-2' }}</dd>
+            <dd>{{ place.hours | number: '1.0-1' }} h · {{ place.earned | money }}</dd>
           </div>
         }
       </dl>
@@ -295,7 +325,7 @@
       </button>
       <button type="button" class="button is-quiet is-block" (click)="exportCsv()">
         <app-icon name="note" />
-        Export CSV
+        {{ 'Export CSV' | t }}
       </button>
     </div>
   </section>

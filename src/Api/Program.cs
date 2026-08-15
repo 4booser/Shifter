@@ -39,6 +39,7 @@ try
         });
     });
     builder.Services.AddApplication(builder.Configuration);
+    builder.Services.AddHardening(builder.Configuration);
     builder.Services.AddJwtAuthentication(builder.Configuration);
     builder.Services.AddInfrastructure(builder.Configuration);
 
@@ -69,12 +70,25 @@ try
     app.UseDefaultFiles();
     app.UseStaticFiles();
 
+    app.UseCors(HardeningExtensions.CorsPolicy);
+
     // Must sit between routing and the endpoints: authentication reads the
     // bearer token, authorization enforces [Authorize] on the matched endpoint.
     app.UseAuthentication();
+
+    // After authentication, not before: the limiter partitions signed-in
+    // callers by account, and the claims it reads only exist once the bearer
+    // token has been validated. Validating a token is cheap next to the
+    // handlers this protects.
+    app.UseRateLimiter();
+
     app.UseAuthorization();
 
-    app.MapControllers();
+    app.MapControllers().RequireRateLimiting(HardeningExtensions.ApiPolicy);
+
+    // Unauthenticated on purpose: a load balancer has no token to present.
+    // It reports only whether each database answers, never why.
+    app.MapHealthChecks("/health").AllowAnonymous();
 
     // SPA fallback: deep links such as /dashboard render the Angular shell so
     // they survive a refresh. Paths under shifter/ are excluded so that unknown

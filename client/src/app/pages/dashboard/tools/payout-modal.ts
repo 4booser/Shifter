@@ -1,14 +1,15 @@
-import { DecimalPipe } from '@angular/common';
+import { TPipe } from '../../../core/i18n/i18n';
 import { Component, computed, effect, inject, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { CalendarStore } from '../../../core/calendar/calendar-store';
+import { MoneyPipe } from '../../../shared/money/money-pipe';
 import { Icon } from '../../../shared/icon/icon';
 import { Modal } from '../../../shared/modal/modal';
 
 @Component({
   selector: 'app-payout-modal',
-  imports: [FormsModule, Modal, DecimalPipe, Icon],
+  imports: [TPipe, FormsModule, Modal, Icon, MoneyPipe],
   templateUrl: './payout-modal.html',
 })
 export class PayoutModal {

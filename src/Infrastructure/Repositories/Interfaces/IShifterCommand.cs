@@ -10,6 +10,14 @@ public interface IShifterCommand
 
     Task<bool> AddLocationAsync(Location location, CancellationToken ct);
 
+    /// <summary>How many shifts point at this place; blocks a destructive delete.</summary>
+    Task<int> CountShiftsAtLocationAsync(int locationId, CancellationToken ct);
+    Task DeleteLocationAsync(Location location, CancellationToken ct);
+
+    /// <summary>How many recorded days used this position.</summary>
+    Task<int> CountSalesUsageAsync(int salesId, CancellationToken ct);
+    Task DeleteSalesAsync(Sales sales, CancellationToken ct);
+
     Task<bool> AddPayoutAsync(Payout payout, CancellationToken ct);
     Task DeletePayoutAsync(Payout payout, CancellationToken ct);
 

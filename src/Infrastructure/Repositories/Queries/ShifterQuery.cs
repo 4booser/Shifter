@@ -20,6 +20,7 @@ public class ShifterQuery : IShifterQuery
     {
         return await _db.Shifts
             .Include(s => s.Location)
+            .Include(s => s.Breaks)
             .Where(s => s.UserId == userId && !s.Archived && ids.Contains(s.Id))
             .ToArrayAsync(ct);
     }
@@ -32,6 +33,7 @@ public class ShifterQuery : IShifterQuery
         return await _db.Shifts
             .AsNoTracking()
             .Include(s => s.Location)
+            .Include(s => s.Breaks)
             .Where(s => s.UserId == userId && (includeArchived || !s.Archived))
             .OrderBy(s => s.Archived)
             .ThenBy(s => s.Name)
@@ -56,6 +58,7 @@ public class ShifterQuery : IShifterQuery
     {
         return await _db.Shifts
             .Include(s => s.Location)
+            .Include(s => s.Breaks)
             .FirstOrDefaultAsync(s => s.UserId == userId && s.Id == id, ct);
     }
 

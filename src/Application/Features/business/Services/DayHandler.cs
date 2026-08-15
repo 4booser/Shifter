@@ -37,9 +37,14 @@ public class DayHandler : IDayHandler
         Day[] days = await _shifterQuery.GetDaysInRangeAsync(userId, from, to, ct);
         Payout[] payouts = await _shifterQuery.GetPayoutsAsync(userId, from, to, ct);
 
-        DayDto[] dtos = days.Select(ToDto).ToArray();
-        DayShift[] entries = days.SelectMany(day => day.Shifts ?? []).ToArray();
+        // Locations first: the day view needs them for tip-out and meals, and
+        // every total below is derived from the days once they are built.
+        Location[] places = await _shifterQuery.GetLocationsAsync(userId, true, ct);
+        Dictionary<int, Location> byId = places.ToDictionary(place => place.Id);
 
+        DayDto[] dtos = days.Select(day => ToDto(day, byId)).ToArray();
+
+        DayShift[] entries = days.SelectMany(day => day.Shifts ?? []).ToArray();
         DayShift[] worked = entries.Where(entry => entry.Worked).ToArray();
         DayShift[] planned = entries.Where(entry => !entry.Worked).ToArray();
 
@@ -48,13 +53,14 @@ public class DayHandler : IDayHandler
         decimal periodEarned = PeriodSalary(days, workedOnly: true);
         decimal shiftsEarned = worked.Sum(entry => entry.Pay);
 
-        Location[] places = await _shifterQuery.GetLocationsAsync(userId, true, ct);
-        Dictionary<int, Location> byId = places.ToDictionary(place => place.Id);
-
         var (overtimeHours, overtimeExtra) = Overtime(days, byId);
 
+        decimal tipOut = days.Sum(day => TipOutFor(day, byId));
+        decimal deductions = days.Sum(day => DeductionsFor(day, byId));
+
         decimal totalEarned =
-            shiftsEarned + salesEarned + tipsEarned + periodEarned + overtimeExtra;
+            shiftsEarned + salesEarned + tipsEarned + periodEarned + overtimeExtra
+            - tipOut - deductions;
         decimal plannedEarned =
             planned.Sum(entry => entry.Pay) + PeriodSalary(days, workedOnly: false)
             - periodEarned;
@@ -76,7 +82,9 @@ public class DayHandler : IDayHandler
             paid,
             // Negative means the payment fell short of what was calculated.
             paid == 0m ? 0m : paid - totalEarned,
-            ByLocation(worked),
+            tipOut,
+            deductions,
+            ByLocation(days, byId),
             overtimeHours,
             overtimeExtra
         );
@@ -91,8 +99,14 @@ public class DayHandler : IDayHandler
         if (request.note?.Length > NoteMaxLength)
             throw new ValidationException($"Note must be at most {NoteMaxLength} characters.");
 
-        if (request.tips < 0)
+        if (request.tips < 0 || request.tips_cash < 0)
             throw new ValidationException("Tips cannot be negative.");
+
+        if (request.tips_cash > (request.tips ?? 0m))
+            throw new ValidationException("Cash tips cannot exceed the total.");
+
+        if (request.deductions < 0)
+            throw new ValidationException("Deductions cannot be negative.");
 
         List<DayShift> shifts = await ResolveShiftsAsync(request.shifts, userId, date, ct);
         List<DaySale> sales = await ResolveSalesAsync(request.sales, userId, ct);
@@ -104,12 +118,19 @@ public class DayHandler : IDayHandler
             Shifts = shifts,
             Sales = sales,
             Tips = request.tips,
+            TipsCash = request.tips_cash,
+            Deductions = request.deductions,
             Note = string.IsNullOrWhiteSpace(request.note) ? null : request.note.Trim()
         };
 
         Day saved = await _shifterCommand.UpsertDayAsync(incoming, ct);
 
-        return ToDto(saved);
+        // Locations carry the tip-out rule, so without them the saved day would
+        // come back with a different total than the calendar shows a moment
+        // later when the range reloads.
+        Location[] places = await _shifterQuery.GetLocationsAsync(userId, true, ct);
+
+        return ToDto(saved, places.ToDictionary(place => place.Id));
     }
 
     public async Task<DayDto[]> BulkAsync(
@@ -140,7 +161,10 @@ public class DayHandler : IDayHandler
         Day[] touched = await _shifterCommand.ApplyShiftAsync(
             userId, request.dates, shifts[0], add, ct);
 
-        return touched.Select(ToDto).ToArray();
+        Location[] places = await _shifterQuery.GetLocationsAsync(userId, true, ct);
+        Dictionary<int, Location> byId = places.ToDictionary(place => place.Id);
+
+        return touched.Select(day => ToDto(day, byId)).ToArray();
     }
 
     private async Task<List<DayShift>> ResolveShiftsAsync(
@@ -270,28 +294,141 @@ public class DayHandler : IDayHandler
     /// Worked hours and pay per place of work. Shifts with no location are
     /// grouped under id 0 rather than dropped, so the parts still sum.
     /// </summary>
-    private static LocationTotalDto[] ByLocation(DayShift[] worked)
+    private static LocationTotalDto[] ByLocation(
+        Day[] days,
+        Dictionary<int, Location> locations)
     {
-        // Grouped by id, not by the navigation object: AsNoTracking hands back a
-        // fresh Location instance per day, so grouping by reference would list
-        // the same place once for every day it appears on.
-        return worked
-            .GroupBy(entry => entry.Shift?.LocationId ?? 0)
-            .Select(group =>
+        // Tips and sales sit on the day, not on a shift, so a day split between
+        // two places shares them out by the hours each place got. Anything else
+        // would hand one location money the other earned.
+        Dictionary<int, LocationAccumulator> totals = [];
+
+        foreach (Day day in days)
+        {
+            DayShift[] worked = (day.Shifts ?? []).Where(entry => entry.Worked).ToArray();
+
+            if (worked.Length == 0) continue;
+
+            double dayHours = worked.Sum(entry => entry.PaidDuration.TotalHours);
+            decimal dayTips = day.Tips ?? 0m;
+            decimal daySales = (day.Sales ?? []).Sum(entry => entry.Earned);
+            decimal dayTipOut = TipOutFor(day, locations);
+            decimal dayDeductions = DeductionsFor(day, locations);
+
+            foreach (var group in worked.GroupBy(entry => entry.Shift?.LocationId ?? 0))
             {
-                Location? place = group
-                    .Select(entry => entry.Shift?.Location)
-                    .FirstOrDefault(location => location is not null);
+                double groupHours = group.Sum(entry => entry.PaidDuration.TotalHours);
+                decimal share = dayHours == 0 ? 0m : (decimal)(groupHours / dayHours);
+
+                if (!totals.TryGetValue(group.Key, out LocationAccumulator? bucket))
+                {
+                    Location? place = group
+                        .Select(entry => entry.Shift?.Location)
+                        .FirstOrDefault(location => location is not null);
+
+                    bucket = new LocationAccumulator
+                    {
+                        Name = place?.Name ?? "No location",
+                        Colour = place?.Colour ?? "#8D97A5",
+                    };
+
+                    totals[group.Key] = bucket;
+                }
+
+                bucket.Hours += groupHours;
+                bucket.ShiftPay += group.Sum(entry => entry.Pay);
+                bucket.Tips += dayTips * share;
+                bucket.Sales += daySales * share;
+                bucket.TipOut += dayTipOut * share;
+                bucket.Deductions += dayDeductions * share;
+                bucket.Days += 1;
+            }
+        }
+
+        return totals
+            .Select(pair =>
+            {
+                LocationAccumulator bucket = pair.Value;
+                decimal earned = bucket.ShiftPay + bucket.Tips + bucket.Sales
+                    - bucket.TipOut - bucket.Deductions;
 
                 return new LocationTotalDto(
-                    group.Key,
-                    place?.Name ?? "No location",
-                    place?.Colour ?? "#8D97A5",
-                    Math.Round(group.Sum(entry => entry.PaidDuration.TotalHours), 2),
-                    group.Sum(entry => entry.Pay));
+                    pair.Key,
+                    bucket.Name,
+                    bucket.Colour,
+                    Math.Round(bucket.Hours, 2),
+                    earned,
+                    bucket.Days,
+                    bucket.Tips,
+                    bucket.Sales,
+                    bucket.TipOut,
+                    bucket.Deductions,
+                    bucket.Hours == 0 ? 0m : earned / (decimal)bucket.Hours);
             })
             .OrderByDescending(total => total.earned)
             .ToArray();
+    }
+
+    private sealed class LocationAccumulator
+    {
+        public string Name = string.Empty;
+        public string Colour = string.Empty;
+        public double Hours;
+        public decimal ShiftPay;
+        public decimal Tips;
+        public decimal Sales;
+        public decimal TipOut;
+        public decimal Deductions;
+        public int Days;
+    }
+
+    /// <summary>
+    /// What the day owes support staff. The rule belongs to the place, so a day
+    /// with no located shifts tips out nothing.
+    /// </summary>
+    /// <summary>
+    /// Everything the day cost: the staff meal withheld by the place plus any
+    /// fine recorded on the day.
+    /// </summary>
+    private static decimal DeductionsFor(Day day, Dictionary<int, Location> locations)
+    {
+        decimal fines = day.Deductions ?? 0m;
+        decimal meals = 0m;
+
+        // One meal per place worked that day, not per shift: a split shift at
+        // the same restaurant is still one sitting.
+        foreach (int locationId in (day.Shifts ?? [])
+            .Where(entry => entry.Worked)
+            .Select(entry => entry.Shift?.LocationId ?? 0)
+            .Distinct())
+        {
+            if (locations.TryGetValue(locationId, out Location? place))
+                meals += place.MealDeduction;
+        }
+
+        return fines + meals;
+    }
+
+    private static decimal TipOutFor(Day day, Dictionary<int, Location> locations)
+    {
+        DayShift[] worked = (day.Shifts ?? []).Where(entry => entry.Worked).ToArray();
+
+        if (worked.Length == 0) return 0m;
+
+        Location? place = worked
+            .Select(entry =>
+                entry.Shift?.LocationId is int id && locations.TryGetValue(id, out Location? l)
+                    ? l
+                    : null)
+            .FirstOrDefault(location => location is not null);
+
+        if (place is null) return 0m;
+
+        decimal tips = day.Tips ?? 0m;
+        decimal sales = (day.Sales ?? []).Sum(entry => entry.Quantity * entry.UnitPrice);
+
+        return tips * place.TipOutOfTipsPercent / 100m
+            + sales * place.TipOutOfSalesPercent / 100m;
     }
 
     /// <summary>
@@ -329,8 +466,17 @@ public class DayHandler : IDayHandler
         return total;
     }
 
-    private static DayDto ToDto(Day day)
+    /// <summary>
+    /// Locations are needed for the tip-out, so the day-level view takes them
+    /// too; an empty map simply means no rule applies.
+    /// </summary>
+    private static DayDto ToDto(Day day) => ToDto(day, []);
+
+    private static DayDto ToDto(Day day, Dictionary<int, Location> locations)
     {
+        decimal tipOut = TipOutFor(day, locations);
+        decimal deductions = DeductionsFor(day, locations);
+
         DaySaleDto[] sales = (day.Sales ?? [])
             .Select(entry => new DaySaleDto(
                 entry.SalesId,
@@ -363,9 +509,12 @@ public class DayHandler : IDayHandler
             shifts,
             sales,
             day.Tips,
+            day.TipsCash,
+            tipOut,
+            deductions,
             day.Note,
             Math.Round(shifts.Where(s => s.worked).Sum(s => s.hours), 2),
-            workedPay + salesPay + (day.Tips ?? 0m),
+            workedPay + salesPay + (day.Tips ?? 0m) - tipOut - deductions,
             plannedPay
         );
     }

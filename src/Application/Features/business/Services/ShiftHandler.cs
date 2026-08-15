@@ -111,6 +111,16 @@ public class ShiftHandler : IShiftHandler
         if (request.symbol?.Length > 8)
             throw new ValidationException("Symbol is too long for a badge.");
 
+        // The break has to leave something behind to pay for: a break as long
+        // as the shift means nobody was on the clock at all.
+        TimeSpan length = start <= end ? end - start : end - start + TimeSpan.FromDays(1);
+
+        if (request.break_minutes < 0)
+            throw new ValidationException("Break cannot be negative.");
+
+        if (request.break_minutes >= length.TotalMinutes)
+            throw new ValidationException("Break must be shorter than the shift.");
+
         shift.Name = request.name.Trim();
         // Trimmed to a couple of graphemes: the badge is a badge, and an emoji
         // with skin tone or ZWJ still fits inside four UTF-16 units.
@@ -122,6 +132,13 @@ public class ShiftHandler : IShiftHandler
         shift.EndTime = end;
         shift.SalaryPeriod = ParsePeriod(request.salary_period);
         shift.SalaryAmount = request.salary_amount;
+
+        // One unpaid stretch per template rather than a named list: the entity
+        // supports several, but a shift with two separately timed breaks is not
+        // something anyone has asked to type in.
+        shift.Breaks = request.break_minutes > 0
+            ? [new Break { Duration = TimeSpan.FromMinutes(request.break_minutes) }]
+            : [];
     }
 
     internal static ShiftDto ToDto(Shift shift) => new ShiftDto(
@@ -132,6 +149,7 @@ public class ShiftHandler : IShiftHandler
         shift.EndTime.ToString("HH:mm"),
         PeriodName(shift.SalaryPeriod),
         shift.SalaryAmount,
+        (int)Math.Round((shift.Duration - shift.PaidDuration).TotalMinutes),
         Math.Round(shift.PaidDuration.TotalHours, 2),
         shift.LocationId,
         shift.Location?.Name,

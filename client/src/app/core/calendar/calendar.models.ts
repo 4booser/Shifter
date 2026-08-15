@@ -24,6 +24,8 @@ export interface ShiftTemplate {
   end_time: string;
   salary_period: SalaryPeriod;
   salary_amount: number | null;
+  /** Unpaid minutes inside the shift. */
+  break_minutes: number;
   /** Paid hours, breaks already deducted. */
   hours: number;
   archived: boolean;
@@ -37,6 +39,7 @@ export interface ShiftCreate {
   end_time: string;
   salary_period: SalaryPeriod;
   salary_amount: number | null;
+  break_minutes: number;
 }
 
 export type PayPeriodKind = 'monthly' | 'semimonthly' | 'biweekly' | 'weekly';
@@ -60,6 +63,9 @@ export interface WorkLocation {
   current_period_to: string;
   overtime_weekly_hours: number;
   overtime_multiplier: number;
+  tip_out_of_tips_percent: number;
+  tip_out_of_sales_percent: number;
+  meal_deduction: number;
   archived: boolean;
 }
 
@@ -72,6 +78,9 @@ export interface WorkLocationCreate {
   pay_anchor: string | null;
   overtime_weekly_hours: number;
   overtime_multiplier: number;
+  tip_out_of_tips_percent: number;
+  tip_out_of_sales_percent: number;
+  meal_deduction: number;
 }
 
 export interface LocationTotal {
@@ -80,6 +89,13 @@ export interface LocationTotal {
   colour: string;
   hours: number;
   earned: number;
+  days_worked: number;
+  tips: number;
+  sales: number;
+  tip_out: number;
+  deductions: number;
+  /** Everything the place produced per paid hour. */
+  per_hour: number;
 }
 
 export interface SalesPosition {
@@ -125,6 +141,11 @@ export interface CalendarDayData {
   shifts: DayShiftEntry[];
   sales: DaySale[];
   tips: number | null;
+  tips_cash: number | null;
+  /** Handed to support staff; already deducted from earned. */
+  tip_out: number;
+  /** Meal withholding plus fines; already deducted from earned. */
+  deductions: number;
   note: string | null;
   /** Paid hours of the shifts marked worked. */
   hours: number;
@@ -150,6 +171,10 @@ export interface DaysResponse {
   paid: number;
   /** paid minus total_earned: negative means short. */
   difference: number;
+  /** Handed to support staff; already deducted from total_earned. */
+  tip_out: number;
+  /** Meals withheld plus fines across the range. */
+  deductions: number;
   by_location: LocationTotal[];
   overtime_hours: number;
   overtime_earned: number;
@@ -175,6 +200,8 @@ export interface PayoutCreate {
 /** A day is always sent whole, never patched. */
 export interface DaySave {
   shifts: { shift_id: number; worked: boolean }[];
+  tips_cash: number | null;
+  deductions: number | null;
   sales: { sales_id: number; quantity: number }[];
   tips: number | null;
   note: string | null;
@@ -196,6 +223,8 @@ export const EMPTY_SUMMARY: DaysResponse = {
   days_planned: 0,
   paid: 0,
   difference: 0,
+  tip_out: 0,
+  deductions: 0,
   by_location: [],
   overtime_hours: 0,
   overtime_earned: 0,
@@ -213,6 +242,8 @@ export function toSavePayload(day: CalendarDayData | undefined): DaySave {
       quantity: entry.quantity,
     })),
     tips: day?.tips ?? null,
+    tips_cash: day?.tips_cash ?? null,
+    deductions: day?.deductions ?? null,
     note: day?.note ?? null,
   };
 }

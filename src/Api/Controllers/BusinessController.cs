@@ -63,6 +63,24 @@ public class BusinessController : ControllerBase
         CancellationToken ct)
         => Ok(await _locationHandler.SetArchivedAsync(CurrentUserId(), id, value, ct));
 
+    [HttpDelete]
+    [Route("locations/{id:int}")]
+    public async Task<IActionResult> DeleteLocation(int id, CancellationToken ct)
+    {
+        await _locationHandler.DeleteAsync(CurrentUserId(), id, ct);
+
+        return NoContent();
+    }
+
+    [HttpDelete]
+    [Route("sales/{id:int}")]
+    public async Task<IActionResult> DeleteSales(int id, CancellationToken ct)
+    {
+        await _salesHandler.DeleteAsync(CurrentUserId(), id, ct);
+
+        return NoContent();
+    }
+
     [HttpGet]
     [Route("payouts")]
     public async Task<ActionResult<PayoutDto[]>> GetPayouts(

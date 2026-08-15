@@ -27,6 +27,13 @@ public class ShifterDbContext : DbContext
             .HasIndex(user => user.Login)
             .IsUnique();
 
+        // One Shifter account per Google account. Filtered so the many users
+        // without one do not all collide on NULL.
+        modelBuilder.Entity<User>()
+            .HasIndex(user => user.GoogleSubject)
+            .IsUnique()
+            .HasFilter("\"GoogleSubject\" IS NOT NULL");
+
         // A user has at most one row per date. The day endpoint upserts on this
         // pair, so a duplicate would silently split one day into two.
         modelBuilder.Entity<Day>()

@@ -11,9 +11,19 @@ public sealed class User
     public string? LastName { get; set; }
     
     public required string Login { get; set; }
-    public required string PasswordHash { get; set; }
+    /// <summary>
+    /// Null for accounts that only ever signed in with Google — there is no
+    /// password to hash, and inventing one would be a lie about how they log in.
+    /// </summary>
+    public string? PasswordHash { get; set; }
+
+    /// <summary>Google's stable user id ("sub"), unique when present.</summary>
+    public string? GoogleSubject { get; set; }
     
     public List<Day>? CalendarDays { get; set; }
+
+    /// <summary>Income the user aims for in a month; null means no goal set.</summary>
+    public decimal? MonthlyGoal { get; set; }
     public List<Sales>? Sales {get; set;}
     
     public bool IsActive { get; set; } = true;

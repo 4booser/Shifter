@@ -16,6 +16,11 @@
       <app-icon [name]="appearance.hideAmounts() ? 'eye-off' : 'eye'" [size]="15" />
     </button>
 
+    <a routerLink="/account" class="button is-quiet">
+      <app-icon name="target" />
+      {{ 'Account' | t }}
+    </a>
+
     <a routerLink="/wrapped" class="button is-quiet">
       <app-icon name="trophy" />
       {{ 'Your year' | t }}

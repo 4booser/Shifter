@@ -1,0 +1,189 @@
+<div class="shell">
+  <header class="topbar">
+    <a routerLink="/dashboard" class="button is-quiet">
+      <app-icon name="chevron-left" />
+      {{ 'Back to calendar' | t }}
+    </a>
+
+    <span class="brand">{{ 'Account' | t }}</span>
+  </header>
+
+  @if (error(); as text) {
+    <p class="alert shell-alert" role="alert">{{ text }}</p>
+  }
+
+  @if (saved(); as text) {
+    <p class="alert is-good shell-alert" role="status">{{ text }}</p>
+  }
+
+  <div class="account">
+    @if (profile(); as account) {
+      <section class="stat-card">
+        <h2 class="card-title">
+          <app-icon name="target" [size]="16" />
+          {{ 'Who you are' | t }}
+        </h2>
+
+        <p class="field-hint">
+          {{ 'Signing in as' | t }} <strong>{{ account.login }}</strong> ·
+          {{ 'Member since' | t }} {{ memberSince() }}
+        </p>
+
+        <div class="field-row">
+          <label class="field">
+            <span class="field-label">{{ 'First name' | t }}</span>
+            <input type="text" maxlength="60" [(ngModel)]="firstName" />
+          </label>
+
+          <label class="field">
+            <span class="field-label">{{ 'Last name' | t }}</span>
+            <input type="text" maxlength="60" [(ngModel)]="lastName" />
+          </label>
+        </div>
+
+        <div class="modal-actions">
+          <button
+            type="button"
+            class="button is-primary"
+            [disabled]="busy() || firstName().trim().length === 0"
+            (click)="saveNames()"
+          >
+            {{ 'Save' | t }}
+          </button>
+        </div>
+      </section>
+
+      <section class="stat-card">
+        <h2 class="card-title">
+          <app-icon name="wallet" [size]="16" />
+          {{ needsPassword() ? ('Set a password' | t) : ('Change password' | t) }}
+        </h2>
+
+        @if (needsPassword()) {
+          <p class="field-hint">
+            {{ 'You sign in with Google. Add a password to get in without it.' | t }}
+          </p>
+        } @else {
+          <label class="field">
+            <span class="field-label">{{ 'Current password' | t }}</span>
+            <input type="password" autocomplete="current-password" [(ngModel)]="currentPassword" />
+          </label>
+        }
+
+        <div class="field-row">
+          <label class="field">
+            <span class="field-label">{{ 'New password' | t }}</span>
+            <input type="password" autocomplete="new-password" [(ngModel)]="newPassword" />
+          </label>
+
+          <label class="field">
+            <span class="field-label">{{ 'Repeat it' | t }}</span>
+            <input type="password" autocomplete="new-password" [(ngModel)]="repeatPassword" />
+          </label>
+        </div>
+
+        <p class="field-hint">{{ 'At least 8 characters.' | t }}</p>
+
+        <div class="modal-actions">
+          <button
+            type="button"
+            class="button is-primary"
+            [disabled]="busy() || !passwordsMatch() || newPassword().length < 8"
+            (click)="savePassword()"
+          >
+            {{ 'Save' | t }}
+          </button>
+        </div>
+      </section>
+
+      <section class="stat-card">
+        <h2 class="card-title">
+          <app-icon name="sliders" [size]="16" />
+          {{ 'Sessions and sign-in' | t }}
+        </h2>
+
+        <div class="summary-row">
+          <dt>{{ 'Google' | t }}</dt>
+          <dd>
+            @if (account.google_linked) {
+              {{ 'Connected' | t }}
+              <button
+                type="button"
+                class="button is-quiet"
+                [disabled]="busy() || !account.has_password"
+                (click)="unlinkGoogle()"
+              >
+                {{ 'Disconnect' | t }}
+              </button>
+            } @else {
+              {{ 'Not connected' | t }}
+            }
+          </dd>
+        </div>
+
+        @if (account.google_linked && !account.has_password) {
+          <p class="field-hint">
+            {{ 'Set a password first, or disconnecting would lock you out.' | t }}
+          </p>
+        }
+
+        <div class="modal-actions">
+          <button type="button" class="button" [disabled]="busy()" (click)="signOutEverywhere()">
+            <app-icon name="logout" [size]="16" />
+            {{ 'Sign out on every device' | t }}
+          </button>
+        </div>
+      </section>
+
+      <!-- Kept last and visually apart: nothing here can be undone. -->
+      <section class="stat-card is-danger">
+        <h2 class="card-title">
+          <app-icon name="trash" [size]="16" />
+          {{ 'Delete account' | t }}
+        </h2>
+
+        <p class="field-hint">
+          {{ 'Every shift, day, place and payout goes with it. This cannot be undone.' | t }}
+        </p>
+
+        @if (!confirmingDelete()) {
+          <div class="modal-actions">
+            <button type="button" class="button is-danger" (click)="confirmingDelete.set(true)">
+              {{ 'Delete account' | t }}
+            </button>
+          </div>
+        } @else {
+          <label class="field">
+            <span class="field-label">
+              {{ 'Type your login to confirm' | t }}: <strong>{{ account.login }}</strong>
+            </span>
+            <input type="text" autocomplete="off" [(ngModel)]="confirmLogin" />
+          </label>
+
+          @if (account.has_password) {
+            <label class="field">
+              <span class="field-label">{{ 'Your password' | t }}</span>
+              <input type="password" autocomplete="current-password" [(ngModel)]="deletePassword" />
+            </label>
+          }
+
+          <div class="modal-actions">
+            <button type="button" class="button is-quiet" (click)="confirmingDelete.set(false)">
+              {{ 'Cancel' | t }}
+            </button>
+            <button
+              type="button"
+              class="button is-danger"
+              [disabled]="busy() || !canDelete()"
+              (click)="deleteAccount()"
+            >
+              {{ 'Delete for good' | t }}
+            </button>
+          </div>
+        }
+      </section>
+    } @else if (!loading()) {
+      <p class="empty-note">{{ 'Nothing recorded in this period yet.' | t }}</p>
+    }
+  </div>
+</div>

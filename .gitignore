@@ -9,3 +9,10 @@ wwwroot/
 
 # Secrets for docker compose; .env.example is the template.
 .env
+
+# Sync-conflict copies. iCloud and Dropbox resolve a clash by writing
+# "name 2.ext" beside the original. These have broken the Docker build once by
+# shadowing a real directory, and a copy of .env would not be matched by the
+# rule above — so they are excluded by name here as well.
+* 2
+* 2.*

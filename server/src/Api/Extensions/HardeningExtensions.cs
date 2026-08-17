@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
 using Shifter.Infrastructure.Persistence.DbContexts;
 
@@ -24,6 +25,20 @@ public static class HardeningExtensions
         this IServiceCollection services,
         IConfiguration configuration)
     {
+        // In production Caddy is the only thing that can reach the app: port
+        // 8080 is not published, so the request always arrives from inside the
+        // compose network. The default trust list is loopback only, which would
+        // drop the headers from exactly that address — hence the clear. Nothing
+        // untrusted can reach this port to forge them.
+        services.Configure<ForwardedHeadersOptions>(options =>
+        {
+            options.ForwardedHeaders =
+                ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+
+            options.KnownIPNetworks.Clear();
+            options.KnownProxies.Clear();
+        });
+
         services.AddRateLimiter(options =>
         {
             // 429 with a hint, in the same shape as every other error the API

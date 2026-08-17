@@ -58,6 +58,11 @@ try
 
     var app = builder.Build();
 
+    // First in the pipeline: everything after it — the request log, the rate
+    // limiter's per-address partition — reads the caller's address, and behind
+    // the proxy that address is the proxy itself unless this runs first.
+    app.UseForwardedHeaders();
+
     app.UseSerilogRequestLogging();
 
     app.UseMiddleware<GlobalExceptionMiddleware>();
@@ -69,14 +74,12 @@ try
         app.UseSwaggerUI();
     }
 
-    // Skipped in development: under the https launch profile this answers the
-    // dev-server's proxied call with a 307 to :7172, and the browser refuses
-    // that cross-origin hop to an untrusted dev certificate. The SPA then sees
-    // a status 0 and reports the server as unreachable.
-    if (!app.Environment.IsDevelopment())
-    {
-        app.UseHttpsRedirection();
-    }
+    // No HTTPS redirection here, deliberately. In production the app never
+    // speaks TLS: Caddy terminates it and forwards plain HTTP over a private
+    // network, so a redirect from here either points at a port nothing listens
+    // on (bare IP) or bounces the browser between the two forever (domain).
+    // The edge already sends http to https on its own, which is where that
+    // decision belongs.
 
     // Serves the Angular bundle that `dotnet publish` builds into wwwroot.
     // In development the SPA is normally served by `ng serve` instead.

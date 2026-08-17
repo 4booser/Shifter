@@ -86,6 +86,11 @@ jobs:
     name: Deploy
     needs: build
     runs-on: ubuntu-latest
+    # The server pulls with this run's token, so it needs to be able to read
+    # packages — stated here rather than left to whatever the default is.
+    permissions:
+      contents: read
+      packages: read
     # One deployment at a time, and a newer commit waits rather than racing.
     concurrency:
       group: production
@@ -106,13 +111,24 @@ jobs:
 
       - name: Pull and restart
         uses: appleboy/ssh-action@v1.2.0
+        env:
+          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REGISTRY_USER: ${{ github.actor }}
         with:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
+          # The token is scoped to this run and expires with it, so the
+          # server never holds a lasting credential for the registry.
+          envs: REGISTRY_TOKEN,REGISTRY_USER
           script: |
             set -euo pipefail
             cd /opt/shifter
+
+            # Images pushed by Actions are private unless someone changes that
+            # by hand, so the pull below needs a login. Doing it here keeps the
+            # package private without anyone storing a token on the server.
+            echo "$REGISTRY_TOKEN" | docker login ghcr.io -u "$REGISTRY_USER" --password-stdin
 
             echo "REGISTRY=${{ env.REGISTRY }}/${{ github.repository_owner }}" > .env.release
             echo "TAG=${{ github.sha }}" >> .env.release
@@ -127,6 +143,7 @@ jobs:
                  | grep -q 'shifter.*healthy'; then
                 echo "healthy"
                 docker image prune -f
+                docker logout ghcr.io
                 exit 0
               fi
               sleep 5
@@ -134,4 +151,5 @@ jobs:
 
             echo "did not become healthy in time"
             docker compose -f compose.prod.yaml logs --tail 60 shifter
+            docker logout ghcr.io
             exit 1

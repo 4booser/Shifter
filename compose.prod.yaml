@@ -43,7 +43,10 @@ services:
       ConnectionStrings__Shifter: "Host=db;Port=5432;Database=shifter;Username=shifter_user;Password=${POSTGRES_PASSWORD}"
       ConnectionStrings__Tokens: "Host=db;Port=5432;Database=tokens;Username=shifter_user;Password=${POSTGRES_PASSWORD}"
       SHIFTER_JWT_KEY: ${SHIFTER_JWT_KEY:?set SHIFTER_JWT_KEY in .env}
-      Google__ClientId: ${GOOGLE_CLIENT_ID:-}
+      # No Google__ClientId here on purpose. It would be set even when the
+      # variable is unset, and an empty environment variable overrides
+      # appsettings.json rather than deferring to it — which silently turns off
+      # the sign-in button. The id is public and ships in the image.
     depends_on:
       db:
         condition: service_healthy

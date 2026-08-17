@@ -14,6 +14,13 @@
         }
       </select>
     }
+
+    @if (teams().length > 0) {
+      <a routerLink="/schedule" class="button is-quiet">
+        <app-icon name="calendar" />
+        {{ 'Schedule' | t }}
+      </a>
+    }
   </header>
 
   @if (error(); as text) {
@@ -31,154 +38,6 @@
         </h2>
         <p class="field-hint">
           {{ 'Everyone sees who is on and for how long. Nobody sees anyone else’s tips, sales or rate.' | t }}
-        </p>
-      </section>
-    }
-
-    @if (coverRequests().length > 0) {
-      <section class="stat-card is-warning">
-        <h2 class="card-title">
-          <app-icon name="swap" [size]="16" />
-          {{ 'Cover requests' | t }}
-        </h2>
-
-        <div class="cover-list">
-          @for (request of coverRequests(); track request.member_id + request.date) {
-            <div class="cover-row">
-              <span class="rota-mark" [style.--mark-colour]="request.colour">
-                {{ request.symbol ?? request.shift_name.charAt(0) }}
-              </span>
-              <span class="cover-who">
-                <strong>{{ request.who }}</strong>
-                <span class="field-hint">
-                  {{ request.shift_name }} · {{ request.start_time }}–{{ request.end_time }}
-                </span>
-              </span>
-              <span class="cover-when">{{ label(request.date) }}</span>
-            </div>
-          }
-        </div>
-      </section>
-    }
-
-    @if (uncovered().length > 0) {
-      <section class="stat-card">
-        <h2 class="card-title">
-          <app-icon name="calendar" [size]="16" />
-          {{ 'Days with nobody on' | t }}
-        </h2>
-        <div class="gap-list">
-          @for (day of uncovered(); track day.date) {
-            <span class="gap-chip">{{ label(day.date) }}</span>
-          }
-        </div>
-      </section>
-    }
-
-    @if (rota(); as loaded) {
-      <section class="stat-card">
-        <div class="rota-head">
-          <h2 class="card-title">{{ loaded.team_name }}</h2>
-
-          <span class="month-switch">
-            <button type="button" class="nav" (click)="shiftMonth(-1)" aria-label="Previous">
-              <app-icon name="chevron-left" [size]="18" />
-            </button>
-            <strong>{{ monthLabel() }}</strong>
-            <button type="button" class="nav" (click)="shiftMonth(1)" aria-label="Next">
-              <app-icon name="chevron-right" [size]="18" />
-            </button>
-          </span>
-        </div>
-
-        <div class="rota-kpis">
-          <span class="avg tint-teal">
-            <span class="kpi-label">{{ 'People' | t }}</span>
-            <span class="avg-value">{{ loaded.members.length }}</span>
-          </span>
-          <span class="avg tint-indigo">
-            <span class="kpi-label">{{ 'Hours together' | t }}</span>
-            <span class="avg-value">{{ totalHours() | number: '1.0-0' }}</span>
-          </span>
-          @if (busiestDay(); as busiest) {
-            <span class="avg tint-amber">
-              <span class="kpi-label">{{ 'Busiest day' | t }}</span>
-              <span class="avg-value">{{ label(busiest.date) }}</span>
-            </span>
-          }
-        </div>
-
-        <!-- Rows are people, columns are days; the whole month scrolls
-             sideways inside this box rather than pushing the page wide. -->
-        <div class="rota-scroll">
-          <table class="rota">
-            <thead>
-              <tr>
-                <th class="rota-corner">{{ 'Who' | t }}</th>
-                @for (key of days(); track key) {
-                  <th
-                    class="rota-day"
-                    [class.is-weekend]="isWeekend(key)"
-                    [class.is-focused]="focusDay() === key"
-                  >
-                    <button type="button" class="rota-day-button" (click)="pickDay(key)">
-                      <span class="rota-weekday">{{ weekday(key) }}</span>
-                      <span class="rota-date">{{ label(key) }}</span>
-                    </button>
-                  </th>
-                }
-                <th class="rota-total">{{ 'h' | t }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (row of grid(); track row.member.member_id) {
-                <tr [class.is-you]="row.member.is_you">
-                  <th class="rota-name">
-                    {{ row.member.display_name }}
-                    @if (row.member.is_you) {
-                      <span class="rota-you">{{ 'you' | t }}</span>
-                    }
-                  </th>
-
-                  @for (cell of row.cells; track cell.key) {
-                    <td class="rota-cell" [class.is-weekend]="isWeekend(cell.key)">
-                      @for (entry of cell.entries; track $index) {
-                        <span
-                          class="rota-mark"
-                          [class.is-planned]="!entry.worked"
-                          [class.needs-cover]="entry.needs_cover"
-                          [style.--mark-colour]="entry.colour"
-                          [title]="entry.shift_name + ' · ' + entry.start_time + '–' + entry.end_time"
-                        >
-                          {{ entry.symbol ?? entry.shift_name.charAt(0) }}
-                        </span>
-                      }
-                    </td>
-                  }
-
-                  <td class="rota-total">{{ row.member.hours | number: '1.0-0' }}</td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-
-        @if (focus(); as day) {
-          <div class="day-focus">
-            <strong>{{ label(day.date) }}</strong>
-            <span class="delta is-up">{{ day.on_shift }} {{ 'on shift' | t }}</span>
-            @if (day.free.length > 0) {
-              <span class="field-hint">
-                {{ 'Free that day' | t }}: {{ day.free.join(', ') }}
-              </span>
-            } @else {
-              <span class="field-hint">{{ 'Everyone is on.' | t }}</span>
-            }
-          </div>
-        }
-
-        <p class="field-hint">
-          {{ 'Hours and shift names only. Tips, sales and rates stay private to each person.' | t }}
         </p>
       </section>
     }
@@ -223,7 +82,10 @@
         {{ 'Join or start a team' | t }}
       </h2>
 
-      <div class="field-row">
+      <!-- Each button sits on the row it acts on, aligned with the field's
+           box rather than floated off to the card's edge on a line of its
+           own, where it read as belonging to nothing. -->
+      <div class="join-row">
         <label class="field">
           <span class="field-label">{{ 'Invite code' | t }}</span>
           <input
@@ -244,9 +106,7 @@
             (ngModelChange)="displayName.set($event)"
           />
         </label>
-      </div>
 
-      <div class="modal-actions">
         <button
           type="button"
           class="button"
@@ -257,17 +117,17 @@
         </button>
       </div>
 
-      <label class="field">
-        <span class="field-label">{{ 'Or start a new one' | t }}</span>
-        <input
-          type="text"
-          maxlength="60"
-          [ngModel]="newName()"
-          (ngModelChange)="newName.set($event)"
-        />
-      </label>
+      <div class="join-row">
+        <label class="field">
+          <span class="field-label">{{ 'Or start a new one' | t }}</span>
+          <input
+            type="text"
+            maxlength="60"
+            [ngModel]="newName()"
+            (ngModelChange)="newName.set($event)"
+          />
+        </label>
 
-      <div class="modal-actions">
         <button
           type="button"
           class="button is-primary"

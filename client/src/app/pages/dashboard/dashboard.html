@@ -22,7 +22,12 @@
         <span>{{ 'Search' | t }}</span>
       </button>
 
-      <a routerLink="/team" routerLinkActive="is-active" class="topnav-item is-feature">
+      <a routerLink="/schedule" routerLinkActive="is-active" class="topnav-item is-feature">
+        <app-icon name="calendar" [size]="16" />
+        <span>{{ 'Schedule' | t }}</span>
+      </a>
+
+      <a routerLink="/team" routerLinkActive="is-active" class="topnav-item">
         <app-icon name="users" [size]="16" />
         <span>{{ 'Team' | t }}</span>
       </a>

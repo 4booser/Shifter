@@ -4,11 +4,11 @@ import { FormsModule } from '@angular/forms';
 
 import { CalendarStore } from '../../../core/calendar/calendar-store';
 import {
+  MARK_COLOURS,
   PAY_PERIODS,
   PayPeriodKind,
   WorkLocation,
 } from '../../../core/calendar/calendar.models';
-import { ACCENT_PRESETS } from '../../../core/settings/settings-store';
 import { I18n } from '../../../core/i18n/i18n';
 import { Icon } from '../../../shared/icon/icon';
 import { Modal } from '../../../shared/modal/modal';
@@ -26,7 +26,11 @@ export class LocationModal {
   private readonly i18n = inject(I18n);
 
   protected readonly periods = PAY_PERIODS;
-  protected readonly colours = ACCENT_PRESETS;
+  // The calendar palette rather than the accents: a place's colour appears as
+  // a badge a few millimetres across, where the accents were chosen to sit
+  // behind text and read as grey at that size. Twelve options also means two
+  // places rarely end up indistinguishable.
+  protected readonly colours = MARK_COLOURS;
   protected readonly locations = this.store.locations;
   protected readonly archived = this.store.archivedLocations;
 

@@ -548,6 +548,60 @@ export const RU: Dictionary = {
   'Last name': 'Фамилия',
   'Already registered?': 'Уже есть аккаунт?',
   'Creating…': 'Создаём…',
+  // Colours, events and holidays
+  Events: 'События',
+  'Nothing on this day but work.': 'Кроме работы в этот день ничего.',
+  'New event': 'Новое событие',
+  'Edit event': 'Событие',
+  'Holiday, course, day off…': 'Отпуск, учёба, выходной…',
+  'All day': 'Весь день',
+  Covers: 'Занимает',
+  'The end cannot come before the start.': 'Конец не может быть раньше начала.',
+  Save: 'Сохранить',
+  'Public holidays': 'Праздники',
+  'Marked on the calendar. Worked out in the app, so they show without a network.':
+    'Отмечаются в календаре. Считаются в приложении, поэтому видны и без сети.',
+  None: 'Нет',
+  Ukraine: 'Украина',
+  Poland: 'Польша',
+  Germany: 'Германия',
+  'United Kingdom': 'Великобритания',
+  'United States': 'США',
+  Canada: 'Канада',
+  'Times in day cells': 'Время в ячейках дня',
+  Start: 'Начало',
+  'Start and end': 'Начало и конец',
+
+  // Weekly pattern
+  'Weekly pattern': 'Недельный шаблон',
+  'Create a shift first — a pattern needs something to place.':
+    'Сначала создай смену — шаблону нужно что ставить.',
+  'Say what you work on each weekday. Then click the days you actually worked and each one takes its own shift.':
+    'Укажи, что работаешь в каждый день недели. Потом просто кликай по рабочим дням — на каждый встанет своя смена.',
+  Nothing: 'Ничего',
+  'Start placing': 'Начать расставлять',
+  'Placing the weekly pattern': 'Ставим недельный шаблон',
+  'click the days you work and each takes its own shift':
+    'кликай по рабочим дням, на каждый встанет своя смена',
+  Monday: 'Понедельник',
+  Tuesday: 'Вторник',
+  Wednesday: 'Среда',
+  Thursday: 'Четверг',
+  Friday: 'Пятница',
+  Saturday: 'Суббота',
+  Sunday: 'Воскресенье',
+
+  // Shared schedule
+  Schedule: 'График',
+  Members: 'Участники',
+  Range: 'Период',
+  'No team yet': 'Команды пока нет',
+  'A shared schedule needs a crew. Join one with a code, or start your own.':
+    'Общему графику нужна команда. Войди по коду или создай свою.',
+
+  // Share card
+  'After tax': 'После налога',
+  'Overtime hours': 'Часы переработки',
 };
 
 export const UK: Dictionary = {
@@ -1081,4 +1135,58 @@ export const UK: Dictionary = {
   'Last name': 'Прізвище',
   'Already registered?': 'Вже є акаунт?',
   'Creating…': 'Створюємо…',
+  // Colours, events and holidays
+  Events: 'Події',
+  'Nothing on this day but work.': 'Крім роботи цього дня нічого.',
+  'New event': 'Нова подія',
+  'Edit event': 'Подія',
+  'Holiday, course, day off…': 'Відпустка, навчання, вихідний…',
+  'All day': 'Весь день',
+  Covers: 'Займає',
+  'The end cannot come before the start.': 'Кінець не може бути раніше початку.',
+  Save: 'Зберегти',
+  'Public holidays': 'Свята',
+  'Marked on the calendar. Worked out in the app, so they show without a network.':
+    'Позначаються в календарі. Обчислюються в застосунку, тому видно й без мережі.',
+  None: 'Немає',
+  Ukraine: 'Україна',
+  Poland: 'Польща',
+  Germany: 'Німеччина',
+  'United Kingdom': 'Велика Британія',
+  'United States': 'США',
+  Canada: 'Канада',
+  'Times in day cells': 'Час у клітинках дня',
+  Start: 'Початок',
+  'Start and end': 'Початок і кінець',
+
+  // Weekly pattern
+  'Weekly pattern': 'Тижневий шаблон',
+  'Create a shift first — a pattern needs something to place.':
+    'Спершу створи зміну — шаблону потрібно що ставити.',
+  'Say what you work on each weekday. Then click the days you actually worked and each one takes its own shift.':
+    'Вкажи, що працюєш кожного дня тижня. Потім просто клікай робочі дні — на кожен стане своя зміна.',
+  Nothing: 'Нічого',
+  'Start placing': 'Почати розставляти',
+  'Placing the weekly pattern': 'Ставимо тижневий шаблон',
+  'click the days you work and each takes its own shift':
+    'клікай робочі дні, на кожен стане своя зміна',
+  Monday: 'Понеділок',
+  Tuesday: 'Вівторок',
+  Wednesday: 'Середа',
+  Thursday: 'Четвер',
+  Friday: "П'ятниця",
+  Saturday: 'Субота',
+  Sunday: 'Неділя',
+
+  // Shared schedule
+  Schedule: 'Графік',
+  Members: 'Учасники',
+  Range: 'Період',
+  'No team yet': 'Команди поки немає',
+  'A shared schedule needs a crew. Join one with a code, or start your own.':
+    'Спільному графіку потрібна команда. Приєднайся за кодом або створи свою.',
+
+  // Share card
+  'After tax': 'Після податку',
+  'Overtime hours': 'Години понаднормово',
 };

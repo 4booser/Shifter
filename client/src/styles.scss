@@ -1368,6 +1368,50 @@ body {
   font-weight: 550;
 }
 
+/* ==== Joining a team ==== */
+
+/* Fields and the button they belong to on one line, the button aligned with
+   the inputs rather than floated to the card's edge. Wraps rather than
+   overflows, so a narrow window stacks it instead of pushing it out. */
+.join-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem;
+
+  .field {
+    flex: 1 1 10rem;
+    min-width: 0;
+  }
+
+  .button {
+    flex: none;
+  }
+}
+
+/* ==== Shared schedule ==== */
+
+.rota-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+
+  .card-title {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+.rota-day.is-today .rota-date {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.rota-cell.is-today {
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
+}
+
 .brush-bar.is-pattern {
   /* No single template to show a badge for, so the text carries it alone. */
   font-style: italic;

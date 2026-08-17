@@ -25,6 +25,11 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/team/team').then((m) => m.TeamPage),
   },
   {
+    path: 'schedule',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/schedule/schedule').then((m) => m.SchedulePage),
+  },
+  {
     path: 'account',
     canActivate: [authGuard],
     loadComponent: () => import('./pages/account/account').then((m) => m.Account),

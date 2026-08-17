@@ -51,20 +51,12 @@ export class TeamPage {
   protected readonly displayName = signal('');
   protected readonly copied = signal(false);
 
+  protected readonly current = computed(
+    () => this.teams().find((team) => team.id === this.selected()) ?? null,
+  );
+
   constructor() {
     this.load();
-
-    effect(() => {
-      const id = this.selected();
-      const { from, to } = this.range();
-
-      if (id === null) return;
-
-      this.api.rota(id, from, to).subscribe({
-        next: (rota) => this.rota.set(rota),
-        error: (error: unknown) => this.error.set(apiErrorMessage(error)),
-      });
-    });
   }
 
   private load(): void {
@@ -82,139 +74,6 @@ export class TeamPage {
         this.loading.set(false);
       },
     });
-  }
-
-  protected readonly range = computed(() => {
-    const { year, month } = this.month();
-
-    return monthBounds(`${year}-${`${month}`.padStart(2, '0')}-01`);
-  });
-
-  protected readonly monthLabel = computed(() => {
-    const { year, month } = this.month();
-
-    return new Intl.DateTimeFormat(this.i18n.lang(), {
-      month: 'long',
-      year: 'numeric',
-    }).format(new Date(year, month - 1, 1));
-  });
-
-  protected readonly days = computed(() => {
-    const { from, to } = this.range();
-
-    return keysBetween(from, to);
-  });
-
-  protected readonly current = computed(() =>
-    this.teams().find((team) => team.id === this.selected()) ?? null,
-  );
-
-  /**
-   * Rows are people, columns are days. Built once per load rather than looked
-   * up per cell: a month by a dozen people is several hundred cells, and a
-   * filter inside each one is the difference between instant and sluggish.
-   */
-  protected readonly grid = computed(() => {
-    const rota = this.rota();
-
-    if (rota === null) return [];
-
-    const byMember = new Map<number, Map<string, RotaEntry[]>>();
-
-    for (const entry of rota.entries) {
-      const member = byMember.get(entry.member_id) ?? new Map<string, RotaEntry[]>();
-
-      member.set(entry.date, [...(member.get(entry.date) ?? []), entry]);
-      byMember.set(entry.member_id, member);
-    }
-
-    return rota.members.map((member) => ({
-      member,
-      cells: this.days().map((key): Cell => {
-        const entries = byMember.get(member.member_id)?.get(key) ?? [];
-
-        return {
-          key,
-          entries,
-          hours: entries.reduce((total, entry) => total + entry.hours, 0),
-        };
-      }),
-    }));
-  });
-
-  /** Everyone's hours together — the one number a rota is actually asked for. */
-  protected readonly totalHours = computed(() =>
-    (this.rota()?.members ?? []).reduce((total, member) => total + member.hours, 0),
-  );
-
-  protected readonly busiestDay = computed(() => {
-    const counts = new Map<string, number>();
-
-    for (const entry of this.rota()?.entries ?? []) {
-      counts.set(entry.date, (counts.get(entry.date) ?? 0) + 1);
-    }
-
-    const best = [...counts.entries()].sort((a, b) => b[1] - a[1])[0];
-
-    return best === undefined ? null : { date: best[0], count: best[1] };
-  });
-
-  /**
-   * Shifts whose owner is asking someone to take them. The single most useful
-   * thing on a shared rota: it is the message that would otherwise scroll away
-   * in a group chat within the hour.
-   */
-  protected readonly coverRequests = computed(() => {
-    const rota = this.rota();
-
-    if (rota === null) return [];
-
-    const names = new Map(
-      rota.members.map((member) => [member.member_id, member.display_name]),
-    );
-
-    return rota.entries
-      .filter((entry) => entry.needs_cover)
-      .map((entry) => ({ ...entry, who: names.get(entry.member_id) ?? '' }))
-      .sort((a, b) => a.date.localeCompare(b.date));
-  });
-
-  /** Days nobody is on — the gaps worth spotting before they arrive. */
-  protected readonly uncovered = computed(() =>
-    (this.rota()?.days ?? []).filter((day) => day.on_shift === 0 && day.date >= todayKey()),
-  );
-
-  /** The selected day's coverage, shown under the grid. */
-  protected readonly focusDay = signal<string | null>(null);
-
-  protected readonly focus = computed<RotaDay | null>(() => {
-    const key = this.focusDay();
-
-    return (this.rota()?.days ?? []).find((day) => day.date === key) ?? null;
-  });
-
-  protected pickDay(key: string): void {
-    this.focusDay.update((current) => (current === key ? null : key));
-  }
-
-  protected shiftMonth(delta: number): void {
-    this.month.update((current) => addMonths(current, delta));
-  }
-
-  protected label(key: string): string {
-    return key.slice(8);
-  }
-
-  protected weekday(key: string): string {
-    return new Intl.DateTimeFormat(this.i18n.lang(), { weekday: 'narrow' }).format(
-      new Date(`${key}T00:00:00`),
-    );
-  }
-
-  protected isWeekend(key: string): boolean {
-    const day = new Date(`${key}T00:00:00`).getDay();
-
-    return day === 0 || day === 6;
   }
 
   protected create(): void {

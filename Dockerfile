@@ -1,33 +1,53 @@
-FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
-USER $APP_UID
-WORKDIR /app
-EXPOSE 8080
-EXPOSE 8081
-
-# The Angular app builds in its own stage so the npm install layer is cached
-# independently of the .NET sources. Output lands in /wwwroot (see angular.json).
+# The Angular bundle builds first and in its own stage, so the npm layer is
+# cached independently of the .NET sources: touching a controller does not
+# reinstall node_modules.
 FROM node:24-alpine AS client
 WORKDIR /client
 COPY ["client/package.json", "client/package-lock.json", "./"]
 RUN npm ci
 COPY client/ ./
+# angular.json writes to ../server/wwwroot, which lands at /server/wwwroot here.
 RUN npm run build
 
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG BUILD_CONFIGURATION=Release
-WORKDIR /src
-COPY ["Shifter.csproj", "./"]
-RUN dotnet restore "Shifter.csproj"
-COPY . .
-COPY --from=client /wwwroot ./wwwroot
-WORKDIR "/src/"
-RUN dotnet build "./Shifter.csproj" -c $BUILD_CONFIGURATION -o /app/build -p:SkipClientBuild=true
+WORKDIR /source
+COPY ["server/Shifter.csproj", "server/"]
+RUN dotnet restore "server/Shifter.csproj"
+COPY server/ server/
+COPY --from=client /server/wwwroot server/wwwroot
+# SkipClientBuild: the bundle is already here, and this image has no npm.
+RUN dotnet publish "server/Shifter.csproj" \
+    -c $BUILD_CONFIGURATION \
+    -o /app/publish \
+    /p:UseAppHost=false \
+    -p:SkipClientBuild=true
 
-FROM build AS publish
-ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./Shifter.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false -p:SkipClientBuild=true
+# Migrations run from their own image before the API starts. It carries the SDK
+# and the sources because `dotnet ef` needs both; the runtime image below stays
+# small and has no tooling in it.
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS migrate
+WORKDIR /source
+ENV PATH="${PATH}:/root/.dotnet/tools"
+RUN dotnet tool install --global dotnet-ef --version 10.0.*
+COPY ["server/Shifter.csproj", "server/"]
+RUN dotnet restore "server/Shifter.csproj"
+COPY server/ server/
+# Two databases, two contexts, applied in order. `dotnet ef` only builds the
+# project, and the Angular target runs on publish, so npm is never reached here.
+ENTRYPOINT ["sh", "-c", "\
+    dotnet ef database update --project server/Shifter.csproj --context ShifterDbContext && \
+    dotnet ef database update --project server/Shifter.csproj --context TokensDbContext"]
 
-FROM base AS final
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
+# The runtime image ships without wget or curl, so the compose healthcheck had
+# nothing to run and reported the container unhealthy while it was serving
+# traffic perfectly well. A few megabytes buys a probe that tells the truth.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
-COPY --from=publish /app/publish .
+EXPOSE 8080
+COPY --from=build /app/publish .
+USER $APP_UID
 ENTRYPOINT ["dotnet", "Shifter.dll"]

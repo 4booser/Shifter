@@ -26,6 +26,9 @@ export class PayoutModal {
   protected readonly amount = signal<number | null>(null);
   protected readonly received = signal('');
   protected readonly note = signal('');
+  /** Which place paid; needed for the payout calendar to reconcile it. */
+  protected readonly locationId = signal<number | null>(null);
+  protected readonly locations = this.store.locations;
 
   /** How this payment compares with what the range worked out to. */
   protected readonly difference = computed(() => {
@@ -46,6 +49,12 @@ export class PayoutModal {
       this.received.set(new Date().toISOString().slice(0, 10));
       this.amount.set(null);
       this.note.set('');
+
+      // One place means there is nothing to choose; more than one and the
+      // payment has to say who it came from or it reconciles against nothing.
+      const places = this.store.locations();
+
+      this.locationId.set(places.length === 1 ? places[0].id : null);
     });
   }
 
@@ -69,6 +78,7 @@ export class PayoutModal {
         amount,
         received_on: this.received(),
         note: this.note().trim() === '' ? null : this.note(),
+        location_id: this.locationId(),
       },
       () => this.closed.emit(),
     );

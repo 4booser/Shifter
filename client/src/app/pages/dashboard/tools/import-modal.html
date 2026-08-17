@@ -1,0 +1,74 @@
+<app-modal [open]="true" [wide]="true" [title]="'Import a spreadsheet' | t" (closed)="close()">
+  <p class="field-hint">
+    {{ 'CSV or XLSX. One row per day; a column named date is the only one required.' | t }}
+  </p>
+
+  <label class="field">
+    <span class="field-label">{{ 'File' | t }}</span>
+    <input type="file" accept=".csv,.xlsx,text/csv" (change)="pick($event)" />
+  </label>
+
+  @if (error(); as text) {
+    <p class="alert" role="alert">{{ text | t }}</p>
+  }
+
+  @if (done(); as written) {
+    <p class="alert is-good" role="status">
+      {{ written }} {{ 'days imported' | t }}
+    </p>
+  }
+
+  @if (preview(); as loaded) {
+    <div class="import-summary">
+      <span class="delta is-up">{{ usable().length }} {{ 'ready' | t }}</span>
+      @if (rows().length - usable().length > 0) {
+        <span class="delta is-down">
+          {{ rows().length - usable().length }} {{ 'skipped' | t }}
+        </span>
+      }
+      <span class="field-hint">{{ fileName() }}</span>
+    </div>
+
+    <div class="import-table">
+      <table>
+        <thead>
+          <tr>
+            <th>{{ 'Date' | t }}</th>
+            <th>{{ 'Shift' | t }}</th>
+            <th>{{ 'Tips' | t }}</th>
+            <th>{{ 'Note' | t }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of rows(); track row.line) {
+            <tr [class.is-skipped]="row.problem !== null" [title]="row.problem ?? ''">
+              <td>{{ row.date }}</td>
+              <td>{{ row.shift ?? '—' }}</td>
+              <td>{{ row.tips ?? '—' }}</td>
+              <td class="import-note">
+                @if (row.problem !== null) {
+                  <app-icon name="close" [size]="12" />
+                  {{ row.problem | t }}
+                } @else {
+                  {{ row.note ?? '' }}
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <div class="modal-actions">
+    <button type="button" class="button is-quiet" (click)="close()">{{ 'Close' | t }}</button>
+    <button
+      type="button"
+      class="button is-primary"
+      [disabled]="busy() || usable().length === 0"
+      (click)="apply()"
+    >
+      {{ busy() ? ('Importing…' | t) : ('Import' | t) }}
+    </button>
+  </div>
+</app-modal>

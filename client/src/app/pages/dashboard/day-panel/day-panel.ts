@@ -204,6 +204,22 @@ export class DayPanel {
     Math.max(0, (this.tips() ?? 0) - (this.tipsCash() ?? 0)),
   );
 
+  /** Shifts the person has asked the team to take, keyed while editing. */
+  protected readonly coverWanted = signal<Record<number, boolean>>({});
+
+  protected wantsCover(shiftId: number): boolean {
+    const local = this.coverWanted()[shiftId];
+
+    return local ?? this.day()?.shifts.find((entry) => entry.shift_id === shiftId)?.needs_cover
+      ?? false;
+  }
+
+  protected toggleCover(shiftId: number): void {
+    const next = !this.wantsCover(shiftId);
+
+    this.coverWanted.update((current) => ({ ...current, [shiftId]: next }));
+  }
+
   protected save(): void {
     const key = this.store.selectedDate();
 
@@ -213,6 +229,9 @@ export class DayPanel {
       shifts: (this.day()?.shifts ?? []).map((entry) => ({
         shift_id: entry.shift_id,
         worked: this.isWorked(entry.shift_id),
+        // A shift marked worked has nothing left to hand over, so the request
+        // clears itself rather than lingering on the team's rota.
+        needs_cover: this.isWorked(entry.shift_id) ? false : this.wantsCover(entry.shift_id),
       })),
       // Zero quantities are dropped rather than stored as empty rows.
       sales: Object.entries(this.quantities())

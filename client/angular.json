@@ -22,7 +22,7 @@
           "builder": "@angular/build:application",
           "options": {
             "outputPath": {
-              "base": "../wwwroot",
+              "base": "../server/wwwroot",
               "browser": ""
             },
             "browser": "src/main.ts",

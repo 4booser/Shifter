@@ -13,10 +13,11 @@ import {
   PASSWORD_MIN_LENGTH,
 } from '../../core/auth/auth.models';
 import { validationMessage } from '../../core/forms/validation-message';
+import { GoogleButton } from '../../shared/google-button/google-button';
 
 @Component({
   selector: 'app-register',
-  imports: [TPipe, ReactiveFormsModule, RouterLink],
+  imports: [TPipe, ReactiveFormsModule, RouterLink, GoogleButton],
   templateUrl: './register.html',
 })
 export class Register {

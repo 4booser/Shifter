@@ -17,7 +17,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\Shifter.csproj" />
+        <ProjectReference Include="..\..\server\Shifter.csproj" />
     </ItemGroup>
 
 </Project>

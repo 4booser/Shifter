@@ -54,6 +54,11 @@ export class LocationModal {
 
   protected readonly needsPayDay = computed(() => this.period() === 'monthly');
 
+  protected readonly taxPercent = signal(0);
+  protected readonly taxTips = signal(false);
+  protected readonly holidayPercent = signal(0);
+  protected readonly currency = signal('');
+
   constructor() {
     effect(() => {
       if (!this.open()) return;
@@ -75,6 +80,10 @@ export class LocationModal {
     this.tipOutTips.set(location.tip_out_of_tips_percent);
     this.tipOutSales.set(location.tip_out_of_sales_percent);
     this.mealDeduction.set(location.meal_deduction);
+    this.taxPercent.set(location.tax_percent);
+    this.taxTips.set(location.tax_tips);
+    this.holidayPercent.set(location.holiday_percent);
+    this.currency.set(location.currency);
   }
 
   protected remove(location: WorkLocation): void {
@@ -107,6 +116,10 @@ export class LocationModal {
         tip_out_of_tips_percent: this.tipOutTips(),
         tip_out_of_sales_percent: this.tipOutSales(),
         meal_deduction: this.mealDeduction(),
+        tax_percent: this.taxPercent(),
+        tax_tips: this.taxTips(),
+        holiday_percent: this.holidayPercent(),
+        currency: this.currency().trim() === '' ? null : this.currency().trim().toUpperCase(),
       },
       this.editing()?.id ?? null,
       () => this.reset(),
@@ -118,6 +131,10 @@ export class LocationModal {
   }
 
   private reset(): void {
+    this.taxPercent.set(0);
+    this.taxTips.set(false);
+    this.holidayPercent.set(0);
+    this.currency.set('');
     this.editing.set(null);
     this.name.set('');
     this.address.set('');

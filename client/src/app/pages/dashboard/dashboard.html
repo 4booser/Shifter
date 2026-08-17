@@ -16,20 +16,37 @@
       <app-icon [name]="appearance.hideAmounts() ? 'eye-off' : 'eye'" [size]="15" />
     </button>
 
-    <a routerLink="/account" class="button is-quiet">
-      <app-icon name="target" />
-      {{ 'Account' | t }}
-    </a>
+    <nav class="topnav">
+      <button type="button" class="topnav-item" (click)="searchOpen.set(true)">
+        <app-icon name="search" [size]="16" />
+        <span>{{ 'Search' | t }}</span>
+      </button>
 
-    <a routerLink="/wrapped" class="button is-quiet">
-      <app-icon name="trophy" />
-      {{ 'Your year' | t }}
-    </a>
+      <a routerLink="/team" routerLinkActive="is-active" class="topnav-item is-feature">
+        <app-icon name="users" [size]="16" />
+        <span>{{ 'Team' | t }}</span>
+      </a>
 
-    <a routerLink="/stats" class="button is-quiet">
-      <app-icon name="chart" />
-      {{ 'Stats' | t }}
-    </a>
+      <a routerLink="/payouts" routerLinkActive="is-active" class="topnav-item">
+        <app-icon name="wallet" [size]="16" />
+        <span>{{ 'Payouts' | t }}</span>
+      </a>
+
+      <a routerLink="/stats" routerLinkActive="is-active" class="topnav-item">
+        <app-icon name="chart" [size]="16" />
+        <span>{{ 'Statistics' | t }}</span>
+      </a>
+
+      <a routerLink="/wrapped" routerLinkActive="is-active" class="topnav-item">
+        <app-icon name="trophy" [size]="16" />
+        <span>{{ 'Your year' | t }}</span>
+      </a>
+
+      <a routerLink="/account" routerLinkActive="is-active" class="topnav-item">
+        <app-icon name="user" [size]="16" />
+        <span>{{ 'Account' | t }}</span>
+      </a>
+    </nav>
 
     <button
       type="button"
@@ -74,9 +91,30 @@
 
   <div class="dashboard">
     <app-sidebar />
+    @if (needsSetup()) {
+      <app-onboarding />
+    }
+
     <app-month-grid />
     <app-day-panel />
   </div>
 </div>
 
 <app-settings-modal [open]="settingsOpen()" (closed)="settingsOpen.set(false)" />
+
+@if (searchOpen()) {
+  <app-search-modal (closed)="searchOpen.set(false)" />
+}
+
+@if (undoStep(); as step) {
+  <!-- Sits above the calendar rather than in a corner: the change it offers to
+       take back happened where the eye already is. -->
+  <div class="undo-bar" role="status">
+    <app-icon name="repeat" [size]="16" />
+    {{ step.label | t }}
+    <button type="button" class="net-action" (click)="undo()">{{ 'Undo' | t }}</button>
+    <button type="button" class="undo-close" (click)="dismissUndo()" aria-label="Close">
+      <app-icon name="close" [size]="14" />
+    </button>
+  </div>
+}

@@ -40,6 +40,10 @@ export interface Settings {
   remindUnclosed: boolean;
   /** Keeps the sidebar collapsed for a wider calendar. */
   compactSidebar: boolean;
+  /** Sends a system notification about days left open. */
+  notifyUnclosed: boolean;
+  /** "HH:mm" — after the shift rather than during it. */
+  notifyAt: string;
 }
 
 export const ACCENT_PRESETS = [
@@ -74,6 +78,8 @@ const DEFAULTS: Settings = {
   glass: false,
   remindUnclosed: true,
   compactSidebar: false,
+  notifyUnclosed: false,
+  notifyAt: '21:00',
 };
 
 const STORAGE_KEY = 'shifter.settings';

@@ -1,4 +1,6 @@
 <main class="auth-page">
+  <app-google-button />
+
   <form class="auth-card" [formGroup]="form" (ngSubmit)="submit()" novalidate>
     <header class="auth-header">
       <h1>{{ 'Create account' | t }}</h1>
@@ -56,7 +58,7 @@
       }
     </label>
 
-    <p class="field-hint">{{ 'Or use the Google button on the sign-in page.' | t }}</p>
+
 
     <button type="submit" class="submit" [disabled]="pending()">
       {{ (pending() ? 'Creating…' : 'Create account') | t }}

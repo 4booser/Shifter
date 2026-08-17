@@ -3,6 +3,7 @@ import { forkJoin } from 'rxjs';
 
 import { apiErrorMessage } from '../auth/api-error';
 import { CalendarApi } from './calendar-api';
+import { OfflineQueue } from '../offline/offline-queue';
 import { SettingsStore } from '../settings/settings-store';
 import {
   YearMonth,
@@ -51,6 +52,7 @@ const ALL_TIME = { from: '2000-01-01', to: '2099-12-31' };
 export class CalendarStore {
   private readonly api = inject(CalendarApi);
   private readonly settings = inject(SettingsStore);
+  private readonly queue = inject(OfflineQueue);
 
   private readonly _month = signal<YearMonth>(currentMonth());
   private readonly _selectedDate = signal<string | null>(todayKey());
@@ -66,6 +68,7 @@ export class CalendarStore {
   private readonly _payouts = signal<Payout[]>([]);
   private readonly _locations = signal<WorkLocation[]>([]);
   private readonly _trend = signal<MonthTotal[]>([]);
+  private readonly _undo = signal<UndoStep | null>(null);
 
   readonly month = this._month.asReadonly();
   readonly selectedDate = this._selectedDate.asReadonly();
@@ -96,6 +99,9 @@ export class CalendarStore {
   readonly trend = this._trend.asReadonly();
   /** The equivalent window just before the one on screen, for the arrows. */
   readonly previousSummary = this._previousSummary.asReadonly();
+
+  /** The last reversible change, or null when there is nothing to take back. */
+  readonly undoStep = this._undo.asReadonly();
 
   readonly locations = computed(() =>
     this._locations().filter((location) => !location.archived),
@@ -195,6 +201,15 @@ export class CalendarStore {
   constructor() {
     this.loadCatalogues();
 
+    // Whatever the queue managed to send is now on the server; the grid on
+    // screen still shows the local copy, so it is re-read.
+    this.queue.flushed.subscribe(() => {
+      const { from, to } = this.gridRange();
+
+      this.loadGrid(from, to);
+      this.reloadSummary();
+    });
+
     effect(() => {
       const { from, to } = this.gridRange();
 
@@ -226,6 +241,16 @@ export class CalendarStore {
   }
 
   select(key: string): void {
+    this._selectedDate.set(key);
+  }
+
+  /**
+   * Jumps to a date from somewhere else in the app: moves the calendar to its
+   * month and selects it, so the day panel opens on the right day rather than
+   * on a date that is no longer in view.
+   */
+  openDate(key: string): void {
+    this._month.set({ year: Number(key.slice(0, 4)), month: Number(key.slice(5, 7)) });
     this._selectedDate.set(key);
   }
 
@@ -352,9 +377,73 @@ export class CalendarStore {
     if (template !== null) this.applyToDates([key], template);
   }
 
+  /**
+   * Writes imported rows one day at a time. Sequential rather than parallel:
+   * the API upserts per date, and a burst of parallel writes is exactly the
+   * shape that trips the rate limiter. Returns how many actually landed.
+   */
+  async importDays(
+    rows: {
+      date: string;
+      shift: string | null;
+      tips: number | null;
+      tipsCash: number | null;
+      deductions: number | null;
+      note: string | null;
+    }[],
+  ): Promise<number> {
+    const byName = new Map(
+      this._templates().map((template) => [template.name.toLowerCase(), template]),
+    );
+
+    let written = 0;
+
+    for (const row of rows) {
+      const template = row.shift === null ? null : byName.get(row.shift.toLowerCase());
+
+      // The existing day is the base, so importing tips onto a day that
+      // already has shifts on it does not wipe them.
+      const existing = this._days().get(row.date);
+
+      const payload: DaySave = {
+        ...toSavePayload(existing),
+        shifts: template === undefined || template === null
+          ? (existing?.shifts ?? []).map((entry) => ({
+              shift_id: entry.shift_id,
+              worked: entry.worked,
+              needs_cover: entry.needs_cover,
+            }))
+          : [{ shift_id: template.id, worked: true, needs_cover: false }],
+        tips: row.tips ?? existing?.tips ?? null,
+        tips_cash: row.tipsCash ?? existing?.tips_cash ?? null,
+        deductions: row.deductions ?? existing?.deductions ?? null,
+        note: row.note ?? existing?.note ?? null,
+      };
+
+      try {
+        const day = await new Promise<CalendarDayData>((resolve, reject) => {
+          this.api.saveDay(row.date, payload).subscribe({ next: resolve, error: reject });
+        });
+
+        this._days.update((map) => new Map(map).set(row.date, day));
+        written += 1;
+      } catch (error: unknown) {
+        this._error.set(apiErrorMessage(error));
+
+        break;
+      }
+    }
+
+    if (written > 0) this.reloadSummary();
+
+    return written;
+  }
+
   /** Used by the day panel, where the whole day is edited at once. */
   saveDay(key: string, request: DaySave): void {
     const rollback = this._days();
+
+    this.remember('Edited a day', [key]);
 
     this._saving.set(true);
     this._error.set(null);
@@ -367,6 +456,17 @@ export class CalendarStore {
       },
       error: (error: unknown) => {
         this._saving.set(false);
+
+        // A connection failure is not the user's mistake, and their day is not
+        // theirs to lose: it goes to the queue and the cell keeps what they
+        // typed. Anything the server actually answered is a real error and
+        // does roll back.
+        if (isOffline(error)) {
+          void this.queue.enqueue(key, request);
+
+          return;
+        }
+
         this._days.set(rollback);
         this._error.set(apiErrorMessage(error));
       },
@@ -380,6 +480,8 @@ export class CalendarStore {
    */
   applyToDates(keys: string[], template: ShiftTemplate): void {
     if (keys.length === 0) return;
+
+    this.remember('Painted shifts', keys);
 
     const mode = this._days()
       .get(keys[0])
@@ -504,6 +606,52 @@ export class CalendarStore {
   }
 
   /** Totals span periods and cross-day rules, so they are refetched, not patched. */
+  /**
+   * Keeps what the given days looked like before they are changed. Only one
+   * step deep: a full history would need the server to agree about ordering,
+   * and one level covers the mistake people actually make — the last one.
+   */
+  private remember(label: string, keys: string[]): void {
+    const days = this._days();
+
+    this._undo.set({
+      label,
+      entries: keys.map((date) => ({ date, payload: toSavePayload(days.get(date)) })),
+    });
+  }
+
+  /** Puts the remembered days back, one request each, and clears the step. */
+  async undo(): Promise<void> {
+    const step = this._undo();
+
+    if (step === null) return;
+
+    this._undo.set(null);
+    this._saving.set(true);
+
+    for (const entry of step.entries) {
+      try {
+        const day = await new Promise<CalendarDayData>((resolve, reject) => {
+          this.api.saveDay(entry.date, entry.payload).subscribe({ next: resolve, error: reject });
+        });
+
+        this._days.update((map) => new Map(map).set(entry.date, day));
+      } catch (error: unknown) {
+        this._error.set(apiErrorMessage(error));
+
+        break;
+      }
+    }
+
+    this._saving.set(false);
+    this.reloadSummary();
+  }
+
+  /** Drops the offer without touching anything. */
+  dismissUndo(): void {
+    this._undo.set(null);
+  }
+
   private reloadSummary(): void {
     const range = this.summaryRange();
 
@@ -617,6 +765,23 @@ export class CalendarStore {
   }
 }
 
+/**
+ * Status 0 is a request that never reached anyone; 503 is what the service
+ * worker answers with when it has nothing cached. Both mean "no network",
+ * as opposed to a server that considered the request and refused it.
+ */
+export interface UndoStep {
+  label: string;
+  /** What those days looked like before the change. */
+  entries: { date: string; payload: DaySave }[];
+}
+
+function isOffline(error: unknown): boolean {
+  const status = (error as { status?: number } | null)?.status;
+
+  return status === 0 || status === 503 || !navigator.onLine;
+}
+
 export interface MonthTotal {
   label: string;
   earned: number;
@@ -663,5 +828,6 @@ function placeholderFor(template: ShiftTemplate, key: string): DayShiftEntry {
     earned: 0,
     // Matches the server's rule: a date already past is treated as worked.
     worked: key <= todayKey(),
+    needs_cover: false,
   };
 }

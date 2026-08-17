@@ -6,8 +6,14 @@ import { ApiError } from './auth.models';
 export function apiErrorMessage(error: unknown): string {
   if (!(error instanceof HttpErrorResponse)) return 'Something went wrong.';
 
-  // status 0 means the request never reached the server.
-  if (error.status === 0) return 'Cannot reach the server.';
+  // Status 0 means the request never left the browser or never landed. Saying
+  // which address was tried turns an unhelpful message into a diagnosis: the
+  // usual cause is a page kept alive by a service worker at an address whose
+  // server has since been stopped, where "cannot reach the server" is true but
+  // says nothing about which one.
+  if (error.status === 0) {
+    return `Cannot reach the server at ${location.origin}. Is it running at this address?`;
+  }
 
   const body = error.error as Partial<ApiError> | string | null;
 

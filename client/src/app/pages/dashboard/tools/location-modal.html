@@ -175,6 +175,38 @@
       {{ 'What goes to support staff and what the house withholds. Both come off what the day earned.' | t }}
     </p>
 
+    <h3 class="block-title">{{ 'Tax and holiday' | t }}</h3>
+
+    <div class="field-row">
+      <label class="field">
+        <span class="field-label">{{ 'Tax withheld, %' | t }}</span>
+        <input type="number" min="0" max="100" step="0.5" [ngModel]="taxPercent()"
+          (ngModelChange)="taxPercent.set(+$event)" />
+      </label>
+
+      <label class="field">
+        <span class="field-label">{{ 'Holiday pay accrual, %' | t }}</span>
+        <input type="number" min="0" max="100" step="0.5" [ngModel]="holidayPercent()"
+          (ngModelChange)="holidayPercent.set(+$event)" />
+      </label>
+    </div>
+
+    <button type="button" class="toggle-row" (click)="taxTips.set(!taxTips())">
+      <span class="toggle" [class.is-on]="taxTips()"></span>
+      {{ 'Tips are taxed here too' | t }}
+    </button>
+
+    <label class="field">
+      <span class="field-label">{{ 'Currency, three letters' | t }}</span>
+      <input type="text" maxlength="3" placeholder="EUR" [ngModel]="currency()"
+        (ngModelChange)="currency.set($event)" />
+      <span class="field-hint">{{ 'Leave empty to use the app currency.' | t }}</span>
+    </label>
+
+    <p class="field-hint">
+      {{ 'Holiday pay is shown apart from earnings: it is owed later, not now.' | t }}
+    </p>
+
     @if (archived().length > 0) {
       <section>
         <h3 class="block-title">{{ 'Archived' | t }}</h3>

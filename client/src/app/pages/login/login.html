@@ -34,12 +34,7 @@
       }
     </label>
 
-    @if (googleAvailable() !== null) {
-      <div class="google-block">
-        <div #googleButton class="google-button"></div>
-        <span class="or-line"><span>{{ 'or' | t }}</span></span>
-      </div>
-    }
+    <app-google-button [returnUrl]="returnPath()" />
 
     <button type="submit" class="submit" [disabled]="pending()">
       {{ (pending() ? 'Signing in…' : 'Sign in') | t }}
@@ -50,29 +45,4 @@
     </p>
   </form>
 
-  @if (needsName(); as credential) {
-    <div class="auth-card name-prompt">
-      <header class="auth-header">
-        <h1>{{ 'Almost there' | t }}</h1>
-        <p>{{ 'Google did not share a name — add one to finish.' | t }}</p>
-      </header>
-
-      <label class="field">
-        <span class="field-label">{{ 'First name' | t }}</span>
-        <input type="text" [ngModel]="firstName()" (ngModelChange)="firstName.set($event)"
-          [ngModelOptions]="{ standalone: true }" autocomplete="given-name" />
-      </label>
-
-      <label class="field">
-        <span class="field-label">{{ 'Last name' | t }}</span>
-        <input type="text" [ngModel]="lastName()" (ngModelChange)="lastName.set($event)"
-          [ngModelOptions]="{ standalone: true }" autocomplete="family-name" />
-      </label>
-
-      <button type="button" class="submit" [disabled]="firstName().trim() === ''"
-        (click)="submitName()">
-        {{ 'Continue' | t }}
-      </button>
-    </div>
-  }
 </main>

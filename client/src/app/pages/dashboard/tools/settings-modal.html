@@ -1,5 +1,34 @@
 <app-modal [open]="open()" title="Appearance" (closed)="close()">
   <div class="modal-form">
+    <!-- First, not last: signing in and the account itself are what people
+         open settings looking for, and they used to live only on a page
+         reachable from the top bar. -->
+    <div class="field">
+      <span class="field-label">{{ 'Account and sign-in' | t }}</span>
+
+      <a routerLink="/account" class="settings-link" (click)="close()">
+        <app-icon name="user" [size]="16" />
+        <span class="settings-link-body">
+          <strong>{{ 'Account' | t }}</strong>
+          <span class="field-hint">
+            {{ 'Name, password, connect Google, delete the account.' | t }}
+          </span>
+        </span>
+        <app-icon name="chevron-right" [size]="16" />
+      </a>
+
+      <a routerLink="/team" class="settings-link" (click)="close()">
+        <app-icon name="users" [size]="16" />
+        <span class="settings-link-body">
+          <strong>{{ 'Team' | t }}</strong>
+          <span class="field-hint">
+            {{ 'A shared rota: who is on and when, without anyone’s money.' | t }}
+          </span>
+        </span>
+        <app-icon name="chevron-right" [size]="16" />
+      </a>
+    </div>
+
     <div class="field">
       <span class="field-label">{{ 'Language' | t }}</span>
       <div class="segmented" role="group" aria-label="Language">
@@ -185,6 +214,32 @@
         <span class="toggle" [class.is-on]="settings().compactSidebar"></span>
         {{ 'Narrow sidebar' | t }}
       </button>
+      <button
+        type="button"
+        class="toggle-row"
+        [disabled]="notifyPermission() === 'unsupported' || notifyPermission() === 'denied'"
+        (click)="toggleNotifications()"
+      >
+        <span class="toggle" [class.is-on]="settings().notifyUnclosed"></span>
+        {{ 'Notify me about open days' | t }}
+      </button>
+
+      @if (settings().notifyUnclosed) {
+        <label class="slider-row">
+          <span>{{ 'Notify at' | t }}</span>
+          <input
+            type="time"
+            [ngModel]="settings().notifyAt"
+            (ngModelChange)="setNotifyAt($event)"
+          />
+          <span class="slider-value"></span>
+        </label>
+      }
+
+      @if (notifyPermission() === 'denied') {
+        <p class="field-hint">{{ 'Notifications are blocked in the browser.' | t }}</p>
+      }
+
       <button type="button" class="toggle-row" (click)="toggle('remindUnclosed')">
         <span class="toggle" [class.is-on]="settings().remindUnclosed"></span>
         {{ 'Remind me to close days' | t }}

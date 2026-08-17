@@ -7,6 +7,7 @@ import {
   DaySave,
   DaysResponse,
   Payout,
+  Reconciliation,
   PayoutCreate,
   WorkLocation,
   WorkLocationCreate,
@@ -111,6 +112,13 @@ export class CalendarApi {
 
   deleteSales(id: number): Observable<void> {
     return this.http.delete<void>(`${API}/sales/${id}`);
+  }
+
+  /** The payout calendar: due dates, arrears and repeated shortfalls. */
+  schedule(from: string, to: string): Observable<Reconciliation> {
+    return this.http.get<Reconciliation>(`${API}/payouts/schedule`, {
+      params: { from, to },
+    });
   }
 
   payouts(from: string, to: string): Observable<Payout[]> {

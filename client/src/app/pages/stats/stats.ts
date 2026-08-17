@@ -513,10 +513,28 @@ export class Stats {
       }
     }
 
-    const rows = [...totals.values()].sort((a, b) => b.value - a.value).slice(0, 6);
-    const top = Math.max(1, ...rows.map((row) => row.value));
+    // A weekly or monthly wage earns nothing per shift — it is paid once per
+    // period and lands on the range summary instead. Ranking those by money
+    // put them at the bottom with a bar reading "0", which looks like the
+    // shift was worthless rather than paid another way. Where a row has no
+    // per-shift pay, its hours carry the bar and the label.
+    const rows = [...totals.values()]
+      .sort((a, b) => b.value - a.value || b.hours - a.hours)
+      .slice(0, 6);
 
-    return rows.map((row) => ({ ...row, share: (row.value / top) * 100 }));
+    const anyPaid = rows.some((row) => row.value > 0);
+    const top = Math.max(
+      1,
+      ...rows.map((row) => (anyPaid && row.value > 0 ? row.value : 0)),
+    );
+    const topHours = Math.max(1, ...rows.map((row) => row.hours));
+
+    return rows.map((row) => ({
+      ...row,
+      /** True when this template is paid per period rather than per shift. */
+      byPeriod: row.value === 0 && row.hours > 0,
+      share: row.value > 0 ? (row.value / top) * 100 : (row.hours / topHours) * 100,
+    }));
   });
 
   // ==== Sources and places ====

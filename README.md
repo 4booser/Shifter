@@ -409,7 +409,7 @@ CI гоняет обе половины на каждый push и pull request �
 
 ## Деплой
 
-Прод живёт на **http://45.76.251.81**. Ручного выката нет: любой push в `main`
+Прод живёт на **https://shifter.ink**. Ручного выката нет: любой push в `main`
 проходит тесты, собирает образы, кладёт их в GHCR и перезапускает стек на сервере.
 Всё это — `.github/workflows/deploy.yml`.
 
@@ -471,9 +471,13 @@ umask 077
 cat > .env <<EOF
 SHIFTER_JWT_KEY=$(openssl rand -base64 48)
 POSTGRES_PASSWORD=$(openssl rand -base64 48 | tr -dc 'A-Za-z0-9' | head -c 32)
-SITE_ADDRESS=:80
+SITE_ADDRESS=shifter.ink, www.shifter.ink
 EOF
 ```
+
+Пока A-запись домена ещё не смотрит на сервер, вместо имён ставится `:80` —
+Caddy отдаёт голый HTTP по IP и не пытается получить сертификат, который ему
+всё равно не выдадут. Домен вписывается позже, см. «Домен и HTTPS».
 
 Пароль базы — только буквы и цифры, намеренно. Он подставляется в строку
 подключения вида `Host=db;…;Password=…`, и `;` внутри разорвал бы её молча,
@@ -501,8 +505,8 @@ git push origin main
 | Порт | Снаружи | Что там |
 |---|---|---|
 | 22 | открыт | SSH, только по ключу, пароли выключены, fail2ban |
-| 80 | открыт | Caddy → `shifter:8080`: и SPA, и API |
-| 443 | откроется вместе с доменом | пока `SITE_ADDRESS=:80`, Caddy на нём не поднимается |
+| 80 | открыт | Caddy: уводит на https 308-м и отвечает на проверки Let's Encrypt |
+| 443 | открыт | тот же Caddy под TLS; сертификаты Let's Encrypt на `shifter.ink` и `www.shifter.ink` |
 | 5432 | закрыт | база не публикуется вовсе; ходить в неё — через SSH-туннель |
 | 8080 | закрыт | приложение доступно только прокси |
 
@@ -548,18 +552,37 @@ docker compose -f compose.prod.yaml restart shifter
 
 ### Домен и HTTPS
 
-Пока в `SITE_ADDRESS` стоит `:80`, отдаётся обычный HTTP — всё, что умеет голый IP.
-Появился домен — правится одна строка:
+Всё решает одна строка в `/opt/shifter/.env`. Сейчас там имена:
 
-```bash
-# A-запись домена должна уже указывать на сервер
-sed -i 's/^SITE_ADDRESS=.*/SITE_ADDRESS=shifter.example.com/' /opt/shifter/.env
-docker compose -f compose.prod.yaml up -d proxy
+```dotenv
+SITE_ADDRESS=shifter.ink, www.shifter.ink
 ```
 
-Дальше Caddy сам получит сертификат Let's Encrypt, сам будет его продлевать и сам
-начнёт уводить http на https. Ни certbot, ни cron, ни перезагрузки конфига — это
-и есть причина, по которой здесь он, а не nginx.
+Смена адреса — правка строки и перезапуск одного контейнера:
+
+```bash
+# A-запись домена должна УЖЕ указывать на сервер: сертификат выдаётся по
+# проверке на порт 80, и до неё домен обязан резолвиться в него.
+sed -i 's/^SITE_ADDRESS=.*/SITE_ADDRESS=example.com, www.example.com/' /opt/shifter/.env
+docker compose -f compose.prod.yaml --env-file .env --env-file .env.release up -d proxy
+```
+
+Дальше Caddy сам получит сертификаты Let's Encrypt на каждое имя, сам будет их
+продлевать и сам начнёт уводить http на https (308). Ни certbot, ни cron, ни
+перезагрузки конфига — это и есть причина, по которой здесь он, а не nginx.
+
+**По IP сайт после этого не открывается**, и это правильно: Caddy обслуживает
+только перечисленные имена. Запрос на `http://45.76.251.81` не совпадает ни с
+одним и остаётся без ответа.
+
+DNS-кеш переживает смену записи: публичные резолверы могут отдавать старый адрес
+до конца TTL, поэтому «у меня не открывается, а у тебя открывается» сразу после
+переключения — это почти всегда кеш, а не сервер. Проверять так:
+
+```bash
+dig +short A shifter.ink @8.8.8.8
+curl -sI --resolve shifter.ink:443:45.76.251.81 https://shifter.ink/   # в обход кеша
+```
 
 Приложение при этом остаётся на чистом HTTP внутри сети и **не редиректит само**:
 за прокси такой редирект либо уводит на порт, где никто не слушает, либо гоняет
@@ -575,12 +598,14 @@ docker compose -f compose.prod.yaml up -d proxy
 проверяется **origin страницы**, а не сервер:
 
 1. **Нужен домен и HTTPS.** Google Identity Services принимает `http://` только
-   для `localhost`, а IP-адрес в качестве origin не принимает вообще. На голом
-   `http://45.76.251.81` кнопка не заработает никогда — сначала домен, см. выше.
+   для `localhost`, а IP-адрес в качестве origin не принимает вообще — по голому
+   IP кнопка не заработает никогда, сколько её ни настраивай.
 2. Google Cloud Console → **APIs & Services → Credentials** → OAuth 2.0 Client ID
    типа Web application → **Authorized JavaScript origins** → добавить
-   `https://shifter.example.com`. Для локальной разработки там же держатся
-   `http://localhost:4200` и `http://localhost:8080`.
+   `https://shifter.ink` и `https://www.shifter.ink`. Origin проверяется целиком,
+   так что имя с `www` и без — для Google два разных адреса, и нужны оба. Для
+   локальной разработки там же держатся `http://localhost:4200` и
+   `http://localhost:8080`.
 3. **Authorized redirect URIs заполнять не нужно.** Этот вход проверяет ID-токен,
    а не обменивает код, так что redirect-адреса в нём не участвуют — как и
    client secret, который здесь не используется совсем.

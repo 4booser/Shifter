@@ -66,6 +66,13 @@ export interface WorkLocation {
   tip_out_of_tips_percent: number;
   tip_out_of_sales_percent: number;
   meal_deduction: number;
+  /** Withheld at source, as a percent. */
+  tax_percent: number;
+  tax_tips: boolean;
+  /** Accrued for later, never part of what was earned now. */
+  holiday_percent: number;
+  /** Empty means "whatever the app is set to". */
+  currency: string;
   archived: boolean;
 }
 
@@ -81,6 +88,11 @@ export interface WorkLocationCreate {
   tip_out_of_tips_percent: number;
   tip_out_of_sales_percent: number;
   meal_deduction: number;
+  tax_percent: number;
+  tax_tips: boolean;
+  holiday_percent: number;
+  /** Null means "use the app's currency". */
+  currency: string | null;
 }
 
 export interface LocationTotal {
@@ -96,6 +108,11 @@ export interface LocationTotal {
   deductions: number;
   /** Everything the place produced per paid hour. */
   per_hour: number;
+  tax: number;
+  /** earned minus tax. */
+  net: number;
+  holiday: number;
+  currency: string;
 }
 
 export interface SalesPosition {
@@ -133,6 +150,8 @@ export interface DayShiftEntry {
   earned: number;
   /** False means planned rather than done. */
   worked: boolean;
+  /** Asking the team to take this one. */
+  needs_cover: boolean;
 }
 
 export interface CalendarDayData {
@@ -175,6 +194,13 @@ export interface DaysResponse {
   tip_out: number;
   /** Meals withheld plus fines across the range. */
   deductions: number;
+  tax: number;
+  /** total_earned minus tax. */
+  net_earned: number;
+  /** Owed later; deliberately outside every other total. */
+  holiday_accrued: number;
+  /** More than one entry means the totals mix currencies. */
+  currencies: string[];
   by_location: LocationTotal[];
   overtime_hours: number;
   overtime_earned: number;
@@ -187,6 +213,9 @@ export interface Payout {
   amount: number;
   received_on: string;
   note: string | null;
+  /** Null when the payment was not attributed to a place. */
+  location_id: number | null;
+  location_name: string | null;
 }
 
 export interface PayoutCreate {
@@ -195,11 +224,50 @@ export interface PayoutCreate {
   amount: number;
   received_on: string;
   note: string | null;
+  location_id: number | null;
+}
+
+/** One pay period at one place: what is owed, what came, where that leaves it. */
+export interface PayPeriodRow {
+  location_id: number;
+  location_name: string;
+  colour: string;
+  period_from: string;
+  period_to: string;
+  /** When the money is due, from the place's own pay day. */
+  due_on: string;
+  /** Take-home for the period: earned less tax withheld. */
+  expected: number;
+  paid: number;
+  /** paid minus expected; negative is a shortfall. */
+  difference: number;
+  hours: number;
+  status: 'open' | 'due' | 'overdue' | 'paid' | 'short' | 'over';
+  days_late: number;
+}
+
+/** A place that has come up short more than once running. */
+export interface Shortfall {
+  location_id: number;
+  location_name: string;
+  periods: number;
+  /** How much is missing, as a positive amount. */
+  total_short: number;
+  since: string;
+}
+
+export interface Reconciliation {
+  periods: PayPeriodRow[];
+  shortfalls: Shortfall[];
+  /** Everything still owed across every place. */
+  awaited: number;
+  /** Owed and past its due date. */
+  overdue: number;
 }
 
 /** A day is always sent whole, never patched. */
 export interface DaySave {
-  shifts: { shift_id: number; worked: boolean }[];
+  shifts: { shift_id: number; worked: boolean; needs_cover: boolean }[];
   tips_cash: number | null;
   deductions: number | null;
   sales: { sales_id: number; quantity: number }[];
@@ -225,6 +293,10 @@ export const EMPTY_SUMMARY: DaysResponse = {
   difference: 0,
   tip_out: 0,
   deductions: 0,
+  tax: 0,
+  net_earned: 0,
+  holiday_accrued: 0,
+  currencies: [],
   by_location: [],
   overtime_hours: 0,
   overtime_earned: 0,
@@ -236,6 +308,7 @@ export function toSavePayload(day: CalendarDayData | undefined): DaySave {
     shifts: (day?.shifts ?? []).map((entry) => ({
       shift_id: entry.shift_id,
       worked: entry.worked,
+      needs_cover: entry.needs_cover,
     })),
     sales: (day?.sales ?? []).map((entry) => ({
       sales_id: entry.sales_id,

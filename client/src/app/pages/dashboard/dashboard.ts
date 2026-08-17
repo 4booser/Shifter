@@ -1,5 +1,8 @@
-import { Component, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Component, computed, inject, signal } from '@angular/core';
+import { RouterLink, RouterLinkActive } from '@angular/router';
+import { Onboarding } from './tools/onboarding';
+import { SearchModal } from './tools/search-modal';
+import { Reminders } from '../../core/offline/reminders';
 import { TPipe } from '../../core/i18n/i18n';
 import { Router } from '@angular/router';
 
@@ -16,7 +19,7 @@ import { Icon } from '../../shared/icon/icon';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [TPipe, MonthGrid, DayPanel, Sidebar, SettingsModal, Icon, RouterLink],
+  imports: [Onboarding, SearchModal, TPipe, MonthGrid, DayPanel, Sidebar, SettingsModal, Icon, RouterLink, RouterLinkActive],
   templateUrl: './dashboard.html',
 })
 export class Dashboard {
@@ -29,7 +32,25 @@ export class Dashboard {
   protected readonly error = signal<string | null>(null);
   protected readonly storeError = this.store.error;
   protected readonly unclosed = this.store.unclosedDays;
+  protected readonly undoStep = this.store.undoStep;
+  protected readonly searchOpen = signal(false);
+
+  /** The checklist shows itself until all three steps are done. */
+  protected readonly needsSetup = computed(
+    () =>
+      this.store.locations().length === 0
+      || this.store.templates().length === 0,
+  );
+  private readonly reminders = inject(Reminders);
   protected readonly remind = this.appearance.remindUnclosed;
+
+  protected undo(): void {
+    void this.store.undo();
+  }
+
+  protected dismissUndo(): void {
+    this.store.dismissUndo();
+  }
   protected readonly dismissedReminder = signal(false);
   protected readonly settingsOpen = signal(false);
 

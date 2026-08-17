@@ -1,0 +1,124 @@
+using Microsoft.OpenApi;
+using Serilog;
+using Shifter.Api.Extensions;
+using Shifter.Api.Middlewares;
+using Shifter.Application.Features;
+using Shifter.Infrastructure;
+
+// Running the built binary directly skips launchSettings.json, so the
+// environment is whatever the shell happens to say — usually Production. A
+// Debug build is a developer machine no matter what the variable claims, and
+// that is the signal the local fallbacks key off. A Release build never gets
+// them, so a real deployment still refuses to start half-configured.
+#if DEBUG
+const bool local = true;
+#else
+const bool local = false;
+#endif
+
+// Bootstrap logger: captures failures that happen before the host is built.
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .CreateBootstrapLogger();
+
+try
+{
+    var builder = WebApplication.CreateBuilder(args);
+
+    builder.Services.AddSerilog((services, loggerConfiguration) => loggerConfiguration
+        .ReadFrom.Configuration(builder.Configuration)
+        .ReadFrom.Services(services));
+
+    builder.Services.AddControllers();
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddSwaggerGen(options =>
+    {
+        // Lets Swagger UI send the bearer token via its "Authorize" button.
+        options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+        {
+            Name = "Authorization",
+            Type = SecuritySchemeType.Http,
+            Scheme = "bearer",
+            BearerFormat = "JWT",
+            In = ParameterLocation.Header,
+            Description = "Paste the access_token returned by the auth endpoints."
+        });
+
+        options.AddSecurityRequirement(_ => new OpenApiSecurityRequirement
+        {
+            { new OpenApiSecuritySchemeReference("Bearer"), new List<string>() }
+        });
+    });
+    builder.Services.AddApplication(builder.Configuration, local);
+    builder.Services.AddHardening(builder.Configuration);
+    builder.Services.AddJwtAuthentication();
+    builder.Services.AddInfrastructure(
+        builder.Configuration,
+        local || builder.Environment.IsDevelopment());
+
+    var app = builder.Build();
+
+    app.UseSerilogRequestLogging();
+
+    app.UseMiddleware<GlobalExceptionMiddleware>();
+
+    // Configure the HTTP request pipeline.
+    if (app.Environment.IsDevelopment())
+    {
+        app.UseSwagger();
+        app.UseSwaggerUI();
+    }
+
+    // Skipped in development: under the https launch profile this answers the
+    // dev-server's proxied call with a 307 to :7172, and the browser refuses
+    // that cross-origin hop to an untrusted dev certificate. The SPA then sees
+    // a status 0 and reports the server as unreachable.
+    if (!app.Environment.IsDevelopment())
+    {
+        app.UseHttpsRedirection();
+    }
+
+    // Serves the Angular bundle that `dotnet publish` builds into wwwroot.
+    // In development the SPA is normally served by `ng serve` instead.
+    app.UseDefaultFiles();
+    app.UseStaticFiles();
+
+    app.UseCors(HardeningExtensions.CorsPolicy);
+
+    // Must sit between routing and the endpoints: authentication reads the
+    // bearer token, authorization enforces [Authorize] on the matched endpoint.
+    app.UseAuthentication();
+
+    // After authentication, not before: the limiter partitions signed-in
+    // callers by account, and the claims it reads only exist once the bearer
+    // token has been validated. Validating a token is cheap next to the
+    // handlers this protects.
+    app.UseRateLimiter();
+
+    app.UseAuthorization();
+
+    app.MapControllers().RequireRateLimiting(HardeningExtensions.ApiPolicy);
+
+    // Unauthenticated on purpose: a load balancer has no token to present.
+    // It reports only whether each database answers, never why.
+    app.MapHealthChecks("/health").AllowAnonymous();
+
+    // SPA fallback: deep links such as /dashboard render the Angular shell so
+    // they survive a refresh. Paths under shifter/ are excluded so that unknown
+    // API routes still return 404 rather than a page of HTML.
+    app.MapFallbackToFile("{*path:nonfile:regex(^(?!shifter/).*$)}", "index.html");
+
+    app.Run();
+
+    return 0;
+}
+catch (Exception exception) when (exception is not HostAbortedException)
+{
+    Log.Fatal(exception, "Shifter API terminated unexpectedly.");
+
+    return 1;
+}
+finally
+{
+    Log.CloseAndFlush();
+}

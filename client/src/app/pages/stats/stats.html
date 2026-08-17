@@ -523,7 +523,11 @@
                     <span class="bar-fill" [style.width.%]="row.share"></span>
                   </span>
                   <span class="bar-value">
-                    {{ row.value | money }} · {{ row.hours }} h
+                    @if (row.byPeriod) {
+                      {{ row.hours }} h · {{ 'paid per period' | t }}
+                    } @else {
+                      {{ row.value | money }} · {{ row.hours }} h
+                    }
                   </span>
                 </div>
               }

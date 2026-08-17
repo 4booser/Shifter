@@ -1,0 +1,88 @@
+using System.ComponentModel.DataAnnotations;
+
+namespace Shifter.Domain.Entities;
+
+/// <summary>
+/// A place of work. People commonly hold two or three, each with its own rates
+/// and its own payday, so totals have to be separable by location.
+/// </summary>
+public sealed class Location
+{
+    [Key]
+    public int Id { get; set; }
+
+    public int UserId { get; set; }
+
+    // The navigation is what makes EF treat UserId as a real foreign key.
+    public User? User { get; set; }
+
+    public required string Name { get; set; }
+
+    /// <summary>Optional: an address is rarely to hand when adding a job.</summary>
+    public string? Address { get; set; }
+
+    /// <summary>Hex colour used to tint this location's shifts in the calendar.</summary>
+    public string Colour { get; set; } = "#1F3A5F";
+
+    public PayPeriod PayPeriod { get; set; } = PayPeriod.Monthly;
+
+    /// <summary>
+    /// Where a period starts. For monthly and semi-monthly it is the day of the
+    /// month; for the rolling periods it is any date the cycle passed through.
+    /// </summary>
+    public int PayDay { get; set; } = 1;
+    public DateOnly PayAnchor { get; set; } = new DateOnly(2020, 1, 6);
+
+    /// <summary>
+    /// Hours past this many in one week are paid at the multiplier. Per
+    /// location because the rule belongs to the employer, not the worker.
+    /// </summary>
+    public double OvertimeWeeklyHours { get; set; } = 40;
+    public decimal OvertimeMultiplier { get; set; } = 1.5m;
+
+    /// <summary>
+    /// Share of tips handed to support staff. Standard in restaurants, and it
+    /// comes straight off take-home, so the totals have to know about it.
+    /// </summary>
+    public decimal TipOutOfTipsPercent { get; set; }
+
+    /// <summary>Share of sales tipped out, the other common house rule.</summary>
+    public decimal TipOutOfSalesPercent { get; set; }
+
+    /// <summary>
+    /// Withheld for a staff meal, once per day worked here. Common in kitchens
+    /// and dining rooms, and it comes off take-home like any other deduction.
+    /// </summary>
+    public decimal MealDeduction { get; set; }
+
+    /// <summary>
+    /// Income tax withheld at source, as a percent. Reported apart from the
+    /// gross rather than folded into it: people need both figures — the gross
+    /// to check against the payslip, the net to plan a month.
+    /// </summary>
+    public decimal TaxPercent { get; set; }
+
+    /// <summary>
+    /// Whether tips are taxed here too. Rules differ by country and by house,
+    /// and guessing wrong misstates take-home by a lot in hospitality.
+    /// </summary>
+    public bool TaxTips { get; set; }
+
+    /// <summary>
+    /// Holiday pay accrued as a percent of gross. Money owed later, never
+    /// added to what was earned now — that would be counting it twice.
+    /// </summary>
+    public decimal HolidayPercent { get; set; }
+
+    /// <summary>
+    /// ISO code of what this place pays in. Seasonal work abroad is common,
+    /// and two currencies must never be added together.
+    /// </summary>
+    public string Currency { get; set; } = string.Empty;
+
+    public bool Archived { get; private set; }
+
+    public void ToArchive() => Archived = true;
+
+    public void Restore() => Archived = false;
+}

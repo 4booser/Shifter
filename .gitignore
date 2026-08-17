@@ -9,3 +9,6 @@ logs/
 /.github/
 # Build output of the Angular app in client/.
 wwwroot/
+
+# Secrets for docker compose; .env.example is the template.
+.env

@@ -121,6 +121,13 @@
           </dd>
         </div>
 
+        @if (!account.google_linked && googleAvailable() !== null) {
+          <p class="field-hint">
+            {{ 'Connect it and you can sign in either way, with a password or one tap.' | t }}
+          </p>
+          <div #googleHost class="google-button"></div>
+        }
+
         @if (account.google_linked && !account.has_password) {
           <p class="field-hint">
             {{ 'Set a password first, or disconnecting would lock you out.' | t }}

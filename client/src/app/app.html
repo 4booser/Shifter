@@ -1,1 +1,25 @@
+@if (!queue.online() || queue.count() > 0) {
+  <div class="net-bar" [class.is-offline]="!queue.online()" role="status">
+    @if (!queue.online()) {
+      <span class="net-dot"></span>
+      {{ 'No connection — your edits are saved on this device.' | t }}
+    } @else {
+      <span class="net-dot is-pending"></span>
+      {{ queue.count() }} {{ 'days waiting to sync' | t }}
+      <button type="button" class="net-action" [disabled]="queue.flushing()" (click)="retry()">
+        {{ queue.flushing() ? ('Sending…' | t) : ('Send now' | t) }}
+      </button>
+    }
+  </div>
+}
+
+@if (updateReady()) {
+  <div class="net-bar is-update" role="status">
+    {{ 'A new version is ready.' | t }}
+    <button type="button" class="net-action" (click)="applyUpdate()">
+      {{ 'Reload' | t }}
+    </button>
+  </div>
+}
+
 <router-outlet />

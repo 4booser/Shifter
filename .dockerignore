@@ -13,12 +13,16 @@
 **/*.jfm
 **/azds.yaml
 **/bin
-**/charts
+# NOTE: the .NET template excludes **/charts here, meaning Helm charts. This
+# repository has none, and it does have client/src/app/shared/charts — which
+# the pattern silently removed from the build context, so the image built
+# without the chart components and failed on an unresolved import.
 **/docker-compose*
 **/Dockerfile*
 **/node_modules
 **/npm-debug.log
 **/obj
+**/wwwroot
 **/secrets.dev.yaml
 **/values.dev.yaml
 LICENSE

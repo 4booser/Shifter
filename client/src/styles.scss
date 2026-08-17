@@ -3811,3 +3811,1107 @@ body {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* ==== Connection and update bars ==== */
+
+.net-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+  flex-wrap: wrap;
+  padding: 0.5rem 1rem;
+  background: color-mix(in srgb, var(--tint-amber) 14%, var(--surface));
+  border-bottom: 1px solid color-mix(in srgb, var(--tint-amber) 30%, var(--border));
+  color: var(--text);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-align: center;
+  /* Above the sticky headers inside the pages, and never covering them. */
+  position: relative;
+  z-index: 30;
+  animation: rowIn calc(260ms * var(--motion)) cubic-bezier(0.2, 0.8, 0.3, 1) backwards;
+
+  &.is-offline {
+    background: color-mix(in srgb, var(--tint-rose) 12%, var(--surface));
+    border-bottom-color: color-mix(in srgb, var(--tint-rose) 30%, var(--border));
+  }
+
+  &.is-update {
+    background: color-mix(in srgb, var(--tint-indigo) 12%, var(--surface));
+    border-bottom-color: color-mix(in srgb, var(--tint-indigo) 30%, var(--border));
+  }
+}
+
+.net-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--tint-rose);
+  /* A slow pulse: the bar has to read as a live state, not a stale banner. */
+  animation: pulse calc(1.8s * var(--motion)) ease-in-out infinite;
+
+  &.is-pending {
+    background: var(--tint-amber);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.35; transform: scale(0.75); }
+}
+
+.net-action {
+  padding: 0.1875rem 0.625rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: var(--surface);
+  color: inherit;
+  font: inherit;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: transform 150ms ease, background 150ms ease;
+
+  &:hover:not(:disabled) {
+    background: var(--surface-sunken);
+    transform: translateY(-1px);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+}
+
+/* ==== Import preview ==== */
+
+.import-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin: 0.75rem 0 0.5rem;
+}
+
+/* A tall preview must scroll inside itself; the modal never grows past the
+   viewport and the action buttons stay reachable. */
+.import-table {
+  max-height: 18rem;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    padding: 0.5rem 0.625rem;
+    background: var(--surface-sunken);
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+    font-size: 0.6875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+  }
+
+  td {
+    padding: 0.4375rem 0.625rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  tr:last-child td {
+    border-bottom: 0;
+  }
+
+  tr.is-skipped {
+    color: var(--text-faint);
+    background: color-mix(in srgb, var(--tint-rose) 6%, transparent);
+  }
+}
+
+.import-note {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  max-width: 16rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+tr.is-skipped .import-note {
+  color: var(--tint-rose);
+}
+
+/* A hint that is a caution rather than an aside. */
+.field-hint.is-warning {
+  color: var(--tint-amber);
+  padding: 0.5rem 0.625rem;
+  border: 1px solid color-mix(in srgb, var(--tint-amber) 30%, var(--border));
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--tint-amber) 8%, transparent);
+}
+
+/* ==== Undo ==== */
+
+.undo-bar {
+  position: fixed;
+  left: 50%;
+  bottom: 1.25rem;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.5rem 0.5rem 0.5rem 0.875rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  white-space: nowrap;
+  transform: translateX(-50%);
+  animation: undoIn calc(280ms * var(--motion)) cubic-bezier(0.2, 0.9, 0.3, 1.2) backwards;
+}
+
+@keyframes undoIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 1.25rem);
+  }
+}
+
+.undo-close {
+  display: grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-faint);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--surface-sunken);
+    color: var(--text);
+  }
+}
+
+/* On a phone it spans the width above the thumb rather than floating. */
+@media (width <= 38rem) {
+  .undo-bar {
+    left: 0.75rem;
+    right: 0.75rem;
+    bottom: 0.75rem;
+    transform: none;
+    justify-content: center;
+  }
+
+  @keyframes undoIn {
+    from {
+      opacity: 0;
+      transform: translateY(1.25rem);
+    }
+  }
+}
+
+/* ==== Search ==== */
+
+.search-hits {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  max-height: 22rem;
+  overflow: auto;
+  margin-top: 0.75rem;
+}
+
+.search-hit {
+  display: grid;
+  grid-template-columns: minmax(7rem, auto) minmax(0, 1fr) auto;
+  grid-template-areas: "date shifts earned" "date note earned";
+  align-items: center;
+  gap: 0.125rem 0.75rem;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 150ms cubic-bezier(0.2, 0.8, 0.3, 1), border-color 150ms ease;
+
+  &:hover {
+    transform: translateX(2px);
+    border-color: var(--border-strong);
+  }
+}
+
+.search-date {
+  grid-area: date;
+  font-size: 0.8125rem;
+  font-weight: 650;
+}
+
+.search-shifts {
+  grid-area: shifts;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.search-note {
+  grid-area: note;
+  color: var(--text-faint);
+  font-size: 0.75rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.search-earned {
+  grid-area: earned;
+  font-size: 0.8125rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  color: var(--tint-green);
+}
+
+@media (width <= 38rem) {
+  .search-hit {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "date earned" "shifts earned" "note note";
+  }
+}
+
+/* ==== First-run checklist ==== */
+
+.onboard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  border: 1px solid color-mix(in srgb, var(--tint-teal) 28%, var(--border));
+  border-radius: var(--radius-lg);
+  background:
+    radial-gradient(
+      32rem 16rem at 12% 0%,
+      color-mix(in srgb, var(--tint-teal) 10%, transparent),
+      transparent 70%
+    ),
+    var(--surface);
+  box-shadow: var(--shadow-sm);
+  animation: rise calc(360ms * var(--motion)) cubic-bezier(0.2, 0.8, 0.3, 1) backwards;
+}
+
+.onboard-badge {
+  font-size: 1.75rem;
+  line-height: 1;
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", system-ui, sans-serif;
+}
+
+.onboard-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+
+.onboard-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: none;
+}
+
+.onboard-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  transition: opacity 200ms ease;
+
+  &.is-done {
+    /* Done steps stay visible but stop competing for attention. */
+    opacity: 0.55;
+
+    strong {
+      text-decoration: line-through;
+      text-decoration-color: var(--text-faint);
+    }
+  }
+}
+
+.onboard-tick {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border-strong);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.onboard-step.is-done .onboard-tick {
+  background: var(--tint-green);
+  border-color: var(--tint-green);
+  color: #fff;
+  animation: pop calc(320ms * var(--motion)) cubic-bezier(0.2, 0.9, 0.3, 1.3) backwards;
+}
+
+.onboard-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+/* ==== Phone layout ====
+   The calendar is the app; on a narrow screen it gets the whole width and the
+   two panels stack under it in the order they are used: pick a shift, tap the
+   days, then fill the day in. */
+
+@media (width <= 46rem) {
+  .dashboard {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.75rem;
+    padding: 0.75rem;
+  }
+
+  .topbar {
+    gap: 0.375rem;
+    padding: 0.5rem 0.75rem;
+
+    /* Labels drop away and the icons carry the buttons, so six controls still
+       fit across a phone without wrapping into three rows. */
+    .button.is-quiet {
+      padding: 0.4375rem;
+      font-size: 0;
+      gap: 0;
+
+      app-icon {
+        font-size: 1rem;
+      }
+    }
+
+    .who {
+      display: none;
+    }
+  }
+
+  /* Touch targets: a calendar cell is the thing being tapped all day. */
+  .day-cell {
+    min-height: 3.75rem;
+  }
+
+  .day-shift-name {
+    display: none;
+  }
+
+  .sidebar,
+  .day-panel {
+    position: static;
+    max-height: none;
+  }
+
+  /* The day panel is what opens after a tap, so it comes before the palette. */
+  .day-panel {
+    order: 1;
+  }
+
+  .sidebar {
+    order: 2;
+  }
+
+  .calendar {
+    order: 0;
+  }
+
+  .kpi-row,
+  .bento {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Anything the thumb has to reach is at least the recommended 44px. */
+@media (pointer: coarse) {
+  .button,
+  .nav,
+  .toggle-row,
+  .palette li button {
+    min-height: 2.75rem;
+  }
+
+  .net-action,
+  .undo-close {
+    min-height: 2rem;
+  }
+}
+
+/* ==== Shared rota ==== */
+
+.team {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 72rem;
+  width: 100%;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 3rem;
+  box-sizing: border-box;
+}
+
+.rota-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.month-switch {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: none;
+}
+
+.rota-kpis {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 0.75rem 0;
+}
+
+/* A month by a dozen people is wider than any phone; it scrolls in its own
+   box so the page itself never scrolls sideways. */
+.rota-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.rota {
+  border-collapse: collapse;
+  width: max-content;
+  min-width: 100%;
+  font-size: 0.75rem;
+}
+
+.rota th,
+.rota td {
+  border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+}
+
+.rota tr:last-child th,
+.rota tr:last-child td {
+  border-bottom: 0;
+}
+
+/* The name column stays put while the days scroll under it. */
+.rota-corner,
+.rota-name {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  min-width: 8rem;
+  max-width: 10rem;
+  padding: 0.375rem 0.625rem;
+  background: var(--surface);
+  text-align: left;
+  font-weight: 650;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rota-corner {
+  z-index: 3;
+  background: var(--surface-sunken);
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.rota-day {
+  min-width: 1.75rem;
+  padding: 0.25rem 0.125rem;
+  background: var(--surface-sunken);
+  font-weight: 600;
+  line-height: 1.1;
+
+  &.is-weekend {
+    background: color-mix(in srgb, var(--tint-amber) 8%, var(--surface-sunken));
+  }
+}
+
+.rota-weekday {
+  display: block;
+  color: var(--text-faint);
+  font-size: 0.5625rem;
+  text-transform: uppercase;
+}
+
+.rota-date {
+  display: block;
+  font-variant-numeric: tabular-nums;
+}
+
+.rota-cell {
+  height: 2rem;
+  padding: 0.125rem;
+  text-align: center;
+  vertical-align: middle;
+
+  &.is-weekend {
+    background: color-mix(in srgb, var(--tint-amber) 5%, transparent);
+  }
+}
+
+.rota-mark {
+  display: inline-grid;
+  place-items: center;
+  width: 1.375rem;
+  height: 1.375rem;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--mark-colour, var(--accent)) 85%, transparent);
+  color: #fff;
+  font-size: 0.6875rem;
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", system-ui, sans-serif;
+  animation: pop calc(240ms * var(--motion)) cubic-bezier(0.2, 0.9, 0.3, 1.2) backwards;
+
+  /* Rostered but not yet worked reads as an outline, the same as it does on
+     the personal calendar. */
+  &.is-planned {
+    background: transparent;
+    border: 1px dashed color-mix(in srgb, var(--mark-colour, var(--accent)) 70%, transparent);
+    color: var(--text-muted);
+  }
+}
+
+.rota tr.is-you .rota-name {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.rota-you {
+  margin-left: 0.375rem;
+  padding: 0.0625rem 0.3125rem;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: 0.5625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.rota-total {
+  min-width: 2.5rem;
+  padding: 0.25rem 0.5rem;
+  text-align: right;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  background: var(--surface-sunken);
+}
+
+.invite {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin: 0.5rem 0;
+}
+
+.invite-code {
+  padding: 0.375rem 0.875rem;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--surface-sunken);
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+}
+
+@media (width <= 46rem) {
+  .rota-kpis {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .rota-corner,
+  .rota-name {
+    min-width: 6rem;
+  }
+}
+
+/* ==== Payout calendar ==== */
+
+.payouts {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 56rem;
+  width: 100%;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 3rem;
+  box-sizing: border-box;
+}
+
+.shortfall-line {
+  margin: 0.25rem 0;
+  font-size: 0.9375rem;
+}
+
+.shortfall-total {
+  margin: 0.25rem 0 0.5rem;
+  font-size: 1.5rem;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  color: var(--danger);
+  font-variant-numeric: tabular-nums;
+}
+
+.pay-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  margin-top: 0.75rem;
+}
+
+.pay-row {
+  display: grid;
+  grid-template-columns: 8px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  animation: rowIn calc(280ms * var(--motion)) cubic-bezier(0.2, 0.8, 0.3, 1) backwards;
+
+  /* Late and short are the two states worth noticing across a long list. */
+  &.is-late {
+    border-color: color-mix(in srgb, var(--tint-rose) 40%, var(--border));
+    background: color-mix(in srgb, var(--tint-rose) 6%, var(--surface));
+  }
+
+  &.is-short {
+    border-color: color-mix(in srgb, var(--tint-amber) 40%, var(--border));
+    background: color-mix(in srgb, var(--tint-amber) 6%, var(--surface));
+  }
+}
+
+.pay-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.pay-where,
+.pay-when {
+  display: flex;
+  flex-direction: column;
+  gap: 0.0625rem;
+  min-width: 0;
+}
+
+.pay-when {
+  align-items: flex-end;
+  text-align: right;
+}
+
+.pay-status {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+
+  &[data-status="overdue"] { color: var(--tint-rose); }
+  &[data-status="short"] { color: var(--tint-amber); }
+  &[data-status="paid"] { color: var(--tint-green); }
+  &[data-status="over"] { color: var(--tint-cyan); }
+  &[data-status="due"] { color: var(--tint-indigo); }
+  &[data-status="open"] { color: var(--text-faint); }
+}
+
+.pay-amount {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  min-width: 5rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+
+  small {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+
+  &.is-short small {
+    color: var(--tint-rose);
+  }
+}
+
+@media (width <= 38rem) {
+  .pay-row {
+    grid-template-columns: 8px minmax(0, 1fr) auto;
+    grid-template-areas: "dot where amount" "dot when amount";
+    row-gap: 0.125rem;
+  }
+
+  .pay-dot { grid-area: dot; }
+  .pay-where { grid-area: where; }
+  .pay-when { grid-area: when; align-items: flex-start; text-align: left; }
+  .pay-amount { grid-area: amount; }
+}
+
+/* ==== Top navigation ====
+   Six destinations in a row of identical quiet buttons meant none of them read
+   as a destination at all. Grouping them, giving each its own icon and marking
+   the active one turns a row of buttons into navigation. */
+
+.topnav {
+  display: flex;
+  align-items: center;
+  gap: 0.125rem;
+  margin-left: auto;
+  padding: 0.1875rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-sunken);
+  flex-wrap: wrap;
+}
+
+.topnav-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease, transform 150ms ease;
+
+  &:hover {
+    background: var(--surface);
+    color: var(--text);
+    transform: translateY(-1px);
+  }
+
+  &.is-active {
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: var(--shadow-sm);
+  }
+
+  /* The shared rota is the newest thing here and the hardest to stumble on,
+     so it carries a tint until it stops being new to the user. */
+  &.is-feature {
+    color: var(--tint-teal);
+
+    app-icon {
+      animation: breathe calc(3.2s * var(--motion)) ease-in-out infinite;
+    }
+
+    &.is-active app-icon {
+      animation: none;
+    }
+  }
+}
+
+/* On a phone the labels go and the icons carry it, which is why each
+   destination needed its own icon in the first place. */
+@media (width <= 52rem) {
+  .topnav-item span {
+    display: none;
+  }
+
+  .topnav-item {
+    padding: 0.5rem;
+  }
+}
+
+/* ==== Cover requests ==== */
+
+.cover-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.1875rem 0.5rem;
+  border: 1px dashed var(--border-strong);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
+
+  &:hover {
+    border-color: var(--tint-amber);
+    color: var(--tint-amber);
+  }
+
+  &.is-on {
+    border-style: solid;
+    border-color: var(--tint-amber);
+    background: color-mix(in srgb, var(--tint-amber) 14%, transparent);
+    color: var(--tint-amber);
+  }
+}
+
+.stat-card.is-warning {
+  border-color: color-mix(in srgb, var(--tint-amber) 40%, var(--border));
+  background: linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--tint-amber) 8%, transparent),
+      transparent 60%
+    ),
+    var(--surface);
+
+  .card-title {
+    color: var(--tint-amber);
+  }
+}
+
+.cover-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  margin-top: 0.5rem;
+}
+
+.cover-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.5rem 0.625rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.cover-who {
+  display: flex;
+  flex-direction: column;
+  gap: 0.0625rem;
+  min-width: 0;
+}
+
+.cover-when {
+  font-size: 0.8125rem;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+/* A shift looking for cover pulses in the grid, so it is findable without
+   reading every cell. */
+.rota-mark.needs-cover {
+  outline: 2px solid var(--tint-amber);
+  outline-offset: 1px;
+  animation: coverPulse calc(2s * var(--motion)) ease-in-out infinite;
+}
+
+@keyframes coverPulse {
+  0%, 100% { outline-color: color-mix(in srgb, var(--tint-amber) 35%, transparent); }
+  50% { outline-color: var(--tint-amber); }
+}
+
+.gap-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  margin-top: 0.5rem;
+}
+
+.gap-chip {
+  padding: 0.1875rem 0.5rem;
+  border: 1px solid color-mix(in srgb, var(--tint-rose) 30%, var(--border));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--tint-rose) 8%, transparent);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.rota-day-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.rota-day.is-focused {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.day-focus {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  flex-wrap: wrap;
+  margin-top: 0.75rem;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-sunken);
+  animation: rowIn calc(240ms * var(--motion)) cubic-bezier(0.2, 0.8, 0.3, 1) backwards;
+}
+
+/* ==== Settings links ==== */
+
+.settings-link {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: inherit;
+  text-decoration: none;
+  transition: transform 150ms cubic-bezier(0.2, 0.8, 0.3, 1), border-color 150ms ease;
+
+  & + & {
+    margin-top: 0.375rem;
+  }
+
+  &:hover {
+    transform: translateX(2px);
+    border-color: var(--border-strong);
+  }
+}
+
+.settings-link-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.0625rem;
+  min-width: 0;
+  margin-right: auto;
+}
+
+/* ==== Team card on the dashboard ==== */
+
+.team-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.875rem;
+  border: 1px solid color-mix(in srgb, var(--tint-teal) 25%, var(--border));
+  border-radius: var(--radius);
+  background: linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--tint-teal) 8%, transparent),
+      transparent 60%
+    ),
+    var(--surface);
+  animation: rise calc(320ms * var(--motion)) cubic-bezier(0.2, 0.8, 0.3, 1) backwards;
+
+  .block-title {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    color: var(--tint-teal);
+  }
+}
+
+.team-today {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.team-figure {
+  display: flex;
+  flex-direction: column;
+  gap: 0.0625rem;
+
+  strong {
+    font-size: 1.375rem;
+    font-weight: 750;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Someone is asking for cover: the one thing here that wants acting on. */
+.team-alert {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.3125rem 0.625rem;
+  border: 1px solid color-mix(in srgb, var(--tint-amber) 40%, var(--border));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--tint-amber) 12%, transparent);
+  color: var(--tint-amber);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-decoration: none;
+  animation: coverPulse calc(2.4s * var(--motion)) ease-in-out infinite;
+}
+
+/* A message that explains rather than alarms: nothing is broken, something is
+   unconfigured, and the thing to paste is right there in it. */
+.alert.is-quiet {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.5rem 0.75rem;
+  border-color: var(--border-strong);
+  background: var(--surface-sunken);
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  font-weight: 600;
+
+  small {
+    font-weight: 500;
+  }
+
+  code {
+    padding: 0.0625rem 0.3125rem;
+    border-radius: 4px;
+    background: var(--surface);
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 0.75rem;
+    color: var(--text);
+  }
+}

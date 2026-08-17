@@ -39,6 +39,10 @@ export class AccountApi {
     });
   }
 
+  linkGoogle(credential: string): Observable<Profile> {
+    return this.http.post<Profile>(`${ACCOUNT_API}/google`, { credential });
+  }
+
   unlinkGoogle(): Observable<Profile> {
     return this.http.delete<Profile>(`${ACCOUNT_API}/google`);
   }

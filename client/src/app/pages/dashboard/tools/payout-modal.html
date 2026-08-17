@@ -6,6 +6,17 @@
 
     <div class="field-row">
       <label class="field">
+      <span class="field-label">{{ 'Who paid it' | t }}</span>
+      <select [ngModel]="locationId()" (ngModelChange)="locationId.set($event === 'null' ? null : +$event)">
+        <option [value]="null">{{ 'Not attributed' | t }}</option>
+        @for (place of locations(); track place.id) {
+          <option [value]="place.id">{{ place.name }}</option>
+        }
+      </select>
+      <span class="field-hint">{{ 'Needed so the payout calendar can check it.' | t }}</span>
+    </label>
+
+    <label class="field">
         <span class="field-label">{{ 'Period from' | t }}</span>
         <input type="date" [ngModel]="from()" (ngModelChange)="from.set($event)" />
       </label>

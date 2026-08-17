@@ -43,7 +43,15 @@ export function forecastFor(
     0,
   );
 
-  const plannedAhead = future.reduce(
+  // Today counts as still ahead for anything booked on it. A shift happening
+  // this evening has earned nothing yet, so it is not in earnedSoFar; before
+  // this it was not in plannedAhead either, because that started at tomorrow —
+  // and the shift simply vanished from the forecast on the day it mattered
+  // most. Earned and planned never overlap on one day, so counting today in
+  // both sets cannot double anything.
+  const ahead = all.filter((key) => key >= today);
+
+  const plannedAhead = ahead.reduce(
     (total, key) => total + (byDate.get(key)?.planned ?? 0),
     0,
   );
@@ -69,7 +77,9 @@ export function forecastFor(
     withPlanned: earnedSoFar + plannedAhead,
     projected: earnedSoFar + plannedAhead + perDay * emptyAhead,
     perDay,
-    live: remaining > 0 && elapsed > 0,
+    // A period with work booked on its last day is still live: there is
+    // something left to happen, even if no whole day remains after it.
+    live: (remaining > 0 || plannedAhead > 0) && elapsed > 0,
   };
 }
 
@@ -112,9 +122,21 @@ export function projectionSeries(
   const points: { label: string; value: number }[] = [];
 
   for (const key of all) {
-    if (key <= today) continue;
+    if (key < today) continue;
 
     const day = byDate.get(key);
+
+    if (key === today) {
+      // The line starts at today, and it starts with whatever is still booked
+      // for tonight. Without this the first point sat below the last recorded
+      // day and the curve dipped on the day the shift was actually being
+      // worked. The pace is not applied here: most of today is already gone.
+      running += day?.planned ?? 0;
+
+      points.push({ label: key.slice(8), value: running });
+
+      continue;
+    }
 
     // A booked shift contributes its own amount; an empty day gets the pace.
     running += day?.planned ? day.planned : forecast.perDay;

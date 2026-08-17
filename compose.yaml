@@ -1,7 +1,77 @@
-﻿services:
-  shifter:
-    image: shifter
+# One command brings the whole thing up:
+#
+#   docker compose up --build
+#
+# Postgres starts, the two databases are created, migrations are applied by a
+# throwaway container, and only then does the API begin serving the Angular
+# bundle it was built with.
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: shifter_user
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      # Postgres only creates the first database itself; the second one comes
+      # from the init script below.
+      POSTGRES_DB: shifter
+    ports:
+      # Published so `dotnet run` on the host can reach the same database.
+      # Not 5432: a Postgres installed on the machine already holds that, and
+      # the container would fail to bind rather than quietly pick another.
+      - "${POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - shifter-db:/var/lib/postgresql/data
+      - ./docker/init-databases.sh:/docker-entrypoint-initdb.d/init-databases.sh:ro
+    healthcheck:
+      # The API and the migration step both wait on this. Without it they race
+      # the database's own startup and fail on a connection refused.
+      test: ["CMD-SHELL", "pg_isready -U shifter_user -d shifter"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  migrate:
     build:
       context: .
-      dockerfile: Dockerfile
+      target: migrate
+    environment:
+      ConnectionStrings__Shifter: "Host=db;Port=5432;Database=shifter;Username=shifter_user;Password=${POSTGRES_PASSWORD}"
+      ConnectionStrings__Tokens: "Host=db;Port=5432;Database=tokens;Username=shifter_user;Password=${POSTGRES_PASSWORD}"
+      # Only needed because `dotnet ef` builds the same host to find the
+      # contexts; migrations never issue a token.
+      SHIFTER_JWT_KEY: ${SHIFTER_JWT_KEY:?set SHIFTER_JWT_KEY in .env}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
 
+  shifter:
+    build:
+      context: .
+      target: final
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://0.0.0.0:8080
+      ConnectionStrings__Shifter: "Host=db;Port=5432;Database=shifter;Username=shifter_user;Password=${POSTGRES_PASSWORD}"
+      ConnectionStrings__Tokens: "Host=db;Port=5432;Database=tokens;Username=shifter_user;Password=${POSTGRES_PASSWORD}"
+      # No default: a Release build refuses to start without it, which is the
+      # point. Generate one with `openssl rand -base64 48` into .env.
+      SHIFTER_JWT_KEY: ${SHIFTER_JWT_KEY:?set SHIFTER_JWT_KEY in .env}
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        # Waits for the migration container to exit successfully, so the API
+        # never starts against a schema that is not there yet.
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
+
+volumes:
+  shifter-db:

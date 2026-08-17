@@ -106,6 +106,14 @@ export class GoogleSignIn {
       .pipe(tap((response) => this.storage.save(response)));
   }
 
+  /**
+   * Attaches the picked Google account to the one already signed in. Uses the
+   * same credential the sign-in button produces; only the endpoint differs.
+   */
+  link(credential: string): Observable<unknown> {
+    return this.http.post('/shifter/v1/account/google', { credential });
+  }
+
   private loadScript(): Promise<void> {
     this.loading ??= new Promise<void>((resolve, reject) => {
       if (window.google !== undefined) {

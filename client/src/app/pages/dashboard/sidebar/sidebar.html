@@ -273,6 +273,18 @@
           <app-delta [percent]="earnedChange()" />
         </dd>
       </div>
+      @if (summary().tax > 0) {
+        <div class="summary-row tint-teal">
+          <dt>{{ 'Take-home' | t }}</dt>
+          <dd>{{ summary().net_earned | money }}</dd>
+        </div>
+      }
+      @if (summary().holiday_accrued > 0) {
+        <div class="summary-row tint-violet">
+          <dt>{{ 'Holiday accrued' | t }}</dt>
+          <dd>{{ summary().holiday_accrued | money }}</dd>
+        </div>
+      }
       @if (summary().planned_earned > 0) {
         <div class="summary-row tint-orange">
           <dt>{{ 'Still planned' | t }}</dt>
@@ -290,6 +302,13 @@
         </div>
       }
     </dl>
+
+    @if (summary().currencies.length > 1) {
+      <p class="field-hint is-warning">
+        {{ 'This range mixes currencies' | t }}: {{ summary().currencies.join(', ') }}.
+        {{ 'Read the per-place figures instead of the totals.' | t }}
+      </p>
+    }
 
     <div class="avg-pair">
       <span class="avg tint-green">
@@ -318,7 +337,14 @@
       </dl>
     }
 
+    <app-team-card />
+
     <div class="stack">
+      <button type="button" class="button is-block" (click)="importOpen.set(true)">
+        <app-icon name="note" [size]="16" />
+        {{ 'Import a spreadsheet' | t }}
+      </button>
+
       <button type="button" class="button is-block" (click)="payoutModalOpen.set(true)">
         <app-icon name="wallet" />
         {{ summary().paid > 0 ? 'Payments' : 'Record a payment' }}
@@ -348,3 +374,7 @@
 <app-payout-modal [open]="payoutModalOpen()" (closed)="payoutModalOpen.set(false)" />
 <app-location-modal [open]="locationModalOpen()" (closed)="locationModalOpen.set(false)" />
 
+
+@if (importOpen()) {
+  <app-import-modal (closed)="importOpen.set(false)" />
+}

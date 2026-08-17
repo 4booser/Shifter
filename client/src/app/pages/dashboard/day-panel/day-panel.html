@@ -31,6 +31,19 @@
                 <app-icon [name]="isWorked(entry.shift_id) ? 'check' : 'clock'" [size]="13" />
                 {{ (isWorked(entry.shift_id) ? 'Worked' : 'Planned') | t }}
               </button>
+
+              @if (!isWorked(entry.shift_id)) {
+                <button
+                  type="button"
+                  class="cover-toggle"
+                  [class.is-on]="wantsCover(entry.shift_id)"
+                  [title]="'Ask the team to take this shift' | t"
+                  (click)="toggleCover(entry.shift_id)"
+                >
+                  <app-icon name="swap" [size]="13" />
+                  {{ (wantsCover(entry.shift_id) ? 'Cover wanted' : 'Need cover?') | t }}
+                </button>
+              }
             </li>
           }
         </ul>

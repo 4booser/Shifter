@@ -1,0 +1,39 @@
+<app-modal [open]="true" [wide]="true" [title]="'Search' | t" (closed)="close()">
+  <label class="field">
+    <span class="field-label">{{ 'Find a note, a shift or a date' | t }}</span>
+    <input
+      type="search"
+      autofocus
+      [ngModel]="query()"
+      (ngModelChange)="query.set($event)"
+      [placeholder]="'covered for Ann, 2026-03…' | t"
+    />
+  </label>
+
+  @if (loading()) {
+    <p class="field-hint">{{ 'Loading…' | t }}</p>
+  } @else if (query().trim().length < 2) {
+    <p class="field-hint">{{ 'Type at least two characters.' | t }}</p>
+  } @else if (hits().length === 0) {
+    <p class="empty-note">{{ 'Nothing found.' | t }}</p>
+  } @else {
+    <div class="search-hits">
+      @for (hit of hits(); track hit.date) {
+        <button type="button" class="search-hit" (click)="go(hit.date)">
+          <span class="search-date">{{ hit.label }}</span>
+          @if (hit.shifts.length > 0) {
+            <span class="search-shifts">{{ hit.shifts }}</span>
+          }
+          @if (hit.note !== null) {
+            <span class="search-note">{{ hit.note }}</span>
+          }
+          <span class="search-earned">{{ hit.earned | money }}</span>
+        </button>
+      }
+    </div>
+  }
+
+  <div class="modal-actions">
+    <button type="button" class="button is-quiet" (click)="close()">{{ 'Close' | t }}</button>
+  </div>
+</app-modal>

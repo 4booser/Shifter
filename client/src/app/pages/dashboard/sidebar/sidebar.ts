@@ -16,16 +16,18 @@ import { daysToCsv, downloadCsv } from '../../../core/calendar/csv-export';
 import { MoneyPipe } from '../../../shared/money/money-pipe';
 import { Icon } from '../../../shared/icon/icon';
 import { Delta } from '../../../shared/delta/delta';
+import { TeamCard } from './team-card';
 import { averagesFor, change } from '../../../core/calendar/insights';
 import { LocationModal } from '../tools/location-modal';
 import { PayoutModal } from '../tools/payout-modal';
 import { RotationModal } from '../tools/rotation-modal';
 import { SalesModal } from '../tools/sales-modal';
+import { ImportModal } from '../tools/import-modal';
 import { ShiftModal } from '../tools/shift-modal';
 
 @Component({
   selector: 'app-sidebar',
-  imports: [TPipe, Delta, 
+  imports: [TPipe, Delta, ImportModal, TeamCard, 
     ShiftModal,
     SalesModal,
     RotationModal,
@@ -49,6 +51,7 @@ export class Sidebar {
   protected readonly brush = this.store.brush;
   protected readonly summary = this.store.summary;
   protected readonly summaryPeriod = this.store.summaryPeriod;
+  protected readonly importOpen = signal(false);
 
   /** Per-unit figures and how each moved against the window just before. */
   protected readonly averages = computed(() => averagesFor(this.summary()));

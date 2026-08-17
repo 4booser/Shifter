@@ -17,6 +17,7 @@ ASP.NET Core (.NET 10) + Angular 22, PostgreSQL, всё поднимается �
 - [Базы данных и миграции](#базы-данных-и-миграции)
 - [API](#api)
 - [Тесты](#тесты)
+- [Деплой](#деплой)
 - [Офлайн и уведомления](#офлайн-и-уведомления)
 - [Как это считает деньги](#как-это-считает-деньги)
 
@@ -69,9 +70,18 @@ client/                    Angular workspace
 
 tests/Shifter.Tests        xUnit: расчёты денег и периодов
 
-docker/                    init-скрипт для PostgreSQL
+docker/
+  init-databases.sh        создаёт вторую базу при первом старте PostgreSQL
+  Caddyfile                конфиг прокси на проде, весь в одну строку адреса
+  bootstrap.sh             подготовка чистой VPS под деплой
+
+.github/workflows/
+  ci.yml                   тесты на каждый push и pull request
+  deploy.yml               сборка образов и выкат прода с main
+
 Dockerfile                 стадии: client → build → migrate → final
-compose.yaml               db + migrate + shifter
+compose.yaml               локально: db + migrate + shifter, всё собирается на месте
+compose.prod.yaml          на сервере: те же сервисы + Caddy, образы из реестра
 ```
 
 Бэкенд и фронтенд лежат на одном уровне: `server/` и `client/`. Корень содержит
@@ -394,6 +404,201 @@ cd client && npx ng test --watch=false   # 32 теста: прогноз, сре
 tip-out, питание, разнос чая и продаж между двумя местами за один день.
 
 CI гоняет обе половины на каждый push и pull request — `.github/workflows/ci.yml`.
+
+---
+
+## Деплой
+
+Прод живёт на **http://45.76.251.81**. Ручного выката нет: любой push в `main`
+проходит тесты, собирает образы, кладёт их в GHCR и перезапускает стек на сервере.
+Всё это — `.github/workflows/deploy.yml`.
+
+```
+push в main
+   │
+   ├─ test           dotnet test + ng test
+   ├─ build          два образа из одного Dockerfile, теги :sha и :latest → ghcr.io
+   └─ deploy         scp compose-файлов в /opt/shifter, docker compose pull && up -d,
+                     ожидание healthy — иначе ран падает и показывает логи
+```
+
+Сервер ничего не собирает, и это осознанно: машина, которая компилирует то, что
+на ней же и запускается, однажды уронит выкат по причине, которую никто не увидит.
+Он только скачивает готовые образы, проверенные CI.
+
+### Стек на сервере
+
+`compose.prod.yaml` — четыре сервиса:
+
+| Сервис | Что делает |
+|---|---|
+| `db` | PostgreSQL 17, том `shifter-db`, наружу **не публикуется** |
+| `migrate` | накатывает миграции на обе базы и завершается; приложение ждёт его успеха |
+| `shifter` | API и SPA одним контейнером, слушает 8080 только внутри сети |
+| `proxy` | Caddy, единственный, кто смотрит наружу: порты 80 и 443 |
+
+Образы `shifter` и `shifter-migrate` собираются из **одного** Dockerfile, разных
+стадий, и получают один и тот же тег коммита — так выкат не может свести
+приложение с чужой схемой базы.
+
+### Новый сервер с нуля
+
+Нужен доступ по SSH и ключ, которым будет ходить CI.
+
+```bash
+# 1. ключ на сервер (пароль спросят в последний раз)
+ssh-keygen -t ed25519 -f ~/.ssh/shifter_deploy -C shifter-deploy
+ssh-copy-id -i ~/.ssh/shifter_deploy.pub root@СЕРВЕР
+
+# 2. подготовка машины
+scp -i ~/.ssh/shifter_deploy docker/bootstrap.sh root@СЕРВЕР:/root/
+ssh -i ~/.ssh/shifter_deploy root@СЕРВЕР 'bash /root/bootstrap.sh'
+```
+
+`bootstrap.sh` идемпотентен и знает про Arch и Debian/Ubuntu — то, что реально
+выдают провайдеры. Он ставит Docker с compose, заводит пользователя `deploy`
+(в группе `docker` и больше нигде — деплою не нужен root), создаёт `/opt/shifter`,
+поднимает ufw на 22/80/443, включает fail2ban, добавляет 2 ГБ swap на машинах
+меньше 2 ГБ памяти и **выключает вход по паролю** — но только если ключ уже на
+месте, иначе оставит пароль включённым и скажет об этом. Дверь не запирается,
+пока ключ внутри.
+
+```bash
+# 3. секреты .env — создаются на сервере один раз и в гит не попадают
+ssh -i ~/.ssh/shifter_deploy deploy@СЕРВЕР
+cd /opt/shifter
+umask 077
+cat > .env <<EOF
+SHIFTER_JWT_KEY=$(openssl rand -base64 48)
+POSTGRES_PASSWORD=$(openssl rand -base64 48 | tr -dc 'A-Za-z0-9' | head -c 32)
+SITE_ADDRESS=:80
+EOF
+```
+
+Пароль базы — только буквы и цифры, намеренно. Он подставляется в строку
+подключения вида `Host=db;…;Password=…`, и `;` внутри разорвал бы её молча,
+дав ошибку аутентификации вместо ошибки конфигурации.
+
+`.env` живёт на сервере и нигде больше. CI его не пишет и не перезаписывает —
+выкат приносит только определение стека, но не секреты.
+
+```bash
+# 4. секреты репозитория, которыми CI ходит на сервер
+gh secret set DEPLOY_SSH_KEY < ~/.ssh/shifter_deploy
+gh secret set DEPLOY_HOST --body СЕРВЕР
+gh secret set DEPLOY_USER --body deploy
+
+# 5. и всё: выкат — это push
+git push origin main
+```
+
+Логин в GHCR внутри выката делается токеном самого рана, который истекает вместе
+с ним. Постоянных учёток реестра на сервере не хранится, а образы остаются
+приватными.
+
+### Что открыто наружу
+
+| Порт | Снаружи | Что там |
+|---|---|---|
+| 22 | открыт | SSH, только по ключу, пароли выключены, fail2ban |
+| 80 | открыт | Caddy → `shifter:8080`: и SPA, и API |
+| 443 | откроется вместе с доменом | пока `SITE_ADDRESS=:80`, Caddy на нём не поднимается |
+| 5432 | закрыт | база не публикуется вовсе; ходить в неё — через SSH-туннель |
+| 8080 | закрыт | приложение доступно только прокси |
+
+Одна тонкость, о которую легко споткнуться: **Docker публикует порты своей
+цепочкой iptables и проходит мимо ufw**. То есть база приватна не потому, что
+файрвол закрыт, а потому, что `compose.prod.yaml` её не публикует. Стоит дописать
+туда `ports: 5432:5432` — и она окажется в интернете, а правила ufw этому не
+помешают. По той же причине на сервере нельзя запускать обычный `compose.yaml`:
+он публикует Postgres и собирает образы прямо на машине.
+
+Заглянуть в базу, ничего не открывая наружу:
+
+```bash
+# psql прямо в контейнере
+ssh -i ~/.ssh/shifter_deploy deploy@СЕРВЕР \
+    'cd /opt/shifter && docker compose -f compose.prod.yaml exec db psql -U shifter_user shifter'
+```
+
+Клиенту с графикой нужен туннель. Порт 5432 на хосте не слушает никто, поэтому
+пробрасывать надо на адрес контейнера — ssh резолвит его уже на сервере:
+
+```bash
+DB=$(ssh -i ~/.ssh/shifter_deploy deploy@СЕРВЕР \
+     "docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' shifter-db-1")
+
+ssh -i ~/.ssh/shifter_deploy -N -L 5433:$DB:5432 deploy@СЕРВЕР
+# теперь база на localhost:5433, пароль — POSTGRES_PASSWORD из /opt/shifter/.env
+```
+
+### Эксплуатация
+
+```bash
+ssh -i ~/.ssh/shifter_deploy deploy@СЕРВЕР
+cd /opt/shifter
+
+docker compose -f compose.prod.yaml ps               # состояние
+docker compose -f compose.prod.yaml logs -f shifter  # логи приложения
+docker compose -f compose.prod.yaml logs -f proxy    # доступы и выдача сертификатов
+docker compose -f compose.prod.yaml restart shifter
+```
+
+`docker compose down -v` стирает том с базой. На проде этой команде делать нечего.
+
+### Домен и HTTPS
+
+Пока в `SITE_ADDRESS` стоит `:80`, отдаётся обычный HTTP — всё, что умеет голый IP.
+Появился домен — правится одна строка:
+
+```bash
+# A-запись домена должна уже указывать на сервер
+sed -i 's/^SITE_ADDRESS=.*/SITE_ADDRESS=shifter.example.com/' /opt/shifter/.env
+docker compose -f compose.prod.yaml up -d proxy
+```
+
+Дальше Caddy сам получит сертификат Let's Encrypt, сам будет его продлевать и сам
+начнёт уводить http на https. Ни certbot, ни cron, ни перезагрузки конфига — это
+и есть причина, по которой здесь он, а не nginx.
+
+Приложение при этом остаётся на чистом HTTP внутри сети и **не редиректит само**:
+за прокси такой редирект либо уводит на порт, где никто не слушает, либо гоняет
+браузер по кругу. Вместо этого оно читает `X-Forwarded-For` и `X-Forwarded-Proto`
+(`AddHardening` в `src/Api/Extensions/HardeningExtensions.cs`) — иначе все клиенты
+выглядели бы для лимитера одним адресом прокси и делили бы одно ведро запросов.
+
+### Вход через Google
+
+Серверная часть настройки не требует: client id лежит в `appsettings.json`, он
+публичный по замыслу, и `/shifter/v1/auth/google/config` отдаёт его клиенту, чтобы
+тот решил, рисовать кнопку или нет. Настраивается только сторона Google — там
+проверяется **origin страницы**, а не сервер:
+
+1. **Нужен домен и HTTPS.** Google Identity Services принимает `http://` только
+   для `localhost`, а IP-адрес в качестве origin не принимает вообще. На голом
+   `http://45.76.251.81` кнопка не заработает никогда — сначала домен, см. выше.
+2. Google Cloud Console → **APIs & Services → Credentials** → OAuth 2.0 Client ID
+   типа Web application → **Authorized JavaScript origins** → добавить
+   `https://shifter.example.com`. Для локальной разработки там же держатся
+   `http://localhost:4200` и `http://localhost:8080`.
+3. **Authorized redirect URIs заполнять не нужно.** Этот вход проверяет ID-токен,
+   а не обменивает код, так что redirect-адреса в нём не участвуют — как и
+   client secret, который здесь не используется совсем.
+4. **OAuth consent screen** перевести из Testing в Production. В режиме Testing
+   войти могут только вручную добавленные тестовые аккаунты. Проверки Google при
+   этом не потребуется: приложение просит только `openid`, `email` и `profile`.
+
+Изменения в Console подхватываются не мгновенно — если кнопка появилась, а вход
+отдаёт ошибку origin, стоит подождать и обновить страницу без кеша.
+
+Как понять, что сломалось:
+
+| Что видно | Где искать |
+|---|---|
+| кнопки нет вовсе | `/shifter/v1/auth/google/config` вернул пустой `client_id` — значит, `Google__ClientId` пришёл в контейнер пустым и перекрыл `appsettings.json` |
+| кнопка есть, в консоли браузера ошибка про origin | origin не добавлен в Authorized JavaScript origins либо страница открыта по http |
+| `403 Google sign-in is not configured` | сервер видит пустой client id — то же, что и в первой строке |
+| `401 Google sign-in could not be verified` | токен выписан для другого client id: в Console и в `appsettings.json` разные приложения |
 
 ---
 

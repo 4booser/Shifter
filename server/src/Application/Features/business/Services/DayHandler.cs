@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text.RegularExpressions;
 using Shifter.Application.Common.Exceptions;
 using Shifter.Application.Features.business.DTOs;
 using Shifter.Application.Features.business.Services.Interfaces;
@@ -7,7 +8,7 @@ using Shifter.Infrastructure.Repositories.Interfaces;
 
 namespace Shifter.Application.Features.business.Services;
 
-public class DayHandler : IDayHandler
+public partial class DayHandler : IDayHandler
 {
     private const int NoteMaxLength = 500;
     private const int MaxBulkDates = 400;
@@ -36,6 +37,7 @@ public class DayHandler : IDayHandler
 
         Day[] days = await _shifterQuery.GetDaysInRangeAsync(userId, from, to, ct);
         Payout[] payouts = await _shifterQuery.GetPayoutsAsync(userId, from, to, ct);
+        Event[] events = await _shifterQuery.GetEventsInRangeAsync(userId, from, to, ct);
 
         // Locations first: the day view needs them for tip-out and meals, and
         // every total below is derived from the days once they are built.
@@ -107,7 +109,8 @@ public class DayHandler : IDayHandler
             currencies,
             byLocation,
             overtimeHours,
-            overtimeExtra
+            overtimeExtra,
+            events.Select(EventHandler.ToDto).ToArray()
         );
     }
 
@@ -141,7 +144,8 @@ public class DayHandler : IDayHandler
             Tips = request.tips,
             TipsCash = request.tips_cash,
             Deductions = request.deductions,
-            Note = string.IsNullOrWhiteSpace(request.note) ? null : request.note.Trim()
+            Note = string.IsNullOrWhiteSpace(request.note) ? null : request.note.Trim(),
+            Colour = NormaliseColour(request.colour)
         };
 
         Day saved = await _shifterCommand.UpsertDayAsync(incoming, ct);
@@ -186,6 +190,22 @@ public class DayHandler : IDayHandler
         Dictionary<int, Location> byId = places.ToDictionary(place => place.Id);
 
         return touched.Select(day => ToDto(day, byId)).ToArray();
+    }
+
+    /// <summary>
+    /// Empty and null both mean "no colour": the client clears the swatch by
+    /// sending either, and neither should reach the database as a value.
+    /// </summary>
+    private static string? NormaliseColour(string? colour)
+    {
+        if (string.IsNullOrWhiteSpace(colour)) return null;
+
+        string trimmed = colour.Trim();
+
+        if (!HexColour().IsMatch(trimmed))
+            throw new ValidationException("Colour must be a hex value like #1F3A5F.");
+
+        return trimmed.ToUpperInvariant();
     }
 
     private async Task<List<DayShift>> ResolveShiftsAsync(
@@ -574,9 +594,13 @@ public class DayHandler : IDayHandler
             tipOut,
             deductions,
             day.Note,
+            day.Colour,
             Math.Round(shifts.Where(s => s.worked).Sum(s => s.hours), 2),
             workedPay + salesPay + (day.Tips ?? 0m) - tipOut - deductions,
             plannedPay
         );
     }
+
+    [GeneratedRegex("^#[0-9A-Fa-f]{6}$")]
+    private static partial Regex HexColour();
 }

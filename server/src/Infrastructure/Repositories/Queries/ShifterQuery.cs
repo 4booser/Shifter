@@ -97,6 +97,30 @@ public class ShifterQuery : IShifterQuery
             .ToArrayAsync(ct);
     }
 
+    public async Task<Event[]> GetEventsInRangeAsync(
+        int userId,
+        DateOnly from,
+        DateOnly to,
+        CancellationToken ct)
+    {
+        // Overlap, not containment: a fortnight of leave that starts in the
+        // previous month still belongs on this month's calendar.
+        return await _db.Events
+            .AsNoTracking()
+            .Where(item => item.UserId == userId
+                && item.StartDate <= to
+                && item.EndDate >= from)
+            .OrderBy(item => item.StartDate)
+            .ThenBy(item => item.Id)
+            .ToArrayAsync(ct);
+    }
+
+    public async Task<Event?> GetEventAsync(int userId, int id, CancellationToken ct)
+    {
+        return await _db.Events
+            .FirstOrDefaultAsync(item => item.UserId == userId && item.Id == id, ct);
+    }
+
     public async Task<Location[]> GetLocationsAsync(
         int userId,
         bool includeArchived,

@@ -17,6 +17,7 @@ public sealed class FakeShifterQuery : IShifterQuery
     public List<Payout> Payouts { get; } = [];
     public List<Shift> Shifts { get; } = [];
     public List<Sales> Sales { get; } = [];
+    public List<Event> Events { get; } = [];
 
     public Task<Day[]> GetDaysInRangeAsync(int userId, DateOnly from, DateOnly to, CancellationToken ct)
         => Task.FromResult(Days
@@ -66,11 +67,30 @@ public sealed class FakeShifterQuery : IShifterQuery
         => Task.FromResult(Sales
             .Where(item => item.UserId == userId && ids.Contains(item.Id))
             .ToArray());
+
+    // Overlap rather than containment, exactly as the real query does: a test
+    // that only saw events starting inside the range would pass against a
+    // repository that quietly drops the ones running through it.
+    public Task<Event[]> GetEventsInRangeAsync(
+        int userId,
+        DateOnly from,
+        DateOnly to,
+        CancellationToken ct)
+        => Task.FromResult(Events
+            .Where(item => item.UserId == userId
+                && item.StartDate <= to
+                && item.EndDate >= from)
+            .OrderBy(item => item.StartDate)
+            .ToArray());
+
+    public Task<Event?> GetEventAsync(int userId, int id, CancellationToken ct)
+        => Task.FromResult(Events.FirstOrDefault(item => item.UserId == userId && item.Id == id));
 }
 
 public sealed class FakeShifterCommand : IShifterCommand
 {
     public List<Day> Saved { get; } = [];
+    public List<Event> Events { get; } = [];
     public int SalesUsage { get; set; }
     public int ShiftsAtLocation { get; set; }
     public List<object> Deleted { get; } = [];
@@ -135,6 +155,22 @@ public sealed class FakeShifterCommand : IShifterCommand
     public Task<bool> AddSalesAsync(Sales sales, CancellationToken ct) => Task.FromResult(true);
     public Task<bool> AddLocationAsync(Location location, CancellationToken ct) => Task.FromResult(true);
     public Task<bool> AddPayoutAsync(Payout payout, CancellationToken ct) => Task.FromResult(true);
+
+    public Task<bool> AddEventAsync(Event item, CancellationToken ct)
+    {
+        Events.Add(item);
+
+        return Task.FromResult(true);
+    }
+
+    public Task DeleteEventAsync(Event item, CancellationToken ct)
+    {
+        Events.Remove(item);
+        Deleted.Add(item);
+
+        return Task.CompletedTask;
+    }
+
     public Task SaveAsync(CancellationToken ct) => Task.CompletedTask;
 }
 

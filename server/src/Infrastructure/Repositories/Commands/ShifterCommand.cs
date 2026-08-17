@@ -57,6 +57,18 @@ public class ShifterCommand : IShifterCommand
         await _db.SaveChangesAsync(ct);
     }
 
+    public async Task<bool> AddEventAsync(Event item, CancellationToken ct)
+    {
+        await _db.Events.AddAsync(item, ct);
+        return await _db.SaveChangesAsync(ct) > 0;
+    }
+
+    public async Task DeleteEventAsync(Event item, CancellationToken ct)
+    {
+        _db.Events.Remove(item);
+        await _db.SaveChangesAsync(ct);
+    }
+
     public async Task<bool> AddPayoutAsync(Payout payout, CancellationToken ct)
     {
         await _db.Payouts.AddAsync(payout, ct);
@@ -153,8 +165,15 @@ public class ShifterCommand : IShifterCommand
             return incoming;
         }
 
+        // Every scalar the save carries, not a subset. Cash tips and deductions
+        // were missing here and simply never persisted on a day that already
+        // existed: the value came back correct in the response, built from the
+        // request, and was gone by the next reload.
         existing.Tips = incoming.Tips;
+        existing.TipsCash = incoming.TipsCash;
+        existing.Deductions = incoming.Deductions;
         existing.Note = incoming.Note;
+        existing.Colour = incoming.Colour;
 
         // The client always sends the day in full, so replacing beats diffing:
         // there is no partial update to reconcile. The old rows go explicitly

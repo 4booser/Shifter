@@ -23,6 +23,14 @@ public sealed class Day
     public decimal? Deductions { get; set; }
 
     public string? Note { get; set; }
-    
+
+    /// <summary>
+    /// A colour the person put on the day themselves, as "#RRGGBB". Independent
+    /// of the shifts on it: a day can be marked without anything being placed,
+    /// and a day full of shifts can still be singled out. Null means the cell
+    /// takes its colour from what is on it, as it always did.
+    /// </summary>
+    public string? Colour { get; set; }
+
     public required DateOnly Date { get; set; }
 }

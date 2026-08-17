@@ -18,19 +18,22 @@ public class BusinessController : ControllerBase
     private readonly IDayHandler _dayHandler;
     private readonly IPayoutHandler _payoutHandler;
     private readonly ILocationHandler _locationHandler;
+    private readonly IEventHandler _eventHandler;
 
     public BusinessController(
         IShiftHandler shiftHandler,
         ISalesHandler salesHandler,
         IDayHandler dayHandler,
         IPayoutHandler payoutHandler,
-        ILocationHandler locationHandler)
+        ILocationHandler locationHandler,
+        IEventHandler eventHandler)
     {
         _shiftHandler = shiftHandler;
         _salesHandler = salesHandler;
         _dayHandler = dayHandler;
         _payoutHandler = payoutHandler;
         _locationHandler = locationHandler;
+        _eventHandler = eventHandler;
     }
 
     [HttpGet]
@@ -213,6 +216,42 @@ public class BusinessController : ControllerBase
         [FromBody] DaySaveDto request,
         CancellationToken ct)
         => Ok(await _dayHandler.SaveAsync(request, CurrentUserId(), date, ct));
+
+    /// <summary>
+    /// Everything overlapping the range, so a fortnight of leave that began
+    /// last month still reaches the calendar showing this one.
+    /// </summary>
+    [HttpGet]
+    [Route("events")]
+    public async Task<ActionResult<EventDto[]>> GetEvents(
+        [FromQuery] DateOnly from,
+        [FromQuery] DateOnly to,
+        CancellationToken ct)
+        => Ok(await _eventHandler.ListAsync(CurrentUserId(), from, to, ct));
+
+    [HttpPost]
+    [Route("events")]
+    public async Task<ActionResult<EventDto>> CreateEvent(
+        [FromBody] EventSaveDto request,
+        CancellationToken ct)
+        => Ok(await _eventHandler.CreateAsync(request, CurrentUserId(), ct));
+
+    [HttpPut]
+    [Route("events/{id:int}")]
+    public async Task<ActionResult<EventDto>> UpdateEvent(
+        int id,
+        [FromBody] EventSaveDto request,
+        CancellationToken ct)
+        => Ok(await _eventHandler.UpdateAsync(request, CurrentUserId(), id, ct));
+
+    [HttpDelete]
+    [Route("events/{id:int}")]
+    public async Task<IActionResult> DeleteEvent(int id, CancellationToken ct)
+    {
+        await _eventHandler.DeleteAsync(CurrentUserId(), id, ct);
+
+        return NoContent();
+    }
 
     /// <summary>
     /// Read from the token, never from the request. A user id in the body or

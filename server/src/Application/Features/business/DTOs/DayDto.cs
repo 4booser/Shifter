@@ -40,6 +40,8 @@ public record DayDto(
     /// <summary>Meal withholding plus fines; already deducted from earned.</summary>
     decimal deductions,
     string? note,
+    /// <summary>Set by hand, as "#RRGGBB". Null means the cell colours itself.</summary>
+    string? colour,
     /// <summary>Paid hours of the shifts marked worked.</summary>
     double hours,
     /// <summary>Money from shifts already worked, plus sales and tips.</summary>
@@ -91,7 +93,13 @@ public record DaysDto(
     /// <summary>Hours past the weekly threshold.</summary>
     double overtime_hours,
     /// <summary>The premium those hours earned, on top of the base rate.</summary>
-    decimal overtime_earned
+    decimal overtime_earned,
+    /// <summary>
+    /// Everything overlapping the range, once each rather than repeated on
+    /// every day it covers — a fortnight of leave is one entry, and the client
+    /// spreads it across the cells itself.
+    /// </summary>
+    EventDto[] events
     );
 
 /// <summary>
@@ -104,7 +112,12 @@ public record DaySaveDto(
     decimal? tips,
     decimal? tips_cash,
     decimal? deductions,
-    string? note
+    string? note,
+    /// <summary>
+    /// "#RRGGBB", or null to clear it. Like everything else here it replaces
+    /// rather than patches: the day is always sent whole.
+    /// </summary>
+    string? colour = null
     );
 
 public record DayShiftSaveDto(

@@ -21,6 +21,9 @@ public interface IShifterCommand
     Task<bool> AddPayoutAsync(Payout payout, CancellationToken ct);
     Task DeletePayoutAsync(Payout payout, CancellationToken ct);
 
+    Task<bool> AddEventAsync(Event item, CancellationToken ct);
+    Task DeleteEventAsync(Event item, CancellationToken ct);
+
     /// <summary>Persists changes to an entity the query layer handed back tracked.</summary>
     Task SaveAsync(CancellationToken ct);
 

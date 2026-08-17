@@ -18,6 +18,7 @@ public class ShifterDbContext : DbContext
     public DbSet<Location> Locations => Set<Location>();
     public DbSet<Team> Teams => Set<Team>();
     public DbSet<TeamMember> TeamMembers => Set<TeamMember>();
+    public DbSet<Event> Events => Set<Event>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -74,6 +75,18 @@ public class ShifterDbContext : DbContext
         // Payout lookups always filter by owner and overlap a date range.
         modelBuilder.Entity<Payout>()
             .HasIndex(payout => new { payout.UserId, payout.PeriodFrom, payout.PeriodTo });
+
+        // Events are read the same way payouts are: whose, and what overlaps
+        // the month on screen.
+        modelBuilder.Entity<Event>()
+            .HasIndex(item => new { item.UserId, item.StartDate, item.EndDate });
+
+        // Deleting an account takes its events with it.
+        modelBuilder.Entity<Event>()
+            .HasOne(item => item.User)
+            .WithMany()
+            .HasForeignKey(item => item.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         base.OnModelCreating(modelBuilder);
     }

@@ -25,4 +25,8 @@ public interface IShifterQuery
 
     Task<Payout[]> GetPayoutsAsync(int userId, DateOnly from, DateOnly to, CancellationToken ct);
     Task<Payout?> GetPayoutAsync(int userId, int id, CancellationToken ct);
+
+    /// <summary>Everything overlapping the range, not only what starts inside it.</summary>
+    Task<Event[]> GetEventsInRangeAsync(int userId, DateOnly from, DateOnly to, CancellationToken ct);
+    Task<Event?> GetEventAsync(int userId, int id, CancellationToken ct);
 }

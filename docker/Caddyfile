@@ -1,0 +1,26 @@
+# One line decides everything. SITE_ADDRESS of ":80" serves plain HTTP, which
+# is all a bare IP can do. Put a hostname there instead and Caddy obtains and
+# renews a Let's Encrypt certificate on its own — no certbot, no cron, no
+# reload. That is the whole reason it is here rather than nginx.
+{$SITE_ADDRESS} {
+	encode zstd gzip
+
+	# The app is the only backend; it serves both the API and the SPA.
+	reverse_proxy shifter:8080 {
+		health_uri /health
+		health_interval 30s
+	}
+
+	header {
+		# The SPA and API are same-origin, so nothing external is needed.
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy strict-origin-when-cross-origin
+		-Server
+	}
+
+	log {
+		output stdout
+		format console
+	}
+}

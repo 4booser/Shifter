@@ -1,0 +1,80 @@
+# Production stack. Unlike compose.yaml it builds nothing: images come from the
+# registry, already built and tested by CI. A server that compiles its own
+# deployment is a server that can fail a deploy for reasons no one can see.
+#
+#   docker compose -f compose.prod.yaml pull
+#   docker compose -f compose.prod.yaml up -d
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: shifter_user
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: shifter
+    volumes:
+      - shifter-db:/var/lib/postgresql/data
+      - ./docker/init-databases.sh:/docker-entrypoint-initdb.d/init-databases.sh:ro
+    # Deliberately not published: only the app needs it, and a database on the
+    # open internet is how servers get owned. Reach it over an SSH tunnel.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U shifter_user -d shifter"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  migrate:
+    image: ${REGISTRY:-ghcr.io/4booser}/shifter-migrate:${TAG:-latest}
+    restart: "no"
+    environment:
+      ConnectionStrings__Shifter: "Host=db;Port=5432;Database=shifter;Username=shifter_user;Password=${POSTGRES_PASSWORD}"
+      ConnectionStrings__Tokens: "Host=db;Port=5432;Database=tokens;Username=shifter_user;Password=${POSTGRES_PASSWORD}"
+      SHIFTER_JWT_KEY: ${SHIFTER_JWT_KEY:?set SHIFTER_JWT_KEY in .env}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  shifter:
+    image: ${REGISTRY:-ghcr.io/4booser}/shifter:${TAG:-latest}
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://0.0.0.0:8080
+      ConnectionStrings__Shifter: "Host=db;Port=5432;Database=shifter;Username=shifter_user;Password=${POSTGRES_PASSWORD}"
+      ConnectionStrings__Tokens: "Host=db;Port=5432;Database=tokens;Username=shifter_user;Password=${POSTGRES_PASSWORD}"
+      SHIFTER_JWT_KEY: ${SHIFTER_JWT_KEY:?set SHIFTER_JWT_KEY in .env}
+      Google__ClientId: ${GOOGLE_CLIENT_ID:-}
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # Caddy terminates the connection and hands it on. On a bare IP it serves
+  # plain HTTP; put a domain in SITE_ADDRESS and it fetches a certificate by
+  # itself, with no further configuration anywhere.
+  proxy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:-:80}
+    volumes:
+      - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - shifter
+
+volumes:
+  shifter-db:
+  caddy-data:
+  caddy-config:

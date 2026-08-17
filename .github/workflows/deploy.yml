@@ -1,0 +1,137 @@
+name: Deploy
+
+# Only main deploys. dev is for CI alone, so a broken experiment cannot reach
+# the server by being pushed to the wrong branch.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE: ${{ github.repository_owner }}/shifter
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - run: dotnet test Shifter.sln --configuration Release
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+
+      - run: npm ci
+        working-directory: client
+
+      - run: npx ng test --watch=false
+        working-directory: client
+
+  build:
+    name: Build and push
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          # Provided by Actions; no token to store anywhere.
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # The app image and the migration image come from the same Dockerfile,
+      # different stages, and are tagged with the same commit so a deployment
+      # can never pair an app with someone else's schema.
+      - name: App image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: final
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE }}:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Migration image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: migrate
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE }}-migrate:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE }}-migrate:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    name: Deploy
+    needs: build
+    runs-on: ubuntu-latest
+    # One deployment at a time, and a newer commit waits rather than racing.
+    concurrency:
+      group: production
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Ship the compose files
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          # The stack definition travels with the release; .env stays on the
+          # server and is never overwritten from here.
+          source: "compose.prod.yaml,docker/Caddyfile,docker/init-databases.sh"
+          target: /opt/shifter
+
+      - name: Pull and restart
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            set -euo pipefail
+            cd /opt/shifter
+
+            echo "REGISTRY=${{ env.REGISTRY }}/${{ github.repository_owner }}" > .env.release
+            echo "TAG=${{ github.sha }}" >> .env.release
+
+            docker compose -f compose.prod.yaml --env-file .env --env-file .env.release pull
+            docker compose -f compose.prod.yaml --env-file .env --env-file .env.release up -d
+
+            # Wait for the app to report healthy before calling this a success,
+            # so a broken release fails the run instead of sitting there.
+            for i in $(seq 1 30); do
+              if docker compose -f compose.prod.yaml ps --format '{{.Service}} {{.Status}}' \
+                 | grep -q 'shifter.*healthy'; then
+                echo "healthy"
+                docker image prune -f
+                exit 0
+              fi
+              sleep 5
+            done
+
+            echo "did not become healthy in time"
+            docker compose -f compose.prod.yaml logs --tail 60 shifter
+            exit 1

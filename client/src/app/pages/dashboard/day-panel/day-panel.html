@@ -5,6 +5,82 @@
       {{ text }}
     </h2>
 
+    @if (holiday(); as name) {
+      <p class="day-holiday-note">
+        <app-icon name="spark" [size]="13" />
+        {{ name }}
+      </p>
+    }
+
+    <section>
+      <h3 class="block-title">{{ 'Colour' | t }}</h3>
+
+      <div class="swatch-row" role="group" [attr.aria-label]="'Colour' | t">
+        @for (option of colours; track option.value) {
+          <button
+            type="button"
+            class="swatch"
+            [class.is-active]="colour() === option.value"
+            [style.background]="option.value"
+            [attr.aria-pressed]="colour() === option.value"
+            [attr.title]="option.label"
+            (click)="pickColour(option.value)"
+          ></button>
+        }
+
+        @if (colour() !== null) {
+          <button type="button" class="swatch is-clear" (click)="pickColour(null)">
+            <app-icon name="close" [size]="13" />
+          </button>
+        }
+      </div>
+    </section>
+
+    <section>
+      <h3 class="block-title">
+        {{ 'Events' | t }}
+
+        <button type="button" class="button is-quiet is-small" (click)="addEvent()">
+          <app-icon name="plus" [size]="13" />
+          {{ 'Add' | t }}
+        </button>
+      </h3>
+
+      @if (events().length === 0) {
+        <p class="empty-note">{{ 'Nothing on this day but work.' | t }}</p>
+      } @else {
+        <ul class="event-list">
+          @for (event of events(); track event.id) {
+            <li class="event-row" [style.--mark-colour]="event.colour">
+              <button type="button" class="event-open" (click)="editEvent(event)">
+                <span class="event-mark">{{ event.symbol ?? '•' }}</span>
+                <span class="event-name">{{ event.name }}</span>
+
+                @if (event.start_time; as time) {
+                  <span class="event-time">
+                    {{ time }}@if (event.end_time) {–{{ event.end_time }}}
+                  </span>
+                }
+
+                @if (event.days > 1) {
+                  <span class="event-span">{{ event.days }} {{ 'days' | t }}</span>
+                }
+              </button>
+
+              <button
+                type="button"
+                class="icon-button"
+                [attr.aria-label]="'Delete' | t"
+                (click)="removeEvent(event.id)"
+              >
+                <app-icon name="trash" [size]="14" />
+              </button>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+
     <section>
       <h3 class="block-title">{{ 'Shifts' | t }}</h3>
 
@@ -216,3 +292,10 @@
     <p class="empty-note">{{ 'Pick a day in the calendar.' | t }}</p>
   }
 </aside>
+
+<app-event-modal
+  [open]="eventModalOpen()"
+  [editing]="editingEvent()"
+  [date]="selectedDate()"
+  (closed)="closeEventModal()"
+/>

@@ -743,7 +743,7 @@ body {
   min-width: 0;
 }
 
-.day-shift {
+.day-entry {
   display: flex;
   align-items: center;
   gap: 0.1875rem;
@@ -763,7 +763,7 @@ body {
 
 /* Truncates rather than wraps: a long name must not push the hours out of the
    cell or make one row taller than its neighbours. */
-.day-shift-name {
+.day-entry-name {
   overflow: hidden;
   color: var(--text-muted);
   font-size: 0.6875rem;
@@ -777,7 +777,7 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-.day.is-selected .day-shift-name,
+.day.is-selected .day-entry-name,
 .day.is-selected .day-hours {
   color: var(--text);
 }
@@ -1144,8 +1144,9 @@ body {
 /* ==== Plan versus fact ==== */
 
 /* A planned shift reads as an outline, a worked one as filled: the difference
-   has to be legible at a glance across a whole month. */
-.day-mark.is-planned {
+   has to be legible at a glance across a whole month. The flag sits on the row
+   rather than the badge, so the name can fade with it. */
+.day-entry.is-planned .day-mark {
   background: transparent;
   border: 1px dashed var(--accent);
   color: var(--accent);
@@ -1263,6 +1264,115 @@ body {
   cursor: pointer;
 }
 
+/* Clearing a colour is not itself a colour, so this one is drawn as an empty
+   slot rather than as another swatch to pick from. */
+.swatch.is-clear {
+  display: grid;
+  place-items: center;
+  background: var(--surface-sunken);
+  border: 1px dashed var(--border-strong);
+  box-shadow: none;
+  color: var(--text-muted);
+}
+
+/* ==== Events ==== */
+
+.day-holiday-note {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin: -0.25rem 0 0.5rem;
+  color: var(--accent);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.event-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.event-row {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.event-open {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 0.375rem;
+  min-width: 0;
+  padding: 0.3125rem 0.4375rem;
+  background: color-mix(in srgb, var(--mark-colour) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--mark-colour) 35%, transparent);
+  border-radius: var(--radius);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    background: color-mix(in srgb, var(--mark-colour) 18%, transparent);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--ring);
+  }
+}
+
+.event-mark {
+  flex: none;
+  font-size: 0.875rem;
+}
+
+.event-name {
+  overflow: hidden;
+  flex: 1;
+  font-size: 0.8125rem;
+  font-weight: 550;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.event-time,
+.event-span {
+  flex: none;
+  color: var(--text-muted);
+  font-size: 0.6875rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* ==== Weekly pattern ==== */
+
+.pattern-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.pattern-row {
+  display: grid;
+  grid-template-columns: 6.5rem 1fr;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pattern-day {
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  font-weight: 550;
+}
+
+.brush-bar.is-pattern {
+  /* No single template to show a badge for, so the text carries it alone. */
+  font-style: italic;
+}
+
 .emoji-row {
   display: flex;
   flex-wrap: wrap;
@@ -1364,15 +1474,102 @@ body {
   }
 }
 
-/* The location's colour overrides the accent on that shift's badge. */
-.day-mark[data-colour] {
+/* The location's colour overrides the accent on that shift's badge. The
+   variable is set on the row, so the badge, the name and the time all take it
+   without each needing its own binding. */
+.day-entry .day-mark {
   background: var(--mark-colour, var(--accent));
 }
 
-.day-mark.is-planned[data-colour] {
+.day-entry.is-planned .day-mark {
   background: transparent;
-  border-color: var(--mark-colour, var(--accent));
+  border: 1px dashed var(--mark-colour, var(--accent));
   color: var(--mark-colour, var(--accent));
+}
+
+/* ==== A day with more than one thing on it ==== */
+
+/* The head is its own row so the number, a holiday and the extras dot stop
+   fighting for the same corner once a cell has several entries. */
+.day-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.day-holiday {
+  overflow: hidden;
+  flex: 1;
+  color: var(--accent);
+  font-size: 0.5625rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* An event is not work, and the cell should not have to be read twice to tell
+   them apart: shifts are solid badges, events are outlined in their colour. */
+.day-entry.is-event {
+  .day-mark {
+    background: color-mix(in srgb, var(--mark-colour) 18%, transparent);
+    border: 1px solid var(--mark-colour);
+    color: var(--mark-colour);
+  }
+
+  .day-entry-name {
+    color: var(--mark-colour);
+  }
+}
+
+.day-entry-time {
+  flex: none;
+  margin-left: auto;
+  color: var(--text-faint);
+  font-size: 0.5625rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Counted rather than listed past the third: a fourth line is what turns a
+   cell into a smudge. */
+.day-entry.is-more {
+  color: var(--text-faint);
+  font-size: 0.625rem;
+  font-weight: 600;
+}
+
+/* What the weekly pattern would place here, shown before it is placed. */
+.day-entry.is-hint {
+  overflow: hidden;
+  color: var(--text-faint);
+  font-size: 0.625rem;
+  font-style: italic;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* A colour put on the day by hand. A wash and a bar rather than a filled cell:
+   the day still has to carry its number, badges and hours legibly. */
+.day.is-coloured {
+  position: relative;
+  background: color-mix(in srgb, var(--day-colour) 14%, var(--surface-sunken));
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0.3125rem auto 0.3125rem 0;
+    width: 3px;
+    background: var(--day-colour);
+    border-radius: 999px;
+  }
+}
+
+.day.is-coloured .day-head {
+  padding-left: 0.3125rem;
+}
+
+.day.is-holiday .day-number {
+  color: var(--accent);
 }
 
 .day-earned {
@@ -4224,7 +4421,7 @@ tr.is-skipped .import-note {
     min-height: 3.75rem;
   }
 
-  .day-shift-name {
+  .day-entry-name {
     display: none;
   }
 

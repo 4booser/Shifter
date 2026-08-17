@@ -4,7 +4,12 @@ import { FormsModule } from '@angular/forms';
 
 import { formatDayLabel } from '../../../core/calendar/calendar-date';
 import { CalendarStore } from '../../../core/calendar/calendar-store';
-import { NOTE_MAX_LENGTH } from '../../../core/calendar/calendar.models';
+import {
+  CalendarEvent,
+  MARK_COLOURS,
+  NOTE_MAX_LENGTH,
+} from '../../../core/calendar/calendar.models';
+import { EventModal } from '../tools/event-modal';
 import { MoneyPipe } from '../../../shared/money/money-pipe';
 import { Icon } from '../../../shared/icon/icon';
 
@@ -16,7 +21,7 @@ const QUANTITY_STEPS = [1, 3, 5, 10];
 
 @Component({
   selector: 'app-day-panel',
-  imports: [TPipe, FormsModule, Icon, MoneyPipe],
+  imports: [TPipe, FormsModule, Icon, MoneyPipe, EventModal],
   templateUrl: './day-panel.html',
 })
 export class DayPanel {
@@ -25,6 +30,44 @@ export class DayPanel {
   protected readonly noteMaxLength = NOTE_MAX_LENGTH;
   protected readonly tipSteps = TIP_STEPS;
   protected readonly quantitySteps = QUANTITY_STEPS;
+  protected readonly colours = MARK_COLOURS;
+
+  /** Which day is open, so the event modal knows where a new one starts. */
+  protected readonly selectedDate = this.store.selectedDate;
+  protected readonly eventModalOpen = signal(false);
+  protected readonly editingEvent = signal<CalendarEvent | null>(null);
+
+  /** Events covering the open day, whether they start on it or run through it. */
+  protected readonly events = computed(() => {
+    const key = this.store.selectedDate();
+
+    return key === null ? [] : (this.store.eventsByDate().get(key) ?? []);
+  });
+
+  protected readonly holiday = computed(() => {
+    const key = this.store.selectedDate();
+
+    return key === null ? null : (this.store.holidays().get(key)?.name ?? null);
+  });
+
+  protected addEvent(): void {
+    this.editingEvent.set(null);
+    this.eventModalOpen.set(true);
+  }
+
+  protected editEvent(event: CalendarEvent): void {
+    this.editingEvent.set(event);
+    this.eventModalOpen.set(true);
+  }
+
+  protected removeEvent(id: number): void {
+    this.store.deleteEvent(id);
+  }
+
+  protected closeEventModal(): void {
+    this.eventModalOpen.set(false);
+    this.editingEvent.set(null);
+  }
 
   protected readonly positions = this.store.positions;
   protected readonly templates = this.store.templates;
@@ -45,6 +88,8 @@ export class DayPanel {
   /** Fines, breakages, till shortfalls. */
   protected readonly deductions = signal<number | null>(null);
   protected readonly note = signal<string>('');
+  /** The day's own colour, independent of whatever is placed on it. */
+  protected readonly colour = signal<string | null>(null);
 
   protected readonly shifts = computed(() => this.day()?.shifts ?? []);
 
@@ -124,6 +169,7 @@ export class DayPanel {
       this.tipsCash.set(day?.tips_cash ?? null);
       this.deductions.set(day?.deductions ?? null);
       this.note.set(day?.note ?? '');
+      this.colour.set(day?.colour ?? null);
     });
 
     // Shifts can be painted onto the open day from the calendar, so the flags
@@ -241,6 +287,13 @@ export class DayPanel {
       tips_cash: this.tipsCash(),
       deductions: this.deductions(),
       note: this.note().trim() === '' ? null : this.note(),
+      colour: this.colour(),
     });
+  }
+
+  /** Sets or clears the day's own colour, saving straight away. */
+  protected pickColour(value: string | null): void {
+    this.colour.set(this.colour() === value ? null : value);
+    this.save();
   }
 }

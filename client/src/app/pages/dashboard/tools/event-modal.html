@@ -1,0 +1,115 @@
+<app-modal
+  [open]="open()"
+  [title]="(editing() === null ? 'New event' : 'Edit event') | t"
+  (closed)="close()"
+>
+  <div class="modal-form">
+    <label class="field">
+      <span class="field-label">{{ 'Name' | t }}</span>
+      <input
+        type="text"
+        maxlength="80"
+        [ngModel]="name()"
+        (ngModelChange)="name.set($event)"
+        [placeholder]="'Holiday, course, day off…' | t"
+      />
+    </label>
+
+    <div class="field">
+      <span class="field-label">{{ 'Colour' | t }}</span>
+
+      <div class="swatch-row">
+        @for (option of colours; track option.value) {
+          <button
+            type="button"
+            class="swatch"
+            [class.is-active]="colour() === option.value"
+            [style.background]="option.value"
+            [attr.title]="option.label"
+            [attr.aria-pressed]="colour() === option.value"
+            (click)="colour.set(option.value)"
+          ></button>
+        }
+      </div>
+    </div>
+
+    <div class="field">
+      <span class="field-label">{{ 'Badge' | t }}</span>
+
+      <div class="emoji-groups">
+        @for (group of emojiGroups; track group.label) {
+          <div class="emoji-group">
+            <span class="emoji-group-label">{{ group.label | t }}</span>
+
+            <div class="emoji-row">
+              @for (emoji of group.emojis; track emoji) {
+                <button
+                  type="button"
+                  class="emoji"
+                  [class.is-active]="symbol() === emoji"
+                  (click)="pickSymbol(emoji)"
+                >
+                  {{ emoji }}
+                </button>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="field-row">
+      <label class="field">
+        <span class="field-label">{{ 'From' | t }}</span>
+        <input type="date" [ngModel]="from()" (ngModelChange)="setFrom($event)" />
+      </label>
+
+      <label class="field">
+        <span class="field-label">{{ 'To' | t }}</span>
+        <input type="date" [min]="from()" [ngModel]="to()" (ngModelChange)="to.set($event)" />
+      </label>
+    </div>
+
+    <label class="check-row">
+      <input type="checkbox" [ngModel]="allDay()" (ngModelChange)="allDay.set($event)" />
+      <span>{{ 'All day' | t }}</span>
+    </label>
+
+    @if (!allDay()) {
+      <div class="field-row">
+        <label class="field">
+          <span class="field-label">{{ 'Starts' | t }}</span>
+          <input type="time" [ngModel]="startTime()" (ngModelChange)="startTime.set($event)" />
+        </label>
+
+        <label class="field">
+          <span class="field-label">{{ 'Ends' | t }}</span>
+          <input type="time" [ngModel]="endTime()" (ngModelChange)="endTime.set($event)" />
+        </label>
+      </div>
+    }
+
+    <label class="field">
+      <span class="field-label">{{ 'Note' | t }}</span>
+      <textarea rows="2" maxlength="500" [ngModel]="note()" (ngModelChange)="note.set($event)"></textarea>
+    </label>
+
+    @if (days() > 1) {
+      <p class="field-hint">{{ 'Covers' | t }} <strong>{{ days() }}</strong> {{ 'days' | t }}.</p>
+    } @else if (days() === 0) {
+      <p class="field-hint">{{ 'The end cannot come before the start.' | t }}</p>
+    }
+
+    <div class="modal-actions">
+      <button type="button" class="button is-quiet" (click)="close()">{{ 'Cancel' | t }}</button>
+      <button
+        type="button"
+        class="button is-primary"
+        [disabled]="!valid() || saving()"
+        (click)="submit()"
+      >
+        {{ (saving() ? 'Saving…' : 'Save') | t }}
+      </button>
+    </div>
+  </div>
+</app-modal>

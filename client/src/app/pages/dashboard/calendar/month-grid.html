@@ -58,6 +58,16 @@
         {{ 'Done' | t }}
       </button>
     </p>
+  } @else if (patternBrush()) {
+    <p class="brush-bar is-pattern">
+      <app-icon name="brush" />
+      {{ 'Placing the weekly pattern' | t }} —
+      {{ 'click the days you work and each takes its own shift' | t }}
+      <button type="button" class="button is-quiet" (click)="clearBrush()">
+        <app-icon name="check" />
+        {{ 'Done' | t }}
+      </button>
+    </p>
   }
 
   @if (view() === 'year') {
@@ -72,9 +82,9 @@
                 <span
                   class="year-day"
                   [class.is-outside]="!day.inCurrentMonth"
-                  [class.is-filled]="marks(day.key).length > 0"
+                  [class.is-filled]="entries(day.key).length > 0"
                   [class.is-today]="day.isToday"
-                  [style.--mark-colour]="marks(day.key)[0]?.colour"
+                  [style.--mark-colour]="dayColour(day.key) ?? entries(day.key)[0]?.colour"
                 ></span>
               }
             }
@@ -96,40 +106,62 @@
             [class.outside]="!day.inCurrentMonth"
             [class.is-today]="day.isToday"
             [class.is-selected]="day.key === selected()"
-            [class.is-painting]="brush() !== null"
+            [class.is-painting]="painting()"
             [class.is-dragged]="isDragged(day.key)"
+            [class.is-coloured]="dayColour(day.key) !== null"
+            [class.is-holiday]="holidayName(day.key) !== null"
+            [style.--day-colour]="dayColour(day.key)"
             [attr.aria-pressed]="day.key === selected()"
+            [attr.title]="holidayName(day.key)"
             (pointerdown)="onPointerDown(day.key, $event)"
             (pointerenter)="onPointerEnter(day.key)"
           >
-            <span class="day-number">{{ day.dayOfMonth }}</span>
+            <span class="day-head">
+              <span class="day-number">{{ day.dayOfMonth }}</span>
 
-            @if (extras(day.key)) {
-              <span class="day-extra" aria-label="Has sales, tips or a note">•••</span>
-            }
+              @if (holidayName(day.key); as holiday) {
+                <span class="day-holiday">{{ holiday }}</span>
+              }
 
-            @if (marks(day.key).length > 0) {
+              @if (extras(day.key)) {
+                <span class="day-extra" aria-label="Has sales, tips or a note">•••</span>
+              }
+            </span>
+
+            @if (entries(day.key).length > 0) {
               <span class="day-body">
-                @for (mark of marks(day.key); track $index) {
-                  <span class="day-shift">
-                    <span
-                      class="day-mark"
-                      [class.is-planned]="!mark.worked"
-                      [attr.data-colour]="mark.colour"
-                      [style.--mark-colour]="mark.colour"
-                    >
-                      {{ mark.symbol }}
-                    </span>
-                    <span class="day-shift-name">{{ mark.name }}</span>
+                @for (entry of visibleEntries(day.key); track $index) {
+                  <span
+                    class="day-entry"
+                    [class.is-event]="entry.kind === 'event'"
+                    [class.is-planned]="entry.planned"
+                    [style.--mark-colour]="entry.colour"
+                  >
+                    <span class="day-mark">{{ entry.symbol }}</span>
+                    <span class="day-entry-name">{{ entry.name }}</span>
+
+                    @if (entry.time; as time) {
+                      <span class="day-entry-time">{{ time }}</span>
+                    }
                   </span>
                 }
 
-                <span class="day-hours">
-                  {{ hoursOf(day.key) }} h
-                  @if (showEarnings() && earned(day.key) > 0) {
-                    · {{ earned(day.key) }}
-                  }
-                </span>
+                @if (hiddenCount(day.key); as more) {
+                  <span class="day-entry is-more">+{{ more }}</span>
+                }
+
+                @if (hoursOf(day.key) > 0) {
+                  <span class="day-hours">
+                    {{ hoursOf(day.key) }} h
+                    @if (showEarnings() && earned(day.key) > 0) {
+                      · {{ earned(day.key) }}
+                    }
+                  </span>
+                }
+              </span>
+            } @else if (patternHint(day.key); as hint) {
+              <span class="day-body">
+                <span class="day-entry is-hint">{{ hint }}</span>
               </span>
             }
           </button>

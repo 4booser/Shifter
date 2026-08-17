@@ -83,6 +83,10 @@
       </ul>
 
       <div class="stack">
+        <button type="button" class="button is-block" (click)="patternModalOpen.set(true)">
+          <app-icon name="brush" />
+          {{ 'Weekly pattern' | t }}
+        </button>
         <button type="button" class="button is-block" (click)="rotationModalOpen.set(true)">
           <app-icon name="repeat" />
           {{ 'Fill a rota' | t }}
@@ -367,6 +371,7 @@
   [editing]="editingPosition()"
   (closed)="salesModalOpen.set(false)"
 />
+<app-pattern-modal [open]="patternModalOpen()" (closed)="patternModalOpen.set(false)" />
 <app-rotation-modal
   [open]="rotationModalOpen()"
   (closed)="rotationModalOpen.set(false)"

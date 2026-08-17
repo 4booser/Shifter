@@ -7,10 +7,12 @@ import { Icon } from '../../../shared/icon/icon';
 
 import { LANGS } from '../../../core/i18n/i18n';
 import { Reminders } from '../../../core/offline/reminders';
+import { HOLIDAY_COUNTRIES } from '../../../core/calendar/holidays';
 import {
   ACCENT_PRESETS,
   CURRENCY_PRESETS,
   CalendarView,
+  CellTimes,
   Density,
   Language,
   SettingsStore,
@@ -33,6 +35,13 @@ export class SettingsModal {
   protected readonly accents = ACCENT_PRESETS;
   protected readonly langs = LANGS;
   protected readonly currencies = CURRENCY_PRESETS;
+  protected readonly countries = HOLIDAY_COUNTRIES;
+
+  protected readonly cellTimeOptions: { value: CellTimes; label: string }[] = [
+    { value: 'none', label: 'None' },
+    { value: 'start', label: 'Start' },
+    { value: 'range', label: 'Start and end' },
+  ];
   protected readonly settings = this.store.settings;
   protected readonly notifyPermission = this.reminders.permission;
 
@@ -67,6 +76,14 @@ export class SettingsModal {
 
   protected setCurrency(value: string): void {
     this.store.update('currency', value);
+  }
+
+  protected setCellTimes(value: CellTimes): void {
+    this.store.update('cellTimes', value);
+  }
+
+  protected setHolidayCountry(value: string): void {
+    this.store.update('holidayCountry', value);
   }
 
   protected setDensity(value: Density): void {

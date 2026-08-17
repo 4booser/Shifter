@@ -19,12 +19,15 @@ import {
   todayKey,
   weekBounds,
 } from './calendar-date';
+import { holidaysInRange } from './holidays';
 import {
   CalendarDayData,
+  CalendarEvent,
   DayShiftEntry,
   DaySave,
   DaysResponse,
   EMPTY_SUMMARY,
+  EventSave,
   Payout,
   PayoutCreate,
   SalesCreate,
@@ -63,6 +66,8 @@ export class CalendarStore {
   private readonly _previousSummary = signal<DaysResponse>(EMPTY_SUMMARY);
   private readonly _summaryPeriod = signal<SummaryPeriod>('month');
   private readonly _brush = signal<ShiftTemplate | null>(null);
+  private readonly _patternBrush = signal(false);
+  private readonly _events = signal<CalendarEvent[]>([]);
   private readonly _error = signal<string | null>(null);
   private readonly _saving = signal(false);
   private readonly _payouts = signal<Payout[]>([]);
@@ -93,6 +98,35 @@ export class CalendarStore {
   readonly summary = this._summary.asReadonly();
   readonly summaryPeriod = this._summaryPeriod.asReadonly();
   readonly brush = this._brush.asReadonly();
+  readonly patternBrush = this._patternBrush.asReadonly();
+  readonly events = this._events.asReadonly();
+
+  /**
+   * Events spread across every day they cover, so a cell can ask one question.
+   * Built once per change rather than filtered per cell: a month grid asks
+   * forty-two times, and a fortnight of leave would be scanned each time.
+   */
+  readonly eventsByDate = computed(() => {
+    const spread = new Map<string, CalendarEvent[]>();
+
+    for (const event of this._events()) {
+      for (const key of keysBetween(event.start_date, event.end_date)) {
+        const existing = spread.get(key);
+
+        if (existing === undefined) spread.set(key, [event]);
+        else existing.push(event);
+      }
+    }
+
+    return spread as ReadonlyMap<string, readonly CalendarEvent[]>;
+  });
+
+  /** Public holidays for whatever is on screen, or nothing when none is chosen. */
+  readonly holidays = computed(() => {
+    const { from, to } = this.gridRange();
+
+    return holidaysInRange(this.settings.holidayCountry(), from, to);
+  });
   readonly error = this._error.asReadonly();
   readonly saving = this._saving.asReadonly();
   readonly payouts = this._payouts.asReadonly();
@@ -359,11 +393,34 @@ export class CalendarStore {
 
   /** Clicking the active template again drops out of painting mode. */
   toggleBrush(template: ShiftTemplate): void {
+    this._patternBrush.set(false);
     this._brush.update((current) => (current?.id === template.id ? null : template));
+  }
+
+  /**
+   * The other painting mode: instead of one template everywhere, each day
+   * takes whatever the weekly pattern puts on its weekday. Clicking the days
+   * worked is then the whole interaction — no picking a shift first, and no
+   * rotation arithmetic for anyone whose week is simply not the same twice.
+   */
+  togglePatternBrush(): void {
+    this._brush.set(null);
+    this._patternBrush.update((on) => !on);
   }
 
   clearBrush(): void {
     this._brush.set(null);
+    this._patternBrush.set(false);
+  }
+
+  /** Which template the pattern would place on a given date, if any. */
+  patternTemplateFor(key: string): ShiftTemplate | null {
+    const weekday = new Date(`${key}T00:00:00`).getDay();
+    const id = this.settings.weekdayShifts()[weekday];
+
+    if (id === undefined) return null;
+
+    return this._templates().find((template) => template.id === id) ?? null;
   }
 
   clearError(): void {
@@ -372,9 +429,81 @@ export class CalendarStore {
 
   /** Single-cell paint, used when a click is not part of a drag. */
   paint(key: string): void {
-    const template = this._brush();
+    const template = this._brush() ?? (this._patternBrush() ? this.patternTemplateFor(key) : null);
 
     if (template !== null) this.applyToDates([key], template);
+  }
+
+  /**
+   * A drag in pattern mode. The dates go out grouped by which template lands
+   * on them — one request per distinct shift rather than one per day, and a
+   * week of three different shifts costs three calls instead of seven.
+   */
+  paintPattern(keys: string[]): void {
+    const byTemplate = new Map<number, { template: ShiftTemplate; dates: string[] }>();
+
+    for (const key of keys) {
+      const template = this.patternTemplateFor(key);
+
+      // A weekday with nothing assigned is left alone rather than cleared:
+      // dragging across a week should not wipe the days off in it.
+      if (template === null) continue;
+
+      const group = byTemplate.get(template.id);
+
+      if (group === undefined) byTemplate.set(template.id, { template, dates: [key] });
+      else group.dates.push(key);
+    }
+
+    for (const { template, dates } of byTemplate.values()) {
+      this.applyToDates(dates, template);
+    }
+  }
+
+  /**
+   * The colour a person puts on a day by hand. Sent as a whole-day save like
+   * everything else, on top of what the day already holds.
+   */
+  setDayColour(key: string, colour: string | null): void {
+    const existing = this._days().get(key);
+
+    this.saveDay(key, { ...toSavePayload(existing), colour });
+  }
+
+  saveEvent(request: EventSave, id: number | null, done: () => void): void {
+    this._error.set(null);
+    this._saving.set(true);
+
+    const call = id === null
+      ? this.api.createEvent(request)
+      : this.api.updateEvent(id, request);
+
+    call.subscribe({
+      next: (event) => {
+        this._saving.set(false);
+
+        // Replace in place when it existed, so an edit that moves an event out
+        // of the month on screen disappears from it rather than lingering.
+        this._events.update((list) =>
+          id === null ? [...list, event] : list.map((item) => (item.id === id ? event : item)),
+        );
+
+        done();
+      },
+      error: (error: unknown) => {
+        this._saving.set(false);
+        this._error.set(apiErrorMessage(error));
+      },
+    });
+  }
+
+  deleteEvent(id: number): void {
+    this._error.set(null);
+
+    this.api.deleteEvent(id).subscribe({
+      next: () => this._events.update((list) => list.filter((item) => item.id !== id)),
+      error: (error: unknown) => this._error.set(apiErrorMessage(error)),
+    });
   }
 
   /**
@@ -512,6 +641,9 @@ export class CalendarStore {
           tip_out: day?.tip_out ?? 0,
           deductions: day?.deductions ?? 0,
           note: day?.note ?? null,
+          // Painting shifts says nothing about the colour someone put on the
+          // day, so it survives the repaint.
+          colour: day?.colour ?? null,
           // Left at the previous value: the server owns the pay and hour
           // rules, and guessing them here is how the two drift.
           hours: day?.hours ?? 0,
@@ -736,8 +868,10 @@ export class CalendarStore {
 
   private loadGrid(from: string, to: string): void {
     this.api.days(from, to).subscribe({
-      next: (response) =>
-        this._days.set(new Map(response.days.map((day) => [day.date, day]))),
+      next: (response) => {
+        this._days.set(new Map(response.days.map((day) => [day.date, day])));
+        this._events.set(response.events);
+      },
       error: (error: unknown) => this._error.set(apiErrorMessage(error)),
     });
   }

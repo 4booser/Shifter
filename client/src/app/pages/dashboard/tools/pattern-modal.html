@@ -1,0 +1,46 @@
+<app-modal [open]="open()" [title]="'Weekly pattern' | t" (closed)="close()">
+  @if (templates().length === 0) {
+    <p class="empty-note">{{ 'Create a shift first — a pattern needs something to place.' | t }}</p>
+  } @else {
+    <div class="modal-form">
+      <p class="field-hint">
+        {{ 'Say what you work on each weekday. Then click the days you actually worked and each one takes its own shift.' | t }}
+      </p>
+
+      <ul class="pattern-list">
+        @for (weekday of weekdays(); track weekday.day) {
+          <li class="pattern-row">
+            <span class="pattern-day">{{ weekday.label | t }}</span>
+
+            <select
+              [value]="shiftFor(weekday.day) ?? ''"
+              (change)="setShift(weekday.day, $any($event.target).value)"
+              [attr.aria-label]="weekday.label | t"
+            >
+              <option value="">{{ 'Nothing' | t }}</option>
+              @for (template of templates(); track template.id) {
+                <option [value]="template.id">
+                  {{ template.name }} · {{ template.start_time }}–{{ template.end_time }}
+                </option>
+              }
+            </select>
+          </li>
+        }
+      </ul>
+
+      <div class="modal-actions">
+        <button type="button" class="button is-quiet" [disabled]="!hasPattern()" (click)="clear()">
+          {{ 'Clear' | t }}
+        </button>
+        <button
+          type="button"
+          class="button is-primary"
+          [disabled]="!hasPattern()"
+          (click)="startPainting()"
+        >
+          {{ 'Start placing' | t }}
+        </button>
+      </div>
+    </div>
+  }
+</app-modal>

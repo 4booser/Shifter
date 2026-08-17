@@ -4,8 +4,10 @@ import { Observable } from 'rxjs';
 
 import {
   CalendarDayData,
+  CalendarEvent,
   DaySave,
   DaysResponse,
+  EventSave,
   Payout,
   Reconciliation,
   PayoutCreate,
@@ -133,6 +135,22 @@ export class CalendarApi {
 
   deletePayout(id: number): Observable<void> {
     return this.http.delete<void>(`${API}/payouts/${id}`);
+  }
+
+  /**
+   * Events are fetched with the days they overlap, so the calendar needs no
+   * separate call to draw a month. These are for editing one.
+   */
+  createEvent(request: EventSave): Observable<CalendarEvent> {
+    return this.http.post<CalendarEvent>(`${API}/events`, request);
+  }
+
+  updateEvent(id: number, request: EventSave): Observable<CalendarEvent> {
+    return this.http.put<CalendarEvent>(`${API}/events/${id}`, request);
+  }
+
+  deleteEvent(id: number): Observable<void> {
+    return this.http.delete<void>(`${API}/events/${id}`);
   }
 
   /** One template across many dates in a single request. */

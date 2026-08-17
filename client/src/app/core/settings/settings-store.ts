@@ -6,6 +6,21 @@ export type CalendarView = 'week' | 'month' | 'year';
 
 export type Language = 'en' | 'ru' | 'uk';
 
+/**
+ * How much of a shift's clock time a calendar cell shows. Off by default: on a
+ * month grid the times are the first thing to turn a cell into mush, and the
+ * people who want them want them badly.
+ */
+export type CellTimes = 'none' | 'start' | 'range';
+
+/**
+ * Which template belongs on which weekday, keyed by day number the way
+ * Date#getDay counts them — 0 is Sunday. Used by the calendar's paint mode:
+ * with a pattern set, clicking a Tuesday puts the Tuesday shift on it without
+ * anyone having to pick one first.
+ */
+export type WeekdayShifts = Partial<Record<number, number>>;
+
 export interface Settings {
   theme: ThemeMode;
   language: Language;
@@ -44,25 +59,40 @@ export interface Settings {
   notifyUnclosed: boolean;
   /** "HH:mm" — after the shift rather than during it. */
   notifyAt: string;
+  /** Whether calendar cells carry the shift's times, and how much of them. */
+  cellTimes: CellTimes;
+  /** ISO country code for the public holidays to mark. Empty shows none. */
+  holidayCountry: string;
+  /** The weekly pattern paint mode places. */
+  weekdayShifts: WeekdayShifts;
 }
 
+/**
+ * The accent tints buttons, links and the ring around a focused field. The
+ * first set here were chosen to be quiet and ended up flat: at the sizes the
+ * accent actually appears — a 2px ring, a small chip — a desaturated colour
+ * reads as grey. These are lifted enough to survive that without turning the
+ * interface into a toy.
+ */
 export const ACCENT_PRESETS = [
-  { label: 'Navy', value: '#1F3A5F' },
-  { label: 'Slate', value: '#3F4A5A' },
-  { label: 'Teal', value: '#1F6F6B' },
-  { label: 'Forest', value: '#2C6244' },
-  { label: 'Plum', value: '#5B3A6E' },
-  { label: 'Rust', value: '#9C4A2A' },
+  { label: 'Indigo', value: '#4F46E5' },
+  { label: 'Ocean', value: '#0284C7' },
+  { label: 'Teal', value: '#0D9488' },
+  { label: 'Emerald', value: '#16A34A' },
+  { label: 'Violet', value: '#7C3AED' },
+  { label: 'Coral', value: '#E11D48' },
+  { label: 'Amber', value: '#D97706' },
+  { label: 'Graphite', value: '#334155' },
 ];
 
-export const CURRENCY_PRESETS = ['₽', '$', '€', '£', '₴', '₸', '¥', 'zł'];
+export const CURRENCY_PRESETS = ['$', '€', '£', '₴', 'zł', 'Kč', '₸', '¥'];
 
 const DEFAULTS: Settings = {
   theme: 'system',
   language: 'en',
   hideAmounts: false,
-  accent: '#1F3A5F',
-  currency: '₽',
+  accent: '#4F46E5',
+  currency: '$',
   currencyBefore: false,
   density: 'comfortable',
   mondayFirst: true,
@@ -80,6 +110,9 @@ const DEFAULTS: Settings = {
   compactSidebar: false,
   notifyUnclosed: false,
   notifyAt: '21:00',
+  cellTimes: 'none',
+  holidayCountry: '',
+  weekdayShifts: {},
 };
 
 const STORAGE_KEY = 'shifter.settings';
@@ -104,6 +137,14 @@ export class SettingsStore {
   readonly confirmBulk = computed(() => this._settings().confirmBulk);
   readonly hideAmounts = computed(() => this._settings().hideAmounts);
   readonly remindUnclosed = computed(() => this._settings().remindUnclosed);
+  readonly cellTimes = computed(() => this._settings().cellTimes);
+  readonly holidayCountry = computed(() => this._settings().holidayCountry);
+  readonly weekdayShifts = computed(() => this._settings().weekdayShifts);
+
+  /** Whether the weekly pattern has anything in it to place. */
+  readonly hasWeekdayPattern = computed(() =>
+    Object.values(this._settings().weekdayShifts).some((id) => typeof id === 'number'),
+  );
 
   constructor() {
     effect(() => {
@@ -120,6 +161,22 @@ export class SettingsStore {
 
   reset(): void {
     this._settings.set({ ...DEFAULTS });
+  }
+
+  /** One weekday of the pattern. Null clears it, leaving that day unpainted. */
+  setWeekdayShift(weekday: number, shiftId: number | null): void {
+    this._settings.update((current) => {
+      const next = { ...current.weekdayShifts };
+
+      if (shiftId === null) delete next[weekday];
+      else next[weekday] = shiftId;
+
+      return { ...current, weekdayShifts: next };
+    });
+  }
+
+  clearWeekdayShifts(): void {
+    this.update('weekdayShifts', {});
   }
 
   /** Formats an amount with the chosen currency label. */
@@ -175,7 +232,15 @@ function read(): Settings {
   try {
     // Spread over the defaults so a settings file written by an older build
     // gains any new keys instead of leaving them undefined.
-    return { ...DEFAULTS, ...(JSON.parse(raw) as Partial<Settings>) };
+    const stored = { ...DEFAULTS, ...(JSON.parse(raw) as Partial<Settings>) };
+
+    // The rouble was the default for a while, so browsers carry it whether or
+    // not anyone chose it. It is gone from the presets, and leaving it in the
+    // stored value would keep it on screen for exactly the people who never
+    // picked it. Anyone who wants it back can type it: the field is free text.
+    if (stored.currency === '₽') stored.currency = DEFAULTS.currency;
+
+    return stored;
   } catch {
     return { ...DEFAULTS };
   }

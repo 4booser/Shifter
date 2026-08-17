@@ -157,6 +157,38 @@
     </div>
 
     <div class="field">
+      <span class="field-label">{{ 'Times in day cells' | t }}</span>
+
+      <div class="segmented">
+        @for (option of cellTimeOptions; track option.value) {
+          <button
+            type="button"
+            class="segment"
+            [class.is-active]="settings().cellTimes === option.value"
+            (click)="setCellTimes(option.value)"
+          >
+            {{ option.label | t }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <label class="field">
+      <span class="field-label">{{ 'Public holidays' | t }}</span>
+      <select
+        [value]="settings().holidayCountry"
+        (change)="setHolidayCountry($any($event.target).value)"
+      >
+        @for (country of countries; track country.code) {
+          <option [value]="country.code">{{ country.label | t }}</option>
+        }
+      </select>
+      <small class="field-hint">
+        {{ 'Marked on the calendar. Worked out in the app, so they show without a network.' | t }}
+      </small>
+    </label>
+
+    <div class="field">
       <span class="field-label">{{ 'Shape' | t }}</span>
       <label class="slider-row">
         <span>{{ 'Corners' | t }}</span>

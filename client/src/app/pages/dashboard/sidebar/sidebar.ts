@@ -20,6 +20,7 @@ import { TeamCard } from './team-card';
 import { averagesFor, change } from '../../../core/calendar/insights';
 import { LocationModal } from '../tools/location-modal';
 import { PayoutModal } from '../tools/payout-modal';
+import { PatternModal } from '../tools/pattern-modal';
 import { RotationModal } from '../tools/rotation-modal';
 import { SalesModal } from '../tools/sales-modal';
 import { ImportModal } from '../tools/import-modal';
@@ -31,6 +32,7 @@ import { ShiftModal } from '../tools/shift-modal';
     ShiftModal,
     SalesModal,
     RotationModal,
+    PatternModal,
     PayoutModal,
     LocationModal,
     DecimalPipe,
@@ -77,6 +79,7 @@ export class Sidebar {
   protected readonly shiftModalOpen = signal(false);
   protected readonly salesModalOpen = signal(false);
   protected readonly rotationModalOpen = signal(false);
+  protected readonly patternModalOpen = signal(false);
   protected readonly payoutModalOpen = signal(false);
   protected readonly locationModalOpen = signal(false);
   protected readonly showArchive = signal(false);

@@ -154,6 +154,38 @@ export interface DayShiftEntry {
   needs_cover: boolean;
 }
 
+/**
+ * Something that occupies days without being work. Mirrors EventDto, and like
+ * it has nowhere to put money: events mark time, shifts pay for it.
+ */
+export interface CalendarEvent {
+  id: number;
+  name: string;
+  symbol: string | null;
+  colour: string;
+  /** 'YYYY-MM-DD'. */
+  start_date: string;
+  /** Inclusive, and equal to start_date for a single day. */
+  end_date: string;
+  /** "HH:mm", or null when it lasts all day. */
+  start_time: string | null;
+  end_time: string | null;
+  note: string | null;
+  /** How many days it covers, both ends included. */
+  days: number;
+}
+
+export interface EventSave {
+  name: string;
+  symbol: string | null;
+  colour: string;
+  start_date: string;
+  end_date: string;
+  start_time: string | null;
+  end_time: string | null;
+  note: string | null;
+}
+
 export interface CalendarDayData {
   /** 'YYYY-MM-DD', the same shape as the calendar grid keys. */
   date: string;
@@ -166,6 +198,8 @@ export interface CalendarDayData {
   /** Meal withholding plus fines; already deducted from earned. */
   deductions: number;
   note: string | null;
+  /** Set by hand, as '#RRGGBB'. Null means the cell colours itself. */
+  colour: string | null;
   /** Paid hours of the shifts marked worked. */
   hours: number;
   earned: number;
@@ -204,6 +238,11 @@ export interface DaysResponse {
   by_location: LocationTotal[];
   overtime_hours: number;
   overtime_earned: number;
+  /**
+   * Everything overlapping the range, once each rather than repeated on every
+   * day it covers. The store spreads them across the cells.
+   */
+  events: CalendarEvent[];
 }
 
 export interface Payout {
@@ -273,6 +312,8 @@ export interface DaySave {
   sales: { sales_id: number; quantity: number }[];
   tips: number | null;
   note: string | null;
+  /** '#RRGGBB', or null to clear it. */
+  colour: string | null;
 }
 
 export const NOTE_MAX_LENGTH = 500;
@@ -300,7 +341,28 @@ export const EMPTY_SUMMARY: DaysResponse = {
   by_location: [],
   overtime_hours: 0,
   overtime_earned: 0,
+  events: [],
 };
+
+/**
+ * The swatches offered for days and events. Bright on purpose: these sit as
+ * small marks on a pale grid, and a muted colour at that size reads as grey.
+ * Each one holds its own against both themes rather than only against white.
+ */
+export const MARK_COLOURS: { label: string; value: string }[] = [
+  { label: 'Coral', value: '#FF5C7A' },
+  { label: 'Amber', value: '#FFA53D' },
+  { label: 'Lemon', value: '#F5C518' },
+  { label: 'Lime', value: '#5CD65C' },
+  { label: 'Emerald', value: '#22C55E' },
+  { label: 'Teal', value: '#14B8A6' },
+  { label: 'Sky', value: '#38BDF8' },
+  { label: 'Indigo', value: '#6366F1' },
+  { label: 'Violet', value: '#A855F7' },
+  { label: 'Magenta', value: '#EC4899' },
+  { label: 'Slate', value: '#64748B' },
+  { label: 'Graphite', value: '#334155' },
+];
 
 /** Turns a stored day back into the payload the save endpoint expects. */
 export function toSavePayload(day: CalendarDayData | undefined): DaySave {
@@ -318,6 +380,7 @@ export function toSavePayload(day: CalendarDayData | undefined): DaySave {
     tips_cash: day?.tips_cash ?? null,
     deductions: day?.deductions ?? null,
     note: day?.note ?? null,
+    colour: day?.colour ?? null,
   };
 }
 

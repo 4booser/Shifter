@@ -9,6 +9,17 @@
 	reverse_proxy shifter:8080 {
 		health_uri /health
 		health_interval 30s
+
+		# A deploy stops the old container before the new one answers, and with
+		# one replica that leaves no healthy upstream for about half a minute.
+		# Without these, every request in that window is a 502 — the release is
+		# fine, but anyone using the site at that moment sees it break. Holding
+		# the request instead turns the outage into a pause: the connection
+		# waits, the new container comes up, and the answer arrives late rather
+		# than not at all. Thirty seconds is longer than a restart takes and
+		# shorter than anyone's patience for a hung tab.
+		lb_try_duration 30s
+		lb_try_interval 500ms
 	}
 
 	header {

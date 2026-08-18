@@ -8,17 +8,22 @@
 	# The app is the only backend; it serves both the API and the SPA.
 	reverse_proxy shifter:8080 {
 		health_uri /health
-		health_interval 30s
+
+		# Ten seconds rather than thirty, because this interval decides how long
+		# a recovered backend keeps being treated as down. At thirty, a restart
+		# that finished in fifteen seconds still looked broken for another
+		# fifteen — which is most of the outage below, and none of it real.
+		health_interval 10s
 
 		# A deploy stops the old container before the new one answers, and with
-		# one replica that leaves no healthy upstream for about half a minute.
-		# Without these, every request in that window is a 502 — the release is
+		# one replica that leaves no healthy upstream for around half a minute.
+		# Without these, every request in that window is a 502: the release is
 		# fine, but anyone using the site at that moment sees it break. Holding
-		# the request instead turns the outage into a pause: the connection
-		# waits, the new container comes up, and the answer arrives late rather
-		# than not at all. Thirty seconds is longer than a restart takes and
-		# shorter than anyone's patience for a hung tab.
-		lb_try_duration 30s
+		# the request turns the outage into a pause — the connection waits, the
+		# new container comes up, and the answer arrives late rather than not at
+		# all. Forty-five seconds covers a slow start with room to spare and
+		# still gives up before a tab looks hung for good.
+		lb_try_duration 45s
 		lb_try_interval 500ms
 	}
 

@@ -136,13 +136,20 @@ jobs:
             docker compose -f compose.prod.yaml --env-file .env --env-file .env.release pull
             docker compose -f compose.prod.yaml --env-file .env --env-file .env.release up -d
 
-            # The Caddyfile is a bind mount, so changing it changes nothing the
-            # compose file can see and the proxy keeps running the old config.
-            # Reloading is graceful and a no-op when nothing changed; a bad
-            # config is refused here rather than after a restart with the site
-            # already down.
-            docker compose -f compose.prod.yaml exec -T proxy \
-              caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile
+            # A single file bind-mounted into a container is bound by inode,
+            # and scp replaces the file rather than writing through it — so the
+            # host gets the new config and the container goes on seeing the old
+            # one. Reloading in place is therefore useless: Caddy re-reads the
+            # same stale bytes and reports the config unchanged, which is how
+            # this went unnoticed. Comparing what the container actually sees
+            # against what was just shipped is the only honest check, and
+            # recreating is what re-resolves the mount.
+            if ! docker compose -f compose.prod.yaml exec -T proxy \
+                 cat /etc/caddy/Caddyfile | cmp -s - docker/Caddyfile; then
+              echo "proxy config changed; recreating"
+              docker compose -f compose.prod.yaml --env-file .env --env-file .env.release \
+                up -d --force-recreate proxy
+            fi
 
             # Wait for the app to report healthy before calling this a success,
             # so a broken release fails the run instead of sitting there.

@@ -77,12 +77,17 @@
         </h2>
 
         <div class="pay-list">
-          @for (row of upcoming(); track row.location_id + row.period_from) {
+          @for (row of upcoming(); track row.location_id + row.period_from + row.stream) {
             <div class="pay-row" [class.is-late]="row.status === 'overdue'">
               <span class="pay-dot" [style.background]="row.colour"></span>
 
               <span class="pay-where">
-                <strong>{{ row.location_name }}</strong>
+                <strong>
+                  {{ row.location_name }}
+                  @if (row.stream !== 'all') {
+                    <span class="pay-stream">{{ streamLabel(row.stream) | t }}</span>
+                  }
+                </strong>
                 <span class="field-hint">
                   {{ label(row.period_from) }} — {{ label(row.period_to) }} ·
                   {{ row.hours | number: '1.0-0' }} h
@@ -120,12 +125,17 @@
         </h2>
 
         <div class="pay-list">
-          @for (row of settled(); track row.location_id + row.period_from) {
+          @for (row of settled(); track row.location_id + row.period_from + row.stream) {
             <div class="pay-row" [class.is-short]="row.status === 'short'">
               <span class="pay-dot" [style.background]="row.colour"></span>
 
               <span class="pay-where">
-                <strong>{{ row.location_name }}</strong>
+                <strong>
+                  {{ row.location_name }}
+                  @if (row.stream !== 'all') {
+                    <span class="pay-stream">{{ streamLabel(row.stream) | t }}</span>
+                  }
+                </strong>
                 <span class="field-hint">
                   {{ label(row.period_from) }} — {{ label(row.period_to) }}
                 </span>

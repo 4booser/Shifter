@@ -127,6 +127,23 @@ public partial class LocationHandler : ILocationHandler
         location.PayDay = request.pay_day;
         location.PayAnchor = request.pay_anchor ?? location.PayAnchor;
 
+        // An empty cycle is not a missing answer, it is the answer: the
+        // commission is paid with everything else, which is what almost every
+        // place does.
+        if (string.IsNullOrWhiteSpace(request.sales_pay_period))
+        {
+            location.SalesPayPeriod = null;
+        }
+        else
+        {
+            if (request.sales_pay_day is < 1 or > 28)
+                throw new ValidationException("Commission pay day must be between 1 and 28.");
+
+            location.SalesPayPeriod = ParsePeriod(request.sales_pay_period);
+            location.SalesPayDay = request.sales_pay_day;
+            location.SalesPayAnchor = request.sales_pay_anchor ?? location.SalesPayAnchor;
+        }
+
         // A threshold of zero would make every hour overtime; a multiplier
         // below one would make overtime pay less than normal time.
         if (request.overtime_weekly_hours is < 1 or > 168)
@@ -196,7 +213,10 @@ public partial class LocationHandler : ILocationHandler
             location.TaxTips,
             location.HolidayPercent,
             location.Currency,
-            location.Archived
+            location.Archived,
+            location.SalesPayPeriod is PayPeriod sales ? PeriodName(sales) : string.Empty,
+            location.SalesPayDay,
+            location.SalesPayAnchor
         );
     }
 

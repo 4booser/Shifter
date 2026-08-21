@@ -231,6 +231,14 @@ export const RU: Dictionary = {
   'Places side by side': 'Места бок о бок',
   'Per hour': 'В час',
   'Tip-out': 'Отдано персоналу',
+  Wage: 'Ставка',
+  Commission: 'Процент',
+  'Sales commission pays': 'Процент с продаж платят',
+  'With the wage': 'Вместе со ставкой',
+  'Commission payday': 'День выплаты процента',
+  'A date the commission cycle passed through': 'Дата, через которую проходил цикл процента',
+  'For a wage paid twice a month against a percentage paid once.':
+    'Для случая, когда ставку платят дважды в месяц, а процент — один раз.',
   'Meals and fines': 'Питание и штрафы',
   'In your pocket': 'На руки',
   'Tips and sales are shared out by the hours each place got that day.':
@@ -895,6 +903,14 @@ export const UK: Dictionary = {
   'Places side by side': 'Місця поруч',
   'Per hour': 'За годину',
   'Tip-out': 'Віддано персоналу',
+  Wage: 'Ставка',
+  Commission: 'Відсоток',
+  'Sales commission pays': 'Відсоток з продажів платять',
+  'With the wage': 'Разом зі ставкою',
+  'Commission payday': 'День виплати відсотка',
+  'A date the commission cycle passed through': 'Дата, через яку проходив цикл відсотка',
+  'For a wage paid twice a month against a percentage paid once.':
+    'Для випадку, коли ставку платять двічі на місяць, а відсоток — один раз.',
   'Meals and fines': 'Харчування та штрафи',
   'In your pocket': 'На руки',
   'Tips and sales are shared out by the hours each place got that day.':

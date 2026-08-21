@@ -8,12 +8,36 @@ namespace Shifter.Domain.Entities;
 public static class PayPeriodCalculator
 {
     public static (DateOnly From, DateOnly To) PeriodFor(Location location, DateOnly date)
-        => location.PayPeriod switch
+        => PeriodFor(location.PayPeriod, location.PayDay, location.PayAnchor, date);
+
+    /// <summary>
+    /// The cycle the sales commission settles on. Places that pay it with
+    /// everything else leave the second schedule unset and fall back to the
+    /// first, so a caller never has to ask which arrangement it is looking at.
+    /// </summary>
+    public static (DateOnly From, DateOnly To) SalesPeriodFor(Location location, DateOnly date)
+        => location.SalesPayPeriod is PayPeriod period
+            ? PeriodFor(period, location.SalesPayDay, location.SalesPayAnchor, date)
+            : PeriodFor(location, date);
+
+    /// <summary>True when the commission is on a cycle of its own.</summary>
+    public static bool SplitsSales(Location location)
+        => location.SalesPayPeriod is PayPeriod period
+            && (period != location.PayPeriod
+                || location.SalesPayDay != location.PayDay
+                || location.SalesPayAnchor != location.PayAnchor);
+
+    public static (DateOnly From, DateOnly To) PeriodFor(
+        PayPeriod period,
+        int payDay,
+        DateOnly anchor,
+        DateOnly date)
+        => period switch
         {
-            PayPeriod.Monthly => Monthly(location.PayDay, date),
+            PayPeriod.Monthly => Monthly(payDay, date),
             PayPeriod.SemiMonthly => SemiMonthly(date),
-            PayPeriod.BiWeekly => Rolling(location.PayAnchor, date, 14),
-            PayPeriod.Weekly => Rolling(location.PayAnchor, date, 7),
+            PayPeriod.BiWeekly => Rolling(anchor, date, 14),
+            PayPeriod.Weekly => Rolling(anchor, date, 7),
             _ => Monthly(1, date)
         };
 

@@ -21,7 +21,13 @@ public record PayPeriodDto(
     /// <summary>open, due, overdue, paid, short or over.</summary>
     string status,
     /// <summary>Days past the due date with nothing recorded; 0 otherwise.</summary>
-    int days_late);
+    int days_late,
+    /// <summary>
+    /// Which payment this is: "all" where a place settles everything at once,
+    /// or "wage" and "commission" where the percentage runs on its own cycle.
+    /// Two rows can then cover the same days without reading as a duplicate.
+    /// </summary>
+    string stream = "all");
 
 /// <summary>
 /// A place that has come up short more than once. One short period is a

@@ -34,6 +34,18 @@ public sealed class Location
     public DateOnly PayAnchor { get; set; } = new DateOnly(2020, 1, 6);
 
     /// <summary>
+    /// A second schedule for the sales commission, for the common arrangement
+    /// where the wage arrives twice a month but the percentage settles once.
+    /// Null means there is no second schedule and the commission is paid on the
+    /// same cycle as everything else, which is what every existing place does.
+    /// </summary>
+    public PayPeriod? SalesPayPeriod { get; set; }
+
+    /// <summary>Reads the same way as <see cref="PayDay"/>, for that schedule.</summary>
+    public int SalesPayDay { get; set; } = 1;
+    public DateOnly SalesPayAnchor { get; set; } = new DateOnly(2020, 1, 6);
+
+    /// <summary>
     /// Hours past this many in one week are paid at the multiplier. Per
     /// location because the rule belongs to the employer, not the worker.
     /// </summary>

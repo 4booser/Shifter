@@ -24,7 +24,14 @@ public record LocationDto(
     decimal holiday_percent,
     /// <summary>Empty means "same as the app's currency".</summary>
     string currency,
-    bool archived
+    bool archived,
+    /// <summary>
+    /// Empty where the sales commission is paid with everything else; otherwise
+    /// the cycle it settles on, with its own day and anchor.
+    /// </summary>
+    string sales_pay_period = "",
+    int sales_pay_day = 1,
+    DateOnly sales_pay_anchor = default
     );
 
 public record LocationCreateDto(
@@ -42,7 +49,11 @@ public record LocationCreateDto(
     decimal tax_percent,
     bool tax_tips,
     decimal holiday_percent,
-    string? currency
+    string? currency,
+    /// <summary>Empty or absent leaves the commission on the main cycle.</summary>
+    string? sales_pay_period = null,
+    int sales_pay_day = 1,
+    DateOnly? sales_pay_anchor = null
     );
 
 /// <summary>Money and hours attributed to one location inside a range.</summary>

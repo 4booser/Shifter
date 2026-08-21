@@ -127,6 +127,55 @@
       </label>
     }
 
+    <!-- Most places pay everything together, so this stays closed until the
+         first option is moved off "with the wage". -->
+    <div class="field">
+      <span class="field-label">{{ 'Sales commission pays' | t }}</span>
+      <div class="segmented is-wrap" role="group" aria-label="Commission pay period">
+        <button
+          type="button"
+          class="segment"
+          [class.is-active]="salesPeriod() === ''"
+          (click)="salesPeriod.set('')"
+        >
+          {{ 'With the wage' | t }}
+        </button>
+        @for (option of periods; track option.value) {
+          <button
+            type="button"
+            class="segment"
+            [class.is-active]="salesPeriod() === option.value"
+            (click)="salesPeriod.set(option.value)"
+          >
+            {{ option.label | t }}
+          </button>
+        }
+      </div>
+      <small class="field-hint">
+        {{ 'For a wage paid twice a month against a percentage paid once.' | t }}
+      </small>
+    </div>
+
+    @if (salesNeedsPayDay()) {
+      <label class="field">
+        <span class="field-label">{{ 'Commission payday' | t }}</span>
+        <input
+          type="number"
+          min="1"
+          max="28"
+          [ngModel]="salesPayDay()"
+          (ngModelChange)="salesPayDay.set(+$event)"
+        />
+      </label>
+    }
+
+    @if (salesNeedsAnchor()) {
+      <label class="field">
+        <span class="field-label">{{ 'A date the commission cycle passed through' | t }}</span>
+        <input type="date" [ngModel]="salesAnchor()" (ngModelChange)="salesAnchor.set($event)" />
+      </label>
+    }
+
     <div class="field-row">
       <label class="field">
         <span class="field-label">{{ 'Overtime after, hours a week' | t }}</span>

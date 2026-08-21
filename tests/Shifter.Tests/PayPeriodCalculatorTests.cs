@@ -124,4 +124,49 @@ public class PayPeriodCalculatorTests
 
         Assert.Equal(new DateOnly(2026, 2, 28), from);
     }
+
+    [Fact]
+    public void CommissionFollowsTheWageWhenItHasNoScheduleOfItsOwn()
+    {
+        Location place = Place(PayPeriod.SemiMonthly);
+
+        Assert.False(PayPeriodCalculator.SplitsSales(place));
+        Assert.Equal(
+            PayPeriodCalculator.PeriodFor(place, new DateOnly(2026, 3, 17)),
+            PayPeriodCalculator.SalesPeriodFor(place, new DateOnly(2026, 3, 17)));
+    }
+
+    [Fact]
+    public void CommissionCanSettleMonthlyWhileTheWageArrivesTwice()
+    {
+        // The arrangement this was built for: the rate twice a month, the
+        // percentage once.
+        Location place = Place(PayPeriod.SemiMonthly);
+        place.SalesPayPeriod = PayPeriod.Monthly;
+        place.SalesPayDay = 1;
+
+        Assert.True(PayPeriodCalculator.SplitsSales(place));
+
+        var (wageFrom, wageTo) = PayPeriodCalculator.PeriodFor(place, new DateOnly(2026, 3, 17));
+        var (salesFrom, salesTo) = PayPeriodCalculator.SalesPeriodFor(place, new DateOnly(2026, 3, 17));
+
+        Assert.Equal(new DateOnly(2026, 3, 16), wageFrom);
+        Assert.Equal(new DateOnly(2026, 3, 31), wageTo);
+
+        Assert.Equal(new DateOnly(2026, 3, 1), salesFrom);
+        Assert.Equal(new DateOnly(2026, 3, 31), salesTo);
+    }
+
+    [Fact]
+    public void AMatchingSecondScheduleIsNotASplit()
+    {
+        // Set, but to the same cycle: there is one payment, not two, and the
+        // reconciliation must not invent a second row for it.
+        Location place = Place(PayPeriod.Monthly, payDay: 10);
+        place.SalesPayPeriod = PayPeriod.Monthly;
+        place.SalesPayDay = 10;
+        place.SalesPayAnchor = place.PayAnchor;
+
+        Assert.False(PayPeriodCalculator.SplitsSales(place));
+    }
 }

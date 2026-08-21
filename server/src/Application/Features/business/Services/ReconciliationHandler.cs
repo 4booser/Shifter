@@ -57,45 +57,47 @@ public class ReconciliationHandler : IReconciliationHandler
 
         foreach (Location place in places)
         {
+            // A place that settles the commission on its own cycle owes two
+            // payments covering different spans of the same work, so each
+            // schedule is walked separately and the money is split between
+            // them. Where there is only one schedule this runs once and the
+            // whole take-home stays on a single row, as it always did.
+            bool split = PayPeriodCalculator.SplitsSales(place);
+
             foreach (var (periodFrom, periodTo) in PeriodsIn(place, from, to))
             {
-                Day[] inPeriod = days
-                    .Where(day => day.Date >= periodFrom && day.Date <= periodTo)
-                    .ToArray();
+                LocationTotalDto? total = TotalFor(place, days, byId, periodFrom, periodTo);
 
-                LocationTotalDto? total = DayHandler
-                    .ByLocation(inPeriod, byId)
-                    .FirstOrDefault(entry => entry.location_id == place.Id);
+                if (total is null) continue;
 
-                // Nothing worked there in that period is not an unpaid period.
-                if (total is null || total.hours == 0) continue;
+                // Commission is taxed at the same rate as the rest, so taking
+                // its share out is exact rather than apportioned: the two
+                // halves still add up to the take-home for the period.
+                decimal commissionNet = split ? NetCommission(place, total) : 0m;
 
-                decimal paid = payouts
-                    .Where(payout => payout.LocationId == place.Id
-                        && Overlaps(payout, periodFrom, periodTo))
-                    .Sum(payout => payout.Amount);
+                rows.Add(Row(
+                    place, total, payouts, today, periodFrom, periodTo,
+                    total.net - commissionNet,
+                    split ? "wage" : "all"));
+            }
 
-                // Take-home rather than gross: what should land in a pocket is
-                // what a payment can sensibly be compared against.
-                decimal expected = total.net;
-                decimal difference = paid - expected;
+            if (!split) continue;
 
-                DateOnly due = DueDate(place, periodTo);
-                int late = paid == 0m && today > due ? today.DayNumber - due.DayNumber : 0;
+            foreach (var (periodFrom, periodTo) in SalesPeriodsIn(place, from, to))
+            {
+                LocationTotalDto? total = TotalFor(place, days, byId, periodFrom, periodTo);
 
-                rows.Add(new PayPeriodDto(
-                    place.Id,
-                    place.Name,
-                    place.Colour,
-                    periodFrom,
-                    periodTo,
-                    due,
-                    expected,
-                    paid,
-                    difference,
-                    total.hours,
-                    Status(periodTo, due, today, paid, difference),
-                    late));
+                if (total is null) continue;
+
+                decimal commissionNet = NetCommission(place, total);
+
+                // No sales in the period is not an unpaid commission.
+                if (commissionNet == 0m) continue;
+
+                rows.Add(Row(
+                    place, total, payouts, today, periodFrom, periodTo,
+                    commissionNet,
+                    "commission"));
             }
         }
 
@@ -113,6 +115,78 @@ public class ReconciliationHandler : IReconciliationHandler
                 .Sum(row => row.expected - row.paid),
             periods.Where(row => row.status == "overdue")
                 .Sum(row => row.expected - row.paid));
+    }
+
+    /// <summary>
+    /// What this place earned between two dates, or null when nothing was
+    /// worked there — an empty period is not an unpaid one.
+    /// </summary>
+    private static LocationTotalDto? TotalFor(
+        Location place,
+        Day[] days,
+        Dictionary<int, Location> byId,
+        DateOnly from,
+        DateOnly to)
+    {
+        Day[] inPeriod = days
+            .Where(day => day.Date >= from && day.Date <= to)
+            .ToArray();
+
+        LocationTotalDto? total = DayHandler
+            .ByLocation(inPeriod, byId)
+            .FirstOrDefault(entry => entry.location_id == place.Id);
+
+        return total is null || total.hours == 0 ? null : total;
+    }
+
+    /// <summary>
+    /// The commission after this place's own withholding. Every component is
+    /// taxed at one rate, so the commission's share of the tax is simply the
+    /// rate applied to the commission.
+    /// </summary>
+    private static decimal NetCommission(Location place, LocationTotalDto total)
+        => total.sales - (total.sales * place.TaxPercent / 100m);
+
+    private static PayPeriodDto Row(
+        Location place,
+        LocationTotalDto total,
+        Payout[] payouts,
+        DateOnly today,
+        DateOnly periodFrom,
+        DateOnly periodTo,
+        decimal expected,
+        string stream)
+    {
+        decimal paid = payouts
+            .Where(payout => payout.LocationId == place.Id
+                && Settles(payout, stream)
+                && Overlaps(payout, periodFrom, periodTo))
+            .Sum(payout => payout.Amount);
+
+        decimal difference = paid - expected;
+
+        // The commission is chased on its own cycle, not the wage's.
+        PayPeriod cycle = stream == "commission" && place.SalesPayPeriod is PayPeriod sales
+            ? sales
+            : place.PayPeriod;
+
+        DateOnly due = DueDate(cycle, periodTo);
+        int late = paid == 0m && today > due ? today.DayNumber - due.DayNumber : 0;
+
+        return new PayPeriodDto(
+            place.Id,
+            place.Name,
+            place.Colour,
+            periodFrom,
+            periodTo,
+            due,
+            expected,
+            paid,
+            difference,
+            total.hours,
+            Status(periodTo, due, today, paid, difference),
+            late,
+            stream);
     }
 
     /// <summary>Every pay period of this place that touches the range.</summary>
@@ -134,12 +208,28 @@ public class ReconciliationHandler : IReconciliationHandler
         }
     }
 
+    /// <summary>The same walk, over the commission's own cycle.</summary>
+    private static IEnumerable<(DateOnly From, DateOnly To)> SalesPeriodsIn(
+        Location place,
+        DateOnly from,
+        DateOnly to)
+    {
+        var (periodFrom, periodTo) = PayPeriodCalculator.SalesPeriodFor(place, from);
+
+        while (periodFrom <= to)
+        {
+            yield return (periodFrom, periodTo);
+
+            (periodFrom, periodTo) = PayPeriodCalculator.SalesPeriodFor(place, periodTo.AddDays(1));
+        }
+    }
+
     /// <summary>
     /// When the money for a finished period is expected. Monthly places pay on
     /// their pay day in the month after the period closes; the rolling cycles
     /// pay shortly after the period ends.
     /// </summary>
-    private static DateOnly DueDate(Location place, DateOnly periodTo) => place.PayPeriod switch
+    private static DateOnly DueDate(PayPeriod cycle, DateOnly periodTo) => cycle switch
     {
         PayPeriod.Monthly => periodTo.AddDays(1),
         PayPeriod.SemiMonthly => periodTo.AddDays(5),
@@ -150,6 +240,15 @@ public class ReconciliationHandler : IReconciliationHandler
 
     private static bool Overlaps(Payout payout, DateOnly from, DateOnly to)
         => payout.PeriodFrom <= to && payout.PeriodTo >= from;
+
+    /// <summary>
+    /// Whether a recorded payment answers this row. Payments made before the
+    /// place split its commission out carry "all", and are read as settling the
+    /// wage: that is what they were at the time, and counting them against both
+    /// rows would show a single transfer as having paid twice.
+    /// </summary>
+    private static bool Settles(Payout payout, string stream)
+        => payout.Stream == stream || (stream == "wage" && payout.Stream == "all");
 
     private static string Status(
         DateOnly periodTo,
@@ -178,7 +277,11 @@ public class ReconciliationHandler : IReconciliationHandler
     {
         List<ShortfallDto> found = [];
 
-        foreach (var group in periods.GroupBy(row => row.location_id))
+        // By payment, not just by place: where a place settles the wage and the
+        // commission separately they are two different things going wrong, and
+        // a run that alternated between them would not be the pattern the
+        // claim is making.
+        foreach (var group in periods.GroupBy(row => (row.location_id, row.stream)))
         {
             PayPeriodDto[] settled = group
                 .Where(row => row.status is not "open")
@@ -197,7 +300,7 @@ public class ReconciliationHandler : IReconciliationHandler
             if (run.Count < 2) continue;
 
             found.Add(new ShortfallDto(
-                group.Key,
+                group.Key.location_id,
                 group.First().location_name,
                 run.Count,
                 run.Sum(row => row.expected - row.paid),

@@ -60,7 +60,8 @@ public class PayoutHandler : IPayoutHandler
             PeriodTo = request.period_to,
             Amount = request.amount,
             ReceivedOn = request.received_on,
-            Note = string.IsNullOrWhiteSpace(request.note) ? null : request.note.Trim()
+            Note = string.IsNullOrWhiteSpace(request.note) ? null : request.note.Trim(),
+            Stream = ParseStream(request.stream)
         };
 
         if (! await _shifterCommand.AddPayoutAsync(payout, ct))
@@ -89,6 +90,18 @@ public class PayoutHandler : IPayoutHandler
         payout.ReceivedOn,
         payout.Note,
         payout.LocationId,
-        payout.Location?.Name
+        payout.Location?.Name,
+        payout.Stream
     );
+
+    /// <summary>
+    /// Anything unrecognised is read as covering everything, which is what a
+    /// client that has never heard of the split will send.
+    /// </summary>
+    private static string ParseStream(string? value) => value?.ToLowerInvariant() switch
+    {
+        "wage" => "wage",
+        "commission" => "commission",
+        _ => "all"
+    };
 }

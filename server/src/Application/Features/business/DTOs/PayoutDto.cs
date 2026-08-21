@@ -9,7 +9,9 @@ public record PayoutDto(
     string? note,
     /// <summary>Null when the payment was not attributed to a place.</summary>
     int? location_id,
-    string? location_name
+    string? location_name,
+    /// <summary>Which of the place's payments this settles: all, wage or commission.</summary>
+    string stream = "all"
     );
 
 public record PayoutCreateDto(
@@ -18,5 +20,7 @@ public record PayoutCreateDto(
     decimal amount,
     DateOnly received_on,
     string? note,
-    int? location_id
+    int? location_id,
+    /// <summary>Absent means the payment covers everything the place owes.</summary>
+    string? stream = null
     );

@@ -80,6 +80,14 @@ export interface WorkLocation {
   /** Empty means "whatever the app is set to". */
   currency: string;
   archived: boolean;
+  /**
+   * Empty where the sales commission arrives with everything else. Set where it
+   * settles on its own cycle — the common case being a wage paid twice a month
+   * against a percentage paid once.
+   */
+  sales_pay_period: PayPeriodKind | '';
+  sales_pay_day: number;
+  sales_pay_anchor: string;
 }
 
 export interface WorkLocationCreate {
@@ -99,6 +107,10 @@ export interface WorkLocationCreate {
   holiday_percent: number;
   /** Null means "use the app's currency". */
   currency: string | null;
+  /** Empty leaves the commission on the main cycle. */
+  sales_pay_period: PayPeriodKind | '';
+  sales_pay_day: number;
+  sales_pay_anchor: string | null;
 }
 
 export interface LocationTotal {
@@ -270,6 +282,8 @@ export interface PayoutCreate {
   received_on: string;
   note: string | null;
   location_id: number | null;
+  /** Which of the place's payments this settles; 'all' where it pays everything. */
+  stream: 'all' | 'wage' | 'commission';
 }
 
 /** One pay period at one place: what is owed, what came, where that leaves it. */
@@ -289,6 +303,12 @@ export interface PayPeriodRow {
   hours: number;
   status: 'open' | 'due' | 'overdue' | 'paid' | 'short' | 'over';
   days_late: number;
+  /**
+   * Which payment this row is. 'all' where a place settles everything at once;
+   * 'wage' and 'commission' where the percentage runs on its own cycle, in
+   * which case two rows can cover overlapping days without being duplicates.
+   */
+  stream: 'all' | 'wage' | 'commission';
 }
 
 /** A place that has come up short more than once running. */

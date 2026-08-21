@@ -53,6 +53,7 @@ export class Payouts {
       from: row.period_from,
       to: row.period_to,
       expected: row.expected,
+      stream: row.stream,
     });
 
     this.payoutOpen.set(true);
@@ -154,6 +155,11 @@ export class Payouts {
     if (days < 0) return this.label(row.due_on);
 
     return `${this.i18n.t('in')} ${days} ${this.i18n.t('days')}`;
+  }
+
+  /** Only shown where a place splits its payments; 'all' needs no badge. */
+  protected streamLabel(stream: PayPeriodRow['stream']): string {
+    return stream === 'commission' ? 'Commission' : 'Wage';
   }
 
   protected statusLabel(status: PayPeriodRow['status']): string {

@@ -28,4 +28,14 @@ public sealed class Payout
     public decimal Amount { get; set; }
     public DateOnly ReceivedOn { get; set; }
     public string? Note { get; set; }
+
+    /// <summary>
+    /// Which of a place's payments this settles: "all" where everything arrives
+    /// together, or "wage" and "commission" where the percentage runs on its
+    /// own cycle. Without it a wage payment would be counted against the
+    /// commission owed for the same days as well, and both rows would look
+    /// settled on one transfer. Defaulted rather than nullable so every payment
+    /// recorded before the split still matches its period.
+    /// </summary>
+    public string Stream { get; set; } = "all";
 }

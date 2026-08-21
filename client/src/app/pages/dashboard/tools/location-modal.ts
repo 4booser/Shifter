@@ -49,6 +49,11 @@ export class LocationModal {
   protected readonly period = signal<PayPeriodKind>('monthly');
   protected readonly payDay = signal(1);
   protected readonly anchor = signal('');
+
+  /** Empty means the commission is paid on the cycle above, like everything else. */
+  protected readonly salesPeriod = signal<PayPeriodKind | ''>('');
+  protected readonly salesPayDay = signal(1);
+  protected readonly salesAnchor = signal('');
   protected readonly overtimeHours = signal(40);
   protected readonly overtimeMultiplier = signal(1.5);
   protected readonly tipOutTips = signal(0);
@@ -65,6 +70,13 @@ export class LocationModal {
   );
 
   protected readonly needsPayDay = computed(() => this.period() === 'monthly');
+
+  /** The same two questions, asked of the commission's own cycle. */
+  protected readonly salesNeedsAnchor = computed(
+    () => this.salesPeriod() === 'biweekly' || this.salesPeriod() === 'weekly',
+  );
+
+  protected readonly salesNeedsPayDay = computed(() => this.salesPeriod() === 'monthly');
 
   protected readonly taxPercent = signal(0);
   protected readonly taxTips = signal(false);
@@ -90,6 +102,9 @@ export class LocationModal {
     this.period.set(location.pay_period);
     this.payDay.set(location.pay_day);
     this.anchor.set(location.pay_anchor);
+    this.salesPeriod.set(location.sales_pay_period ?? '');
+    this.salesPayDay.set(location.sales_pay_day ?? 1);
+    this.salesAnchor.set(location.sales_pay_anchor ?? this.salesAnchor());
     this.overtimeHours.set(location.overtime_weekly_hours);
     this.overtimeMultiplier.set(location.overtime_multiplier);
     this.tipOutTips.set(location.tip_out_of_tips_percent);
@@ -129,6 +144,10 @@ export class LocationModal {
         tax_tips: this.taxTips(),
         holiday_percent: this.holidayPercent(),
         currency: this.currency().trim() === '' ? null : this.currency().trim().toUpperCase(),
+        sales_pay_period: this.salesPeriod(),
+        sales_pay_day: this.salesNeedsPayDay() ? this.salesPayDay() : 1,
+        sales_pay_anchor:
+          this.salesNeedsAnchor() && this.salesAnchor() !== '' ? this.salesAnchor() : null,
       },
       this.editing()?.id ?? null,
       () => this.reset(),
@@ -151,6 +170,9 @@ export class LocationModal {
     this.period.set('monthly');
     this.payDay.set(1);
     this.anchor.set(new Date().toISOString().slice(0, 10));
+    this.salesPeriod.set('');
+    this.salesPayDay.set(1);
+    this.salesAnchor.set(new Date().toISOString().slice(0, 10));
     this.overtimeHours.set(40);
     this.overtimeMultiplier.set(1.5);
     this.tipOutTips.set(0);

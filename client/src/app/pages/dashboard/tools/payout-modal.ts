@@ -19,6 +19,12 @@ export interface PayoutPrefill {
   to: string;
   /** What the period worked out to; the amount to confirm or correct. */
   expected: number;
+  /**
+   * Which of the place's payments is being settled. Carried from the row so a
+   * transfer recorded against the commission is not also read as having paid
+   * the wage for the days the two happen to share.
+   */
+  stream: 'all' | 'wage' | 'commission';
 }
 
 @Component({
@@ -111,6 +117,7 @@ export class PayoutModal {
         received_on: this.received(),
         note: this.note().trim() === '' ? null : this.note(),
         location_id: this.locationId(),
+        stream: this.prefill()?.stream ?? 'all',
       },
       () => {
         this.saved.emit();

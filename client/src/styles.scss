@@ -1476,6 +1476,21 @@ body {
   color: var(--danger);
 }
 
+/* Which of a place's payments a row is. Only appears where the wage and the
+   commission settle separately, so two rows can cover overlapping days without
+   the second looking like a duplicate of the first. */
+.pay-stream {
+  margin-left: 0.375rem;
+  padding: 0.0625rem 0.375rem;
+  border-radius: 999px;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
 .quick.is-active {
   background: var(--accent);
   border-color: var(--accent);

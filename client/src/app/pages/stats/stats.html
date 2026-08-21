@@ -60,26 +60,12 @@
     <!-- ==== Goal meter ==== -->
     <section class="stat-card goal-card">
       <div class="goal-head">
-        <h3 class="block-title">{{ 'Monthly goal' | t }}</h3>
+        <h3 class="block-title">{{ 'Goal for this period' | t }}</h3>
 
-        @if (editingGoal()) {
-          <span class="goal-edit">
-            <input type="number" min="0" step="1000" class="goal-input"
-              [ngModel]="goalDraft()"
-              (ngModelChange)="goalDraft.set($event === '' ? null : +$event)" />
-            <button type="button" class="button is-primary" (click)="saveGoal()">
-              {{ 'Save changes' | t }}
-            </button>
-            <button type="button" class="button is-quiet" (click)="editingGoal.set(false)">
-              {{ 'Cancel' | t }}
-            </button>
-          </span>
-        } @else {
-          <button type="button" class="button is-quiet" (click)="editingGoal.set(true)">
-            <app-icon name="sliders" />
-            {{ goalProgress() ? ('Change' | t) : ('Set a goal' | t) }}
-          </button>
-        }
+        <button type="button" class="button is-quiet" (click)="goalsOpen.set(true)">
+          <app-icon name="sliders" />
+          {{ goalProgress() ? ('Change' | t) : ('Set a goal' | t) }}
+        </button>
       </div>
 
       @if (goalProgress(); as progress) {
@@ -89,7 +75,12 @@
 
         <div class="goal-legend">
           <span class="goal-now">{{ progress.earned | money }}</span>
-          <span class="goal-of">{{ 'of' | t }} {{ progress.goal | money }}</span>
+          <span class="goal-of">
+            {{ 'of' | t }} {{ progress.goal | money }}
+            @if (progress.note) {
+              · {{ progress.note }}
+            }
+          </span>
           @if (progress.reached) {
             <span class="goal-badge">{{ 'Goal reached' | t }}</span>
           } @else {
@@ -100,7 +91,13 @@
         </div>
       } @else {
         <p class="empty-note">
-          {{ 'Set a target and every period shows how close you are.' | t }}
+          @if (goals().length > 0) {
+            <!-- Goals exist, but none of them measures this stretch: half a
+                 month against a monthly goal is not half the target. -->
+            {{ 'No goal covers this stretch. Whole weeks, months and years line up with one.' | t }}
+          } @else {
+            {{ 'Set a target and every period shows how close you are.' | t }}
+          }
         </p>
       }
     </section>
@@ -311,7 +308,7 @@
         <app-area-chart
           [points]="cumulative()"
           [projection]="projection()"
-          [goal]="goal()"
+          [goal]="activeGoal()?.target ?? null"
         />
       </section>
 
@@ -647,3 +644,9 @@
     }
   </div>
 </div>
+
+<app-goals-modal
+  [open]="goalsOpen()"
+  (closed)="goalsOpen.set(false)"
+  (saved)="loadGoals()"
+/>

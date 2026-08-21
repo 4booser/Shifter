@@ -97,6 +97,31 @@ public class ShifterQuery : IShifterQuery
             .ToArrayAsync(ct);
     }
 
+    public async Task<Goal[]> GetGoalsAsync(int userId, CancellationToken ct)
+        => await _db.Goals
+            .AsNoTracking()
+            .Where(item => item.UserId == userId)
+            .OrderBy(item => item.Period)
+            .ThenBy(item => item.Anchor)
+            .ToArrayAsync(ct);
+
+    public async Task<Goal?> GetGoalAsync(int userId, int id, CancellationToken ct)
+        => await _db.Goals
+            .FirstOrDefaultAsync(item => item.UserId == userId && item.Id == id, ct);
+
+    public async Task<Goal?> FindGoalAsync(
+        int userId,
+        GoalPeriod period,
+        DateOnly? anchor,
+        CancellationToken ct)
+    {
+        // Tracked, not no-tracking: the caller updates the row it gets back
+        // rather than inserting a second rule for the same period.
+        return await _db.Goals.FirstOrDefaultAsync(
+            item => item.UserId == userId && item.Period == period && item.Anchor == anchor,
+            ct);
+    }
+
     public async Task<Event[]> GetEventsInRangeAsync(
         int userId,
         DateOnly from,

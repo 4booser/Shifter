@@ -286,6 +286,33 @@ export interface PayoutCreate {
   stream: 'all' | 'wage' | 'commission';
 }
 
+/** How long a goal covers. */
+export type GoalPeriod = 'day' | 'week' | 'month' | 'year';
+
+/**
+ * An amount to aim for. A null anchor is a standing goal — every month, every
+ * day, whichever the period is; an anchor names one period alone, and beats the
+ * standing goal for that period.
+ */
+export interface Goal {
+  id: number;
+  period: GoalPeriod;
+  amount: number;
+  anchor: string | null;
+  note: string | null;
+  /** The stretch this goal governs right now. */
+  current_from: string;
+  current_to: string;
+}
+
+export interface GoalSave {
+  period: GoalPeriod;
+  amount: number;
+  /** Any date inside the period being named; null for the standing goal. */
+  anchor: string | null;
+  note: string | null;
+}
+
 /** One pay period at one place: what is owed, what came, where that leaves it. */
 export interface PayPeriodRow {
   location_id: number;

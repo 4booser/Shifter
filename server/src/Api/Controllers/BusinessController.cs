@@ -126,6 +126,38 @@ public class BusinessController : ControllerBase
     }
 
     [HttpGet]
+    [Route("goals")]
+    public async Task<ActionResult<GoalItemDto[]>> GetGoals(
+        [FromServices] IGoalHandler goals,
+        CancellationToken ct)
+        => Ok(await goals.ListAsync(CurrentUserId(), ct));
+
+    /// <summary>
+    /// Upsert: there is only ever one goal per period per anchor, so a client
+    /// that knows what it wants should not also have to know whether that row
+    /// already exists.
+    /// </summary>
+    [HttpPut]
+    [Route("goals")]
+    public async Task<ActionResult<GoalItemDto>> SaveGoal(
+        [FromServices] IGoalHandler goals,
+        [FromBody] GoalSaveDto request,
+        CancellationToken ct)
+        => Ok(await goals.SaveAsync(request, CurrentUserId(), ct));
+
+    [HttpDelete]
+    [Route("goals/{id:int}")]
+    public async Task<IActionResult> DeleteGoal(
+        [FromServices] IGoalHandler goals,
+        int id,
+        CancellationToken ct)
+    {
+        await goals.DeleteAsync(CurrentUserId(), id, ct);
+
+        return NoContent();
+    }
+
+    [HttpGet]
     [Route("shifts")]
     public async Task<ActionResult<ShiftDto[]>> GetShifts(
         [FromQuery] bool archived,

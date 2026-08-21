@@ -8,6 +8,8 @@ import {
   DaySave,
   DaysResponse,
   EventSave,
+  Goal,
+  GoalSave,
   Payout,
   Reconciliation,
   PayoutCreate,
@@ -86,6 +88,19 @@ export class CalendarApi {
     return this.http.put<{ monthly_goal: number | null }>('/shifter/v1/auth/goal', {
       monthly_goal: value,
     });
+  }
+
+  goals(): Observable<Goal[]> {
+    return this.http.get<Goal[]>(`${API}/goals`);
+  }
+
+  /** Upsert: one goal per period per anchor, so the server decides the verb. */
+  saveGoal(request: GoalSave): Observable<Goal> {
+    return this.http.put<Goal>(`${API}/goals`, request);
+  }
+
+  deleteGoal(id: number): Observable<void> {
+    return this.http.delete<void>(`${API}/goals/${id}`);
   }
 
   locations(): Observable<WorkLocation[]> {

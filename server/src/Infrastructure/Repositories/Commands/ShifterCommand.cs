@@ -67,6 +67,21 @@ public class ShifterCommand : IShifterCommand
         await _db.SaveChangesAsync(ct);
     }
 
+    public async Task<bool> AddGoalAsync(Goal item, CancellationToken ct)
+    {
+        await _db.Goals.AddAsync(item, ct);
+        return await _db.SaveChangesAsync(ct) > 0;
+    }
+
+    public async Task UpdateGoalAsync(Goal item, CancellationToken ct)
+        => await _db.SaveChangesAsync(ct);
+
+    public async Task DeleteGoalAsync(Goal item, CancellationToken ct)
+    {
+        _db.Goals.Remove(item);
+        await _db.SaveChangesAsync(ct);
+    }
+
     public async Task<bool> AddEventAsync(Event item, CancellationToken ct)
     {
         await _db.Events.AddAsync(item, ct);

@@ -20,6 +20,7 @@ public class ShifterDbContext : DbContext
     public DbSet<TeamMember> TeamMembers => Set<TeamMember>();
     public DbSet<Event> Events => Set<Event>();
     public DbSet<CoverOffer> CoverOffers => Set<CoverOffer>();
+    public DbSet<Goal> Goals => Set<Goal>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -103,6 +104,32 @@ public class ShifterDbContext : DbContext
 
         // Deleting an account takes its events with it.
         modelBuilder.Entity<Event>()
+            .HasOne(item => item.User)
+            .WithMany()
+            .HasForeignKey(item => item.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Looked up by period whenever a page asks "what am I aiming for over
+        // this stretch", which is every load of the statistics page.
+        modelBuilder.Entity<Goal>()
+            .HasIndex(item => new { item.UserId, item.Period });
+
+        // Two filtered indexes rather than one over all three columns, because
+        // Postgres counts NULLs as distinct from each other: a plain unique
+        // index on (user, period, anchor) would happily accept a second, third
+        // and fourth standing goal for the same period, which is the case it
+        // was added to prevent.
+        modelBuilder.Entity<Goal>()
+            .HasIndex(item => new { item.UserId, item.Period })
+            .HasFilter("\"Anchor\" IS NULL")
+            .IsUnique();
+
+        modelBuilder.Entity<Goal>()
+            .HasIndex(item => new { item.UserId, item.Period, item.Anchor })
+            .HasFilter("\"Anchor\" IS NOT NULL")
+            .IsUnique();
+
+        modelBuilder.Entity<Goal>()
             .HasOne(item => item.User)
             .WithMany()
             .HasForeignKey(item => item.UserId)

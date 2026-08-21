@@ -29,4 +29,9 @@ public interface IShifterQuery
     /// <summary>Everything overlapping the range, not only what starts inside it.</summary>
     Task<Event[]> GetEventsInRangeAsync(int userId, DateOnly from, DateOnly to, CancellationToken ct);
     Task<Event?> GetEventAsync(int userId, int id, CancellationToken ct);
+
+    Task<Goal[]> GetGoalsAsync(int userId, CancellationToken ct);
+    Task<Goal?> GetGoalAsync(int userId, int id, CancellationToken ct);
+    /// <summary>The row a period+anchor pair already occupies, if any.</summary>
+    Task<Goal?> FindGoalAsync(int userId, GoalPeriod period, DateOnly? anchor, CancellationToken ct);
 }

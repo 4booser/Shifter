@@ -30,6 +30,10 @@ public interface IShifterCommand
     Task<bool> AddEventAsync(Event item, CancellationToken ct);
     Task DeleteEventAsync(Event item, CancellationToken ct);
 
+    Task<bool> AddGoalAsync(Goal item, CancellationToken ct);
+    Task UpdateGoalAsync(Goal item, CancellationToken ct);
+    Task DeleteGoalAsync(Goal item, CancellationToken ct);
+
     /// <summary>Persists changes to an entity the query layer handed back tracked.</summary>
     Task SaveAsync(CancellationToken ct);
 

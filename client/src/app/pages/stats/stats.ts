@@ -15,7 +15,7 @@ import {
   todayKey,
   weekBounds,
 } from '../../core/calendar/calendar-date';
-import { DaysResponse, EMPTY_SUMMARY } from '../../core/calendar/calendar.models';
+import { DaysResponse, EMPTY_SUMMARY, Goal } from '../../core/calendar/calendar.models';
 import { AreaPoint } from '../../shared/charts/area-chart';
 import { forecastFor, paceToGoal, projectionSeries } from '../../core/calendar/forecast';
 import { averagesFor } from '../../core/calendar/insights';
@@ -34,6 +34,7 @@ import {
 import { AreaChart } from '../../shared/charts/area-chart';
 import { ColumnChart } from '../../shared/charts/column-chart';
 import { Heatmap } from '../../shared/charts/heatmap';
+import { GoalsModal } from '../dashboard/tools/goals-modal';
 import { ProgressRing } from '../../shared/charts/progress-ring';
 import { CountUp } from '../../shared/count-up';
 import { Delta } from '../../shared/delta/delta';
@@ -66,6 +67,7 @@ const ALL_TIME = { from: '2000-01-01', to: '2099-12-31' };
     CountUp,
     Delta,
     Icon,
+    GoalsModal,
   ],
   templateUrl: './stats.html',
 })
@@ -91,9 +93,6 @@ export class Stats {
   protected readonly summary = signal<DaysResponse>(EMPTY_SUMMARY);
   /** The same length of time immediately before the range, for the deltas. */
   protected readonly previous = signal<DaysResponse>(EMPTY_SUMMARY);
-  protected readonly goal = signal<number | null>(null);
-  protected readonly goalDraft = signal<number | null>(null);
-  protected readonly editingGoal = signal(false);
   protected readonly loading = signal(false);
   protected readonly error = signal<string | null>(null);
 
@@ -208,13 +207,7 @@ export class Stats {
   });
 
   constructor() {
-    this.api.goal().subscribe({
-      next: (response) => {
-        this.goal.set(response.monthly_goal);
-        this.goalDraft.set(response.monthly_goal);
-      },
-      error: () => undefined,
-    });
+    this.loadGoals();
 
     effect(() => {
       const { from, to } = this.range();
@@ -290,33 +283,75 @@ export class Stats {
 
   // ==== Goal ====
 
-  protected readonly goalProgress = computed(() => {
-    const goal = this.goal();
+  protected readonly goals = signal<Goal[]>([]);
+  protected readonly goalsOpen = signal(false);
 
-    if (goal === null || goal <= 0) return null;
+  protected loadGoals(): void {
+    this.api.goals().subscribe({
+      next: (goals) => this.goals.set(goals),
+      error: () => this.goals.set([]),
+    });
+  }
+
+  /**
+   * The goal that governs the range on screen, and what it asks for over it.
+   *
+   * Only whole periods get a figure. Half a month against a monthly goal is not
+   * half the target in any sense a reader would accept, so a partial range says
+   * nothing rather than showing a prorated number that would be wrong to act on.
+   */
+  protected readonly activeGoal = computed(() => {
+    const { from, to } = this.range();
+    const goals = this.goals();
+
+    if (goals.length === 0) return null;
+
+    // "All time" is a hundred-year span standing in for "everything", not a
+    // stretch anyone sets a goal against. Multiplying a monthly goal by the
+    // months in it produced a target of 78 million, which is arithmetically
+    // right and no use to a reader.
+    if (this.preset() === 'all') return null;
+
+    const days = keysBetween(from, to).length;
+
+    if (days === 0) return null;
+
+    const candidates: { period: Goal['period']; multiple: number }[] = [
+      { period: 'day', multiple: days },
+      { period: 'week', multiple: days % 7 === 0 ? days / 7 : 0 },
+      { period: 'month', multiple: wholeMonths(from, to) },
+      { period: 'year', multiple: wholeYears(from, to) },
+    ];
+
+    // Largest period that divides the range cleanly: a month of days answers to
+    // the monthly goal, not to the daily one multiplied by thirty.
+    for (const candidate of [...candidates].reverse()) {
+      if (candidate.multiple <= 0) continue;
+
+      const goal = resolveGoal(goals, candidate.period, from, to);
+
+      if (goal !== null) return { goal, target: goal.amount * candidate.multiple };
+    }
+
+    return null;
+  });
+
+  protected readonly goalProgress = computed(() => {
+    const active = this.activeGoal();
+
+    if (active === null) return null;
 
     const earned = this.summary().total_earned;
 
     return {
-      goal,
+      goal: active.target,
+      note: active.goal.note,
       earned,
-      percent: Math.min(100, (earned / goal) * 100),
-      remaining: Math.max(0, goal - earned),
-      reached: earned >= goal,
+      percent: Math.min(100, (earned / active.target) * 100),
+      remaining: Math.max(0, active.target - earned),
+      reached: earned >= active.target,
     };
   });
-
-  protected saveGoal(): void {
-    const value = this.goalDraft();
-
-    this.api.setGoal(value && value > 0 ? value : null).subscribe({
-      next: (response) => {
-        this.goal.set(response.monthly_goal);
-        this.editingGoal.set(false);
-      },
-      error: (error: unknown) => this.error.set(apiErrorMessage(error)),
-    });
-  }
 
   // ==== Deltas against the previous window ====
 
@@ -413,7 +448,9 @@ export class Stats {
     return forecastFor(this.summary().days, from, to);
   });
 
-  protected readonly pace = computed(() => paceToGoal(this.forecast(), this.goal()));
+  protected readonly pace = computed(() =>
+    paceToGoal(this.forecast(), this.activeGoal()?.target ?? null),
+  );
 
   protected readonly projection = computed<AreaPoint[]>(() => {
     const forecast = this.forecast();
@@ -893,6 +930,45 @@ function shiftKey(key: string, days: number): string {
     `${date.getMonth() + 1}`.padStart(2, '0'),
     `${date.getDate()}`.padStart(2, '0'),
   ].join('-');
+}
+
+/**
+ * Whole calendar months spanned, or 0 when the range is not whole months.
+ * Mirrors GoalCalculator.WholeMonths on the server; the two have to agree or
+ * the meter would claim a target the server would not.
+ */
+function wholeMonths(from: string, to: string): number {
+  const [fy, fm, fd] = from.split('-').map(Number);
+  const [ty, tm, td] = to.split('-').map(Number);
+
+  if (fd !== 1) return 0;
+  if (td !== new Date(ty, tm, 0).getDate()) return 0;
+
+  return (ty - fy) * 12 + tm - fm + 1;
+}
+
+function wholeYears(from: string, to: string): number {
+  if (!from.endsWith('-01-01') || !to.endsWith('-12-31')) return 0;
+
+  return Number(to.slice(0, 4)) - Number(from.slice(0, 4)) + 1;
+}
+
+/**
+ * The goal for a period over a range: one pinned to a period inside the range
+ * wins, otherwise the standing one. Same precedence as the server's resolver.
+ */
+function resolveGoal(
+  goals: Goal[],
+  period: Goal['period'],
+  from: string,
+  to: string,
+): Goal | null {
+  const ofPeriod = goals.filter((goal) => goal.period === period);
+  const pinned = ofPeriod.find(
+    (goal) => goal.anchor !== null && goal.anchor >= from && goal.anchor <= to,
+  );
+
+  return pinned ?? ofPeriod.find((goal) => goal.anchor === null) ?? null;
 }
 
 function shiftMonth(anchor: { year: number; month: number }, delta: number): string {

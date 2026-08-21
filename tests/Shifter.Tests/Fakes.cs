@@ -18,6 +18,7 @@ public sealed class FakeShifterQuery : IShifterQuery
     public List<Shift> Shifts { get; } = [];
     public List<Sales> Sales { get; } = [];
     public List<Event> Events { get; } = [];
+    public List<Goal> Goals { get; } = [];
 
     public Task<Day[]> GetDaysInRangeAsync(int userId, DateOnly from, DateOnly to, CancellationToken ct)
         => Task.FromResult(Days
@@ -71,6 +72,20 @@ public sealed class FakeShifterQuery : IShifterQuery
     // Overlap rather than containment, exactly as the real query does: a test
     // that only saw events starting inside the range would pass against a
     // repository that quietly drops the ones running through it.
+    public Task<Goal[]> GetGoalsAsync(int userId, CancellationToken ct)
+        => Task.FromResult(Goals.Where(item => item.UserId == userId).ToArray());
+
+    public Task<Goal?> GetGoalAsync(int userId, int id, CancellationToken ct)
+        => Task.FromResult(Goals.FirstOrDefault(item => item.UserId == userId && item.Id == id));
+
+    public Task<Goal?> FindGoalAsync(
+        int userId,
+        GoalPeriod period,
+        DateOnly? anchor,
+        CancellationToken ct)
+        => Task.FromResult(Goals.FirstOrDefault(
+            item => item.UserId == userId && item.Period == period && item.Anchor == anchor));
+
     public Task<Event[]> GetEventsInRangeAsync(
         int userId,
         DateOnly from,
@@ -101,6 +116,7 @@ public sealed class FakeShifterCommand : IShifterCommand
 
     public List<Day> Saved { get; } = [];
     public List<Event> Events { get; } = [];
+    public List<Goal> Goals { get; } = [];
     public int SalesUsage { get; set; }
     public int ShiftsAtLocation { get; set; }
     public List<object> Deleted { get; } = [];
@@ -214,6 +230,32 @@ public sealed class FakeShifterCommand : IShifterCommand
     public Task<bool> AddSalesAsync(Sales sales, CancellationToken ct) => Task.FromResult(true);
     public Task<bool> AddLocationAsync(Location location, CancellationToken ct) => Task.FromResult(true);
     public Task<bool> AddPayoutAsync(Payout payout, CancellationToken ct) => Task.FromResult(true);
+
+    public Task<bool> AddGoalAsync(Goal item, CancellationToken ct)
+    {
+        Goals.Add(item);
+        _query?.Goals.Add(item);
+
+        return Task.FromResult(true);
+    }
+
+    /// <summary>The row is already the tracked instance, so this only records
+    /// that a save happened.</summary>
+    public Task UpdateGoalAsync(Goal item, CancellationToken ct)
+    {
+        if (!Goals.Contains(item)) Goals.Add(item);
+
+        return Task.CompletedTask;
+    }
+
+    public Task DeleteGoalAsync(Goal item, CancellationToken ct)
+    {
+        Goals.Remove(item);
+        _query?.Goals.Remove(item);
+        Deleted.Add(item);
+
+        return Task.CompletedTask;
+    }
 
     public Task<bool> AddEventAsync(Event item, CancellationToken ct)
     {

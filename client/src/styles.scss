@@ -1459,6 +1459,50 @@ body {
   }
 }
 
+/* ==== Cover offers ==== */
+
+/* Indented under the request they answer, so a list of several requests does
+   not read as one flat pile of names. */
+.offer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin: 0.25rem 0 0.5rem 2rem;
+}
+
+.offer-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  font-size: 0.8125rem;
+}
+
+.offer-name {
+  overflow: hidden;
+  flex: 1;
+  font-weight: 550;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.offer-done {
+  flex: none;
+  color: var(--tint-teal);
+  font-weight: 600;
+}
+
+/* The request row now ends in a button, and the name beside it has to be the
+   part that gives way. */
+.cover-row {
+  flex-wrap: wrap;
+
+  .button {
+    flex: none;
+    margin-left: auto;
+  }
+}
+
 /* ==== Shared schedule ==== */
 
 .rota-bar {

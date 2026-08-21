@@ -151,6 +151,19 @@ export class SettingsModal {
     if (result === 'granted') this.store.update('notifyUnclosed', true);
   }
 
+  /** Same permission gate as the nudge about open days. */
+  protected async toggleTomorrow(): Promise<void> {
+    if (this.settings().notifyTomorrow) {
+      this.store.update('notifyTomorrow', false);
+
+      return;
+    }
+
+    const result = await this.reminders.request();
+
+    if (result === 'granted') this.store.update('notifyTomorrow', true);
+  }
+
   protected setNotifyAt(value: string): void {
     this.store.update('notifyAt', value);
   }

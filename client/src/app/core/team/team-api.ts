@@ -17,7 +17,18 @@ export interface Team {
  * grows a pay field, the server is handing out something it should not, and
  * the backend privacy tests fail long before this file matters.
  */
+/** Somebody offering to take a shift. Names and dates, never money. */
+export interface RotaOffer {
+  offer_id: number;
+  member_id: number;
+  display_name: string;
+  is_you: boolean;
+  accepted: boolean;
+}
+
 export interface RotaEntry {
+  /** Identifies the placement, so an offer can name which one. */
+  day_shift_id: number;
   member_id: number;
   date: string;
   shift_name: string;
@@ -29,6 +40,18 @@ export interface RotaEntry {
   worked: boolean;
   /** The person is asking for someone to take it. */
   needs_cover: boolean;
+  /** Yours, so you are the one who can hand it over. */
+  is_mine: boolean;
+  offers: RotaOffer[];
+}
+
+/** What was handed over, so the person taking it knows what to put in. */
+export interface AcceptedCover {
+  date: string;
+  shift_name: string;
+  start_time: string;
+  end_time: string;
+  taken_by: string;
 }
 
 export interface RotaMember {
@@ -89,5 +112,25 @@ export class TeamApi {
 
   rota(id: number, from: string, to: string): Observable<Rota> {
     return this.http.get<Rota>(`${TEAMS_API}/${id}/rota`, { params: { from, to } });
+  }
+
+  /** Offering to take a shift somebody put up for cover. */
+  offerCover(teamId: number, dayShiftId: number): Observable<RotaOffer> {
+    return this.http.post<RotaOffer>(`${TEAMS_API}/${teamId}/cover/${dayShiftId}`, {});
+  }
+
+  withdrawCover(teamId: number, offerId: number): Observable<void> {
+    return this.http.delete<void>(`${TEAMS_API}/${teamId}/cover/offers/${offerId}`);
+  }
+
+  /**
+   * Handing it over. The shift leaves the owner's calendar; whoever took it
+   * places it on their own, because only they know what they are paid for it.
+   */
+  acceptCover(teamId: number, offerId: number): Observable<AcceptedCover> {
+    return this.http.post<AcceptedCover>(
+      `${TEAMS_API}/${teamId}/cover/offers/${offerId}/accept`,
+      {},
+    );
   }
 }

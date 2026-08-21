@@ -19,6 +19,7 @@ public class ShifterDbContext : DbContext
     public DbSet<Team> Teams => Set<Team>();
     public DbSet<TeamMember> TeamMembers => Set<TeamMember>();
     public DbSet<Event> Events => Set<Event>();
+    public DbSet<CoverOffer> CoverOffers => Set<CoverOffer>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -75,6 +76,25 @@ public class ShifterDbContext : DbContext
         // Payout lookups always filter by owner and overlap a date range.
         modelBuilder.Entity<Payout>()
             .HasIndex(payout => new { payout.UserId, payout.PeriodFrom, payout.PeriodTo });
+
+        // One offer per person per shift: raising a hand twice says nothing
+        // more than raising it once.
+        modelBuilder.Entity<CoverOffer>()
+            .HasIndex(offer => new { offer.DayShiftId, offer.ClaimantUserId })
+            .IsUnique()
+            .HasFilter("\"DayShiftId\" IS NOT NULL");
+
+        // The rota reads offers the same way it reads shifts: this team, this
+        // stretch of days.
+        modelBuilder.Entity<CoverOffer>()
+            .HasIndex(offer => new { offer.TeamId, offer.Date });
+
+        // Deleting the team takes its offers; they mean nothing without it.
+        modelBuilder.Entity<CoverOffer>()
+            .HasOne(offer => offer.Team)
+            .WithMany()
+            .HasForeignKey(offer => offer.TeamId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         // Events are read the same way payouts are: whose, and what overlaps
         // the month on screen.

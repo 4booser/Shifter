@@ -19,7 +19,17 @@ public record TeamDto(
 /// not filtered out later, simply absent from the shape. Anything added here
 /// becomes visible to every member of the team, so think before widening it.
 /// </summary>
+/// <summary>Somebody offering to take a shift. Names and nothing else.</summary>
+public record RotaOfferDto(
+    int offer_id,
+    int member_id,
+    string display_name,
+    bool is_you,
+    bool accepted);
+
 public record RotaEntryDto(
+    /// <summary>Identifies the placement so an offer can name which one.</summary>
+    int day_shift_id,
     int member_id,
     DateOnly date,
     string shift_name,
@@ -31,7 +41,11 @@ public record RotaEntryDto(
     /// <summary>False means rostered but not yet done.</summary>
     bool worked,
     /// <summary>The person is looking for someone to take this one.</summary>
-    bool needs_cover);
+    bool needs_cover,
+    /// <summary>True when it is the caller's own shift, who alone can hand it over.</summary>
+    bool is_mine,
+    /// <summary>Who has offered to work it.</summary>
+    RotaOfferDto[] offers);
 
 public record RotaMemberDto(
     int member_id,
@@ -61,6 +75,27 @@ public record RotaDto(
     RotaEntryDto[] entries,
     /// <summary>Day by day: coverage, spare hands and open cover requests.</summary>
     RotaDayDto[] days);
+
+/// <summary>Offering to take somebody else's shift.</summary>
+public record OfferCoverDto(int UserId, int TeamId, int DayShiftId) : IRequest<RotaOfferDto>;
+
+/// <summary>Taking the offer back, which only the person who made it may do.</summary>
+public record WithdrawCoverDto(int UserId, int TeamId, int OfferId) : IRequest<Unit>;
+
+/// <summary>
+/// Handing the shift over, which only its owner may do. The shift leaves their
+/// calendar; the person taking it puts it on their own, because only they know
+/// what they are paid for it.
+/// </summary>
+public record AcceptCoverDto(int UserId, int TeamId, int OfferId) : IRequest<AcceptedCoverDto>;
+
+/// <summary>What was handed over, so the client can say so plainly.</summary>
+public record AcceptedCoverDto(
+    DateOnly date,
+    string shift_name,
+    string start_time,
+    string end_time,
+    string taken_by);
 
 public record CreateTeamDto(int UserId, string name) : IRequest<TeamDto>;
 

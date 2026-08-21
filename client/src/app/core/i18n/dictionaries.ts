@@ -619,6 +619,18 @@ export const RU: Dictionary = {
   'Will place': 'Поставит',
   'shifts over': 'смен на',
   'Add to calendar': 'В календарь',
+  // Cover and reminders
+  'I’ll take it': 'Беру',
+  'Never mind': 'Передумал',
+  'Hand it over': 'Отдать',
+  'took it': 'взял смену',
+  offered: 'предложил себя',
+  You: 'Вы',
+  'handed to': 'передана',
+  'It is off your calendar; they add it to theirs.':
+    'Из вашего календаря она убрана — теперь её ставит себе тот, кто взял.',
+  'Tell me what is on tomorrow': 'Сообщать, что завтра',
+  'Tomorrow you work': 'Завтра работаете',
 };
 
 export const UK: Dictionary = {
@@ -1223,4 +1235,16 @@ export const UK: Dictionary = {
   'Will place': 'Поставить',
   'shifts over': 'змін на',
   'Add to calendar': 'До календаря',
+  // Cover and reminders
+  'I’ll take it': 'Беру',
+  'Never mind': 'Передумав',
+  'Hand it over': 'Віддати',
+  'took it': 'взяв зміну',
+  offered: 'запропонував себе',
+  You: 'Ви',
+  'handed to': 'передана',
+  'It is off your calendar; they add it to theirs.':
+    'З вашого календаря її прибрано — тепер її ставить собі той, хто взяв.',
+  'Tell me what is on tomorrow': 'Повідомляти, що завтра',
+  'Tomorrow you work': 'Завтра працюєте',
 };

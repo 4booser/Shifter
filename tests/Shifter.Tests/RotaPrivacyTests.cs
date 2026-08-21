@@ -29,6 +29,9 @@ public class RotaPrivacyTests
         typeof(RotaMemberDto),
         typeof(RotaDayDto),
         typeof(RotaRow),
+        typeof(RotaOfferDto),
+        typeof(CoverShift),
+        typeof(AcceptedCoverDto),
     ];
 
     [Theory]
@@ -83,10 +86,18 @@ public class RotaPrivacyTests
         // needs_cover was added knowingly — it is a fact about the schedule,
         // like the start time, and asking the team to take a shift is the
         // whole reason the shared rota exists.
+        //
+        // day_shift_id, is_mine and offers were added for the same reason: an
+        // offer has to name which shift it is for, the owner has to be told
+        // which shifts are theirs to hand over, and the answers to a cover
+        // request are as much a fact about the schedule as the request itself.
+        // None of the three can carry an amount — offers hold names and dates,
+        // and RotaOfferDto is checked by the tests above like everything else.
         Assert.Equal(
             [
-                "colour", "date", "end_time", "hours", "member_id",
-                "needs_cover", "shift_name", "start_time", "symbol", "worked",
+                "colour", "date", "day_shift_id", "end_time", "hours", "is_mine",
+                "member_id", "needs_cover", "offers", "shift_name", "start_time",
+                "symbol", "worked",
             ],
             fields);
     }

@@ -273,7 +273,12 @@
         {{ 'Notify me about open days' | t }}
       </button>
 
-      @if (settings().notifyUnclosed) {
+      <button type="button" class="toggle-row" (click)="toggleTomorrow()">
+        <span class="toggle" [class.is-on]="settings().notifyTomorrow"></span>
+        {{ 'Tell me what is on tomorrow' | t }}
+      </button>
+
+      @if (settings().notifyUnclosed || settings().notifyTomorrow) {
         <label class="slider-row">
           <span>{{ 'Notify at' | t }}</span>
           <input

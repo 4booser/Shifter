@@ -87,6 +87,7 @@ public class TeamRepository : ITeamRepository
                 && entry.Day.Date >= from
                 && entry.Day.Date <= to)
             .Select(entry => new RotaRow(
+                entry.Id,
                 entry.Day!.UserId,
                 entry.Day.Date,
                 entry.Shift!.Name,
@@ -98,5 +99,93 @@ public class TeamRepository : ITeamRepository
                 entry.Worked,
                 entry.NeedsCover))
             .ToArrayAsync(ct);
+    }
+
+    public async Task<CoverShift?> GetCoverShiftAsync(
+        int dayShiftId,
+        int[] userIds,
+        CancellationToken ct)
+    {
+        // The owner set is part of the query rather than a check afterwards:
+        // a placement belonging to somebody outside the team is simply not
+        // found, and nothing about it is read on the way to saying so.
+        return await _db.DayShifts
+            .AsNoTracking()
+            .Where(entry =>
+                entry.Id == dayShiftId
+                && entry.Day != null
+                && userIds.Contains(entry.Day.UserId))
+            .Select(entry => new CoverShift(
+                entry.Id,
+                entry.Day!.UserId,
+                entry.Day.Date,
+                entry.Shift!.Name,
+                entry.StartTime,
+                entry.EndTime,
+                entry.NeedsCover,
+                entry.Worked))
+            .FirstOrDefaultAsync(ct);
+    }
+
+    public async Task<CoverOffer[]> GetOffersAsync(
+        int teamId,
+        DateOnly from,
+        DateOnly to,
+        CancellationToken ct)
+    {
+        return await _db.CoverOffers
+            .AsNoTracking()
+            .Where(offer => offer.TeamId == teamId && offer.Date >= from && offer.Date <= to)
+            .OrderBy(offer => offer.CreatedAt)
+            .ToArrayAsync(ct);
+    }
+
+    public async Task<CoverOffer[]> GetOffersForShiftAsync(int dayShiftId, CancellationToken ct)
+    {
+        return await _db.CoverOffers
+            .Where(offer => offer.DayShiftId == dayShiftId)
+            .ToArrayAsync(ct);
+    }
+
+    public async Task<CoverOffer?> GetOfferAsync(int offerId, int teamId, CancellationToken ct)
+    {
+        return await _db.CoverOffers
+            .FirstOrDefaultAsync(offer => offer.Id == offerId && offer.TeamId == teamId, ct);
+    }
+
+    public async Task AddOfferAsync(CoverOffer offer, CancellationToken ct)
+    {
+        await _db.CoverOffers.AddAsync(offer, ct);
+        await _db.SaveChangesAsync(ct);
+    }
+
+    public async Task RemoveOfferAsync(CoverOffer offer, CancellationToken ct)
+    {
+        _db.CoverOffers.Remove(offer);
+        await _db.SaveChangesAsync(ct);
+    }
+
+    public async Task AcceptOfferAsync(CoverOffer accepted, CancellationToken ct)
+    {
+        int? dayShiftId = accepted.DayShiftId;
+
+        accepted.AcceptedAt = DateTime.UtcNow;
+        accepted.DayShiftId = null;
+
+        if (dayShiftId is int id)
+        {
+            // The other offers on the same shift are dropped rather than left
+            // pending: the shift is gone, and an offer to take something that
+            // no longer exists is only confusing.
+            List<CoverOffer> others = await _db.CoverOffers
+                .Where(offer => offer.DayShiftId == id && offer.Id != accepted.Id)
+                .ToListAsync(ct);
+
+            _db.CoverOffers.RemoveRange(others);
+
+            await _db.DayShifts.Where(entry => entry.Id == id).ExecuteDeleteAsync(ct);
+        }
+
+        await _db.SaveChangesAsync(ct);
     }
 }

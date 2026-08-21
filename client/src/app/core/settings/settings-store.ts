@@ -65,6 +65,8 @@ export interface Settings {
   compactSidebar: boolean;
   /** Sends a system notification about days left open. */
   notifyUnclosed: boolean;
+  /** Says what is on tomorrow, at the same hour as the nudge above. */
+  notifyTomorrow: boolean;
   /** "HH:mm" — after the shift rather than during it. */
   notifyAt: string;
   /** Whether calendar cells carry the shift's times, and how much of them. */
@@ -119,6 +121,7 @@ const DEFAULTS: Settings = {
   remindUnclosed: true,
   compactSidebar: false,
   notifyUnclosed: false,
+  notifyTomorrow: false,
   notifyAt: '21:00',
   cellTimes: 'none',
   dayFill: 'edge',

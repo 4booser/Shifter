@@ -9,6 +9,7 @@ import { ServiceWorkerHost } from './sw-register';
 export type Permission = 'default' | 'granted' | 'denied' | 'unsupported';
 
 const LAST_FIRED_KEY = 'shifter.reminder.last';
+const LAST_TOMORROW_KEY = 'shifter.reminder.tomorrow';
 
 /**
  * The nudge to close the day. Without a push server this can only fire while
@@ -37,7 +38,9 @@ export class Reminders {
 
       this.clear();
 
-      if (!settings.notifyUnclosed || this.permission() !== 'granted') return;
+      const wanted = settings.notifyUnclosed || settings.notifyTomorrow;
+
+      if (!wanted || this.permission() !== 'granted') return;
 
       this.catchUp(settings.notifyAt);
       this.schedule(settings.notifyAt);
@@ -77,6 +80,7 @@ export class Reminders {
     // discarded first — so the start-up check is what actually carries it.
     this.timer = setTimeout(() => {
       this.fire();
+      this.remindTomorrow();
       this.schedule(at);
     }, Math.min(delay, 2 ** 31 - 1));
   }
@@ -92,9 +96,43 @@ export class Reminders {
     if (now < due) return;
 
     this.fire();
+    this.remindTomorrow();
+  }
+
+  /**
+   * What is on tomorrow, said the evening before. The same timer carries it as
+   * the close-the-day nudge, because it is the same moment: the phone is out,
+   * the shift is over, and the next one is the thing worth knowing.
+   */
+  private remindTomorrow(): void {
+    if (!this.settings.settings().notifyTomorrow) return;
+
+    const tomorrow = new Date();
+
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const key = tomorrow.toISOString().slice(0, 10);
+
+    // Once per day being announced, not once per day it is announced on: a
+    // second reminder about the same tomorrow is noise.
+    if (localStorage.getItem(LAST_TOMORROW_KEY) === key) return;
+
+    const shifts = this.store.days().get(key)?.shifts ?? [];
+
+    if (shifts.length === 0) return;
+
+    localStorage.setItem(LAST_TOMORROW_KEY, key);
+
+    const times = shifts
+      .map((shift) => `${shift.name} ${shift.start_time}–${shift.end_time}`)
+      .join(', ');
+
+    this.worker.notify(this.i18n.t('Tomorrow you work'), times);
   }
 
   private fire(): void {
+    if (!this.settings.settings().notifyUnclosed) return;
+
     const open = this.store.unclosedDays();
 
     if (open.length === 0) return;

@@ -252,13 +252,26 @@ public class GetRotaHandler : IRequestHandler<GetRotaDto, RotaDto>
 
         Dictionary<int, TeamMember> byUser = members.ToDictionary(member => member.UserId);
 
+        CoverOffer[] offers = await _teams.GetOffersAsync(
+            team.Id, request.From, request.To, ct);
+
+        // Grouped once rather than filtered per entry: a fortnight of a busy
+        // rota is hundreds of entries and the scan would repeat for each.
+        Dictionary<int, List<CoverOffer>> offersByShift = offers
+            .Where(offer => offer.DayShiftId is not null)
+            .GroupBy(offer => offer.DayShiftId!.Value)
+            .ToDictionary(group => group.Key, group => group.ToList());
+
         RotaEntryDto[] entries = rows
             .Where(row => byUser.ContainsKey(row.UserId))
             .Select(row =>
             {
                 double hours = PaidHours(row);
 
+                List<CoverOffer> raised = offersByShift.GetValueOrDefault(row.DayShiftId, []);
+
                 return new RotaEntryDto(
+                    row.DayShiftId,
                     byUser[row.UserId].Id,
                     row.Date,
                     row.ShiftName,
@@ -268,7 +281,14 @@ public class GetRotaHandler : IRequestHandler<GetRotaDto, RotaDto>
                     row.EndTime.ToString("HH:mm"),
                     Math.Round(hours, 2),
                     row.Worked,
-                    row.NeedsCover);
+                    row.NeedsCover,
+                    row.UserId == request.UserId,
+                    raised
+                        .Select(offer => CoverRules.ToDto(
+                            offer,
+                            byUser.GetValueOrDefault(offer.ClaimantUserId),
+                            request.UserId))
+                        .ToArray());
             })
             .OrderBy(entry => entry.date)
             .ThenBy(entry => entry.start_time)

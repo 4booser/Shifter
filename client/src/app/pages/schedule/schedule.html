@@ -25,6 +25,20 @@
     <p class="alert shell-alert" role="alert">{{ text }}</p>
   }
 
+  @if (handedOver(); as handover) {
+    <p class="reminder shell-alert" role="status">
+      <app-icon name="swap" />
+      <span>
+        {{ handover.shift_name }} {{ label(handover.date) }} —
+        {{ 'handed to' | t }} <strong>{{ handover.taken_by }}</strong>.
+        {{ 'It is off your calendar; they add it to theirs.' | t }}
+      </span>
+      <button type="button" class="button is-quiet" (click)="handedOver.set(null)">
+        {{ 'Dismiss' | t }}
+      </button>
+    </p>
+  }
+
   <div class="team">
     @if (loading()) {
       <p class="field-hint">{{ 'Loading…' | t }}</p>
@@ -180,7 +194,7 @@
           </h2>
 
           <div class="cover-list">
-            @for (request of coverRequests(); track request.member_id + request.date) {
+            @for (request of coverRequests(); track request.day_shift_id) {
               <div class="cover-row">
                 <span class="rota-mark" [style.--mark-colour]="request.colour">
                   {{ request.symbol ?? request.shift_name.charAt(0) }}
@@ -192,7 +206,61 @@
                   </span>
                 </span>
                 <span class="cover-when">{{ label(request.date) }}</span>
+
+                <!-- Somebody else's shift: you can put your hand up. Your own:
+                     you are the one who decides who takes it. -->
+                @if (!request.is_mine) {
+                  @if (yourOffer(request); as mine) {
+                    <button
+                      type="button"
+                      class="button is-quiet is-small"
+                      [disabled]="busy()"
+                      (click)="withdraw(mine.offer_id)"
+                    >
+                      {{ 'Never mind' | t }}
+                    </button>
+                  } @else {
+                    <button
+                      type="button"
+                      class="button is-primary is-small"
+                      [disabled]="busy()"
+                      (click)="offer(request)"
+                    >
+                      <app-icon name="swap" [size]="13" />
+                      {{ 'I’ll take it' | t }}
+                    </button>
+                  }
+                }
               </div>
+
+              @if (request.offers.length > 0) {
+                <div class="offer-list">
+                  @for (offer of request.offers; track offer.offer_id) {
+                    <div class="offer-row">
+                      <app-icon name="user" [size]="13" />
+                      <span class="offer-name">
+                        {{ offer.is_you ? ('You' | t) : offer.display_name }}
+                      </span>
+
+                      @if (offer.accepted) {
+                        <span class="offer-done">{{ 'took it' | t }}</span>
+                      } @else if (request.is_mine) {
+                        <button
+                          type="button"
+                          class="button is-primary is-small"
+                          [disabled]="busy()"
+                          (click)="accept(offer.offer_id)"
+                        >
+                          <app-icon name="check" [size]="13" />
+                          {{ 'Hand it over' | t }}
+                        </button>
+                      } @else {
+                        <span class="field-hint">{{ 'offered' | t }}</span>
+                      }
+                    </div>
+                  }
+                </div>
+              }
             }
           </div>
         </section>

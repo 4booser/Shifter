@@ -14,7 +14,7 @@ import {
   weekBounds,
 } from '../../core/calendar/calendar-date';
 import { I18n, TPipe } from '../../core/i18n/i18n';
-import { Rota, RotaDay, RotaEntry, Team, TeamApi } from '../../core/team/team-api';
+import { AcceptedCover, Rota, RotaDay, RotaEntry, Team, TeamApi } from '../../core/team/team-api';
 import { Icon } from '../../shared/icon/icon';
 
 interface Cell {
@@ -58,6 +58,15 @@ export class SchedulePage {
 
   protected readonly loading = signal(true);
   protected readonly error = signal<string | null>(null);
+  protected readonly busy = signal(false);
+
+  /**
+   * What a handover left behind. The shift is off the owner's calendar, and the
+   * person who took it has to put it on their own — the app cannot do that for
+   * them, because the rate travels with a placement and the rate is the one
+   * thing a team never sees about its members.
+   */
+  protected readonly handedOver = signal<AcceptedCover | null>(null);
 
   constructor() {
     this.api.list().subscribe({
@@ -76,6 +85,8 @@ export class SchedulePage {
     effect(() => {
       const id = this.selected();
       const { from, to } = this.range();
+
+      this.reloadToken();
 
       if (id === null) return;
 
@@ -207,6 +218,75 @@ export class SchedulePage {
 
     return (this.rota()?.days ?? []).find((day) => day.date === key) ?? null;
   });
+
+  /** Your own offer on a shift, if you have made one. */
+  protected yourOffer(entry: RotaEntry) {
+    return entry.offers.find((offer) => offer.is_you && !offer.accepted) ?? null;
+  }
+
+  /** Offering to take somebody's shift, and taking that back. */
+  protected offer(entry: RotaEntry): void {
+    const team = this.selected();
+
+    if (team === null) return;
+
+    this.run(this.api.offerCover(team, entry.day_shift_id));
+  }
+
+  protected withdraw(offerId: number): void {
+    const team = this.selected();
+
+    if (team === null) return;
+
+    this.run(this.api.withdrawCover(team, offerId));
+  }
+
+  protected accept(offerId: number): void {
+    const team = this.selected();
+
+    if (team === null) return;
+
+    this.busy.set(true);
+    this.error.set(null);
+
+    this.api.acceptCover(team, offerId).subscribe({
+      next: (result) => {
+        this.busy.set(false);
+        this.handedOver.set(result);
+        this.refresh();
+      },
+      error: (error: unknown) => {
+        this.busy.set(false);
+        this.error.set(apiErrorMessage(error));
+      },
+    });
+  }
+
+  private run(call: { subscribe: (observer: {
+    next: () => void;
+    error: (error: unknown) => void;
+  }) => void }): void {
+    this.busy.set(true);
+    this.error.set(null);
+
+    call.subscribe({
+      next: () => {
+        this.busy.set(false);
+        this.refresh();
+      },
+      error: (error: unknown) => {
+        this.busy.set(false);
+        this.error.set(apiErrorMessage(error));
+      },
+    });
+  }
+
+  /** Bumped to refetch the rota after it has been changed from this page. */
+  private readonly reloadToken = signal(0);
+
+  protected refresh(): void {
+    this.reloadToken.update((value) => value + 1);
+  }
 
   protected pickDay(key: string): void {
     this.focusDay.update((current) => (current === key ? null : key));

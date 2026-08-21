@@ -64,6 +64,36 @@ public class TeamsController : Controller
         CancellationToken ct)
         => Ok(await _mediator.Send(new GetRotaDto(UserId(), id, from, to), ct));
 
+    /// <summary>Offering to take a shift somebody has asked to have covered.</summary>
+    [HttpPost]
+    [Route("{id:int}/cover/{dayShiftId:int}")]
+    public async Task<ActionResult<RotaOfferDto>> OfferCover(
+        int id,
+        int dayShiftId,
+        CancellationToken ct)
+        => Ok(await _mediator.Send(new OfferCoverDto(UserId(), id, dayShiftId), ct));
+
+    [HttpDelete]
+    [Route("{id:int}/cover/offers/{offerId:int}")]
+    public async Task<IActionResult> WithdrawCover(int id, int offerId, CancellationToken ct)
+    {
+        await _mediator.Send(new WithdrawCoverDto(UserId(), id, offerId), ct);
+
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Handing the shift over. Only its owner may, and it leaves their calendar
+    /// as a result — the person taking it places it on their own.
+    /// </summary>
+    [HttpPost]
+    [Route("{id:int}/cover/offers/{offerId:int}/accept")]
+    public async Task<ActionResult<AcceptedCoverDto>> AcceptCover(
+        int id,
+        int offerId,
+        CancellationToken ct)
+        => Ok(await _mediator.Send(new AcceptCoverDto(UserId(), id, offerId), ct));
+
     private int UserId()
     {
         if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int id))

@@ -1,4 +1,4 @@
-import { TPipe } from '../../../core/i18n/i18n';
+import { I18n, TPipe } from '../../../core/i18n/i18n';
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
@@ -26,6 +26,7 @@ const QUANTITY_STEPS = [1, 3, 5, 10];
 })
 export class DayPanel {
   private readonly store = inject(CalendarStore);
+  private readonly i18n = inject(I18n);
 
   protected readonly noteMaxLength = NOTE_MAX_LENGTH;
   protected readonly tipSteps = TIP_STEPS;
@@ -77,7 +78,7 @@ export class DayPanel {
   protected readonly label = computed(() => {
     const key = this.store.selectedDate();
 
-    return key === null ? null : formatDayLabel(key);
+    return key === null ? null : formatDayLabel(key, this.i18n.lang());
   });
 
   /** Draft state, so typing does not fire a request on every keystroke. */

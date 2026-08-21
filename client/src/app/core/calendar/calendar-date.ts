@@ -30,8 +30,13 @@ export function addMonths({ year, month }: YearMonth, delta: number): YearMonth 
   return { year: shifted.getFullYear(), month: shifted.getMonth() + 1 };
 }
 
-export function monthLabel({ year, month }: YearMonth): string {
-  return new Intl.DateTimeFormat('en', { month: 'long', year: 'numeric' })
+/* These are plain functions, so they cannot reach the settings the way a
+   component can; the caller passes the language it already holds. English is the
+   default because it is the app's own fallback language, and because the tests
+   call these directly. */
+
+export function monthLabel({ year, month }: YearMonth, locale = 'en'): string {
+  return new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' })
     .format(new Date(year, month - 1, 1));
 }
 
@@ -39,8 +44,8 @@ export function todayKey(): string {
   return toKey(new Date());
 }
 
-export function formatDayLabel(key: string): string {
-  return new Intl.DateTimeFormat('en', {
+export function formatDayLabel(key: string, locale = 'en'): string {
+  return new Intl.DateTimeFormat(locale, {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
@@ -200,15 +205,16 @@ export function buildWeekGrid(key: string, mondayFirst = true): CalendarDay[][] 
 }
 
 /** Twelve compact months, for scanning a year at a glance. */
-export function buildYearGrid(year: number, mondayFirst = true): {
+export function buildYearGrid(year: number, mondayFirst = true, locale = 'en'): {
   month: number;
   label: string;
   weeks: CalendarDay[][];
 }[] {
+  const months = new Intl.DateTimeFormat(locale, { month: 'short' });
+
   return Array.from({ length: 12 }, (_, index) => ({
     month: index + 1,
-    label: new Intl.DateTimeFormat('en', { month: 'short' })
-      .format(new Date(year, index, 1)),
+    label: months.format(new Date(year, index, 1)),
     weeks: buildMonthGrid({ year, month: index + 1 }, mondayFirst),
   }));
 }

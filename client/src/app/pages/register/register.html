@@ -1,6 +1,4 @@
 <main class="auth-page">
-  <app-google-button />
-
   <form class="auth-card" [formGroup]="form" (ngSubmit)="submit()" novalidate>
     <header class="auth-header">
       <h1>{{ 'Create account' | t }}</h1>
@@ -30,7 +28,7 @@
     </div>
 
     <label class="field">
-      <span class="field-label">Login</span>
+      <span class="field-label">{{ 'Login' | t }}</span>
       <input
         type="text"
         formControlName="login"
@@ -40,7 +38,7 @@
       @if (fieldError(form.controls.login, 'Login'); as text) {
         <small class="field-error">{{ text }}</small>
       } @else {
-        <small class="field-hint">4–20 characters: letters, digits, @ . _ -</small>
+        <small class="field-hint">{{ '4–20 characters: letters, digits, @ . _ -' | t }}</small>
       }
     </label>
 
@@ -54,13 +52,13 @@
       @if (fieldError(form.controls.password, 'Password'); as text) {
         <small class="field-error">{{ text }}</small>
       } @else {
-        <small class="field-hint">8–20 characters: letters, digits, @ . _ -</small>
+        <small class="field-hint">{{ '8–20 characters: letters, digits, @ . _ -' | t }}</small>
       }
     </label>
 
+    <app-google-button />
 
-
-    <button type="submit" class="submit" [disabled]="pending()">
+    <button type="submit" class="button is-primary is-block" [disabled]="pending()">
       {{ (pending() ? 'Creating…' : 'Create account') | t }}
     </button>
 

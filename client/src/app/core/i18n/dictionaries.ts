@@ -538,7 +538,10 @@ export const RU: Dictionary = {
   // Auth
   'Sign in': 'Войти',
   'Welcome back to Shifter.': 'С возвращением в Shifter.',
+  Login: 'Логин',
   Password: 'Пароль',
+  '4–20 characters: letters, digits, @ . _ -': '4–20 символов: буквы, цифры, @ . _ -',
+  '8–20 characters: letters, digits, @ . _ -': '8–20 символов: буквы, цифры, @ . _ -',
   'No account yet?': 'Ещё нет аккаунта?',
   'Create one': 'Создать',
   'Signing in…': 'Входим…',
@@ -1180,7 +1183,10 @@ export const UK: Dictionary = {
 
   'Sign in': 'Увійти',
   'Welcome back to Shifter.': 'З поверненням у Shifter.',
+  Login: 'Логін',
   Password: 'Пароль',
+  '4–20 characters: letters, digits, @ . _ -': '4–20 символів: літери, цифри, @ . _ -',
+  '8–20 characters: letters, digits, @ . _ -': '8–20 символів: літери, цифри, @ . _ -',
   'No account yet?': 'Ще немає акаунта?',
   'Create one': 'Створити',
   'Signing in…': 'Входимо…',

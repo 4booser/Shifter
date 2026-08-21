@@ -457,6 +457,10 @@ body {
   place-items: center;
   width: 1.5rem;
   height: 1.5rem;
+  /* The browser's own button padding (1px 6px) would eat most of a box this
+     small and push the glyph out past the border — the plus was the worst of
+     them. The square is the whole target; the icon centres in it. */
+  padding: 0;
   background: transparent;
   border: 1px solid var(--border-strong);
   border-radius: 7px;
@@ -1005,6 +1009,7 @@ body {
   place-items: center;
   width: 1.75rem;
   height: 1.75rem;
+  padding: 0;
   background: transparent;
   border: none;
   border-radius: 7px;
@@ -1293,6 +1298,7 @@ body {
 .swatch {
   width: 1.75rem;
   height: 1.75rem;
+  padding: 0;
   border: 2px solid transparent;
   border-radius: 50%;
   cursor: pointer;
@@ -1667,6 +1673,7 @@ body {
 .emoji {
   width: 2rem;
   height: 2rem;
+  padding: 0;
   background: var(--surface-sunken);
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -1720,6 +1727,7 @@ body {
   margin-top: 0.125rem;
   width: 2rem;
   height: 1.125rem;
+  padding: 0;
   background: var(--border-strong);
   border-radius: 999px;
   transition: background-color 120ms ease;
@@ -2880,6 +2888,15 @@ body {
 .legend-key,
 .toggle-row {
   white-space: nowrap;
+}
+
+/* The one exception to the line above. Keeping a label on one line works because
+   a button that outgrows its row is allowed to wrap as part of that row — but a
+   block button already owns the full width and has no row to fall into, so a
+   long label ("Повторить прошлую неделю") runs past its own edge instead. Give
+   that case its second line back. */
+.button.is-block {
+  white-space: normal;
 }
 
 /* Groups of controls get their own row rather than squeezing the title. */
@@ -4045,6 +4062,16 @@ body {
   .wrap-sub {
     justify-content: flex-start;
   }
+
+  /* At least one of the four labels takes two lines in every language — "A full
+     year at this pace", "Полный год в таком темпе". Without a floor under the
+     short ones their numbers sit a line higher and the row of figures loses the
+     common baseline that makes it readable as a row. Top-aligned so the first
+     line still meets its neighbours. */
+  .wrap-label {
+    align-items: start;
+    min-height: 2lh;
+  }
 }
 
 .wrap-figure:nth-child(1) { animation-delay: calc(260ms * var(--motion)); }
@@ -4522,6 +4549,7 @@ tr.is-skipped .import-note {
   place-items: center;
   width: 1.5rem;
   height: 1.5rem;
+  padding: 0;
   border: 0;
   border-radius: 50%;
   background: transparent;

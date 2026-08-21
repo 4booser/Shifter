@@ -1,5 +1,5 @@
 import { Component, computed, inject, input, output, signal } from '@angular/core';
-import { TPipe } from '../../../core/i18n/i18n';
+import { I18n, TPipe } from '../../../core/i18n/i18n';
 import { FormsModule } from '@angular/forms';
 
 import { formatDayLabel, rotationKeys, todayKey } from '../../../core/calendar/calendar-date';
@@ -24,6 +24,7 @@ export class RotationModal {
   readonly closed = output<void>();
 
   private readonly store = inject(CalendarStore);
+  private readonly i18n = inject(I18n);
 
   protected readonly presets = PRESETS;
   protected readonly templates = this.store.templates;
@@ -47,8 +48,8 @@ export class RotationModal {
 
     return {
       count: keys.length,
-      first: formatDayLabel(keys[0]),
-      last: formatDayLabel(keys[keys.length - 1]),
+      first: formatDayLabel(keys[0], this.i18n.lang()),
+      last: formatDayLabel(keys[keys.length - 1], this.i18n.lang()),
     };
   });
 

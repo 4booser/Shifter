@@ -67,6 +67,9 @@ export class CalendarStore {
   private readonly settings = inject(SettingsStore);
   private readonly queue = inject(OfflineQueue);
 
+  /** Month and weekday names follow the chosen language, like the rest of the UI. */
+  private readonly locale = computed(() => this.settings.settings().language);
+
   private readonly _month = signal<YearMonth>(currentMonth());
   private readonly _selectedDate = signal<string | null>(todayKey());
   private readonly _templates = signal<ShiftTemplate[]>([]);
@@ -171,11 +174,11 @@ export class CalendarStore {
   });
 
   readonly yearMonths = computed(() =>
-    buildYearGrid(this._month().year, this.settings.mondayFirst()),
+    buildYearGrid(this._month().year, this.settings.mondayFirst(), this.locale()),
   );
 
   readonly view = computed(() => this.settings.view());
-  readonly label = computed(() => monthLabel(this._month()));
+  readonly label = computed(() => monthLabel(this._month(), this.locale()));
 
   /**
    * Past days with a worked shift and nothing else recorded. Tips and sales are
@@ -323,7 +326,7 @@ export class CalendarStore {
       next: (responses) =>
         this._trend.set(
           responses.map((response, index) => ({
-            label: monthShortLabel(months[index]),
+            label: monthShortLabel(months[index], this.locale()),
             earned: response.total_earned,
             planned: response.planned_earned,
             hours: response.hours,
@@ -1153,8 +1156,8 @@ export interface MonthTotal {
   hours: number;
 }
 
-function monthShortLabel({ year, month }: YearMonth): string {
-  return new Intl.DateTimeFormat('en', { month: 'short' }).format(
+function monthShortLabel({ year, month }: YearMonth, locale = 'en'): string {
+  return new Intl.DateTimeFormat(locale, { month: 'short' }).format(
     new Date(year, month - 1, 1),
   );
 }

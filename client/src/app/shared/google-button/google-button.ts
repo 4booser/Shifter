@@ -75,7 +75,7 @@ import { SettingsStore } from '../../core/settings/settings-store';
 
         <button
           type="button"
-          class="submit"
+          class="button is-primary is-block"
           [disabled]="pending() || firstName().trim() === ''"
           (click)="submitName()"
         >

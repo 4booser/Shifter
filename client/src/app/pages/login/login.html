@@ -10,7 +10,7 @@
     }
 
     <label class="field">
-      <span class="field-label">Login</span>
+      <span class="field-label">{{ 'Login' | t }}</span>
       <input
         type="text"
         formControlName="login"
@@ -36,7 +36,7 @@
 
     <app-google-button [returnUrl]="returnPath()" />
 
-    <button type="submit" class="submit" [disabled]="pending()">
+    <button type="submit" class="button is-primary is-block" [disabled]="pending()">
       {{ (pending() ? 'Signing in…' : 'Sign in') | t }}
     </button>
 

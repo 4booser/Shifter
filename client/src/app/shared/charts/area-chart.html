@@ -8,15 +8,15 @@
     </defs>
 
     @for (tick of ticks(); track tick.value) {
-      <line class="gridline" x1="52" [attr.x2]="chartWidth - 6"
+      <line class="gridline" x1="60" [attr.x2]="chartWidth - 6"
         [attr.y1]="tick.y" [attr.y2]="tick.y" />
-      <text class="axis-text" x="46" [attr.y]="tick.y + 3" text-anchor="end">
+      <text class="axis-text" x="54" [attr.y]="tick.y + 3" text-anchor="end">
         {{ formatAxis(tick.value) }}
       </text>
     }
 
     @if (goalY(); as y) {
-      <line class="goal-line" x1="52" [attr.x2]="chartWidth - 6"
+      <line class="goal-line" x1="60" [attr.x2]="chartWidth - 6"
         [attr.y1]="y" [attr.y2]="y" />
       <text class="axis-text goal-text" [attr.x]="chartWidth - 8" [attr.y]="y - 4"
         text-anchor="end">{{ 'Goal' | t }}</text>

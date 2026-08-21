@@ -3,6 +3,8 @@ import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
+import { forkJoin } from 'rxjs';
+
 import { apiErrorMessage } from '../../core/auth/api-error';
 import { CalendarApi } from '../../core/calendar/calendar-api';
 import {
@@ -88,6 +90,92 @@ export class Stats {
   protected readonly loading = signal(false);
   protected readonly error = signal<string | null>(null);
 
+  /** Twelve months of totals, for the "is this normal" chart. */
+  protected readonly trend = signal<ColumnDatum[]>([]);
+
+  protected readonly trendColumns = computed<Column[]>(() =>
+    // Wider cap: a dozen columns over this plot leave slots far wider than the
+    // day chart's, and the default thickness would look like a rendering fault.
+    buildColumns(this.trend(), 34),
+  );
+  protected readonly trendTicks = computed<Tick[]>(() => buildTicks(this.trend()));
+
+  /** The best month in the window, so the chart can say what it is beating. */
+  protected readonly trendBest = computed(() =>
+    this.trend().reduce<ColumnDatum | null>(
+      (best, entry) => (best === null || entry.earned > best.earned ? entry : best),
+      null,
+    ),
+  );
+
+  /**
+   * How the worked days are spread, in six bands from the quietest to the best.
+   * The page already gives a median and a best day, but two numbers cannot say
+   * whether the money arrives evenly or in a few big nights — which is the
+   * difference between a wage you can plan around and one you cannot.
+   */
+  protected readonly spread = computed(() => {
+    const earned = this.summary()
+      .days.filter((day) => day.hours > 0)
+      .map((day) => day.earned)
+      .sort((a, b) => a - b);
+
+    if (earned.length < 4) return [];
+
+    const low = earned[0];
+    const high = earned[earned.length - 1];
+    const span = high - low;
+
+    // Every day the same is not six bands of one day each, it is one band.
+    if (span <= 0) return [{ label: this.settings.format(low), count: earned.length, from: low, to: high }];
+
+    const bands = 6;
+    const step = span / bands;
+
+    return Array.from({ length: bands }, (_, index) => {
+      const from = low + step * index;
+      const to = index === bands - 1 ? high : from + step;
+      const count = earned.filter((value) =>
+        index === bands - 1 ? value >= from : value >= from && value < to,
+      ).length;
+
+      return { label: this.settings.format(from), count, from, to };
+    });
+  });
+
+  protected readonly spreadPeak = computed(() =>
+    Math.max(1, ...this.spread().map((band) => band.count)),
+  );
+
+  /**
+   * Which band the typical day falls in, so the chart can point at it rather
+   * than leaving the reader to find the middle by eye.
+   */
+  protected readonly spreadMedianBand = computed(() => {
+    const bands = this.spread();
+
+    if (bands.length === 0) return -1;
+
+    const earned = this.summary()
+      .days.filter((day) => day.hours > 0)
+      .map((day) => day.earned)
+      .sort((a, b) => a - b);
+    const median = earned[Math.floor(earned.length / 2)];
+
+    return bands.findIndex((band, index) =>
+      index === bands.length - 1 ? median >= band.from : median >= band.from && median < band.to,
+    );
+  });
+
+  /** Mean of the months that had any work in them; empty months are not a dip. */
+  protected readonly trendAverage = computed(() => {
+    const worked = this.trend().filter((entry) => entry.earned > 0);
+
+    if (worked.length === 0) return 0;
+
+    return worked.reduce((sum, entry) => sum + entry.earned, 0) / worked.length;
+  });
+
   protected readonly range = computed(() => {
     const now = currentMonth();
     const first = `${now.year}-${`${now.month}`.padStart(2, '0')}-01`;
@@ -149,6 +237,48 @@ export class Stats {
         error: () => this.previous.set(EMPTY_SUMMARY),
       });
     });
+
+    this.loadTrend();
+  }
+
+  /**
+   * Twelve months ending with this one, independent of the period picker: the
+   * rest of the page answers "how did this stretch go", and this answers "is
+   * that normal", which is a different question and a fixed window.
+   *
+   * One request per month rather than one long range, because overtime and
+   * period wages are worked out per range — a single span would smear both
+   * across the month boundaries they belong to.
+   */
+  private loadTrend(): void {
+    const anchor = currentMonth();
+    const months = Array.from({ length: 12 }, (_, index) => addMonths(anchor, index - 11));
+
+    forkJoin(
+      months.map((month) => {
+        const { from, to } = monthBounds(
+          `${month.year}-${`${month.month}`.padStart(2, '0')}-01`,
+        );
+
+        return this.api.days(from, to);
+      }),
+    ).subscribe({
+      next: (responses) =>
+        this.trend.set(
+          responses.map((response, index) => ({
+            label: this.monthLabel(months[index]),
+            earned: response.total_earned,
+            planned: response.planned_earned,
+            hours: response.hours,
+          })),
+        ),
+      error: () => this.trend.set([]),
+    });
+  }
+
+  private monthLabel({ year, month }: { year: number; month: number }): string {
+    return new Intl.DateTimeFormat(this.i18n.lang(), { month: 'short' })
+      .format(new Date(year, month - 1, 1));
   }
 
   // ==== Goal ====

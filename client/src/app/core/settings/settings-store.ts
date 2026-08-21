@@ -311,13 +311,20 @@ export class SettingsStore {
     }));
   }
 
+  /**
+   * The language the app is set to, for grouping marks and the words Intl puts
+   * in a compact number. Passing `undefined` used Chrome's own locale instead,
+   * so an English interface said "100 тис. $" on a chart axis.
+   */
+  private readonly locale = computed(() => this._settings().language);
+
   /** Formats an amount with the chosen currency label. */
   format(amount: number): string {
     const { currency, currencyBefore, hideAmounts } = this._settings();
 
     // The mask keeps the currency mark so a hidden value still reads as money.
     if (hideAmounts) return currencyBefore ? `${currency}•••` : `••• ${currency}`;
-    const text = amount.toLocaleString(undefined, {
+    const text = amount.toLocaleString(this.locale(), {
       minimumFractionDigits: 0,
       maximumFractionDigits: 2,
     });
@@ -337,7 +344,7 @@ export class SettingsStore {
     const { currency, currencyBefore, hideAmounts } = this._settings();
 
     if (hideAmounts) return currencyBefore ? `${currency}•••` : `••• ${currency}`;
-    const text = amount.toLocaleString(undefined, {
+    const text = amount.toLocaleString(this.locale(), {
       notation: 'compact',
       maximumFractionDigits: 1,
     });

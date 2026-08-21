@@ -37,8 +37,15 @@ export interface ColumnDatum {
   hours: number;
 }
 
-/** Solid earned from the baseline, planned wash above with a 2px surface gap. */
-export function buildColumns(data: ColumnDatum[]): Column[] {
+/**
+ * Solid earned from the baseline, planned wash above with a 2px surface gap.
+ *
+ * `maxWidth` caps the thickness. The default suits a month of days; a chart of
+ * six months over the same plot leaves slots four times as wide, and a 24px
+ * column stranded in the middle of one reads as a missing bar rather than a
+ * deliberately thin mark.
+ */
+export function buildColumns(data: ColumnDatum[], maxWidth = 24): Column[] {
   if (data.length === 0) return [];
 
   const max = niceCeiling(
@@ -46,7 +53,7 @@ export function buildColumns(data: ColumnDatum[]): Column[] {
   );
   const slot = PLOT_W / data.length;
   // Capped thickness with the slot's leftover as air, per the mark spec.
-  const width = Math.min(24, Math.max(3, slot - 2));
+  const width = Math.min(maxWidth, Math.max(3, slot - 2));
   const baseline = PAD.top + PLOT_H;
 
   return data.map((entry, index) => {

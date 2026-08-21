@@ -347,6 +347,69 @@
         }
       </section>
 
+      <!-- ==== Spread of days ====
+           A median says where the middle is; this says whether there is one. -->
+      @if (spread().length > 1) {
+        <section class="stat-card">
+          <h3 class="block-title">{{ 'What a day usually brings' | t }}</h3>
+
+          <div class="spread">
+            @for (band of spread(); track band.from; let index = $index) {
+              <div
+                class="spread-band"
+                [class.is-typical]="index === spreadMedianBand()"
+                [style.--share.%]="(band.count / spreadPeak()) * 100"
+              >
+                <span class="spread-bar"></span>
+                <span class="spread-count">{{ band.count }}</span>
+                <span class="spread-label">{{ band.label }}</span>
+              </div>
+            }
+          </div>
+
+          <p class="field-hint">
+            {{ 'Worked days grouped by what they paid. The marked column is where the typical day falls.' | t }}
+          </p>
+        </section>
+      }
+
+      <!-- ==== Twelve months ====
+           Deliberately outside the period picker: the rest of the page says how
+           this stretch went, and this says whether that is normal for you. -->
+      @if (trend().length > 0) {
+        <section class="stat-card">
+          <header class="chart-head">
+            <h3 class="block-title">{{ 'The last twelve months' | t }}</h3>
+            <span class="chart-legend">
+              <span class="legend-key"><span class="legend-swatch"></span>{{ 'Earned' | t }}</span>
+              <span class="legend-key">
+                <span class="legend-swatch is-planned"></span>{{ 'Planned' | t }}
+              </span>
+            </span>
+          </header>
+
+          <app-column-chart
+            [columns]="trendColumns()"
+            [ticks]="trendTicks()"
+            [labelEvery]="1"
+            [labelAll]="false"
+          />
+
+          <dl class="trend-rows">
+            @if (trendBest(); as best) {
+              <div class="summary-row">
+                <dt>{{ 'Best month' | t }}</dt>
+                <dd>{{ best.label }} · {{ best.earned | money }}</dd>
+              </div>
+            }
+            <div class="summary-row">
+              <dt>{{ 'Average month worked' | t }}</dt>
+              <dd>{{ trendAverage() | money }}</dd>
+            </div>
+          </dl>
+        </section>
+      }
+
       <!-- ==== Heatmap ==== -->
       <section class="stat-card">
         <h3 class="block-title">{{ 'Activity' | t }}</h3>

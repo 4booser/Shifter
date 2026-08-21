@@ -163,7 +163,7 @@ export class Payouts {
    * not been updated yet — where the field is simply absent — reads as one
    * payment rather than badging every row as a wage.
    */
-  protected splitLabel(row: PayPeriodRow): string | null {
+  protected splitLabel(row: { stream: PayPeriodRow['stream'] }): string | null {
     if (row.stream === 'commission') return 'Commission';
 
     return row.stream === 'wage' ? 'Wage' : null;

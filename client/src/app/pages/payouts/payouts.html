@@ -24,6 +24,9 @@
 
         <p class="shortfall-line">
           <strong>{{ shortfall.location_name }}</strong>
+          @if (splitLabel(shortfall); as stream) {
+            <span class="pay-stream">{{ stream | t }}</span>
+          }
           {{ 'has paid short' | t }}
           <strong>{{ shortfall.periods }}</strong>
           {{ 'periods running' | t }}, {{ 'since' | t }} {{ label(shortfall.since) }}.

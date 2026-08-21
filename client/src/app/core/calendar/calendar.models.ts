@@ -319,6 +319,8 @@ export interface Shortfall {
   /** How much is missing, as a positive amount. */
   total_short: number;
   since: string;
+  /** Which payment is short, where a place settles more than one. */
+  stream: 'all' | 'wage' | 'commission';
 }
 
 export interface Reconciliation {

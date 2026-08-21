@@ -46,7 +46,13 @@ public record ShortfallDto(
     /// with a minus in front of it.
     /// </summary>
     decimal total_short,
-    DateOnly since);
+    DateOnly since,
+    /// <summary>
+    /// Which payment is short. A place that settles the wage and the commission
+    /// separately can be behind on both, and two claims naming the same place
+    /// with no other difference read as the same claim printed twice.
+    /// </summary>
+    string stream = "all");
 
 public record ReconciliationDto(
     PayPeriodDto[] periods,

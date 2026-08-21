@@ -304,7 +304,8 @@ public class ReconciliationHandler : IReconciliationHandler
                 group.First().location_name,
                 run.Count,
                 run.Sum(row => row.expected - row.paid),
-                run.Min(row => row.period_from)));
+                run.Min(row => row.period_from),
+                group.Key.stream));
         }
 
         return found.OrderByDescending(entry => entry.total_short).ToArray();

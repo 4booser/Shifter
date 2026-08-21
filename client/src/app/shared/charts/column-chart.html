@@ -1,10 +1,10 @@
 <div class="chart-frame">
   <svg [attr.viewBox]="viewBox" class="chart" role="img">
     @for (tick of ticks(); track tick.value) {
-      <line class="gridline" x1="42" [attr.x2]="chartWidth - 6"
+      <line class="gridline" x1="52" [attr.x2]="chartWidth - 6"
         [attr.y1]="tick.y" [attr.y2]="tick.y" />
-      <text class="axis-text" x="36" [attr.y]="tick.y + 3" text-anchor="end">
-        {{ format(tick.value) }}
+      <text class="axis-text" x="46" [attr.y]="tick.y + 3" text-anchor="end">
+        {{ formatAxis(tick.value) }}
       </text>
     }
 

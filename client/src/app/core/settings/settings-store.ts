@@ -261,6 +261,26 @@ export class SettingsStore {
   }
 
   /**
+   * Short form for chart axes, where the gutter is a fixed number of SVG units
+   * and cannot grow with the number: "50 000 ₴" does not fit and loses its first
+   * digit to the clip, "50K ₴" does. Only the axis uses this — a tooltip has the
+   * room to show the amount in full.
+   */
+  formatCompact(amount: number): string {
+    const { currency, currencyBefore, hideAmounts } = this._settings();
+
+    if (hideAmounts) return currencyBefore ? `${currency}•••` : `••• ${currency}`;
+    const text = amount.toLocaleString(undefined, {
+      notation: 'compact',
+      maximumFractionDigits: 1,
+    });
+
+    if (currency === '') return text;
+
+    return currencyBefore ? `${currency}${text}` : `${text} ${currency}`;
+  }
+
+  /**
    * Writes the choices onto the document root so plain CSS picks them up; no
    * component needs to know a theme exists.
    */

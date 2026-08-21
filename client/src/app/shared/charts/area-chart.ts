@@ -147,4 +147,9 @@ export class AreaChart {
   protected format(value: number): string {
     return this.settings.format(value);
   }
+
+  /** The axis gutter is fixed, so its labels are the compact ones. */
+  protected formatAxis(value: number): string {
+    return this.settings.formatCompact(value);
+  }
 }

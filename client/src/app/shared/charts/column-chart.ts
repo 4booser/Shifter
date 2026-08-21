@@ -72,6 +72,11 @@ export class ColumnChart {
     return `${(entry.centre / CHART_W) * 100}%`;
   }
 
+  /** The axis gutter is fixed, so its labels are the compact ones. */
+  protected formatAxis(value: number): string {
+    return this.settings.formatCompact(value);
+  }
+
   protected format(value: number): string {
     return this.settings.format(value);
   }

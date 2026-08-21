@@ -2,7 +2,10 @@
 
 export const CHART_W = 640;
 export const CHART_H = 190;
-export const PAD = { top: 12, right: 6, bottom: 22, left: 42 };
+/* The left gutter holds the money labels of the y axis. Compact notation keeps
+   them short, but a currency mark still follows the number, so the gutter is
+   wider than the bare digits need. */
+export const PAD = { top: 12, right: 6, bottom: 22, left: 52 };
 export const PLOT_W = CHART_W - PAD.left - PAD.right;
 export const PLOT_H = CHART_H - PAD.top - PAD.bottom;
 

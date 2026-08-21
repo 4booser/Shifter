@@ -65,10 +65,14 @@ server/                    бэкенд целиком
 
 client/                    Angular workspace
   src/app/core             сторы, API-клиенты, настройки, i18n
-  src/app/pages            dashboard, stats, wrapped, account, login, register
+    calendar/holidays.ts   праздники считаются в приложении, без сети
+    export/ics.ts          выгрузка смен в календарь телефона
+  src/app/pages            dashboard, schedule, stats, payouts, team, wrapped,
+                           account, login, register
   src/app/shared           графики, иконки, модалки, пайпы
+  public/sw.js             service worker: офлайн-оболочка и уведомления
 
-tests/Shifter.Tests        xUnit: расчёты денег и периодов
+tests/Shifter.Tests        xUnit: расчёты, доступ, приватность общего графика
 
 docker/
   init-databases.sh        создаёт вторую базу при первом старте PostgreSQL
@@ -395,13 +399,20 @@ curl -X POST http://localhost:8080/shifter/v1/auth/refresh \
 ## Тесты
 
 ```bash
-dotnet test Shifter.sln           # 55 тестов: расчёты денег и периодов
-cd client && npx ng test --watch=false   # 32 теста: прогноз, средние, импорт
+dotnet test Shifter.sln                  # 142 теста: расчёты, доступ, валидация
+cd client && npx ng test --watch=false   # 67 тестов: даты, праздники, экспорт
 ```
 
 Бэкенд-тесты идут без базы, на подменах репозиториев. Покрыто то, что нельзя
 сломать молча: границы расчётных периодов, порог переработки, оклад за период,
-tip-out, питание, разнос чая и продаж между двумя местами за один день.
+tip-out, питание, разнос чая и продаж между двумя местами за один день,
+диапазоны событий, приватность общего графика и правила подмены смен — кто
+может предложить себя, кто отдать и что нельзя отдать дважды.
+
+Клиентские проверяют то, что ломается тихо и не в тестах, а у людей: даты
+праздников сверены с опубликованными календарями, свёртка и экранирование в
+`.ics` (иначе телефон просто молча не импортирует файл), и шаг цветовой
+ротации через границу месяца.
 
 CI гоняет обе половины на каждый push и pull request — `.github/workflows/ci.yml`.
 
@@ -416,15 +427,71 @@ CI гоняет обе половины на каждый push и pull request �
 ```
 push в main
    │
-   ├─ test           dotnet test + ng test
-   ├─ build          два образа из одного Dockerfile, теги :sha и :latest → ghcr.io
-   └─ deploy         scp compose-файлов в /opt/shifter, docker compose pull && up -d,
-                     ожидание healthy — иначе ран падает и показывает логи
+   ├─ test      dotnet test + ng test — падение здесь останавливает всё
+   ├─ build     два образа из одного Dockerfile, теги :sha и :latest → ghcr.io
+   └─ deploy    scp compose-файлов в /opt/shifter
+                docker compose pull && up -d      ← миграции накатываются сами
+                перечитывание конфига прокси, если он изменился
+                ожидание healthy — иначе ран падает и показывает логи
 ```
 
 Сервер ничего не собирает, и это осознанно: машина, которая компилирует то, что
 на ней же и запускается, однажды уронит выкат по причине, которую никто не увидит.
 Он только скачивает готовые образы, проверенные CI.
+
+### Как выкатить изменения
+
+```bash
+git push origin main
+```
+
+Это всё. Ничего на сервере запускать не нужно — ни миграций, ни рестартов.
+
+Посмотреть, как идёт:
+
+```bash
+gh run watch                       # текущий выкат
+gh run list -w Deploy -L 5         # последние пять
+```
+
+**Миграции** едут сами: контейнер `migrate` стартует раньше приложения и
+завершается до того, как оно поднимется. Если миграция упадёт, приложение просто
+не стартует — старая версия продолжит работать, а не наполовину обновлённая.
+
+**Если ран упал на `Failed to download action … 429`** — это codeload GitHub, а
+не код. Лечится `gh run rerun <id> --failed`: успешные джобы не пересобираются.
+
+### Что происходит с сайтом во время выката
+
+Реплика одна, поэтому старый контейнер останавливается раньше, чем новый начинает
+отвечать, — примерно полминуты. Раньше в это окно каждый запрос получал 502.
+Сейчас Caddy держит соединение и отвечает, когда приложение поднимется
+(`lb_try_duration` в `docker/Caddyfile`), так что запрос ждёт дольше обычного, но
+доезжает. Замерено на живом сайте перезапуском под нагрузкой:
+
+| | 200 | ошибок |
+|---|---|---|
+| было | 73 | 51 × 502 |
+| стало | 62 | 0, худший запрос 29 с |
+
+Совсем убрать паузу можно только второй репликой приложения — это другой разговор.
+
+### Откатиться на предыдущую версию
+
+Образы тегируются коммитом, так что откат — это подстановка старого тега:
+
+```bash
+ssh -i ~/.ssh/shifter_deploy deploy@СЕРВЕР
+cd /opt/shifter
+
+docker compose -f compose.prod.yaml ps --format '{{.Service}} {{.Image}}'   # что сейчас
+echo "TAG=<нужный sha>" >> .env.release        # или поправить существующую строку
+docker compose -f compose.prod.yaml --env-file .env --env-file .env.release up -d
+```
+
+Осторожно с миграциями: откат кода не откатывает схему. Если между версиями была
+миграция, старое приложение встретит новую таблицу — обычно это переживается,
+но добавленную NOT NULL-колонку уже нет. Проверяйте, что именно откатываете.
 
 ### Стек на сервере
 
@@ -548,7 +615,83 @@ docker compose -f compose.prod.yaml logs -f proxy    # доступы и выд�
 docker compose -f compose.prod.yaml restart shifter
 ```
 
+Заглянуть в базу, ничего не открывая наружу:
+
+```bash
+docker compose -f compose.prod.yaml exec db psql -U shifter_user shifter
+```
+
 `docker compose down -v` стирает том с базой. На проде этой команде делать нечего.
+
+### Выкатить руками, если CI лёг
+
+```bash
+ssh -i ~/.ssh/shifter_deploy deploy@СЕРВЕР
+cd /opt/shifter
+
+# Образы приватные, поэтому нужен логин: PAT с правом read:packages.
+echo "$GHCR_TOKEN" | docker login ghcr.io -u ВАШ_ЛОГИН --password-stdin
+
+docker compose -f compose.prod.yaml --env-file .env --env-file .env.release pull
+docker compose -f compose.prod.yaml --env-file .env --env-file .env.release up -d
+docker logout ghcr.io
+```
+
+### Правки в конфиге прокси
+
+`docker/Caddyfile` смонтирован в контейнер **как один файл**, а файл в bind-mount
+привязан к иноду. `scp` файл не переписывает, а заменяет, поэтому на хосте
+оказывается новая версия, а контейнер продолжает читать старую — и
+`caddy reload` честно отвечает «config is unchanged». Ровно так однажды
+несколько дней прожила «применённая» правка, которой не было.
+
+Поэтому выкат сравнивает то, что **реально видит контейнер**, с тем, что
+отправлено, и пересоздаёт прокси при расхождении. Руками — то же самое:
+
+```bash
+docker compose -f compose.prod.yaml exec -T proxy cat /etc/caddy/Caddyfile | diff - docker/Caddyfile
+docker compose -f compose.prod.yaml --env-file .env --env-file .env.release up -d --force-recreate proxy
+```
+
+Проверять конфиг до выката — бесплатно и спасает от прокси, который не поднялся:
+
+```bash
+docker run --rm -e SITE_ADDRESS=":80" \
+    -v "$PWD/docker/Caddyfile:/etc/caddy/Caddyfile:ro" \
+    caddy:2-alpine caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+```
+
+### «Правки не появились на сайте»
+
+Сначала проверьте, что дело не в сервере:
+
+```bash
+# какой коммит крутится
+ssh -i ~/.ssh/shifter_deploy deploy@СЕРВЕР \
+    'cd /opt/shifter && docker compose -f compose.prod.yaml ps --format "{{.Service}} {{.Image}}"'
+
+# что реально отдаётся браузеру
+curl -s https://shifter.ink/ | grep -oE 'main-[A-Z0-9]+\.js'
+curl -s https://shifter.ink/main-XXXXXXXX.js | grep -c 'какая-нибудь новая строка'
+```
+
+Если тег совпадает с последним коммитом, а в бандле новый код есть — сервер ни при
+чём, и старую версию держит **браузер**. Это уже случалось: не выставлялся
+`Cache-Control`, и браузер по эвристике кешировал `sw.js`; устаревший service
+worker не перезапрашивался, не обновлялся и продолжал отдавать бандл, который
+закешировал в первый раз. Сайт выглядел замороженным, пока сервер выкатывал
+новые релизы.
+
+Теперь точки входа отдаются с `no-cache`, а хешированные сборки — с `immutable`:
+
+```bash
+curl -sI https://shifter.ink/ | grep -i cache-control        # no-cache
+curl -sI https://shifter.ink/sw.js | grep -i cache-control   # no-cache
+```
+
+Если у вас в браузере остался старый worker, он про эти заголовки не знает —
+один раз нужно обновиться жёстко (Cmd/Ctrl+Shift+R) или закрыть вкладку и
+открыть заново. Дальше обновления приезжают сами.
 
 ### Домен и HTTPS
 

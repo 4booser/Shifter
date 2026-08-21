@@ -3,6 +3,16 @@
    gives depth without the glare of #fff across a full screen. Colour is spent
    only where it means something (the active brush, an error). */
 
+/* Padding and borders count inside the declared width. Without this a control
+   sized `width: 100%` measures its padding on top of the parent's content box
+   and hangs off the edge, which is how the block buttons in the sidebar and the
+   team card ended up 15px wider than the section holding them. */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 :root {
   color-scheme: light;
 
@@ -1213,6 +1223,15 @@ body {
   flex-direction: column;
   flex: 1 1 8rem;
   min-width: 0;
+}
+
+/* The rate line carries the money earned, so it may not be cut. Elsewhere
+   `.position-rate` stays on one line, but here it sits beside the worked toggle
+   in a column narrow enough that "11:00–23:00 · 12 h · 1 000 ₴" does not fit;
+   nowrap made it run under the badge and lose the amount. A second line is
+   cheaper than a missing number. */
+.shift-info .position-rate {
+  white-space: normal;
 }
 
 .worked-toggle {

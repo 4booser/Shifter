@@ -133,6 +133,18 @@ public record DaySaleSaveDto(
     );
 
 /// <summary>
+/// Colours a stretch of days in one round trip. Each date carries its own
+/// value, so a pattern that alternates colours is one request rather than one
+/// per colour — and a month painted a day at a time is thirty.
+/// </summary>
+public record BulkColourDto(
+    /// <summary>Date to colour. Null clears whatever the day had.</summary>
+    DayColourDto[] days
+    );
+
+public record DayColourDto(DateOnly date, string? colour);
+
+/// <summary>
 /// Applies one template across many dates in a single round trip. Dragging a
 /// week or generating a rota otherwise costs one request per day.
 /// </summary>

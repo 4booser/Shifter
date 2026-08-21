@@ -95,6 +95,10 @@
           <app-icon name="repeat" />
           {{ 'Fill a rota' | t }}
         </button>
+        <button type="button" class="button is-block" (click)="schemeModalOpen.set(true)">
+          <app-icon name="sliders" />
+          {{ 'Colour schemes' | t }}
+        </button>
         <button type="button" class="button is-block" (click)="copyWeek()">
           <app-icon name="calendar" />
           {{ 'Repeat last week' | t }}
@@ -380,6 +384,7 @@
   (closed)="salesModalOpen.set(false)"
 />
 <app-pattern-modal [open]="patternModalOpen()" (closed)="patternModalOpen.set(false)" />
+<app-scheme-modal [open]="schemeModalOpen()" (closed)="schemeModalOpen.set(false)" />
 <app-rotation-modal
   [open]="rotationModalOpen()"
   (closed)="rotationModalOpen.set(false)"

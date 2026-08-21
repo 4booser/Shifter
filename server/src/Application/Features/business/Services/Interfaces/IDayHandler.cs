@@ -7,4 +7,7 @@ public interface IDayHandler
     Task<DaysDto> ListAsync(int userId, DateOnly from, DateOnly to, CancellationToken ct);
     Task<DayDto> SaveAsync(DaySaveDto request, int userId, DateOnly date, CancellationToken ct);
     Task<DayDto[]> BulkAsync(BulkShiftDto request, int userId, CancellationToken ct);
+
+    /// <summary>Colours many days at once, each with its own value.</summary>
+    Task<DayDto[]> ColourAsync(BulkColourDto request, int userId, CancellationToken ct);
 }

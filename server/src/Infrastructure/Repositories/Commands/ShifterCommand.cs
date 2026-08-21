@@ -96,6 +96,46 @@ public class ShifterCommand : IShifterCommand
         await _db.SaveChangesAsync(ct);
     }
 
+    public async Task<Day[]> ApplyColourAsync(
+        int userId,
+        Dictionary<DateOnly, string?> colours,
+        CancellationToken ct)
+    {
+        DateOnly[] dates = colours.Keys.ToArray();
+
+        Day[] existing = await _db.Days
+            .Include(day => day.Shifts)
+            .Include(day => day.Sales)
+            .Where(day => day.UserId == userId && dates.Contains(day.Date))
+            .ToArrayAsync(ct);
+
+        Dictionary<DateOnly, Day> byDate = existing.ToDictionary(day => day.Date);
+        List<Day> touched = [];
+
+        foreach ((DateOnly date, string? colour) in colours)
+        {
+            if (!byDate.TryGetValue(date, out Day? day))
+            {
+                // Clearing a colour off a day that was never recorded has
+                // nothing to clear, and creating an empty row to hold a null
+                // would fill the calendar with days that say nothing.
+                if (colour is null) continue;
+
+                day = new Day { UserId = userId, Date = date };
+
+                await _db.Days.AddAsync(day, ct);
+                byDate[date] = day;
+            }
+
+            day.Colour = colour;
+            touched.Add(day);
+        }
+
+        await _db.SaveChangesAsync(ct);
+
+        return touched.ToArray();
+    }
+
     public async Task<Day[]> ApplyShiftAsync(
         int userId,
         DateOnly[] dates,

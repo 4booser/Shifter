@@ -97,4 +97,92 @@ public class DayColourTests
 
         Assert.Equal("#22C55E", Assert.Single(range.days).colour);
     }
+
+    // ==== Painting a stretch at once ====
+
+    private Task<DayDto[]> Colour(params (string date, string? colour)[] days)
+        => _handler.ColourAsync(
+            new BulkColourDto(days
+                .Select(entry => new DayColourDto(DateOnly.Parse(entry.date), entry.colour))
+                .ToArray()),
+            Build.UserId,
+            CancellationToken.None);
+
+    [Fact]
+    public async Task AStretchIsColouredInOneCall()
+    {
+        DayDto[] painted = await Colour(
+            ("2026-03-10", "#FF5C7A"),
+            ("2026-03-11", "#FF5C7A"),
+            ("2026-03-12", "#FF5C7A"));
+
+        Assert.Equal(3, painted.Length);
+        Assert.All(painted, day => Assert.Equal("#FF5C7A", day.colour));
+    }
+
+    [Fact]
+    public async Task EachDayCanTakeItsOwnColour()
+    {
+        // A pattern that alternates is the reason this takes a value per date
+        // rather than one colour and a list of days.
+        DayDto[] painted = await Colour(
+            ("2026-03-10", "#FF5C7A"),
+            ("2026-03-11", "#22C55E"));
+
+        Assert.Equal("#FF5C7A", painted[0].colour);
+        Assert.Equal("#22C55E", painted[1].colour);
+    }
+
+    [Fact]
+    public async Task ARepeatedDateTakesTheLastValueRatherThanFailing()
+    {
+        await Colour(("2026-03-10", "#FF5C7A"), ("2026-03-10", "#22C55E"));
+
+        KeyValuePair<DateOnly, string?> only = Assert.Single(_command.Coloured);
+
+        Assert.Equal("#22C55E", only.Value);
+    }
+
+    [Fact]
+    public async Task ColoursAreNormalisedInBulkToo()
+    {
+        await Colour(("2026-03-10", "#ff5c7a"));
+
+        Assert.Equal("#FF5C7A", Assert.Single(_command.Coloured).Value);
+    }
+
+    [Fact]
+    public async Task ClearingIsSentAsNothingRatherThanAsAColour()
+    {
+        await Colour(("2026-03-10", null));
+
+        Assert.Null(Assert.Single(_command.Coloured).Value);
+    }
+
+    [Fact]
+    public async Task ABadColourAnywhereInTheBatchIsRejected()
+    {
+        await Assert.ThrowsAsync<ValidationException>(() => Colour(
+            ("2026-03-10", "#FF5C7A"),
+            ("2026-03-11", "greenish")));
+    }
+
+    [Fact]
+    public async Task AnEmptyBatchIsRejectedRatherThanSilentlyDoingNothing()
+    {
+        await Assert.ThrowsAsync<ValidationException>(() => Colour());
+    }
+
+    [Fact]
+    public async Task ARunawayRangeIsRefused()
+    {
+        (string, string?)[] tooMany = Enumerable
+            .Range(0, 401)
+            .Select(offset => (
+                DateOnly.Parse("2026-01-01").AddDays(offset).ToString("yyyy-MM-dd"),
+                (string?)"#FF5C7A"))
+            .ToArray();
+
+        await Assert.ThrowsAsync<ValidationException>(() => Colour(tooMany));
+    }
 }

@@ -22,6 +22,7 @@ import { averagesFor, change } from '../../../core/calendar/insights';
 import { LocationModal } from '../tools/location-modal';
 import { PayoutModal } from '../tools/payout-modal';
 import { PatternModal } from '../tools/pattern-modal';
+import { SchemeModal } from '../tools/scheme-modal';
 import { RotationModal } from '../tools/rotation-modal';
 import { SalesModal } from '../tools/sales-modal';
 import { ImportModal } from '../tools/import-modal';
@@ -34,6 +35,7 @@ import { ShiftModal } from '../tools/shift-modal';
     SalesModal,
     RotationModal,
     PatternModal,
+    SchemeModal,
     PayoutModal,
     LocationModal,
     DecimalPipe,
@@ -81,6 +83,7 @@ export class Sidebar {
   protected readonly salesModalOpen = signal(false);
   protected readonly rotationModalOpen = signal(false);
   protected readonly patternModalOpen = signal(false);
+  protected readonly schemeModalOpen = signal(false);
   protected readonly payoutModalOpen = signal(false);
   protected readonly locationModalOpen = signal(false);
   protected readonly showArchive = signal(false);

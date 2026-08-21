@@ -209,6 +209,17 @@ public class BusinessController : ControllerBase
         => Ok(await _dayHandler.BulkAsync(request, CurrentUserId(), ct));
 
     /// <summary>
+    /// Colours many days at once, each with its own value — a whole month, a
+    /// week, or a pattern that alternates, in one request.
+    /// </summary>
+    [HttpPost]
+    [Route("days/colour")]
+    public async Task<ActionResult<DayDto[]>> ColourDays(
+        [FromBody] BulkColourDto request,
+        CancellationToken ct)
+        => Ok(await _dayHandler.ColourAsync(request, CurrentUserId(), ct));
+
+    /// <summary>
     /// Upsert: the date in the route identifies the day, and the body carries
     /// its full contents, so repeating the call is safe.
     /// </summary>

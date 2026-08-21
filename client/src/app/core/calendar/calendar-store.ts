@@ -19,6 +19,7 @@ import {
   todayKey,
   weekBounds,
 } from './calendar-date';
+import { ColourScheme } from '../settings/settings-store';
 import { holidaysInRange } from './holidays';
 import {
   CalendarDayData,
@@ -51,6 +52,15 @@ export const SUMMARY_PERIODS: { value: SummaryPeriod; label: string }[] = [
 /** Wide enough to mean "everything" without the server needing a special case. */
 const ALL_TIME = { from: '2000-01-01', to: '2099-12-31' };
 
+/** How much of the calendar one click of the colour brush covers. */
+export type PaintScope = 'day' | 'week' | 'month';
+
+export const PAINT_SCOPES: { value: PaintScope; label: string }[] = [
+  { value: 'day', label: 'Day' },
+  { value: 'week', label: 'Week' },
+  { value: 'month', label: 'Month' },
+];
+
 @Service()
 export class CalendarStore {
   private readonly api = inject(CalendarApi);
@@ -67,6 +77,8 @@ export class CalendarStore {
   private readonly _summaryPeriod = signal<SummaryPeriod>('month');
   private readonly _brush = signal<ShiftTemplate | null>(null);
   private readonly _patternBrush = signal(false);
+  private readonly _colourBrush = signal<string | null>(null);
+  private readonly _paintScope = signal<PaintScope>('day');
   private readonly _events = signal<CalendarEvent[]>([]);
   private readonly _error = signal<string | null>(null);
   private readonly _saving = signal(false);
@@ -99,6 +111,8 @@ export class CalendarStore {
   readonly summaryPeriod = this._summaryPeriod.asReadonly();
   readonly brush = this._brush.asReadonly();
   readonly patternBrush = this._patternBrush.asReadonly();
+  readonly colourBrush = this._colourBrush.asReadonly();
+  readonly paintScope = this._paintScope.asReadonly();
   readonly events = this._events.asReadonly();
 
   /**
@@ -411,6 +425,145 @@ export class CalendarStore {
   clearBrush(): void {
     this._brush.set(null);
     this._patternBrush.set(false);
+    this._colourBrush.set(null);
+  }
+
+  /**
+   * The colour brush. Picking one puts the calendar into colouring mode, and
+   * clicking the same swatch again drops out of it — the same gesture as the
+   * shift palette, so there is one rule to learn rather than two.
+   */
+  toggleColourBrush(colour: string | null): void {
+    this._brush.set(null);
+    this._patternBrush.set(false);
+    this._colourBrush.update((current) => (current === colour ? null : colour));
+  }
+
+  /** Whether a click paints the day, its week, or its whole month. */
+  setPaintScope(scope: PaintScope): void {
+    this._paintScope.set(scope);
+  }
+
+  /** The dates one click covers, given the scope in force. */
+  scopeOf(key: string): string[] {
+    const scope = this._paintScope();
+
+    if (scope === 'week') {
+      const { from, to } = weekBounds(key);
+
+      return keysBetween(from, to);
+    }
+
+    if (scope === 'month') {
+      const { from, to } = monthBounds(key);
+
+      return keysBetween(from, to);
+    }
+
+    return [key];
+  }
+
+  /**
+   * Colours a set of days in one request. Repainting is optimistic — the cells
+   * change under the finger and roll back together if the call fails, which is
+   * the only way a month of colour feels like painting rather than waiting.
+   */
+  paintColour(keys: string[], colour: string | null): void {
+    if (keys.length === 0) return;
+
+    const rollback = this._days();
+
+    this.remember('Coloured days', keys);
+
+    this._days.update((map) => {
+      const next = new Map(map);
+
+      for (const key of keys) {
+        const day = next.get(key);
+
+        // A day with nothing on it and no colour is not worth inventing here;
+        // the server creates the row, and the reload brings it back.
+        if (day === undefined && colour === null) continue;
+
+        next.set(key, { ...(day ?? blankDay(key)), colour });
+      }
+
+      return next;
+    });
+
+    this._saving.set(true);
+    this._error.set(null);
+
+    this.api.colourDays(keys.map((date) => ({ date, colour }))).subscribe({
+      next: (days) => {
+        this._saving.set(false);
+        this._days.update((map) => {
+          const next = new Map(map);
+
+          for (const day of days) next.set(day.date, day);
+
+          return next;
+        });
+      },
+      error: (error: unknown) => {
+        this._saving.set(false);
+        this._days.set(rollback);
+        this._error.set(apiErrorMessage(error));
+      },
+    });
+  }
+
+  /**
+   * Lays a saved scheme over a stretch of dates. A weekday scheme asks each
+   * date which day of the week it is; a cycle counts days from its start, so
+   * it survives months of different lengths without drifting.
+   */
+  applyScheme(scheme: ColourScheme, keys: string[]): void {
+    const days = keys
+      .map((date) => ({ date, colour: schemeColourFor(scheme, date) }))
+      .filter((entry) => entry.colour !== undefined) as
+        { date: string; colour: string | null }[];
+
+    if (days.length === 0) return;
+
+    const rollback = this._days();
+
+    this.remember('Applied a colour scheme', days.map((entry) => entry.date));
+
+    this._days.update((map) => {
+      const next = new Map(map);
+
+      for (const entry of days) {
+        const day = next.get(entry.date);
+
+        if (day === undefined && entry.colour === null) continue;
+
+        next.set(entry.date, { ...(day ?? blankDay(entry.date)), colour: entry.colour });
+      }
+
+      return next;
+    });
+
+    this._saving.set(true);
+    this._error.set(null);
+
+    this.api.colourDays(days).subscribe({
+      next: (updated) => {
+        this._saving.set(false);
+        this._days.update((map) => {
+          const next = new Map(map);
+
+          for (const day of updated) next.set(day.date, day);
+
+          return next;
+        });
+      },
+      error: (error: unknown) => {
+        this._saving.set(false);
+        this._days.set(rollback);
+        this._error.set(apiErrorMessage(error));
+      },
+    });
   }
 
   /** Which template the pattern would place on a given date, if any. */
@@ -937,6 +1090,55 @@ function isOffline(error: unknown): boolean {
   const status = (error as { status?: number } | null)?.status;
 
   return status === 0 || status === 503 || !navigator.onLine;
+}
+
+/**
+ * A day the calendar knows nothing about yet. Used only to hold a colour while
+ * the request is in flight — every figure on it is left at zero because the
+ * server owns them, and the reload replaces the whole thing regardless.
+ */
+function blankDay(date: string): CalendarDayData {
+  return {
+    date,
+    shifts: [],
+    sales: [],
+    tips: null,
+    tips_cash: null,
+    tip_out: 0,
+    deductions: 0,
+    note: null,
+    colour: null,
+    hours: 0,
+    earned: 0,
+    planned: 0,
+  };
+}
+
+/**
+ * What a scheme puts on a given date, or undefined when it says nothing about
+ * it — which is different from saying "no colour". A weekday with nothing
+ * assigned is left exactly as it was; only an explicit null clears.
+ */
+export function schemeColourFor(scheme: ColourScheme, date: string): string | null | undefined {
+  if (scheme.kind === 'weekday') {
+    const weekday = new Date(`${date}T00:00:00`).getDay();
+
+    return scheme.byWeekday[weekday];
+  }
+
+  const length = scheme.cycle.length;
+
+  if (length === 0) return undefined;
+
+  // Counted in whole days from the start rather than in weeks, so a rotation
+  // that is not a multiple of seven does not drift as months change length.
+  const start = Date.parse(`${scheme.cycleFrom}T00:00:00Z`);
+  const here = Date.parse(`${date}T00:00:00Z`);
+  const offset = Math.round((here - start) / 86_400_000);
+
+  // Modulo that stays positive before the start date, so a cycle laid over
+  // earlier days repeats backwards rather than falling off the front.
+  return scheme.cycle[((offset % length) + length) % length];
 }
 
 /** The server saying "not like that" rather than "no": there is a way through. */

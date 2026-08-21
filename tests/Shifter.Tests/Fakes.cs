@@ -112,6 +112,31 @@ public sealed class FakeShifterCommand : IShifterCommand
         return Task.FromResult(incoming);
     }
 
+    /// <summary>Dates handed to the bulk colour call, in the order they came.</summary>
+    public List<KeyValuePair<DateOnly, string?>> Coloured { get; } = [];
+
+    public Task<Day[]> ApplyColourAsync(
+        int userId,
+        Dictionary<DateOnly, string?> colours,
+        CancellationToken ct)
+    {
+        Coloured.AddRange(colours);
+
+        Day[] touched = colours
+            .Where(pair => pair.Value is not null)
+            .Select(pair => new Day
+            {
+                UserId = userId,
+                Date = pair.Key,
+                Colour = pair.Value,
+            })
+            .ToArray();
+
+        Saved.AddRange(touched);
+
+        return Task.FromResult(touched);
+    }
+
     public Task<Day[]> ApplyShiftAsync(
         int userId,
         DateOnly[] dates,

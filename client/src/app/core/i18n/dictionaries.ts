@@ -635,6 +635,28 @@ export const RU: Dictionary = {
     'Берёт цвет своего места работы. Выберите свой, чтобы отличать две смены в одном месте.',
   'Click the same colour again to go back to the place’s.':
     'Нажмите тот же цвет ещё раз, чтобы вернуть цвет места.',
+  // Colouring
+  Paint: 'Красить',
+  Erase: 'Стереть',
+  'Click to paint': 'кликайте по дням',
+  'Click to clear': 'кликайте, чтобы стереть',
+  'Colour schemes': 'Цветовые схемы',
+  'New scheme': 'Новая схема',
+  'Weekends, 2/2, night week…': 'Выходные, 2/2, ночная неделя…',
+  'Repeats by': 'Повтор по',
+  'Day of week': 'Дням недели',
+  Rotation: 'Ротации',
+  'Fixed to the days of the week — for a rota that repeats weekly.':
+    'Привязана к дням недели — для графика, который повторяется каждую неделю.',
+  'Counts days from a start date, so 2/2 and 4/2 keep their step across months.':
+    'Считает дни от даты старта, поэтому 2/2 и 4/2 не сбиваются при переходе через месяц.',
+  'Cycle length': 'Длина цикла',
+  'Apply to': 'Применить к',
+  Colours: 'Покрасит',
+  'Nothing to colour over those dates.': 'На этих датах красить нечего.',
+  'Save scheme': 'Сохранить схему',
+  'Colour the calendar': 'Покрасить',
+  'Saved schemes': 'Сохранённые схемы',
 };
 
 export const UK: Dictionary = {
@@ -1255,4 +1277,26 @@ export const UK: Dictionary = {
     'Бере колір свого місця роботи. Оберіть власний, щоб відрізняти дві зміни в одному місці.',
   'Click the same colour again to go back to the place’s.':
     'Натисніть той самий колір ще раз, щоб повернути колір місця.',
+  // Colouring
+  Paint: 'Фарбувати',
+  Erase: 'Стерти',
+  'Click to paint': 'клікайте по днях',
+  'Click to clear': 'клікайте, щоб стерти',
+  'Colour schemes': 'Колірні схеми',
+  'New scheme': 'Нова схема',
+  'Weekends, 2/2, night week…': 'Вихідні, 2/2, нічний тиждень…',
+  'Repeats by': 'Повтор за',
+  'Day of week': 'Днями тижня',
+  Rotation: 'Ротацією',
+  'Fixed to the days of the week — for a rota that repeats weekly.':
+    'Прив’язана до днів тижня — для графіка, що повторюється щотижня.',
+  'Counts days from a start date, so 2/2 and 4/2 keep their step across months.':
+    'Рахує дні від дати старту, тож 2/2 і 4/2 не збиваються при переході через місяць.',
+  'Cycle length': 'Довжина циклу',
+  'Apply to': 'Застосувати до',
+  Colours: 'Пофарбує',
+  'Nothing to colour over those dates.': 'На цих датах фарбувати нічого.',
+  'Save scheme': 'Зберегти схему',
+  'Colour the calendar': 'Пофарбувати',
+  'Saved schemes': 'Збережені схеми',
 };

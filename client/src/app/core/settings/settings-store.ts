@@ -29,6 +29,31 @@ export type DayFill = 'edge' | 'full';
  */
 export type WeekdayShifts = Partial<Record<number, number>>;
 
+/**
+ * A named way of colouring a calendar. Two shapes, because people describe
+ * their week in two different ways:
+ *
+ *   byWeekday — "Saturdays and Sundays green, Mondays red". Fixed to the days
+ *   of the week, so it lines up with a rota that repeats weekly.
+ *
+ *   cycle — a run of colours repeated from a start date, which is how a 2/2 or
+ *   4/2 rotation works: it has nothing to do with which weekday it falls on.
+ *
+ * A scheme uses one or the other. Both at once would need a rule about which
+ * wins, and there is no answer to that anyone would remember.
+ */
+export interface ColourScheme {
+  id: string;
+  name: string;
+  kind: 'weekday' | 'cycle';
+  /** Weekday number as Date#getDay counts it, 0 being Sunday. */
+  byWeekday: Partial<Record<number, string>>;
+  /** One entry per day of the cycle; null leaves that day alone. */
+  cycle: (string | null)[];
+  /** Where the cycle starts counting, as 'YYYY-MM-DD'. */
+  cycleFrom: string;
+}
+
 export interface Settings {
   theme: ThemeMode;
   language: Language;
@@ -77,6 +102,8 @@ export interface Settings {
   holidayCountry: string;
   /** The weekly pattern paint mode places. */
   weekdayShifts: WeekdayShifts;
+  /** Saved ways of colouring a calendar, by weekday or on a rotation. */
+  colourSchemes: ColourScheme[];
 }
 
 /**
@@ -127,6 +154,7 @@ const DEFAULTS: Settings = {
   dayFill: 'edge',
   holidayCountry: '',
   weekdayShifts: {},
+  colourSchemes: [],
 };
 
 const STORAGE_KEY = 'shifter.settings';
@@ -155,6 +183,7 @@ export class SettingsStore {
   readonly dayFill = computed(() => this._settings().dayFill);
   readonly holidayCountry = computed(() => this._settings().holidayCountry);
   readonly weekdayShifts = computed(() => this._settings().weekdayShifts);
+  readonly colourSchemes = computed(() => this._settings().colourSchemes);
 
   /** Whether the weekly pattern has anything in it to place. */
   readonly hasWeekdayPattern = computed(() =>
@@ -192,6 +221,27 @@ export class SettingsStore {
 
   clearWeekdayShifts(): void {
     this.update('weekdayShifts', {});
+  }
+
+  /** Adds a scheme or replaces the one with the same id. */
+  saveScheme(scheme: ColourScheme): void {
+    this._settings.update((current) => {
+      const existing = current.colourSchemes.some((item) => item.id === scheme.id);
+
+      return {
+        ...current,
+        colourSchemes: existing
+          ? current.colourSchemes.map((item) => (item.id === scheme.id ? scheme : item))
+          : [...current.colourSchemes, scheme],
+      };
+    });
+  }
+
+  deleteScheme(id: string): void {
+    this._settings.update((current) => ({
+      ...current,
+      colourSchemes: current.colourSchemes.filter((scheme) => scheme.id !== id),
+    }));
   }
 
   /** Formats an amount with the chosen currency label. */

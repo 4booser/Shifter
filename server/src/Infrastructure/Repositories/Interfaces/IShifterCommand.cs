@@ -40,6 +40,16 @@ public interface IShifterCommand
     Task<Day> UpsertDayAsync(Day incoming, CancellationToken ct);
 
     /// <summary>
+    /// Colours many days at once, each with its own value, creating the days
+    /// that do not exist yet. A month painted a day at a time is thirty round
+    /// trips and thirty chances for one of them to fail halfway.
+    /// </summary>
+    Task<Day[]> ApplyColourAsync(
+        int userId,
+        Dictionary<DateOnly, string?> colours,
+        CancellationToken ct);
+
+    /// <summary>
     /// Adds or removes one template across many dates, creating the missing
     /// days, in a single save. Returns the affected days.
     /// </summary>

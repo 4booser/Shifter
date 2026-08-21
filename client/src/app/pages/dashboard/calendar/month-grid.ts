@@ -9,7 +9,8 @@ import {
   WEEKDAY_LABELS_SUNDAY,
   keysBetween,
 } from '../../../core/calendar/calendar-date';
-import { CalendarStore } from '../../../core/calendar/calendar-store';
+import { CalendarStore, PAINT_SCOPES, PaintScope } from '../../../core/calendar/calendar-store';
+import { MARK_COLOURS } from '../../../core/calendar/calendar.models';
 import { SettingsStore } from '../../../core/settings/settings-store';
 import { Icon } from '../../../shared/icon/icon';
 import { MoneyPipe } from '../../../shared/money/money-pipe';
@@ -73,11 +74,36 @@ export class MonthGrid {
   protected readonly selected = this.store.selectedDate;
   protected readonly brush = this.store.brush;
   protected readonly patternBrush = this.store.patternBrush;
+  protected readonly colourBrush = this.store.colourBrush;
+  protected readonly paintScope = this.store.paintScope;
+  protected readonly scopes = PAINT_SCOPES;
+  protected readonly colours = MARK_COLOURS;
 
-  /** Either painting mode: both make a click place something. */
+  /** Any painting mode: all of them make a click change the day under it. */
   protected readonly painting = computed(
-    () => this.brush() !== null || this.patternBrush(),
+    () => this.brush() !== null || this.patternBrush() || this.colourBrush() !== null,
   );
+
+  /** Open only while colouring; the palette is long and steals the calendar. */
+  protected readonly colourBarOpen = signal(false);
+
+  protected toggleColourBar(): void {
+    const open = !this.colourBarOpen();
+
+    this.colourBarOpen.set(open);
+
+    // Leaving the bar drops the brush with it: a colour still armed behind a
+    // closed panel is how a stray click repaints a week.
+    if (!open) this.store.toggleColourBrush(null);
+  }
+
+  protected pickColour(colour: string | null): void {
+    this.store.toggleColourBrush(colour);
+  }
+
+  protected setScope(scope: PaintScope): void {
+    this.store.setPaintScope(scope);
+  }
 
   /** Where the drag started; null when no drag is in progress. */
   private readonly anchor = signal<string | null>(null);
@@ -112,7 +138,10 @@ export class MonthGrid {
     event.preventDefault();
 
     this.anchor.set(key);
-    this.dragging.set(new Set([key]));
+
+    // A week or a month lights up from the first press rather than only once
+    // the finger moves, so the scope is visible before anything is committed.
+    this.dragging.set(new Set(this.spread([key])));
   }
 
   protected onPointerEnter(key: string): void {
@@ -120,28 +149,55 @@ export class MonthGrid {
 
     if (from === null) return;
 
-    this.dragging.set(new Set(keysBetween(from, key)));
+    this.dragging.set(new Set(this.spread(keysBetween(from, key))));
+  }
+
+  /**
+   * The dates a gesture covers. Dragging picks a run of days; the scope then
+   * widens each of them to its week or its month, so "week" plus a two-day
+   * drag means both of those weeks rather than an argument about which one.
+   */
+  private spread(keys: string[]): string[] {
+    if (this.colourBrush() === null || this.paintScope() === 'day') return keys;
+
+    const widened = new Set<string>();
+
+    for (const key of keys) {
+      for (const day of this.store.scopeOf(key)) widened.add(day);
+    }
+
+    return [...widened];
   }
 
   /** Bound on the window so releasing outside the grid still commits. */
   protected onPointerUp(): void {
     const template = this.brush();
     const pattern = this.patternBrush();
+    const colour = this.colourBrush();
     const keys = [...this.dragging()];
 
     this.anchor.set(null);
     this.dragging.set(new Set());
 
-    if (keys.length === 0 || (template === null && !pattern)) return;
+    if (keys.length === 0) return;
+
+    if (template === null && !pattern && colour === null) return;
 
     // Opt-in guard: a stray drag over a month is easy to do by accident.
     if (keys.length > 1 && this.settings.confirmBulk()) {
-      const what = template === null ? 'the weekly pattern' : `"${template.name}"`;
+      const what = colour !== null
+        ? 'this colour'
+        : template === null
+          ? 'the weekly pattern'
+          : `"${template.name}"`;
 
       if (!window.confirm(`Apply ${what} to ${keys.length} days?`)) return;
     }
 
-    if (template === null) this.store.paintPattern(keys);
+    // The eraser is armed as an empty string so that "no brush" and "the brush
+    // that removes colour" stay different states; the store only knows null.
+    if (colour !== null) this.store.paintColour(keys, colour === '' ? null : colour);
+    else if (template === null) this.store.paintPattern(keys);
     else this.store.applyToDates(keys, template);
   }
 

@@ -1,0 +1,221 @@
+<app-modal [open]="open()" [title]="'Colour schemes' | t" (closed)="close()">
+  <div class="modal-form">
+    @if (schemes().length > 0) {
+      <div class="field">
+        <span class="field-label">{{ 'Saved schemes' | t }}</span>
+
+        <ul class="scheme-list">
+          @for (scheme of schemes(); track scheme.id) {
+            <li class="scheme-row" [class.is-editing]="editingId() === scheme.id">
+              <button type="button" class="scheme-open" (click)="edit(scheme)">
+                <span class="scheme-name">{{ scheme.name }}</span>
+
+                <!-- The colours themselves, in order, so a scheme is
+                     recognisable without opening it. -->
+                <span class="scheme-strip">
+                  @if (scheme.kind === 'weekday') {
+                    @for (day of weekdays(); track day.day) {
+                      <span
+                        class="scheme-dot"
+                        [style.background]="scheme.byWeekday[day.day] ?? 'transparent'"
+                      ></span>
+                    }
+                  } @else {
+                    @for (colour of scheme.cycle; track $index) {
+                      <span
+                        class="scheme-dot"
+                        [style.background]="colour ?? 'transparent'"
+                      ></span>
+                    }
+                  }
+                </span>
+              </button>
+
+              <button
+                type="button"
+                class="icon-button is-small is-danger"
+                [attr.aria-label]="'Delete' | t"
+                (click)="remove(scheme.id)"
+              >
+                ×
+              </button>
+            </li>
+          }
+        </ul>
+
+        <button type="button" class="button is-quiet is-small" (click)="startNew()">
+          {{ 'New scheme' | t }}
+        </button>
+      </div>
+    }
+
+    <label class="field">
+      <span class="field-label">{{ 'Name' | t }}</span>
+      <input
+        type="text"
+        maxlength="40"
+        [ngModel]="name()"
+        (ngModelChange)="name.set($event)"
+        [placeholder]="'Weekends, 2/2, night week…' | t"
+      />
+    </label>
+
+    <div class="field">
+      <span class="field-label">{{ 'Repeats by' | t }}</span>
+
+      <div class="segmented">
+        <button
+          type="button"
+          class="segment"
+          [class.is-active]="kind() === 'weekday'"
+          (click)="kind.set('weekday')"
+        >
+          {{ 'Day of week' | t }}
+        </button>
+        <button
+          type="button"
+          class="segment"
+          [class.is-active]="kind() === 'cycle'"
+          (click)="kind.set('cycle')"
+        >
+          {{ 'Rotation' | t }}
+        </button>
+      </div>
+
+      <small class="field-hint">
+        @if (kind() === 'weekday') {
+          {{ 'Fixed to the days of the week — for a rota that repeats weekly.' | t }}
+        } @else {
+          {{ 'Counts days from a start date, so 2/2 and 4/2 keep their step across months.' | t }}
+        }
+      </small>
+    </div>
+
+    @if (kind() === 'weekday') {
+      <ul class="pattern-list">
+        @for (day of weekdays(); track day.day) {
+          <li class="pattern-row">
+            <span class="pattern-day">{{ day.label | t }}</span>
+
+            <div class="swatch-row">
+              @for (option of colours; track option.value) {
+                <button
+                  type="button"
+                  class="swatch is-tiny"
+                  [class.is-active]="byWeekday()[day.day] === option.value"
+                  [style.background]="option.value"
+                  [attr.title]="option.label"
+                  (click)="setWeekday(day.day, option.value)"
+                ></button>
+              }
+            </div>
+          </li>
+        }
+      </ul>
+    } @else {
+      <div class="field-row">
+        <label class="field">
+          <span class="field-label">{{ 'Cycle length' | t }}</span>
+          <input
+            type="number"
+            min="2"
+            max="31"
+            [ngModel]="cycle().length"
+            (ngModelChange)="setCycleLength(+$event)"
+          />
+        </label>
+
+        <label class="field">
+          <span class="field-label">{{ 'Starting' | t }}</span>
+          <input type="date" [ngModel]="cycleFrom()" (ngModelChange)="cycleFrom.set($event)" />
+        </label>
+      </div>
+
+      <ul class="pattern-list">
+        @for (colour of cycle(); track $index) {
+          <li class="pattern-row">
+            <span class="pattern-day">{{ 'Day' | t }} {{ $index + 1 }}</span>
+
+            <div class="swatch-row">
+              @for (option of colours; track option.value) {
+                <button
+                  type="button"
+                  class="swatch is-tiny"
+                  [class.is-active]="colour === option.value"
+                  [style.background]="option.value"
+                  [attr.title]="option.label"
+                  (click)="setCycleDay($index, option.value)"
+                ></button>
+              }
+            </div>
+          </li>
+        }
+      </ul>
+    }
+
+    <div class="field">
+      <span class="field-label">{{ 'Apply to' | t }}</span>
+
+      <div class="segmented">
+        @for (option of scopes; track option.value) {
+          <button
+            type="button"
+            class="segment"
+            [class.is-active]="scope() === option.value"
+            (click)="scope.set(option.value)"
+          >
+            {{ option.label | t }}
+          </button>
+        }
+      </div>
+    </div>
+
+    @if (scope() === 'ahead') {
+      <label class="field">
+        <span class="field-label">{{ 'How many months' | t }}</span>
+        <input
+          type="number"
+          min="1"
+          max="12"
+          [ngModel]="months()"
+          (ngModelChange)="months.set(+$event)"
+        />
+      </label>
+    } @else if (scope() === 'range') {
+      <div class="field-row">
+        <label class="field">
+          <span class="field-label">{{ 'From' | t }}</span>
+          <input type="date" [ngModel]="from()" (ngModelChange)="from.set($event)" />
+        </label>
+
+        <label class="field">
+          <span class="field-label">{{ 'To' | t }}</span>
+          <input type="date" [min]="from()" [ngModel]="until()" (ngModelChange)="until.set($event)" />
+        </label>
+      </div>
+    }
+
+    @if (willPaint() > 0) {
+      <p class="field-hint">
+        {{ 'Colours' | t }} <strong>{{ willPaint() }}</strong> / {{ dates().length }}
+        {{ 'days' | t }}.
+      </p>
+    } @else {
+      <p class="field-hint">{{ 'Nothing to colour over those dates.' | t }}</p>
+    }
+
+    <div class="modal-actions">
+      <button type="button" class="button is-quiet" [disabled]="!valid()" (click)="save()">
+        {{ 'Save scheme' | t }}
+      </button>
+      <button
+        type="button"
+        class="button is-primary"
+        [disabled]="!valid() || willPaint() === 0 || saving()"
+        (click)="apply()"
+      >
+        {{ 'Colour the calendar' | t }}
+      </button>
+    </div>
+  </div>
+</app-modal>

@@ -33,6 +33,16 @@
       </button>
     </div>
 
+    <button
+      type="button"
+      class="button is-quiet"
+      [class.is-active]="colourBarOpen()"
+      (click)="toggleColourBar()"
+    >
+      <app-icon name="brush" />
+      {{ 'Colour' | t }}
+    </button>
+
     <button type="button" class="button is-quiet" (click)="today()">
       <app-icon name="calendar" />
       {{ 'Today' | t }}
@@ -45,6 +55,57 @@
       <app-icon name="chevron-right" [size]="18" />
     </button>
   </header>
+
+  @if (colourBarOpen()) {
+    <div class="colour-bar">
+      <!-- How much one click covers. A month of colour is otherwise thirty
+           clicks, which is the complaint this exists to answer. -->
+      <div class="segmented" role="group" [attr.aria-label]="'Paint' | t">
+        @for (option of scopes; track option.value) {
+          <button
+            type="button"
+            class="segment"
+            [class.is-active]="paintScope() === option.value"
+            (click)="setScope(option.value)"
+          >
+            {{ option.label | t }}
+          </button>
+        }
+      </div>
+
+      <div class="swatch-row">
+        @for (option of colours; track option.value) {
+          <button
+            type="button"
+            class="swatch"
+            [class.is-active]="colourBrush() === option.value"
+            [style.background]="option.value"
+            [attr.title]="option.label"
+            [attr.aria-pressed]="colourBrush() === option.value"
+            (click)="pickColour(option.value)"
+          ></button>
+        }
+
+        <!-- Clearing is a colour you can paint with, which is the only way to
+             wipe a stretch without visiting every day in it. -->
+        <button
+          type="button"
+          class="swatch is-clear"
+          [class.is-active]="colourBrush() === ''"
+          [attr.title]="'Erase' | t"
+          (click)="pickColour('')"
+        >
+          <app-icon name="close" [size]="13" />
+        </button>
+      </div>
+
+      @if (colourBrush(); as active) {
+        <span class="colour-hint">
+          {{ (active === '' ? 'Click to clear' : 'Click to paint') | t }}
+        </span>
+      }
+    </div>
+  }
 
   @if (brush(); as template) {
     <p class="brush-bar">

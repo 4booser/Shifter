@@ -208,6 +208,34 @@ public partial class DayHandler : IDayHandler
         return trimmed.ToUpperInvariant();
     }
 
+    public async Task<DayDto[]> ColourAsync(
+        BulkColourDto request,
+        int userId,
+        CancellationToken ct)
+    {
+        if (request.days is null or [])
+            throw new ValidationException("No days given.");
+
+        // Same guard as the bulk shift call: a runaway range would otherwise
+        // paint decades, and nobody meant to.
+        if (request.days.Length > MaxBulkDates)
+            throw new ValidationException($"At most {MaxBulkDates} days at a time.");
+
+        // Last value wins on a repeated date rather than the request being
+        // rejected: a pattern laid over an overlapping selection is a normal
+        // thing to send, and the caller's intent is plain.
+        Dictionary<DateOnly, string?> colours = request.days
+            .GroupBy(entry => entry.date)
+            .ToDictionary(group => group.Key, group => NormaliseColour(group.Last().colour));
+
+        Day[] touched = await _shifterCommand.ApplyColourAsync(userId, colours, ct);
+
+        Location[] places = await _shifterQuery.GetLocationsAsync(userId, true, ct);
+        Dictionary<int, Location> byId = places.ToDictionary(place => place.Id);
+
+        return touched.Select(day => ToDto(day, byId)).ToArray();
+    }
+
     private async Task<List<DayShift>> ResolveShiftsAsync(
         DayShiftSaveDto[]? requested,
         int userId,

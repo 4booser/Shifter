@@ -159,6 +159,16 @@ export class CalendarApi {
     return this.http.delete<void>(`${API}/events/${id}`);
   }
 
+  /**
+   * Colours many days at once, each with its own value. A month painted a day
+   * at a time is thirty round trips and thirty chances to fail halfway.
+   */
+  colourDays(
+    days: { date: string; colour: string | null }[],
+  ): Observable<CalendarDayData[]> {
+    return this.http.post<CalendarDayData[]>(`${API}/days/colour`, { days });
+  }
+
   /** One template across many dates in a single request. */
   bulk(dates: string[], shiftId: number, mode: 'add' | 'remove'): Observable<CalendarDayData[]> {
     return this.http.post<CalendarDayData[]>(`${API}/days/bulk`, {

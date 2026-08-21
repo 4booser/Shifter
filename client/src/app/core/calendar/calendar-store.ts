@@ -828,13 +828,36 @@ export class CalendarStore {
   }
 
   /** The server refuses when history points at it, and says so. */
-  deleteLocation(id: number): void {
+  /**
+   * `onConflict` fires when the server refuses because templates still use the
+   * place. The caller decides what to offer next, rather than the store
+   * guessing — the second attempt destroys history and is not the store's call.
+   */
+  deleteLocation(id: number, detach = false, onConflict?: (message: string) => void): void {
     this._error.set(null);
 
-    this.api.deleteLocation(id).subscribe({
-      next: () =>
-        this._locations.update((list) => list.filter((item) => item.id !== id)),
-      error: (error: unknown) => this._error.set(apiErrorMessage(error)),
+    this.api.deleteLocation(id, detach).subscribe({
+      next: () => {
+        this._locations.update((list) => list.filter((item) => item.id !== id));
+
+        // The templates that pointed at it lost their colour and rules, and
+        // the calendar reads both off them.
+        if (detach) {
+          this.loadCatalogueShifts();
+          this.reload();
+        }
+      },
+      error: (error: unknown) => {
+        const message = apiErrorMessage(error);
+
+        if (onConflict !== undefined && isConflict(error)) {
+          onConflict(message);
+
+          return;
+        }
+
+        this._error.set(message);
+      },
     });
   }
 
@@ -914,6 +937,11 @@ function isOffline(error: unknown): boolean {
   const status = (error as { status?: number } | null)?.status;
 
   return status === 0 || status === 503 || !navigator.onLine;
+}
+
+/** The server saying "not like that" rather than "no": there is a way through. */
+function isConflict(error: unknown): boolean {
+  return (error as { status?: number } | null)?.status === 409;
 }
 
 export interface MonthTotal {

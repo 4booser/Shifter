@@ -7,6 +7,20 @@ import { MoneyPipe } from '../../../shared/money/money-pipe';
 import { Icon } from '../../../shared/icon/icon';
 import { Modal } from '../../../shared/modal/modal';
 
+/**
+ * A period the payment is being recorded against, handed in from the payout
+ * calendar. Without it the modal defaults to whatever range is on screen, which
+ * is right when opening it cold and wrong when the question was "this place,
+ * this period, is it paid".
+ */
+export interface PayoutPrefill {
+  locationId: number | null;
+  from: string;
+  to: string;
+  /** What the period worked out to; the amount to confirm or correct. */
+  expected: number;
+}
+
 @Component({
   selector: 'app-payout-modal',
   imports: [TPipe, FormsModule, Modal, Icon, MoneyPipe],
@@ -14,7 +28,10 @@ import { Modal } from '../../../shared/modal/modal';
 })
 export class PayoutModal {
   readonly open = input.required<boolean>();
+  readonly prefill = input<PayoutPrefill | null>(null);
   readonly closed = output<void>();
+  /** Fires only when a payment was actually recorded, so callers can reload. */
+  readonly saved = output<void>();
 
   private readonly store = inject(CalendarStore);
 
@@ -38,17 +55,32 @@ export class PayoutModal {
   });
 
   constructor() {
-    // Defaults to the period on screen, which is what is being reconciled.
     effect(() => {
       if (!this.open()) return;
 
+      this.received.set(new Date().toISOString().slice(0, 10));
+      this.note.set('');
+
+      const asked = this.prefill();
+
+      // Opened against a specific period: the amount is filled in with what was
+      // calculated, because confirming a figure is a glance and typing it again
+      // is a chore that also invites a typo.
+      if (asked !== null) {
+        this.from.set(asked.from);
+        this.to.set(asked.to);
+        this.amount.set(asked.expected === 0 ? null : round(asked.expected));
+        this.locationId.set(asked.locationId);
+
+        return;
+      }
+
+      // Otherwise the period on screen, which is what is being reconciled.
       const range = this.store.summaryRangeValue();
 
       this.from.set(range.from);
       this.to.set(range.to);
-      this.received.set(new Date().toISOString().slice(0, 10));
       this.amount.set(null);
-      this.note.set('');
 
       // One place means there is nothing to choose; more than one and the
       // payment has to say who it came from or it reconciles against nothing.
@@ -80,7 +112,13 @@ export class PayoutModal {
         note: this.note().trim() === '' ? null : this.note(),
         location_id: this.locationId(),
       },
-      () => this.closed.emit(),
+      () => {
+        this.saved.emit();
+        this.closed.emit();
+      },
     );
   }
 }
+
+/** Money to two places; the input is a number field and rejects long tails. */
+const round = (value: number): number => Math.round(value * 100) / 100;

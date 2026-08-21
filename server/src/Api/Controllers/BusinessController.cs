@@ -68,9 +68,12 @@ public class BusinessController : ControllerBase
 
     [HttpDelete]
     [Route("locations/{id:int}")]
-    public async Task<IActionResult> DeleteLocation(int id, CancellationToken ct)
+    public async Task<IActionResult> DeleteLocation(
+        int id,
+        [FromQuery] bool detach,
+        CancellationToken ct)
     {
-        await _locationHandler.DeleteAsync(CurrentUserId(), id, ct);
+        await _locationHandler.DeleteAsync(CurrentUserId(), id, detach, ct);
 
         return NoContent();
     }

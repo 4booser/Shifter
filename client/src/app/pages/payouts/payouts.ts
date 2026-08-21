@@ -7,6 +7,7 @@ import { CalendarApi } from '../../core/calendar/calendar-api';
 import { addMonths, currentMonth, todayKey } from '../../core/calendar/calendar-date';
 import { PayPeriodRow, Reconciliation } from '../../core/calendar/calendar.models';
 import { I18n, TPipe } from '../../core/i18n/i18n';
+import { PayoutModal, PayoutPrefill } from '../dashboard/tools/payout-modal';
 import { Icon } from '../../shared/icon/icon';
 import { MoneyPipe } from '../../shared/money/money-pipe';
 
@@ -23,7 +24,7 @@ const MONTHS_BACK = 6;
  */
 @Component({
   selector: 'app-payouts',
-  imports: [DecimalPipe, RouterLink, TPipe, MoneyPipe, Icon],
+  imports: [DecimalPipe, RouterLink, TPipe, MoneyPipe, Icon, PayoutModal],
   templateUrl: './payouts.html',
 })
 export class Payouts {
@@ -37,9 +38,41 @@ export class Payouts {
   /** How many months back the view covers; forward always reaches next month. */
   protected readonly monthsBack = signal(MONTHS_BACK);
 
+  /**
+   * Recording a payment used to mean leaving this page, finding the button in
+   * the calendar's sidebar and retyping the period and amount this page was
+   * already showing. It is the one action the page exists to provoke, so it
+   * belongs on the row that provokes it.
+   */
+  protected readonly payoutOpen = signal(false);
+  protected readonly prefill = signal<PayoutPrefill | null>(null);
+
+  protected recordPayment(row: PayPeriodRow): void {
+    this.prefill.set({
+      locationId: row.location_id,
+      from: row.period_from,
+      to: row.period_to,
+      expected: row.expected,
+    });
+
+    this.payoutOpen.set(true);
+  }
+
+  /**
+   * Bumped to refetch. The load lives in an effect keyed on the range, and a
+   * payment recorded here changes the answer without changing the range.
+   */
+  private readonly reloadToken = signal(0);
+
+  protected reload(): void {
+    this.reloadToken.update((value) => value + 1);
+  }
+
   constructor() {
     effect(() => {
       const back = this.monthsBack();
+
+      this.reloadToken();
       const now = currentMonth();
       const start = addMonths(now, -back);
 

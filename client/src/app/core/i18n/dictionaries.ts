@@ -602,6 +602,22 @@ export const RU: Dictionary = {
   // Share card
   'After tax': 'После налога',
   'Overtime hours': 'Часы переработки',
+  // Places, payouts and painting
+  'Days already worked will lose this place’s tip-out, meal and tax rules, so what they are worth will change. Delete anyway?':
+    'Отработанные дни потеряют правила этого места — отчисления с чая, питание и налог, — поэтому их сумма изменится. Всё равно удалить?',
+  'Top up': 'Доплата',
+  'Coloured days': 'Покраска дня',
+  Edge: 'Полосой',
+  Filled: 'Заливкой',
+  'Fill at once': 'Залить сразу',
+  'Months ahead': 'Месяцы вперёд',
+  'Chosen dates': 'Выбранные даты',
+  'How many months': 'Сколько месяцев',
+  'Click day by day': 'Кликать по дням',
+  Fill: 'Залить',
+  'Nothing to place over those dates.': 'На этих датах ставить нечего.',
+  'Will place': 'Поставит',
+  'shifts over': 'смен на',
 };
 
 export const UK: Dictionary = {
@@ -1189,4 +1205,20 @@ export const UK: Dictionary = {
   // Share card
   'After tax': 'Після податку',
   'Overtime hours': 'Години понаднормово',
+  // Places, payouts and painting
+  'Days already worked will lose this place’s tip-out, meal and tax rules, so what they are worth will change. Delete anyway?':
+    'Відпрацьовані дні втратять правила цього місця — відрахування з чайових, харчування й податок, — тож їхня сума зміниться. Все одно видалити?',
+  'Top up': 'Доплата',
+  'Coloured days': 'Фарбування дня',
+  Edge: 'Смугою',
+  Filled: 'Заливкою',
+  'Fill at once': 'Залити одразу',
+  'Months ahead': 'Місяці вперед',
+  'Chosen dates': 'Обрані дати',
+  'How many months': 'Скільки місяців',
+  'Click day by day': 'Клікати по днях',
+  Fill: 'Залити',
+  'Nothing to place over those dates.': 'На цих датах ставити нічого.',
+  'Will place': 'Поставить',
+  'shifts over': 'змін на',
 };

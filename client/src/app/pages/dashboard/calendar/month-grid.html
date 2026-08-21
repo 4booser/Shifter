@@ -109,6 +109,7 @@
             [class.is-painting]="painting()"
             [class.is-dragged]="isDragged(day.key)"
             [class.is-coloured]="dayColour(day.key) !== null"
+            [class.is-filled]="dayFill() === 'full'"
             [class.is-holiday]="holidayName(day.key) !== null"
             [style.--day-colour]="dayColour(day.key)"
             [attr.aria-pressed]="day.key === selected()"

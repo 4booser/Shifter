@@ -136,6 +136,16 @@ public sealed class FakeShifterCommand : IShifterCommand
         return Task.CompletedTask;
     }
 
+    /// <summary>Records which place was cleared off its templates, if any.</summary>
+    public int? DetachedFrom { get; private set; }
+
+    public Task DetachShiftsFromLocationAsync(int locationId, CancellationToken ct)
+    {
+        DetachedFrom = locationId;
+
+        return Task.CompletedTask;
+    }
+
     public Task DeleteSalesAsync(Sales sales, CancellationToken ct)
     {
         Deleted.Add(sales);

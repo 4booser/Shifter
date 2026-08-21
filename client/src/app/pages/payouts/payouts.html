@@ -97,6 +97,15 @@
               </span>
 
               <span class="pay-amount">{{ row.expected | money }}</span>
+
+              <button
+                type="button"
+                class="button is-quiet is-small pay-action"
+                (click)="recordPayment(row)"
+              >
+                <app-icon name="wallet" [size]="13" />
+                {{ 'Paid' | t }}
+              </button>
             </div>
           }
         </div>
@@ -139,6 +148,21 @@
                   <small>{{ row.difference > 0 ? '+' : '' }}{{ row.difference | money }}</small>
                 }
               </span>
+
+              <!-- A period that came up short is still owed something, so it
+                   keeps the button; one paid in full has nothing to add. -->
+              @if (row.status === 'short') {
+                <button
+                  type="button"
+                  class="button is-quiet is-small pay-action"
+                  (click)="recordPayment(row)"
+                >
+                  <app-icon name="wallet" [size]="13" />
+                  {{ 'Top up' | t }}
+                </button>
+              } @else {
+                <span class="pay-action"></span>
+              }
             </div>
           }
         </div>
@@ -156,3 +180,10 @@
     </p>
   </div>
 </div>
+
+<app-payout-modal
+  [open]="payoutOpen()"
+  [prefill]="prefill()"
+  (saved)="reload()"
+  (closed)="payoutOpen.set(false)"
+/>

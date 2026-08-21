@@ -1,5 +1,11 @@
 <app-modal [open]="open()" [title]="title()" (closed)="close()">
   <div class="modal-form">
+    <!-- A refusal used to be reported on the page behind the sheet, where the
+         dialog covered it: the button appeared to do nothing at all. -->
+    @if (error(); as text) {
+      <p class="alert" role="alert">{{ text }}</p>
+    }
+
     @if (locations().length > 0) {
       <section>
         <h3 class="block-title">{{ 'Your places' | t }}</h3>

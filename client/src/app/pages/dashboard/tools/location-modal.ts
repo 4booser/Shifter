@@ -32,6 +32,7 @@ export class LocationModal {
   // places rarely end up indistinguishable.
   protected readonly colours = MARK_COLOURS;
   protected readonly locations = this.store.locations;
+  protected readonly error = this.store.error;
   protected readonly archived = this.store.archivedLocations;
 
   protected readonly editing = signal<WorkLocation | null>(null);
@@ -90,10 +91,23 @@ export class LocationModal {
     this.currency.set(location.currency);
   }
 
+  /**
+   * Two questions rather than one, because they are different questions. The
+   * first is "did you mean to". The second only appears when templates still
+   * point at the place, and it is asking whether losing that place's tip-out,
+   * meal and tax rules on days already worked is acceptable — which is not
+   * something to bury in the first prompt, where nobody would read it.
+   */
   protected remove(location: WorkLocation): void {
-    if (window.confirm(`${location.name} — ${this.deletePrompt}`)) {
-      this.store.deleteLocation(location.id);
-    }
+    if (!window.confirm(`${location.name} — ${this.deletePrompt}`)) return;
+
+    this.store.deleteLocation(location.id, false, (message) => {
+      const question = `${message}\n\n${this.i18n.t(
+        'Days already worked will lose this place’s tip-out, meal and tax rules, so what they are worth will change. Delete anyway?',
+      )}`;
+
+      if (window.confirm(question)) this.store.deleteLocation(location.id, true);
+    });
   }
 
   protected get deletePrompt(): string {

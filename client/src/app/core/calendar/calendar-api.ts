@@ -108,8 +108,14 @@ export class CalendarApi {
     });
   }
 
-  deleteLocation(id: number): Observable<void> {
-    return this.http.delete<void>(`${API}/locations/${id}`);
+  /**
+   * Refused while shift templates point at the place. `detach` clears it off
+   * them first — destructive, so the caller asks for it deliberately.
+   */
+  deleteLocation(id: number, detach = false): Observable<void> {
+    return this.http.delete<void>(`${API}/locations/${id}`, {
+      params: new HttpParams().set('detach', detach),
+    });
   }
 
   deleteSales(id: number): Observable<void> {

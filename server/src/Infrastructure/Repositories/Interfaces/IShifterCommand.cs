@@ -14,6 +14,12 @@ public interface IShifterCommand
     Task<int> CountShiftsAtLocationAsync(int locationId, CancellationToken ct);
     Task DeleteLocationAsync(Location location, CancellationToken ct);
 
+    /// <summary>
+    /// Clears the place off every template pointing at it, so the place can go
+    /// without taking the templates — or the days they sit on — with it.
+    /// </summary>
+    Task DetachShiftsFromLocationAsync(int locationId, CancellationToken ct);
+
     /// <summary>How many recorded days used this position.</summary>
     Task<int> CountSalesUsageAsync(int salesId, CancellationToken ct);
     Task DeleteSalesAsync(Sales sales, CancellationToken ct);

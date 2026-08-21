@@ -13,6 +13,7 @@ import {
   CURRENCY_PRESETS,
   CalendarView,
   CellTimes,
+  DayFill,
   Density,
   Language,
   SettingsStore,
@@ -36,6 +37,11 @@ export class SettingsModal {
   protected readonly langs = LANGS;
   protected readonly currencies = CURRENCY_PRESETS;
   protected readonly countries = HOLIDAY_COUNTRIES;
+
+  protected readonly dayFillOptions: { value: DayFill; label: string }[] = [
+    { value: 'edge', label: 'Edge' },
+    { value: 'full', label: 'Filled' },
+  ];
 
   protected readonly cellTimeOptions: { value: CellTimes; label: string }[] = [
     { value: 'none', label: 'None' },
@@ -80,6 +86,10 @@ export class SettingsModal {
 
   protected setCellTimes(value: CellTimes): void {
     this.store.update('cellTimes', value);
+  }
+
+  protected setDayFill(value: DayFill): void {
+    this.store.update('dayFill', value);
   }
 
   protected setHolidayCountry(value: string): void {

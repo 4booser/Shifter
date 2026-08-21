@@ -80,21 +80,26 @@ public partial class LocationHandler : ILocationHandler
         return ToDto(location);
     }
 
-    public async Task DeleteAsync(int userId, int id, CancellationToken ct)
+    public async Task DeleteAsync(int userId, int id, bool detach, CancellationToken ct)
     {
         Location location = await _shifterQuery.GetLocationAsync(userId, id, ct)
             ?? throw new NotFoundException("Location does not exist.");
 
         int shifts = await _shifterCommand.CountShiftsAtLocationAsync(id, ct);
 
-        // Deleting would strip the place off every shift that used it and
-        // silently change what those days are worth. Archiving keeps the
-        // history and gets it out of the way, which is what is actually wanted.
-        if (shifts > 0)
+        // Deleting takes the place off every shift that used it, and with it
+        // that place's tip-out, meal and tax rules — so days already worked
+        // stop being worth what they were. That is a real consequence and the
+        // caller has to ask for it explicitly; refusing outright, as this used
+        // to, left no way to remove a place that was simply a mistake.
+        if (shifts > 0 && !detach)
         {
             throw new ConflictException(
-                $"{shifts} shifts still use this place. Archive it instead.");
+                $"{shifts} shifts still use this place. Delete it anyway to "
+                + "remove it from them, or archive it to keep the history.");
         }
+
+        if (shifts > 0) await _shifterCommand.DetachShiftsFromLocationAsync(id, ct);
 
         await _shifterCommand.DeleteLocationAsync(location, ct);
     }

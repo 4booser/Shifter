@@ -46,6 +46,16 @@ public class ShifterCommand : IShifterCommand
         await _db.SaveChangesAsync(ct);
     }
 
+    public async Task DetachShiftsFromLocationAsync(int locationId, CancellationToken ct)
+    {
+        // The templates outlive the place: a shift with no location still has
+        // its own hours and rate, and deleting them alongside would take the
+        // days they sit on with them.
+        await _db.Shifts
+            .Where(shift => shift.LocationId == locationId)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(s => s.LocationId, _ => null), ct);
+    }
+
     public async Task<int> CountSalesUsageAsync(int salesId, CancellationToken ct)
     {
         return await _db.DaySales.CountAsync(entry => entry.SalesId == salesId, ct);

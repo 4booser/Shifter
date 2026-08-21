@@ -14,6 +14,14 @@ export type Language = 'en' | 'ru' | 'uk';
 export type CellTimes = 'none' | 'start' | 'range';
 
 /**
+ * How a day wears the colour put on it. A bar reads as an annotation and keeps
+ * the cell's own contrast; a full wash reads as a category and is easier to
+ * scan across a month, at the cost of everything sitting on tinted ground.
+ * Neither is right for everyone, which is why it is a setting.
+ */
+export type DayFill = 'edge' | 'full';
+
+/**
  * Which template belongs on which weekday, keyed by day number the way
  * Date#getDay counts them — 0 is Sunday. Used by the calendar's paint mode:
  * with a pattern set, clicking a Tuesday puts the Tuesday shift on it without
@@ -61,6 +69,8 @@ export interface Settings {
   notifyAt: string;
   /** Whether calendar cells carry the shift's times, and how much of them. */
   cellTimes: CellTimes;
+  /** Whether a coloured day is washed through or marked down one edge. */
+  dayFill: DayFill;
   /** ISO country code for the public holidays to mark. Empty shows none. */
   holidayCountry: string;
   /** The weekly pattern paint mode places. */
@@ -111,6 +121,7 @@ const DEFAULTS: Settings = {
   notifyUnclosed: false,
   notifyAt: '21:00',
   cellTimes: 'none',
+  dayFill: 'edge',
   holidayCountry: '',
   weekdayShifts: {},
 };
@@ -138,6 +149,7 @@ export class SettingsStore {
   readonly hideAmounts = computed(() => this._settings().hideAmounts);
   readonly remindUnclosed = computed(() => this._settings().remindUnclosed);
   readonly cellTimes = computed(() => this._settings().cellTimes);
+  readonly dayFill = computed(() => this._settings().dayFill);
   readonly holidayCountry = computed(() => this._settings().holidayCountry);
   readonly weekdayShifts = computed(() => this._settings().weekdayShifts);
 

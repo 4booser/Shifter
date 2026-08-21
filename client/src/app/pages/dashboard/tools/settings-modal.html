@@ -173,6 +173,23 @@
       </div>
     </div>
 
+    <div class="field">
+      <span class="field-label">{{ 'Coloured days' | t }}</span>
+
+      <div class="segmented">
+        @for (option of dayFillOptions; track option.value) {
+          <button
+            type="button"
+            class="segment"
+            [class.is-active]="settings().dayFill === option.value"
+            (click)="setDayFill(option.value)"
+          >
+            {{ option.label | t }}
+          </button>
+        }
+      </div>
+    </div>
+
     <label class="field">
       <span class="field-label">{{ 'Public holidays' | t }}</span>
       <select

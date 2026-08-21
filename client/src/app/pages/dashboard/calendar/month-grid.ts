@@ -207,6 +207,8 @@ export class MonthGrid {
     return this.store.days().get(key)?.colour ?? null;
   }
 
+  protected readonly dayFill = this.settings.dayFill;
+
   protected holidayName(key: string): string | null {
     return this.store.holidays().get(key)?.name ?? null;
   }

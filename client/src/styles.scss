@@ -1387,7 +1387,7 @@ body {
 
 .pattern-row {
   display: grid;
-  grid-template-columns: 6.5rem 1fr;
+  grid-template-columns: minmax(0, 8rem) minmax(0, 1fr);
   align-items: center;
   gap: 0.5rem;
 }
@@ -1396,6 +1396,46 @@ body {
   color: var(--text-muted);
   font-size: 0.8125rem;
   font-weight: 550;
+}
+
+/* ==== Text that has to give way ====
+
+   Every one of these was laid out against an English label and broke the first
+   time a longer translation met it. The pattern is always the same: a flex or
+   grid child that cannot shrink below its content, sitting next to something
+   that also cannot, so one lands on top of the other. Allowing the text to
+   ellipsis is what stops it — the full string is still in the title or on the
+   next line, and nothing overlaps. */
+
+.pay-where,
+.pay-when,
+.cover-who,
+.settings-link-body {
+  min-width: 0;
+
+  > * {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.pay-amount {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The action on a payout row keeps its size and lets the rest give way. */
+.pay-action {
+  flex: none;
+  justify-self: end;
+  white-space: nowrap;
+}
+
+/* A slider's label wraps rather than running under the track. */
+.slider-row > span:first-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 /* ==== Joining a team ==== */
@@ -1480,7 +1520,11 @@ body {
 
 .toggle-row {
   display: flex;
-  align-items: center;
+  /* The label is a whole sentence beside a fixed switch, and wraps to two
+     lines in most languages that are not English. Aligning to the top keeps
+     the switch level with the first line rather than floating in the middle. */
+  align-items: flex-start;
+  text-align: left;
   gap: 0.5rem;
   width: 100%;
   padding: 0.25rem 0;
@@ -1501,6 +1545,8 @@ body {
 .toggle {
   position: relative;
   flex: none;
+  /* Sits level with the first line of a label that may wrap to several. */
+  margin-top: 0.125rem;
   width: 2rem;
   height: 1.125rem;
   background: var(--border-strong);
@@ -1622,8 +1668,9 @@ body {
   white-space: nowrap;
 }
 
-/* A colour put on the day by hand. A wash and a bar rather than a filled cell:
-   the day still has to carry its number, badges and hours legibly. */
+/* A colour put on the day by hand. A faint wash and a bar down the edge: the
+   day still has to carry its number, badges and hours legibly, and this reads
+   as an annotation on the cell rather than a change of category. */
 .day.is-coloured {
   position: relative;
   background: color-mix(in srgb, var(--day-colour) 14%, var(--surface-sunken));
@@ -1640,6 +1687,45 @@ body {
 
 .day.is-coloured .day-head {
   padding-left: 0.3125rem;
+}
+
+/* The other choice: the colour takes the whole cell. Stronger to scan across a
+   month, but everything then sits on tinted ground, so the text colour is
+   picked against the fill rather than against the surface — a light wash keeps
+   the normal ink, a heavy one needs white. */
+.day.is-coloured.is-filled {
+  background: color-mix(in srgb, var(--day-colour) 82%, var(--surface));
+  color: #fff;
+
+  &::before {
+    display: none;
+  }
+
+  .day-head {
+    padding-left: 0;
+  }
+
+  .day-number,
+  .day-entry-name,
+  .day-hours,
+  .day-entry-time,
+  .day-holiday {
+    color: inherit;
+  }
+
+  /* Badges lose their own colour here: on a saturated ground the only thing
+     that stays legible is the cell's own ink on a translucent chip. */
+  .day-entry .day-mark {
+    background: rgb(255 255 255 / 22%);
+    border-color: rgb(255 255 255 / 45%);
+    color: #fff;
+  }
+
+  .day-hours,
+  .day-entry-time,
+  .day-holiday {
+    opacity: 0.85;
+  }
 }
 
 .day.is-holiday .day-number {
@@ -1768,7 +1854,7 @@ body {
 
 .slider-row {
   display: grid;
-  grid-template-columns: 5rem 1fr 3rem;
+  grid-template-columns: minmax(0, 7rem) minmax(0, 1fr) 3rem;
   gap: 0.5rem;
   align-items: center;
   font-size: 0.875rem;
@@ -4773,9 +4859,11 @@ tr.is-skipped .import-note {
 
 .pay-row {
   display: grid;
-  grid-template-columns: 8px minmax(0, 1fr) auto auto;
+  /* The place takes what is left after the fixed parts, so a long name
+     ellipses instead of shoving the amount and the button off the row. */
+  grid-template-columns: 8px minmax(0, 1fr) auto auto auto;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.5rem 0.75rem;
   padding: 0.625rem 0.75rem;
   border: 1px solid var(--border);
   border-radius: var(--radius);

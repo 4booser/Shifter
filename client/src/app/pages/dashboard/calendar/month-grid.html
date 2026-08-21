@@ -196,9 +196,11 @@
                 @for (entry of visibleEntries(day.key); track $index) {
                   <span
                     class="day-entry"
+                    [attr.data-look]="shiftLook()"
                     [class.is-event]="entry.kind === 'event'"
                     [class.is-planned]="entry.planned"
                     [style.--mark-colour]="entry.colour"
+                    [style.--mark-ink]="entryInk(entry)"
                   >
                     <span class="day-mark">{{ entry.symbol }}</span>
                     <span class="day-entry-name">{{ entry.name }}</span>

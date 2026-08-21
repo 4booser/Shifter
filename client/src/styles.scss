@@ -1024,6 +1024,89 @@ body {
   min-width: 0;
 }
 
+/* ==== How much of the row a shift's colour takes ====
+
+   The colour used to live only in the emoji badge, a few pixels wide, which is
+   the hardest thing to tell apart when scanning down a column of Mondays. Four
+   settings, quietest to loudest. `mark` is what it always was and stays the
+   default; the others trade the badge for more colour. */
+
+/* A dot instead of the badge: the colour, and nothing else. Drawn rather than
+   restyled — shrinking the badge left the emoji rendering inside it at whatever
+   minimum size the font would allow, which showed through as a speck. */
+.day-entry[data-look="dot"] {
+  &::before {
+    content: "";
+    flex: none;
+    width: 0.4375rem;
+    height: 0.4375rem;
+    border-radius: 50%;
+    background: var(--mark-colour, var(--accent));
+  }
+
+  .day-mark {
+    display: none;
+  }
+}
+
+/* The name sits in a tint of its own colour. Text stays the colour rather than
+   the ink, because the chip is translucent — it is the cell showing through. */
+.day-entry[data-look="chip"] {
+  padding: 0.0625rem 0.25rem;
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--mark-colour, var(--accent)) 16%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--mark-colour, var(--accent)) 35%, transparent);
+
+  .day-mark {
+    display: none;
+  }
+
+  .day-entry-name {
+    color: var(--mark-colour, var(--accent));
+    font-weight: 600;
+  }
+}
+
+/* Solid: the row becomes the colour. Loudest, and the only one that has to
+   pick ink, which it does from the colour's luminance like a filled day. */
+.day-entry[data-look="bar"] {
+  padding: 0.0625rem 0.3125rem;
+  border-radius: 5px;
+  background: var(--mark-colour, var(--accent));
+  color: var(--mark-ink, #fff);
+
+  .day-mark {
+    display: none;
+  }
+
+  .day-entry-name,
+  .day-entry-time {
+    color: inherit;
+  }
+
+  .day-entry-time {
+    opacity: 0.8;
+  }
+}
+
+/* A planned shift is an outline whatever the look, so "booked" never reads as
+   "worked" — the loud looks would otherwise say it louder than the truth. */
+.day-entry.is-planned[data-look="bar"] {
+  background: transparent;
+  color: var(--mark-colour, var(--accent));
+  box-shadow: inset 0 0 0 1px var(--mark-colour, var(--accent));
+
+  .day-entry-name,
+  .day-entry-time {
+    color: var(--mark-colour, var(--accent));
+  }
+}
+
+.day-entry.is-planned[data-look="dot"]::before {
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--mark-colour, var(--accent));
+}
+
 .day-mark {
   flex: none;
   padding: 0.0625rem 0.25rem;

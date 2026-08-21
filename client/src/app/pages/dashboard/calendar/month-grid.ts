@@ -276,6 +276,12 @@ export class MonthGrid {
   }
 
   protected readonly dayFill = this.settings.dayFill;
+  protected readonly shiftLook = this.settings.shiftLook;
+
+  /** Only the looks that flood the row with the colour need ink chosen for it. */
+  protected entryInk(entry: CellEntry): string | null {
+    return entry.colour ? readableInk(entry.colour) : null;
+  }
 
   protected holidayName(key: string): string | null {
     return this.store.holidays().get(key)?.name ?? null;

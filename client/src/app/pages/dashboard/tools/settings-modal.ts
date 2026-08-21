@@ -17,6 +17,7 @@ import {
   Density,
   Language,
   SettingsStore,
+  ShiftLook,
   THEME_PRESETS,
   ThemeMode,
 } from '../../../core/settings/settings-store';
@@ -46,6 +47,13 @@ export class SettingsModal {
     { value: 'edge', label: 'Edge' },
     { value: 'wash', label: 'Wash' },
     { value: 'full', label: 'Filled' },
+  ];
+
+  protected readonly shiftLookOptions: { value: ShiftLook; label: string }[] = [
+    { value: 'dot', label: 'Dot' },
+    { value: 'mark', label: 'Emoji' },
+    { value: 'chip', label: 'Chip' },
+    { value: 'bar', label: 'Solid' },
   ];
 
   protected readonly cellTimeOptions: { value: CellTimes; label: string }[] = [
@@ -91,6 +99,10 @@ export class SettingsModal {
 
   protected setDayFill(value: DayFill): void {
     this.store.update('dayFill', value);
+  }
+
+  protected setShiftLook(value: ShiftLook): void {
+    this.store.update('shiftLook', value);
   }
 
   protected setHolidayCountry(value: string): void {

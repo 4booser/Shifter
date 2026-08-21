@@ -53,6 +53,13 @@ export type CellTimes = 'none' | 'start' | 'range';
 export type DayFill = 'outline' | 'corner' | 'underline' | 'edge' | 'wash' | 'full';
 
 /**
+ * How a shift is drawn inside a day. The shift's own colour was only ever a
+ * few pixels of emoji badge, which is hard to tell apart down a column; these
+ * give it more or less of the row. Ordered quietest to loudest.
+ */
+export type ShiftLook = 'dot' | 'mark' | 'chip' | 'bar';
+
+/**
  * Which template belongs on which weekday, keyed by day number the way
  * Date#getDay counts them — 0 is Sunday. Used by the calendar's paint mode:
  * with a pattern set, clicking a Tuesday puts the Tuesday shift on it without
@@ -129,6 +136,8 @@ export interface Settings {
   cellTimes: CellTimes;
   /** Whether a coloured day is washed through or marked down one edge. */
   dayFill: DayFill;
+  /** How much of a cell row a shift's own colour takes. */
+  shiftLook: ShiftLook;
   /** ISO country code for the public holidays to mark. Empty shows none. */
   holidayCountry: string;
   /** The weekly pattern paint mode places. */
@@ -208,6 +217,7 @@ const DEFAULTS: Settings = {
   notifyAt: '21:00',
   cellTimes: 'none',
   dayFill: 'edge',
+  shiftLook: 'mark',
   holidayCountry: '',
   weekdayShifts: {},
   colourSchemes: [],
@@ -237,6 +247,7 @@ export class SettingsStore {
   readonly remindUnclosed = computed(() => this._settings().remindUnclosed);
   readonly cellTimes = computed(() => this._settings().cellTimes);
   readonly dayFill = computed(() => this._settings().dayFill);
+  readonly shiftLook = computed(() => this._settings().shiftLook);
   readonly holidayCountry = computed(() => this._settings().holidayCountry);
   readonly weekdayShifts = computed(() => this._settings().weekdayShifts);
   readonly colourSchemes = computed(() => this._settings().colourSchemes);

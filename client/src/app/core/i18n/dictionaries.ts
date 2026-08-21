@@ -540,6 +540,11 @@ export const RU: Dictionary = {
   // Auth
   'Sign in': 'Войти',
   'Welcome back to Shifter.': 'С возвращением в Shifter.',
+  'Shifts in a cell': 'Смены в клетке',
+  Dot: 'Точкой',
+  Emoji: 'Эмодзи',
+  Chip: 'Плашкой',
+  Solid: 'Заливкой',
   Outline: 'Контуром',
   Corner: 'Уголком',
   Underline: 'Чертой снизу',
@@ -1198,6 +1203,11 @@ export const UK: Dictionary = {
 
   'Sign in': 'Увійти',
   'Welcome back to Shifter.': 'З поверненням у Shifter.',
+  'Shifts in a cell': 'Зміни в клітинці',
+  Dot: 'Крапкою',
+  Emoji: 'Емодзі',
+  Chip: 'Плашкою',
+  Solid: 'Заливкою',
   Outline: 'Контуром',
   Corner: 'Кутиком',
   Underline: 'Рискою знизу',

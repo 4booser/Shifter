@@ -555,6 +555,27 @@ export class Stats {
     return rows.map((row) => ({ ...row, share: (row.value / top) * 100 }));
   });
 
+  /**
+   * What is taken back off the sources above. The bars alone never added up to
+   * the headline figure, which is the question this card is asked: the total is
+   * the five sources minus these two, and then minus tax to reach a pocket.
+   *
+   * Mirrors the server's own arithmetic in DayHandler:
+   *   total = shifts + sales + tips + salary + overtime − tip-out − deductions
+   *   net   = total − tax
+   */
+  protected readonly deductionRows = computed(() => {
+    const summary = this.summary();
+
+    return [
+      { name: 'Tip-out', value: summary.tip_out },
+      { name: 'Meals and fines', value: summary.deductions },
+    ].filter((row) => row.value > 0);
+  });
+
+  /** True when tax is withheld, so the net line is worth showing at all. */
+  protected readonly hasTax = computed(() => this.summary().tax > 0);
+
   protected readonly places = computed(() => {
     const rows = this.summary().by_location;
 

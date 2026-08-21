@@ -1367,6 +1367,32 @@ body {
   color: var(--positive);
 }
 
+/* The lines under the source bars that carry the total back down to what
+   actually reaches a pocket. Ruled off from the bars above so the reader can
+   see it is arithmetic rather than another list. */
+.breakdown-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  margin: 0.75rem 0 0;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+
+  dd {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .summary-row.is-total {
+    padding-top: 0.375rem;
+    border-top: 1px solid var(--border);
+    font-weight: 650;
+  }
+}
+
+.summary-row dd.is-negative {
+  color: var(--danger);
+}
+
 .quick.is-active {
   background: var(--accent);
   border-color: var(--accent);

@@ -231,6 +231,8 @@ export const RU: Dictionary = {
   'Places side by side': 'Места бок о бок',
   'Per hour': 'В час',
   'Tip-out': 'Отдано персоналу',
+  'Meals and fines': 'Питание и штрафы',
+  'In your pocket': 'На руки',
   'Tips and sales are shared out by the hours each place got that day.':
     'Чаевые и продажи делятся между местами по часам, отработанным в этот день.',
   'Of that, cash': 'Из них наличными',
@@ -888,6 +890,8 @@ export const UK: Dictionary = {
   'Places side by side': 'Місця поруч',
   'Per hour': 'За годину',
   'Tip-out': 'Віддано персоналу',
+  'Meals and fines': 'Харчування та штрафи',
+  'In your pocket': 'На руки',
   'Tips and sales are shared out by the hours each place got that day.':
     'Чайові та продажі діляться між місцями за годинами, відпрацьованими того дня.',
   'Of that, cash': 'З них готівкою',

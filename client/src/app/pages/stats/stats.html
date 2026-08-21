@@ -508,6 +508,33 @@
                 </div>
               }
             </div>
+
+            <!-- The sources on their own never reached the headline figure.
+                 What comes off them, and then what tax leaves behind. -->
+            <dl class="breakdown-rows">
+              @for (row of deductionRows(); track row.name) {
+                <div class="summary-row">
+                  <dt>{{ row.name | t }}</dt>
+                  <dd class="is-negative">−{{ row.value | money }}</dd>
+                </div>
+              }
+
+              <div class="summary-row is-total">
+                <dt>{{ 'Earned' | t }}</dt>
+                <dd>{{ summary().total_earned | money }}</dd>
+              </div>
+
+              @if (hasTax()) {
+                <div class="summary-row">
+                  <dt>{{ 'Tax' | t }}</dt>
+                  <dd class="is-negative">−{{ summary().tax | money }}</dd>
+                </div>
+                <div class="summary-row is-total">
+                  <dt>{{ 'In your pocket' | t }}</dt>
+                  <dd>{{ summary().net_earned | money }}</dd>
+                </div>
+              }
+            </dl>
           </section>
         }
 

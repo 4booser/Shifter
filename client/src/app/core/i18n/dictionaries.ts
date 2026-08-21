@@ -235,6 +235,10 @@ export const RU: Dictionary = {
   Commission: 'Процент',
   'The last twelve months': 'Последние двенадцать месяцев',
   'What a day usually brings': 'Сколько обычно приносит день',
+  'The shape of the year': 'Форма года',
+  'Every day of the year': 'Каждый день года',
+  'Which day carries you': 'Какой день тебя вывозит',
+  'Everything each weekday earned this year.': 'Сколько каждый день недели принёс за год.',
   'Worked days grouped by what they paid. The marked column is where the typical day falls.':
     'Отработанные дни, сгруппированные по заработку. Отмеченный столбец — где оказывается типичный день.',
   'Best month': 'Лучший месяц',
@@ -913,6 +917,10 @@ export const UK: Dictionary = {
   Commission: 'Відсоток',
   'The last twelve months': 'Останні дванадцять місяців',
   'What a day usually brings': 'Скільки зазвичай приносить день',
+  'The shape of the year': 'Форма року',
+  'Every day of the year': 'Кожен день року',
+  'Which day carries you': 'Який день тебе витягує',
+  'Everything each weekday earned this year.': 'Скільки кожен день тижня приніс за рік.',
   'Worked days grouped by what they paid. The marked column is where the typical day falls.':
     'Відпрацьовані дні, згруповані за заробітком. Позначений стовпчик — де опиняється типовий день.',
   'Best month': 'Найкращий місяць',

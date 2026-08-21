@@ -18,6 +18,7 @@ import {
   restDays,
 } from '../../core/calendar/insights';
 import { I18n, TPipe } from '../../core/i18n/i18n';
+import { Heatmap } from '../../shared/charts/heatmap';
 import { CountUp } from '../../shared/count-up';
 import { Delta } from '../../shared/delta/delta';
 import { Icon } from '../../shared/icon/icon';
@@ -40,7 +41,7 @@ const TIERS: { hours: number; name: string; emoji: string }[] = [
  */
 @Component({
   selector: 'app-wrapped',
-  imports: [RouterLink, TPipe, MoneyPipe, DecimalPipe, CountUp, Delta, Icon],
+  imports: [RouterLink, TPipe, MoneyPipe, DecimalPipe, CountUp, Delta, Icon, Heatmap],
   templateUrl: './wrapped.html',
 })
 export class Wrapped {
@@ -260,6 +261,41 @@ export class Wrapped {
     const best = totals.indexOf(Math.max(...totals));
 
     return totals[best] === 0 ? null : { name: names[best], count: totals[best] };
+  });
+
+  /**
+   * The year as one grid, a cell a day. `favouriteWeekday` already names the
+   * best day of the week, but a name cannot show a fortnight off in February or
+   * a run of doubles in December — the shape of the year is the thing the page
+   * is for, and it was the one thing it never drew.
+   */
+  protected readonly heatValues = computed(
+    () => new Map(this.days().map((day) => [day.date, day.earned])),
+  );
+
+  protected readonly yearFrom = computed(() => `${this.year()}-01-01`);
+  protected readonly yearTo = computed(() => `${this.year()}-12-31`);
+
+  /**
+   * All seven weekdays by what they earned, not just the winner. A Saturday
+   * worth twice a Tuesday is the argument for asking for Saturdays, and that
+   * only reads as a row you can compare across.
+   */
+  protected readonly weekdayRhythm = computed(() => {
+    const totals = new Array(7).fill(0) as number[];
+
+    for (const day of this.days()) totals[(fromKey(day.date).getDay() + 6) % 7] += day.earned;
+
+    const peak = Math.max(...totals, 1);
+    const names = new Intl.DateTimeFormat(this.locale(), { weekday: 'short' });
+
+    return totals.map((value, index) => ({
+      // 2026-01-05 was a Monday, so index 0 lands on Monday in every locale.
+      label: names.format(new Date(2026, 0, 5 + index)),
+      value,
+      share: Math.max(2, (value / peak) * 100),
+      peak: value === peak && value > 0,
+    }));
   });
 
   /** Nights are anything starting at or after 20:00 — the hospitality shape. */

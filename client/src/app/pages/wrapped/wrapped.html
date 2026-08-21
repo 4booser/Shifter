@@ -171,6 +171,34 @@
         </section>
       </div>
 
+      <h2 class="wrap-heading">{{ 'The shape of the year' | t }}</h2>
+
+      <!-- A cell a day. The numbers above say how much; this says when. -->
+      <section class="wrap-card is-wide">
+        <span class="wrap-label">{{ 'Every day of the year' | t }}</span>
+        <app-heatmap [values]="heatValues()" [from]="yearFrom()" [to]="yearTo()" />
+      </section>
+
+      <!-- All seven days, not just the winner: the gap between them is the
+           argument for asking for more of the good ones. -->
+      <section class="wrap-card is-wide">
+        <span class="wrap-label">{{ 'Which day carries you' | t }}</span>
+        <!-- Named, because "Your day" further down ranks weekdays by how often
+             you worked them and this ranks them by what they paid; without
+             saying so, the two cards look like they disagree. -->
+        <span class="wrap-sub">{{ 'Everything each weekday earned this year.' | t }}</span>
+
+        <div class="rhythm">
+          @for (day of weekdayRhythm(); track day.label) {
+            <div class="rhythm-day" [class.is-peak]="day.peak">
+              <span class="rhythm-bar" [style.height.%]="day.share"></span>
+              <span class="rhythm-name">{{ day.label }}</span>
+              <span class="rhythm-value">{{ day.value | money }}</span>
+            </div>
+          }
+        </div>
+      </section>
+
       <h2 class="wrap-heading">{{ 'Your year in records' | t }}</h2>
 
       <div class="wrap-grid">

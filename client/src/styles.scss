@@ -4089,6 +4089,81 @@ body {
   }
 }
 
+/* The two full-width panels: a card that holds a chart rather than a figure,
+   so it gets the page's width and a little air under its label. */
+.wrap-card.is-wide {
+  gap: 0.875rem;
+  margin-bottom: 1rem;
+
+  /* Figure cards centre their sub-line under a centred number; here it is a
+     caption under a left-aligned label and wants the same edge. */
+  .wrap-sub {
+    justify-content: flex-start;
+    margin-top: -0.5rem;
+  }
+
+  &:hover {
+    /* A chart is read, not browsed past — lifting it under the cursor makes
+       the cell you are pointing at move away from the pointer. */
+    transform: none;
+    box-shadow: var(--shadow-sm);
+  }
+}
+
+/* ==== Weekday rhythm ====
+
+   Seven columns, one per weekday, each as tall as that day's share of the best
+   one. The bars carry magnitude; the day names and amounts underneath carry
+   identity, so nothing here depends on colour alone. */
+.rhythm {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  height: 8rem;
+}
+
+.rhythm-day {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto auto;
+  justify-items: center;
+  gap: 0.25rem;
+  flex: 1 1 0;
+  min-width: 0;
+  height: 100%;
+}
+
+.rhythm-bar {
+  grid-row: 1;
+  align-self: end;
+  width: 100%;
+  background: color-mix(in srgb, var(--accent) 35%, transparent);
+  border-radius: 5px 5px 2px 2px;
+}
+
+.rhythm-day.is-peak .rhythm-bar {
+  background: var(--accent);
+}
+
+.rhythm-name {
+  grid-row: 2;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.rhythm-day.is-peak .rhythm-name {
+  color: var(--text);
+}
+
+.rhythm-value {
+  grid-row: 3;
+  color: var(--text-faint);
+  font-size: 0.625rem;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
 .wrap-card:nth-child(1) { animation-delay: 60ms; }
 .wrap-card:nth-child(2) { animation-delay: 120ms; }
 .wrap-card:nth-child(3) { animation-delay: 180ms; }

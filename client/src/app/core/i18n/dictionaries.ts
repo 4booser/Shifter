@@ -618,6 +618,7 @@ export const RU: Dictionary = {
   'Nothing to place over those dates.': 'На этих датах ставить нечего.',
   'Will place': 'Поставит',
   'shifts over': 'смен на',
+  'Add to calendar': 'В календарь',
 };
 
 export const UK: Dictionary = {
@@ -1221,4 +1222,5 @@ export const UK: Dictionary = {
   'Nothing to place over those dates.': 'На цих датах ставити нічого.',
   'Will place': 'Поставить',
   'shifts over': 'змін на',
+  'Add to calendar': 'До календаря',
 };

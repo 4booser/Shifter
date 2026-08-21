@@ -13,6 +13,7 @@ import {
   rateLabel,
 } from '../../../core/calendar/calendar.models';
 import { daysToCsv, downloadCsv } from '../../../core/calendar/csv-export';
+import { buildIcs, downloadIcs } from '../../../core/export/ics';
 import { MoneyPipe } from '../../../shared/money/money-pipe';
 import { Icon } from '../../../shared/icon/icon';
 import { Delta } from '../../../shared/delta/delta';
@@ -142,6 +143,25 @@ export class Sidebar {
     downloadCsv(
       `shifter-${range.from}-${range.to}.csv`,
       daysToCsv(this.summary().days),
+    );
+  }
+
+  /**
+   * The rota in whatever calendar the phone already opens. A file rather than
+   * a subscription, so it is a snapshot — but the entries carry stable ids, so
+   * exporting again after a change updates them instead of leaving duplicates
+   * beside the originals.
+   */
+  protected exportIcs(): void {
+    const range = this.store.summaryRangeValue();
+
+    downloadIcs(
+      `shifter-${range.from}-${range.to}.ics`,
+      buildIcs({
+        days: this.summary().days,
+        events: this.store.events(),
+        calendarName: 'Shifter',
+      }),
     );
   }
 }

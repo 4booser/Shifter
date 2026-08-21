@@ -3,6 +3,7 @@ import { TPipe } from '../../../core/i18n/i18n';
 import { FormsModule } from '@angular/forms';
 
 import { CalendarStore } from '../../../core/calendar/calendar-store';
+import { confirmDeleteLocation } from '../../../core/calendar/location-delete';
 import {
   MARK_COLOURS,
   PAY_PERIODS,
@@ -20,6 +21,12 @@ import { Modal } from '../../../shared/modal/modal';
 })
 export class LocationModal {
   readonly open = input.required<boolean>();
+  /**
+   * Set when the sheet is opened from a place's own row, so it arrives on that
+   * place rather than on an empty "new place" form. Null means the caller wants
+   * the manager itself.
+   */
+  readonly editLocation = input<WorkLocation | null>(null);
   readonly closed = output<void>();
 
   private readonly store = inject(CalendarStore);
@@ -68,7 +75,10 @@ export class LocationModal {
     effect(() => {
       if (!this.open()) return;
 
-      this.reset();
+      const chosen = this.editLocation();
+
+      if (chosen === null) this.reset();
+      else this.edit(chosen);
     });
   }
 
@@ -91,27 +101,8 @@ export class LocationModal {
     this.currency.set(location.currency);
   }
 
-  /**
-   * Two questions rather than one, because they are different questions. The
-   * first is "did you mean to". The second only appears when templates still
-   * point at the place, and it is asking whether losing that place's tip-out,
-   * meal and tax rules on days already worked is acceptable — which is not
-   * something to bury in the first prompt, where nobody would read it.
-   */
   protected remove(location: WorkLocation): void {
-    if (!window.confirm(`${location.name} — ${this.deletePrompt}`)) return;
-
-    this.store.deleteLocation(location.id, false, (message) => {
-      const question = `${message}\n\n${this.i18n.t(
-        'Days already worked will lose this place’s tip-out, meal and tax rules, so what they are worth will change. Delete anyway?',
-      )}`;
-
-      if (window.confirm(question)) this.store.deleteLocation(location.id, true);
-    });
-  }
-
-  protected get deletePrompt(): string {
-    return this.i18n.t('Delete this? It cannot be undone.');
+    confirmDeleteLocation(this.store, this.i18n, location);
   }
 
   protected archive(location: WorkLocation, archived: boolean): void {

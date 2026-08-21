@@ -6,7 +6,7 @@
         type="button"
         class="icon-button"
         aria-label="Places of work"
-        (click)="locationModalOpen.set(true)"
+        (click)="manageLocations()"
       >
         <app-icon name="plus" [size]="15" />
       </button>
@@ -17,12 +17,33 @@
     } @else {
       <ul class="position-list">
         @for (location of locations(); track location.id) {
-          <li class="position-item">
-            <span class="palette-name">
-              <span class="location-dot" [style.background]="location.colour"></span>
-              {{ location.name }}
+          <li class="palette-row">
+            <span class="position-item">
+              <span class="palette-name">
+                <span class="location-dot" [style.background]="location.colour"></span>
+                {{ location.name }}
+              </span>
+              <span class="position-rate">{{ location.pay_period }}</span>
             </span>
-            <span class="position-rate">{{ location.pay_period }}</span>
+
+            <span class="row-actions">
+              <button
+                type="button"
+                class="icon-button is-small"
+                [attr.aria-label]="'Edit ' + location.name"
+                (click)="editLocation(location)"
+              >
+                <app-icon name="brush" [size]="13" />
+              </button>
+              <button
+                type="button"
+                class="icon-button is-small is-danger"
+                [attr.aria-label]="'Delete ' + location.name"
+                (click)="removeLocation(location)"
+              >
+                <app-icon name="trash" [size]="13" />
+              </button>
+            </span>
           </li>
         }
       </ul>
@@ -390,7 +411,11 @@
   (closed)="rotationModalOpen.set(false)"
 />
 <app-payout-modal [open]="payoutModalOpen()" (closed)="payoutModalOpen.set(false)" />
-<app-location-modal [open]="locationModalOpen()" (closed)="locationModalOpen.set(false)" />
+<app-location-modal
+  [open]="locationModalOpen()"
+  [editLocation]="editingLocation()"
+  (closed)="locationModalOpen.set(false)"
+/>
 
 
 @if (importOpen()) {

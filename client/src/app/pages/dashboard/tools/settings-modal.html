@@ -47,14 +47,17 @@
 
     <div class="field">
       <span class="field-label">{{ 'Theme' | t }}</span>
-      <div class="segmented" role="group" aria-label="Theme">
+      <div class="theme-row" role="group" aria-label="Theme">
         @for (theme of themes; track theme.value) {
           <button
             type="button"
-            class="segment"
+            class="theme-option"
+            [attr.data-preview]="theme.value"
+            [attr.aria-pressed]="settings().theme === theme.value"
             [class.is-active]="settings().theme === theme.value"
             (click)="setTheme(theme.value)"
           >
+            <span class="theme-swatch" aria-hidden="true"></span>
             {{ theme.label | t }}
           </button>
         }

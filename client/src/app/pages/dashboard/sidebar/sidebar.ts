@@ -10,8 +10,10 @@ import {
 import {
   SalesPosition,
   ShiftTemplate,
+  WorkLocation,
   rateLabel,
 } from '../../../core/calendar/calendar.models';
+import { confirmDeleteLocation } from '../../../core/calendar/location-delete';
 import { daysToCsv, downloadCsv } from '../../../core/calendar/csv-export';
 import { buildIcs, downloadIcs } from '../../../core/export/ics';
 import { MoneyPipe } from '../../../shared/money/money-pipe';
@@ -91,6 +93,7 @@ export class Sidebar {
   /** Null means the open modal is creating rather than editing. */
   protected readonly editingShift = signal<ShiftTemplate | null>(null);
   protected readonly editingPosition = signal<SalesPosition | null>(null);
+  protected readonly editingLocation = signal<WorkLocation | null>(null);
 
   protected readonly rate = rateLabel;
 
@@ -134,6 +137,21 @@ export class Sidebar {
 
   protected archivePosition(position: SalesPosition, archived: boolean): void {
     this.store.archivePosition(position.id, archived);
+  }
+
+  /** The plus opens the manager; a row opens the place it belongs to. */
+  protected manageLocations(): void {
+    this.editingLocation.set(null);
+    this.locationModalOpen.set(true);
+  }
+
+  protected editLocation(location: WorkLocation): void {
+    this.editingLocation.set(location);
+    this.locationModalOpen.set(true);
+  }
+
+  protected removeLocation(location: WorkLocation): void {
+    confirmDeleteLocation(this.store, this.i18n, location);
   }
 
   protected copyWeek(): void {

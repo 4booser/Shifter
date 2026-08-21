@@ -17,6 +17,7 @@ import {
   Density,
   Language,
   SettingsStore,
+  THEME_PRESETS,
   ThemeMode,
 } from '../../../core/settings/settings-store';
 import { Modal } from '../../../shared/modal/modal';
@@ -51,11 +52,7 @@ export class SettingsModal {
   protected readonly settings = this.store.settings;
   protected readonly notifyPermission = this.reminders.permission;
 
-  protected readonly themes: { value: ThemeMode; label: string }[] = [
-    { value: 'system', label: 'System' },
-    { value: 'light', label: 'Light' },
-    { value: 'dark', label: 'Dark' },
-  ];
+  protected readonly themes = THEME_PRESETS;
 
   protected readonly densities: { value: Density; label: string }[] = [
     { value: 'comfortable', label: 'Comfortable' },

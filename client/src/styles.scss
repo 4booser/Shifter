@@ -97,6 +97,108 @@ color-scheme: dark;
   }
 }
 
+/* ==== The rest of the grounds ====
+
+   Each one moves the four surface tokens and the two text tokens and nothing
+   else. Accent, positive and danger are shared: they carry meaning, and a
+   meaning that shifts with the theme is not a meaning. The tints are kept
+   within a few percent of neutral so the coloured shift marks — which are the
+   only saturated thing on the page — still read as the loudest element. */
+
+/* Dimmer than white for a bright room, without going dark. */
+:root[data-theme="grey"] {
+  --ground: #d9dde2;
+  --surface: #eceff2;
+  --surface-sunken: #e2e6ea;
+  --border: #c6ccd4;
+  --border-strong: #aab2bd;
+}
+
+/* Warm paper. */
+:root[data-theme="sand"] {
+  --ground: #f2ede4;
+  --surface: #fffdf9;
+  --surface-sunken: #f7f3ea;
+  --border: #e6ddcd;
+  --border-strong: #d3c7b2;
+
+  --text: #2a2115;
+  --text-muted: #6b5d4a;
+  --text-faint: #9a8d79;
+}
+
+/* Cool paper. */
+:root[data-theme="mint"] {
+  --ground: #e8f1ed;
+  --surface: #fbfefc;
+  --surface-sunken: #f0f6f3;
+  --border: #d3e3db;
+  --border-strong: #b3cdc1;
+
+  --text: #10241c;
+  --text-muted: #4d6960;
+  --text-faint: #7d9890;
+}
+
+/* Darker than dark: near-black, for a room with the lights off. */
+:root[data-theme="night"] {
+  @include dark-tokens;
+
+  --ground: #06080a;
+  --surface: #0d1013;
+  --surface-sunken: #090b0e;
+  --border: #1b2026;
+  --border-strong: #2a313a;
+}
+
+/* Dark with the blue left in. */
+:root[data-theme="ocean"] {
+  @include dark-tokens;
+
+  --ground: #0b1620;
+  --surface: #122231;
+  --surface-sunken: #0e1c28;
+  --border: #1e3648;
+  --border-strong: #2c4b63;
+
+  --text: #dfeaf3;
+  --text-muted: #8fa8bd;
+}
+
+/* Dark with the red left in. */
+:root[data-theme="plum"] {
+  @include dark-tokens;
+
+  --ground: #150c19;
+  --surface: #211527;
+  --surface-sunken: #1a1020;
+  --border: #33203b;
+  --border-strong: #4a3054;
+
+  --text: #eee3f2;
+  --text-muted: #ac95b6;
+}
+
+/* Night with one lit corner. The gradient is on the ground only — putting it
+   behind the cards as well would tint every surface differently depending on
+   where it happened to sit on the page. */
+:root[data-theme="gradient"] {
+  @include dark-tokens;
+
+  --ground: #0a0d14;
+  --surface: #151a24;
+  --surface-sunken: #10141c;
+  --border: #232a37;
+  --border-strong: #333c4d;
+}
+
+:root[data-theme="gradient"] body {
+  background-image:
+    radial-gradient(70rem 40rem at 12% -10%, rgb(99 102 241 / 22%), transparent 60%),
+    radial-gradient(60rem 36rem at 105% 8%, rgb(20 184 166 / 16%), transparent 62%);
+  background-attachment: fixed;
+}
+
 html {
   -webkit-text-size-adjust: 100%;
 }
@@ -264,6 +366,110 @@ body {
   background: var(--surface-sunken);
   border: 1px solid var(--border);
   border-radius: var(--radius);
+}
+
+/* ==== Theme picker ====
+
+   Ten grounds will not fit a segmented control — as columns of an equal share
+   they would each be a few characters wide. They wrap instead, and each one
+   shows what it actually looks like: the swatch is the ground with the card
+   colour sitting on it, which is the whole of the decision being made. The
+   preview colours are written out rather than taken from the tokens, because
+   the tokens describe the theme in use, not the one being offered. */
+.theme-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.theme-option {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  flex: 0 0 auto;
+  padding: 0.3125rem 0.5rem 0.3125rem 0.3125rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--border-strong);
+    color: var(--text);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--ring);
+  }
+
+  &.is-active {
+    border-color: var(--accent);
+    color: var(--text);
+  }
+}
+
+.theme-swatch {
+  width: 1.125rem;
+  height: 1.125rem;
+  flex: none;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 20%);
+  /* Ground on one half, card on the other. */
+  background: linear-gradient(135deg, var(--swatch-ground) 50%, var(--swatch-surface) 50%);
+}
+
+.theme-option[data-preview="system"] .theme-swatch {
+  --swatch-ground: #f4f6f8;
+  --swatch-surface: #14181d;
+}
+
+.theme-option[data-preview="light"] .theme-swatch {
+  --swatch-ground: #f4f6f8;
+  --swatch-surface: #ffffff;
+}
+
+.theme-option[data-preview="grey"] .theme-swatch {
+  --swatch-ground: #d9dde2;
+  --swatch-surface: #eceff2;
+}
+
+.theme-option[data-preview="sand"] .theme-swatch {
+  --swatch-ground: #f2ede4;
+  --swatch-surface: #fffdf9;
+}
+
+.theme-option[data-preview="mint"] .theme-swatch {
+  --swatch-ground: #e8f1ed;
+  --swatch-surface: #fbfefc;
+}
+
+.theme-option[data-preview="dark"] .theme-swatch {
+  --swatch-ground: #14181d;
+  --swatch-surface: #1b2027;
+}
+
+.theme-option[data-preview="night"] .theme-swatch {
+  --swatch-ground: #06080a;
+  --swatch-surface: #0d1013;
+}
+
+.theme-option[data-preview="ocean"] .theme-swatch {
+  --swatch-ground: #0b1620;
+  --swatch-surface: #122231;
+}
+
+.theme-option[data-preview="plum"] .theme-swatch {
+  --swatch-ground: #150c19;
+  --swatch-surface: #211527;
+}
+
+.theme-option[data-preview="gradient"] .theme-swatch {
+  background: linear-gradient(135deg, #6366f1 0%, #0a0d14 55%, #14b8a6 100%);
 }
 
 .segment {
@@ -2150,21 +2356,20 @@ body {
   gap: 1.25rem;
 }
 
+/* Flex rather than a fixed column count. A grid of four left the ninth card
+   stranded alone on a row, stretched to the full width and reading as a mistake
+   rather than as a card; the count also changes with what the period actually
+   has to show, so no column number is right for long. Wrapping items that grow
+   share whatever the last row has left between them, and the flex-basis picks
+   the column count per width without a media query for each step. */
 .kpi-row {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
-}
 
-@media (width <= 62rem) {
-  .kpi-row {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
-@media (width <= 42rem) {
-  .kpi-row {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  > * {
+    flex: 1 1 9rem;
+    min-width: 0;
   }
 }
 
@@ -2958,6 +3163,12 @@ body {
 .bento-ring { grid-column: span 3; }
 .bento-streak { grid-column: span 3; }
 .bento-activity { grid-column: span 6; }
+
+/* The ring only exists once a goal is set. Without it the row ended three
+   columns short, leaving a gap that looked like a card had failed to load;
+   the two that remain take the width between them instead. */
+.bento-streak:first-child { grid-column: span 4; }
+.bento-streak:first-child ~ .bento-activity { grid-column: span 8; }
 
 .forecast-card {
   display: grid;
@@ -3783,12 +3994,20 @@ body {
   --tint-indigo: #6366f1;
 }
 
-:root[data-theme="dark"] {
+/* Every dark ground, named. The system preference only decides the case where
+   no ground was chosen — `:not([data-theme="light"])` used to hand dark tints
+   to a light theme whenever the machine itself was dark. */
+:root[data-theme="dark"],
+:root[data-theme="night"],
+:root[data-theme="ocean"],
+:root[data-theme="plum"],
+:root[data-theme="gradient"] {
   @include dark-tints;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
+  :root[data-theme="system"],
+  :root:not([data-theme]) {
     @include dark-tints;
   }
 }

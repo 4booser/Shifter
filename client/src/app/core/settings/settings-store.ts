@@ -1,6 +1,36 @@
 import { Service, computed, effect, signal } from '@angular/core';
 
-export type ThemeMode = 'system' | 'light' | 'dark';
+/**
+ * Two neutrals each side of the line, then four tinted grounds. The tints stay
+ * desaturated: this is a screen someone keeps open through a shift, and a
+ * ground with real colour in it makes the coloured shift marks unreadable.
+ * 'gradient' is 'night' with a lit corner rather than a separate palette.
+ */
+export type ThemeMode =
+  | 'system'
+  | 'light'
+  | 'grey'
+  | 'sand'
+  | 'mint'
+  | 'dark'
+  | 'night'
+  | 'ocean'
+  | 'plum'
+  | 'gradient';
+
+/** Only these two answer the system preference; the rest are explicit choices. */
+export const THEME_PRESETS: { value: ThemeMode; label: string; dark: boolean }[] = [
+  { value: 'system', label: 'System', dark: false },
+  { value: 'light', label: 'Light', dark: false },
+  { value: 'grey', label: 'Grey', dark: false },
+  { value: 'sand', label: 'Sand', dark: false },
+  { value: 'mint', label: 'Mint', dark: false },
+  { value: 'dark', label: 'Dark', dark: true },
+  { value: 'night', label: 'Night', dark: true },
+  { value: 'ocean', label: 'Ocean', dark: true },
+  { value: 'plum', label: 'Plum', dark: true },
+  { value: 'gradient', label: 'Gradient', dark: true },
+];
 export type Density = 'comfortable' | 'compact';
 export type CalendarView = 'week' | 'month' | 'year';
 
@@ -113,15 +143,40 @@ export interface Settings {
  * reads as grey. These are lifted enough to survive that without turning the
  * interface into a toy.
  */
+/**
+ * Three steps across each hue rather than one, because the accent sits behind
+ * text as often as beside it: the deep step holds white, the mid step is the
+ * default, and the light step is for anyone running a dark theme who wants the
+ * accent to read as a highlight rather than a block.
+ */
 export const ACCENT_PRESETS = [
+  { label: 'Indigo', value: '#3730A3' },
   { label: 'Indigo', value: '#4F46E5' },
+  { label: 'Indigo light', value: '#818CF8' },
+  { label: 'Ocean', value: '#075985' },
   { label: 'Ocean', value: '#0284C7' },
+  { label: 'Ocean light', value: '#38BDF8' },
+  { label: 'Teal', value: '#115E59' },
   { label: 'Teal', value: '#0D9488' },
+  { label: 'Teal light', value: '#2DD4BF' },
+  { label: 'Emerald', value: '#15803D' },
   { label: 'Emerald', value: '#16A34A' },
+  { label: 'Emerald light', value: '#4ADE80' },
+  { label: 'Violet', value: '#5B21B6' },
   { label: 'Violet', value: '#7C3AED' },
+  { label: 'Violet light', value: '#A78BFA' },
+  { label: 'Coral', value: '#9F1239' },
   { label: 'Coral', value: '#E11D48' },
+  { label: 'Coral light', value: '#FB7185' },
+  { label: 'Amber', value: '#B45309' },
   { label: 'Amber', value: '#D97706' },
+  { label: 'Amber light', value: '#FBBF24' },
+  { label: 'Rose', value: '#9D174D' },
+  { label: 'Rose', value: '#DB2777' },
+  { label: 'Rose light', value: '#F472B6' },
+  { label: 'Graphite', value: '#1E293B' },
   { label: 'Graphite', value: '#334155' },
+  { label: 'Graphite light', value: '#64748B' },
 ];
 
 export const CURRENCY_PRESETS = ['$', '€', '£', '₴', 'zł', 'Kč', '₸', '¥'];

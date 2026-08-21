@@ -355,6 +355,13 @@ export const EMPTY_SUMMARY: DaysResponse = {
  * small marks on a pale grid, and a muted colour at that size reads as grey.
  * Each one holds its own against both themes rather than only against white.
  */
+/**
+ * Two rows of hues, then a deep step under each. A mark is a few millimetres
+ * across, so the hues stay far apart round the wheel — the point is telling two
+ * shifts apart at a glance, not covering the spectrum. The deep row exists
+ * because the bright row disappears against a light ground when a whole day is
+ * filled rather than outlined.
+ */
 export const MARK_COLOURS: { label: string; value: string }[] = [
   { label: 'Coral', value: '#FF5C7A' },
   { label: 'Amber', value: '#FFA53D' },
@@ -368,6 +375,19 @@ export const MARK_COLOURS: { label: string; value: string }[] = [
   { label: 'Magenta', value: '#EC4899' },
   { label: 'Slate', value: '#64748B' },
   { label: 'Graphite', value: '#334155' },
+
+  { label: 'Rosewood', value: '#B91C4A' },
+  { label: 'Rust', value: '#C2620E' },
+  { label: 'Ochre', value: '#A16207' },
+  { label: 'Moss', value: '#3F7A24' },
+  { label: 'Pine', value: '#15803D' },
+  { label: 'Deep teal', value: '#0F766E' },
+  { label: 'Deep sky', value: '#0369A1' },
+  { label: 'Deep indigo', value: '#4338CA' },
+  { label: 'Deep violet', value: '#6D28D9' },
+  { label: 'Plum', value: '#A21CAF' },
+  { label: 'Clay', value: '#8D6E63' },
+  { label: 'Ink', value: '#1E293B' },
 ];
 
 /** Turns a stored day back into the payload the save endpoint expects. */

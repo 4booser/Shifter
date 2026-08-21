@@ -538,6 +538,10 @@ export const RU: Dictionary = {
   // Auth
   'Sign in': 'Войти',
   'Welcome back to Shifter.': 'С возвращением в Shifter.',
+  Outline: 'Контуром',
+  Corner: 'Уголком',
+  Underline: 'Чертой снизу',
+  Wash: 'Заливкой светлой',
   Grey: 'Серая',
   Sand: 'Песочная',
   Mint: 'Мятная',
@@ -1190,6 +1194,10 @@ export const UK: Dictionary = {
 
   'Sign in': 'Увійти',
   'Welcome back to Shifter.': 'З поверненням у Shifter.',
+  Outline: 'Контуром',
+  Corner: 'Кутиком',
+  Underline: 'Рискою знизу',
+  Wash: 'Заливкою світлою',
   Grey: 'Сіра',
   Sand: 'Пісочна',
   Mint: 'М’ятна',

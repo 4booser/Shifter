@@ -11,6 +11,7 @@ import {
 } from '../../../core/calendar/calendar-date';
 import { CalendarStore, PAINT_SCOPES, PaintScope } from '../../../core/calendar/calendar-store';
 import { MARK_COLOURS } from '../../../core/calendar/calendar.models';
+import { readableInk } from '../../../core/calendar/contrast';
 import { SettingsStore } from '../../../core/settings/settings-store';
 import { Icon } from '../../../shared/icon/icon';
 import { MoneyPipe } from '../../../shared/money/money-pipe';
@@ -261,6 +262,17 @@ export class MonthGrid {
   /** The colour put on the day by hand, which overrides nothing else. */
   protected dayColour(key: string): string | null {
     return this.store.days().get(key)?.colour ?? null;
+  }
+
+  /**
+   * The ink a filled cell states its number in. Picked from the colour rather
+   * than fixed to white, because the palette runs from lemon to near-black and
+   * white on lemon is a missing number.
+   */
+  protected dayInk(key: string): string | null {
+    const colour = this.dayColour(key);
+
+    return colour === null ? null : readableInk(colour);
   }
 
   protected readonly dayFill = this.settings.dayFill;

@@ -40,7 +40,11 @@ export class SettingsModal {
   protected readonly countries = HOLIDAY_COUNTRIES;
 
   protected readonly dayFillOptions: { value: DayFill; label: string }[] = [
+    { value: 'outline', label: 'Outline' },
+    { value: 'corner', label: 'Corner' },
+    { value: 'underline', label: 'Underline' },
     { value: 'edge', label: 'Edge' },
+    { value: 'wash', label: 'Wash' },
     { value: 'full', label: 'Filled' },
   ];
 

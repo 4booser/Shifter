@@ -49,7 +49,8 @@ export type CellTimes = 'none' | 'start' | 'range';
  * scan across a month, at the cost of everything sitting on tinted ground.
  * Neither is right for everyone, which is why it is a setting.
  */
-export type DayFill = 'edge' | 'full';
+/** How loud a hand-picked day colour is drawn. Ordered quietest to loudest. */
+export type DayFill = 'outline' | 'corner' | 'underline' | 'edge' | 'wash' | 'full';
 
 /**
  * Which template belongs on which weekday, keyed by day number the way

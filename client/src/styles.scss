@@ -366,6 +366,17 @@ body {
   background: var(--surface-sunken);
   border: 1px solid var(--border);
   border-radius: var(--radius);
+
+  /* Past four or so choices an equal share of one row is a few characters
+     each. These wrap onto as many rows as they need instead. */
+  &.is-wrap {
+    display: flex;
+    flex-wrap: wrap;
+
+    > * {
+      flex: 1 1 5.5rem;
+    }
+  }
 }
 
 /* ==== Theme picker ====
@@ -783,9 +794,23 @@ body {
   display: flex;
   justify-content: space-between;
   gap: 0.5rem;
+  min-width: 0;
   padding: 0.3125rem 0.5rem;
   border-radius: 7px;
   font-size: 0.8125rem;
+
+  /* A place carries a name that can be long, a pay period, and now two
+     controls as well. Side by side in a column this narrow the name was the
+     part that gave way — "BarDym <3" became "BarDy…". Stacked, the name gets
+     the line to itself and the period sits under it, which is how the shift
+     rows above already read. */
+  &.is-stacked {
+    flex: 1 1 auto;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 0;
+  }
 
   &:hover {
     background: var(--surface-sunken);
@@ -2053,11 +2078,18 @@ body {
   white-space: nowrap;
 }
 
-/* A colour put on the day by hand. A faint wash and a bar down the edge: the
-   day still has to carry its number, badges and hours legibly, and this reads
-   as an annotation on the cell rather than a change of category. */
+/* A colour put on the day by hand. How loud it is left to the reader: the same
+   colour can be a bar down the edge, a ring, a wash, a solid cell, a rule along
+   the bottom or a folded corner. Everything except `full` keeps the day's own
+   ink, because the day still has to carry its number, badges and hours legibly
+   and only the solid fill earns the right to restate them in white. */
 .day.is-coloured {
   position: relative;
+}
+
+/* Default: a faint wash and a bar down the edge, reading as an annotation on
+   the cell rather than a change of category. */
+.day.is-coloured[data-fill="edge"] {
   background: color-mix(in srgb, var(--day-colour) 14%, var(--surface-sunken));
 
   &::before {
@@ -2068,19 +2100,59 @@ body {
     background: var(--day-colour);
     border-radius: 999px;
   }
+
+  .day-head {
+    padding-left: 0.3125rem;
+  }
 }
 
-.day.is-coloured .day-head {
-  padding-left: 0.3125rem;
+/* Nothing but a ring, for anyone who wants the grid to stay plain. */
+.day.is-coloured[data-fill="outline"] {
+  box-shadow: inset 0 0 0 2px var(--day-colour);
 }
 
-/* The other choice: the colour takes the whole cell. Stronger to scan across a
-   month, but everything then sits on tinted ground, so the text colour is
-   picked against the fill rather than against the surface — a light wash keeps
-   the normal ink, a heavy one needs white. */
-.day.is-coloured.is-filled {
-  background: color-mix(in srgb, var(--day-colour) 82%, var(--surface));
-  color: #fff;
+/* The wash without the bar: the quietest way to tell a run of days apart. */
+.day.is-coloured[data-fill="wash"] {
+  background: color-mix(in srgb, var(--day-colour) 18%, var(--surface-sunken));
+}
+
+/* A rule along the bottom — visible down a column without tinting the cell. */
+.day.is-coloured[data-fill="underline"] {
+  &::after {
+    content: "";
+    position: absolute;
+    inset: auto 0.3125rem 0 0.3125rem;
+    height: 3px;
+    background: var(--day-colour);
+    border-radius: 999px;
+  }
+}
+
+/* A folded corner. The smallest mark that still survives a month at a glance. */
+.day.is-coloured[data-fill="corner"] {
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    border-width: 0 0.75rem 0.75rem 0;
+    border-style: solid;
+    border-color: transparent var(--day-colour) transparent transparent;
+    border-top-right-radius: inherit;
+  }
+}
+
+/* The loudest choice: the colour takes the whole cell. Stronger to scan across
+   a month, but everything then sits on tinted ground, so the text colour is
+   picked against the fill rather than against the surface. */
+.day.is-coloured[data-fill="full"] {
+  /* The colour itself, not a mix towards the surface. Mixing made the cell
+     lighter under a light theme and darker under a dark one, so the ink that
+     had to sit on it was not knowable from the colour alone — and the ink was
+     hard-coded to white, which vanished on the pale half of the palette. Full
+     means full, and the ink is chosen from the colour's own luminance. */
+  background: var(--day-colour);
+  color: var(--day-ink, #fff);
 
   &::before {
     display: none;
@@ -2101,9 +2173,9 @@ body {
   /* Badges lose their own colour here: on a saturated ground the only thing
      that stays legible is the cell's own ink on a translucent chip. */
   .day-entry .day-mark {
-    background: rgb(255 255 255 / 22%);
-    border-color: rgb(255 255 255 / 45%);
-    color: #fff;
+    background: color-mix(in srgb, var(--day-ink, #fff) 22%, transparent);
+    border-color: color-mix(in srgb, var(--day-ink, #fff) 45%, transparent);
+    color: var(--day-ink, #fff);
   }
 
   .day-hours,
@@ -2368,7 +2440,11 @@ body {
   gap: 0.5rem;
 
   > * {
-    flex: 1 1 9rem;
+    /* Wide enough that the largest value on the row — the hero amount, at
+       1.625rem — keeps its currency mark on the same line. On the stats page
+       that works out at four to a row, which is the density the grid had; below
+       that the row simply fits fewer. */
+    flex: 1 1 12rem;
     min-width: 0;
   }
 }

@@ -84,8 +84,8 @@
               <span class="pay-where">
                 <strong>
                   {{ row.location_name }}
-                  @if (row.stream !== 'all') {
-                    <span class="pay-stream">{{ streamLabel(row.stream) | t }}</span>
+                  @if (splitLabel(row); as stream) {
+                    <span class="pay-stream">{{ stream | t }}</span>
                   }
                 </strong>
                 <span class="field-hint">
@@ -132,8 +132,8 @@
               <span class="pay-where">
                 <strong>
                   {{ row.location_name }}
-                  @if (row.stream !== 'all') {
-                    <span class="pay-stream">{{ streamLabel(row.stream) | t }}</span>
+                  @if (splitLabel(row); as stream) {
+                    <span class="pay-stream">{{ stream | t }}</span>
                   }
                 </strong>
                 <span class="field-hint">

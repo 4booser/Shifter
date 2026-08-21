@@ -157,9 +157,16 @@ export class Payouts {
     return `${this.i18n.t('in')} ${days} ${this.i18n.t('days')}`;
   }
 
-  /** Only shown where a place splits its payments; 'all' needs no badge. */
-  protected streamLabel(stream: PayPeriodRow['stream']): string {
-    return stream === 'commission' ? 'Commission' : 'Wage';
+  /**
+   * The badge for a row, or null where there is nothing to distinguish. Tested
+   * for the two split values rather than against 'all', so a server that has
+   * not been updated yet — where the field is simply absent — reads as one
+   * payment rather than badging every row as a wage.
+   */
+  protected splitLabel(row: PayPeriodRow): string | null {
+    if (row.stream === 'commission') return 'Commission';
+
+    return row.stream === 'wage' ? 'Wage' : null;
   }
 
   protected statusLabel(status: PayPeriodRow['status']): string {

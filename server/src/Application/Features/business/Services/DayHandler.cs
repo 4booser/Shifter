@@ -572,7 +572,10 @@ public partial class DayHandler : IDayHandler
                 entry.ShiftId,
                 entry.Shift?.Name ?? string.Empty,
                 entry.Shift?.Symbol,
-                entry.Shift?.Location?.Colour,
+                // The template's own colour first: two shifts at one place
+                // are the case this exists for, and they would otherwise be
+                // the same colour as each other.
+                entry.Shift?.Colour ?? entry.Shift?.Location?.Colour,
                 entry.StartTime.ToString("HH:mm"),
                 entry.EndTime.ToString("HH:mm"),
                 Math.Round(entry.PaidDuration.TotalHours, 2),

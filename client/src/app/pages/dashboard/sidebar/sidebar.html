@@ -50,7 +50,11 @@
               [attr.aria-pressed]="brush()?.id === template.id"
               (click)="pick(template)"
             >
-              <span class="palette-symbol">
+              <span
+                class="palette-symbol"
+                [class.is-coloured]="template.effective_colour !== null"
+                [style.--mark-colour]="template.effective_colour"
+              >
                 {{ template.symbol ?? template.name.charAt(0) }}
               </span>
               <span class="palette-name">{{ template.name }}</span>

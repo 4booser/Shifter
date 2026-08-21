@@ -631,6 +631,10 @@ export const RU: Dictionary = {
     'Из вашего календаря она убрана — теперь её ставит себе тот, кто взял.',
   'Tell me what is on tomorrow': 'Сообщать, что завтра',
   'Tomorrow you work': 'Завтра работаете',
+  'Takes the colour of its place of work. Pick one to tell two shifts at the same place apart.':
+    'Берёт цвет своего места работы. Выберите свой, чтобы отличать две смены в одном месте.',
+  'Click the same colour again to go back to the place’s.':
+    'Нажмите тот же цвет ещё раз, чтобы вернуть цвет места.',
 };
 
 export const UK: Dictionary = {
@@ -1247,4 +1251,8 @@ export const UK: Dictionary = {
     'З вашого календаря її прибрано — тепер її ставить собі той, хто взяв.',
   'Tell me what is on tomorrow': 'Повідомляти, що завтра',
   'Tomorrow you work': 'Завтра працюєте',
+  'Takes the colour of its place of work. Pick one to tell two shifts at the same place apart.':
+    'Бере колір свого місця роботи. Оберіть власний, щоб відрізняти дві зміни в одному місці.',
+  'Click the same colour again to go back to the place’s.':
+    'Натисніть той самий колір ще раз, щоб повернути колір місця.',
 };

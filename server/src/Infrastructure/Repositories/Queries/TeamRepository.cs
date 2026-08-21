@@ -92,7 +92,10 @@ public class TeamRepository : ITeamRepository
                 entry.Day.Date,
                 entry.Shift!.Name,
                 entry.Shift.Symbol,
-                entry.Shift.Location!.Colour,
+                // The template's own colour first, the place's as a fallback —
+                // the same order the calendar uses, so one shift is not two
+                // colours depending on which screen it is on.
+                entry.Shift.Colour ?? entry.Shift.Location!.Colour,
                 entry.StartTime,
                 entry.EndTime,
                 entry.BreakMinutes,

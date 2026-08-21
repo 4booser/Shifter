@@ -12,7 +12,7 @@
  */
 
 // Bumping this drops every old cache on activate.
-const VERSION = 'v1';
+const VERSION = 'v2';
 const SHELL = `shifter-shell-${VERSION}`;
 const DATA = `shifter-data-${VERSION}`;
 
@@ -71,9 +71,23 @@ self.addEventListener('fetch', (event) => {
   // offline shows the browser's dinosaur instead of the app.
   if (request.mode === 'navigate') {
     event.respondWith(
-      fetch(request).catch(() =>
-        caches.match('/index.html').then((cached) => cached ?? Response.error()),
-      ),
+      fetch(request)
+        .then((response) => {
+          // Keep the offline fallback current. It used to be written once, at
+          // install, and never again — so the copy shown without a network was
+          // whatever shipped the day the worker was first registered, pointing
+          // at bundles that no longer exist.
+          if (response.ok) {
+            const copy = response.clone();
+
+            caches.open(SHELL).then((cache) => cache.put('/index.html', copy));
+          }
+
+          return response;
+        })
+        .catch(() =>
+          caches.match('/index.html').then((cached) => cached ?? Response.error()),
+        ),
     );
 
     return;

@@ -89,6 +89,16 @@ public sealed class FakeShifterQuery : IShifterQuery
 
 public sealed class FakeShifterCommand : IShifterCommand
 {
+    /// <summary>
+    /// The query side, when a test has one. The handlers re-read what they have
+    /// just written — that is how a response gets its location name and colour
+    /// — so without somewhere for a write to land, the read finds nothing and
+    /// the fake quietly answers a different question than the database would.
+    /// </summary>
+    private readonly FakeShifterQuery? _query;
+
+    public FakeShifterCommand(FakeShifterQuery? query = null) => _query = query;
+
     public List<Day> Saved { get; } = [];
     public List<Event> Events { get; } = [];
     public int SalesUsage { get; set; }
@@ -161,7 +171,21 @@ public sealed class FakeShifterCommand : IShifterCommand
     }
 
     public Task<bool> AddDayAsync(Day day, CancellationToken ct) => Task.FromResult(true);
-    public Task<bool> AddShiftAsync(Shift shift, CancellationToken ct) => Task.FromResult(true);
+    public Task<bool> AddShiftAsync(Shift shift, CancellationToken ct)
+    {
+        if (_query is not null)
+        {
+            shift.Id = shift.Id == 0 ? _query.Shifts.Count + 1 : shift.Id;
+
+            // Attaching the place is what EF's Include does on the re-read.
+            shift.Location = _query.Locations
+                .FirstOrDefault(place => place.Id == shift.LocationId);
+
+            _query.Shifts.Add(shift);
+        }
+
+        return Task.FromResult(true);
+    }
     public Task<bool> AddSalesAsync(Sales sales, CancellationToken ct) => Task.FromResult(true);
     public Task<bool> AddLocationAsync(Location location, CancellationToken ct) => Task.FromResult(true);
     public Task<bool> AddPayoutAsync(Payout payout, CancellationToken ct) => Task.FromResult(true);

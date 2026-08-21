@@ -35,6 +35,28 @@
 		-Server
 	}
 
+	# ==== Caching ====
+	#
+	# Nothing here sent Cache-Control at all, which does not mean "do not
+	# cache" — with only an ETag and a Last-Modified to go on, browsers fall
+	# back to a heuristic and keep the file for a fraction of its age without
+	# asking again. For a service worker that is close to fatal: a stale sw.js
+	# is never re-fetched, so it never updates, and it goes on serving the
+	# bundle it cached the first time. The site then looks frozen at an old
+	# release while the server has been shipping new ones for days.
+
+	# The entry points, which must be checked every single time. no-cache does
+	# not forbid storing them — it requires revalidation, so an unchanged file
+	# still costs a 304 rather than a download.
+	@entry path / /index.html /sw.js /manifest.webmanifest
+	header @entry Cache-Control "no-cache"
+
+	# Hashed builds, where the name changes whenever the contents do. These are
+	# the ones worth keeping for a year: a new release asks for new names, so a
+	# stale copy can never be served for them.
+	@hashed path_regexp \-[A-Z0-9]{8}\.(js|css)$
+	header @hashed Cache-Control "public, max-age=31536000, immutable"
+
 	log {
 		output stdout
 		format console

@@ -6,6 +6,7 @@ import { CalendarStore } from '../../../core/calendar/calendar-store';
 import {
   SALARY_PERIODS,
   EMOJI_GROUPS,
+  MARK_COLOURS,
   SalaryPeriod,
   ShiftTemplate,
 } from '../../../core/calendar/calendar.models';
@@ -23,6 +24,7 @@ const DEFAULTS = {
   salary_amount: null as number | null,
   break_minutes: 0,
   location_id: null as number | null,
+  colour: null as string | null,
 };
 
 @Component({
@@ -42,6 +44,7 @@ export class ShiftModal {
   protected readonly periods = SALARY_PERIODS;
   protected readonly locations = this.store.locations;
   protected readonly emojiGroups = EMOJI_GROUPS;
+  protected readonly colours = MARK_COLOURS;
   protected readonly fieldError = validationMessage;
 
   protected pickEmoji(emoji: string): void {
@@ -61,6 +64,7 @@ export class ShiftModal {
     salary_amount: [null as number | null, [Validators.min(0)]],
     break_minutes: [0, [Validators.min(0), Validators.max(720)]],
     location_id: [null as number | null],
+    colour: [null as string | null],
   });
 
   constructor() {
@@ -83,10 +87,33 @@ export class ShiftModal {
               salary_amount: template.salary_amount,
               break_minutes: template.break_minutes,
               location_id: template.location_id,
+              colour: template.colour,
             },
       );
     });
   }
+
+  /**
+   * Clicking the active colour again clears it, which is how a template goes
+   * back to borrowing its place's — there is no separate "none" swatch to hunt
+   * for, and the place's colour is the sensible default to fall back to.
+   */
+  protected pickColour(value: string): void {
+    const control = this.form.controls.colour;
+
+    control.setValue(control.value === value ? null : value);
+  }
+
+  /** What the calendar will actually draw, given the place currently chosen. */
+  protected readonly preview = computed(() => {
+    const own = this.form.controls.colour.value;
+
+    if (own !== null) return own;
+
+    const placeId = this.form.controls.location_id.value;
+
+    return this.locations().find((place) => place.id === placeId)?.colour ?? null;
+  });
 
   protected pickPeriod(period: SalaryPeriod): void {
     this.form.controls.salary_period.setValue(period);
@@ -130,6 +157,7 @@ export class ShiftModal {
         salary_amount: value.salary_amount,
         break_minutes: value.break_minutes,
         location_id: value.location_id,
+        colour: value.colour,
       },
       this.editing()?.id ?? null,
       () => this.closed.emit(),

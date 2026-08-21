@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Shifter.Application.Common.Exceptions;
 using Shifter.Application.Features.business.DTOs;
 using Shifter.Application.Features.business.Services.Interfaces;
@@ -6,7 +7,7 @@ using Shifter.Infrastructure.Repositories.Interfaces;
 
 namespace Shifter.Application.Features.business.Services;
 
-public class ShiftHandler : IShiftHandler
+public partial class ShiftHandler : IShiftHandler
 {
     private const int NameMaxLength = 40;
 
@@ -128,6 +129,7 @@ public class ShiftHandler : IShiftHandler
             ? null
             : request.symbol.Trim();
         shift.LocationId = request.location_id;
+        shift.Colour = NormaliseColour(request.colour);
         shift.StartTime = start;
         shift.EndTime = end;
         shift.SalaryPeriod = ParsePeriod(request.salary_period);
@@ -154,8 +156,28 @@ public class ShiftHandler : IShiftHandler
         shift.LocationId,
         shift.Location?.Name,
         shift.Location?.Colour,
+        shift.Colour,
+        // Worked out here rather than in the client, so the calendar, the rota
+        // and the share card cannot each answer it differently.
+        shift.Colour ?? shift.Location?.Colour,
         shift.Archived
     );
+
+    /// <summary>
+    /// Empty and null both mean "take the place's colour": the client clears
+    /// the swatch by sending either, and neither belongs in the database.
+    /// </summary>
+    private static string? NormaliseColour(string? colour)
+    {
+        if (string.IsNullOrWhiteSpace(colour)) return null;
+
+        string trimmed = colour.Trim();
+
+        if (!HexColour().IsMatch(trimmed))
+            throw new ValidationException("Colour must be a hex value like #1F3A5F.");
+
+        return trimmed.ToUpperInvariant();
+    }
 
     internal static string PeriodName(SalaryPeriod period) => period switch
     {
@@ -183,4 +205,7 @@ public class ShiftHandler : IShiftHandler
 
         return parsed;
     }
+
+    [GeneratedRegex("^#[0-9A-Fa-f]{6}$")]
+    private static partial Regex HexColour();
 }

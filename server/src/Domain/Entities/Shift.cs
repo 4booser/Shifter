@@ -23,6 +23,14 @@ public sealed class Shift
     public string? Symbol { get; set; }
 
     /// <summary>
+    /// The template's own colour, as "#RRGGBB". Null means it borrows its
+    /// place's, which is where every shift's colour used to come from — fine
+    /// while one place meant one kind of work, useless the moment a bar has an
+    /// opening shift and a close that want telling apart at a glance.
+    /// </summary>
+    public string? Colour { get; set; }
+
+    /// <summary>
     /// Explicit foreign key alongside the Location navigation below, so the
     /// template can be assigned a place without loading one first.
     /// </summary>

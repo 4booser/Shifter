@@ -19,6 +19,10 @@ export interface ShiftTemplate {
   location_id: number | null;
   location_name: string | null;
   location_colour: string | null;
+  /** The template's own colour, or null when it borrows the place's. */
+  colour: string | null;
+  /** What to draw: own colour first, the place's as a fallback. */
+  effective_colour: string | null;
   /** "HH:mm". */
   start_time: string;
   end_time: string;
@@ -35,6 +39,8 @@ export interface ShiftCreate {
   name: string;
   symbol: string | null;
   location_id: number | null;
+  /** '#RRGGBB', or null to go back to the place's colour. */
+  colour: string | null;
   start_time: string;
   end_time: string;
   salary_period: SalaryPeriod;

@@ -23,6 +23,7 @@ import { currentCardTheme, drawShareCard } from '../../core/export/share-card';
 import { Sheet, buildXlsx, downloadBlob } from '../../core/export/xlsx';
 import { I18n, TPipe } from '../../core/i18n/i18n';
 import { SettingsStore } from '../../core/settings/settings-store';
+import { STATS_PERIODS } from '../../core/settings/settings-store';
 import {
   Column,
   ColumnDatum,
@@ -41,14 +42,11 @@ import { MoneyPipe } from '../../shared/money/money-pipe';
 
 type PresetId = 'month' | 'previous' | '3m' | '6m' | 'year' | 'all' | 'custom';
 
-const PRESETS: { id: PresetId; label: string }[] = [
-  { id: 'month', label: 'This month' },
-  { id: 'previous', label: 'Last month' },
-  { id: '3m', label: 'Last 3 months' },
-  { id: '6m', label: 'Last 6 months' },
-  { id: 'year', label: 'This year' },
-  { id: 'all', label: 'All time' },
-];
+/** The shared list, shaped for this page's template. */
+const PRESETS: { id: PresetId; label: string }[] = STATS_PERIODS.map((entry) => ({
+  id: entry.value as PresetId,
+  label: entry.label,
+}));
 
 /** Wide enough to mean "everything" without a special case on the server. */
 const ALL_TIME = { from: '2000-01-01', to: '2099-12-31' };
@@ -77,7 +75,16 @@ export class Stats {
   private readonly i18n = inject(I18n);
 
   protected readonly presets = PRESETS;
-  protected readonly preset = signal<PresetId>('month');
+  /**
+   * Opens on whatever the settings say, so someone who always looks at the year
+   * is not clicking past this month every time. A stored value that no longer
+   * names a preset falls back rather than leaving the page on nothing.
+   */
+  protected readonly preset = signal<PresetId>(
+    (PRESETS.some((entry) => entry.id === this.settings.statsPeriod())
+      ? this.settings.statsPeriod()
+      : 'month') as PresetId,
+  );
   protected readonly customFrom = signal(monthBounds(todayKey()).from);
   protected readonly customTo = signal(monthBounds(todayKey()).to);
 

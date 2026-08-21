@@ -102,6 +102,16 @@ export interface Settings {
   /** Prefix or suffix on every amount; purely a label. */
   currency: string;
   currencyBefore: boolean;
+  /**
+   * Decimals shown on money. Two is exact; none suits anyone paid in round
+   * numbers, for whom a trailing ",5" on every figure is noise. Only the
+   * display rounds — every total is still summed at full precision.
+   */
+  moneyDecimals: 0 | 2;
+  /** Group thousands ("12 500" against "12500"). */
+  groupThousands: boolean;
+  /** Which window the statistics page opens on. */
+  statsPeriod: string;
   density: Density;
   /** Monday-first is the norm for rotas, but not everywhere. */
   mondayFirst: boolean;
@@ -191,6 +201,23 @@ export const ACCENT_PRESETS = [
 
 export const CURRENCY_PRESETS = ['$', '€', '£', '₴', 'zł', 'Kč', '₸', '¥'];
 
+/**
+ * The windows the statistics page offers. Here rather than on that page so the
+ * settings modal can offer the same list without importing a lazy route and
+ * dragging the whole statistics chunk onto the dashboard.
+ *
+ * 'custom' is deliberately absent: it means "the two dates in those boxes",
+ * which is not a thing a page can open on.
+ */
+export const STATS_PERIODS: { value: string; label: string }[] = [
+  { value: 'month', label: 'This month' },
+  { value: 'previous', label: 'Last month' },
+  { value: '3m', label: 'Last 3 months' },
+  { value: '6m', label: 'Last 6 months' },
+  { value: 'year', label: 'This year' },
+  { value: 'all', label: 'All time' },
+];
+
 const DEFAULTS: Settings = {
   theme: 'system',
   language: 'en',
@@ -198,6 +225,9 @@ const DEFAULTS: Settings = {
   accent: '#4F46E5',
   currency: '$',
   currencyBefore: false,
+  moneyDecimals: 2,
+  groupThousands: true,
+  statsPeriod: 'month',
   density: 'comfortable',
   mondayFirst: true,
   view: 'month',
@@ -244,6 +274,7 @@ export class SettingsStore {
   readonly highlightWeekends = computed(() => this._settings().highlightWeekends);
   readonly confirmBulk = computed(() => this._settings().confirmBulk);
   readonly hideAmounts = computed(() => this._settings().hideAmounts);
+  readonly statsPeriod = computed(() => this._settings().statsPeriod);
   readonly remindUnclosed = computed(() => this._settings().remindUnclosed);
   readonly cellTimes = computed(() => this._settings().cellTimes);
   readonly dayFill = computed(() => this._settings().dayFill);
@@ -324,9 +355,11 @@ export class SettingsStore {
 
     // The mask keeps the currency mark so a hidden value still reads as money.
     if (hideAmounts) return currencyBefore ? `${currency}•••` : `••• ${currency}`;
+    const { moneyDecimals, groupThousands } = this._settings();
     const text = amount.toLocaleString(this.locale(), {
       minimumFractionDigits: 0,
-      maximumFractionDigits: 2,
+      maximumFractionDigits: moneyDecimals,
+      useGrouping: groupThousands,
     });
 
     if (currency === '') return text;

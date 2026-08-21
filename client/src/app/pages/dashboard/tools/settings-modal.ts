@@ -16,12 +16,24 @@ import {
   DayFill,
   Density,
   Language,
+  STATS_PERIODS,
+  Settings,
   SettingsStore,
   ShiftLook,
   THEME_PRESETS,
   ThemeMode,
 } from '../../../core/settings/settings-store';
 import { Modal } from '../../../shared/modal/modal';
+
+/**
+ * Every setting that is a plain on/off. Derived rather than listed: the list
+ * used to be written out by hand, so adding a switch meant remembering to
+ * extend it in a second place, and forgetting only showed up as a type error
+ * pointing at the template rather than at the omission.
+ */
+type BooleanSetting = {
+  [K in keyof Settings]: Settings[K] extends boolean ? K : never;
+}[keyof Settings];
 
 @Component({
   selector: 'app-settings-modal',
@@ -65,6 +77,12 @@ export class SettingsModal {
   protected readonly notifyPermission = this.reminders.permission;
 
   protected readonly themes = THEME_PRESETS;
+  protected readonly statsPeriods = STATS_PERIODS;
+
+  protected readonly decimalOptions: { value: 0 | 2; label: string }[] = [
+    { value: 0, label: 'Whole numbers' },
+    { value: 2, label: 'To the cent' },
+  ];
 
   protected readonly densities: { value: Density; label: string }[] = [
     { value: 'comfortable', label: 'Comfortable' },
@@ -105,6 +123,14 @@ export class SettingsModal {
     this.store.update('shiftLook', value);
   }
 
+  protected setDecimals(value: 0 | 2): void {
+    this.store.update('moneyDecimals', value);
+  }
+
+  protected setStatsPeriod(value: string): void {
+    this.store.update('statsPeriod', value);
+  }
+
   protected setHolidayCountry(value: string): void {
     this.store.update('holidayCountry', value);
   }
@@ -129,18 +155,7 @@ export class SettingsModal {
     this.store.update('showEarningsInCells', !this.settings().showEarningsInCells);
   }
 
-  protected toggle(
-    key:
-      | 'showShiftNamesInCells'
-      | 'highlightWeekends'
-      | 'reduceMotion'
-      | 'confirmBulk'
-      | 'hideAmounts'
-      | 'glass'
-      | 'remindUnclosed'
-      | 'compactSidebar'
-      | 'notifyUnclosed',
-  ): void {
+  protected toggle(key: BooleanSetting): void {
     this.store.update(key, !this.settings()[key]);
   }
 

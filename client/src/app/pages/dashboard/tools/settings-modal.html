@@ -105,6 +105,45 @@
         <span class="toggle" [class.is-on]="settings().currencyBefore"></span>
         {{ 'Symbol before the amount' | t }}
       </button>
+      <button type="button" class="toggle-row" (click)="toggle('groupThousands')">
+        <span class="toggle" [class.is-on]="settings().groupThousands"></span>
+        {{ 'Space between thousands' | t }}
+      </button>
+    </div>
+
+    <div class="field">
+      <span class="field-label">{{ 'Decimals on amounts' | t }}</span>
+      <div class="segmented" role="group" aria-label="Decimals on amounts">
+        @for (option of decimalOptions; track option.value) {
+          <button
+            type="button"
+            class="segment"
+            [class.is-active]="settings().moneyDecimals === option.value"
+            (click)="setDecimals(option.value)"
+          >
+            {{ option.label | t }}
+          </button>
+        }
+      </div>
+      <!-- Only the display rounds: a total is still summed from the full
+           figures, so switching this can never change what a period is worth. -->
+      <small class="field-hint">{{ 'Rounding is only what you see; totals keep every cent.' | t }}</small>
+    </div>
+
+    <div class="field">
+      <span class="field-label">{{ 'Statistics open on' | t }}</span>
+      <div class="segmented is-wrap" role="group" aria-label="Default statistics period">
+        @for (option of statsPeriods; track option.value) {
+          <button
+            type="button"
+            class="segment"
+            [class.is-active]="settings().statsPeriod === option.value"
+            (click)="setStatsPeriod(option.value)"
+          >
+            {{ option.label | t }}
+          </button>
+        }
+      </div>
     </div>
 
     <div class="field">

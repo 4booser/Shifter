@@ -459,6 +459,43 @@
         </section>
       }
 
+      <!-- ==== The mix, month by month ====
+           The chart above says whether a month was good. This says whether it
+           was good for the same reason. -->
+      @if (mix().length > 0) {
+        <section class="stat-card">
+          <header class="chart-head">
+            <h3 class="block-title">{{ 'How the mix moved' | t }}</h3>
+            <span class="chart-legend">
+              @for (series of mixLegend; track series.name) {
+                <span class="legend-key">
+                  <span class="legend-swatch" [attr.data-tint]="series.tint"></span>
+                  {{ series.name | t }}
+                </span>
+              }
+            </span>
+          </header>
+
+          <div class="mix">
+            @for (month of mix(); track month.label) {
+              <div class="mix-month">
+                <span class="mix-stack" [style.height.%]="month.height">
+                  @for (part of month.parts; track part.name) {
+                    <span
+                      class="mix-part"
+                      [attr.data-tint]="part.tint"
+                      [style.flex-grow]="part.share"
+                      [title]="(part.name | t) + ': ' + (part.value | money)"
+                    ></span>
+                  }
+                </span>
+                <span class="mix-name">{{ month.label }}</span>
+              </div>
+            }
+          </div>
+        </section>
+      }
+
       <!-- ==== Heatmap ==== -->
       <section class="stat-card">
         <h3 class="block-title">{{ 'Activity' | t }}</h3>

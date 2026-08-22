@@ -99,6 +99,56 @@ export class Stats {
   /** Twelve months of totals, for the "is this normal" chart. */
   protected readonly trend = signal<ColumnDatum[]>([]);
 
+  /**
+   * Fixed and in the stacking order, not derived from whichever period is on
+   * screen: the legend for this chart has to name the same three series every
+   * time, or a month with no sales would quietly repaint the others.
+   */
+  protected readonly mixLegend = [
+    { name: 'Shifts', tint: 'teal' },
+    { name: 'Sales', tint: 'indigo' },
+    { name: 'Tips', tint: 'green' },
+  ];
+
+  /** The same months split three ways, for how the mix moved. */
+  protected readonly trendParts = signal<
+    { label: string; shifts: number; sales: number; tips: number }[]
+  >([]);
+
+  /**
+   * Each month as a stack of what made it up, on one scale across the year.
+   *
+   * The twelve-month chart says whether a month was good; this says whether it
+   * was good for the same reason. A summer carried by tips and a winter carried
+   * by hours are different jobs, and the totals alone cannot tell them apart.
+   */
+  protected readonly mix = computed(() => {
+    const months = this.trendParts();
+    const peak = Math.max(
+      1,
+      ...months.map((month) => month.shifts + month.sales + month.tips),
+    );
+
+    return months.map((month) => {
+      const total = month.shifts + month.sales + month.tips;
+
+      return {
+        label: month.label,
+        total,
+        // Of the tallest month, so the columns are comparable down the row;
+        // the segments then divide that height between them.
+        height: (total / peak) * 100,
+        parts: [
+          { name: 'Shifts', tint: 'teal', value: month.shifts },
+          { name: 'Sales', tint: 'indigo', value: month.sales },
+          { name: 'Tips', tint: 'green', value: month.tips },
+        ]
+          .filter((part) => part.value > 0)
+          .map((part) => ({ ...part, share: total > 0 ? (part.value / total) * 100 : 0 })),
+      };
+    });
+  });
+
   protected readonly trendColumns = computed<Column[]>(() =>
     // Wider cap: a dozen columns over this plot leave slots far wider than the
     // day chart's, and the default thickness would look like a rendering fault.
@@ -263,7 +313,7 @@ export class Stats {
         return this.api.days(from, to);
       }),
     ).subscribe({
-      next: (responses) =>
+      next: (responses) => {
         this.trend.set(
           responses.map((response, index) => ({
             label: this.monthLabel(months[index]),
@@ -271,8 +321,23 @@ export class Stats {
             planned: response.planned_earned,
             hours: response.hours,
           })),
-        ),
-      error: () => this.trend.set([]),
+        );
+
+        // The same twelve responses, kept split, so the mix over the year costs
+        // no extra requests.
+        this.trendParts.set(
+          responses.map((response, index) => ({
+            label: this.monthLabel(months[index]),
+            shifts: response.shifts_earned + response.period_earned + response.overtime_earned,
+            sales: response.sales_earned,
+            tips: response.tips_earned,
+          })),
+        );
+      },
+      error: () => {
+        this.trend.set([]);
+        this.trendParts.set([]);
+      },
     });
   }
 

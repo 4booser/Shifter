@@ -1522,6 +1522,60 @@ body {
   background: var(--slice);
 }
 
+/* ==== The mix, month by month ====
+
+   Twelve stacked columns. Each column's height is its share of the best month,
+   so the row compares totals; the segments inside divide that height, so each
+   column also compares its own parts. The 2px gaps are the surface showing
+   through, as everywhere else marks touch. */
+.mix {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.375rem;
+  height: 10rem;
+  margin-top: 0.75rem;
+}
+
+.mix-month {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  justify-items: center;
+  gap: 0.375rem;
+  flex: 1 1 0;
+  min-width: 0;
+  height: 100%;
+}
+
+.mix-stack {
+  grid-row: 1;
+  align-self: end;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 2px;
+  width: 100%;
+  min-height: 2px;
+}
+
+.mix-part {
+  flex-basis: 0;
+  min-height: 2px;
+  background: var(--slice);
+  border-radius: 2px;
+
+  /* Only the top of the stack is rounded off, so a column reads as one bar
+     divided rather than as blocks piled up. */
+  &:last-child {
+    border-radius: 4px 4px 2px 2px;
+  }
+}
+
+.mix-name {
+  grid-row: 2;
+  color: var(--text-faint);
+  font-size: 0.625rem;
+  font-variant-numeric: tabular-nums;
+}
+
 /* ==== Spread of days ====
 
    A histogram, built from divs rather than SVG: six bands is few enough that

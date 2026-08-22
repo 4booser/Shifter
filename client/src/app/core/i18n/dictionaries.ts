@@ -265,6 +265,7 @@ export const RU: Dictionary = {
   'No goal covers this stretch. Whole weeks, months and years line up with one.':
     'На этот отрезок цели нет. Целые недели, месяцы и годы совпадают с целями.',
   'What this wage is made of': 'Из чего складывается заработок',
+  'How the mix moved': 'Как менялся состав',
   'This period': 'Этот период',
   'The one before': 'Предыдущий',
   'What sells': 'Что продаётся',
@@ -981,6 +982,7 @@ export const UK: Dictionary = {
   'No goal covers this stretch. Whole weeks, months and years line up with one.':
     'На цей відрізок цілі немає. Цілі тижні, місяці та роки збігаються з цілями.',
   'What this wage is made of': 'З чого складається заробіток',
+  'How the mix moved': 'Як змінювався склад',
   'This period': 'Цей період',
   'The one before': 'Попередній',
   'What sells': 'Що продається',

@@ -53,6 +53,11 @@
         <div class="wrap-months" role="img" [attr.aria-label]="'Biggest month' | t">
           @for (month of monthBars(); track $index) {
             <span class="wrap-month" [class.is-peak]="month.peak" [title]="month.title">
+              @if (month.beforeHeight > 0) {
+                <!-- Last year's same month, behind and hollow: the mark to
+                     beat, not a second thing being measured. -->
+                <span class="wrap-month-ghost" [style.height.%]="month.beforeHeight"></span>
+              }
               <span class="wrap-month-bar" [style.height.%]="month.height"></span>
               <span class="wrap-month-name">{{ month.label }}</span>
             </span>
@@ -172,6 +177,41 @@
       </div>
 
       <h2 class="wrap-heading">{{ 'The shape of the year' | t }}</h2>
+
+      @if (composition().length > 1) {
+        <section class="wrap-card is-wide">
+          <span class="wrap-label">{{ 'What the year was made of' | t }}</span>
+
+          <div
+            class="composition"
+            role="img"
+            [attr.aria-label]="'What the year was made of' | t"
+          >
+            @for (part of composition(); track part.name) {
+              <span
+                class="composition-part"
+                [attr.data-tint]="part.tint"
+                [style.flex-grow]="part.share"
+                [title]="(part.name | t) + ': ' + (part.value | money)"
+              >
+                @if (part.labelled) {
+                  <span class="composition-share">{{ part.share | number: '1.0-0' }}%</span>
+                }
+              </span>
+            }
+          </div>
+
+          <div class="composition-legend">
+            @for (part of composition(); track part.name) {
+              <span class="legend-key">
+                <span class="legend-swatch" [attr.data-tint]="part.tint"></span>
+                {{ part.name | t }}
+                <span class="legend-value">{{ part.value | money }}</span>
+              </span>
+            }
+          </div>
+        </section>
+      }
 
       <!-- A cell a day. The numbers above say how much; this says when. -->
       <section class="wrap-card is-wide">

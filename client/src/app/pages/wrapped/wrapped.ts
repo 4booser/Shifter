@@ -230,10 +230,16 @@ export class Wrapped {
   /** Twelve bars of the year, scaled to the biggest month. */
   protected readonly monthBars = computed(() => {
     const totals = new Array(12).fill(0) as number[];
+    const before = new Array(12).fill(0) as number[];
 
     for (const day of this.days()) totals[Number(day.date.slice(5, 7)) - 1] += day.earned;
+    for (const day of this.previous().days) {
+      before[Number(day.date.slice(5, 7)) - 1] += day.earned;
+    }
 
-    const peak = Math.max(...totals, 1);
+    // One scale across both years, or the comparison would be between two
+    // differently stretched pictures and every month would look matched.
+    const peak = Math.max(...totals, ...before, 1);
     const initial = new Intl.DateTimeFormat(this.locale(), { month: 'narrow' });
     const full = new Intl.DateTimeFormat(this.locale(), { month: 'long' });
 
@@ -244,6 +250,9 @@ export class Wrapped {
       // Floor of 2% so an empty month still shows a seat for its bar.
       height: Math.max(2, (value / peak) * 100),
       peak: value === peak && value > 0,
+      /** Last year's same month, drawn behind as the mark to beat. */
+      beforeValue: before[index],
+      beforeHeight: before[index] > 0 ? Math.max(2, (before[index] / peak) * 100) : 0,
     }));
   });
 
@@ -261,6 +270,33 @@ export class Wrapped {
     const best = totals.indexOf(Math.max(...totals));
 
     return totals[best] === 0 ? null : { name: names[best], count: totals[best] };
+  });
+
+  /**
+   * What the year was made of. The records name the biggest single things; this
+   * says how the whole divides, which is the difference between "my best night
+   * was 4 000" and "a quarter of my year is tips".
+   */
+  protected readonly composition = computed(() => {
+    const summary = this.summary();
+
+    const parts = [
+      { name: 'Shifts', value: summary.shifts_earned, tint: 'teal' },
+      { name: 'Salary', value: summary.period_earned, tint: 'rose' },
+      { name: 'Overtime', value: summary.overtime_earned, tint: 'amber' },
+      { name: 'Sales', value: summary.sales_earned, tint: 'indigo' },
+      { name: 'Tips', value: summary.tips_earned, tint: 'green' },
+    ].filter((part) => part.value > 0);
+
+    const total = parts.reduce((sum, part) => sum + part.value, 0);
+
+    if (total <= 0) return [];
+
+    return parts.map((part) => ({
+      ...part,
+      share: (part.value / total) * 100,
+      labelled: part.value / total >= 0.08,
+    }));
   });
 
   /**

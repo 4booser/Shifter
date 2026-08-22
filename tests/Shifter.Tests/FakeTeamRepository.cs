@@ -110,10 +110,40 @@ public sealed class FakeTeamRepository : ITeamRepository
 
     public Task SaveAsync(CancellationToken ct) => Task.CompletedTask;
 
+    /// <summary>
+    /// Placements the caller owns, for the visibility handler to edit.
+    /// Keyed the way the real lookup is — by shift and owner together — so a
+    /// fake cannot hand back somebody else's shift and make the ownership
+    /// check untestable.
+    /// </summary>
+    public List<DayShift> OwnedShifts { get; } = [];
+
+    /// <summary>Who the last rota query was told shares their earnings.</summary>
+    public int[] LastSharingUserIds { get; private set; } = [];
+
+    /// <summary>Who the last rota query was told hides by default.</summary>
+    public int[] LastPrivateUserIds { get; private set; } = [];
+
     public Task<RotaRow[]> GetRotaAsync(
         int[] userIds,
+        int callerUserId,
+        int[] sharingUserIds,
+        int[] privateByDefaultUserIds,
         DateOnly from,
         DateOnly to,
         CancellationToken ct)
-        => Task.FromResult(Array.Empty<RotaRow>());
+    {
+        // Recorded rather than acted on: the filtering itself is SQL and is
+        // verified against a real database, but which people the handler
+        // classifies as sharing is a decision made in the handler, and that is
+        // worth pinning here.
+        LastSharingUserIds = sharingUserIds;
+        LastPrivateUserIds = privateByDefaultUserIds;
+
+        return Task.FromResult(Array.Empty<RotaRow>());
+    }
+
+    public Task<DayShift?> GetOwnShiftAsync(int dayShiftId, int userId, CancellationToken ct)
+        => Task.FromResult(OwnedShifts.FirstOrDefault(shift =>
+            shift.Id == dayShiftId && shift.Day?.UserId == userId));
 }

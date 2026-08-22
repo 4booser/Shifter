@@ -33,8 +33,16 @@ public class CoverHandlerTests
             InviteCode = "ABC234",
             Members =
             [
-                new TeamMember { Id = 1, TeamId = TeamId, UserId = Owner, DisplayName = "Sam" },
-                new TeamMember { Id = 2, TeamId = TeamId, UserId = Claimant, DisplayName = "Alex" },
+                new TeamMember
+                {
+                    Id = 1, TeamId = TeamId, UserId = Owner,
+                    DisplayName = "Sam", Colour = "#6366F1",
+                },
+                new TeamMember
+                {
+                    Id = 2, TeamId = TeamId, UserId = Claimant,
+                    DisplayName = "Alex", Colour = "#D97706",
+                },
             ],
         });
 
@@ -175,7 +183,11 @@ public class CoverHandlerTests
     public async Task AcceptingOneOfferDropsTheOthersOnThatShift()
     {
         _teams.Teams[0].Members!.Add(
-            new TeamMember { Id = 3, TeamId = TeamId, UserId = 4, DisplayName = "Robin" });
+            new TeamMember
+            {
+                Id = 3, TeamId = TeamId, UserId = 4,
+                DisplayName = "Robin", Colour = "#0891B2",
+            });
 
         await Offer();
         await Offer(4);

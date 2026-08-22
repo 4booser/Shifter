@@ -20,15 +20,33 @@ public interface ITeamRepository
     Task SaveAsync(CancellationToken ct);
 
     /// <summary>
-    /// The rota rows for a set of people over a range. Returns the shift facts
-    /// only — the query never reads a pay column, so no amount can leak by
-    /// someone later widening a DTO.
+    /// The rota rows for a set of people over a range.
+    ///
+    /// Two of the arguments are the privacy rules, expressed as data the query
+    /// runs on rather than as checks after it. <paramref name="sharingUserIds"/>
+    /// are the people who have switched earnings sharing on, and pay is read for
+    /// nobody else — the column is not selected, so no amount reaches memory to
+    /// be leaked by a widened DTO. <paramref name="privateByDefaultUserIds"/> are
+    /// the people whose unmarked shifts stay off the rota.
+    ///
+    /// <paramref name="callerUserId"/> is exempt from the visibility filter: you
+    /// always see your own shifts here, including the ones you are hiding, or
+    /// there would be no way to tell what the crew is missing.
     /// </summary>
     Task<RotaRow[]> GetRotaAsync(
         int[] userIds,
+        int callerUserId,
+        int[] sharingUserIds,
+        int[] privateByDefaultUserIds,
         DateOnly from,
         DateOnly to,
         CancellationToken ct);
+
+    /// <summary>
+    /// One of the caller's own placements, for setting whether the crew sees it.
+    /// Null when it is not theirs, so the ownership check cannot be forgotten.
+    /// </summary>
+    Task<DayShift?> GetOwnShiftAsync(int dayShiftId, int userId, CancellationToken ct);
 
     /// <summary>
     /// The placement someone is offering to take, with the facts an offer has
@@ -80,4 +98,11 @@ public sealed record RotaRow(
     TimeOnly EndTime,
     int BreakMinutes,
     bool Worked,
-    bool NeedsCover);
+    bool NeedsCover,
+    /// <summary>Null for "follow my default", which is most shifts.</summary>
+    bool? TeamVisible,
+    /// <summary>
+    /// Null for everyone who has not opted in — not blanked afterwards, never
+    /// selected in the first place.
+    /// </summary>
+    decimal? Pay);

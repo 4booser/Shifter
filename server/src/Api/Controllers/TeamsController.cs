@@ -8,9 +8,12 @@ using Shifter.Application.Features.Teams.DTOs;
 namespace Shifter.Api.Controllers;
 
 /// <summary>
-/// The shared rota. Everything here shows who is on and for how long; nothing
-/// here can show what anyone earns. The DTOs have no money fields at all, and
-/// the query behind them never reads a pay column.
+/// The shared rota: who is on and for how long.
+///
+/// What anyone earns is theirs to publish. It reaches the rota only for members
+/// who have switched sharing on, and for the rest the query does not read the
+/// pay column at all — see <see cref="Shifter.Application.Features.Teams.DTOs.RotaEntryDto"/>.
+/// Tips, sales and rates are never read for anyone.
 /// </summary>
 [Authorize]
 [Route("shifter/v1/teams")]
@@ -63,6 +66,42 @@ public class TeamsController : Controller
         [FromQuery] DateOnly to,
         CancellationToken ct)
         => Ok(await _mediator.Send(new GetRotaDto(UserId(), id, from, to), ct));
+
+    /// <summary>
+    /// How you appear to this crew and what you let them see. Your own only —
+    /// there is no route to anybody else's, by design.
+    /// </summary>
+    [HttpPatch]
+    [Route("{id:int}/me")]
+    public async Task<ActionResult<MembershipDto>> UpdateMembership(
+        int id,
+        [FromBody] MembershipBody request,
+        CancellationToken ct)
+        => Ok(await _mediator.Send(
+            new UpdateMembershipDto(
+                UserId(),
+                id,
+                request.display_name,
+                request.colour,
+                request.share_earnings,
+                request.private_by_default),
+            ct));
+
+    /// <summary>
+    /// Whether one shift of yours shows on the rota. Null puts it back under
+    /// your default. Not scoped to a team: hiding a shift hides it everywhere.
+    /// </summary>
+    [HttpPut]
+    [Route("shifts/{dayShiftId:int}/visibility")]
+    public async Task<IActionResult> SetVisibility(
+        int dayShiftId,
+        [FromBody] VisibilityBody request,
+        CancellationToken ct)
+    {
+        await _mediator.Send(new SetShiftVisibilityDto(UserId(), dayShiftId, request.visible), ct);
+
+        return NoContent();
+    }
 
     /// <summary>Offering to take a shift somebody has asked to have covered.</summary>
     [HttpPost]

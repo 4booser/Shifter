@@ -13,6 +13,55 @@ public static class TeamRules
     public const int MaxMembers = 60;
 
     /// <summary>
+    /// The colours a crew is drawn in, in the order they are handed out.
+    ///
+    /// Validated for colour blindness rather than chosen by eye: no adjacent
+    /// pair separates by less than ΔE 10 under deuteranopia, and every one of
+    /// them clears 3:1 against both the light and the dark surface. The order
+    /// is the assignment order and must not be shuffled — re-stepping it would
+    /// change the CVD separation the list was picked for.
+    ///
+    /// A name is always drawn beside the colour, so nobody is ever identified
+    /// by colour alone; past seven people it wraps, and anyone can pick their
+    /// own instead.
+    /// </summary>
+    public static readonly string[] MemberColours =
+    [
+        "#6366F1", "#D97706", "#0891B2", "#DB2777", "#65A30D", "#A855F7", "#059669",
+    ];
+
+    /// <summary>
+    /// The first colour nobody in the team is using, so a crew of four is four
+    /// obviously different colours rather than whatever the counter landed on.
+    /// </summary>
+    public static string NextColour(Team team)
+    {
+        HashSet<string> taken = (team.Members ?? [])
+            .Select(member => member.Colour)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        return MemberColours.FirstOrDefault(colour => !taken.Contains(colour))
+            ?? MemberColours[(team.Members?.Count ?? 0) % MemberColours.Length];
+    }
+
+    /// <summary>
+    /// Six-digit hex only. The value is written into a style attribute on every
+    /// other member's screen, so anything else does not get stored.
+    /// </summary>
+    public static string RequireColour(string? value)
+    {
+        string colour = (value ?? string.Empty).Trim();
+
+        bool valid = colour.Length == 7
+            && colour[0] == '#'
+            && colour[1..].All(Uri.IsHexDigit);
+
+        if (!valid) throw new ValidationException("Colour must be a hex value like #6366F1.");
+
+        return colour.ToUpperInvariant();
+    }
+
+    /// <summary>
     /// Six characters from an alphabet with no 0/O or 1/I/L in it: the code
     /// gets read aloud across a bar, and those are the pairs people mishear.
     /// </summary>
@@ -103,6 +152,7 @@ public class CreateTeamHandler : IRequestHandler<CreateTeamDto, TeamDto>
                 TeamId = team.Id,
                 UserId = request.UserId,
                 DisplayName = user.FirstName,
+                Colour = TeamRules.MemberColours[0],
             },
             ct);
 
@@ -162,7 +212,13 @@ public class JoinTeamHandler : IRequestHandler<JoinTeamDto, TeamDto>
             : TeamRules.RequireName(request.display_name, "Display name");
 
         await _teams.AddMemberAsync(
-            new TeamMember { TeamId = team.Id, UserId = request.UserId, DisplayName = name },
+            new TeamMember
+            {
+                TeamId = team.Id,
+                UserId = request.UserId,
+                DisplayName = name,
+                Colour = TeamRules.NextColour(team),
+            },
             ct);
 
         Team joined = await _teams.GetForMemberAsync(team.Id, request.UserId, ct) ?? team;
@@ -221,6 +277,74 @@ public class RotateCodeHandler : IRequestHandler<RotateCodeDto, TeamDto>
     }
 }
 
+/// <summary>
+/// Your own membership: the name and colour the crew sees you as, and how much
+/// of yourself you show them. Nobody can edit anyone else's — not even the
+/// owner, who can remove a person but not decide what they share.
+/// </summary>
+public class UpdateMembershipHandler : IRequestHandler<UpdateMembershipDto, MembershipDto>
+{
+    private readonly ITeamRepository _teams;
+
+    public UpdateMembershipHandler(ITeamRepository teams) => _teams = teams;
+
+    public async Task<MembershipDto> Handle(UpdateMembershipDto request, CancellationToken ct)
+    {
+        Team team = await _teams.GetForMemberAsync(request.TeamId, request.UserId, ct)
+            ?? throw new NotFoundException("Team does not exist.");
+
+        TeamMember member = team.Members!.First(entry => entry.UserId == request.UserId);
+
+        // Absent means "leave it alone". A screen that only changes the colour
+        // sends only the colour, and a stale client cannot silently reset the
+        // sharing switches by omitting them.
+        if (request.display_name is not null)
+            member.DisplayName = TeamRules.RequireName(request.display_name, "Display name");
+
+        if (request.colour is not null)
+            member.Colour = TeamRules.RequireColour(request.colour);
+
+        if (request.share_earnings is not null)
+            member.ShareEarnings = request.share_earnings.Value;
+
+        if (request.private_by_default is not null)
+            member.PrivateByDefault = request.private_by_default.Value;
+
+        await _teams.SaveAsync(ct);
+
+        return new MembershipDto(
+            member.Id,
+            member.DisplayName,
+            member.Colour,
+            member.ShareEarnings,
+            member.PrivateByDefault);
+    }
+}
+
+/// <summary>
+/// Marking one shift shown or hidden on every rota it appears on. Not scoped to
+/// a team on purpose: someone in two crews who hides a shift means it, and
+/// asking them to hide it once per team is how it ends up published by mistake.
+/// </summary>
+public class SetShiftVisibilityHandler : IRequestHandler<SetShiftVisibilityDto, Unit>
+{
+    private readonly ITeamRepository _teams;
+
+    public SetShiftVisibilityHandler(ITeamRepository teams) => _teams = teams;
+
+    public async Task<Unit> Handle(SetShiftVisibilityDto request, CancellationToken ct)
+    {
+        DayShift shift = await _teams.GetOwnShiftAsync(request.DayShiftId, request.UserId, ct)
+            ?? throw new NotFoundException("That shift does not exist.");
+
+        shift.TeamVisible = request.visible;
+
+        await _teams.SaveAsync(ct);
+
+        return Unit.Value;
+    }
+}
+
 public class GetRotaHandler : IRequestHandler<GetRotaDto, RotaDto>
 {
     private const int MaxRangeDays = 120;
@@ -246,6 +370,18 @@ public class GetRotaHandler : IRequestHandler<GetRotaDto, RotaDto>
 
         RotaRow[] rows = await _teams.GetRotaAsync(
             members.Select(member => member.UserId).ToArray(),
+            request.UserId,
+            // You are in the sharing set whether or not you share: it is your
+            // own money, and a rota that hid your totals from you would be a
+            // strange thing to open.
+            members
+                .Where(member => member.ShareEarnings || member.UserId == request.UserId)
+                .Select(member => member.UserId)
+                .ToArray(),
+            members
+                .Where(member => member.PrivateByDefault)
+                .Select(member => member.UserId)
+                .ToArray(),
             request.From,
             request.To,
             ct);
@@ -270,6 +406,8 @@ public class GetRotaHandler : IRequestHandler<GetRotaDto, RotaDto>
 
                 List<CoverOffer> raised = offersByShift.GetValueOrDefault(row.DayShiftId, []);
 
+                bool mine = row.UserId == request.UserId;
+
                 return new RotaEntryDto(
                     row.DayShiftId,
                     byUser[row.UserId].Id,
@@ -277,12 +415,17 @@ public class GetRotaHandler : IRequestHandler<GetRotaDto, RotaDto>
                     row.ShiftName,
                     row.Symbol,
                     row.Colour,
+                    byUser[row.UserId].Colour,
                     row.StartTime.ToString("HH:mm"),
                     row.EndTime.ToString("HH:mm"),
                     Math.Round(hours, 2),
                     row.Worked,
                     row.NeedsCover,
-                    row.UserId == request.UserId,
+                    mine,
+                    // What you are keeping back is your business; what somebody
+                    // else is keeping back is theirs, and they are not sent it.
+                    mine ? Visibility(row.TeamVisible) : null,
+                    row.Pay is null ? null : Math.Round(row.Pay.Value, 2),
                     raised
                         .Select(offer => CoverRules.ToDto(
                             offer,
@@ -301,13 +444,26 @@ public class GetRotaHandler : IRequestHandler<GetRotaDto, RotaDto>
                     .Where(entry => entry.member_id == member.Id)
                     .ToArray();
 
+                bool you = member.UserId == request.UserId;
+
                 return new RotaMemberDto(
                     member.Id,
                     member.DisplayName,
-                    member.UserId == request.UserId,
+                    you,
+                    member.Colour,
                     Math.Round(theirs.Sum(entry => entry.hours), 2),
                     theirs.Select(entry => entry.date).Distinct().Count(),
-                    theirs.Count(entry => entry.needs_cover));
+                    theirs.Count(entry => entry.needs_cover),
+                    member.ShareEarnings,
+                    // Null and zero are different answers: null is "not shared",
+                    // zero is "shared, and it was a quiet month".
+                    theirs.Any(entry => entry.pay is not null)
+                        ? Math.Round(theirs.Sum(entry => entry.pay ?? 0m), 2)
+                        : null,
+                    you
+                        ? theirs.Count(entry => Hidden(entry.visibility, member.PrivateByDefault))
+                        : null,
+                    you ? member.PrivateByDefault : null);
             })
             .ToArray();
 
@@ -342,11 +498,30 @@ public class GetRotaHandler : IRequestHandler<GetRotaDto, RotaDto>
                     .Select(member => member.display_name)
                     .ToArray(),
                 Math.Round(onDate.Sum(entry => entry.hours), 2),
-                onDate.Count(entry => entry.needs_cover)));
+                onDate.Count(entry => entry.needs_cover),
+                onDate.Any(entry => entry.pay is not null)
+                    ? Math.Round(onDate.Sum(entry => entry.pay ?? 0m), 2)
+                    : null));
         }
 
         return [.. days];
     }
+
+    /// <summary>The three states as a word, because true/false/null is not one.</summary>
+    private static string Visibility(bool? visible) => visible switch
+    {
+        true => "shown",
+        false => "hidden",
+        _ => "default",
+    };
+
+    /// <summary>Whether the crew is missing this one, default included.</summary>
+    private static bool Hidden(string? visibility, bool privateByDefault) => visibility switch
+    {
+        "hidden" => true,
+        "default" => privateByDefault,
+        _ => false,
+    };
 
     /// <summary>
     /// The same arithmetic DayShift uses, applied to the projected row: clock

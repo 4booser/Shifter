@@ -38,6 +38,17 @@ public sealed class DayShift
     /// </summary>
     public bool NeedsCover { get; set; }
 
+    /// <summary>
+    /// Whether the crew sees this one. Null defers to the member's own default
+    /// for the team, which is what almost every shift will be; true and false
+    /// are the deliberate exceptions to it.
+    ///
+    /// Three states rather than two because the answer is genuinely "I have not
+    /// said" for most shifts, and collapsing that into either yes or no makes
+    /// changing the default rewrite history.
+    /// </summary>
+    public bool? TeamVisible { get; set; }
+
     /// <summary>Clock time between start and end, wrapping past midnight.</summary>
     [NotMapped]
     public TimeSpan Duration

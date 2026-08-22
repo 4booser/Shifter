@@ -12,11 +12,6 @@ export interface Team {
   invite_code: string | null;
 }
 
-/**
- * Mirrors RotaEntryDto — and, like it, has nowhere to put money. If this ever
- * grows a pay field, the server is handing out something it should not, and
- * the backend privacy tests fail long before this file matters.
- */
 /** Somebody offering to take a shift. Names and dates, never money. */
 export interface RotaOffer {
   offer_id: number;
@@ -26,6 +21,14 @@ export interface RotaOffer {
   accepted: boolean;
 }
 
+/** What one shift may be set to do on the rota. */
+export type Visibility = 'shown' | 'hidden' | 'default';
+
+/**
+ * Mirrors RotaEntryDto. `pay` arrives only for people who have switched sharing
+ * on — for everyone else the server does not read the column, so null here is
+ * "not shared" and never "shared but zero".
+ */
 export interface RotaEntry {
   /** Identifies the placement, so an offer can name which one. */
   day_shift_id: number;
@@ -33,7 +36,10 @@ export interface RotaEntry {
   date: string;
   shift_name: string;
   symbol: string | null;
+  /** The shift's own colour, as on its owner's calendar. */
   colour: string | null;
+  /** The person's colour, which is how the crew tells them apart. */
+  member_colour: string;
   start_time: string;
   end_time: string;
   hours: number;
@@ -42,6 +48,9 @@ export interface RotaEntry {
   needs_cover: boolean;
   /** Yours, so you are the one who can hand it over. */
   is_mine: boolean;
+  /** Only ever set on your own shifts. */
+  visibility: Visibility | null;
+  pay: number | null;
   offers: RotaOffer[];
 }
 
@@ -58,10 +67,42 @@ export interface RotaMember {
   member_id: number;
   display_name: string;
   is_you: boolean;
+  colour: string;
   hours: number;
   days: number;
   cover_requests: number;
+  shares_earnings: boolean;
+  /** Null unless they share. Zero is a quiet month, null is a closed book. */
+  earned: number | null;
+  /** Shifts the crew cannot see. Only ever set for you. */
+  hidden: number | null;
+  /** What your unmarked shifts do. Only ever set for you. */
+  private_by_default: boolean | null;
 }
+
+/** Your own membership — the only one you may read in full. */
+export interface Membership {
+  member_id: number;
+  display_name: string;
+  colour: string;
+  share_earnings: boolean;
+  private_by_default: boolean;
+}
+
+/**
+ * The colours a crew is drawn in, in the order the server hands them out.
+ * Mirrors TeamRules.MemberColours: validated for colour blindness as a set, so
+ * the order is part of the guarantee and re-stepping it would break it.
+ */
+export const MEMBER_COLOURS = [
+  '#6366F1',
+  '#D97706',
+  '#0891B2',
+  '#DB2777',
+  '#65A30D',
+  '#A855F7',
+  '#059669',
+] as const;
 
 /** One day across the whole team: coverage, spare hands, open requests. */
 export interface RotaDay {
@@ -71,6 +112,8 @@ export interface RotaDay {
   free: string[];
   hours: number;
   cover_requests: number;
+  /** The day's takings across everyone who shares them; null if nobody does. */
+  earned: number | null;
 }
 
 export interface Rota {
@@ -112,6 +155,31 @@ export class TeamApi {
 
   rota(id: number, from: string, to: string): Observable<Rota> {
     return this.http.get<Rota>(`${TEAMS_API}/${id}/rota`, { params: { from, to } });
+  }
+
+  /**
+   * How you appear to this crew and what you let them see. Only the fields
+   * passed are changed, so a screen that flips one switch cannot reset another
+   * by not knowing about it.
+   */
+  updateMembership(
+    id: number,
+    changes: Partial<{
+      display_name: string;
+      colour: string;
+      share_earnings: boolean;
+      private_by_default: boolean;
+    }>,
+  ): Observable<Membership> {
+    return this.http.patch<Membership>(`${TEAMS_API}/${id}/me`, changes);
+  }
+
+  /**
+   * Whether one shift of yours shows on the rota. Null puts it back under your
+   * default. Not scoped to a team — hiding a shift hides it from every crew.
+   */
+  setVisibility(dayShiftId: number, visible: boolean | null): Observable<void> {
+    return this.http.put<void>(`${TEAMS_API}/shifts/${dayShiftId}/visibility`, { visible });
   }
 
   /** Offering to take a shift somebody put up for cover. */

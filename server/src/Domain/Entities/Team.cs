@@ -1,8 +1,9 @@
 namespace Shifter.Domain.Entities;
 
 /// <summary>
-/// A crew that shares a rota. Deliberately thin: it exists so people can see
-/// when the others are on, and nothing about it touches money.
+/// A crew that shares a rota. It exists so people can see when the others are
+/// on; what each of them earns is nobody's business unless they say otherwise,
+/// which is what <see cref="TeamMember.ShareEarnings"/> is for.
 /// </summary>
 public sealed class Team
 {
@@ -39,6 +40,29 @@ public sealed class TeamMember
     /// account: a rota reads better with the name the shift list uses.
     /// </summary>
     public required string DisplayName { get; set; }
+
+    /// <summary>
+    /// The colour this person is drawn in on the shared calendar. Their own
+    /// choice rather than a hash of their name: a crew works out between
+    /// themselves who is which colour, and a hash cannot be argued with.
+    /// </summary>
+    public required string Colour { get; set; }
+
+    /// <summary>
+    /// Opt-in, and off for everyone who joined before it existed. When it is
+    /// off the rota query does not read this person's pay at all — it is not
+    /// fetched and then withheld, so there is nothing to leak.
+    /// </summary>
+    public bool ShareEarnings { get; set; }
+
+    /// <summary>
+    /// What an unmarked shift does. Off means the crew sees this person's
+    /// shifts unless one is marked private; on inverts it, so nothing shows
+    /// until it is deliberately shared. Someone holding two jobs wants the
+    /// second one, and the per-shift flag alone would make them mark every
+    /// shift they place for the rest of the year.
+    /// </summary>
+    public bool PrivateByDefault { get; set; }
 
     public DateTime JoinedAt { get; set; } = DateTime.UtcNow;
 }

@@ -11,14 +11,6 @@ public record TeamDto(
     /// <summary>Only the owner is shown the code; members do not need it.</summary>
     string? invite_code);
 
-/// <summary>
-/// One person's day on the shared rota.
-///
-/// This record is the privacy boundary, and it is a boundary by construction:
-/// there is nowhere in it to put money. No pay, no tips, no sales, no rate —
-/// not filtered out later, simply absent from the shape. Anything added here
-/// becomes visible to every member of the team, so think before widening it.
-/// </summary>
 /// <summary>Somebody offering to take a shift. Names and nothing else.</summary>
 public record RotaOfferDto(
     int offer_id,
@@ -27,6 +19,15 @@ public record RotaOfferDto(
     bool is_you,
     bool accepted);
 
+/// <summary>
+/// One person's shift on the shared rota.
+///
+/// This record is the privacy boundary. <c>pay</c> is null for everyone who has
+/// not switched sharing on, and null there is not a filtered value — the query
+/// does not select the column for those people at all, so there is nothing in
+/// memory to leak. Anything added here becomes visible to the whole team, so
+/// think before widening it.
+/// </summary>
 public record RotaEntryDto(
     /// <summary>Identifies the placement so an offer can name which one.</summary>
     int day_shift_id,
@@ -34,7 +35,10 @@ public record RotaEntryDto(
     DateOnly date,
     string shift_name,
     string? symbol,
+    /// <summary>The shift's own colour, as it appears on its owner's calendar.</summary>
     string? colour,
+    /// <summary>The person's colour, which is how the crew tells them apart.</summary>
+    string member_colour,
     string start_time,
     string end_time,
     double hours,
@@ -44,6 +48,14 @@ public record RotaEntryDto(
     bool needs_cover,
     /// <summary>True when it is the caller's own shift, who alone can hand it over.</summary>
     bool is_mine,
+    /// <summary>
+    /// What the shift is set to do on the rota: "shown", "hidden", or "default".
+    /// Only ever populated for the caller's own shifts — what somebody else has
+    /// chosen to keep back is itself not the crew's business.
+    /// </summary>
+    string? visibility,
+    /// <summary>Null unless this person shares earnings. See the type remarks.</summary>
+    decimal? pay,
     /// <summary>Who has offered to work it.</summary>
     RotaOfferDto[] offers);
 
@@ -51,11 +63,24 @@ public record RotaMemberDto(
     int member_id,
     string display_name,
     bool is_you,
+    string colour,
     /// <summary>Hours this person is on for across the range.</summary>
     double hours,
     int days,
     /// <summary>Shifts this person is asking to have covered.</summary>
-    int cover_requests);
+    int cover_requests,
+    /// <summary>Whether this person lets the crew see what they earn.</summary>
+    bool shares_earnings,
+    /// <summary>Null unless they do.</summary>
+    decimal? earned,
+    /// <summary>Shifts of theirs the crew cannot see. Only ever set for you.</summary>
+    int? hidden,
+    /// <summary>
+    /// What their unmarked shifts do. Only ever set for you — knowing whether
+    /// somebody hides by habit or by exception says something about them that
+    /// the rota has no business saying.
+    /// </summary>
+    bool? private_by_default);
 
 /// <summary>One day of the rota, seen across the whole team.</summary>
 public record RotaDayDto(
@@ -65,7 +90,9 @@ public record RotaDayDto(
     /// <summary>Members with nothing on — who could pick something up.</summary>
     string[] free,
     double hours,
-    int cover_requests);
+    int cover_requests,
+    /// <summary>The day's takings across everyone who shares them.</summary>
+    decimal? earned);
 
 /// <summary>The rota for a range: who is on, when, and for how long.</summary>
 public record RotaDto(
@@ -111,7 +138,43 @@ public record RotateCodeDto(int UserId, int TeamId) : IRequest<TeamDto>;
 public record GetRotaDto(int UserId, int TeamId, DateOnly From, DateOnly To)
     : IRequest<RotaDto>;
 
+/// <summary>
+/// How you appear to your crew and how much of yourself you show them. Every
+/// field is optional so a screen can change one thing without restating the
+/// rest, which is also what stops a stale client switching sharing back on.
+/// </summary>
+public record UpdateMembershipDto(
+    int UserId,
+    int TeamId,
+    string? display_name,
+    string? colour,
+    bool? share_earnings,
+    bool? private_by_default) : IRequest<MembershipDto>;
+
+/// <summary>Your own membership, which is the only one you may read in full.</summary>
+public record MembershipDto(
+    int member_id,
+    string display_name,
+    string colour,
+    bool share_earnings,
+    bool private_by_default);
+
+/// <summary>
+/// Marking one shift shown or hidden on the rota. Null means "no opinion" and
+/// puts the shift back under whatever the member default is.
+/// </summary>
+public record SetShiftVisibilityDto(int UserId, int DayShiftId, bool? visible)
+    : IRequest<Unit>;
+
 /// <summary>Body shapes; the user id never travels in one.</summary>
 public record CreateTeamBody(string name);
 
 public record JoinTeamBody(string invite_code, string? display_name);
+
+public record MembershipBody(
+    string? display_name,
+    string? colour,
+    bool? share_earnings,
+    bool? private_by_default);
+
+public record VisibilityBody(bool? visible);

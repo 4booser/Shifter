@@ -467,6 +467,7 @@ export const RU: Dictionary = {
   'ready': 'готово',
   'skipped': 'пропущено',
   'Import': 'Импортировать',
+  Date: 'Дата',
   'Importing…': 'Импортирую…',
   'Date is not readable.': 'Дата не читается.',
   'No shift with that name.': 'Нет смены с таким названием.',
@@ -590,6 +591,33 @@ export const RU: Dictionary = {
   'Nobody is asking for cover right now.': 'Сейчас подмену никто не ищет.',
   'Days with nobody on': 'Дни без покрытия',
   'Everyone is on.': 'Все на смене.',
+
+  // The shared rota: colours, what each person shows the crew
+  'Colour by': 'Цвет по',
+  'By person': 'По людям',
+  'By shift': 'По сменам',
+  'How the crew sees you': 'Как тебя видит команда',
+  'Your colour': 'Твой цвет',
+  'Someone else is using this': 'Этот цвет уже занят',
+  'Show on the rota': 'Показывать в графике',
+  Default: 'По умолчанию',
+  Show: 'Показать',
+  Hide: 'Скрыть',
+  Dismiss: 'Закрыть',
+  'Hide my shifts by default': 'По умолчанию скрывать мои смены',
+  'Nothing of yours reaches the rota until you show it, shift by shift. For a second job the crew has no part in.':
+    'Ничего твоего не попадёт в график, пока не откроешь смену вручную. Для второй работы, к которой команда отношения не имеет.',
+  'Let the crew see what I earn': 'Показывать команде мой заработок',
+  'Shift totals and their sum, on the shifts they can already see. Never your rate, tips or sales. Off unless you turn it on.':
+    'Суммы по сменам и их итог — по тем сменам, которые команда и так видит. Никогда ставку, чаевые или продажи. Выключено, пока не включишь.',
+  'Hidden from the crew in this range': 'Скрыто от команды за период',
+  'Tips, sales and rates stay private to each person, always. Everything else is up to you below.':
+    'Чаевые, продажи и ставка всегда остаются личными. Всё остальное — ниже, на твоё усмотрение.',
+  'What the range was worth': 'Сколько принёс период',
+  'share their earnings': 'делятся заработком',
+  'only you': 'только ты',
+  'Only you can see this. Nobody in the crew has opened their books, including you.':
+    'Это видишь только ты. В команде свои цифры пока не открыл никто, включая тебя.',
   'Account and sign-in': 'Аккаунт и вход',
   'Name, password, connect Google, delete the account.':
     'Имя, пароль, привязка Google, удаление аккаунта.',
@@ -1226,6 +1254,7 @@ export const UK: Dictionary = {
   'ready': 'готово',
   'skipped': 'пропущено',
   'Import': 'Імпортувати',
+  Date: 'Дата',
   'Importing…': 'Імпортую…',
   'Date is not readable.': 'Дата не читається.',
   'No shift with that name.': 'Немає зміни з такою назвою.',
@@ -1349,6 +1378,33 @@ export const UK: Dictionary = {
   'Nobody is asking for cover right now.': 'Зараз підміну ніхто не шукає.',
   'Days with nobody on': 'Дні без покриття',
   'Everyone is on.': 'Усі на зміні.',
+
+  // The shared rota: colours, what each person shows the crew
+  'Colour by': 'Колір за',
+  'By person': 'За людьми',
+  'By shift': 'За змінами',
+  'How the crew sees you': 'Як тебе бачить команда',
+  'Your colour': 'Твій колір',
+  'Someone else is using this': 'Цей колір уже зайнятий',
+  'Show on the rota': 'Показувати у графіку',
+  Default: 'За замовчуванням',
+  Show: 'Показати',
+  Hide: 'Сховати',
+  Dismiss: 'Закрити',
+  'Hide my shifts by default': 'За замовчуванням ховати мої зміни',
+  'Nothing of yours reaches the rota until you show it, shift by shift. For a second job the crew has no part in.':
+    'Нічого твого не потрапить у графік, доки не відкриєш зміну вручну. Для другої роботи, до якої команда не має стосунку.',
+  'Let the crew see what I earn': 'Показувати команді мій заробіток',
+  'Shift totals and their sum, on the shifts they can already see. Never your rate, tips or sales. Off unless you turn it on.':
+    'Суми за змінами та їхній підсумок — за тими змінами, які команда й так бачить. Ніколи ставку, чайові чи продажі. Вимкнено, доки не увімкнеш.',
+  'Hidden from the crew in this range': 'Приховано від команди за період',
+  'Tips, sales and rates stay private to each person, always. Everything else is up to you below.':
+    'Чайові, продажі та ставка завжди лишаються особистими. Решта — нижче, на твій розсуд.',
+  'What the range was worth': 'Скільки приніс період',
+  'share their earnings': 'діляться заробітком',
+  'only you': 'лише ти',
+  'Only you can see this. Nobody in the crew has opened their books, including you.':
+    'Це бачиш лише ти. У команді свої цифри поки не відкрив ніхто, включно з тобою.',
   'Account and sign-in': 'Акаунт і вхід',
   'Name, password, connect Google, delete the account.':
     'Ім\'я, пароль, прив\'язка Google, видалення акаунта.',

@@ -77,6 +77,25 @@
             </button>
           </div>
 
+          <div class="segmented" role="group" [attr.aria-label]="'Colour by' | t">
+            <button
+              type="button"
+              class="segment"
+              [class.is-active]="colourBy() === 'person'"
+              (click)="colourBy.set('person')"
+            >
+              {{ 'By person' | t }}
+            </button>
+            <button
+              type="button"
+              class="segment"
+              [class.is-active]="colourBy() === 'shift'"
+              (click)="colourBy.set('shift')"
+            >
+              {{ 'By shift' | t }}
+            </button>
+          </div>
+
           <button type="button" class="button is-quiet" (click)="today()">
             <app-icon name="calendar" />
             {{ 'Today' | t }}
@@ -134,6 +153,10 @@
               @for (row of grid(); track row.member.member_id) {
                 <tr [class.is-you]="row.member.is_you">
                   <th class="rota-name">
+                    <!-- The swatch never carries the identity on its own: the
+                         name is right beside it, which is what makes the grid
+                         readable to someone who cannot tell the colours apart. -->
+                    <span class="rota-swatch" [style.background]="row.member.colour"></span>
                     {{ row.member.display_name }}
                     @if (row.member.is_you) {
                       <span class="rota-you">{{ 'you' | t }}</span>
@@ -151,7 +174,8 @@
                           class="rota-mark"
                           [class.is-planned]="!entry.worked"
                           [class.needs-cover]="entry.needs_cover"
-                          [style.--mark-colour]="entry.colour"
+                          [class.is-unseen]="entry.is_mine && !reaching(entry)"
+                          [style.--mark-colour]="markColour(entry)"
                           [title]="entry.shift_name + ' · ' + entry.start_time + '–' + entry.end_time"
                         >
                           {{ entry.symbol ?? entry.shift_name.charAt(0) }}
@@ -171,6 +195,10 @@
           <div class="day-focus">
             <strong>{{ label(day.date) }}</strong>
             <span class="delta is-up">{{ day.on_shift }} {{ 'on shift' | t }}</span>
+            <span class="field-hint">{{ day.hours | number: '1.0-1' }} {{ 'h' | t }}</span>
+            @if (day.earned !== null) {
+              <span class="field-hint">{{ day.earned | money }}</span>
+            }
             @if (day.free.length > 0) {
               <span class="field-hint">
                 {{ 'Free that day' | t }}: {{ day.free.join(', ') }}
@@ -179,12 +207,203 @@
               <span class="field-hint">{{ 'Everyone is on.' | t }}</span>
             }
           </div>
+
+          @if (focusEntries().length > 0) {
+            <div class="focus-list">
+              @for (entry of focusEntries(); track entry.day_shift_id) {
+                <div class="focus-row" [class.is-mine]="entry.is_mine">
+                  <span class="rota-mark" [style.--mark-colour]="markColour(entry)">
+                    {{ entry.symbol ?? entry.shift_name.charAt(0) }}
+                  </span>
+
+                  <span class="focus-who">
+                    <strong>{{ entry.who }}</strong>
+                    <span class="field-hint">
+                      {{ entry.shift_name }} · {{ entry.start_time }}–{{ entry.end_time }} ·
+                      {{ entry.hours | number: '1.0-1' }} {{ 'h' | t }}
+                    </span>
+                  </span>
+
+                  @if (entry.pay !== null) {
+                    <span class="focus-pay">{{ entry.pay | money }}</span>
+                  }
+
+                  <!-- Only your own shifts carry the control, and only your own
+                       carry the state: what somebody else is holding back is
+                       not sent to this page at all. -->
+                  @if (entry.visibility; as state) {
+                    <span class="segmented is-small" role="group" [attr.aria-label]="'Show on the rota' | t">
+                      @for (option of visibilities; track option) {
+                        <button
+                          type="button"
+                          class="segment"
+                          [class.is-active]="state === option"
+                          [disabled]="busy()"
+                          (click)="setVisibility(entry, option)"
+                        >
+                          @switch (option) {
+                            @case ('default') { {{ 'Default' | t }} }
+                            @case ('shown') { {{ 'Show' | t }} }
+                            @case ('hidden') { {{ 'Hide' | t }} }
+                          }
+                        </button>
+                      }
+                    </span>
+                  }
+                </div>
+              }
+            </div>
+          }
         }
 
         <p class="field-hint">
-          {{ 'Hours and shift names only. Tips, sales and rates stay private to each person.' | t }}
+          {{ 'Tips, sales and rates stay private to each person, always. Everything else is up to you below.' | t }}
         </p>
       </section>
+
+      @if (you(); as me) {
+        <section class="stat-card">
+          <h2 class="card-title">
+            <app-icon name="user" [size]="16" />
+            {{ 'How the crew sees you' | t }}
+          </h2>
+
+          <label class="field">
+            <span class="field-label">{{ 'Your name on the rota' | t }}</span>
+            <input
+              type="text"
+              maxlength="60"
+              [ngModel]="me.display_name"
+              (ngModelChange)="renameMe($event)"
+            />
+          </label>
+
+          <span class="field-label">{{ 'Your colour' | t }}</span>
+          <div class="theme-row">
+            @for (colour of colours; track colour) {
+              <button
+                type="button"
+                class="swatch"
+                [class.is-active]="me.colour.toUpperCase() === colour"
+                [style.background]="colour"
+                [style.color]="ink(colour)"
+                [disabled]="busy()"
+                [title]="takenColours().has(colour) ? ('Someone else is using this' | t) : colour"
+                (click)="setColour(colour)"
+              >
+                <!-- A dot for a colour already in use: two people the same
+                     colour is allowed but rarely meant. -->
+                @if (takenColours().has(colour)) {
+                  <span class="swatch-taken" aria-hidden="true">•</span>
+                }
+              </button>
+            }
+          </div>
+
+          <div class="share-row">
+            <label class="share-toggle">
+              <input
+                type="checkbox"
+                [checked]="me.private_by_default === true"
+                [disabled]="busy()"
+                (change)="setPrivateDefault(!me.private_by_default)"
+              />
+              <span>
+                <strong>{{ 'Hide my shifts by default' | t }}</strong>
+                <span class="field-hint">
+                  {{ 'Nothing of yours reaches the rota until you show it, shift by shift. For a second job the crew has no part in.' | t }}
+                </span>
+              </span>
+            </label>
+
+            <label class="share-toggle">
+              <input
+                type="checkbox"
+                [checked]="me.shares_earnings"
+                [disabled]="busy()"
+                (change)="setSharing(!me.shares_earnings)"
+              />
+              <span>
+                <strong>{{ 'Let the crew see what I earn' | t }}</strong>
+                <span class="field-hint">
+                  {{ 'Shift totals and their sum, on the shifts they can already see. Never your rate, tips or sales. Off unless you turn it on.' | t }}
+                </span>
+              </span>
+            </label>
+          </div>
+
+          @if (me.hidden !== null && me.hidden > 0) {
+            <p class="field-hint">
+              <app-icon name="eye-off" [size]="13" />
+              <!-- The count sits after a colon rather than before a noun: Russian
+                   and Ukrainian decline the noun by the number, and one key
+                   cannot spell "1 смену", "2 смены" and "5 смен" at once. -->
+              {{ 'Hidden from the crew in this range' | t }}: {{ me.hidden }}
+            </p>
+          }
+        </section>
+      }
+
+      @if (sharers().length > 0) {
+        <section class="stat-card">
+          <header class="chart-head">
+            <h2 class="card-title">
+              <app-icon name="wallet" [size]="16" />
+              {{ 'What the range was worth' | t }}
+            </h2>
+            <span class="chart-legend">
+              <span class="legend-key">
+                {{ sharingCount().shared }} {{ 'of' | t }} {{ sharingCount().total }}
+                {{ 'share their earnings' | t }}
+              </span>
+            </span>
+          </header>
+
+          <app-plot [max]="earnedCeiling()" scale="money" height="9rem">
+            @for (member of sharers(); track member.member_id) {
+              <span
+                class="earned-bar"
+                [style.height.%]="earnedHeight(member)"
+                [style.background]="member.colour"
+                [title]="member.display_name"
+              ></span>
+            }
+          </app-plot>
+
+          <!-- The table is the chart's other half, not a fallback: an hourly
+               rate is a number people want to read, not estimate off a bar. -->
+          <div class="crew-list">
+            @for (member of sharers(); track member.member_id) {
+              <div class="crew-row">
+                <span class="rota-swatch" [style.background]="member.colour"></span>
+
+                <span class="crew-name">
+                  {{ member.display_name }}
+                  @if (member.is_you && !member.shares_earnings) {
+                    <span class="rota-you">{{ 'only you' | t }}</span>
+                  }
+                </span>
+
+                <span class="field-hint crew-detail">
+                  {{ member.hours | number: '1.0-0' }} {{ 'h' | t }} ·
+                  {{ member.days }} {{ 'days' | t }}
+                  @if (rate(member); as hourly) {
+                    · {{ hourly | money }}/{{ 'h' | t }}
+                  }
+                </span>
+
+                <span class="crew-total">{{ member.earned | money }}</span>
+              </div>
+            }
+          </div>
+
+          @if (sharingCount().shared === 0) {
+            <p class="field-hint">
+              {{ 'Only you can see this. Nobody in the crew has opened their books, including you.' | t }}
+            </p>
+          }
+        </section>
+      }
 
       @if (coverRequests().length > 0) {
         <section class="stat-card is-warning">

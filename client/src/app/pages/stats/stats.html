@@ -402,7 +402,7 @@
         <section class="stat-card">
           <h3 class="block-title">{{ 'What a day usually brings' | t }}</h3>
 
-          <div class="spread">
+          <app-plot [max]="spreadMax()" scale="plain" height="9rem" [tight]="true">
             @for (band of spread(); track band.from; let index = $index) {
               <div
                 class="spread-band"
@@ -414,7 +414,7 @@
                 <span class="spread-label">{{ band.label }}</span>
               </div>
             }
-          </div>
+          </app-plot>
 
           <p class="field-hint">
             {{ 'Worked days grouped by what they paid. The marked column is where the typical day falls.' | t }}
@@ -476,7 +476,7 @@
             </span>
           </header>
 
-          <div class="mix">
+          <app-plot [max]="mixMax()" scale="money" height="10rem">
             @for (month of mix(); track month.label) {
               <div class="mix-month">
                 <span class="mix-stack" [style.height.%]="month.height">
@@ -492,7 +492,7 @@
                 <span class="mix-name">{{ month.label }}</span>
               </div>
             }
-          </div>
+          </app-plot>
         </section>
       }
 
@@ -588,7 +588,8 @@
             </span>
           </header>
 
-          <div class="rates is-climb" [class.is-easing]="!hill.steeper">
+          <app-plot [max]="hill.start" scale="money" height="9rem" [tight]="true">
+            <span class="climb-marks" [class.is-easing]="!hill.steeper">
             @for (point of hill.points; track point.key) {
               <span
                 class="rates-bar"
@@ -596,7 +597,8 @@
                 [title]="point.key + ' · ' + (point.needed | money)"
               ></span>
             }
-          </div>
+            </span>
+          </app-plot>
 
           <p class="field-hint">
             @if (hill.reached) {
@@ -623,10 +625,14 @@
             </span>
           </header>
 
-          <div class="rates">
-            <!-- The average, straight across. Every column is read against it,
-                 so it is the only reference the plot needs. -->
-            <span class="rates-average" [style.bottom.%]="rates.averageAt" aria-hidden="true"></span>
+          <app-plot [max]="rates.max" scale="money" height="10rem">
+            <!-- The average, straight across. Every column is read against it. -->
+            <span
+              plotOverlay
+              class="rates-average"
+              [style.bottom.%]="rates.averageAt"
+              aria-hidden="true"
+            ></span>
 
             @for (day of rates.days; track day.date) {
               <span
@@ -636,7 +642,7 @@
                 [title]="day.date + ' · ' + (day.rate | money) + '/' + ('h' | t) + ' · ' + day.hours + ' h'"
               ></span>
             }
-          </div>
+          </app-plot>
 
           <dl class="trend-rows">
             <div class="summary-row">
@@ -735,7 +741,7 @@
         <section class="stat-card">
           <h3 class="block-title">{{ 'Which start pays' | t }}</h3>
 
-          <div class="tips-trend">
+          <app-plot [max]="startHourMax()" scale="money" height="8rem" [tight]="true">
             @for (slot of byStartHour(); track slot.hour) {
               <div class="tips-month">
                 <span class="tips-value">{{ slot.count }}</span>
@@ -748,7 +754,7 @@
                 <span class="tips-name">{{ slot.label }}</span>
               </div>
             }
-          </div>
+          </app-plot>
 
           <p class="field-hint">
             {{ 'Earnings by the hour a shift starts; the number above each is how many.' | t }}
@@ -761,7 +767,7 @@
         <section class="stat-card">
           <h3 class="block-title">{{ 'Is the tipping holding up' | t }}</h3>
 
-          <div class="tips-trend">
+          <app-plot [max]="tipsMax()" scale="percent" height="8rem" [tight]="true">
             @for (month of tipsTrend(); track month.label) {
               <div class="tips-month">
                 <span class="tips-value">{{ month.share | number: '1.0-0' }}%</span>
@@ -769,7 +775,7 @@
                 <span class="tips-name">{{ month.label }}</span>
               </div>
             }
-          </div>
+          </app-plot>
 
           <p class="field-hint">
             {{ 'Tips as a share of what each month brought in.' | t }}

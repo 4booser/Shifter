@@ -30,10 +30,12 @@ import {
   Tick,
   buildColumns,
   buildTicks,
+  niceCeiling,
 } from '../../shared/charts/chart-math';
 import { AreaChart } from '../../shared/charts/area-chart';
 import { ColumnChart } from '../../shared/charts/column-chart';
 import { Heatmap } from '../../shared/charts/heatmap';
+import { Plot } from '../../shared/charts/plot';
 import { GoalsModal } from '../dashboard/tools/goals-modal';
 import { ProgressRing } from '../../shared/charts/progress-ring';
 import { CountUp } from '../../shared/count-up';
@@ -68,6 +70,7 @@ const ALL_TIME = { from: '2000-01-01', to: '2099-12-31' };
     Delta,
     Icon,
     GoalsModal,
+    Plot,
   ],
   templateUrl: './stats.html',
 })
@@ -124,10 +127,8 @@ export class Stats {
    */
   protected readonly mix = computed(() => {
     const months = this.trendParts();
-    const peak = Math.max(
-      1,
-      ...months.map((month) => month.shifts + month.sales + month.tips),
-    );
+    const raw = Math.max(1, ...months.map((month) => month.shifts + month.sales + month.tips));
+    const peak = niceCeiling(raw);
 
     return months.map((month) => {
       const total = month.shifts + month.sales + month.tips;
@@ -135,8 +136,8 @@ export class Stats {
       return {
         label: month.label,
         total,
-        // Of the tallest month, so the columns are comparable down the row;
-        // the segments then divide that height between them.
+        // Of the axis ceiling, so the columns are comparable down the row and
+        // land on their own gridlines; the segments divide that height.
         height: (total / peak) * 100,
         parts: [
           { name: 'Shifts', tint: 'teal', value: month.shifts },
@@ -148,6 +149,20 @@ export class Stats {
       };
     });
   });
+
+  /** Peaks the plot frames measure their axes from. */
+  protected readonly tipsMax = computed(() =>
+    Math.max(1, ...this.tipsTrend().map((month) => month.share)),
+  );
+
+  protected readonly startHourMax = computed(() =>
+    Math.max(1, ...this.byStartHour().map((slot) => slot.earned)),
+  );
+
+  /** The tallest month, for the axis over the mix chart. */
+  protected readonly mixMax = computed(() =>
+    Math.max(1, ...this.trendParts().map((m) => m.shifts + m.sales + m.tips)),
+  );
 
   protected readonly trendColumns = computed<Column[]>(() =>
     // Wider cap: a dozen columns over this plot leave slots far wider than the
@@ -198,6 +213,11 @@ export class Stats {
       return { label: this.settings.format(from), count, from, to };
     });
   });
+
+  /** The busiest band, for the count axis beside the spread. */
+  protected readonly spreadMax = computed(() =>
+    Math.max(1, ...this.spread().map((band) => band.count)),
+  );
 
   protected readonly spreadPeak = computed(() =>
     Math.max(1, ...this.spread().map((band) => band.count)),
@@ -972,12 +992,12 @@ export class Stats {
       return { label: month.label, share: (month.tips / total) * 100 };
     });
 
-    const peak = Math.max(...shares.map((entry) => entry.share), 1);
+    // Against a rounded ceiling over the best month rather than against 100%:
+    // a wage where tips are a tenth would otherwise draw twelve slivers.
+    const peak = niceCeiling(Math.max(...shares.map((entry) => entry.share), 1));
 
     return shares.map((entry) => ({
       ...entry,
-      // Against the best month rather than against 100%, or a wage where tips
-      // are a tenth would draw twelve slivers and say nothing.
       height: Math.max(2, (entry.share / peak) * 100),
     }));
   });
@@ -1104,13 +1124,14 @@ export class Stats {
       .map(([hour, bucket]) => ({ hour, ...bucket }))
       .sort((a, b) => a.hour - b.hour);
 
-    const top = Math.max(1, ...rows.map((row) => row.earned));
+    const raw = Math.max(1, ...rows.map((row) => row.earned));
+    const top = niceCeiling(raw);
 
     return rows.map((row) => ({
       ...row,
       label: `${`${row.hour}`.padStart(2, '0')}:00`,
       height: Math.max(2, (row.earned / top) * 100),
-      best: row.earned === top,
+      best: row.earned === raw,
     }));
   });
 
@@ -1190,10 +1211,13 @@ export class Stats {
     const totalHours = this.summary().days.reduce((sum, day) => sum + day.hours, 0);
     const totalEarned = this.summary().days.reduce((sum, day) => sum + day.earned, 0);
     const average = totalHours > 0 ? totalEarned / totalHours : 0;
-    const peak = Math.max(...days.map((day) => day.rate), average);
+    // The axis rounds the top up to a number worth printing; the bars have to
+    // be measured against that same ceiling or they miss their own gridlines.
+    const peak = niceCeiling(Math.max(...days.map((day) => day.rate), average, 1));
 
     return {
       average,
+      max: Math.max(...days.map((day) => day.rate), average),
       // Where the average sits up the plot, so the line can be drawn across it.
       averageAt: peak > 0 ? (average / peak) * 100 : 0,
       best: Math.max(...days.map((day) => day.rate)),

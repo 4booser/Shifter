@@ -1,5 +1,4 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
-import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
@@ -29,7 +28,7 @@ interface Cell {
  */
 @Component({
   selector: 'app-team',
-  imports: [DecimalPipe, FormsModule, RouterLink, TPipe, Icon],
+  imports: [FormsModule, RouterLink, TPipe, Icon],
   templateUrl: './team.html',
 })
 export class TeamPage {

@@ -1637,14 +1637,6 @@ body {
    One series, so no legend: the title names it. Measured against the best
    month rather than against 100%, or a wage where tips are a tenth would draw
    twelve slivers and say nothing at all. */
-.tips-trend {
-  display: flex;
-  align-items: flex-end;
-  gap: 0.375rem;
-  height: 8rem;
-  margin-top: 0.75rem;
-}
-
 .tips-month {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
@@ -1674,6 +1666,102 @@ body {
   grid-row: 3;
   color: var(--text-faint);
   font-size: 0.625rem;
+}
+
+/* ==== Plot frame ====
+
+   Shared by every chart built from elements rather than SVG. The axis sits in
+   its own column so the marks keep the full remaining width, and the gridlines
+   are positioned rather than repeated, so a tick and its rule can never end up
+   at different heights. */
+.plot {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.plot-axis {
+  position: relative;
+  width: 3.25rem;
+  /* Matched to the marks' box, not the row, so 0 lands on the floor. */
+  align-self: stretch;
+}
+
+.plot-tick {
+  position: absolute;
+  right: 0;
+  /* Half a line up, so the label is centred on its rule rather than sitting on
+     it — the top tick would otherwise be clipped by the card. */
+  transform: translateY(50%);
+  color: var(--text-faint);
+  font-size: 0.625rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.plot-area {
+  position: relative;
+  padding: 0 0.5rem;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.plot-grid {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  pointer-events: none;
+}
+
+/* The marks fill the frame and sit above the rules. Every chart that goes in
+   here is a row of things standing on the floor, so the row lives here rather
+   than being restated by each one. */
+.plot-marks {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  gap: 0.375rem;
+  height: 100%;
+  padding: 0.5rem 0;
+
+  /* Columns share the width evenly whatever they are made of, but a chart with
+     three of them should not draw three slabs: past a sensible width they stop
+     growing and the leftover becomes air at the edges instead. */
+  justify-content: center;
+
+  > * {
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: 4.5rem;
+  }
+}
+
+/* Tighter gaps where a chart has a column per day rather than per month. */
+.plot-marks > .rates-bar {
+  flex: 1 1 0;
+}
+
+/* The climb draws one run rather than independent columns, so it wraps its
+   bars to carry the trend's direction as a single state. */
+.climb-marks {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 100%;
+  min-width: 0;
+  /* Not a column: it is the whole run, so the per-column width cap above must
+     not apply to it or its own bars overflow the box they sit in. */
+  max-width: none;
+  width: 100%;
+
+  > * {
+    flex: 1 1 0;
+    min-width: 0;
+  }
 }
 
 /* ==== Next money in ==== */
@@ -1845,17 +1933,9 @@ body {
    straight across, which is a horizontal line and therefore actually drawable
    in CSS — the earlier version of this plotted hours against money and needed
    a diagonal, which is where it went wrong in more ways than one. */
-.rates {
-  position: relative;
-  display: flex;
-  align-items: flex-end;
-  gap: 2px;
-  height: 10rem;
-  margin-top: 0.75rem;
-  padding: 0.5rem 0.5rem 0;
-  background: var(--surface-sunken);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+/* The marks only; the plot frame supplies the box, the axis and the rules. */
+.plot-marks > .rates-bar {
+  flex: 1 1 0;
 }
 
 .rates-average {
@@ -1883,11 +1963,11 @@ body {
 /* The climb reuses the columns but not the meaning: here the whole run is one
    trend, and what matters is its direction rather than each bar's side of a
    line. Falling behind is stated in the caption as well as coloured. */
-.rates.is-climb .rates-bar {
+.climb-marks .rates-bar {
   background: color-mix(in srgb, var(--danger) 55%, transparent);
 }
 
-.rates.is-climb.is-easing .rates-bar {
+.climb-marks.is-easing .rates-bar {
   background: color-mix(in srgb, var(--positive) 55%, transparent);
 }
 
@@ -1964,14 +2044,6 @@ body {
    so the row compares totals; the segments inside divide that height, so each
    column also compares its own parts. The 2px gaps are the surface showing
    through, as everywhere else marks touch. */
-.mix {
-  display: flex;
-  align-items: flex-end;
-  gap: 0.375rem;
-  height: 10rem;
-  margin-top: 0.75rem;
-}
-
 .mix-month {
   display: grid;
   grid-template-rows: minmax(0, 1fr) auto;
@@ -2017,14 +2089,6 @@ body {
    A histogram, built from divs rather than SVG: six bands is few enough that
    the marks are just boxes, and staying in the DOM means the count and the
    band's floor are real text that wraps, translates and can be selected. */
-.spread {
-  display: flex;
-  align-items: flex-end;
-  gap: 0.375rem;
-  height: 9rem;
-  margin-top: 0.75rem;
-}
-
 /* Three rows rather than a flex column: the middle one is the only part that
    stretches, so the bar's percentage height has a definite track to resolve
    against and the count and label keep their own lines. */

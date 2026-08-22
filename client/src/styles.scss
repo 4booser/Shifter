@@ -1676,6 +1676,57 @@ body {
   font-size: 0.625rem;
 }
 
+/* ==== What an hour was worth ====
+
+   One column a worked day, height is that day's rate. The average is a rule
+   straight across, which is a horizontal line and therefore actually drawable
+   in CSS — the earlier version of this plotted hours against money and needed
+   a diagonal, which is where it went wrong in more ways than one. */
+.rates {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 10rem;
+  margin-top: 0.75rem;
+  padding: 0.5rem 0.5rem 0;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.rates-average {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 1px dashed color-mix(in srgb, var(--text-faint) 65%, transparent);
+  pointer-events: none;
+}
+
+.rates-bar {
+  flex: 1 1 0;
+  min-width: 2px;
+  background: var(--accent);
+  border-radius: 3px 3px 1px 1px;
+}
+
+/* Below the average. Filled differently as well as shorter, so the reading
+   never depends on judging which side of a dashed line a bar ends. */
+.rates-bar.is-below {
+  background: color-mix(in srgb, var(--text-faint) 55%, transparent);
+}
+
+/* The start-hour chart reuses the tips columns but measures money, so it wears
+   the accent rather than the tips green. */
+.tips-bar.is-accent {
+  background: color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+.tips-bar.is-accent.is-peak {
+  background: var(--accent);
+}
+
 /* ==== Money against time ====
 
    Two bars per row on one scale, both percentages of their own totals. The

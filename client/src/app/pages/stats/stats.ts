@@ -1022,6 +1022,134 @@ export class Stats {
       .sort((a, b) => b.moneyShare - a.moneyShare);
   });
 
+  /**
+   * Cash against card, on the tips.
+   *
+   * The day panel has asked for this on every shift and nothing has ever shown
+   * it back. It is the one split that decides whether the money is already in a
+   * pocket or arriving with the wage — and whether it is visible to a tax
+   * office, which is not this app's business to judge but is the user's to see.
+   */
+  protected readonly tipsSplit = computed(() => {
+    let cash = 0;
+    let total = 0;
+
+    for (const day of this.summary().days) {
+      total += day.tips ?? 0;
+      cash += day.tips_cash ?? 0;
+    }
+
+    if (total <= 0) return null;
+
+    // Cash is recorded as a part of the tips, not on top of them.
+    const card = Math.max(0, total - cash);
+
+    return {
+      cash,
+      card,
+      total,
+      cashShare: (cash / total) * 100,
+      cardShare: (card / total) * 100,
+    };
+  });
+
+  /**
+   * What the hours past the weekly threshold were worth.
+   *
+   * The KPI row says how many hours went over. It does not say what they
+   * bought, and the premium is the whole reason for noticing them.
+   */
+  protected readonly overtime = computed(() => {
+    const summary = this.summary();
+
+    if (summary.overtime_hours <= 0) return null;
+
+    return {
+      hours: summary.overtime_hours,
+      earned: summary.overtime_earned,
+      share: summary.hours > 0 ? (summary.overtime_hours / summary.hours) * 100 : 0,
+      perHour: summary.overtime_hours > 0 ? summary.overtime_earned / summary.overtime_hours : 0,
+    };
+  });
+
+  /**
+   * Which starting hour the money comes from.
+   *
+   * A late shift and an early one are different jobs even at the same place,
+   * and the templates hide that behind a name. Bucketed by the hour a shift
+   * starts, because that is the thing being chosen when a rota is offered.
+   */
+  protected readonly byStartHour = computed(() => {
+    const totals = new Map<number, { earned: number; count: number }>();
+
+    for (const day of this.summary().days) {
+      for (const entry of day.shifts) {
+        if (!entry.worked) continue;
+
+        const hour = Number(entry.start_time.slice(0, 2));
+
+        if (Number.isNaN(hour)) continue;
+
+        const bucket = totals.get(hour) ?? { earned: 0, count: 0 };
+
+        bucket.earned += entry.earned;
+        bucket.count += 1;
+        totals.set(hour, bucket);
+      }
+    }
+
+    if (totals.size < 2) return [];
+
+    const rows = [...totals.entries()]
+      .map(([hour, bucket]) => ({ hour, ...bucket }))
+      .sort((a, b) => a.hour - b.hour);
+
+    const top = Math.max(1, ...rows.map((row) => row.earned));
+
+    return rows.map((row) => ({
+      ...row,
+      label: `${`${row.hour}`.padStart(2, '0')}:00`,
+      height: Math.max(2, (row.earned / top) * 100),
+      best: row.earned === top,
+    }));
+  });
+
+  /**
+   * What an hour was actually worth on each day worked.
+   *
+   * This began as hours-against-money on two axes, which was the wrong form for
+   * the data: shifts are all 7 to 11 hours, so every point landed in the same
+   * corner and the plot said nothing. Dividing one by the other says it
+   * directly — a day at 180 an hour against an average of 270 is the day worth
+   * asking about, and it needs one axis instead of two.
+   */
+  protected readonly hourlyByDay = computed(() => {
+    const days = this.summary()
+      .days.filter((day) => day.hours > 0 && day.earned > 0)
+      .map((day) => ({ date: day.date, rate: day.earned / day.hours, hours: day.hours }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+
+    if (days.length < 4) return null;
+
+    const totalHours = this.summary().days.reduce((sum, day) => sum + day.hours, 0);
+    const totalEarned = this.summary().days.reduce((sum, day) => sum + day.earned, 0);
+    const average = totalHours > 0 ? totalEarned / totalHours : 0;
+    const peak = Math.max(...days.map((day) => day.rate), average);
+
+    return {
+      average,
+      // Where the average sits up the plot, so the line can be drawn across it.
+      averageAt: peak > 0 ? (average / peak) * 100 : 0,
+      best: Math.max(...days.map((day) => day.rate)),
+      worst: Math.min(...days.map((day) => day.rate)),
+      days: days.map((day) => ({
+        ...day,
+        height: Math.max(2, (day.rate / peak) * 100),
+        below: day.rate < average,
+      })),
+    };
+  });
+
   /** Whole numbers for counters that are not money. */
   protected readonly plain = (value: number) => `${Math.round(value)}`;
 

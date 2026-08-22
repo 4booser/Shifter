@@ -272,6 +272,24 @@ export const RU: Dictionary = {
   'Tips as a share of what each month brought in.':
     'Чаевые как доля того, что принёс месяц.',
   'Money against time': 'Деньги против времени',
+  'What an hour was worth': 'Сколько стоил час',
+  'Each worked day, what it paid divided by how long it took. Muted columns fell below the average.':
+    'Каждый отработанный день: заработок, делённый на часы. Приглушённые столбцы — ниже среднего.',
+  'Worst hour': 'Худший час',
+  Average: 'В среднем',
+  'Tips already in your pocket': 'Чаевые, что уже в кармане',
+  Cash: 'Наличными',
+  'Paid with the wage': 'Пришли с зарплатой',
+  'What the long weeks paid': 'Что дали длинные недели',
+  'of every hour worked': 'от всех отработанных часов',
+  'The premium they added': 'Сколько добавила надбавка',
+  'on top of the base rate': 'сверх базовой ставки',
+  'Per overtime hour': 'За час переработки',
+  'the extra alone': 'только надбавка',
+  'Which start pays': 'Какое начало платит',
+  'Earnings by the hour a shift starts; the number above each is how many.':
+    'Заработок по часу начала смены; число сверху — сколько таких смен.',
+
   'A shift taking more of the time than of the money is the one paying under its weight.':
     'Смена, забирающая больше времени, чем денег, — та, что недоплачивает.',
   Money: 'Деньги',
@@ -1001,6 +1019,24 @@ export const UK: Dictionary = {
   'Tips as a share of what each month brought in.':
     'Чайові як частка того, що приніс місяць.',
   'Money against time': 'Гроші проти часу',
+  'What an hour was worth': 'Скільки коштувала година',
+  'Each worked day, what it paid divided by how long it took. Muted columns fell below the average.':
+    'Кожен відпрацьований день: заробіток, поділений на години. Приглушені стовпчики — нижче середнього.',
+  'Worst hour': 'Найгірша година',
+  Average: 'У середньому',
+  'Tips already in your pocket': 'Чайові, що вже в кишені',
+  Cash: 'Готівкою',
+  'Paid with the wage': 'Прийшли із зарплатою',
+  'What the long weeks paid': 'Що дали довгі тижні',
+  'of every hour worked': 'від усіх відпрацьованих годин',
+  'The premium they added': 'Скільки додала надбавка',
+  'on top of the base rate': 'понад базову ставку',
+  'Per overtime hour': 'За годину переробітку',
+  'the extra alone': 'лише надбавка',
+  'Which start pays': 'Який початок платить',
+  'Earnings by the hour a shift starts; the number above each is how many.':
+    'Заробіток за годиною початку зміни; число зверху — скільки таких змін.',
+
   'A shift taking more of the time than of the money is the one paying under its weight.':
     'Зміна, що забирає більше часу, ніж грошей, — та, що недоплачує.',
   Money: 'Гроші',

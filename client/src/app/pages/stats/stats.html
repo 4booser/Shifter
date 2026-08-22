@@ -567,6 +567,153 @@
         </section>
       }
 
+      <!-- ==== Hours against money, day by day ====
+           The averages flatten the one thing worth seeing: a long cheap day
+           and a short expensive one land on the same mean. -->
+      @if (hourlyByDay(); as rates) {
+        <section class="stat-card">
+          <header class="chart-head">
+            <h3 class="block-title">{{ 'What an hour was worth' | t }}</h3>
+            <span class="chart-legend">
+              <span class="legend-key">
+                {{ 'Average' | t }} {{ rates.average | money }}/{{ 'h' | t }}
+              </span>
+            </span>
+          </header>
+
+          <div class="rates">
+            <!-- The average, straight across. Every column is read against it,
+                 so it is the only reference the plot needs. -->
+            <span class="rates-average" [style.bottom.%]="rates.averageAt" aria-hidden="true"></span>
+
+            @for (day of rates.days; track day.date) {
+              <span
+                class="rates-bar"
+                [class.is-below]="day.below"
+                [style.height.%]="day.height"
+                [title]="day.date + ' · ' + (day.rate | money) + '/' + ('h' | t) + ' · ' + day.hours + ' h'"
+              ></span>
+            }
+          </div>
+
+          <dl class="trend-rows">
+            <div class="summary-row">
+              <dt>{{ 'Best hour' | t }}</dt>
+              <dd>{{ rates.best | money }}</dd>
+            </div>
+            <div class="summary-row">
+              <dt>{{ 'Worst hour' | t }}</dt>
+              <dd>{{ rates.worst | money }}</dd>
+            </div>
+          </dl>
+
+          <p class="field-hint">
+            {{ 'Each worked day, what it paid divided by how long it took. Muted columns fell below the average.' | t }}
+          </p>
+        </section>
+      }
+
+      <!-- ==== Cash against card ====
+           Asked for on every shift in the day panel and never shown back. -->
+      @if (tipsSplit(); as split) {
+        <section class="stat-card">
+          <h3 class="block-title">{{ 'Tips already in your pocket' | t }}</h3>
+
+          <div class="composition" role="img" [attr.aria-label]="'Tips already in your pocket' | t">
+            @if (split.cash > 0) {
+              <span
+                class="composition-part"
+                data-tint="green"
+                [style.flex-grow]="split.cashShare"
+                [title]="('Cash' | t) + ': ' + (split.cash | money)"
+              >
+                @if (split.cashShare >= 8) {
+                  <span class="composition-share">{{ split.cashShare | number: '1.0-0' }}%</span>
+                }
+              </span>
+            }
+            @if (split.card > 0) {
+              <span
+                class="composition-part"
+                data-tint="indigo"
+                [style.flex-grow]="split.cardShare"
+                [title]="('Paid with the wage' | t) + ': ' + (split.card | money)"
+              >
+                @if (split.cardShare >= 8) {
+                  <span class="composition-share">{{ split.cardShare | number: '1.0-0' }}%</span>
+                }
+              </span>
+            }
+          </div>
+
+          <div class="composition-legend">
+            <span class="legend-key">
+              <span class="legend-swatch" data-tint="green"></span>
+              {{ 'Cash' | t }}
+              <span class="legend-value">{{ split.cash | money }}</span>
+            </span>
+            <span class="legend-key">
+              <span class="legend-swatch" data-tint="indigo"></span>
+              {{ 'Paid with the wage' | t }}
+              <span class="legend-value">{{ split.card | money }}</span>
+            </span>
+          </div>
+        </section>
+      }
+
+      <!-- ==== Overtime ==== -->
+      @if (overtime(); as extra) {
+        <section class="stat-card">
+          <h3 class="block-title">{{ 'What the long weeks paid' | t }}</h3>
+
+          <div class="kpi-row">
+            <div class="kpi">
+              <span class="kpi-label">{{ 'Overtime hours' | t }}</span>
+              <span class="kpi-value">{{ extra.hours | number: '1.0-1' }}</span>
+              <span class="kpi-hint">
+                {{ extra.share | number: '1.0-0' }}% {{ 'of every hour worked' | t }}
+              </span>
+            </div>
+            <div class="kpi">
+              <span class="kpi-label">{{ 'The premium they added' | t }}</span>
+              <span class="kpi-value">{{ extra.earned | money }}</span>
+              <span class="kpi-hint">{{ 'on top of the base rate' | t }}</span>
+            </div>
+            <div class="kpi">
+              <span class="kpi-label">{{ 'Per overtime hour' | t }}</span>
+              <span class="kpi-value">{{ extra.perHour | money }}</span>
+              <span class="kpi-hint">{{ 'the extra alone' | t }}</span>
+            </div>
+          </div>
+        </section>
+      }
+
+      <!-- ==== By starting hour ==== -->
+      @if (byStartHour().length > 0) {
+        <section class="stat-card">
+          <h3 class="block-title">{{ 'Which start pays' | t }}</h3>
+
+          <div class="tips-trend">
+            @for (slot of byStartHour(); track slot.hour) {
+              <div class="tips-month">
+                <span class="tips-value">{{ slot.count }}</span>
+                <span
+                  class="tips-bar is-accent"
+                  [class.is-peak]="slot.best"
+                  [style.height.%]="slot.height"
+                  [title]="slot.earned | money"
+                ></span>
+                <span class="tips-name">{{ slot.label }}</span>
+              </div>
+            }
+          </div>
+
+          <p class="field-hint">
+            {{ 'Earnings by the hour a shift starts; the number above each is how many.' | t }}
+          </p>
+        </section>
+      }
+
       <!-- ==== Tips share over the year ==== -->
       @if (tipsTrend().length > 1) {
         <section class="stat-card">

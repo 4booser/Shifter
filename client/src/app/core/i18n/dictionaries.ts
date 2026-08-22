@@ -264,6 +264,10 @@ export const RU: Dictionary = {
   'Rent, holiday, a new bike': 'Аренда, отпуск, новый велосипед',
   'No goal covers this stretch. Whole weeks, months and years line up with one.':
     'На этот отрезок цели нет. Целые недели, месяцы и годы совпадают с целями.',
+  'What this wage is made of': 'Из чего складывается заработок',
+  'This period': 'Этот период',
+  'The one before': 'Предыдущий',
+  'What sells': 'Что продаётся',
   'The shape of the year': 'Форма года',
   'Every day of the year': 'Каждый день года',
   'Which day carries you': 'Какой день тебя вывозит',
@@ -975,6 +979,10 @@ export const UK: Dictionary = {
   'Rent, holiday, a new bike': 'Оренда, відпустка, новий велосипед',
   'No goal covers this stretch. Whole weeks, months and years line up with one.':
     'На цей відрізок цілі немає. Цілі тижні, місяці та роки збігаються з цілями.',
+  'What this wage is made of': 'З чого складається заробіток',
+  'This period': 'Цей період',
+  'The one before': 'Попередній',
+  'What sells': 'Що продається',
   'The shape of the year': 'Форма року',
   'Every day of the year': 'Кожен день року',
   'Which day carries you': 'Який день тебе витягує',

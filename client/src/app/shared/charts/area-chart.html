@@ -22,6 +22,12 @@
         text-anchor="end">{{ 'Goal' | t }}</text>
     }
 
+    <!-- Behind the live line and unfilled, so the two never compete: this one
+         is context, the solid one is what is happening. -->
+    @if (comparisonPath(); as path) {
+      <path class="area-line is-comparison" [attr.d]="path" />
+    }
+
     @for (key of [renderKey()]; track key) {
       @if (coords().length > 1) {
         <path class="area-fill" [attr.d]="areaPath()" fill="url(#area-wash)" />

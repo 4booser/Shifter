@@ -421,6 +421,26 @@ export class Stats {
     });
   });
 
+  /**
+   * The same running total over the window before this one. Laid across the
+   * same width so the two line up start-to-start: a February compared against
+   * a March has three fewer days, and matching them by date would make the
+   * shorter month look like it stopped early rather than finished.
+   */
+  protected readonly cumulativePrevious = computed<AreaPoint[]>(() => {
+    const days = [...this.previous().days].sort((a, b) => a.date.localeCompare(b.date));
+
+    if (days.length < 2) return [];
+
+    let running = 0;
+
+    return days.map((day) => {
+      running += day.earned;
+
+      return { label: day.date.slice(5), value: running };
+    });
+  });
+
   /** Everything the period gave back: tip-out, staff meals and fines. */
   protected readonly withheld = computed(
     () => this.summary().tip_out + this.summary().deductions,
@@ -727,6 +747,63 @@ export class Stats {
     const top = Math.max(1, ...rows.map((row) => row.value));
 
     return rows.map((row) => ({ ...row, share: (row.value / top) * 100 }));
+  });
+
+  /**
+   * The same five sources as proportions of one another rather than as ranked
+   * lengths. The bars below answer "which is biggest"; this answers "what is
+   * this wage made of", which is the question behind deciding whether to chase
+   * shifts or chase tables — and a row of bars cannot be read as a share.
+   */
+  protected readonly composition = computed(() => {
+    const summary = this.summary();
+
+    const parts = [
+      { name: 'Shifts', value: summary.shifts_earned, tint: 'teal' },
+      { name: 'Salary', value: summary.period_earned, tint: 'rose' },
+      { name: 'Overtime', value: summary.overtime_earned, tint: 'amber' },
+      { name: 'Sales', value: summary.sales_earned, tint: 'indigo' },
+      { name: 'Tips', value: summary.tips_earned, tint: 'green' },
+    ].filter((part) => part.value > 0);
+
+    const total = parts.reduce((sum, part) => sum + part.value, 0);
+
+    if (total <= 0) return [];
+
+    return parts.map((part) => ({
+      ...part,
+      share: (part.value / total) * 100,
+      // Below about a twelfth the segment is thinner than its own label, so the
+      // legend carries the name instead of crushing it into the mark.
+      labelled: part.value / total >= 0.08,
+    }));
+  });
+
+  /**
+   * What each sales position actually brought in. The page knows every unit
+   * sold and never said which of them was worth selling.
+   */
+  protected readonly salesRanked = computed(() => {
+    const totals = new Map<string, { earned: number; units: number }>();
+
+    for (const day of this.summary().days) {
+      for (const sale of day.sales ?? []) {
+        const bucket = totals.get(sale.name) ?? { earned: 0, units: 0 };
+
+        bucket.earned += sale.earned;
+        bucket.units += sale.quantity;
+        totals.set(sale.name, bucket);
+      }
+    }
+
+    const rows = [...totals.entries()]
+      .map(([name, bucket]) => ({ name, ...bucket }))
+      .filter((row) => row.earned > 0)
+      .sort((a, b) => b.earned - a.earned);
+
+    const top = Math.max(1, ...rows.map((row) => row.earned));
+
+    return rows.map((row) => ({ ...row, share: (row.earned / top) * 100 }));
   });
 
   /**

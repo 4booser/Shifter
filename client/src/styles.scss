@@ -1450,6 +1450,78 @@ body {
   color: var(--positive);
 }
 
+/* ==== Composition ====
+
+   One bar read as shares rather than five bars read as lengths. Segments are
+   separated by the surface rather than by a border, so the gap belongs to the
+   page and not to either neighbour. */
+.composition {
+  display: flex;
+  gap: 2px;
+  height: 2.25rem;
+  margin-top: 0.75rem;
+}
+
+.composition-part {
+  display: grid;
+  place-items: center;
+  flex-basis: 0;
+  min-width: 0;
+  background: var(--slice);
+  border-radius: 3px;
+
+  /* Squared where they meet, rounded at the two ends of the run, so the whole
+     reads as one bar that has been divided rather than as blocks in a row. */
+  &:first-child {
+    border-radius: 6px 3px 3px 6px;
+  }
+
+  &:last-child {
+    border-radius: 3px 6px 6px 3px;
+  }
+
+  &:only-child {
+    border-radius: 6px;
+  }
+}
+
+/* White on every one of these: the tints are chosen for contrast against the
+   surface, and all five clear 3:1 against white at this size. */
+.composition-share {
+  color: #fff;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.composition-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem 1rem;
+  margin-top: 0.75rem;
+}
+
+.composition-legend .legend-key {
+  gap: 0.375rem;
+}
+
+.legend-value {
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The one place a series colour is set, so the mark and its legend swatch can
+   never drift apart. Fixed order, never cycled. */
+[data-tint="teal"] { --slice: var(--tint-teal); }
+[data-tint="rose"] { --slice: var(--tint-rose); }
+[data-tint="amber"] { --slice: var(--tint-amber); }
+[data-tint="indigo"] { --slice: var(--tint-indigo); }
+[data-tint="green"] { --slice: var(--tint-green); }
+
+.legend-swatch[data-tint] {
+  background: var(--slice);
+}
+
 /* ==== Spread of days ====
 
    A histogram, built from divs rather than SVG: six bands is few enough that
@@ -3616,6 +3688,20 @@ body {
   stroke: var(--accent);
   stroke-dasharray: 5 4;
   opacity: 0.7;
+}
+
+/* The window before this one. Grey rather than a second hue: it is the same
+   measure, and giving it a colour of its own would say it was a different
+   thing. Thin and behind, so it reads as the mark to beat. */
+.area-line.is-comparison {
+  stroke: var(--text-faint);
+  stroke-width: 1.5;
+  opacity: 0.55;
+}
+
+.legend-swatch.is-previous {
+  background: var(--text-faint);
+  opacity: 0.55;
 }
 
 .area-dot.is-projection {

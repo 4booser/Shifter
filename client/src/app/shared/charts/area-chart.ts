@@ -23,6 +23,12 @@ export class AreaChart {
   readonly points = input.required<AreaPoint[]>();
   /** Continues the line past today; drawn dashed so it never reads as fact. */
   readonly projection = input<AreaPoint[]>([]);
+  /**
+   * The same measure over the window before this one, for "am I ahead of last
+   * month". The same measure on the same scale, so it is one axis and one
+   * comparison — not a second series with a second meaning.
+   */
+  readonly comparison = input<AreaPoint[]>([]);
   readonly goal = input<number | null>(null);
 
   private readonly settings = inject(SettingsStore);
@@ -44,6 +50,9 @@ export class AreaChart {
       1,
       ...this.points().map((point) => point.value),
       ...this.projection().map((point) => point.value),
+      // The comparison shares the scale or the two lines could not be compared,
+      // which is the only reason it is drawn.
+      ...this.comparison().map((point) => point.value),
     );
 
     return niceCeiling(Math.max(peak, this.goal() ?? 0));
@@ -96,6 +105,29 @@ export class AreaChart {
       .map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`)
       .join(' '),
   );
+
+  /**
+   * Laid over the same days rather than after them: a window of a different
+   * length still has to line up start-to-start, or "ahead" and "behind" would
+   * depend on how long each month happened to be.
+   */
+  protected readonly comparisonPath = computed(() => {
+    const points = this.comparison();
+
+    if (points.length < 2) return '';
+
+    const max = this.max();
+    const span = points.length - 1;
+
+    return points
+      .map((point, index) => {
+        const x = PAD.left + (PLOT_W * index) / span;
+        const y = PAD.top + PLOT_H - (point.value / max) * PLOT_H;
+
+        return `${index === 0 ? 'M' : 'L'} ${x} ${y}`;
+      })
+      .join(' ');
+  });
 
   protected readonly areaPath = computed(() => {
     const coords = this.coords();

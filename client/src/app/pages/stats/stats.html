@@ -301,13 +301,25 @@
         <header class="chart-head">
           <h3 class="block-title">{{ 'Running total' | t }}</h3>
           <span class="chart-legend">
-            <span class="legend-key">{{ 'Cumulative earnings across the period' | t }}</span>
+            @if (cumulativePrevious().length > 1) {
+              <!-- Two lines on the plot, so both are named: identity is never
+                   left to colour alone. -->
+              <span class="legend-key">
+                <span class="legend-swatch"></span>{{ 'This period' | t }}
+              </span>
+              <span class="legend-key">
+                <span class="legend-swatch is-previous"></span>{{ 'The one before' | t }}
+              </span>
+            } @else {
+              <span class="legend-key">{{ 'Cumulative earnings across the period' | t }}</span>
+            }
           </span>
         </header>
 
         <app-area-chart
           [points]="cumulative()"
           [projection]="projection()"
+          [comparison]="cumulativePrevious()"
           [goal]="activeGoal()?.target ?? null"
         />
       </section>
@@ -343,6 +355,46 @@
           </p>
         }
       </section>
+
+      <!-- ==== Composition ====
+           Part-to-whole. The ranked bars further down say which source is
+           biggest; only a share says what the wage is made of. -->
+      @if (composition().length > 1) {
+        <section class="stat-card">
+          <h3 class="block-title">{{ 'What this wage is made of' | t }}</h3>
+
+          <div
+            class="composition"
+            role="img"
+            [attr.aria-label]="'What this wage is made of' | t"
+          >
+            @for (part of composition(); track part.name) {
+              <span
+                class="composition-part"
+                [attr.data-tint]="part.tint"
+                [style.flex-grow]="part.share"
+                [title]="(part.name | t) + ': ' + (part.value | money)"
+              >
+                @if (part.labelled) {
+                  <span class="composition-share">{{ part.share | number: '1.0-0' }}%</span>
+                }
+              </span>
+            }
+          </div>
+
+          <!-- Always present, because the marks are only distinguishable by
+               colour and the thin slices carry no label of their own. -->
+          <div class="composition-legend">
+            @for (part of composition(); track part.name) {
+              <span class="legend-key">
+                <span class="legend-swatch" [attr.data-tint]="part.tint"></span>
+                {{ part.name | t }}
+                <span class="legend-value">{{ part.value | money }}</span>
+              </span>
+            }
+          </div>
+        </section>
+      }
 
       <!-- ==== Spread of days ====
            A median says where the middle is; this says whether there is one. -->
@@ -595,6 +647,28 @@
                 </div>
               }
             </dl>
+          </section>
+        }
+
+        <!-- ==== What sells ====
+             Every unit sold was already recorded; nothing said which of them
+             was worth the effort of selling. -->
+        @if (salesRanked().length > 0) {
+          <section class="stat-card">
+            <h3 class="block-title">{{ 'What sells' | t }}</h3>
+            <div class="bars">
+              @for (row of salesRanked(); track row.name) {
+                <div class="bar-row">
+                  <span class="bar-name">{{ row.name }}</span>
+                  <span class="bar-track">
+                    <span class="bar-fill" [style.width.%]="row.share"></span>
+                  </span>
+                  <span class="bar-value">
+                    {{ row.earned | money }} · {{ row.units | number: '1.0-0' }}
+                  </span>
+                </div>
+              }
+            </div>
           </section>
         }
 

@@ -1115,6 +1115,62 @@ export class Stats {
   });
 
   /**
+   * How much a day has had to bring in, recomputed as the period ran down.
+   *
+   * The goal meter says how far along you are. It cannot say whether the hill
+   * is getting steeper, which is the thing that decides whether to pick up
+   * another shift — and a target that has quietly climbed from 1 500 a day to
+   * 2 400 is worth seeing before the last week rather than during it.
+   */
+  protected readonly climb = computed(() => {
+    const active = this.activeGoal();
+
+    if (active === null) return null;
+
+    const { from, to } = this.range();
+    const keys = keysBetween(from, to);
+
+    if (keys.length < 4) return null;
+
+    const byDate = new Map(this.summary().days.map((day) => [day.date, day.earned]));
+    const today = todayKey();
+
+    let running = 0;
+    const points: { key: string; needed: number; done: boolean }[] = [];
+
+    keys.forEach((key, index) => {
+      const left = keys.length - index;
+      // What the remaining days each had to bring in, standing at this one.
+      const needed = Math.max(0, (active.target - running) / left);
+
+      points.push({ key, needed, done: key <= today });
+      running += byDate.get(key) ?? 0;
+    });
+
+    // Only the days already behind us are fact; the rest would be a flat line
+    // drawn from a total that has not happened.
+    const walked = points.filter((point) => point.done);
+
+    if (walked.length < 3) return null;
+
+    const peak = Math.max(...walked.map((point) => point.needed), 1);
+    const first = walked[0].needed;
+    const last = walked[walked.length - 1].needed;
+
+    return {
+      start: first,
+      now: last,
+      // Rising means falling behind; the wording elsewhere leans on this.
+      steeper: last > first,
+      reached: last === 0,
+      points: walked.map((point) => ({
+        ...point,
+        height: Math.max(2, (point.needed / peak) * 100),
+      })),
+    };
+  });
+
+  /**
    * What an hour was actually worth on each day worked.
    *
    * This began as hours-against-money on two axes, which was the wrong form for

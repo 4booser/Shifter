@@ -13,9 +13,34 @@
   }
 
   <div class="payouts">
+    <!-- ==== Next money in ====
+         The list says what is owed; this says when the next of it lands, which
+         is the question actually being asked when this page is opened. -->
+    @if (nextDue(); as next) {
+      <section class="stat-card next-due">
+        <span class="next-due-label">{{ 'Next money in' | t }}</span>
+        <span class="next-due-amount">{{ next.amount | money }}</span>
+        <span class="next-due-when">
+          @if (next.days === 0) {
+            {{ 'today' | t }}
+          } @else if (next.days === 1) {
+            {{ 'tomorrow' | t }}
+          } @else {
+            {{ 'in' | t }} {{ next.days }} {{ 'days' | t }}
+          }
+          · {{ label(next.due) }}
+          @if (next.where > 1) {
+            · {{ next.where }} {{ 'payments' | t }}
+          }
+        </span>
+      </section>
+    }
+
     <!-- The detector goes first: it is the only thing here that is worth
          acting on today, and burying it under a table would defeat it. -->
-    @for (shortfall of shortfalls(); track shortfall.location_id) {
+    <!-- Keyed by payment as well as place: a bar behind on both the wage and
+         the commission produces two claims about the same location_id. -->
+    @for (shortfall of shortfalls(); track shortfall.location_id + shortfall.stream) {
       <section class="stat-card is-danger">
         <h2 class="card-title">
           <app-icon name="flame" [size]="16" />
@@ -116,6 +141,53 @@
               </button>
             </div>
           }
+        </div>
+      </section>
+    }
+
+    <!-- ==== Track record ====
+         The list below says what happened to each period. It takes scrolling
+         to see that a place has been short six times running, and that is the
+         form the argument has to be in when it reaches whoever does payroll. -->
+    @if (reliability().length > 0) {
+      <section class="stat-card">
+        <h2 class="card-title">
+          <app-icon name="chart" [size]="16" />
+          {{ 'Track record' | t }}
+        </h2>
+
+        <div class="record">
+          @for (place of reliability(); track place.name + place.stream) {
+            <div class="record-row">
+              <span class="record-name">
+                {{ place.name }}
+                @if (splitLabel(place); as stream) {
+                  <span class="pay-stream">{{ stream | t }}</span>
+                }
+              </span>
+
+              <span class="record-strip">
+                @for (cell of place.cells; track cell.key) {
+                  <span
+                    class="record-cell"
+                    [attr.data-status]="cell.status"
+                    [title]="cell.label"
+                  ></span>
+                }
+              </span>
+
+              <span class="record-score">
+                {{ place.onTime }}% {{ 'clean' | t }}
+              </span>
+            </div>
+          }
+        </div>
+
+        <div class="record-legend">
+          <span class="legend-key"><span class="record-cell" data-status="paid"></span>{{ 'Settled' | t }}</span>
+          <span class="legend-key"><span class="record-cell" data-status="short"></span>{{ 'Underpaid' | t }}</span>
+          <span class="legend-key"><span class="record-cell" data-status="overdue"></span>{{ 'Late' | t }}</span>
+          <span class="legend-key"><span class="record-cell" data-status="over"></span>{{ 'Overpaid' | t }}</span>
         </div>
       </section>
     }

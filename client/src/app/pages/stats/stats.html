@@ -570,6 +570,48 @@
       <!-- ==== Hours against money, day by day ====
            The averages flatten the one thing worth seeing: a long cheap day
            and a short expensive one land on the same mean. -->
+      <!-- ==== The climb ====
+           The meter says how far along you are; this says whether the hill is
+           getting steeper, which is what decides picking up another shift. -->
+      @if (climb(); as hill) {
+        <section class="stat-card">
+          <header class="chart-head">
+            <h3 class="block-title">{{ 'What a day has to bring' | t }}</h3>
+            <span class="chart-legend">
+              <span class="legend-key">
+                @if (hill.reached) {
+                  {{ 'Goal reached' | t }}
+                } @else {
+                  {{ 'Now' | t }} {{ hill.now | money }}
+                }
+              </span>
+            </span>
+          </header>
+
+          <div class="rates is-climb" [class.is-easing]="!hill.steeper">
+            @for (point of hill.points; track point.key) {
+              <span
+                class="rates-bar"
+                [style.height.%]="point.height"
+                [title]="point.key + ' · ' + (point.needed | money)"
+              ></span>
+            }
+          </div>
+
+          <p class="field-hint">
+            @if (hill.reached) {
+              {{ 'Nothing left to make up — the goal is already met.' | t }}
+            } @else if (hill.steeper) {
+              {{ 'Climbing: it started at' | t }} {{ hill.start | money }}
+              {{ 'a day and the remaining days now carry more.' | t }}
+            } @else {
+              {{ 'Easing: it started at' | t }} {{ hill.start | money }}
+              {{ 'a day and the remaining days now carry less.' | t }}
+            }
+          </p>
+        </section>
+      }
+
       @if (hourlyByDay(); as rates) {
         <section class="stat-card">
           <header class="chart-head">

@@ -4,7 +4,7 @@ import { RouterLink } from '@angular/router';
 
 import { apiErrorMessage } from '../../core/auth/api-error';
 import { CalendarApi } from '../../core/calendar/calendar-api';
-import { addMonths, currentMonth, todayKey } from '../../core/calendar/calendar-date';
+import { addMonths, currentMonth, keysBetween, todayKey } from '../../core/calendar/calendar-date';
 import { PayPeriodRow, Reconciliation } from '../../core/calendar/calendar.models';
 import { I18n, TPipe } from '../../core/i18n/i18n';
 import { PayoutModal, PayoutPrefill } from '../dashboard/tools/payout-modal';
@@ -119,6 +119,74 @@ export class Payouts {
       .filter((row) => row.status === 'short')
       .reduce((total, row) => total + (row.expected - row.paid), 0),
   );
+
+  /**
+   * Every settled period as one square, oldest first, grouped by the payment it
+   * belongs to.
+   *
+   * The list below says what happened to each period; it takes scrolling to see
+   * that a place has been short six times running. A row of squares says it at
+   * a glance, which is the form the argument has to be in when it is taken to
+   * whoever does the payroll.
+   */
+  protected readonly reliability = computed(() => {
+    const settled = this.periods().filter((row) => row.status !== 'open');
+
+    if (settled.length < 3) return [];
+
+    const groups = new Map<string, { name: string; stream: PayPeriodRow['stream']; rows: PayPeriodRow[] }>();
+
+    for (const row of settled) {
+      const key = `${row.location_id}:${row.stream}`;
+      const group = groups.get(key)
+        ?? { name: row.location_name, stream: row.stream, rows: [] };
+
+      group.rows.push(row);
+      groups.set(key, group);
+    }
+
+    return [...groups.values()]
+      .filter((group) => group.rows.length >= 3)
+      .map((group) => {
+        const rows = [...group.rows].sort((a, b) => a.period_from.localeCompare(b.period_from));
+        const clean = rows.filter((row) => row.status === 'paid' || row.status === 'over').length;
+
+        return {
+          name: group.name,
+          stream: group.stream,
+          onTime: Math.round((clean / rows.length) * 100),
+          total: rows.length,
+          cells: rows.map((row) => ({
+            key: row.period_from + row.stream,
+            status: row.status,
+            label: `${row.period_from} — ${this.statusLabel(row.status)}`,
+          })),
+        };
+      });
+  });
+
+  /** How long until the next money is due, and how much of it there is. */
+  protected readonly nextDue = computed(() => {
+    const today = todayKey();
+    const ahead = this.periods()
+      .filter((row) => row.paid === 0 && row.due_on >= today && row.expected > 0)
+      .sort((a, b) => a.due_on.localeCompare(b.due_on));
+
+    if (ahead.length === 0) return null;
+
+    const next = ahead[0];
+    const days = keysBetween(today, next.due_on).length - 1;
+
+    return {
+      days,
+      due: next.due_on,
+      // Everything landing on that same day, not just the first row of it.
+      amount: ahead
+        .filter((row) => row.due_on === next.due_on)
+        .reduce((sum, row) => sum + row.expected, 0),
+      where: ahead.filter((row) => row.due_on === next.due_on).length,
+    };
+  });
 
   protected readonly upcoming = computed(() =>
     this.periods()

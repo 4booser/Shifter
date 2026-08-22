@@ -1676,6 +1676,169 @@ body {
   font-size: 0.625rem;
 }
 
+/* ==== Next money in ==== */
+.next-due {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.next-due-label {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.next-due-amount {
+  color: var(--accent);
+  font-size: 1.75rem;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.next-due-when {
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+}
+
+/* ==== Track record ====
+
+   One square a settled period, oldest first. Status colours are the status
+   palette, not the categorical one — these are states, and they ship with a
+   legend rather than being left to colour alone. */
+.record {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  margin-top: 0.75rem;
+}
+
+.record-row {
+  display: grid;
+  grid-template-columns: minmax(5rem, 11rem) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.record-name {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  min-width: 0;
+  color: var(--text);
+  font-size: 0.8125rem;
+  font-weight: 600;
+
+  /* The name gives way before the badge does: the badge is two words and the
+     name is the thing with a natural short form. */
+  > :first-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.record-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  min-width: 0;
+}
+
+/* Each square carries a mark as well as a colour.
+
+   These are the four states of getting paid, and the validator is blunt about
+   the colours alone: the app's dark-mode green and red sit ΔE 4.8 apart under
+   deuteranopia, and amber against that red is 9.1 even with full colour
+   vision. Green-against-red is the textbook pair a colourblind reader cannot
+   split, and it is carrying the only distinction that matters here — was I
+   paid or not. So the state is written in the square. */
+.record-cell {
+  display: grid;
+  place-items: center;
+  width: 1rem;
+  height: 1rem;
+  flex: none;
+  border-radius: 3px;
+  background: var(--border-strong);
+  color: var(--on-accent);
+  font-size: 0.5625rem;
+  font-weight: 800;
+  line-height: 1;
+
+  &::after {
+    content: "·";
+  }
+}
+
+.record-cell[data-status="paid"] {
+  background: var(--positive);
+
+  &::after {
+    content: "✓";
+  }
+}
+
+/* Paid more than was owed. Still good news, so it keeps the good hue and takes
+   the quieter mark. */
+.record-cell[data-status="over"] {
+  background: color-mix(in srgb, var(--positive) 55%, var(--surface));
+  color: var(--text);
+
+  &::after {
+    content: "+";
+  }
+}
+
+.record-cell[data-status="short"] {
+  background: var(--danger);
+
+  &::after {
+    content: "−";
+  }
+}
+
+/* Late is money that may still turn up; short is money that will not unless
+   somebody asks for it. Different hue and different mark, because they lead to
+   different actions. */
+.record-cell[data-status="overdue"] {
+  background: var(--tint-amber);
+
+  &::after {
+    content: "!";
+  }
+}
+
+.record-cell[data-status="due"] {
+  background: var(--border-strong);
+  color: var(--text-muted);
+}
+
+.record-score {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.record-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem 1rem;
+  margin-top: 0.875rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.record-legend .legend-key {
+  gap: 0.375rem;
+}
+
 /* ==== What an hour was worth ====
 
    One column a worked day, height is that day's rate. The average is a rule
@@ -1715,6 +1878,17 @@ body {
    never depends on judging which side of a dashed line a bar ends. */
 .rates-bar.is-below {
   background: color-mix(in srgb, var(--text-faint) 55%, transparent);
+}
+
+/* The climb reuses the columns but not the meaning: here the whole run is one
+   trend, and what matters is its direction rather than each bar's side of a
+   line. Falling behind is stated in the caption as well as coloured. */
+.rates.is-climb .rates-bar {
+  background: color-mix(in srgb, var(--danger) 55%, transparent);
+}
+
+.rates.is-climb.is-easing .rates-bar {
+  background: color-mix(in srgb, var(--positive) 55%, transparent);
 }
 
 /* The start-hour chart reuses the tips columns but measures money, so it wears

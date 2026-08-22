@@ -1522,6 +1522,217 @@ body {
   background: var(--slice);
 }
 
+/* ==== Places side by side ====
+
+   Small multiples: the same panel repeated per place, so the eye compares like
+   with like down each row rather than reading two different cards. */
+.places-split {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.place-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  flex: 1 1 15rem;
+  min-width: 0;
+  padding: 0.875rem;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+/* The one paying best by the hour. Named as well as ringed, so the mark is not
+   carried by colour alone. */
+.place-panel.is-best {
+  border-color: var(--accent);
+}
+
+.place-head {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-width: 0;
+
+  strong {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.place-badge {
+  flex: none;
+  padding: 0.0625rem 0.375rem;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 0.625rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.place-hourly {
+  color: var(--text);
+  font-size: 1.375rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+
+  small {
+    color: var(--text-faint);
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+}
+
+.place-caveat {
+  margin-top: -0.375rem;
+  color: var(--text-faint);
+  font-size: 0.6875rem;
+}
+
+.place-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.place-bar-row {
+  display: grid;
+  grid-template-columns: 2.75rem minmax(0, 1fr) 2.25rem;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.6875rem;
+}
+
+.place-bar-name {
+  color: var(--text-faint);
+}
+
+.place-bar-value {
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.place-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin: 0;
+  padding-top: 0.625rem;
+  border-top: 1px solid var(--border);
+
+  dd {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* ==== Tips share ====
+
+   One series, so no legend: the title names it. Measured against the best
+   month rather than against 100%, or a wage where tips are a tenth would draw
+   twelve slivers and say nothing at all. */
+.tips-trend {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.375rem;
+  height: 8rem;
+  margin-top: 0.75rem;
+}
+
+.tips-month {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  justify-items: center;
+  gap: 0.25rem;
+  flex: 1 1 0;
+  min-width: 0;
+  height: 100%;
+}
+
+.tips-value {
+  grid-row: 1;
+  color: var(--text-muted);
+  font-size: 0.625rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.tips-bar {
+  grid-row: 2;
+  align-self: end;
+  width: 100%;
+  background: var(--tint-green);
+  border-radius: 4px 4px 2px 2px;
+}
+
+.tips-name {
+  grid-row: 3;
+  color: var(--text-faint);
+  font-size: 0.625rem;
+}
+
+/* ==== Money against time ====
+
+   Two bars per row on one scale, both percentages of their own totals. The
+   pair is the point: a row longer on time than on money is the shift paying
+   under its weight. */
+.paired {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  margin-top: 0.75rem;
+}
+
+.paired-row {
+  display: grid;
+  grid-template-columns: minmax(4rem, 8rem) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.paired-name {
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.paired-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.paired-bar {
+  height: 0.5rem;
+  min-width: 2px;
+  background: var(--accent);
+  border-radius: 3px;
+
+  &.is-muted {
+    background: color-mix(in srgb, var(--text-faint) 55%, transparent);
+  }
+}
+
+.paired-value {
+  color: var(--text-faint);
+  font-size: 0.6875rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.bar-fill.is-muted,
+.legend-swatch.is-muted {
+  background: color-mix(in srgb, var(--text-faint) 55%, transparent);
+}
+
 /* ==== The mix, month by month ====
 
    Twelve stacked columns. Each column's height is its share of the best month,
@@ -3161,11 +3372,24 @@ body {
   }
 }
 
+/* Two columns of cards whose contents are lists of wildly different lengths —
+   seven weekdays beside five sources beside two places. */
 .stat-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
-  align-items: start;
+
+  /* Stretch, not start. Sized to their contents the two cards in a row ended
+     at different heights and the shorter one left a hole under it, which is
+     what made the page look shuffled rather than laid out. */
+  align-items: stretch;
+
+  /* A card alone on the last row took half the width and left the other half
+     empty. Odd counts are the normal case here — the cards appear and vanish
+     with what the period actually has in it — so the last one takes the row. */
+  > :last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
 }
 
 .kpi-hint.is-short {

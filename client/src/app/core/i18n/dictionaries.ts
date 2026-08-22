@@ -46,7 +46,6 @@ export const RU: Dictionary = {
     'Архив не мешает работе, но сохраняет всё заработанное.',
 
   // Summary rows
-  'Days worked': 'Отработано дней',
   Hours: 'Часы',
   Overtime: 'Переработка',
   Salary: 'Оклад',
@@ -266,6 +265,19 @@ export const RU: Dictionary = {
     'На этот отрезок цели нет. Целые недели, месяцы и годы совпадают с целями.',
   'What this wage is made of': 'Из чего складывается заработок',
   'How the mix moved': 'Как менялся состав',
+  'Your places, hour for hour': 'Твои места, час к часу',
+  'Best hour': 'Лучший час',
+  'From too few shifts to rely on yet.': 'Слишком мало смен, чтобы на это опираться.',
+  'Is the tipping holding up': 'Держатся ли чаевые',
+  'Tips as a share of what each month brought in.':
+    'Чаевые как доля того, что принёс месяц.',
+  'Money against time': 'Деньги против времени',
+  'A shift taking more of the time than of the money is the one paying under its weight.':
+    'Смена, забирающая больше времени, чем денег, — та, что недоплачивает.',
+  Money: 'Деньги',
+  Time: 'Время',
+  'Days worked': 'Отработано дней',
+
   'This period': 'Этот период',
   'The one before': 'Предыдущий',
   'What sells': 'Что продаётся',
@@ -771,7 +783,6 @@ export const UK: Dictionary = {
   'Archived items stay out of the way but keep everything they earned.':
     'Архів не заважає роботі, але зберігає все зароблене.',
 
-  'Days worked': 'Відпрацьовано днів',
   Hours: 'Години',
   Overtime: 'Понаднормові',
   Salary: 'Оклад',
@@ -983,6 +994,19 @@ export const UK: Dictionary = {
     'На цей відрізок цілі немає. Цілі тижні, місяці та роки збігаються з цілями.',
   'What this wage is made of': 'З чого складається заробіток',
   'How the mix moved': 'Як змінювався склад',
+  'Your places, hour for hour': 'Твої місця, година до години',
+  'Best hour': 'Найкраща година',
+  'From too few shifts to rely on yet.': 'Замало змін, щоб на це спиратися.',
+  'Is the tipping holding up': 'Чи тримаються чайові',
+  'Tips as a share of what each month brought in.':
+    'Чайові як частка того, що приніс місяць.',
+  'Money against time': 'Гроші проти часу',
+  'A shift taking more of the time than of the money is the one paying under its weight.':
+    'Зміна, що забирає більше часу, ніж грошей, — та, що недоплачує.',
+  Money: 'Гроші',
+  Time: 'Час',
+  'Days worked': 'Відпрацьовано днів',
+
   'This period': 'Цей період',
   'The one before': 'Попередній',
   'What sells': 'Що продається',

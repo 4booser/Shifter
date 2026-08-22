@@ -496,6 +496,140 @@
         </section>
       }
 
+      <!-- ==== Places side by side ====
+           Which place paid more is mostly a question of how many shifts each
+           got. Which hour is worth more is the question behind keeping a job. -->
+      @if (placeBreakdown().length > 0) {
+        <section class="stat-card">
+          <h3 class="block-title">{{ 'Your places, hour for hour' | t }}</h3>
+
+          <div class="places-split">
+            @for (place of placeBreakdown(); track place.name) {
+              <div class="place-panel" [class.is-best]="place.best">
+                <span class="place-head">
+                  <span class="location-dot" [style.background]="place.colour"></span>
+                  <strong>{{ place.name }}</strong>
+                  @if (place.best) {
+                    <span class="place-badge">{{ 'Best hour' | t }}</span>
+                  }
+                </span>
+
+                <span class="place-hourly">{{ place.perHour | money }}<small>/{{ 'h' | t }}</small></span>
+
+                @if (place.thin) {
+                  <!-- Said plainly rather than left to be worked out from the
+                       days row further down, which nobody reads first. -->
+                  <span class="place-caveat">
+                    {{ 'From too few shifts to rely on yet.' | t }}
+                  </span>
+                }
+
+                <!-- Money against time for this place: a bar that is longer on
+                     hours than on money is one paying under its weight. -->
+                <span class="place-bars">
+                  <span class="place-bar-row">
+                    <span class="place-bar-name">{{ 'Money' | t }}</span>
+                    <span class="bar-track">
+                      <span class="bar-fill" [style.width.%]="place.earnedShare"></span>
+                    </span>
+                    <span class="place-bar-value">{{ place.earnedShare | number: '1.0-0' }}%</span>
+                  </span>
+                  <span class="place-bar-row">
+                    <span class="place-bar-name">{{ 'Time' | t }}</span>
+                    <span class="bar-track">
+                      <span class="bar-fill is-muted" [style.width.%]="place.hoursShare"></span>
+                    </span>
+                    <span class="place-bar-value">{{ place.hoursShare | number: '1.0-0' }}%</span>
+                  </span>
+                </span>
+
+                <dl class="place-rows">
+                  <div class="summary-row">
+                    <dt>{{ 'Earned' | t }}</dt>
+                    <dd>{{ place.earned | money }}</dd>
+                  </div>
+                  <div class="summary-row">
+                    <dt>{{ 'Hours' | t }}</dt>
+                    <dd>{{ place.hours | number: '1.0-1' }}</dd>
+                  </div>
+                  <div class="summary-row">
+                    <dt>{{ 'Days worked' | t }}</dt>
+                    <dd>{{ place.days }}</dd>
+                  </div>
+                  <div class="summary-row">
+                    <dt>{{ 'Tips' | t }}</dt>
+                    <dd>{{ place.tips | money }}</dd>
+                  </div>
+                </dl>
+              </div>
+            }
+          </div>
+        </section>
+      }
+
+      <!-- ==== Tips share over the year ==== -->
+      @if (tipsTrend().length > 1) {
+        <section class="stat-card">
+          <h3 class="block-title">{{ 'Is the tipping holding up' | t }}</h3>
+
+          <div class="tips-trend">
+            @for (month of tipsTrend(); track month.label) {
+              <div class="tips-month">
+                <span class="tips-value">{{ month.share | number: '1.0-0' }}%</span>
+                <span class="tips-bar" [style.height.%]="month.height"></span>
+                <span class="tips-name">{{ month.label }}</span>
+              </div>
+            }
+          </div>
+
+          <p class="field-hint">
+            {{ 'Tips as a share of what each month brought in.' | t }}
+          </p>
+        </section>
+      }
+
+      <!-- ==== Money against time ==== -->
+      @if (moneyVsTime().length > 0) {
+        <section class="stat-card">
+          <header class="chart-head">
+            <h3 class="block-title">{{ 'Money against time' | t }}</h3>
+            <span class="chart-legend">
+              <span class="legend-key"><span class="legend-swatch"></span>{{ 'Money' | t }}</span>
+              <span class="legend-key">
+                <span class="legend-swatch is-muted"></span>{{ 'Time' | t }}
+              </span>
+            </span>
+          </header>
+
+          <div class="paired">
+            @for (row of moneyVsTime(); track row.name) {
+              <div class="paired-row">
+                <span class="paired-name">{{ row.name }}</span>
+                <span class="paired-bars">
+                  <span
+                    class="paired-bar"
+                    [style.width.%]="row.moneyShare"
+                    [title]="row.earned | money"
+                  ></span>
+                  <span
+                    class="paired-bar is-muted"
+                    [style.width.%]="row.timeShare"
+                    [title]="row.hours + ' h'"
+                  ></span>
+                </span>
+                <span class="paired-value">
+                  {{ row.moneyShare | number: '1.0-0' }}% / {{ row.timeShare | number: '1.0-0' }}%
+                </span>
+              </div>
+            }
+          </div>
+
+          <p class="field-hint">
+            {{ 'A shift taking more of the time than of the money is the one paying under its weight.' | t }}
+          </p>
+        </section>
+      }
+
       <!-- ==== Heatmap ==== -->
       <section class="stat-card">
         <h3 class="block-title">{{ 'Activity' | t }}</h3>

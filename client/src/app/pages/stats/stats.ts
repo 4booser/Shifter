@@ -907,6 +907,121 @@ export class Stats {
     }));
   });
 
+  /**
+   * Each place on the measures that decide whether it is worth keeping.
+   *
+   * The ranked bar below says which place paid more, which is mostly a question
+   * of how many shifts each got. Someone holding two jobs is asking a different
+   * one — which hour is worth more — and that only shows when the places are
+   * put side by side on the same measures.
+   */
+  protected readonly placeBreakdown = computed(() => {
+    const rows = this.summary().by_location;
+
+    if (rows.length < 2) return [];
+
+    const earned = rows.reduce((sum, row) => sum + row.earned, 0);
+    const hours = rows.reduce((sum, row) => sum + row.hours, 0);
+
+    // Only places with enough shifts behind them can win the badge. One good
+    // night would otherwise crown a place as the best-paying job there is, and
+    // that is a claim somebody might hand their notice in over.
+    const settled = rows.filter((row) => row.days_worked >= 3);
+    const bestHourly = settled.length > 0 ? Math.max(...settled.map((row) => row.per_hour)) : -1;
+
+    return [...rows]
+      .sort((a, b) => b.per_hour - a.per_hour)
+      .map((row) => ({
+        name: row.name,
+        colour: row.colour,
+        earned: row.earned,
+        hours: row.hours,
+        days: row.days_worked,
+        perHour: row.per_hour,
+        tips: row.tips,
+        earnedShare: earned > 0 ? (row.earned / earned) * 100 : 0,
+        hoursShare: hours > 0 ? (row.hours / hours) * 100 : 0,
+        /** Ranked by the hour, so the best-paying one is named rather than found. */
+        best: row.per_hour === bestHourly && row.per_hour > 0,
+        /**
+         * Too few shifts for the hourly figure to mean anything. One good night
+         * at a place makes it look like the best-paying job there is, and
+         * someone could reasonably act on that.
+         */
+        thin: row.days_worked > 0 && row.days_worked < 3,
+      }));
+  });
+
+  /**
+   * Tips as a share of what each month brought in.
+   *
+   * The amount of tips already has a card; a share answers a different
+   * question — whether the tipping is holding up as the hours change. A good
+   * month on more shifts is not the same as a good month on better tables.
+   */
+  protected readonly tipsTrend = computed(() => {
+    const months = this.trendParts().filter(
+      (month) => month.shifts + month.sales + month.tips > 0,
+    );
+
+    if (months.length < 2) return [];
+
+    const shares = months.map((month) => {
+      const total = month.shifts + month.sales + month.tips;
+
+      return { label: month.label, share: (month.tips / total) * 100 };
+    });
+
+    const peak = Math.max(...shares.map((entry) => entry.share), 1);
+
+    return shares.map((entry) => ({
+      ...entry,
+      // Against the best month rather than against 100%, or a wage where tips
+      // are a tenth would draw twelve slivers and say nothing.
+      height: Math.max(2, (entry.share / peak) * 100),
+    }));
+  });
+
+  /**
+   * Share of money against share of time, per shift template.
+   *
+   * "Top shifts" ranks by what each earned. A shift taking a third of the hours
+   * for a fifth of the money is the one worth dropping, and no ranking by money
+   * alone can show it. Both bars are percentages of their own totals, so it is
+   * one scale and the pair can be compared.
+   */
+  protected readonly moneyVsTime = computed(() => {
+    const totals = new Map<string, { earned: number; hours: number }>();
+
+    for (const day of this.summary().days) {
+      for (const entry of day.shifts) {
+        if (!entry.worked) continue;
+
+        const bucket = totals.get(entry.name) ?? { earned: 0, hours: 0 };
+
+        bucket.earned += entry.earned;
+        bucket.hours += entry.hours;
+        totals.set(entry.name, bucket);
+      }
+    }
+
+    const rows = [...totals.entries()].map(([name, bucket]) => ({ name, ...bucket }));
+    const earned = rows.reduce((sum, row) => sum + row.earned, 0);
+    const hours = rows.reduce((sum, row) => sum + row.hours, 0);
+
+    if (rows.length < 2 || earned <= 0 || hours <= 0) return [];
+
+    return rows
+      .map((row) => ({
+        name: row.name,
+        moneyShare: (row.earned / earned) * 100,
+        timeShare: (row.hours / hours) * 100,
+        earned: row.earned,
+        hours: row.hours,
+      }))
+      .sort((a, b) => b.moneyShare - a.moneyShare);
+  });
+
   /** Whole numbers for counters that are not money. */
   protected readonly plain = (value: number) => `${Math.round(value)}`;
 

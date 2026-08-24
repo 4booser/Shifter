@@ -197,12 +197,19 @@ public class WebhookIngestHandler : IWebhookIngestHandler
             sales?.Replace ?? false,
             hoursWrite?.Shift);
 
-        // Nothing matched and there was nothing to match against: the sender's
-        // fields are not the ones this endpoint reads. Answered as an error
-        // rather than as an empty day, because the sender shows a 2xx as
-        // "delivered" — which is how a misconfigured mapping goes unnoticed for
-        // a week while the dashboard says everything is fine.
-        if (hoursWrite is null && (salesWrite is null || salesWrite.Blind))
+        // Whether anything was understood, as opposed to whether anything is
+        // worth writing. A day off reads perfectly and writes nothing; a
+        // mapping pointing at the wrong names reads nothing at all. Only the
+        // second is an error.
+        bool understood = salesWrite is { Blind: false }
+            || (hours?.SawTime ?? false)
+            || endpoint.Kind == WebhookKind.Hours;
+
+        // The sender's fields are not the ones this endpoint reads. Answered as
+        // an error rather than as an empty day, because the sender shows a 2xx
+        // as "delivered" — which is how a misconfigured mapping goes unnoticed
+        // for a week while the dashboard says everything is fine.
+        if (!understood)
         {
             throw new ValidationException(
                 "Nothing here matched: no positions, no amounts and no hours were found. "
@@ -216,7 +223,7 @@ public class WebhookIngestHandler : IWebhookIngestHandler
         // sender's own test button produces exactly this, and creating a blank
         // row for it would put an empty day on the calendar and report success
         // for a night that was never recorded.
-        if (hoursWrite is null && salesWrite!.Empty)
+        if (hoursWrite is null && (salesWrite is null || salesWrite.Empty))
         {
             if (options.Log)
             {
@@ -323,7 +330,14 @@ public class WebhookIngestHandler : IWebhookIngestHandler
                 entry.Earned));
         }
 
-        bool empty = entries.Count == 0
+        // A position listed as zero says it was not sold, which is what a
+        // scheduled report says about every position on a day off. It is not
+        // content: a delivery of nothing but zeroes writes nothing and does not
+        // bring a day into being. Clearing a day that does have entries is what
+        // replace is for, and that counts as content precisely because it says
+        // so out loud.
+        bool empty = !entries.Any(entry => entry.Quantity > 0)
+            && !payload.Replace
             && payload.Tips is null
             && payload.TipsCash is null
             && payload.Deductions is null
@@ -344,11 +358,20 @@ public class WebhookIngestHandler : IWebhookIngestHandler
             empty && !payload.SawPositions);
     }
 
-    private async Task<HoursWrite> PrepareHoursAsync(
+    /// <summary>
+    /// Null when the payload says no shift was worked. A report on a schedule
+    /// arrives every day, including the days off, and on those it says zero —
+    /// which is a statement about the day, not a mistake in the delivery.
+    /// </summary>
+    private async Task<HoursWrite?> PrepareHoursAsync(
         WebhookEndpoint endpoint,
         HoursPayload payload,
         CancellationToken ct)
     {
+        // Nothing was worked. Said before the template is even looked up, so a
+        // day off does not need one configured to be reported.
+        if (payload.Hours is 0) return null;
+
         Shift template = await ResolveShiftAsync(endpoint, payload.Shift, ct);
 
         DayShift placement = DayShift.From(template, payload.Worked);
@@ -392,9 +415,13 @@ public class WebhookIngestHandler : IWebhookIngestHandler
             placement.EndTime = only.Add(template.Duration);
         }
 
-        Require(
-            placement.PaidDuration > TimeSpan.Zero,
-            "The break is at least as long as the shift.");
+        TimeSpan paid = placement.Duration - TimeSpan.FromMinutes(placement.BreakMinutes);
+
+        Require(paid >= TimeSpan.Zero, "The break is longer than the shift.");
+
+        // A shift that starts and ends at the same moment is the same statement
+        // as zero hours: there was no shift.
+        if (paid == TimeSpan.Zero) return null;
 
         return new HoursWrite(
             placement,

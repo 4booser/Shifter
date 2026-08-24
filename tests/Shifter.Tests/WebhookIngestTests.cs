@@ -912,6 +912,81 @@ public class WebhookIngestTests
         Assert.Equal(new TimeOnly(22, 0), placement.EndTime);
     }
 
+    /// <summary>
+    /// A report on a schedule arrives every day, including the days nobody
+    /// worked, and on those it says zero — hours, and a quantity against every
+    /// position. That is a statement about the day, not a broken delivery: it
+    /// used to answer 400, which would have turned every day off into a red
+    /// line in the sender's dashboard.
+    /// </summary>
+    [Fact]
+    public async Task Reads_a_day_off_as_a_day_off_rather_than_a_failure()
+    {
+        _query.Shifts.Add(Build.Template(7, name: "Evening"));
+        GivenCatalogue((1, "Heven", 350m, 5m));
+        Given(WebhookKind.Both, defaultShiftId: 7);
+
+        IngestResultDto result = await Post("""
+            { "date": "2026-08-25", "hours": 0, "sales": { "Heven": 0 } }
+            """);
+
+        Assert.Equal("empty", result.status);
+
+        Assert.Empty(_command.Placed);
+        Assert.Empty(_query.Days);
+        Assert.Equal(DeliveryStatus.Empty, Assert.Single(_webhooks.Deliveries).Status);
+    }
+
+    /// <summary>Zero hours beside real takings: the sales still land.</summary>
+    [Fact]
+    public async Task Writes_the_takings_when_the_same_report_says_no_hours()
+    {
+        _query.Shifts.Add(Build.Template(7, name: "Evening"));
+        GivenCatalogue((1, "Heven", 350m, 5m));
+        Given(WebhookKind.Both, defaultShiftId: 7);
+
+        IngestResultDto result = await Post("""
+            { "date": "2026-08-25", "hours": 0, "sales": { "Heven": 3 } }
+            """);
+
+        Assert.Equal("applied", result.status);
+        Assert.Equal(3, Assert.Single(Assert.Single(_command.Merges).Sales).Quantity);
+        Assert.Empty(_command.Placed);
+    }
+
+    /// <summary>An hours endpoint told the day was zero writes nothing at all.</summary>
+    [Fact]
+    public async Task An_hours_endpoint_writes_nothing_for_a_day_off()
+    {
+        _query.Shifts.Add(Build.Template(7, name: "Evening"));
+        Given(WebhookKind.Hours, defaultShiftId: 7);
+
+        IngestResultDto result = await Post("""{ "date": "2026-08-25", "hours": 0 }""");
+
+        Assert.Equal("empty", result.status);
+        Assert.Empty(_command.Placed);
+    }
+
+    /// <summary>
+    /// A shift that starts and ends at the same moment says the same thing as
+    /// zero hours. A break longer than the shift does not — that is a delivery
+    /// nobody can act on, and it still says so.
+    /// </summary>
+    [Fact]
+    public async Task Separates_a_shift_of_no_length_from_a_break_that_outlasts_it()
+    {
+        _query.Shifts.Add(Build.Template(7, name: "Evening"));
+        Given(WebhookKind.Hours, defaultShiftId: 7);
+
+        Assert.Equal(
+            "empty",
+            (await Post("""{ "date": "2026-08-25", "start": "17:00", "end": "17:00" }""")).status);
+
+        await Assert.ThrowsAsync<ValidationException>(() => Post("""
+            { "date": "2026-08-25", "start": "17:00", "end": "19:00", "break_minutes": 150 }
+            """));
+    }
+
     // ==== Trying one out ====
 
     [Fact]

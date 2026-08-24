@@ -59,6 +59,25 @@ public sealed class WebhookEndpoint
     /// </summary>
     public string? Mapping { get; set; }
 
+    /// <summary>
+    /// The header a sender signs under, when it will not be told which one to
+    /// use — "X-Syrve-Signature", "Stripe-Signature", "X-Hub-Signature-256".
+    /// Null means it speaks ours.
+    ///
+    /// Senders that offer a webhook feature rarely offer a choice of header,
+    /// and refusing them on that alone would make this useless against exactly
+    /// the software people need it for.
+    /// </summary>
+    public string? SignatureHeader { get; set; }
+
+    /// <summary>
+    /// The key that sender signs with — its own, generated on its side, which
+    /// is why it is stored beside our <see cref="Secret"/> rather than instead
+    /// of it. An endpoint may be reachable both ways at once: the sender by its
+    /// scheme, a script by ours.
+    /// </summary>
+    public string? SignatureSecret { get; set; }
+
     public DateTime CreatedAt { get; set; }
 
     /// <summary>When something last arrived, successful or not — the first

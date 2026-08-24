@@ -30,6 +30,10 @@ public record WebhookDto(
     int? default_shift_id,
     string? default_shift_name,
     string? mapping,
+    /// <summary>The header a sender signs under, when it uses its own scheme.</summary>
+    string? signature_header,
+    /// <summary>The sender's own key. Shown to its owner, like the endpoint's own.</summary>
+    string? signature_secret,
     DateTime created_at,
     DateTime? last_delivery_at,
     /// <summary>How the last few arrivals went; the quickest read on health.</summary>
@@ -48,7 +52,14 @@ public record WebhookSaveDto(
     /// <summary>Which template hours land on when the payload names none.</summary>
     int? default_shift_id,
     /// <summary>Null or empty means the sender already speaks the canonical shape.</summary>
-    string? mapping);
+    string? mapping,
+    /// <summary>
+    /// Together these say "this sender signs its own way": the header it signs
+    /// under and the key it signs with. Both or neither — a header with no key
+    /// cannot be checked, and a key with no header cannot be found.
+    /// </summary>
+    string? signature_header = null,
+    string? signature_secret = null);
 
 /// <summary>One arrival, with the body that arrived.</summary>
 public record DeliveryDto(

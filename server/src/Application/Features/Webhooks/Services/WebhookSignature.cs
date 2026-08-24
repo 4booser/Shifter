@@ -100,6 +100,105 @@ public static class WebhookSignature
         return asked;
     }
 
+    /// <summary>
+    /// The other direction: a sender that signs under its own scheme and will
+    /// not be told to do otherwise. The value read is the one Stripe made
+    /// common and half the industry copied —
+    /// <c>t=1787600865,v1=&lt;hex&gt;</c> — where the timestamp travels inside
+    /// the signature rather than beside it, and the signed string is
+    /// <c>{t}.{body}</c>. Several v1 entries may appear at once, which is how a
+    /// sender rotates a key without dropping deliveries.
+    /// </summary>
+    /// <param name="secret">
+    /// The sender's own key. Tried as it was given, and — for the
+    /// <c>whsec_</c>-prefixed keys, where the part after the prefix is base64 —
+    /// as those bytes too, because the two conventions share one format and
+    /// nothing in the request says which is in use.
+    /// </param>
+    public static string? VerifySender(
+        string secret,
+        string? value,
+        string body,
+        DateTimeOffset now)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return "The sender's signature header was not present.";
+
+        long? stamp = null;
+        List<string> offered = [];
+
+        foreach (string part in value.Split(',', StringSplitOptions.TrimEntries))
+        {
+            int equals = part.IndexOf('=');
+
+            if (equals <= 0) continue;
+
+            string key = part[..equals];
+            string element = part[(equals + 1)..];
+
+            if (key == "t" && long.TryParse(element, out long parsed)) stamp = parsed;
+
+            // v1 today; a sender that moves to v2 keeps sending v1 alongside it
+            // for exactly this reason, so anything else is left alone.
+            if (key == "v1") offered.Add(element);
+        }
+
+        if (stamp is not long moment)
+            return $"The signature carried no timestamp: expected t=… in {value[..Math.Min(value.Length, 24)]}…";
+
+        if (offered.Count == 0)
+            return "The signature carried no v1=… element.";
+
+        TimeSpan drift = now - DateTimeOffset.FromUnixTimeSeconds(moment);
+
+        if (drift.Duration() > Window)
+        {
+            return "The signed timestamp is outside the accepted window. "
+                + "Check the sender's clock.";
+        }
+
+        string signed = $"{moment}.{body}";
+
+        foreach (byte[] key in Keys(secret))
+        {
+            string expected = Convert.ToHexStringLower(
+                HMACSHA256.HashData(key, Encoding.UTF8.GetBytes(signed)));
+
+            if (offered.Any(candidate => Matches(expected, candidate.Trim()))) return null;
+        }
+
+        return "The sender's signature does not match the body. The endpoint "
+            + "checked HMAC-SHA256 over \"{timestamp}.{body}\" with the sender's key.";
+    }
+
+    /// <summary>
+    /// The one key, in the two forms the convention allows. Both are derived
+    /// from the same secret, so trying each widens nothing an attacker could
+    /// reach — and picking wrong means every delivery is refused for a reason
+    /// nobody can see from the outside.
+    /// </summary>
+    private static IEnumerable<byte[]> Keys(string secret)
+    {
+        yield return Encoding.UTF8.GetBytes(secret);
+
+        const string prefix = "whsec_";
+
+        if (!secret.StartsWith(prefix, StringComparison.Ordinal)) yield break;
+
+        byte[] decoded;
+
+        try
+        {
+            decoded = Convert.FromBase64String(secret[prefix.Length..]);
+        }
+        catch (FormatException)
+        {
+            yield break;
+        }
+
+        yield return decoded;
+    }
+
     /// <summary>The public half of the address, which is what the sender's URL carries.</summary>
     public static string NewToken() => Random(24);
 

@@ -50,14 +50,7 @@ public class WebhookIngestHandler : IWebhookIngestHandler
         if (endpoint is null || !endpoint.Active)
             throw new NotFoundException("No webhook endpoint at this address.");
 
-        string? refused = WebhookSignature.Verify(
-            endpoint.Secret,
-            headers.Signature,
-            headers.Timestamp,
-            headers.Secret,
-            body,
-            now,
-            headers.Present);
+        string? refused = Refuse(endpoint, headers, body, now);
 
         if (refused is not null)
         {
@@ -70,6 +63,42 @@ public class WebhookIngestHandler : IWebhookIngestHandler
         }
 
         return await RunAsync(endpoint, body, IngestOptions.Delivery, ct);
+    }
+
+    /// <summary>
+    /// Null when the sender may write. An endpoint can be reachable two ways at
+    /// once: by the sender's own scheme, where one is configured and the sender
+    /// used it, and by ours for everything else — a script, a curl, a second
+    /// integration that can be told what to send. The sender's own comes first
+    /// so that a configured integration is never silently judged by rules it
+    /// was never given.
+    /// </summary>
+    private static string? Refuse(
+        WebhookEndpoint endpoint,
+        DeliveryHeaders headers,
+        string body,
+        DateTimeOffset now)
+    {
+        if (!string.IsNullOrWhiteSpace(endpoint.SignatureHeader)
+            && !string.IsNullOrWhiteSpace(endpoint.SignatureSecret))
+        {
+            string? presented = headers.Named(endpoint.SignatureHeader);
+
+            if (!string.IsNullOrWhiteSpace(presented))
+            {
+                return WebhookSignature.VerifySender(
+                    endpoint.SignatureSecret, presented, body, now);
+            }
+        }
+
+        return WebhookSignature.Verify(
+            endpoint.Secret,
+            headers.Signature,
+            headers.Timestamp,
+            headers.Secret,
+            body,
+            now,
+            headers.Present);
     }
 
     public async Task<IngestResultDto> RunAsync(

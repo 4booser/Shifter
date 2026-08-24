@@ -22,6 +22,10 @@ export interface Webhook {
   default_shift_id: number | null;
   default_shift_name: string | null;
   mapping: string | null;
+  /** The header a sender signs under, when it uses its own scheme. */
+  signature_header: string | null;
+  /** That sender's own key. */
+  signature_secret: string | null;
   created_at: string;
   last_delivery_at: string | null;
   recent_applied: number;
@@ -34,6 +38,9 @@ export interface WebhookSave {
   active: boolean;
   default_shift_id: number | null;
   mapping: string | null;
+  /** Both or neither: a header with no key cannot be checked. */
+  signature_header: string | null;
+  signature_secret: string | null;
 }
 
 /** Mirrors DeliveryDto: one arrival, with the body as it was sent. */

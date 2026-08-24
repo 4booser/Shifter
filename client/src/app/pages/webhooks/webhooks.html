@@ -163,6 +163,22 @@
           </span>
         </label>
 
+        <div class="field-row">
+          <label class="field">
+            <span class="field-label">{{ 'Sender signs under this header' | t }}</span>
+            <input type="text" maxlength="120" placeholder="X-Syrve-Signature" [(ngModel)]="signatureHeader" />
+          </label>
+
+          <label class="field">
+            <span class="field-label">{{ "Sender's own key" | t }}</span>
+            <input type="text" maxlength="200" placeholder="whsec_…" [(ngModel)]="signatureSecret" />
+          </label>
+        </div>
+
+        <p class="field-hint">
+          {{ 'Fill both in when the sender cannot be told which headers to use: it keeps signing its own way, and this endpoint checks it. Reads the common form t=1787600865,v1=… — HMAC-SHA256 over the timestamp and the body. Leave empty and the sender must use the key above.' | t }}
+        </p>
+
         <label class="hook-switch">
           <input type="checkbox" [(ngModel)]="active" />
           <span>{{ 'Accepting deliveries' | t }}</span>
@@ -251,6 +267,9 @@
           }
           @if (hook.default_shift_name; as template) {
             · {{ 'default' | t }}: {{ template }}
+          }
+          @if (hook.signature_header; as header) {
+            · {{ 'signed by the sender' | t }}: <code>{{ header }}</code>
           }
         </p>
 

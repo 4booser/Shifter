@@ -262,6 +262,185 @@ public class WebhookIngestTests
         Assert.Equal(0m, Assert.Single(_command.Merges).Tips);
     }
 
+    // ==== A sender that signs its own way ====
+
+    /// <summary>
+    /// The shape Stripe made common and half the industry copied: the timestamp
+    /// travels inside the signature rather than beside it, under whatever header
+    /// the sender happens to use. Refusing those senders would make this useless
+    /// against exactly the software people need it for — a till's webhook page
+    /// offers a URL and a key, never a choice of scheme.
+    /// </summary>
+    private WebhookEndpoint GivenSender(string header = "X-Syrve-Signature", string secret = "whsec_c2VjcmV0")
+    {
+        WebhookEndpoint endpoint = Given();
+
+        endpoint.SignatureHeader = header;
+        endpoint.SignatureSecret = secret;
+
+        return endpoint;
+    }
+
+    private static string SenderSignature(string secret, long stamp, string body)
+    {
+        byte[] hash = System.Security.Cryptography.HMACSHA256.HashData(
+            System.Text.Encoding.UTF8.GetBytes(secret),
+            System.Text.Encoding.UTF8.GetBytes($"{stamp}.{body}"));
+
+        return $"t={stamp},v1={Convert.ToHexStringLower(hash)}";
+    }
+
+    private Task<IngestResultDto> PostAs(
+        string header,
+        string value,
+        string body,
+        DateTimeOffset now)
+        => _handler.ReceiveAsync(
+            Token,
+            body,
+            new DeliveryHeaders(
+                null,
+                null,
+                null,
+                [header],
+                new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    [header] = value
+                }),
+            now,
+            CancellationToken.None);
+
+    [Fact]
+    public async Task Accepts_a_sender_signing_under_its_own_header()
+    {
+        const string secret = "whsec_c2VjcmV0";
+
+        GivenSender(secret: secret);
+        GivenCatalogue((1, "Wine", 12m, 10m));
+
+        DateTimeOffset now = DateTimeOffset.UtcNow;
+        string body = """{ "date": "2026-08-20", "tips": 12 }""";
+
+        IngestResultDto result = await PostAs(
+            "X-Syrve-Signature",
+            SenderSignature(secret, now.ToUnixTimeSeconds(), body),
+            body,
+            now);
+
+        Assert.Equal("applied", result.status);
+    }
+
+    /// <summary>
+    /// A sender rotating its key signs with both for a while, and dropping the
+    /// deliveries in that window is the one thing rotation exists to avoid.
+    /// </summary>
+    [Fact]
+    public async Task Accepts_a_signature_carrying_more_than_one_element()
+    {
+        const string secret = "whsec_c2VjcmV0";
+
+        GivenSender(secret: secret);
+
+        DateTimeOffset now = DateTimeOffset.UtcNow;
+        string body = """{ "date": "2026-08-20", "tips": 12 }""";
+        long stamp = now.ToUnixTimeSeconds();
+
+        string real = SenderSignature(secret, stamp, body).Split("v1=")[1];
+
+        IngestResultDto result = await PostAs(
+            "X-Syrve-Signature",
+            $"t={stamp},v1=0000000000000000000000000000000000000000000000000000000000000000,v1={real}",
+            body,
+            now);
+
+        Assert.Equal("applied", result.status);
+    }
+
+    [Fact]
+    public async Task Refuses_a_senders_signature_over_a_different_body()
+    {
+        const string secret = "whsec_c2VjcmV0";
+
+        GivenSender(secret: secret);
+
+        DateTimeOffset now = DateTimeOffset.UtcNow;
+
+        UnauthorizedException error = await Assert.ThrowsAsync<UnauthorizedException>(
+            () => PostAs(
+                "X-Syrve-Signature",
+                SenderSignature(secret, now.ToUnixTimeSeconds(), """{"date":"2026-08-20"}"""),
+                """{"date":"2026-08-21","tips":9000}""",
+                now));
+
+        Assert.Contains("does not match", error.Message);
+    }
+
+    [Fact]
+    public async Task Refuses_a_senders_signature_that_has_gone_stale()
+    {
+        const string secret = "whsec_c2VjcmV0";
+
+        GivenSender(secret: secret);
+
+        DateTimeOffset now = DateTimeOffset.UtcNow;
+        long stale = now.Add(-WebhookSignature.Window - TimeSpan.FromMinutes(1)).ToUnixTimeSeconds();
+        string body = """{ "date": "2026-08-20" }""";
+
+        UnauthorizedException error = await Assert.ThrowsAsync<UnauthorizedException>(
+            () => PostAs("X-Syrve-Signature", SenderSignature(secret, stale, body), body, now));
+
+        Assert.Contains("window", error.Message);
+    }
+
+    /// <summary>
+    /// The two conventions that share this format differ on one thing: whether
+    /// a whsec_-prefixed key is the string itself or the bytes it encodes.
+    /// Nothing in the request says which, so both are tried — they come from
+    /// one secret, so accepting either widens nothing.
+    /// </summary>
+    [Fact]
+    public async Task Accepts_a_key_signed_as_the_bytes_behind_its_prefix()
+    {
+        const string secret = "whsec_c2VjcmV0";
+
+        GivenSender(secret: secret);
+
+        DateTimeOffset now = DateTimeOffset.UtcNow;
+        string body = """{ "date": "2026-08-20", "tips": 3 }""";
+        long stamp = now.ToUnixTimeSeconds();
+
+        byte[] decoded = Convert.FromBase64String(secret["whsec_".Length..]);
+
+        string signature = "t=" + stamp + ",v1=" + Convert.ToHexStringLower(
+            System.Security.Cryptography.HMACSHA256.HashData(
+                decoded,
+                System.Text.Encoding.UTF8.GetBytes($"{stamp}.{body}")));
+
+        IngestResultDto result = await PostAs("X-Syrve-Signature", signature, body, now);
+
+        Assert.Equal("applied", result.status);
+    }
+
+    /// <summary>
+    /// The endpoint keeps its own key working alongside the sender's: a script
+    /// or a second integration can still be told what to send, and configuring
+    /// one sender must not lock everything else out.
+    /// </summary>
+    [Fact]
+    public async Task Still_accepts_its_own_key_when_a_sender_scheme_is_configured()
+    {
+        GivenSender();
+
+        IngestResultDto result = await _handler.ReceiveAsync(
+            Token,
+            """{ "date": "2026-08-20", "tips": 5 }""",
+            new DeliveryHeaders(null, null, Secret),
+            DateTimeOffset.UtcNow,
+            CancellationToken.None);
+
+        Assert.Equal("applied", result.status);
+    }
+
     // ==== Sales ====
 
     [Fact]

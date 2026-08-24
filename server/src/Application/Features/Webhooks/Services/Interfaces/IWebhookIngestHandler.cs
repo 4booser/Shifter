@@ -44,7 +44,22 @@ public sealed record DeliveryHeaders(
     string? Signature,
     string? Timestamp,
     string? Secret,
-    string[]? Present = null);
+    string[]? Present = null,
+    /// <summary>
+    /// Every header of the request, for the endpoints configured to read a
+    /// sender's own signature: which header that is only becomes known once the
+    /// endpoint has been looked up, so the whole set has to be carried this far.
+    /// Values are used to verify and never written down.
+    /// </summary>
+    IReadOnlyDictionary<string, string>? All = null)
+{
+    public string? Named(string? name)
+    {
+        if (string.IsNullOrWhiteSpace(name) || All is null) return null;
+
+        return All.TryGetValue(name, out string? value) ? value : null;
+    }
+}
 
 /// <summary>
 /// How far a run goes. A test writes nothing and logs nothing; a replay writes

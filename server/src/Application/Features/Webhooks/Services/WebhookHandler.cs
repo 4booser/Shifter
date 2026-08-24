@@ -19,6 +19,9 @@ public class WebhookHandler : IWebhookHandler
     /// nobody is storing a payload in the field by mistake.</summary>
     private const int MappingMaxLength = 4_000;
 
+    private const int HeaderMaxLength = 120;
+    private const int SecretMaxLength = 200;
+
     /// <summary>How much of the log the screen shows.</summary>
     private const int DeliveryPage = 50;
 
@@ -168,6 +171,9 @@ public class WebhookHandler : IWebhookHandler
             ct);
     }
 
+    private static string? Trimmed(string? value)
+        => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
     private async Task<WebhookEndpoint> RequireAsync(int userId, int id, CancellationToken ct)
         => await _webhooks.GetAsync(userId, id, ct)
             ?? throw new NotFoundException("No such webhook endpoint.");
@@ -186,6 +192,23 @@ public class WebhookHandler : IWebhookHandler
 
         if (request.mapping?.Length > MappingMaxLength)
             throw new ValidationException($"The mapping must be at most {MappingMaxLength} characters.");
+
+        // Half a credential can never verify anything, and an endpoint that
+        // silently ignored the half it was given would look configured while
+        // refusing every delivery.
+        if (string.IsNullOrWhiteSpace(request.signature_header)
+            != string.IsNullOrWhiteSpace(request.signature_secret))
+        {
+            throw new ValidationException(
+                "A sender's signature needs both the header it signs under and "
+                + "the key it signs with, or neither.");
+        }
+
+        if (request.signature_header?.Length > HeaderMaxLength
+            || request.signature_secret?.Length > SecretMaxLength)
+        {
+            throw new ValidationException("That signature header or key is too long.");
+        }
 
         // Parsed here so a mapping that cannot be read is refused while someone
         // is looking at it, rather than at three in the morning when the till
@@ -207,6 +230,9 @@ public class WebhookHandler : IWebhookHandler
         endpoint.Mapping = string.IsNullOrWhiteSpace(request.mapping)
             ? null
             : request.mapping.Trim();
+
+        endpoint.SignatureHeader = Trimmed(request.signature_header);
+        endpoint.SignatureSecret = Trimmed(request.signature_secret);
 
         // The navigation is stale the moment the id changes, and the response
         // is built from it. Cleared rather than re-read: the name is only there
@@ -261,6 +287,8 @@ public class WebhookHandler : IWebhookHandler
             endpoint.DefaultShiftId,
             endpoint.DefaultShift?.Name,
             endpoint.Mapping,
+            endpoint.SignatureHeader,
+            endpoint.SignatureSecret,
             endpoint.CreatedAt,
             endpoint.LastDeliveryAt,
             tally?.Applied ?? 0,

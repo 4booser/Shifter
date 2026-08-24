@@ -84,6 +84,14 @@ export class Webhooks {
   protected readonly defaultShiftId = signal<number | null>(null);
   protected readonly mapping = signal('');
 
+  /**
+   * For senders that sign their own way. A till's webhook page offers a URL
+   * and a key, never a choice of scheme, so the endpoint learns theirs instead
+   * of demanding ours.
+   */
+  protected readonly signatureHeader = signal('');
+  protected readonly signatureSecret = signal('');
+
   /** Secrets stay covered until asked for: this page gets shown to people. */
   protected readonly revealed = signal<number | null>(null);
 
@@ -148,6 +156,8 @@ export class Webhooks {
     this.active.set(true);
     this.defaultShiftId.set(null);
     this.mapping.set('');
+    this.signatureHeader.set('');
+    this.signatureSecret.set('');
   }
 
   protected startEdit(hook: Webhook): void {
@@ -157,6 +167,8 @@ export class Webhooks {
     this.active.set(hook.active);
     this.defaultShiftId.set(hook.default_shift_id);
     this.mapping.set(hook.mapping ?? '');
+    this.signatureHeader.set(hook.signature_header ?? '');
+    this.signatureSecret.set(hook.signature_secret ?? '');
   }
 
   protected cancel(): void {
@@ -176,6 +188,8 @@ export class Webhooks {
       // one on it would confuse the next person to read the form.
       default_shift_id: this.needsTemplate() ? this.defaultShiftId() : null,
       mapping: this.mapping().trim() === '' ? null : this.mapping(),
+      signature_header: this.signatureHeader().trim() || null,
+      signature_secret: this.signatureSecret().trim() || null,
     };
 
     this.run(
@@ -187,12 +201,17 @@ export class Webhooks {
 
   protected toggleActive(hook: Webhook): void {
     this.run(
+      // The whole endpoint goes up, so every field it already had has to come
+      // with it: a switch that quietly cleared the sender's signature would
+      // take an integration down and look like it only flipped a toggle.
       this.api.update(hook.id, {
         name: hook.name,
         kind: hook.kind,
         active: !hook.active,
         default_shift_id: hook.default_shift_id,
         mapping: hook.mapping,
+        signature_header: hook.signature_header,
+        signature_secret: hook.signature_secret,
       }),
       hook.active ? 'Switched off' : 'Switched on',
     );

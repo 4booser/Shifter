@@ -42,7 +42,11 @@ public class HooksController : ControllerBase
             Request.Headers[WebhookSignature.SignatureHeader],
             Request.Headers[WebhookSignature.TimestampHeader],
             Request.Headers[WebhookSignature.SecretHeader],
-            AuthHeaderNames());
+            AuthHeaderNames(),
+            Request.Headers.ToDictionary(
+                header => header.Key,
+                header => header.Value.ToString(),
+                StringComparer.OrdinalIgnoreCase));
 
         IngestResultDto result = await _ingest.ReceiveAsync(
             token,

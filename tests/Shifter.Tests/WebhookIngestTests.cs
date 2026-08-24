@@ -247,6 +247,42 @@ public class WebhookIngestTests
         Assert.Null(logged.AppliedDate);
     }
 
+    /// <summary>
+    /// The failure that hides itself: the sender's fields are under names the
+    /// endpoint was never told about, so nothing matches — and a 2xx makes the
+    /// sender's own dashboard report "delivered". A week later somebody asks
+    /// why the calendar is empty. It is an error, and it answers as one.
+    /// </summary>
+    [Fact]
+    public async Task Refuses_a_payload_where_nothing_matched_at_all()
+    {
+        Given();
+
+        ValidationException error = await Assert.ThrowsAsync<ValidationException>(() => Post("""
+            { "date": "2026-08-24", "items": { "Heven": 2 }, "revenue": 5100 }
+            """));
+
+        Assert.Contains("mapping", error.Message);
+
+        Assert.Empty(_command.Merges);
+        Assert.Equal(DeliveryStatus.Rejected, Assert.Single(_webhooks.Deliveries).Status);
+    }
+
+    /// <summary>
+    /// And the case it must not be confused with: the positions were there to
+    /// read and there were none of them. That is a quiet day, not a mistake.
+    /// </summary>
+    [Fact]
+    public async Task Accepts_a_day_that_really_did_sell_nothing()
+    {
+        Given();
+
+        IngestResultDto result = await Post("""{ "date": "2026-08-24", "sales": {} }""");
+
+        Assert.Equal("empty", result.status);
+        Assert.Equal(DeliveryStatus.Empty, Assert.Single(_webhooks.Deliveries).Status);
+    }
+
     /// <summary>A day of zero takings is still a day: an amount of zero is a
     /// figure somebody sent, not an absence of one.</summary>
     [Fact]

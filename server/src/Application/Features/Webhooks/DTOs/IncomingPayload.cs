@@ -25,7 +25,15 @@ public sealed record SalesPayload(
     /// reporting one item cannot wipe a day filled in by hand.
     /// </summary>
     bool Replace,
-    SalesLine[] Lines);
+    SalesLine[] Lines,
+    /// <summary>
+    /// Whether the payload had a positions field at all, as opposed to one that
+    /// was there and empty. A shop that sold nothing and a mapping that points
+    /// at nothing produce the same empty list, and they deserve opposite
+    /// answers: the first is a quiet day, the second is a misconfiguration the
+    /// sender has to be told about.
+    /// </summary>
+    bool SawPositions);
 
 /// <summary>
 /// Hours worked on one day. Either the two clock times or a plain count of

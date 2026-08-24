@@ -255,6 +255,19 @@ public class WebhookIngestHandler : IWebhookIngestHandler
             && payload.Deductions is null
             && note is null;
 
+        // Nothing matched and there was nothing to match against: the sender's
+        // fields are not the ones this endpoint reads. Answered as an error
+        // rather than as an empty day, because the sender shows a 2xx as
+        // "delivered" — which is how a misconfigured mapping goes unnoticed
+        // for a week while the dashboard says everything is fine.
+        if (carriesNothing && !payload.SawPositions)
+        {
+            throw new ValidationException(
+                "Nothing here matched: no positions and no amounts were found. If the "
+                + "sender does send them, they are under names this endpoint was not "
+                + "told about — name them in the endpoint's mapping.");
+        }
+
         if (carriesNothing)
         {
             if (options.Log)

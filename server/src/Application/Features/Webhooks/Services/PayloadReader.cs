@@ -24,6 +24,8 @@ public static class PayloadReader
     {
         JsonElement root = mapping.Root(body);
 
+        SalesLine[]? lines = ReadLines(mapping, root);
+
         return new SalesPayload(
             RequireDate(mapping.Read(root, "date"), "date"),
             Text(mapping.Read(root, "external_id")),
@@ -32,7 +34,8 @@ public static class PayloadReader
             Money(mapping, root, "deductions"),
             Text(mapping.Read(root, "note")),
             Flag(mapping.Read(root, "replace")) ?? false,
-            ReadLines(mapping, root));
+            lines ?? [],
+            lines is not null);
     }
 
     public static HoursPayload ReadHours(JsonElement body, PayloadMapping mapping)
@@ -65,9 +68,10 @@ public static class PayloadReader
             Flag(mapping.Read(root, "worked")) ?? true);
     }
 
-    private static SalesLine[] ReadLines(PayloadMapping mapping, JsonElement root)
+    /// <summary>Null when the payload carries no positions field at all.</summary>
+    private static SalesLine[]? ReadLines(PayloadMapping mapping, JsonElement root)
     {
-        if (mapping.Read(root, "sales") is not JsonElement sold) return [];
+        if (mapping.Read(root, "sales") is not JsonElement sold) return null;
 
         // Two shapes, because senders genuinely use both. A list of objects is
         // what a till exports. A plain map of name to quantity is what a daily

@@ -173,6 +173,46 @@ export class DayPanel {
       this.colour.set(day?.colour ?? null);
     });
 
+    // The same case as the shifts below, and the one people actually notice:
+    // the day can arrive after the panel has opened on it — the month was
+    // still loading, or a webhook filled the day in while the panel sat open.
+    // The date key is already spent by then, so the effect above will never
+    // run again and the inputs stay at zero over a day that has sales on it.
+    //
+    // Only what the draft has no answer for is filled in. A quantity the user
+    // has touched — including one they cleared to zero — has a key in the
+    // record and is left exactly as they left it.
+    effect(() => {
+      const day = this.day();
+
+      if (day === undefined || day === null) return;
+
+      this.quantities.update((current) => {
+        const next = { ...current };
+        let changed = false;
+
+        for (const entry of day.sales ?? []) {
+          if (entry.sales_id in next) continue;
+
+          next[entry.sales_id] = entry.quantity;
+          changed = true;
+        }
+
+        return changed ? next : current;
+      });
+
+      // An empty field is not a decision the user made; it is data that had
+      // not arrived yet. Anything they have typed stays untouched.
+      if (this.tips() === null && day.tips !== null) this.tips.set(day.tips);
+      if (this.tipsCash() === null && day.tips_cash !== null) this.tipsCash.set(day.tips_cash);
+
+      if (this.deductions() === null && day.deductions !== null)
+        this.deductions.set(day.deductions);
+
+      if (this.note() === '' && (day.note ?? '') !== '') this.note.set(day.note ?? '');
+      if (this.colour() === null && day.colour !== null) this.colour.set(day.colour);
+    });
+
     // Shifts can be painted onto the open day from the calendar, so the flags
     // have to pick up arrivals without clobbering the rest of the draft.
     effect(() => {
@@ -257,8 +297,9 @@ export class DayPanel {
   protected wantsCover(shiftId: number): boolean {
     const local = this.coverWanted()[shiftId];
 
-    return local ?? this.day()?.shifts.find((entry) => entry.shift_id === shiftId)?.needs_cover
-      ?? false;
+    return (
+      local ?? this.day()?.shifts.find((entry) => entry.shift_id === shiftId)?.needs_cover ?? false
+    );
   }
 
   protected toggleCover(shiftId: number): void {

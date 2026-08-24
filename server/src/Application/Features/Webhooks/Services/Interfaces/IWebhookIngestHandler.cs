@@ -31,8 +31,20 @@ public interface IWebhookIngestHandler
         CancellationToken ct);
 }
 
-/// <summary>What the sender presented to prove it is the endpoint.</summary>
-public sealed record DeliveryHeaders(string? Signature, string? Timestamp, string? Secret);
+/// <summary>
+/// What the sender presented to prove it is the endpoint.
+///
+/// <paramref name="Present"/> is the names — never the values — of the headers
+/// it sent that look like they were meant to authenticate it. A sender signing
+/// under its own header names is the commonest way this fails, and from the
+/// outside it is indistinguishable from one sending nothing at all. Naming what
+/// did arrive turns that into a five-second diagnosis.
+/// </summary>
+public sealed record DeliveryHeaders(
+    string? Signature,
+    string? Timestamp,
+    string? Secret,
+    string[]? Present = null);
 
 /// <summary>
 /// How far a run goes. A test writes nothing and logs nothing; a replay writes

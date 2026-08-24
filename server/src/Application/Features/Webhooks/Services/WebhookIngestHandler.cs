@@ -56,7 +56,8 @@ public class WebhookIngestHandler : IWebhookIngestHandler
             headers.Timestamp,
             headers.Secret,
             body,
-            now);
+            now,
+            headers.Present);
 
         if (refused is not null)
         {
@@ -214,6 +215,33 @@ public class WebhookIngestHandler : IWebhookIngestHandler
             null);
 
         if (!options.Apply) return new IngestResultDto("preview", payload.Date, preview);
+
+        // A delivery with nothing in it writes nothing — not even the day. The
+        // sender's own test button produces exactly this, and creating a blank
+        // row for it would put an empty day on the calendar and report success
+        // for a night that was never recorded.
+        bool carriesNothing = entries.Count == 0
+            && payload.Tips is null
+            && payload.TipsCash is null
+            && payload.Deductions is null
+            && note is null;
+
+        if (carriesNothing)
+        {
+            if (options.Log)
+            {
+                await LogAsync(
+                    endpoint,
+                    body,
+                    DeliveryStatus.Empty,
+                    payload.ExternalId,
+                    null,
+                    "Read without trouble, and it carried no positions and no amounts.",
+                    ct);
+            }
+
+            return new IngestResultDto("empty", payload.Date, preview);
+        }
 
         await _shifterCommand.MergeDaySalesAsync(
             endpoint.UserId,

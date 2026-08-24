@@ -52,7 +52,8 @@ public static class WebhookSignature
         string? timestamp,
         string? presentedSecret,
         string body,
-        DateTimeOffset now)
+        DateTimeOffset now,
+        string[]? presentHeaders = null)
     {
         if (!string.IsNullOrWhiteSpace(signature))
         {
@@ -84,8 +85,19 @@ public static class WebhookSignature
                 : "The secret does not match this endpoint.";
         }
 
-        return $"Sign the request with {SignatureHeader}, or send the endpoint's "
+        string asked = $"Sign the request with {SignatureHeader}, or send the endpoint's "
             + $"secret in {SecretHeader}.";
+
+        // A sender that signs under its own names looks exactly like one that
+        // sends nothing, and the owner cannot see the request to tell them
+        // apart. Names only: the values are the very things being protected.
+        if (presentHeaders is { Length: > 0 })
+        {
+            asked += " The request did carry: " + string.Join(", ", presentHeaders)
+                + " — this endpoint does not read those.";
+        }
+
+        return asked;
     }
 
     /// <summary>The public half of the address, which is what the sender's URL carries.</summary>

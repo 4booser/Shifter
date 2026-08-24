@@ -16,5 +16,13 @@ public enum DeliveryStatus
     Rejected = 2,
 
     /// <summary>Never got as far as the contents: bad signature, bad JSON.</summary>
-    Failed = 3
+    Failed = 3,
+
+    /// <summary>
+    /// Read and understood, and there was nothing in it: no positions, no
+    /// amounts. Its own status rather than "applied", because a sender's test
+    /// button produces exactly this, and reporting success for it sends people
+    /// looking through the calendar for a day that was never written.
+    /// </summary>
+    Empty = 4
 }

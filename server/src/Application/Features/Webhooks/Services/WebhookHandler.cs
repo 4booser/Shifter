@@ -274,6 +274,7 @@ public class WebhookHandler : IWebhookHandler
             DeliveryStatus.Applied => "applied",
             DeliveryStatus.Duplicate => "duplicate",
             DeliveryStatus.Rejected => "rejected",
+            DeliveryStatus.Empty => "empty",
             _ => "failed"
         },
         delivery.ExternalId,

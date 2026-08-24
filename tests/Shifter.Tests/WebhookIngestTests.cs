@@ -196,6 +196,72 @@ public class WebhookIngestTests
         Assert.Contains("window", error.Message);
     }
 
+    /// <summary>
+    /// A sender signing under its own header names is refused exactly like one
+    /// that sent nothing, and from the outside the two are identical. The names
+    /// that did arrive go into the answer — and so into the log the owner
+    /// reads — because that is the whole diagnosis.
+    /// </summary>
+    [Fact]
+    public async Task Names_the_credentials_the_sender_did_send()
+    {
+        Given();
+
+        UnauthorizedException error = await Assert.ThrowsAsync<UnauthorizedException>(
+            () => _handler.ReceiveAsync(
+                Token,
+                """{ "date": "2026-08-20" }""",
+                new DeliveryHeaders(null, null, null, ["svix-id", "svix-signature"]),
+                DateTimeOffset.UtcNow,
+                CancellationToken.None));
+
+        Assert.Contains("svix-signature", error.Message);
+        Assert.Contains("does not read those", error.Message);
+        Assert.Contains("svix-signature", Assert.Single(_webhooks.Deliveries).Error);
+    }
+
+    /// <summary>
+    /// What a sender's own "test" button produces: a well-formed report of a
+    /// day on which nothing was sold. Writing it would put a blank day on the
+    /// calendar and call it a success, which is worse than saying plainly that
+    /// the delivery was empty.
+    /// </summary>
+    [Fact]
+    public async Task Reports_a_delivery_that_carries_nothing_and_writes_nothing()
+    {
+        Given();
+
+        IngestResultDto result = await Post("""
+            { "date": "2026-08-24", "sales": [] }
+            """);
+
+        Assert.Equal("empty", result.status);
+        Assert.Equal(new DateOnly(2026, 8, 24), result.date);
+
+        Assert.Empty(_command.Merges);
+        Assert.Empty(_query.Days);
+
+        WebhookDelivery logged = Assert.Single(_webhooks.Deliveries);
+
+        Assert.Equal(DeliveryStatus.Empty, logged.Status);
+        Assert.Null(logged.AppliedDate);
+    }
+
+    /// <summary>A day of zero takings is still a day: an amount of zero is a
+    /// figure somebody sent, not an absence of one.</summary>
+    [Fact]
+    public async Task Writes_a_day_whose_takings_really_were_zero()
+    {
+        Given();
+
+        IngestResultDto result = await Post("""
+            { "date": "2026-08-24", "tips": 0, "sales": [] }
+            """);
+
+        Assert.Equal("applied", result.status);
+        Assert.Equal(0m, Assert.Single(_command.Merges).Tips);
+    }
+
     // ==== Sales ====
 
     [Fact]

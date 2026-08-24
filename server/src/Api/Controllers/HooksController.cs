@@ -41,7 +41,8 @@ public class HooksController : ControllerBase
         DeliveryHeaders headers = new DeliveryHeaders(
             Request.Headers[WebhookSignature.SignatureHeader],
             Request.Headers[WebhookSignature.TimestampHeader],
-            Request.Headers[WebhookSignature.SecretHeader]);
+            Request.Headers[WebhookSignature.SecretHeader],
+            AuthHeaderNames());
 
         IngestResultDto result = await _ingest.ReceiveAsync(
             token,
@@ -53,6 +54,29 @@ public class HooksController : ControllerBase
         // Only what the sender needs to know it worked. The preview carries the
         // account's own catalogue prices, and a till has no business with them.
         return Ok(new { status = result.status, date = result.date });
+    }
+
+    /// <summary>
+    /// Words that mark a header as an attempt to authenticate. A sender signing
+    /// under its own names — svix-signature, X-Hub-Signature, Webhook-Signature
+    /// — is refused exactly like one that sent nothing, and from the outside
+    /// those two look identical. Reporting which of these arrived costs nothing
+    /// and ends the guessing.
+    /// </summary>
+    private static readonly string[] AuthWords =
+        ["sign", "secret", "hmac", "digest", "webhook", "svix", "timestamp", "token"];
+
+    /// <summary>
+    /// Names only, never values: whatever the sender is presenting as its
+    /// credential is the one thing that must not end up in a log.
+    /// </summary>
+    private string[] AuthHeaderNames()
+    {
+        return Request.Headers.Keys
+            .Where(name => AuthWords.Any(word =>
+                name.Contains(word, StringComparison.OrdinalIgnoreCase)))
+            .Order(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
     }
 
     private async Task<string> ReadBodyAsync(CancellationToken ct)

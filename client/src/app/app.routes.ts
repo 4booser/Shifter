@@ -30,6 +30,11 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/schedule/schedule').then((m) => m.SchedulePage),
   },
   {
+    path: 'webhooks',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/webhooks/webhooks').then((m) => m.Webhooks),
+  },
+  {
     path: 'account',
     canActivate: [authGuard],
     loadComponent: () => import('./pages/account/account').then((m) => m.Account),

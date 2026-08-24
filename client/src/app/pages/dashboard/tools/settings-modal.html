@@ -17,6 +17,17 @@
         <app-icon name="chevron-right" [size]="16" />
       </a>
 
+      <a routerLink="/webhooks" class="settings-link" (click)="close()">
+        <app-icon name="swap" [size]="16" />
+        <span class="settings-link-body">
+          <strong>{{ 'Webhooks' | t }}</strong>
+          <span class="field-hint">
+            {{ 'Let a till or a rota exporter fill the calendar in by itself.' | t }}
+          </span>
+        </span>
+        <app-icon name="chevron-right" [size]="16" />
+      </a>
+
       <a routerLink="/team" class="settings-link" (click)="close()">
         <app-icon name="users" [size]="16" />
         <span class="settings-link-body">
@@ -127,7 +138,9 @@
       </div>
       <!-- Only the display rounds: a total is still summed from the full
            figures, so switching this can never change what a period is worth. -->
-      <small class="field-hint">{{ 'Rounding is only what you see; totals keep every cent.' | t }}</small>
+      <small class="field-hint">{{
+        'Rounding is only what you see; totals keep every cent.' | t
+      }}</small>
     </div>
 
     <div class="field">

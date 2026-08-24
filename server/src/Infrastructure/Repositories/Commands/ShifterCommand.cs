@@ -213,6 +213,127 @@ public class ShifterCommand : IShifterCommand
         return touched.ToArray();
     }
 
+    public async Task<Day> MergeDaySalesAsync(
+        int userId,
+        DaySalesMerge incoming,
+        CancellationToken ct)
+    {
+        Day day = await LoadOrStartDayAsync(userId, incoming.Date, ct);
+
+        // Only what arrived. A delivery of tips alone leaves the note, the
+        // colour and the cash split exactly as the person left them.
+        if (incoming.Tips is not null) day.Tips = incoming.Tips;
+        if (incoming.TipsCash is not null) day.TipsCash = incoming.TipsCash;
+        if (incoming.Deductions is not null) day.Deductions = incoming.Deductions;
+        if (incoming.Note is not null) day.Note = incoming.Note;
+
+        day.Sales ??= [];
+
+        foreach (DaySale entry in incoming.Sales)
+        {
+            DaySale? existing = day.Sales.FirstOrDefault(row => row.SalesId == entry.SalesId);
+
+            // Nothing sold is how a correction removes a line: a till that
+            // resends a day without an item means the item was voided.
+            if (entry.Quantity <= 0)
+            {
+                if (existing is null) continue;
+
+                _db.DaySales.Remove(existing);
+                day.Sales.Remove(existing);
+
+                continue;
+            }
+
+            if (existing is null)
+            {
+                day.Sales.Add(entry);
+
+                continue;
+            }
+
+            // The price and share come from the catalogue as it stands now,
+            // same as a day saved by hand: the delivery says how many, never
+            // how much.
+            existing.Quantity = entry.Quantity;
+            existing.UnitPrice = entry.UnitPrice;
+            existing.Percentage = entry.Percentage;
+        }
+
+        if (incoming.Replace)
+        {
+            int[] sent = incoming.Sales.Select(entry => entry.SalesId).ToArray();
+
+            List<DaySale> going = day.Sales
+                .Where(row => !sent.Contains(row.SalesId))
+                .ToList();
+
+            _db.DaySales.RemoveRange(going);
+            day.Sales.RemoveAll(row => !sent.Contains(row.SalesId));
+        }
+
+        await _db.SaveChangesAsync(ct);
+
+        return day;
+    }
+
+    public async Task<Day> MergeDayShiftAsync(
+        int userId,
+        DateOnly date,
+        DayShift placement,
+        CancellationToken ct)
+    {
+        Day day = await LoadOrStartDayAsync(userId, date, ct);
+
+        day.Shifts ??= [];
+
+        DayShift? existing = day.Shifts
+            .FirstOrDefault(entry => entry.ShiftId == placement.ShiftId);
+
+        if (existing is null)
+        {
+            day.Shifts.Add(placement);
+
+            await _db.SaveChangesAsync(ct);
+
+            return day;
+        }
+
+        // Corrected in place rather than replaced, so anything hanging off the
+        // placement — a cover offer, the crew's view of it — survives a second
+        // delivery of the same shift.
+        existing.SalaryPeriod = placement.SalaryPeriod;
+        existing.SalaryAmount = placement.SalaryAmount;
+        existing.StartTime = placement.StartTime;
+        existing.EndTime = placement.EndTime;
+        existing.BreakMinutes = placement.BreakMinutes;
+        existing.Worked = placement.Worked;
+
+        await _db.SaveChangesAsync(ct);
+
+        return day;
+    }
+
+    /// <summary>
+    /// The day with its contents attached, tracked, created if this is the
+    /// first thing to land on it. Not saved here: the caller has more to add.
+    /// </summary>
+    private async Task<Day> LoadOrStartDayAsync(int userId, DateOnly date, CancellationToken ct)
+    {
+        Day? existing = await _db.Days
+            .Include(day => day.Shifts)
+            .Include(day => day.Sales)
+            .FirstOrDefaultAsync(day => day.UserId == userId && day.Date == date, ct);
+
+        if (existing is not null) return existing;
+
+        Day day = new Day { UserId = userId, Date = date, Shifts = [], Sales = [] };
+
+        await _db.Days.AddAsync(day, ct);
+
+        return day;
+    }
+
     public async Task<Day> UpsertDayAsync(Day incoming, CancellationToken ct)
     {
         Day? existing = await _db.Days

@@ -273,6 +273,83 @@ public sealed class FakeShifterCommand : IShifterCommand
     }
 
     public Task SaveAsync(CancellationToken ct) => Task.CompletedTask;
+
+    /// <summary>Every merge a delivery asked for, in order. What the ingest
+    /// handler resolved is the thing under test — the database's own merge is
+    /// tested where it lives.</summary>
+    public List<DaySalesMerge> Merges { get; } = [];
+
+    /// <summary>Placements written by an hours delivery, with their date.</summary>
+    public List<(DateOnly Date, DayShift Placement)> Placed { get; } = [];
+
+    public Task<Day> MergeDaySalesAsync(int userId, DaySalesMerge incoming, CancellationToken ct)
+    {
+        Merges.Add(incoming);
+
+        Day day = Existing(userId, incoming.Date);
+
+        if (incoming.Tips is not null) day.Tips = incoming.Tips;
+        if (incoming.TipsCash is not null) day.TipsCash = incoming.TipsCash;
+        if (incoming.Deductions is not null) day.Deductions = incoming.Deductions;
+        if (incoming.Note is not null) day.Note = incoming.Note;
+
+        day.Sales ??= [];
+
+        foreach (DaySale entry in incoming.Sales)
+        {
+            day.Sales.RemoveAll(row => row.SalesId == entry.SalesId);
+
+            if (entry.Quantity > 0) day.Sales.Add(entry);
+        }
+
+        if (incoming.Replace)
+        {
+            int[] sent = incoming.Sales.Select(entry => entry.SalesId).ToArray();
+
+            day.Sales.RemoveAll(row => !sent.Contains(row.SalesId));
+        }
+
+        Saved.Add(day);
+
+        return Task.FromResult(day);
+    }
+
+    public Task<Day> MergeDayShiftAsync(
+        int userId,
+        DateOnly date,
+        DayShift placement,
+        CancellationToken ct)
+    {
+        Placed.Add((date, placement));
+
+        Day day = Existing(userId, date);
+
+        day.Shifts ??= [];
+        day.Shifts.RemoveAll(entry => entry.ShiftId == placement.ShiftId);
+        day.Shifts.Add(placement);
+
+        Saved.Add(day);
+
+        return Task.FromResult(day);
+    }
+
+    /// <summary>
+    /// The day already on the calendar, or a new one. Kept in the query fake
+    /// where there is one, so a test can assert that a delivery left the rest
+    /// of the day alone.
+    /// </summary>
+    private Day Existing(int userId, DateOnly date)
+    {
+        Day? day = _query?.Days.FirstOrDefault(item => item.UserId == userId && item.Date == date);
+
+        if (day is not null) return day;
+
+        day = new Day { UserId = userId, Date = date, Shifts = [], Sales = [] };
+
+        _query?.Days.Add(day);
+
+        return day;
+    }
 }
 
 /// <summary>Builders that keep the arrange blocks down to what a test is about.</summary>

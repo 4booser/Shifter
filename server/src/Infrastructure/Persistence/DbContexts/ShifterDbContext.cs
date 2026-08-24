@@ -21,6 +21,8 @@ public class ShifterDbContext : DbContext
     public DbSet<Event> Events => Set<Event>();
     public DbSet<CoverOffer> CoverOffers => Set<CoverOffer>();
     public DbSet<Goal> Goals => Set<Goal>();
+    public DbSet<WebhookEndpoint> WebhookEndpoints => Set<WebhookEndpoint>();
+    public DbSet<WebhookDelivery> WebhookDeliveries => Set<WebhookDelivery>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -134,6 +136,47 @@ public class ShifterDbContext : DbContext
             .WithMany()
             .HasForeignKey(item => item.UserId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // The token is the whole of an incoming request's identity, so a
+        // collision would hand one person's endpoint another person's data.
+        modelBuilder.Entity<WebhookEndpoint>()
+            .HasIndex(hook => hook.Token)
+            .IsUnique();
+
+        // Deleting an account takes its endpoints, and each endpoint takes its
+        // log: neither means anything without the other.
+        modelBuilder.Entity<WebhookEndpoint>()
+            .HasOne(hook => hook.User)
+            .WithMany()
+            .HasForeignKey(hook => hook.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Archiving a template must stay possible while an endpoint points at
+        // it, so the default shift is cleared rather than blocking the delete.
+        modelBuilder.Entity<WebhookEndpoint>()
+            .HasOne(hook => hook.DefaultShift)
+            .WithMany()
+            .HasForeignKey(hook => hook.DefaultShiftId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<WebhookDelivery>()
+            .HasOne(delivery => delivery.Endpoint)
+            .WithMany(hook => hook.Deliveries)
+            .HasForeignKey(delivery => delivery.EndpointId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // The log is always read newest first, for one endpoint.
+        modelBuilder.Entity<WebhookDelivery>()
+            .HasIndex(delivery => new { delivery.EndpointId, delivery.ReceivedAt });
+
+        // What makes a retry harmless. Filtered because most senders give no id
+        // of their own, and in Postgres those NULLs would not collide anyway —
+        // being explicit says the uniqueness is only claimed where there is a
+        // value to claim it for.
+        modelBuilder.Entity<WebhookDelivery>()
+            .HasIndex(delivery => new { delivery.EndpointId, delivery.ExternalId })
+            .IsUnique()
+            .HasFilter("\"ExternalId\" IS NOT NULL");
 
         base.OnModelCreating(modelBuilder);
     }

@@ -54,6 +54,25 @@ public interface IShifterCommand
         CancellationToken ct);
 
     /// <summary>
+    /// Writes what a delivery brought into one day without disturbing the rest
+    /// of it. The day endpoint replaces wholesale because the client always
+    /// sends the day entire; a till knows only about its own takings, and
+    /// letting it save the same way would delete the shifts sitting under them.
+    /// </summary>
+    Task<Day> MergeDaySalesAsync(int userId, DaySalesMerge incoming, CancellationToken ct);
+
+    /// <summary>
+    /// Places or corrects one shift on one day, leaving the day's other
+    /// placements and its sales alone. Matched on the template, so the same
+    /// hours delivered twice correct the placement rather than doubling it.
+    /// </summary>
+    Task<Day> MergeDayShiftAsync(
+        int userId,
+        DateOnly date,
+        DayShift placement,
+        CancellationToken ct);
+
+    /// <summary>
     /// Adds or removes one template across many dates, creating the missing
     /// days, in a single save. Returns the affected days.
     /// </summary>
@@ -64,3 +83,22 @@ public interface IShifterCommand
         bool add,
         CancellationToken ct);
 }
+
+/// <summary>
+/// One day's worth of an incoming delivery. Every scalar is nullable and null
+/// means "not sent" rather than "set to nothing": a payload carrying only tips
+/// must not erase a note somebody typed.
+/// </summary>
+public sealed record DaySalesMerge(
+    DateOnly Date,
+    List<DaySale> Sales,
+    /// <summary>
+    /// True makes the delivery the whole truth for the day: positions it does
+    /// not mention are removed. False, the default, only touches what it names,
+    /// which leaves anything entered by hand where it was.
+    /// </summary>
+    bool Replace,
+    decimal? Tips,
+    decimal? TipsCash,
+    decimal? Deductions,
+    string? Note);

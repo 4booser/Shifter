@@ -47,6 +47,7 @@ public static class DependencyInjection
         services.AddScoped<IShifterCommand, ShifterCommand>();
         services.AddScoped<IShifterQuery, ShifterQuery>();
         services.AddScoped<ITeamRepository, TeamRepository>();
+        services.AddScoped<IWebhookRepository, WebhookRepository>();
         
         return services;
     }

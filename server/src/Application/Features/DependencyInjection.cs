@@ -5,6 +5,8 @@ using Shifter.Application.Features.Auth.Services;
 using Shifter.Application.Features.Auth.Services.Interfaces;
 using Shifter.Application.Features.business.Services;
 using Shifter.Application.Features.business.Services.Interfaces;
+using Shifter.Application.Features.Webhooks.Services;
+using Shifter.Application.Features.Webhooks.Services.Interfaces;
 
 // System.EventHandler is a delegate that every file gets through the implicit
 // usings, and an unqualified EventHandler here means neither of them.
@@ -86,6 +88,9 @@ public static class DependencyInjection
         services.AddScoped<ILocationHandler, LocationHandler>();
         services.AddScoped<IReconciliationHandler, ReconciliationHandler>();
         services.AddScoped<IEventHandler, EventHandler>();
+
+        services.AddScoped<IWebhookHandler, WebhookHandler>();
+        services.AddScoped<IWebhookIngestHandler, WebhookIngestHandler>();
 
         return services;
     }

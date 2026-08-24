@@ -56,16 +56,20 @@ public static class PayloadReader
         if (mapping.Read(root, "break_minutes") is JsonElement rest)
             breakMinutes = (int)Math.Round(Number(rest, "break_minutes"));
 
+        TimeOnly? start = Clock(mapping.Read(root, "start"), "start");
+        TimeOnly? end = Clock(mapping.Read(root, "end"), "end");
+
         return new HoursPayload(
             RequireDate(mapping.Read(root, "date"), "date"),
             Text(mapping.Read(root, "external_id")),
             Text(mapping.Read(root, "shift")),
-            Clock(mapping.Read(root, "start"), "start"),
-            Clock(mapping.Read(root, "end"), "end"),
+            start,
+            end,
             hours,
             breakMinutes,
             // A timesheet reports the past. Something still ahead has to say so.
-            Flag(mapping.Read(root, "worked")) ?? true);
+            Flag(mapping.Read(root, "worked")) ?? true,
+            hours is not null || start is not null || end is not null);
     }
 
     /// <summary>Null when the payload carries no positions field at all.</summary>

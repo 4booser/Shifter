@@ -882,6 +882,7 @@ export const RU: Dictionary = {
   "Sender's own key": 'Ключ отправителя',
   'Fill both in when the sender cannot be told which headers to use: it keeps signing its own way, and this endpoint checks it. Reads the common form t=1787600865,v1=… — HMAC-SHA256 over the timestamp and the body. Leave empty and the sender must use the key above.': 'Заполните оба, если отправителю нельзя указать заголовки: он продолжает подписывать по-своему, а эндпоинт это проверяет. Читается распространённый вид t=1787600865,v1=… — HMAC-SHA256 по времени и телу. Оставите пустым — отправитель обязан слать ключ выше.',
   'signed by the sender': 'подпись отправителя',
+  'Sales and hours together': 'Продажи и часы вместе',
 };
 
 export const UK: Dictionary = {
@@ -1749,4 +1750,5 @@ export const UK: Dictionary = {
   "Sender's own key": 'Ключ відправника',
   'Fill both in when the sender cannot be told which headers to use: it keeps signing its own way, and this endpoint checks it. Reads the common form t=1787600865,v1=… — HMAC-SHA256 over the timestamp and the body. Leave empty and the sender must use the key above.': 'Заповніть обидва, якщо відправнику не можна вказати заголовки: він далі підписує по-своєму, а ендпоінт це перевіряє. Читається поширений вигляд t=1787600865,v1=… — HMAC-SHA256 за часом і тілом. Лишите порожнім — відправник має слати ключ вище.',
   'signed by the sender': 'підпис відправника',
+  'Sales and hours together': 'Продажі та години разом',
 };

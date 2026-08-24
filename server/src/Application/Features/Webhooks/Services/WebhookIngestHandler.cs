@@ -145,6 +145,12 @@ public class WebhookIngestHandler : IWebhookIngestHandler
         }
     }
 
+    /// <summary>
+    /// Reads whichever halves this endpoint is for out of the one body, and
+    /// writes the ones the payload actually carried. A nightly report names
+    /// both the takings and the length of the shift; splitting that across two
+    /// addresses means two keys and two schedules for one report.
+    /// </summary>
     private async Task<IngestResultDto> ApplyAsync(
         WebhookEndpoint endpoint,
         JsonElement root,
@@ -154,28 +160,111 @@ public class WebhookIngestHandler : IWebhookIngestHandler
     {
         PayloadMapping mapping = PayloadMapping.Parse(endpoint.Mapping);
 
-        return endpoint.Kind switch
+        bool readsSales = endpoint.Kind is WebhookKind.Sales or WebhookKind.Both;
+        bool readsHours = endpoint.Kind is WebhookKind.Hours or WebhookKind.Both;
+
+        if (!readsSales && !readsHours)
+            throw new ValidationException("This endpoint has no kind to read.");
+
+        SalesPayload? sales = readsSales ? PayloadReader.ReadSales(root, mapping) : null;
+        HoursPayload? hours = readsHours ? PayloadReader.ReadHours(root, mapping) : null;
+
+        DateOnly date = sales?.Date ?? hours!.Date;
+        string? externalId = sales?.ExternalId ?? hours?.ExternalId;
+
+        if (await SeenBeforeAsync(endpoint, externalId, options, ct))
+            return new IngestResultDto("duplicate", date, null);
+
+        SalesWrite? salesWrite = sales is null ? null : await PrepareSalesAsync(endpoint, sales, ct);
+
+        // An hours-only endpoint may place the template as it stands: "I worked
+        // today, the usual shift" is a complete statement. One that also brings
+        // the takings may not — a report of a night's sales would otherwise
+        // invent a shift out of a template nobody worked.
+        bool placeHours = hours is not null
+            && (endpoint.Kind == WebhookKind.Hours || hours.SawTime);
+
+        HoursWrite? hoursWrite = placeHours
+            ? await PrepareHoursAsync(endpoint, hours!, ct)
+            : null;
+
+        IngestPreviewDto preview = new IngestPreviewDto(
+            salesWrite?.Lines ?? [],
+            sales?.Tips,
+            sales?.TipsCash,
+            sales?.Deductions,
+            salesWrite?.Note,
+            sales?.Replace ?? false,
+            hoursWrite?.Shift);
+
+        // Nothing matched and there was nothing to match against: the sender's
+        // fields are not the ones this endpoint reads. Answered as an error
+        // rather than as an empty day, because the sender shows a 2xx as
+        // "delivered" — which is how a misconfigured mapping goes unnoticed for
+        // a week while the dashboard says everything is fine.
+        if (hoursWrite is null && (salesWrite is null || salesWrite.Blind))
         {
-            WebhookKind.Sales => await ApplySalesAsync(
-                endpoint, PayloadReader.ReadSales(root, mapping), body, options, ct),
+            throw new ValidationException(
+                "Nothing here matched: no positions, no amounts and no hours were found. "
+                + "If the sender does send them, they are under names this endpoint was "
+                + "not told about — name them in the endpoint's mapping.");
+        }
 
-            WebhookKind.Hours => await ApplyHoursAsync(
-                endpoint, PayloadReader.ReadHours(root, mapping), body, options, ct),
+        if (!options.Apply) return new IngestResultDto("preview", date, preview);
 
-            _ => throw new ValidationException("This endpoint has no kind to read.")
-        };
+        // A delivery with nothing in it writes nothing — not even the day. The
+        // sender's own test button produces exactly this, and creating a blank
+        // row for it would put an empty day on the calendar and report success
+        // for a night that was never recorded.
+        if (hoursWrite is null && salesWrite!.Empty)
+        {
+            if (options.Log)
+            {
+                await LogAsync(
+                    endpoint,
+                    body,
+                    DeliveryStatus.Empty,
+                    externalId,
+                    null,
+                    "Read without trouble, and it carried no positions and no amounts.",
+                    ct);
+            }
+
+            return new IngestResultDto("empty", date, preview);
+        }
+
+        if (salesWrite is { Empty: false })
+            await _shifterCommand.MergeDaySalesAsync(endpoint.UserId, salesWrite.Merge, ct);
+
+        if (hoursWrite is not null)
+            await _shifterCommand.MergeDayShiftAsync(endpoint.UserId, date, hoursWrite.Placement, ct);
+
+        if (options.Log)
+            await LogAsync(endpoint, body, DeliveryStatus.Applied, externalId, date, null, ct);
+
+        return new IngestResultDto("applied", date, preview);
     }
 
-    private async Task<IngestResultDto> ApplySalesAsync(
+    /// <summary>
+    /// What a delivery's takings would write, and what to call it on screen.
+    /// <paramref name="Blind"/> means the payload had no positions field at all
+    /// and no amounts either — nothing was read, as opposed to a day on which
+    /// nothing was sold.
+    /// </summary>
+    private sealed record SalesWrite(
+        DaySalesMerge Merge,
+        IngestLineDto[] Lines,
+        string? Note,
+        bool Empty,
+        bool Blind);
+
+    private sealed record HoursWrite(DayShift Placement, IngestShiftDto Shift);
+
+    private async Task<SalesWrite> PrepareSalesAsync(
         WebhookEndpoint endpoint,
         SalesPayload payload,
-        string body,
-        IngestOptions options,
         CancellationToken ct)
     {
-        if (await SeenBeforeAsync(endpoint, payload.ExternalId, options, ct))
-            return new IngestResultDto("duplicate", payload.Date, null);
-
         // Written as a pattern rather than a comparison: a null compares false
         // against every bound, so `tips >= 0` would reject the many deliveries
         // that carry no tips at all.
@@ -234,59 +323,13 @@ public class WebhookIngestHandler : IWebhookIngestHandler
                 entry.Earned));
         }
 
-        IngestPreviewDto preview = new IngestPreviewDto(
-            lines.ToArray(),
-            payload.Tips,
-            payload.TipsCash,
-            payload.Deductions,
-            note,
-            payload.Replace,
-            null);
-
-        if (!options.Apply) return new IngestResultDto("preview", payload.Date, preview);
-
-        // A delivery with nothing in it writes nothing — not even the day. The
-        // sender's own test button produces exactly this, and creating a blank
-        // row for it would put an empty day on the calendar and report success
-        // for a night that was never recorded.
-        bool carriesNothing = entries.Count == 0
+        bool empty = entries.Count == 0
             && payload.Tips is null
             && payload.TipsCash is null
             && payload.Deductions is null
             && note is null;
 
-        // Nothing matched and there was nothing to match against: the sender's
-        // fields are not the ones this endpoint reads. Answered as an error
-        // rather than as an empty day, because the sender shows a 2xx as
-        // "delivered" — which is how a misconfigured mapping goes unnoticed
-        // for a week while the dashboard says everything is fine.
-        if (carriesNothing && !payload.SawPositions)
-        {
-            throw new ValidationException(
-                "Nothing here matched: no positions and no amounts were found. If the "
-                + "sender does send them, they are under names this endpoint was not "
-                + "told about — name them in the endpoint's mapping.");
-        }
-
-        if (carriesNothing)
-        {
-            if (options.Log)
-            {
-                await LogAsync(
-                    endpoint,
-                    body,
-                    DeliveryStatus.Empty,
-                    payload.ExternalId,
-                    null,
-                    "Read without trouble, and it carried no positions and no amounts.",
-                    ct);
-            }
-
-            return new IngestResultDto("empty", payload.Date, preview);
-        }
-
-        await _shifterCommand.MergeDaySalesAsync(
-            endpoint.UserId,
+        return new SalesWrite(
             new DaySalesMerge(
                 payload.Date,
                 entries,
@@ -295,33 +338,17 @@ public class WebhookIngestHandler : IWebhookIngestHandler
                 payload.TipsCash,
                 payload.Deductions,
                 note),
-            ct);
-
-        if (options.Log)
-        {
-            await LogAsync(
-                endpoint,
-                body,
-                DeliveryStatus.Applied,
-                payload.ExternalId,
-                payload.Date,
-                null,
-                ct);
-        }
-
-        return new IngestResultDto("applied", payload.Date, preview);
+            lines.ToArray(),
+            note,
+            empty,
+            empty && !payload.SawPositions);
     }
 
-    private async Task<IngestResultDto> ApplyHoursAsync(
+    private async Task<HoursWrite> PrepareHoursAsync(
         WebhookEndpoint endpoint,
         HoursPayload payload,
-        string body,
-        IngestOptions options,
         CancellationToken ct)
     {
-        if (await SeenBeforeAsync(endpoint, payload.ExternalId, options, ct))
-            return new IngestResultDto("duplicate", payload.Date, null);
-
         Shift template = await ResolveShiftAsync(endpoint, payload.Shift, ct);
 
         DayShift placement = DayShift.From(template, payload.Worked);
@@ -369,13 +396,8 @@ public class WebhookIngestHandler : IWebhookIngestHandler
             placement.PaidDuration > TimeSpan.Zero,
             "The break is at least as long as the shift.");
 
-        IngestPreviewDto preview = new IngestPreviewDto(
-            [],
-            null,
-            null,
-            null,
-            null,
-            false,
+        return new HoursWrite(
+            placement,
             new IngestShiftDto(
                 template.Id,
                 template.Name,
@@ -384,24 +406,6 @@ public class WebhookIngestHandler : IWebhookIngestHandler
                 placement.BreakMinutes,
                 Math.Round(placement.PaidDuration.TotalHours, 2),
                 placement.Worked));
-
-        if (!options.Apply) return new IngestResultDto("preview", payload.Date, preview);
-
-        await _shifterCommand.MergeDayShiftAsync(endpoint.UserId, payload.Date, placement, ct);
-
-        if (options.Log)
-        {
-            await LogAsync(
-                endpoint,
-                body,
-                DeliveryStatus.Applied,
-                payload.ExternalId,
-                payload.Date,
-                null,
-                ct);
-        }
-
-        return new IngestResultDto("applied", payload.Date, preview);
     }
 
     /// <summary>One catalogue position and how much of it the delivery sold.</summary>

@@ -166,17 +166,30 @@
         <div class="field-row">
           <label class="field">
             <span class="field-label">{{ 'Sender signs under this header' | t }}</span>
-            <input type="text" maxlength="120" placeholder="X-Syrve-Signature" [(ngModel)]="signatureHeader" />
+            <input
+              type="text"
+              maxlength="120"
+              placeholder="X-Syrve-Signature"
+              [(ngModel)]="signatureHeader"
+            />
           </label>
 
           <label class="field">
             <span class="field-label">{{ "Sender's own key" | t }}</span>
-            <input type="text" maxlength="200" placeholder="whsec_…" [(ngModel)]="signatureSecret" />
+            <input
+              type="text"
+              maxlength="200"
+              placeholder="whsec_…"
+              [(ngModel)]="signatureSecret"
+            />
           </label>
         </div>
 
         <p class="field-hint">
-          {{ 'Fill both in when the sender cannot be told which headers to use: it keeps signing its own way, and this endpoint checks it. Reads the common form t=1787600865,v1=… — HMAC-SHA256 over the timestamp and the body. Leave empty and the sender must use the key above.' | t }}
+          {{
+            'Fill both in when the sender cannot be told which headers to use: it keeps signing its own way, and this endpoint checks it. Reads the common form t=1787600865,v1=… — HMAC-SHA256 over the timestamp and the body. Leave empty and the sender must use the key above.'
+              | t
+          }}
         </p>
 
         <label class="hook-switch">
@@ -218,11 +231,24 @@
     @for (hook of hooks(); track hook.id) {
       <section class="stat-card hook-card" [class.is-off]="!hook.active">
         <div class="hook-head">
-          <app-icon [name]="hook.kind === 'hours' ? 'clock' : 'coins'" [size]="16" />
+          <app-icon
+            [name]="hook.kind === 'hours' ? 'clock' : hook.kind === 'both' ? 'swap' : 'coins'"
+            [size]="16"
+          />
           <strong class="hook-name">{{ hook.name }}</strong>
 
           <span class="hook-chip">
-            {{ (hook.kind === 'hours' ? 'Hours worked' : 'Sales for a day') | t }}
+            @switch (hook.kind) {
+              @case ('hours') {
+                {{ 'Hours worked' | t }}
+              }
+              @case ('both') {
+                {{ 'Sales and hours together' | t }}
+              }
+              @default {
+                {{ 'Sales for a day' | t }}
+              }
+            }
           </span>
 
           @if (!hook.active) {

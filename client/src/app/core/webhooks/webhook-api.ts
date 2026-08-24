@@ -3,7 +3,7 @@ import { Service, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
 /** What an endpoint is allowed to write. */
-export type WebhookKind = 'sales' | 'hours';
+export type WebhookKind = 'sales' | 'hours' | 'both';
 
 /** How one arrival ended. */
 export type DeliveryStatus = 'applied' | 'duplicate' | 'rejected' | 'failed';

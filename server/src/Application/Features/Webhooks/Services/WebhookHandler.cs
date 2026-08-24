@@ -217,6 +217,8 @@ public class WebhookHandler : IWebhookHandler
 
         WebhookKind kind = ParseKind(request.kind);
 
+        // Hours need a template to land on, and so does a combined endpoint on
+        // the days its report carries hours.
         if (request.default_shift_id is int shiftId)
         {
             _ = await _shifterQuery.GetShiftAsync(userId, shiftId, ct)
@@ -266,12 +268,14 @@ public class WebhookHandler : IWebhookHandler
     {
         "sales" => WebhookKind.Sales,
         "hours" => WebhookKind.Hours,
-        _ => throw new ValidationException("Kind must be either sales or hours.")
+        "both" => WebhookKind.Both,
+        _ => throw new ValidationException("Kind must be sales, hours or both.")
     };
 
     internal static string KindName(WebhookKind kind) => kind switch
     {
         WebhookKind.Hours => "hours",
+        WebhookKind.Both => "both",
         _ => "sales"
     };
 

@@ -43,6 +43,12 @@ const PAYLOAD_EXAMPLE: Record<WebhookKind, string> = {
   "end": "23:30",
   "break_minutes": 30
 }`,
+  both: `{
+  "date": "2026-08-20",
+  "hours": 9.5,
+  "tips": 42.50,
+  "sales": [{ "name": "Wine", "quantity": 3 }]
+}`,
 };
 
 /**
@@ -107,10 +113,11 @@ export class Webhooks {
   protected readonly kinds: { value: WebhookKind; label: string }[] = [
     { value: 'sales', label: 'Sales for a day' },
     { value: 'hours', label: 'Hours worked' },
+    { value: 'both', label: 'Sales and hours together' },
   ];
 
-  /** Only hours need a template to land on, so the field only shows for them. */
-  protected readonly needsTemplate = computed(() => this.kind() === 'hours');
+  /** Hours need a template to land on; the takings do not. */
+  protected readonly needsTemplate = computed(() => this.kind() !== 'sales');
 
   constructor() {
     this.load();

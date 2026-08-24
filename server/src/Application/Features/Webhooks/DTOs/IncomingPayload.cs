@@ -53,4 +53,11 @@ public sealed record HoursPayload(
     /// timesheet reports what happened, and a rota exporter that means
     /// otherwise can map the field.
     /// </summary>
-    bool Worked);
+    bool Worked,
+    /// <summary>
+    /// Whether the payload said anything about time at all. An endpoint that
+    /// only does hours may place a shift on the template's own times; one that
+    /// also carries the takings must not, or a report of a night's sales would
+    /// invent a shift nobody worked.
+    /// </summary>
+    bool SawTime);

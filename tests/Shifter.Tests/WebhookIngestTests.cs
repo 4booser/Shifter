@@ -820,6 +820,98 @@ public class WebhookIngestTests
         Assert.Null(placement.Shift);
     }
 
+    // ==== One delivery carrying both ====
+
+    /// <summary>
+    /// The shape a real nightly report takes: what was sold and how long the
+    /// shift ran, in one body. Splitting that across two endpoints means two
+    /// keys and two schedules to keep in step for one report.
+    /// </summary>
+    [Fact]
+    public async Task Writes_the_takings_and_the_hours_out_of_one_delivery()
+    {
+        _query.Shifts.Add(Build.Template(7, name: "Evening", start: "11:00", end: "22:00"));
+        GivenCatalogue((1, "Heven", 350m, 5m), (2, "Maduro", 350m, 5m));
+        Given(WebhookKind.Both, defaultShiftId: 7);
+
+        IngestResultDto result = await Post("""
+            {
+              "date": "2026-08-24",
+              "hours": 9.56,
+              "sales": { "Heven": 2, "Maduro": 2 }
+            }
+            """);
+
+        Assert.Equal("applied", result.status);
+
+        DaySalesMerge merge = Assert.Single(_command.Merges);
+
+        Assert.Equal([1, 2], merge.Sales.Select(entry => entry.SalesId));
+
+        var (date, placement) = Assert.Single(_command.Placed);
+
+        Assert.Equal(new DateOnly(2026, 8, 24), date);
+        Assert.Equal(9.56, Math.Round(placement.PaidDuration.TotalHours, 2));
+
+        // Both halves show up in the preview, so a test run reports the whole
+        // delivery rather than half of it.
+        Assert.Equal(2, result.preview!.sales.Length);
+        Assert.NotNull(result.preview.shift);
+    }
+
+    /// <summary>
+    /// A report of takings alone must not invent a shift out of the fallback
+    /// template. The endpoint reads hours; the payload simply had none.
+    /// </summary>
+    [Fact]
+    public async Task Does_not_invent_a_shift_when_the_delivery_carries_no_time()
+    {
+        _query.Shifts.Add(Build.Template(7, name: "Evening"));
+        GivenCatalogue((1, "Heven", 350m, 5m));
+        Given(WebhookKind.Both, defaultShiftId: 7);
+
+        IngestResultDto result = await Post("""
+            { "date": "2026-08-24", "sales": { "Heven": 2 } }
+            """);
+
+        Assert.Equal("applied", result.status);
+        Assert.Single(_command.Merges);
+        Assert.Empty(_command.Placed);
+        Assert.Null(result.preview!.shift);
+    }
+
+    [Fact]
+    public async Task Places_the_shift_when_a_combined_delivery_carries_only_time()
+    {
+        _query.Shifts.Add(Build.Template(7, name: "Evening"));
+        Given(WebhookKind.Both, defaultShiftId: 7);
+
+        IngestResultDto result = await Post("""{ "date": "2026-08-24", "hours": 8 }""");
+
+        Assert.Equal("applied", result.status);
+        Assert.Single(_command.Placed);
+        Assert.Empty(_command.Merges);
+    }
+
+    /// <summary>
+    /// The hours-only endpoint keeps its older, looser rule: "I worked today,
+    /// the usual shift" is a complete statement, and the template supplies the
+    /// times. Only the combined kind requires the payload to say so.
+    /// </summary>
+    [Fact]
+    public async Task An_hours_endpoint_still_places_the_template_with_no_time_given()
+    {
+        _query.Shifts.Add(Build.Template(7, name: "Evening", start: "11:00", end: "22:00"));
+        Given(WebhookKind.Hours, defaultShiftId: 7);
+
+        await Post("""{ "date": "2026-08-24" }""");
+
+        DayShift placement = Assert.Single(_command.Placed).Placement;
+
+        Assert.Equal(new TimeOnly(11, 0), placement.StartTime);
+        Assert.Equal(new TimeOnly(22, 0), placement.EndTime);
+    }
+
     // ==== Trying one out ====
 
     [Fact]

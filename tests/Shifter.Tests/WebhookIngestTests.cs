@@ -522,6 +522,33 @@ public class WebhookIngestTests
     }
 
     /// <summary>
+    /// A nightly report names everything sold, and half of it may be missing
+    /// from the catalogue the first time. One name per attempt would turn that
+    /// into an evening of add-one, replay, read the next name.
+    /// </summary>
+    [Fact]
+    public async Task Names_every_position_the_catalogue_is_missing_at_once()
+    {
+        Given();
+        GivenCatalogue((1, "Heven", 450m, 10m));
+
+        NotFoundException error = await Assert.ThrowsAsync<NotFoundException>(() => Post("""
+            {
+              "date": "2026-08-24",
+              "sales": { "Heven": 2, "Maduro": 2, "Adalya": 1, "цитрусовий": 2 }
+            }
+            """));
+
+        Assert.Contains("Maduro", error.Message);
+        Assert.Contains("Adalya", error.Message);
+        Assert.Contains("цитрусовий", error.Message);
+        Assert.DoesNotContain("Heven", error.Message);
+
+        Assert.Empty(_command.Merges);
+        Assert.Equal(DeliveryStatus.Rejected, Assert.Single(_webhooks.Deliveries).Status);
+    }
+
+    /// <summary>
     /// Nothing said is not nothing meant. A payload of tips alone must reach the
     /// merge with every other field still null, or a note somebody typed would
     /// be erased by a till that has never heard of notes.

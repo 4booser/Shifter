@@ -67,18 +67,46 @@ public static class PayloadReader
 
     private static SalesLine[] ReadLines(PayloadMapping mapping, JsonElement root)
     {
-        if (mapping.Read(root, "sales") is not JsonElement array) return [];
+        if (mapping.Read(root, "sales") is not JsonElement sold) return [];
 
-        if (array.ValueKind != JsonValueKind.Array)
-            throw new ValidationException("'sales' must be a list of sold positions.");
+        // Two shapes, because senders genuinely use both. A list of objects is
+        // what a till exports. A plain map of name to quantity is what a daily
+        // summary looks like when somebody wrote it by hand — and refusing that
+        // would mean asking them to rewrite their report to suit us.
+        (string? Key, JsonElement Value)[] items = sold.ValueKind switch
+        {
+            JsonValueKind.Array => sold
+                .EnumerateArray()
+                .Select(item => ((string?)null, item))
+                .ToArray(),
 
-        if (array.GetArrayLength() > MaxLines)
+            JsonValueKind.Object => sold
+                .EnumerateObject()
+                .Select(property => ((string?)property.Name, property.Value))
+                .ToArray(),
+
+            _ => throw new ValidationException(
+                "'sales' must be a list of sold positions, or an object of name to quantity.")
+        };
+
+        if (items.Length > MaxLines)
             throw new ValidationException($"At most {MaxLines} positions in one delivery.");
 
         List<SalesLine> lines = [];
 
-        foreach (JsonElement item in array.EnumerateArray())
+        foreach ((string? key, JsonElement item) in items)
         {
+            // The bare form: "Heven": 2. The name is the key and the value is
+            // the count, with nothing to read inside it.
+            if (key is not null && item.ValueKind is not JsonValueKind.Object)
+            {
+                decimal counted = mapping.Scale("sales.quantity", Number(item, key));
+
+                lines.Add(new SalesLine(null, key.Trim(), Quantity(counted)));
+
+                continue;
+            }
+
             // The paths inside an element are written as "sales.name" in the
             // mapping and fall back to the bare field name without it.
             int? id = null;
@@ -86,7 +114,9 @@ public static class PayloadReader
             if (mapping.Read(item, "sales.sales_id", "sales_id") is JsonElement number)
                 id = (int)Math.Round(Number(number, "sales_id"));
 
-            string? name = Text(mapping.Read(item, "sales.name", "name"));
+            // A keyed object names the position by its key; anything the
+            // element carries itself wins, since it was written on purpose.
+            string? name = Text(mapping.Read(item, "sales.name", "name")) ?? key;
 
             if (id is null && string.IsNullOrWhiteSpace(name))
                 throw new ValidationException("A sold position has neither a name nor an id.");
@@ -100,17 +130,21 @@ public static class PayloadReader
                     + "has no quantity.");
             }
 
-            decimal counted = mapping.Scale(
-                "sales.quantity",
-                Number(quantity.Value, "quantity"));
-
-            if (counted < 0)
-                throw new ValidationException("A quantity cannot be negative.");
-
-            lines.Add(new SalesLine(id, name?.Trim(), (int)Math.Round(counted)));
+            lines.Add(new SalesLine(
+                id,
+                name?.Trim(),
+                Quantity(mapping.Scale("sales.quantity", Number(quantity.Value, "quantity")))));
         }
 
         return lines.ToArray();
+    }
+
+    private static int Quantity(decimal counted)
+    {
+        if (counted < 0)
+            throw new ValidationException("A quantity cannot be negative.");
+
+        return (int)Math.Round(counted);
     }
 
     /// <summary>An amount of money, scaled if the endpoint says the sender counts in cents.</summary>

@@ -416,20 +416,30 @@ public class WebhookIngestHandler : IWebhookIngestHandler
 
         Dictionary<int, ResolvedLine> resolved = [];
 
+        // Gathered rather than thrown on sight. A nightly report names
+        // everything sold, and half of it may be missing from the catalogue the
+        // first time: reporting one name per attempt turns that into an evening
+        // of add-one, replay, read the next name.
+        List<string> unknown = [];
+
         foreach (SalesLine line in lines)
         {
             Sales? position = null;
 
             if (line.SalesId is int id && !byId.TryGetValue(id, out position))
-                throw new NotFoundException($"No sales position with id {id}.");
+            {
+                unknown.Add($"#{id}");
+
+                continue;
+            }
 
             if (position is null && line.Name is not null)
             {
                 if (!byName.TryGetValue(line.Name, out position))
                 {
-                    throw new NotFoundException(
-                        $"No sales position called '{line.Name}'. Add it to the catalogue, "
-                        + "or map this field to one that is there.");
+                    unknown.Add($"'{line.Name}'");
+
+                    continue;
                 }
             }
 
@@ -446,6 +456,14 @@ public class WebhookIngestHandler : IWebhookIngestHandler
             }
 
             resolved[position.Id] = new ResolvedLine(position, line.Quantity);
+        }
+
+        if (unknown.Count > 0)
+        {
+            throw new NotFoundException(
+                $"The catalogue has nothing called {string.Join(", ", unknown.Distinct())}. "
+                + "Add them, or map the field to names that are there. The body is kept, "
+                + "so this delivery can be replayed once it is.");
         }
 
         return resolved.Values.ToList();

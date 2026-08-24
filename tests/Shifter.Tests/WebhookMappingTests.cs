@@ -258,6 +258,50 @@ public class WebhookMappingTests
             """));
     }
 
+    /// <summary>
+    /// A daily summary written by a person, rather than exported by a till:
+    /// the positions are a plain map of name to how many. Refusing it would
+    /// mean asking them to rewrite their report to suit us.
+    /// </summary>
+    [Fact]
+    public void Reads_positions_given_as_a_map_of_name_to_quantity()
+    {
+        SalesPayload payload = Sales("""
+            {
+              "date": "2026-08-24",
+              "sales": { "Heven": 2, "Maduro": "3", "Adalya": 1 }
+            }
+            """);
+
+        Assert.Equal(["Heven", "Maduro", "Adalya"], payload.Lines.Select(line => line.Name));
+        Assert.Equal([2, 3, 1], payload.Lines.Select(line => line.Quantity));
+    }
+
+    [Fact]
+    public void Reads_a_map_whose_values_are_objects()
+    {
+        SalesPayload payload = Sales(
+            """{ "day": "2026-08-24", "items": { "Heven": { "qty": 4 } } }""",
+            """{ "date": "day", "sales": "items", "sales.quantity": "qty" }""");
+
+        SalesLine line = Assert.Single(payload.Lines);
+
+        Assert.Equal("Heven", line.Name);
+        Assert.Equal(4, line.Quantity);
+    }
+
+    /// <summary>The key names the position; a name inside the element was
+    /// written on purpose and wins over it.</summary>
+    [Fact]
+    public void Prefers_a_name_the_element_carries_over_the_key_it_sits_under()
+    {
+        SalesPayload payload = Sales("""
+            { "date": "2026-08-24", "sales": { "sku-11": { "name": "Heven", "quantity": 2 } } }
+            """);
+
+        Assert.Equal("Heven", Assert.Single(payload.Lines).Name);
+    }
+
     // ==== Hours ====
 
     [Fact]

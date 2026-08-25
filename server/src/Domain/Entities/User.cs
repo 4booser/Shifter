@@ -26,6 +26,12 @@ public sealed class User
     public decimal? MonthlyGoal { get; set; }
     public List<Sales>? Sales {get; set;}
     
+    /// <summary>
+    /// The secret in the calendar-subscription URL. Null until the person
+    /// turns the feed on; rotating it is how a leaked link is put down.
+    /// </summary>
+    public string? FeedToken { get; set; }
+
     public bool IsActive { get; set; } = true;
     public DateTime CreatedAt { get; set; }
     public DateTime? LastLogin { get; set; }

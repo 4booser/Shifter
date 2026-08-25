@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import { Profile, accountApi, authApi } from '@/lib/api/auth';
-import { apiErrorMessage } from '@/lib/api/http';
+import { api, apiErrorMessage } from '@/lib/api/http';
 import { useI18n } from '@/lib/i18n';
 import { useReveal } from '@/lib/fx';
 import { Shell } from '@/components/layout/shell';
@@ -233,6 +233,8 @@ function Account() {
             </button>
           </section>
 
+          <FeedSection />
+
           {/* ==== Danger ==== */}
           <section className="card reveal border-danger/40 p-4">
             <h2 className="mb-1 text-[0.98rem] font-bold text-danger">{t('Delete the account')}</h2>
@@ -285,5 +287,87 @@ function Account() {
         </>
       )}
     </div>
+  );
+}
+
+/**
+ * The calendar-subscription block: one secret URL that Google or Apple
+ * Calendar polls on its own. Money never travels through it, only names and
+ * times — a subscribed calendar gets shared far more casually than a login.
+ */
+function FeedSection() {
+  const { t } = useI18n();
+  const [token, setToken] = useState<string | null>(null);
+  const [loaded, setLoaded] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    void api<{ token: string | null }>('/shifter/v1/feed')
+      .then((response) => setToken(response.token))
+      .catch(() => undefined)
+      .finally(() => setLoaded(true));
+  }, []);
+
+  if (!loaded) return null;
+
+  const url = token === null ? null : `${location.origin}/feed/${token}.ics`;
+
+  const rotate = () =>
+    void api<{ token: string }>('/shifter/v1/feed', { method: 'POST' }).then((response) =>
+      setToken(response.token),
+    );
+
+  return (
+    <section className="card reveal p-4">
+      <h2 className="mb-1 text-[0.98rem] font-bold">{t('Calendar subscription')}</h2>
+      <p className="field-hint mb-3">
+        {t('Your shifts appear in Google or Apple Calendar by themselves. Times and names travel; money never does.')}
+      </p>
+
+      {url === null ? (
+        <button type="button" className="btn btn-primary" onClick={rotate}>
+          {t('Turn the feed on')}
+        </button>
+      ) : (
+        <>
+          <div className="flex items-center gap-1.5">
+            <input readOnly className="field-input flex-1 !text-[0.78rem] tabular" value={url} onFocus={(e) => e.target.select()} />
+            <button
+              type="button"
+              className="btn btn-sm"
+              onClick={() => {
+                void navigator.clipboard.writeText(url);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+              }}
+            >
+              <Icon name={copied ? 'check' : 'copy'} size={13} />
+            </button>
+          </div>
+          <div className="mt-2 flex gap-1.5">
+            <button
+              type="button"
+              className="btn btn-sm"
+              onClick={() => {
+                if (window.confirm(t('A new link locks the old one out. Calendars subscribed to it stop updating.'))) rotate();
+              }}
+            >
+              {t('New link')}
+            </button>
+            <button
+              type="button"
+              className="btn btn-sm text-danger"
+              onClick={() => {
+                if (window.confirm(t('Turn the feed off? Subscribed calendars go stale.'))) {
+                  void api('/shifter/v1/feed', { method: 'DELETE' }).then(() => setToken(null));
+                }
+              }}
+            >
+              {t('Turn off')}
+            </button>
+          </div>
+        </>
+      )}
+    </section>
   );
 }

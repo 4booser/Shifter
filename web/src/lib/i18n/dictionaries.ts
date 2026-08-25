@@ -5,6 +5,13 @@
 type Dictionary = Record<string, string>;
 
 export const RU: Dictionary = {
+  'Calendar subscription': 'Календарная подписка',
+  'Your shifts appear in Google or Apple Calendar by themselves. Times and names travel; money never does.': 'Смены сами появляются в Google или Apple Calendar. Передаются времена и названия — деньги никогда.',
+  'Turn the feed on': 'Включить подписку',
+  'New link': 'Новая ссылка',
+  'Turn off': 'Отключить',
+  'A new link locks the old one out. Calendars subscribed to it stop updating.': 'Новая ссылка отключит старую. Подписанные на неё календари перестанут обновляться.',
+  'Turn the feed off? Subscribed calendars go stale.': 'Отключить подписку? Подписанные календари застынут.',
   'Payday heads-up': 'Предупреждать о зарплате',
   'Mid-morning, when a pay period lands.': 'Утром в день, когда закрывается период оплаты.',
   'Weekly digest': 'Итог недели',
@@ -1208,6 +1215,13 @@ export const RU: Dictionary = {
 };
 
 export const UK: Dictionary = {
+  'Calendar subscription': 'Календарна підписка',
+  'Your shifts appear in Google or Apple Calendar by themselves. Times and names travel; money never does.': 'Зміни самі з’являються в Google або Apple Calendar. Передаються часи та назви — гроші ніколи.',
+  'Turn the feed on': 'Увімкнути підписку',
+  'New link': 'Нове посилання',
+  'Turn off': 'Вимкнути',
+  'A new link locks the old one out. Calendars subscribed to it stop updating.': 'Нове посилання вимкне старе. Підписані на нього календарі перестануть оновлюватися.',
+  'Turn the feed off? Subscribed calendars go stale.': 'Вимкнути підписку? Підписані календарі застигнуть.',
   'Payday heads-up': 'Попереджати про зарплату',
   'Mid-morning, when a pay period lands.': 'Вранці в день, коли закривається період оплати.',
   'Weekly digest': 'Підсумок тижня',

@@ -23,6 +23,7 @@ if (process.env.NODE_ENV === 'development') {
   nextConfig.rewrites = async () => [
     { source: '/shifter/:path*', destination: 'http://localhost:5208/shifter/:path*' },
     { source: '/health', destination: 'http://localhost:5208/health' },
+    { source: '/feed/:path*', destination: 'http://localhost:5208/feed/:path*' },
   ];
 }
 

@@ -6,7 +6,6 @@ riderModule.iml
 logs/
 /.idea/
 /.claude/
-/.github/
 # Build outputs of the web app in web/.
 wwwroot/
 web/node_modules/

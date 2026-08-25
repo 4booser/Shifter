@@ -1,0 +1,24 @@
+name: Uptime
+
+# An outside pulse for the production box. GitHub emails the owner whenever a
+# scheduled workflow fails, which turns this into a free pager: three failed
+# probes in a row and the run goes red.
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Probe /health
+        run: |
+          for attempt in 1 2 3; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 https://www.shifter.ink/health || echo 000)
+            echo "attempt $attempt: $code"
+            [ "$code" = "200" ] && exit 0
+            sleep 20
+          done
+          echo "shifter.ink is down (last status: $code)"
+          exit 1

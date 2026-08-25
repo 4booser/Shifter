@@ -137,6 +137,15 @@ jobs:
             echo "REGISTRY=${{ env.REGISTRY }}/${{ github.repository_owner }}" > .env.release
             echo "TAG=${{ github.sha }}" >> .env.release
 
+            # Nightly database dumps: the script ships with every release and
+            # the cron entry is rewritten idempotently, so changing the
+            # schedule or the script is just another deploy.
+            chmod +x docker/backup.sh
+            printf '%s\n' \
+              'SHELL=/bin/bash' \
+              '17 3 * * * root /opt/shifter/docker/backup.sh >> /var/log/shifter-backup.log 2>&1' \
+              > /etc/cron.d/shifter-backup
+
             docker compose -f compose.prod.yaml --env-file .env --env-file .env.release pull
             docker compose -f compose.prod.yaml --env-file .env --env-file .env.release up -d
 
@@ -161,7 +170,11 @@ jobs:
               if docker compose -f compose.prod.yaml ps --format '{{.Service}} {{.Status}}' \
                  | grep -q 'shifter.*healthy'; then
                 echo "healthy"
-                docker image prune -f
+                # -a matters: every image here is tagged with its commit, so
+                # the plain prune never matched anything and the disk filled
+                # with 1.8 GB migrate images until the box hit 94%. Referenced
+                # images survive; the 48h window keeps a rollback pair around.
+                docker image prune -af --filter "until=48h"
                 docker logout ghcr.io
                 exit 0
               fi

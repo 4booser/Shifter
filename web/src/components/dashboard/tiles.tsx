@@ -10,7 +10,7 @@ import { forecastFor } from '@/lib/calendar/forecast';
 import { bestDay } from '@/lib/calendar/insights';
 import { CalendarDayData, Goal, Reconciliation, ShiftTemplate } from '@/lib/calendar/models';
 import { activeGoalFor } from '@/lib/calendar/stats-math';
-import { fireConfetti, stagger } from '@/lib/fx';
+import { stagger } from '@/lib/fx';
 import { useI18n } from '@/lib/i18n';
 import {
   cancelLiveShift,
@@ -22,7 +22,6 @@ import {
 } from '@/lib/live/live-shift';
 import { useMoney } from '@/lib/settings/money';
 import { useSettings } from '@/lib/settings/store';
-import { pushToast } from '@/lib/toast';
 import { useCalendar } from '@/lib/store/calendar';
 import { CountUp, Money } from '@/components/ui/bits';
 import { Icon } from '@/components/ui/icon';
@@ -112,7 +111,7 @@ export function TileStrip() {
   if (visible.length === 0 && !customising) return null;
 
   return (
-    <section aria-label={t('Overview')}>
+    <section aria-label={t('Overview')} data-tour="tiles">
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:[grid-template-columns:repeat(auto-fit,minmax(9.5rem,1fr))]">
         {visible.map((id, index) => {
           const body = (
@@ -287,12 +286,7 @@ function TodayTile({ window, templates }: { window: CalendarDayData[]; templates
           <button
             type="button"
             className="btn btn-primary btn-sm min-w-0 flex-1 truncate"
-            onClick={() => {
-              void finishLiveShift().then(() => {
-                fireConfetti();
-                pushToast({ icon: '✅', title: t('Shift recorded'), text: template.name });
-              });
-            }}
+            onClick={() => void finishLiveShift(template)}
           >
             {t('Finish')}
           </button>

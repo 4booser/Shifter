@@ -14,6 +14,8 @@ import { Toasts } from '@/lib/toast';
 import { useUnlockCheck } from '@/components/achievements/badges';
 import { CommandPalette, PALETTE_OPEN_EVENT } from '@/components/command/palette';
 import { LiveBar } from '@/components/live/live-bar';
+import { ShiftDoneOverlay } from '@/components/live/shift-done';
+import { FeatureTour } from '@/components/tour/tour';
 import { Icon } from '@/components/ui/icon';
 
 const NAV: { href: string; label: string; icon: string }[] = [
@@ -113,6 +115,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
               type="button"
               className="btn btn-quiet btn-sm"
               aria-label={t('Command palette')}
+              data-tour="palette"
               title="⌘K"
               onClick={() => dispatchEvent(new CustomEvent(PALETTE_OPEN_EVENT))}
             >
@@ -176,6 +179,8 @@ export function Shell({ children }: { children: React.ReactNode }) {
       <main className="mx-auto max-w-[1440px] px-3 pb-24 pt-4 sm:px-5 md:pb-8">{children}</main>
 
       <CommandPalette />
+      <ShiftDoneOverlay />
+      <FeatureTour />
       <Toasts />
       <PointerFx />
       <PressRipple />

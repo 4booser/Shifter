@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 
-import { fireConfetti } from '@/lib/fx';
 import { useI18n } from '@/lib/i18n';
 import {
   cancelLiveShift,
@@ -11,7 +10,6 @@ import {
   liveTick,
   useLive,
 } from '@/lib/live/live-shift';
-import { pushToast } from '@/lib/toast';
 import { useCalendar } from '@/lib/store/calendar';
 import { Money } from '@/components/ui/bits';
 
@@ -48,10 +46,7 @@ export function LiveBar() {
 
   const finish = () => {
     setOpen(false);
-    void finishLiveShift().then(() => {
-      fireConfetti();
-      pushToast({ icon: '✅', title: t('Shift recorded'), text: template.name });
-    });
+    void finishLiveShift(template);
   };
 
   return (

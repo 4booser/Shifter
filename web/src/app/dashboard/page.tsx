@@ -122,7 +122,7 @@ function Dashboard() {
         <div className="order-1 min-w-0 flex-1 lg:order-none">
           <MonthGrid onSearch={() => setSearchOpen(true)} onSettings={() => setSettingsOpen(true)} />
         </div>
-        <div className="order-2 w-full flex-none lg:order-none lg:w-72 xl:w-80">
+        <div className="order-2 w-full flex-none lg:order-none lg:w-72 xl:w-80" data-tour="daypanel">
           <DayPanel />
         </div>
       </div>

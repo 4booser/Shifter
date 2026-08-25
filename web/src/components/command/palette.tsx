@@ -122,6 +122,18 @@ export function CommandPalette() {
       { id: 'nav-stats', icon: 'chart', label: t('Statistics'), run: go('/stats') },
       { id: 'nav-wrapped', icon: 'trophy', label: t('Your year'), run: go('/wrapped') },
       { id: 'nav-report', icon: 'note', label: t('Monthly report'), run: go('/report') },
+      {
+        id: 'tour',
+        icon: 'spark',
+        label: t('Show the tour'),
+        run: () => {
+          setOpen(false);
+
+          if (pathname !== '/dashboard') router.push('/dashboard');
+
+          setTimeout(() => dispatchEvent(new CustomEvent('shifter:tour')), 400);
+        },
+      },
       { id: 'nav-account', icon: 'user', label: t('Account'), run: go('/account') },
       { id: 'nav-webhooks', icon: 'swap', label: t('Webhooks'), run: go('/webhooks') },
       { id: 'today', icon: 'spark', label: t('Go to today'), run: emit('today') },

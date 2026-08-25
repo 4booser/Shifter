@@ -1072,3 +1072,65 @@ body,
     opacity: 0;
   }
 }
+
+/* ==== The clock-out moment ==== */
+
+.done-scene {
+  position: fixed;
+  inset: 0;
+  z-index: 96;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: color-mix(in srgb, black 55%, transparent);
+  backdrop-filter: blur(6px);
+  animation: fade-in calc(0.25s * var(--motion)) ease backwards;
+}
+
+.done-card {
+  width: min(22rem, 100%);
+  padding: 2rem 1.5rem 1.5rem;
+  text-align: center;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) * 1.6);
+  background:
+    radial-gradient(120% 90% at 50% 0%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 60%),
+    var(--surface);
+  box-shadow: var(--shadow-lg);
+  animation: done-pop calc(0.45s * var(--motion)) cubic-bezier(0.3, 1.35, 0.4, 1) backwards;
+}
+
+@keyframes done-pop {
+  from {
+    opacity: 0;
+    transform: translateY(28px) scale(0.9);
+  }
+}
+
+/* ==== Feature tour ==== */
+
+/* The ring floats over the target; its giant shadow is the page shade. */
+.tour-ring {
+  position: fixed;
+  border-radius: calc(var(--radius) * 1.2);
+  box-shadow:
+    0 0 0 3px var(--accent),
+    0 0 0 9999px color-mix(in srgb, black 55%, transparent);
+  transition:
+    top calc(0.35s * var(--motion)) cubic-bezier(0.2, 0.85, 0.3, 1),
+    left calc(0.35s * var(--motion)) cubic-bezier(0.2, 0.85, 0.3, 1),
+    width calc(0.35s * var(--motion)) cubic-bezier(0.2, 0.85, 0.3, 1),
+    height calc(0.35s * var(--motion)) cubic-bezier(0.2, 0.85, 0.3, 1);
+  pointer-events: none;
+}
+
+.tour-card {
+  position: fixed;
+  width: min(20rem, calc(100vw - 1.5rem));
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
+  animation: toast-pop calc(0.3s * var(--motion)) cubic-bezier(0.34, 1.4, 0.64, 1) backwards;
+}

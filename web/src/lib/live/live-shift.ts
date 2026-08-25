@@ -67,12 +67,27 @@ export function cancelLiveShift(): void {
   write(null);
 }
 
+/** What the clock-out hands to whoever wants to celebrate it. */
+export interface ShiftDone {
+  shiftId: number;
+  date: string;
+  name: string;
+  /** Milliseconds actually on the clock. */
+  elapsed: number;
+  /** What the server priced the shift at, once the day came back. */
+  earned: number;
+  hours: number;
+}
+
+/** Fired on window after a live shift lands on its day. */
+export const SHIFT_DONE_EVENT = 'shifter:shift-done';
+
 /**
  * Clocks out: the shift lands on its day as worked, on top of whatever the
  * day already holds. The server then prices it — the live counter was only
- * ever a preview.
+ * ever a preview — and the result goes out as an event for the done-card.
  */
-export async function finishLiveShift(): Promise<void> {
+export async function finishLiveShift(template: ShiftTemplate): Promise<void> {
   const live = useLive.getState().live;
 
   if (live === null) return;
@@ -88,8 +103,26 @@ export async function finishLiveShift(): Promise<void> {
     );
   }
 
+  const elapsed = Date.now() - live.startedAt;
+
   await saveDay(live.date, payload);
+
+  const saved = useCalendar
+    .getState()
+    .days.get(live.date)
+    ?.shifts.find((entry) => entry.shift_id === live.shiftId);
+
+  const done: ShiftDone = {
+    shiftId: live.shiftId,
+    date: live.date,
+    name: template.name,
+    elapsed,
+    earned: saved?.earned ?? liveTick(template, live.startedAt, Date.now()).earned ?? 0,
+    hours: saved?.hours ?? template.hours,
+  };
+
   write(null);
+  dispatchEvent(new CustomEvent<ShiftDone>(SHIFT_DONE_EVENT, { detail: done }));
 }
 
 export interface LiveTick {

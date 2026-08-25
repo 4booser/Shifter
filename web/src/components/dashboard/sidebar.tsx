@@ -67,7 +67,7 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="order-3 flex w-full flex-none flex-col gap-4 lg:order-none lg:w-64 xl:w-72">
+    <aside className="order-3 flex w-full flex-none flex-col gap-4 lg:order-none lg:w-64 xl:w-72" data-tour="sidebar">
       {/* ==== Places ==== */}
       <section className="card p-3.5">
         <SectionHead

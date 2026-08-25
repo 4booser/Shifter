@@ -31,6 +31,12 @@ public sealed class PushSubscription
     /// <summary>"Yesterday has no tips or sales on it yet."</summary>
     public bool NotifyUnclosed { get; set; }
 
+    /// <summary>"A pay period lands today", sent mid-morning.</summary>
+    public bool NotifyPayday { get; set; }
+
+    /// <summary>The week in one line, Sunday evening.</summary>
+    public bool NotifyDigest { get; set; }
+
     /// <summary>Local "HH:mm" both nudges are sent at.</summary>
     public required string NotifyAt { get; set; }
 
@@ -43,4 +49,8 @@ public sealed class PushSubscription
     public DateOnly? TomorrowSentOn { get; set; }
 
     public DateOnly? UnclosedSentOn { get; set; }
+
+    public DateOnly? PaydaySentOn { get; set; }
+
+    public DateOnly? DigestSentOn { get; set; }
 }

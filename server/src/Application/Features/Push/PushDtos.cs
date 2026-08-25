@@ -12,6 +12,8 @@ public sealed class PushSubscribeDto
     [JsonPropertyName("language")] public required string Language { get; set; }
     [JsonPropertyName("notify_tomorrow")] public bool NotifyTomorrow { get; set; }
     [JsonPropertyName("notify_unclosed")] public bool NotifyUnclosed { get; set; }
+    [JsonPropertyName("notify_payday")] public bool NotifyPayday { get; set; }
+    [JsonPropertyName("notify_digest")] public bool NotifyDigest { get; set; }
     /// <summary>"HH:mm" on this device's clock.</summary>
     [JsonPropertyName("notify_at")] public required string NotifyAt { get; set; }
 }

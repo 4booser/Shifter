@@ -5,6 +5,10 @@
 type Dictionary = Record<string, string>;
 
 export const RU: Dictionary = {
+  'Payday heads-up': 'Предупреждать о зарплате',
+  'Mid-morning, when a pay period lands.': 'Утром в день, когда закрывается период оплаты.',
+  'Weekly digest': 'Итог недели',
+  'Sunday evening: shifts, hours, money, trend.': 'В воскресенье вечером: смены, часы, деньги, тренд.',
   'Actually': 'Фактически',
   'Back to the plan': 'Вернуть по плану',
   'Break': 'Перерыв',
@@ -1204,6 +1208,10 @@ export const RU: Dictionary = {
 };
 
 export const UK: Dictionary = {
+  'Payday heads-up': 'Попереджати про зарплату',
+  'Mid-morning, when a pay period lands.': 'Вранці в день, коли закривається період оплати.',
+  'Weekly digest': 'Підсумок тижня',
+  'Sunday evening: shifts, hours, money, trend.': 'У неділю ввечері: зміни, години, гроші, тренд.',
   'Actually': 'Фактично',
   'Back to the plan': 'Повернути за планом',
   'Break': 'Перерва',

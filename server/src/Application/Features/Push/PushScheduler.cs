@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Shifter.Application.Features.business.Services.Interfaces;
 using Shifter.Domain.Entities;
 using Shifter.Infrastructure.Persistence.DbContexts;
 
@@ -20,6 +21,9 @@ public sealed class PushScheduler : BackgroundService
 
     /// <summary>How far past the chosen minute a nudge is still worth sending.</summary>
     private static readonly TimeSpan Window = TimeSpan.FromMinutes(30);
+
+    /// <summary>Payday news comes mid-morning, whatever the evening setting says.</summary>
+    private static readonly TimeOnly PaydayAt = new(10, 0);
 
     private readonly IServiceScopeFactory _scopes;
     private readonly PushSender _sender;
@@ -57,7 +61,7 @@ public sealed class PushScheduler : BackgroundService
         var db = scope.ServiceProvider.GetRequiredService<ShifterDbContext>();
 
         var subscriptions = await db.PushSubscriptions
-            .Where(s => s.NotifyTomorrow || s.NotifyUnclosed)
+            .Where(s => s.NotifyTomorrow || s.NotifyUnclosed || s.NotifyPayday || s.NotifyDigest)
             .ToListAsync(ct);
 
         foreach (var subscription in subscriptions)
@@ -78,24 +82,42 @@ public sealed class PushScheduler : BackgroundService
 
             if (!TimeOnly.TryParse(subscription.NotifyAt, out var at)) continue;
 
-            var since = localNow.TimeOfDay - at.ToTimeSpan();
+            var sinceChosen = localNow.TimeOfDay - at.ToTimeSpan();
+            var chosenOpen = sinceChosen >= TimeSpan.Zero && sinceChosen <= Window;
 
-            // Before the chosen minute, or so long after it that the moment has
-            // passed — a "tomorrow you work" nudge at 3 a.m. helps nobody.
-            if (since < TimeSpan.Zero || since > Window) continue;
+            var sinceMorning = localNow.TimeOfDay - PaydayAt.ToTimeSpan();
+            var morningOpen = sinceMorning >= TimeSpan.Zero && sinceMorning <= Window;
 
             var dead = false;
 
-            if (subscription.NotifyTomorrow && subscription.TomorrowSentOn != today)
+            // The evening pair, at the chosen minute: a nudge at 3 a.m. helps
+            // nobody, hence the window.
+            if (chosenOpen && subscription.NotifyTomorrow && subscription.TomorrowSentOn != today)
             {
                 subscription.TomorrowSentOn = today;
                 dead = !await SendTomorrowAsync(db, subscription, today.AddDays(1), ct);
             }
 
-            if (!dead && subscription.NotifyUnclosed && subscription.UnclosedSentOn != today)
+            if (!dead && chosenOpen && subscription.NotifyUnclosed && subscription.UnclosedSentOn != today)
             {
                 subscription.UnclosedSentOn = today;
                 dead = !await SendUnclosedAsync(db, subscription, today.AddDays(-1), ct);
+            }
+
+            if (!dead && morningOpen && subscription.NotifyPayday && subscription.PaydaySentOn != today)
+            {
+                subscription.PaydaySentOn = today;
+                dead = !await SendPaydayAsync(scope.ServiceProvider, subscription, today, ct);
+            }
+
+            if (!dead
+                && chosenOpen
+                && subscription.NotifyDigest
+                && localNow.DayOfWeek == DayOfWeek.Sunday
+                && subscription.DigestSentOn != today)
+            {
+                subscription.DigestSentOn = today;
+                dead = !await SendDigestAsync(scope.ServiceProvider, subscription, today, ct);
             }
 
             if (dead) db.PushSubscriptions.Remove(subscription);
@@ -141,6 +163,74 @@ public sealed class PushScheduler : BackgroundService
         }
 
         return await _sender.SendAsync(subscription, title, body, "/dashboard");
+    }
+
+    /// <summary>Money landing today, summed across places due on the date.</summary>
+    private async Task<bool> SendPaydayAsync(
+        IServiceProvider services,
+        PushSubscription subscription,
+        DateOnly today,
+        CancellationToken ct)
+    {
+        var reconciliation = services.GetRequiredService<IReconciliationHandler>();
+        var schedule = await reconciliation.BuildAsync(
+            subscription.UserId, today.AddDays(-31), today.AddDays(1), ct);
+
+        var due = schedule.periods
+            .Where(row => row.due_on == today && row.paid == 0 && row.expected > 0)
+            .ToArray();
+
+        if (due.Length == 0) return true;
+
+        var amount = Math.Round(due.Sum(row => row.expected));
+        var names = string.Join(", ", due.Select(row => row.location_name).Distinct());
+
+        var (title, body) = subscription.Language switch
+        {
+            "ru" => ("Сегодня зарплата", $"{names}: ~{amount:N0}. Придут деньги — запишите выплату."),
+            "uk" => ("Сьогодні зарплата", $"{names}: ~{amount:N0}. Прийдуть гроші — запишіть виплату."),
+            _ => ("Payday", $"{names}: ~{amount:N0}. When it lands, record the payout."),
+        };
+
+        return await _sender.SendAsync(subscription, title, body, "/payouts");
+    }
+
+    /// <summary>The finished week in one line, with last week as the yardstick.</summary>
+    private async Task<bool> SendDigestAsync(
+        IServiceProvider services,
+        PushSubscription subscription,
+        DateOnly sunday,
+        CancellationToken ct)
+    {
+        var daysHandler = services.GetRequiredService<IDayHandler>();
+        var monday = sunday.AddDays(-6);
+        var week = await daysHandler.ListAsync(subscription.UserId, monday, sunday, ct);
+
+        if (week.total_earned <= 0 && week.days_worked == 0) return true;
+
+        var before = await daysHandler.ListAsync(
+            subscription.UserId, monday.AddDays(-7), sunday.AddDays(-7), ct);
+
+        var trend = "";
+
+        if (before.total_earned > 0)
+        {
+            var change = (double)((week.total_earned / before.total_earned - 1m) * 100m);
+
+            trend = change >= 1 ? $" (+{change:F0}%)" : change <= -1 ? $" ({change:F0}%)" : "";
+        }
+
+        var earned = $"{Math.Round(week.total_earned):N0}";
+        var hours = Math.Round(week.hours);
+
+        var (title, body) = subscription.Language switch
+        {
+            "ru" => ("Итог недели", $"{week.days_worked} смен · {hours} ч · {earned}{trend}"),
+            "uk" => ("Підсумок тижня", $"{week.days_worked} змін · {hours} год · {earned}{trend}"),
+            _ => ("Your week", $"{week.days_worked} shifts · {hours} h · {earned}{trend}"),
+        };
+
+        return await _sender.SendAsync(subscription, title, body, "/stats");
     }
 
     private async Task<bool> SendUnclosedAsync(

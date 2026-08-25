@@ -51,7 +51,7 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [settings.notifyTomorrow, settings.notifyUnclosed, settings.notifyAt, settings.language]);
+  }, [settings.notifyTomorrow, settings.notifyUnclosed, settings.notifyPayday, settings.notifyDigest, settings.notifyAt, settings.language]);
 
   return (
     <Modal open={open} title={t('Settings')} onClose={onClose}>
@@ -252,7 +252,19 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
             label={t('Nudge about days left open')}
             hint={t('A worked day with no tips or sales on it.')}
           />
-          {(settings.notifyTomorrow || settings.notifyUnclosed) && (
+          <Toggle
+            on={settings.notifyPayday}
+            onChange={(value) => update('notifyPayday', value)}
+            label={t('Payday heads-up')}
+            hint={t('Mid-morning, when a pay period lands.')}
+          />
+          <Toggle
+            on={settings.notifyDigest}
+            onChange={(value) => update('notifyDigest', value)}
+            label={t('Weekly digest')}
+            hint={t('Sunday evening: shifts, hours, money, trend.')}
+          />
+          {(settings.notifyTomorrow || settings.notifyUnclosed || settings.notifyPayday || settings.notifyDigest) && (
             <>
               <label>
                 <span className="field-hint">{t('Send at')}</span>

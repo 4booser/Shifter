@@ -82,6 +82,8 @@ export interface Settings {
   compactSidebar: boolean;
   notifyUnclosed: boolean;
   notifyTomorrow: boolean;
+  notifyPayday: boolean;
+  notifyDigest: boolean;
   notifyAt: string;
   cellTimes: CellTimes;
   dayFill: DayFill;
@@ -160,6 +162,8 @@ export const DEFAULT_SETTINGS: Settings = {
   compactSidebar: false,
   notifyUnclosed: false,
   notifyTomorrow: false,
+  notifyPayday: false,
+  notifyDigest: false,
   notifyAt: '21:00',
   cellTimes: 'none',
   dayFill: 'edge',

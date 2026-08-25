@@ -74,6 +74,8 @@ public class PushController : ControllerBase
         existing.Language = request.Language;
         existing.NotifyTomorrow = request.NotifyTomorrow;
         existing.NotifyUnclosed = request.NotifyUnclosed;
+        existing.NotifyPayday = request.NotifyPayday;
+        existing.NotifyDigest = request.NotifyDigest;
         existing.NotifyAt = request.NotifyAt;
 
         await _db.SaveChangesAsync(ct);

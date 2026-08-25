@@ -29,9 +29,16 @@ export function Boot({ children }: { children: React.ReactNode }) {
         const raw = JSON.parse(localStorage.getItem('shifter.settings') ?? '{}') as {
           notifyTomorrow?: boolean;
           notifyUnclosed?: boolean;
+          notifyPayday?: boolean;
+          notifyDigest?: boolean;
         };
 
-        return raw.notifyTomorrow === true || raw.notifyUnclosed === true;
+        return (
+          raw.notifyTomorrow === true ||
+          raw.notifyUnclosed === true ||
+          raw.notifyPayday === true ||
+          raw.notifyDigest === true
+        );
       } catch {
         return false;
       }

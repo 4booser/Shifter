@@ -142,7 +142,7 @@ jobs:
             # schedule or the script is just another deploy. The deploy user's
             # own crontab, because /etc/cron.d is root's and this user is not.
             chmod +x docker/backup.sh
-            mkdir -p backups
+            mkdir -p backups "$HOME/.cache"
             ( crontab -l 2>/dev/null | grep -v shifter-backup ; \
               echo '17 3 * * * /opt/shifter/docker/backup.sh >> /opt/shifter/backups/backup.log 2>&1 # shifter-backup' \
             ) | crontab -

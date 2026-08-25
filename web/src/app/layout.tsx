@@ -28,7 +28,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             are applied before React exists. */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `try{var s=JSON.parse(localStorage.getItem('shifter.settings')||'{}');var r=document.documentElement;r.dataset.theme=s.theme||'system';if(s.accent){r.style.setProperty('--accent',s.accent)}if(s.fontScale){r.style.setProperty('--font-size',s.fontScale+'px')}if(s.roundness){r.style.setProperty('--radius',s.roundness+'px');r.style.setProperty('--radius-lg',(s.roundness+4)+'px')}}catch(e){}`,
+            __html: `window.__errs=[];addEventListener('error',function(e){if(window.__errs.length>20)return;window.__errs.push(String(e.message)+' @ '+String(e.filename).split('/').pop()+':'+e.lineno)});addEventListener('unhandledrejection',function(e){if(window.__errs.length>20)return;window.__errs.push('rej: '+String(e.reason && e.reason.stack || e.reason).slice(0,500))});try{var s=JSON.parse(localStorage.getItem('shifter.settings')||'{}');var r=document.documentElement;r.dataset.theme=s.theme||'system';if(s.accent){r.style.setProperty('--accent',s.accent)}if(s.fontScale){r.style.setProperty('--font-size',s.fontScale+'px')}if(s.roundness){r.style.setProperty('--radius',s.roundness+'px');r.style.setProperty('--radius-lg',(s.roundness+4)+'px')}}catch(e){}`,
           }}
         />
       </head>

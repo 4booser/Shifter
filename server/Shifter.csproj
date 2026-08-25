@@ -33,10 +33,10 @@
       <Folder Include="src\Infrastructure\Persistence\Migrations\" />
     </ItemGroup>
 
-    <!-- ==== Angular client (client/) ==== -->
+    <!-- ==== Web client (web/, Next.js static export) ==== -->
 
     <PropertyGroup>
-        <ClientDir>../client</ClientDir>
+        <ClientDir>../web</ClientDir>
         <!-- Set to true to publish a prebuilt wwwroot without invoking npm.
              The Dockerfile does this: it builds the SPA in its own stage. -->
         <SkipClientBuild Condition="'$(SkipClientBuild)' == ''">false</SkipClientBuild>
@@ -54,6 +54,7 @@
     </Target>
 
     <Target Name="BuildClient" BeforeTargets="PublishClientAssets" DependsOnTargets="RestoreClient" Condition="'$(SkipClientBuild)' != 'true'">
+        <!-- `next build` plus the copy into wwwroot; one script owns both. -->
         <Exec Command="npm run build" WorkingDirectory="$(ClientDir)" />
     </Target>
 

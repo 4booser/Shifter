@@ -28,13 +28,17 @@ jobs:
         with:
           node-version: '22'
           cache: npm
-          cache-dependency-path: client/package-lock.json
+          cache-dependency-path: web/package-lock.json
 
       - run: npm ci
-        working-directory: client
+        working-directory: web
 
-      - run: npx ng test --watch=false
-        working-directory: client
+      # Type errors fail the build later and more expensively; catch them here.
+      - run: npm run lint
+        working-directory: web
+
+      - run: npm test
+        working-directory: web
 
   build:
     name: Build and push

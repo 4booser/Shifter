@@ -1,0 +1,499 @@
+'use client';
+
+import { useEffect, useRef, useState } from 'react';
+
+import { formatDayLabel } from '@/lib/calendar/calendar-date';
+import { holidaysInRange } from '@/lib/calendar/holidays';
+import { CalendarEvent, MARK_COLOURS, NOTE_MAX_LENGTH } from '@/lib/calendar/models';
+import { useI18n } from '@/lib/i18n';
+import { useMoney } from '@/lib/settings/money';
+import { useSettings } from '@/lib/settings/store';
+import { catalogueActions, saveDay, useCalendar } from '@/lib/store/calendar';
+import { Icon } from '@/components/ui/icon';
+import { Money, SwatchRow } from '@/components/ui/bits';
+import { EventModal } from './modals/event-modal';
+
+const QUANTITY_STEPS = [1, 3, 5, 10];
+const TIP_STEPS = [50, 100, 200, 500];
+
+/**
+ * Editing one day as a draft, so typing does not fire a request per keystroke.
+ * The draft refills when the date changes, and — the regression the old client
+ * shipped a fix for — also picks up a day that arrives after the panel opened
+ * on it, filling only what the draft has no answer for.
+ */
+export function DayPanel() {
+  const { t, lang } = useI18n();
+  const { format } = useMoney();
+  const settings = useSettings((state) => state.settings);
+  const key = useCalendar((state) => state.selectedDate);
+  const day = useCalendar((state) => (state.selectedDate === null ? undefined : state.days.get(state.selectedDate)));
+  const allPositions = useCalendar((state) => state.positions);
+  const positions = allPositions.filter((position) => !position.archived);
+  const allEvents = useCalendar((state) => state.events);
+  const events =
+    key === null ? [] : allEvents.filter((event) => event.start_date <= key && event.end_date >= key);
+  const saving = useCalendar((state) => state.saving);
+
+  const [quantities, setQuantities] = useState<Record<number, number>>({});
+  const [worked, setWorked] = useState<Record<number, boolean>>({});
+  const [cover, setCover] = useState<Record<number, boolean>>({});
+  const [tips, setTips] = useState<number | null>(null);
+  const [tipsCash, setTipsCash] = useState<number | null>(null);
+  const [deductions, setDeductions] = useState<number | null>(null);
+  const [note, setNote] = useState('');
+  const [colour, setColour] = useState<string | null>(null);
+  const [eventOpen, setEventOpen] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
+
+  const loadedFor = useRef<string | null>(null);
+
+  // Only a change of date refills the whole draft.
+  useEffect(() => {
+    if (key === loadedFor.current) return;
+
+    loadedFor.current = key;
+
+    const next: Record<number, number> = {};
+
+    for (const entry of day?.sales ?? []) next[entry.sales_id] = entry.quantity;
+
+    const flags: Record<number, boolean> = {};
+    const covers: Record<number, boolean> = {};
+
+    for (const entry of day?.shifts ?? []) {
+      flags[entry.shift_id] = entry.worked;
+      covers[entry.shift_id] = entry.needs_cover;
+    }
+
+    setQuantities(next);
+    setWorked(flags);
+    setCover(covers);
+    setTips(day?.tips ?? null);
+    setTipsCash(day?.tips_cash ?? null);
+    setDeductions(day?.deductions ?? null);
+    setNote(day?.note ?? '');
+    setColour(day?.colour ?? null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key, day]);
+
+  // The day can arrive after the panel opened on it — the month still loading,
+  // or a webhook writing while it sits open. Fill only what has no answer yet.
+  useEffect(() => {
+    if (day === undefined) return;
+
+    setQuantities((current) => {
+      const next = { ...current };
+      let changed = false;
+
+      for (const entry of day.sales ?? []) {
+        if (entry.sales_id in next) continue;
+
+        next[entry.sales_id] = entry.quantity;
+        changed = true;
+      }
+
+      return changed ? next : current;
+    });
+
+    setWorked((current) => {
+      const next = { ...current };
+      let changed = false;
+
+      for (const entry of day.shifts ?? []) {
+        if (entry.shift_id in next) continue;
+
+        next[entry.shift_id] = entry.worked;
+        changed = true;
+      }
+
+      return changed ? next : current;
+    });
+
+    setTips((current) => (current === null && day.tips !== null ? day.tips : current));
+    setTipsCash((current) => (current === null && day.tips_cash !== null ? day.tips_cash : current));
+    setDeductions((current) => (current === null && day.deductions !== null ? day.deductions : current));
+    setNote((current) => (current === '' && (day.note ?? '') !== '' ? (day.note ?? '') : current));
+    setColour((current) => (current === null && day.colour !== null ? day.colour : current));
+  }, [day]);
+
+  if (key === null) {
+    return (
+      <aside className="card w-full flex-none p-4 lg:w-72 xl:w-80">
+        <p className="field-hint">{t('Pick a day in the calendar.')}</p>
+      </aside>
+    );
+  }
+
+  const holiday = holidaysInRange(settings.holidayCountry, key, key).get(key)?.name ?? null;
+  const shifts = day?.shifts ?? [];
+  const draftSales = positions.reduce((total, position) => {
+    const quantity = quantities[position.id] ?? 0;
+
+    return total + quantity * position.price * ((position.percentage ?? 0) / 100);
+  }, 0);
+
+  const save = () => {
+    void saveDay(key, {
+      shifts: shifts.map((entry) => ({
+        shift_id: entry.shift_id,
+        worked: worked[entry.shift_id] ?? entry.worked,
+        needs_cover: !(worked[entry.shift_id] ?? entry.worked) && (cover[entry.shift_id] ?? false),
+      })),
+      sales: Object.entries(quantities)
+        .map(([id, quantity]) => ({ sales_id: Number(id), quantity }))
+        .filter((entry) => entry.quantity > 0),
+      tips,
+      tips_cash: tipsCash,
+      deductions,
+      note: note.trim() === '' ? null : note,
+      colour,
+    });
+  };
+
+  return (
+    <aside className="card flex w-full flex-none flex-col gap-4 p-4 lg:w-72 xl:w-80">
+      <div>
+        <h2 className="flex items-center gap-2 text-[1rem] font-bold capitalize">
+          <Icon name="calendar" size={16} className="text-(--accent)" />
+          {formatDayLabel(key, lang)}
+        </h2>
+        {holiday && (
+          <p className="mt-0.5 flex items-center gap-1 text-[0.78rem] text-warn">
+            <Icon name="spark" size={12} />
+            {holiday}
+          </p>
+        )}
+      </div>
+
+      {/* Colour */}
+      <section>
+        <h3 className="field-label">{t('Colour')}</h3>
+        <SwatchRow
+          colours={MARK_COLOURS}
+          value={colour}
+          clearable={colour !== null}
+          onPick={(value) => setColour(value === '' || value === colour ? null : value)}
+        />
+      </section>
+
+      {/* Events */}
+      <section>
+        <h3 className="field-label flex items-center justify-between">
+          {t('Events')}
+          <button
+            type="button"
+            className="btn btn-quiet btn-sm -my-1"
+            onClick={() => {
+              setEditingEvent(null);
+              setEventOpen(true);
+            }}
+          >
+            <Icon name="plus" size={12} />
+            {t('Add')}
+          </button>
+        </h3>
+
+        {events.length === 0 ? (
+          <p className="field-hint">{t('Nothing on this day but work.')}</p>
+        ) : (
+          <ul className="flex flex-col gap-1">
+            {events.map((event) => (
+              <li key={event.id} className="flex items-center gap-1">
+                <button
+                  type="button"
+                  className="flex min-w-0 flex-1 items-center gap-2 rounded-(--radius) border border-border px-2 py-1.5 text-left text-[0.85rem] hover:border-border-strong"
+                  style={{ borderLeft: `3px solid ${event.colour}` }}
+                  onClick={() => {
+                    setEditingEvent(event);
+                    setEventOpen(true);
+                  }}
+                >
+                  <span>{event.symbol ?? '•'}</span>
+                  <span className="truncate">{event.name}</span>
+                  {event.start_time && (
+                    <span className="ml-auto text-[0.72rem] text-faint">
+                      {event.start_time}
+                      {event.end_time ? `–${event.end_time}` : ''}
+                    </span>
+                  )}
+                  {event.days > 1 && (
+                    <span className="chip flex-none">{event.days} {t('days')}</span>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-quiet btn-sm btn-danger"
+                  aria-label={t('Delete')}
+                  onClick={() => void catalogueActions.deleteEvent(event.id)}
+                >
+                  <Icon name="trash" size={13} />
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      {/* Shifts */}
+      <section>
+        <h3 className="field-label">{t('Shifts')}</h3>
+
+        {shifts.length === 0 ? (
+          <p className="field-hint">{t('None. Pick a shift on the left, then click this day.')}</p>
+        ) : (
+          <ul className="flex flex-col gap-1.5">
+            {shifts.map((entry) => {
+              const isWorked = worked[entry.shift_id] ?? entry.worked;
+              const wantsCover = cover[entry.shift_id] ?? entry.needs_cover;
+
+              return (
+                <li key={entry.shift_id} className="rounded-(--radius) border border-border p-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="min-w-0">
+                      <span className="block truncate text-[0.88rem] font-semibold">{entry.name}</span>
+                      <span className="field-hint">
+                        {entry.start_time}–{entry.end_time} · {entry.hours}h · <Money value={entry.earned} />
+                      </span>
+                    </span>
+
+                    <button
+                      type="button"
+                      className={`btn btn-sm flex-none ${isWorked ? 'btn-primary' : ''}`}
+                      onClick={() => setWorked((current) => ({ ...current, [entry.shift_id]: !isWorked }))}
+                    >
+                      <Icon name={isWorked ? 'check' : 'clock'} size={12} />
+                      {t(isWorked ? 'Worked' : 'Planned')}
+                    </button>
+                  </div>
+
+                  {!isWorked && (
+                    <button
+                      type="button"
+                      className={`btn btn-sm mt-1.5 w-full ${wantsCover ? 'border-warn/50 bg-(--warn-soft) text-warn' : 'btn-quiet'}`}
+                      title={t('Ask the team to take this shift')}
+                      onClick={() => setCover((current) => ({ ...current, [entry.shift_id]: !wantsCover }))}
+                    >
+                      <Icon name="swap" size={12} />
+                      {t(wantsCover ? 'Cover wanted' : 'Need cover?')}
+                    </button>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
+
+      {/* Sales */}
+      {positions.length > 0 && (
+        <section>
+          <h3 className="field-label flex items-center gap-1">
+            <Icon name="bag" size={12} />
+            {t('Sold today')}
+          </h3>
+
+          <ul className="flex flex-col gap-2">
+            {positions.map((position) => {
+              const quantity = quantities[position.id] ?? 0;
+
+              return (
+                <li key={position.id}>
+                  <div className="flex items-center gap-2">
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[0.85rem]">{position.name}</span>
+                      <span className="field-hint block whitespace-nowrap tabular">
+                        {position.price} × {position.percentage ?? 0}%
+                      </span>
+                    </span>
+                    <input
+                      type="number"
+                      min={0}
+                      step={1}
+                      className="field-input w-16 flex-none text-center"
+                      value={quantity === 0 ? '' : quantity}
+                      placeholder="0"
+                      aria-label={position.name}
+                      onChange={(event) =>
+                        setQuantities((current) => ({
+                          ...current,
+                          [position.id]: Math.max(0, Math.floor(Number(event.target.value) || 0)),
+                        }))
+                      }
+                    />
+                  </div>
+                  <div className="mt-1 flex gap-1">
+                    {QUANTITY_STEPS.map((step) => (
+                      <button
+                        key={step}
+                        type="button"
+                        className="btn btn-quiet btn-sm tabular"
+                        onClick={() =>
+                          setQuantities((current) => ({
+                            ...current,
+                            [position.id]: (current[position.id] ?? 0) + step,
+                          }))
+                        }
+                      >
+                        +{step}
+                      </button>
+                    ))}
+                    {quantity > 0 && (
+                      <button
+                        type="button"
+                        className="btn btn-quiet btn-sm text-danger"
+                        onClick={() => setQuantities((current) => ({ ...current, [position.id]: 0 }))}
+                      >
+                        {t('Clear')}
+                      </button>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+
+          {draftSales > 0 && (
+            <p className="field-hint mt-1.5">
+              {t('Sales so far:')} <Money value={draftSales} className="font-semibold text-ink" />
+            </p>
+          )}
+        </section>
+      )}
+
+      {/* Tips */}
+      <section>
+        <h3 className="field-label flex items-center gap-1">
+          <Icon name="coins" size={12} />
+          {t('Tips')}
+        </h3>
+        <input
+          type="number"
+          min={0}
+          className="field-input"
+          value={tips ?? ''}
+          placeholder="0"
+          onChange={(event) => setTips(event.target.value === '' ? null : Number(event.target.value))}
+        />
+        <div className="mt-1 flex flex-wrap gap-1">
+          {TIP_STEPS.map((step) => (
+            <button
+              key={step}
+              type="button"
+              className="btn btn-quiet btn-sm tabular"
+              onClick={() => setTips((current) => (current ?? 0) + step)}
+            >
+              +{step}
+            </button>
+          ))}
+          {(tips ?? 0) > 0 && (
+            <button type="button" className="btn btn-quiet btn-sm text-danger" onClick={() => { setTips(null); setTipsCash(null); }}>
+              {t('Clear')}
+            </button>
+          )}
+        </div>
+
+        {(tips ?? 0) > 0 && (
+          <div className="mt-2 flex items-center gap-2">
+            <label className="flex-1">
+              <span className="field-label">{t('Of that, cash')}</span>
+              <input
+                type="number"
+                min={0}
+                className="field-input"
+                value={tipsCash ?? ''}
+                placeholder="0"
+                onChange={(event) => setTipsCash(event.target.value === '' ? null : Number(event.target.value))}
+              />
+            </label>
+            <span className="field-hint mt-4">
+              {t('Card')}: <Money value={Math.max(0, (tips ?? 0) - (tipsCash ?? 0))} />
+            </span>
+          </div>
+        )}
+      </section>
+
+      {/* Deductions */}
+      <section>
+        <h3 className="field-label flex items-center gap-1">
+          <Icon name="wallet" size={12} />
+          {t('Fines and shortfalls')}
+        </h3>
+        <input
+          type="number"
+          min={0}
+          className="field-input"
+          value={deductions ?? ''}
+          placeholder="0"
+          onChange={(event) => setDeductions(event.target.value === '' ? null : Number(event.target.value))}
+        />
+      </section>
+
+      {/* Note */}
+      <section>
+        <h3 className="field-label flex items-center gap-1">
+          <Icon name="note" size={12} />
+          {t('Note')}
+        </h3>
+        <textarea
+          rows={3}
+          maxLength={NOTE_MAX_LENGTH}
+          className="field-input resize-y"
+          value={note}
+          onChange={(event) => setNote(event.target.value)}
+        />
+        <p className="field-hint mt-0.5 text-right tabular">
+          {note.length} / {NOTE_MAX_LENGTH}
+        </p>
+      </section>
+
+      <button type="button" className="btn btn-primary w-full" disabled={saving} onClick={save}>
+        <Icon name="check" size={15} />
+        {saving ? t('Saving…') : t('Save day')}
+      </button>
+
+      {/* Saved figures */}
+      {day && (
+        <dl className="flex flex-col gap-1 border-t border-border pt-3 text-[0.85rem]">
+          {day.sales.map((entry) => (
+            <div key={entry.sales_id} className="flex justify-between gap-2">
+              <dt className="truncate text-muted">
+                {entry.name} × {entry.quantity}
+              </dt>
+              <dd><Money value={entry.earned} /></dd>
+            </div>
+          ))}
+          {day.tip_out > 0 && (
+            <div className="flex justify-between gap-2">
+              <dt className="text-muted">{t('Tip-out')}</dt>
+              <dd className="text-danger">−<Money value={day.tip_out} /></dd>
+            </div>
+          )}
+          {day.deductions > 0 && (
+            <div className="flex justify-between gap-2">
+              <dt className="text-muted">{t('Deductions')}</dt>
+              <dd className="text-danger">−<Money value={day.deductions} /></dd>
+            </div>
+          )}
+          <div className="flex justify-between gap-2 border-t border-border pt-1 text-[0.95rem] font-bold">
+            <dt>{t('Earned')}</dt>
+            <dd className="text-good"><Money value={day.earned} /></dd>
+          </div>
+          {day.planned > 0 && (
+            <div className="flex justify-between gap-2">
+              <dt className="text-muted">{t('Still planned')}</dt>
+              <dd><Money value={day.planned} /></dd>
+            </div>
+          )}
+        </dl>
+      )}
+
+      <EventModal
+        open={eventOpen}
+        editing={editingEvent}
+        date={key}
+        onClose={() => setEventOpen(false)}
+      />
+    </aside>
+  );
+}

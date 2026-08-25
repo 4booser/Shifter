@@ -14,9 +14,9 @@
 **/azds.yaml
 **/bin
 # NOTE: the .NET template excludes **/charts here, meaning Helm charts. This
-# repository has none, and it does have client/src/app/shared/charts — which
-# the pattern silently removed from the build context, so the image built
-# without the chart components and failed on an unresolved import.
+# repository has none, and it does have web/src/components/charts — which
+# the pattern would silently remove from the build context, so the exclusion
+# stays deleted.
 **/docker-compose*
 **/Dockerfile*
 **/node_modules
@@ -34,3 +34,7 @@ README.md
 # rule above — so they are excluded by name here as well.
 * 2
 * 2.*
+
+# Next.js build outputs; the image builds its own.
+web/.next
+web/out

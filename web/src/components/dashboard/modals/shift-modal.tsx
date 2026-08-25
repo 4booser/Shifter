@@ -1,0 +1,234 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+
+import { apiErrorMessage } from '@/lib/api/http';
+import {
+  EMOJI_GROUPS,
+  MARK_COLOURS,
+  SALARY_PERIODS,
+  SalaryPeriod,
+  ShiftTemplate,
+} from '@/lib/calendar/models';
+import { useI18n } from '@/lib/i18n';
+import { catalogueActions, useCalendar } from '@/lib/store/calendar';
+import { Alert, Segmented, SwatchRow } from '@/components/ui/bits';
+import { Modal } from '@/components/ui/modal';
+
+const PERIOD_HINTS: Record<SalaryPeriod, string> = {
+  hour: 'Multiplied by the hours of every shift you work.',
+  day: 'A flat amount for each day this shift is on.',
+  week: 'Counted once per week, however many shifts fall in it.',
+  month: 'Counted once per month, however many shifts fall in it.',
+};
+
+export function ShiftModal({
+  open,
+  editing,
+  onClose,
+}: {
+  open: boolean;
+  editing: ShiftTemplate | null;
+  onClose: () => void;
+}) {
+  const { t } = useI18n();
+  const allLocations = useCalendar((state) => state.locations);
+  const locations = allLocations.filter((location) => !location.archived);
+
+  const [name, setName] = useState('');
+  const [symbol, setSymbol] = useState('');
+  const [start, setStart] = useState('09:00');
+  const [end, setEnd] = useState('18:00');
+  const [period, setPeriod] = useState<SalaryPeriod>('hour');
+  const [amount, setAmount] = useState<number | null>(null);
+  const [breakMinutes, setBreakMinutes] = useState(0);
+  const [locationId, setLocationId] = useState<number | null>(null);
+  const [colour, setColour] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  // Refills whenever the dialog opens, so a cancelled edit leaves nothing
+  // behind for the next one.
+  useEffect(() => {
+    if (!open) return;
+
+    setError(null);
+    setName(editing?.name ?? '');
+    setSymbol(editing?.symbol ?? '');
+    setStart(editing?.start_time ?? '09:00');
+    setEnd(editing?.end_time ?? '18:00');
+    setPeriod(editing?.salary_period ?? 'hour');
+    setAmount(editing?.salary_amount ?? null);
+    setBreakMinutes(editing?.break_minutes ?? 0);
+    setLocationId(editing?.location_id ?? null);
+    setColour(editing?.colour ?? null);
+  }, [open, editing]);
+
+  /** What the calendar will actually draw, given the place currently chosen. */
+  const preview = colour ?? locations.find((place) => place.id === locationId)?.colour ?? null;
+
+  const submit = async () => {
+    if (name.trim() === '') return;
+
+    try {
+      await catalogueActions.saveShift(
+        {
+          name: name.trim(),
+          symbol: symbol === '' ? null : symbol,
+          start_time: start,
+          end_time: end,
+          salary_period: period,
+          salary_amount: amount,
+          break_minutes: breakMinutes,
+          location_id: locationId,
+          colour,
+        },
+        editing?.id ?? null,
+      );
+      onClose();
+    } catch (caught) {
+      setError(apiErrorMessage(caught));
+    }
+  };
+
+  return (
+    <Modal open={open} title={t(editing === null ? 'New shift' : 'Edit shift')} onClose={onClose}>
+      <div className="flex flex-col gap-3.5">
+        {error && <Alert>{error}</Alert>}
+
+        <div className="grid grid-cols-[1fr_5.5rem] gap-3">
+          <label>
+            <span className="field-label">{t('Name')}</span>
+            <input className="field-input" maxLength={40} value={name} placeholder="Night" onChange={(event) => setName(event.target.value)} />
+          </label>
+          <label>
+            <span className="field-label">{t('Badge')}</span>
+            <input className="field-input text-center" maxLength={4} value={symbol} onChange={(event) => setSymbol(event.target.value)} />
+          </label>
+        </div>
+
+        <div>
+          <span className="field-label">{t('Or pick an icon')}</span>
+          <div className="flex max-h-32 flex-col gap-1.5 overflow-y-auto rounded-(--radius) border border-border p-2">
+            {EMOJI_GROUPS.map((group) => (
+              <div key={group.label} className="flex flex-wrap gap-0.5">
+                {group.emojis.map((emoji) => (
+                  <button
+                    key={emoji}
+                    type="button"
+                    className={`grid h-7 w-7 place-items-center rounded text-[0.95rem] hover:bg-surface-2 ${
+                      symbol === emoji ? 'bg-(--accent-soft) ring-1 ring-(--accent)' : ''
+                    }`}
+                    onClick={() => setSymbol(emoji)}
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {locations.length > 0 && (
+          <label>
+            <span className="field-label">{t('Place of work')}</span>
+            <select
+              className="field-input"
+              value={locationId ?? ''}
+              onChange={(event) => setLocationId(event.target.value === '' ? null : Number(event.target.value))}
+            >
+              <option value="">{t('No place')}</option>
+              {locations.map((location) => (
+                <option key={location.id} value={location.id}>
+                  {location.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+
+        <div>
+          <span className="field-label flex items-center gap-2">
+            {t('Colour')}
+            {preview && <span className="h-3.5 w-3.5 rounded-full" style={{ background: preview }} />}
+          </span>
+          {/* Clicking the active colour again clears it — the template goes
+              back to borrowing its place's. */}
+          <SwatchRow
+            colours={MARK_COLOURS}
+            value={colour}
+            onPick={(value) => setColour((current) => (current === value ? null : value))}
+          />
+          <p className="field-hint mt-1">
+            {t(
+              colour === null
+                ? 'Takes the colour of its place of work. Pick one to tell two shifts at the same place apart.'
+                : 'Click the same colour again to go back to the place’s.',
+            )}
+          </p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <label>
+            <span className="field-label">{t('Starts')}</span>
+            <input type="time" className="field-input" value={start} onChange={(event) => setStart(event.target.value)} />
+          </label>
+          <label>
+            <span className="field-label">{t('Ends')}</span>
+            <input type="time" className="field-input" value={end} onChange={(event) => setEnd(event.target.value)} />
+          </label>
+        </div>
+
+        <p className="field-hint">{t('An end before the start means the shift runs past midnight.')}</p>
+
+        <label>
+          <span className="field-label">{t('Unpaid break, minutes')}</span>
+          <input
+            type="number"
+            min={0}
+            max={720}
+            step={5}
+            className="field-input"
+            value={breakMinutes}
+            onChange={(event) => setBreakMinutes(Number(event.target.value) || 0)}
+          />
+        </label>
+
+        <div>
+          <span className="field-label">{t('Paid per')}</span>
+          <Segmented
+            value={period}
+            options={SALARY_PERIODS.map((option) => ({ value: option.value, label: t(option.label) }))}
+            onChange={setPeriod}
+          />
+        </div>
+
+        <label>
+          <span className="field-label">{t('Amount')}</span>
+          <input
+            type="number"
+            min={0}
+            className="field-input"
+            value={amount ?? ''}
+            onChange={(event) => setAmount(event.target.value === '' ? null : Number(event.target.value))}
+          />
+          <span className="field-hint mt-1 block">{t(PERIOD_HINTS[period])}</span>
+        </label>
+
+        {editing !== null && (
+          <p className="field-hint">
+            {t('Changing the rate also changes every day this shift is already on. To leave history alone, archive this one and create a replacement.')}
+          </p>
+        )}
+
+        <div className="flex justify-end gap-2">
+          <button type="button" className="btn btn-quiet" onClick={onClose}>
+            {t('Cancel')}
+          </button>
+          <button type="button" className="btn btn-primary" disabled={name.trim() === ''} onClick={() => void submit()}>
+            {t(editing === null ? 'Create shift' : 'Save changes')}
+          </button>
+        </div>
+      </div>
+    </Modal>
+  );
+}

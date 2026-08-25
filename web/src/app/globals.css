@@ -1,0 +1,454 @@
+@import 'tailwindcss';
+
+/*
+ * The design system. Tailwind supplies layout utilities; identity lives in
+ * these tokens. Every theme redefines the same dozen variables, so components
+ * never know which of the ten palettes is active — including the accent,
+ * which arrives from JS because the user picks it freely.
+ */
+
+:root {
+  /* Written by the settings store; these are only the first-paint fallbacks. */
+  --accent: #4f46e5;
+  --accent-hover: #6a62ea;
+  --accent-ink: #ffffff;
+  --accent-soft: rgb(79 70 229 / 12%);
+  --ring: rgb(79 70 229 / 20%);
+  --radius: 12px;
+  --radius-lg: 16px;
+  --font-size: 15px;
+  --motion: 1;
+
+  /* Light (paper): warm neutrals, ink text. */
+  --bg: #f4f2ed;
+  --bg-veil: linear-gradient(180deg, rgb(255 255 255 / 45%), transparent 320px);
+  --surface: #fdfcfa;
+  --surface-2: #f1efe9;
+  --border: #e2ded4;
+  --border-strong: #c9c4b6;
+  --text: #1c1b18;
+  --muted: #6d6a61;
+  --faint: #9c988c;
+  --shadow: 0 1px 2px rgb(28 27 24 / 5%), 0 8px 24px -12px rgb(28 27 24 / 12%);
+  --shadow-lg: 0 2px 6px rgb(28 27 24 / 7%), 0 24px 48px -16px rgb(28 27 24 / 22%);
+
+  --danger: #c73e4e;
+  --danger-soft: rgb(199 62 78 / 10%);
+  --good: #1b7f4d;
+  --good-soft: rgb(27 127 77 / 10%);
+  --warn: #a16207;
+  --warn-soft: rgb(161 98 7 / 12%);
+
+  /* Chart series — validated (dataviz): slots 1–3, light steps. */
+  --s1: #2a78d6;
+  --s2: #eb6834;
+  --s3: #1baf7a;
+  --heat: var(--accent);
+
+  color-scheme: light;
+}
+
+/* ==== Dark palettes ==== */
+
+[data-theme='dark'],
+[data-theme='night'],
+[data-theme='ocean'],
+[data-theme='plum'],
+[data-theme='gradient'] {
+  --text: #eceef2;
+  --muted: #9aa0ac;
+  --faint: #676d78;
+  --shadow: 0 1px 2px rgb(0 0 0 / 40%), 0 8px 24px -12px rgb(0 0 0 / 50%);
+  --shadow-lg: 0 2px 6px rgb(0 0 0 / 45%), 0 24px 56px -16px rgb(0 0 0 / 65%);
+  --danger: #f07884;
+  --danger-soft: rgb(240 120 132 / 14%);
+  --good: #52c98a;
+  --good-soft: rgb(82 201 138 / 14%);
+  --warn: #e0a63c;
+  --warn-soft: rgb(224 166 60 / 15%);
+  --s1: #3987e5;
+  --s2: #d95926;
+  --s3: #199e70;
+  color-scheme: dark;
+}
+
+[data-theme='dark'] {
+  --bg: #17181c;
+  --bg-veil: none;
+  --surface: #1f2126;
+  --surface-2: #26282e;
+  --border: #30333b;
+  --border-strong: #454955;
+}
+
+[data-theme='night'] {
+  --bg: #0b0c10;
+  --bg-veil: none;
+  --surface: #14151a;
+  --surface-2: #1b1d23;
+  --border: #26282f;
+  --border-strong: #3c3f49;
+}
+
+[data-theme='ocean'] {
+  --bg: #0a1420;
+  --bg-veil: none;
+  --surface: #101d2c;
+  --surface-2: #162536;
+  --border: #223447;
+  --border-strong: #34506b;
+}
+
+[data-theme='plum'] {
+  --bg: #150f1d;
+  --bg-veil: none;
+  --surface: #1e1729;
+  --surface-2: #261e33;
+  --border: #362c46;
+  --border-strong: #4f4265;
+}
+
+[data-theme='gradient'] {
+  --bg: #0b0c10;
+  --bg-veil: radial-gradient(1200px 700px at 85% -10%, rgb(from var(--accent) r g b / 22%), transparent 60%);
+  --surface: #14151a;
+  --surface-2: #1b1d23;
+  --border: #26282f;
+  --border-strong: #3c3f49;
+}
+
+/* ==== Tinted light palettes ==== */
+
+[data-theme='grey'] {
+  --bg: #eef0f2;
+  --surface: #fafbfc;
+  --surface-2: #eef0f2;
+  --border: #dcdfe3;
+  --border-strong: #bfc4cb;
+}
+
+[data-theme='sand'] {
+  --bg: #f3ead9;
+  --surface: #fdf8ee;
+  --surface-2: #f2ebdb;
+  --border: #e4d9c0;
+  --border-strong: #cdbe9c;
+}
+
+[data-theme='mint'] {
+  --bg: #e9f1ec;
+  --surface: #f9fcfa;
+  --surface-2: #eaf2ed;
+  --border: #d6e2da;
+  --border-strong: #b4c8bc;
+}
+
+/* System theme: the light block above is the default; dark comes from the OS. */
+@media (prefers-color-scheme: dark) {
+  [data-theme='system'] {
+    --bg: #17181c;
+    --bg-veil: none;
+    --surface: #1f2126;
+    --surface-2: #26282e;
+    --border: #30333b;
+    --border-strong: #454955;
+    --text: #eceef2;
+    --muted: #9aa0ac;
+    --faint: #676d78;
+    --shadow: 0 1px 2px rgb(0 0 0 / 40%), 0 8px 24px -12px rgb(0 0 0 / 50%);
+    --shadow-lg: 0 2px 6px rgb(0 0 0 / 45%), 0 24px 56px -16px rgb(0 0 0 / 65%);
+    --danger: #f07884;
+    --danger-soft: rgb(240 120 132 / 14%);
+    --good: #52c98a;
+    --good-soft: rgb(82 201 138 / 14%);
+    --warn: #e0a63c;
+    --warn-soft: rgb(224 166 60 / 15%);
+    --s1: #3987e5;
+    --s2: #d95926;
+    --s3: #199e70;
+    color-scheme: dark;
+  }
+}
+
+/* Tailwind reads the tokens, so `bg-surface` etc. work as utilities. */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-ink: var(--text);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-danger: var(--danger);
+  --color-good: var(--good);
+  --color-warn: var(--warn);
+  --radius-card: var(--radius-lg);
+  --radius-ctl: var(--radius);
+}
+
+html {
+  font-size: var(--font-size);
+}
+
+body {
+  background: var(--bg);
+  background-image: var(--bg-veil);
+  background-attachment: fixed;
+  color: var(--text);
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.45;
+}
+
+[data-motion='reduced'] *,
+[data-motion='reduced'] *::before,
+[data-motion='reduced'] *::after {
+  animation-duration: 0.001s !important;
+  transition-duration: 0.001s !important;
+}
+
+/* Money and figures line up down a column. */
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==== Core components ==== */
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+}
+
+[data-glass='on'] .card {
+  background: color-mix(in srgb, var(--surface) 72%, transparent);
+  backdrop-filter: blur(14px);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.5rem 0.95rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 550;
+  line-height: 1.25;
+  cursor: pointer;
+  transition: background calc(0.15s * var(--motion)), border-color calc(0.15s * var(--motion)),
+    transform calc(0.1s * var(--motion));
+  user-select: none;
+  white-space: nowrap;
+}
+
+.btn:hover {
+  border-color: var(--border-strong);
+  background: var(--surface-2);
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+  transform: none;
+}
+
+.btn:focus-visible,
+.field-input:focus-visible,
+.seg-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+
+.btn-primary:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+.btn-quiet {
+  background: transparent;
+  border-color: transparent;
+  color: var(--muted);
+}
+
+.btn-quiet:hover {
+  background: var(--surface-2);
+  border-color: transparent;
+  color: var(--text);
+}
+
+.btn-danger {
+  color: var(--danger);
+}
+
+.btn-danger:hover {
+  background: var(--danger-soft);
+  border-color: transparent;
+}
+
+.btn-sm {
+  padding: 0.3rem 0.6rem;
+  font-size: 0.8rem;
+}
+
+.field-label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--muted);
+  margin-bottom: 0.3rem;
+}
+
+.field-input {
+  width: 100%;
+  padding: 0.5rem 0.7rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.92rem;
+  transition: border-color calc(0.15s * var(--motion));
+}
+
+.field-input:hover {
+  border-color: var(--border-strong);
+}
+
+.field-input::placeholder {
+  color: var(--faint);
+}
+
+.field-hint {
+  font-size: 0.78rem;
+  color: var(--faint);
+  line-height: 1.45;
+}
+
+.seg {
+  display: inline-flex;
+  padding: 3px;
+  gap: 2px;
+  background: var(--surface-2);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+
+.seg-btn {
+  padding: 0.32rem 0.75rem;
+  border-radius: calc(var(--radius) - 3px);
+  font-size: 0.82rem;
+  font-weight: 550;
+  color: var(--muted);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background calc(0.15s * var(--motion)), color calc(0.15s * var(--motion));
+}
+
+.seg-btn:hover {
+  color: var(--text);
+}
+
+.seg-btn.is-active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.14rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  font-size: 0.74rem;
+  font-weight: 550;
+  color: var(--muted);
+}
+
+.swatch {
+  width: 1.45rem;
+  height: 1.45rem;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform calc(0.12s * var(--motion));
+  flex: none;
+}
+
+.swatch:hover {
+  transform: scale(1.14);
+}
+
+.swatch.is-active {
+  border-color: var(--text);
+  box-shadow: 0 0 0 2px var(--surface);
+}
+
+/* The native dialog brings focus trapping and Escape for free. */
+dialog.modal {
+  margin: auto;
+  padding: 0;
+  border: none;
+  background: transparent;
+  max-width: min(94vw, 34rem);
+  width: 100%;
+  max-height: 92vh;
+}
+
+dialog.modal.is-wide {
+  max-width: min(96vw, 52rem);
+}
+
+dialog.modal::backdrop {
+  background: rgb(10 10 14 / 45%);
+  backdrop-filter: blur(3px);
+}
+
+dialog.modal[open] {
+  animation: modal-in calc(0.22s * var(--motion)) cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+}
+
+/* Recessive scrollbars that match the theme. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+
+/* ==== Small entry animations, all scaled by --motion ==== */
+
+.rise {
+  animation: rise calc(0.3s * var(--motion)) cubic-bezier(0.2, 0.9, 0.3, 1) backwards;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}

@@ -1,12 +1,13 @@
-# The Angular bundle builds first and in its own stage, so the npm layer is
-# cached independently of the .NET sources: touching a controller does not
-# reinstall node_modules.
+# The web bundle builds first and in its own stage, so the npm layer is cached
+# independently of the .NET sources: touching a controller does not reinstall
+# node_modules.
 FROM node:24-alpine AS client
-WORKDIR /client
-COPY ["client/package.json", "client/package-lock.json", "./"]
+WORKDIR /web
+COPY ["web/package.json", "web/package-lock.json", "./"]
 RUN npm ci
-COPY client/ ./
-# angular.json writes to ../server/wwwroot, which lands at /server/wwwroot here.
+COPY web/ ./
+# `next build` exports to out/, and the sync script copies that to
+# ../server/wwwroot — which lands at /server/wwwroot here.
 RUN npm run build
 
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build

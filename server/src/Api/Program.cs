@@ -81,8 +81,30 @@ try
     // The edge already sends http to https on its own, which is where that
     // decision belongs.
 
-    // Serves the Angular bundle that `dotnet publish` builds into wwwroot.
-    // In development the SPA is normally served by `ng serve` instead.
+    // Serves the exported Next.js bundle that `dotnet publish` builds into
+    // wwwroot. In development the SPA is normally served by `next dev` instead.
+    //
+    // The export writes one file per route — dashboard.html, stats.html — and
+    // browsers ask for /dashboard. Rewriting here, before the static files
+    // middleware, is one rule instead of a directory convention per route.
+    app.Use(async (context, next) =>
+    {
+        var path = context.Request.Path.Value ?? string.Empty;
+
+        if (path.Length > 1
+            && !path.StartsWith("/shifter/", StringComparison.Ordinal)
+            && !Path.HasExtension(path))
+        {
+            var candidate = Path.Combine(
+                app.Environment.WebRootPath ?? string.Empty,
+                path.TrimStart('/') + ".html");
+
+            if (File.Exists(candidate)) context.Request.Path = path + ".html";
+        }
+
+        await next();
+    });
+
     app.UseDefaultFiles();
     app.UseStaticFiles();
 

@@ -1,0 +1,358 @@
+'use client';
+
+import { useCallback, useEffect, useMemo, useState } from 'react';
+
+import { calendarApi } from '@/lib/api/calendar';
+import { apiErrorMessage } from '@/lib/api/http';
+import { addMonths, currentMonth, keysBetween, todayKey } from '@/lib/calendar/calendar-date';
+import { PayPeriodRow, Reconciliation } from '@/lib/calendar/models';
+import { useI18n } from '@/lib/i18n';
+import { Shell } from '@/components/layout/shell';
+import { PayoutModal, PayoutPrefill } from '@/components/dashboard/modals/payout-modal';
+import { Alert, Money } from '@/components/ui/bits';
+import { Icon } from '@/components/ui/icon';
+
+const MONTHS_BACK = 6;
+
+const STATUS_LABEL: Record<PayPeriodRow['status'], string> = {
+  open: 'Being worked',
+  due: 'Expected',
+  overdue: 'Late',
+  paid: 'Settled',
+  short: 'Underpaid',
+  over: 'Overpaid',
+};
+
+export default function PayoutsPage() {
+  return (
+    <Shell>
+      <Payouts />
+    </Shell>
+  );
+}
+
+/**
+ * When money is due, from whom, and whether it arrived in full. Two places on
+ * different cycles is already more than anyone tracks reliably in their head —
+ * which is exactly how a place that quietly pays short goes unnoticed.
+ */
+function Payouts() {
+  const { t, lang } = useI18n();
+
+  const [data, setData] = useState<Reconciliation | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [monthsBack, setMonthsBack] = useState(MONTHS_BACK);
+  const [payoutOpen, setPayoutOpen] = useState(false);
+  const [prefill, setPrefill] = useState<PayoutPrefill | null>(null);
+
+  const load = useCallback(() => {
+    const now = currentMonth();
+    const start = addMonths(now, -monthsBack);
+    // One month ahead, so a period being worked right now shows up as
+    // something to expect rather than disappearing off the end.
+    const ahead = addMonths(now, 2);
+    const last = new Date(ahead.year, ahead.month - 1, 0);
+    const to = `${last.getFullYear()}-${`${last.getMonth() + 1}`.padStart(2, '0')}-${`${last.getDate()}`.padStart(2, '0')}`;
+
+    setLoading(true);
+
+    void calendarApi
+      .schedule(`${start.year}-${`${start.month}`.padStart(2, '0')}-01`, to)
+      .then(setData)
+      .catch((caught) => setError(apiErrorMessage(caught)))
+      .finally(() => setLoading(false));
+  }, [monthsBack]);
+
+  useEffect(load, [load]);
+
+  const periods = data?.periods ?? [];
+  const shortfalls = data?.shortfalls ?? [];
+  const upcoming = periods
+    .filter((row) => row.status === 'due' || row.status === 'overdue' || row.status === 'open')
+    .sort((a, b) => a.due_on.localeCompare(b.due_on));
+  const settled = periods.filter((row) => row.status === 'paid' || row.status === 'short' || row.status === 'over');
+
+  /** How long until the next money, and how much lands that day. */
+  const nextDue = useMemo(() => {
+    const today = todayKey();
+    const ahead = periods
+      .filter((row) => row.paid === 0 && row.due_on >= today && row.expected > 0)
+      .sort((a, b) => a.due_on.localeCompare(b.due_on));
+
+    if (ahead.length === 0) return null;
+
+    const next = ahead[0];
+    const sameDay = ahead.filter((row) => row.due_on === next.due_on);
+
+    return {
+      days: keysBetween(today, next.due_on).length - 1,
+      due: next.due_on,
+      amount: sameDay.reduce((sum, row) => sum + row.expected, 0),
+      where: sameDay.length,
+    };
+  }, [periods]);
+
+  /** Every settled period as one square, grouped by place and payment. */
+  const reliability = useMemo(() => {
+    const done = periods.filter((row) => row.status !== 'open');
+
+    if (done.length < 3) return [];
+
+    const groups = new Map<string, { name: string; stream: PayPeriodRow['stream']; rows: PayPeriodRow[] }>();
+
+    for (const row of done) {
+      const key = `${row.location_id}:${row.stream}`;
+      const group = groups.get(key) ?? { name: row.location_name, stream: row.stream, rows: [] };
+
+      group.rows.push(row);
+      groups.set(key, group);
+    }
+
+    return [...groups.values()]
+      .filter((group) => group.rows.length >= 3)
+      .map((group) => {
+        const rows = [...group.rows].sort((a, b) => a.period_from.localeCompare(b.period_from));
+        const clean = rows.filter((row) => row.status === 'paid' || row.status === 'over').length;
+
+        return { ...group, rows, onTime: Math.round((clean / rows.length) * 100) };
+      });
+  }, [periods]);
+
+  const label = (key: string) =>
+    new Intl.DateTimeFormat(lang, { day: 'numeric', month: 'short' }).format(new Date(`${key}T00:00:00`));
+
+  /** "in 3 days" / "5 days late" — a bare date needs mental arithmetic. */
+  const relative = (row: PayPeriodRow) => {
+    if (row.days_late > 0) return `${row.days_late} ${t('days late')}`;
+
+    const days = Math.round(
+      (new Date(`${row.due_on}T00:00:00`).getTime() - new Date(`${todayKey()}T00:00:00`).getTime()) / 86_400_000,
+    );
+
+    if (days === 0) return t('today');
+    if (days < 0) return label(row.due_on);
+
+    return `${t('in')} ${days} ${t('days')}`;
+  };
+
+  const streamChip = (row: { stream: PayPeriodRow['stream'] }) =>
+    row.stream === 'commission' ? t('Commission') : row.stream === 'wage' ? t('Wage') : null;
+
+  const record = (row: PayPeriodRow) => {
+    setPrefill({ locationId: row.location_id, from: row.period_from, to: row.period_to, expected: row.expected, stream: row.stream });
+    setPayoutOpen(true);
+  };
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-wrap items-center gap-2">
+        <h1 className="text-[1.3rem] font-bold tracking-tight">{t('Payouts')}</h1>
+        <button
+          type="button"
+          className="btn btn-primary btn-sm ml-auto"
+          onClick={() => {
+            setPrefill(null);
+            setPayoutOpen(true);
+          }}
+        >
+          <Icon name="plus" size={13} />
+          {t('Record a payment')}
+        </button>
+      </div>
+
+      {error && <Alert onDismiss={() => setError(null)}>{error}</Alert>}
+
+      {/* ==== Next money in ==== */}
+      {nextDue !== null && (
+        <section className="card rise flex flex-wrap items-center gap-x-6 gap-y-1 p-4">
+          <div>
+            <span className="field-hint block">{t('Next money in')}</span>
+            <Money value={nextDue.amount} className="text-[1.6rem] font-bold text-good" />
+          </div>
+          <p className="text-[0.9rem] text-muted">
+            {nextDue.days === 0 ? t('today') : nextDue.days === 1 ? t('tomorrow') : `${t('in')} ${nextDue.days} ${t('days')}`} ·{' '}
+            {label(nextDue.due)}
+            {nextDue.where > 1 && <> · {nextDue.where} {t('payments')}</>}
+          </p>
+        </section>
+      )}
+
+      {/* ==== Shortfall detector, first: the only thing worth acting on today ==== */}
+      {shortfalls.map((shortfall) => (
+        <section key={`${shortfall.location_id}-${shortfall.stream}`} className="card rise border-danger/40 bg-(--danger-soft) p-4">
+          <h2 className="mb-1 flex items-center gap-2 font-bold text-danger">
+            <Icon name="flame" size={16} />
+            {t('Underpaid repeatedly')}
+          </h2>
+          <p className="text-[0.9rem]">
+            <strong>{shortfall.location_name}</strong>
+            {streamChip(shortfall) && <span className="chip mx-1.5">{streamChip(shortfall)}</span>} {t('has paid short')}{' '}
+            <strong>{shortfall.periods}</strong> {t('periods running')}, {t('since')} {label(shortfall.since)}.
+          </p>
+          <p className="mt-1 text-[1.2rem] font-bold text-danger">
+            {t('You are owed')} <Money value={shortfall.total_short} />
+          </p>
+          <p className="field-hint">{t('Broken down by period below. Take the dates and amounts to whoever does the payroll.')}</p>
+        </section>
+      ))}
+
+      {/* ==== KPI ==== */}
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+        <div className="card p-3">
+          <span className="field-hint block">{t('Awaited')}</span>
+          <Money value={data?.awaited ?? 0} className="text-[1.25rem] font-bold" />
+        </div>
+        <div className="card p-3">
+          <span className="field-hint block">{t('Of that, late')}</span>
+          <Money value={data?.overdue ?? 0} className={`text-[1.25rem] font-bold ${(data?.overdue ?? 0) > 0 ? 'text-danger' : ''}`} />
+        </div>
+        <div className="card p-3">
+          <span className="field-hint block">{t('Gone missing')}</span>
+          <Money
+            value={periods.filter((row) => row.status === 'short').reduce((total, row) => total + (row.expected - row.paid), 0)}
+            className="text-[1.25rem] font-bold"
+          />
+        </div>
+      </div>
+
+      {/* ==== Reliability strips ==== */}
+      {reliability.length > 0 && (
+        <section className="card p-4">
+          <h2 className="mb-2 text-[0.98rem] font-bold">{t('How each place has paid')}</h2>
+          <div className="flex flex-col gap-2.5">
+            {reliability.map((group) => (
+              <div key={`${group.name}-${group.stream}`}>
+                <p className="mb-1 flex items-center gap-2 text-[0.85rem]">
+                  <strong>{group.name}</strong>
+                  {streamChip(group) && <span className="chip">{streamChip(group)}</span>}
+                  <span className="field-hint">{group.onTime}% {t('on time')}</span>
+                </p>
+                <div className="flex flex-wrap gap-1">
+                  {group.rows.map((row) => (
+                    <span
+                      key={row.period_from + row.stream}
+                      title={`${row.period_from} — ${t(STATUS_LABEL[row.status])}`}
+                      className="h-3.5 w-3.5 rounded"
+                      style={{
+                        background:
+                          row.status === 'paid' || row.status === 'over'
+                            ? 'var(--good)'
+                            : row.status === 'short'
+                              ? 'var(--danger)'
+                              : row.status === 'overdue'
+                                ? 'var(--warn)'
+                                : 'var(--surface-2)',
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ==== Upcoming ==== */}
+      <section className="card p-4">
+        <h2 className="mb-2 text-[0.98rem] font-bold">{t('Expected')}</h2>
+        {loading ? (
+          <p className="field-hint">{t('Loading…')}</p>
+        ) : upcoming.length === 0 ? (
+          <p className="field-hint">{t('Nothing on the way. Give a place a pay period and its calendar appears here.')}</p>
+        ) : (
+          <ul className="flex flex-col gap-1.5">
+            {upcoming.map((row) => (
+              <PeriodRow key={`${row.location_id}-${row.period_from}-${row.stream}`} row={row} onRecord={record} relative={relative} streamChip={streamChip} />
+            ))}
+          </ul>
+        )}
+      </section>
+
+      {/* ==== Settled ==== */}
+      {settled.length > 0 && (
+        <section className="card p-4">
+          <h2 className="mb-2 text-[0.98rem] font-bold">{t('Settled')}</h2>
+          <ul className="flex flex-col gap-1.5">
+            {settled.map((row) => (
+              <PeriodRow key={`${row.location_id}-${row.period_from}-${row.stream}`} row={row} onRecord={record} relative={relative} streamChip={streamChip} />
+            ))}
+          </ul>
+          <button type="button" className="btn btn-quiet btn-sm mt-2" onClick={() => setMonthsBack((months) => months + 6)}>
+            {t('Show earlier periods')}
+          </button>
+        </section>
+      )}
+
+      <PayoutModal
+        open={payoutOpen}
+        prefill={prefill}
+        onClose={() => setPayoutOpen(false)}
+        onSaved={load}
+      />
+    </div>
+  );
+}
+
+function PeriodRow({
+  row,
+  onRecord,
+  relative,
+  streamChip,
+}: {
+  row: PayPeriodRow;
+  onRecord: (row: PayPeriodRow) => void;
+  relative: (row: PayPeriodRow) => string;
+  streamChip: (row: { stream: PayPeriodRow['stream'] }) => string | null;
+}) {
+  const { t } = useI18n();
+
+  const tone =
+    row.status === 'short' || row.status === 'overdue'
+      ? 'border-danger/40'
+      : row.status === 'paid' || row.status === 'over'
+        ? 'border-good/30'
+        : 'border-border';
+
+  return (
+    <li className={`flex flex-wrap items-center gap-x-3 gap-y-1 rounded-(--radius) border px-3 py-2 ${tone}`}>
+      <span className="h-2.5 w-2.5 flex-none rounded-full" style={{ background: row.colour }} />
+      <span className="min-w-0 flex-1">
+        <span className="flex flex-wrap items-center gap-1.5 text-[0.88rem] font-medium">
+          {row.location_name}
+          {streamChip(row) && <span className="chip">{streamChip(row)}</span>}
+          <span
+            className={`chip ${
+              row.status === 'short' || row.status === 'overdue'
+                ? 'border-danger/40 text-danger'
+                : row.status === 'paid' || row.status === 'over'
+                  ? 'border-good/40 text-good'
+                  : ''
+            }`}
+          >
+            {t(STATUS_LABEL[row.status])}
+          </span>
+        </span>
+        <span className="field-hint tabular">
+          {row.period_from} — {row.period_to} · {relative(row)}
+        </span>
+      </span>
+
+      <span className="text-right">
+        <Money value={row.expected} className="block text-[0.95rem] font-bold" />
+        {row.paid > 0 && row.difference !== 0 && (
+          <span className={`text-[0.78rem] tabular ${row.difference < 0 ? 'text-danger' : 'text-good'}`}>
+            {row.difference < 0 ? '−' : '+'}
+            <Money value={Math.abs(row.difference)} />
+          </span>
+        )}
+      </span>
+
+      {(row.status === 'due' || row.status === 'overdue') && (
+        <button type="button" className="btn btn-sm" onClick={() => onRecord(row)}>
+          {t('Record')}
+        </button>
+      )}
+    </li>
+  );
+}

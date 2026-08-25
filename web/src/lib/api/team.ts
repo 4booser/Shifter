@@ -1,0 +1,139 @@
+'use client';
+
+import { api } from './http';
+
+/** Mirrors TeamDto. */
+export interface Team {
+  id: number;
+  name: string;
+  is_owner: boolean;
+  member_count: number;
+  /** Only the owner is given the code. */
+  invite_code: string | null;
+}
+
+/** Somebody offering to take a shift. Names and dates, never money. */
+export interface RotaOffer {
+  offer_id: number;
+  member_id: number;
+  display_name: string;
+  is_you: boolean;
+  accepted: boolean;
+}
+
+export type Visibility = 'shown' | 'hidden' | 'default';
+
+export interface RotaEntry {
+  day_shift_id: number;
+  member_id: number;
+  date: string;
+  shift_name: string;
+  symbol: string | null;
+  colour: string | null;
+  member_colour: string;
+  start_time: string;
+  end_time: string;
+  hours: number;
+  worked: boolean;
+  needs_cover: boolean;
+  is_mine: boolean;
+  /** Only ever set on your own shifts. */
+  visibility: Visibility | null;
+  /** Null is "not shared", never "shared but zero". */
+  pay: number | null;
+  offers: RotaOffer[];
+}
+
+export interface AcceptedCover {
+  date: string;
+  shift_name: string;
+  start_time: string;
+  end_time: string;
+  taken_by: string;
+}
+
+export interface RotaMember {
+  member_id: number;
+  display_name: string;
+  is_you: boolean;
+  colour: string;
+  hours: number;
+  days: number;
+  cover_requests: number;
+  shares_earnings: boolean;
+  earned: number | null;
+  hidden: number | null;
+  private_by_default: boolean | null;
+}
+
+export interface Membership {
+  member_id: number;
+  display_name: string;
+  colour: string;
+  share_earnings: boolean;
+  private_by_default: boolean;
+}
+
+/**
+ * The colours a crew is drawn in, in the order the server hands them out.
+ * Mirrors TeamRules.MemberColours: validated for colour blindness as a set.
+ */
+export const MEMBER_COLOURS = [
+  '#6366F1',
+  '#D97706',
+  '#0891B2',
+  '#DB2777',
+  '#65A30D',
+  '#A855F7',
+  '#059669',
+] as const;
+
+export interface RotaDay {
+  date: string;
+  on_shift: number;
+  free: string[];
+  hours: number;
+  cover_requests: number;
+  earned: number | null;
+}
+
+export interface Rota {
+  team_id: number;
+  team_name: string;
+  members: RotaMember[];
+  entries: RotaEntry[];
+  days: RotaDay[];
+}
+
+const TEAMS = '/shifter/v1/teams';
+
+export const teamApi = {
+  list: () => api<Team[]>(TEAMS),
+  create: (name: string) => api<Team>(TEAMS, { body: { name } }),
+  join: (invite_code: string, display_name: string | null) =>
+    api<Team>(`${TEAMS}/join`, { body: { invite_code, display_name } }),
+  leave: (id: number) => api<void>(`${TEAMS}/${id}/me`, { method: 'DELETE' }),
+  rotateCode: (id: number) => api<Team>(`${TEAMS}/${id}/code`, { method: 'POST', body: {} }),
+  rota: (id: number, from: string, to: string) =>
+    api<Rota>(`${TEAMS}/${id}/rota?from=${from}&to=${to}`),
+  updateMembership: (
+    id: number,
+    changes: Partial<{
+      display_name: string;
+      colour: string;
+      share_earnings: boolean;
+      private_by_default: boolean;
+    }>,
+  ) => api<Membership>(`${TEAMS}/${id}/me`, { method: 'PATCH', body: changes }),
+  setVisibility: (dayShiftId: number, visible: boolean | null) =>
+    api<void>(`${TEAMS}/shifts/${dayShiftId}/visibility`, { method: 'PUT', body: { visible } }),
+  offerCover: (teamId: number, dayShiftId: number) =>
+    api<RotaOffer>(`${TEAMS}/${teamId}/cover/${dayShiftId}`, { method: 'POST', body: {} }),
+  withdrawCover: (teamId: number, offerId: number) =>
+    api<void>(`${TEAMS}/${teamId}/cover/offers/${offerId}`, { method: 'DELETE' }),
+  acceptCover: (teamId: number, offerId: number) =>
+    api<AcceptedCover>(`${TEAMS}/${teamId}/cover/offers/${offerId}/accept`, {
+      method: 'POST',
+      body: {},
+    }),
+};

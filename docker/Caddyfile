@@ -47,14 +47,15 @@
 
 	# The entry points, which must be checked every single time. no-cache does
 	# not forbid storing them — it requires revalidation, so an unchanged file
-	# still costs a 304 rather than a download.
-	@entry path / /index.html /sw.js /manifest.webmanifest
+	# still costs a 304 rather than a download. Every route is its own .html
+	# now, so the pattern covers them all.
+	@entry path / /sw.js /manifest.webmanifest *.html
 	header @entry Cache-Control "no-cache"
 
 	# Hashed builds, where the name changes whenever the contents do. These are
 	# the ones worth keeping for a year: a new release asks for new names, so a
 	# stale copy can never be served for them.
-	@hashed path_regexp \-[A-Z0-9]{8}\.(js|css)$
+	@hashed path /_next/static/*
 	header @hashed Cache-Control "public, max-age=31536000, immutable"
 
 	log {

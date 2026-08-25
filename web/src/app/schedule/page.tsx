@@ -1,0 +1,525 @@
+'use client';
+
+import { useCallback, useEffect, useMemo, useState } from 'react';
+
+import {
+  addMonths,
+  currentMonth,
+  keysBetween,
+  monthBounds,
+  shiftDays,
+  todayKey,
+  weekBounds,
+} from '@/lib/calendar/calendar-date';
+import { readableInk } from '@/lib/calendar/contrast';
+import { apiErrorMessage } from '@/lib/api/http';
+import {
+  AcceptedCover,
+  MEMBER_COLOURS,
+  Rota,
+  RotaEntry,
+  Team,
+  Visibility,
+  teamApi,
+} from '@/lib/api/team';
+import { useI18n } from '@/lib/i18n';
+import { Shell } from '@/components/layout/shell';
+import { Alert, Money, Segmented } from '@/components/ui/bits';
+import { Icon } from '@/components/ui/icon';
+
+type Span = 'week' | 'month';
+
+export default function SchedulePage() {
+  return (
+    <Shell>
+      <Schedule />
+    </Shell>
+  );
+}
+
+/**
+ * The shared rota. What anyone is paid reaches this page only for people who
+ * deliberately switched sharing on; the server does not read the column for
+ * anybody else, and nothing here can flip somebody else's switch.
+ */
+function Schedule() {
+  const { t, lang } = useI18n();
+
+  const [teams, setTeams] = useState<Team[]>([]);
+  const [selected, setSelected] = useState<number | null>(null);
+  const [rota, setRota] = useState<Rota | null>(null);
+  const [month, setMonth] = useState(currentMonth());
+  const [span, setSpan] = useState<Span>('month');
+  const [anchor, setAnchor] = useState(todayKey());
+  const [colourBy, setColourBy] = useState<'person' | 'shift'>('person');
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [focusDay, setFocusDay] = useState<string | null>(null);
+  const [handedOver, setHandedOver] = useState<AcceptedCover | null>(null);
+  const [nameDraft, setNameDraft] = useState('');
+
+  const range = useMemo(
+    () =>
+      span === 'week'
+        ? weekBounds(anchor)
+        : monthBounds(`${month.year}-${`${month.month}`.padStart(2, '0')}-01`),
+    [span, anchor, month],
+  );
+
+  useEffect(() => {
+    void teamApi
+      .list()
+      .then((list) => {
+        setTeams(list);
+
+        if (list.length > 0) setSelected((current) => current ?? list[0].id);
+      })
+      .catch((caught) => setError(apiErrorMessage(caught)))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const refresh = useCallback(() => {
+    if (selected === null) return;
+
+    void teamApi
+      .rota(selected, range.from, range.to)
+      .then(setRota)
+      .catch((caught) => setError(apiErrorMessage(caught)));
+  }, [selected, range]);
+
+  useEffect(refresh, [refresh]);
+
+  const days = keysBetween(range.from, range.to);
+  const you = rota?.members.find((member) => member.is_you) ?? null;
+
+  /** Rows are people, columns are days — built once, not per cell. */
+  const grid = useMemo(() => {
+    if (rota === null) return [];
+
+    const byMember = new Map<number, Map<string, RotaEntry[]>>();
+
+    for (const entry of rota.entries) {
+      const member = byMember.get(entry.member_id) ?? new Map<string, RotaEntry[]>();
+
+      member.set(entry.date, [...(member.get(entry.date) ?? []), entry]);
+      byMember.set(entry.member_id, member);
+    }
+
+    return rota.members.map((member) => ({
+      member,
+      cells: days.map((key) => {
+        const entries = byMember.get(member.member_id)?.get(key) ?? [];
+
+        return { key, entries, hours: entries.reduce((total, entry) => total + entry.hours, 0) };
+      }),
+    }));
+  }, [rota, days]);
+
+  const coverRequests = useMemo(() => {
+    if (rota === null) return [];
+
+    const names = new Map(rota.members.map((member) => [member.member_id, member.display_name]));
+
+    return rota.entries
+      .filter((entry) => entry.needs_cover)
+      .map((entry) => ({ ...entry, who: names.get(entry.member_id) ?? '' }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+  }, [rota]);
+
+  const uncovered = (rota?.days ?? []).filter((day) => day.on_shift === 0 && day.date >= todayKey());
+
+  const focusEntries = useMemo(() => {
+    if (focusDay === null || rota === null) return [];
+
+    const names = new Map(rota.members.map((member) => [member.member_id, member.display_name]));
+
+    return rota.entries
+      .filter((entry) => entry.date === focusDay)
+      .map((entry) => ({ ...entry, who: names.get(entry.member_id) ?? '' }))
+      .sort((a, b) => a.start_time.localeCompare(b.start_time));
+  }, [focusDay, rota]);
+
+  const sharers = useMemo(() => {
+    const members = (rota?.members ?? []).filter(
+      (member) => member.earned !== null && (member.shares_earnings || member.is_you),
+    );
+
+    return [...members].sort((a, b) => (b.earned ?? 0) - (a.earned ?? 0));
+  }, [rota]);
+
+  const run = async (call: Promise<unknown>) => {
+    setBusy(true);
+    setError(null);
+
+    try {
+      await call;
+      refresh();
+    } catch (caught) {
+      setError(apiErrorMessage(caught));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const markColour = (entry: RotaEntry) =>
+    colourBy === 'person' ? entry.member_colour : (entry.colour ?? entry.member_colour);
+
+  const rangeLabel =
+    span === 'month'
+      ? new Intl.DateTimeFormat(lang, { month: 'long', year: 'numeric' }).format(new Date(month.year, month.month - 1, 1))
+      : `${range.from.slice(8)}–${range.to.slice(8)} ${new Intl.DateTimeFormat(lang, { month: 'short' }).format(new Date(`${range.from}T00:00:00`))}`;
+
+  const step = (delta: number) => {
+    if (span === 'week') setAnchor((key) => shiftDays(key, delta * 7));
+    else setMonth((current) => addMonths(current, delta));
+  };
+
+  if (!loading && teams.length === 0) {
+    return (
+      <div className="mx-auto max-w-md">
+        <div className="card p-6 text-center">
+          <Icon name="users" size={32} className="mx-auto mb-2 text-muted" />
+          <h1 className="mb-1 text-[1.1rem] font-bold">{t('No team yet')}</h1>
+          <p className="field-hint mb-3">{t('Share a rota with your crew: who is on and when, without anyone’s money.')}</p>
+          <a href="/team" className="btn btn-primary w-full">
+            {t('Join or start a team')}
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      {/* ==== Toolbar ==== */}
+      <div className="flex flex-wrap items-center gap-2">
+        <h1 className="text-[1.3rem] font-bold capitalize tracking-tight">{rangeLabel}</h1>
+
+        {teams.length > 1 && (
+          <select
+            className="field-input w-auto"
+            value={selected ?? ''}
+            onChange={(event) => setSelected(Number(event.target.value))}
+          >
+            {teams.map((team) => (
+              <option key={team.id} value={team.id}>
+                {team.name}
+              </option>
+            ))}
+          </select>
+        )}
+
+        <div className="ml-auto flex flex-wrap items-center gap-1.5">
+          <Segmented
+            value={colourBy}
+            options={[
+              { value: 'person', label: t('By person') },
+              { value: 'shift', label: t('By shift') },
+            ]}
+            onChange={setColourBy}
+          />
+          <Segmented
+            value={span}
+            options={[
+              { value: 'week', label: t('Week') },
+              { value: 'month', label: t('Month') },
+            ]}
+            onChange={setSpan}
+          />
+          <button type="button" className="btn btn-sm" onClick={() => { setAnchor(todayKey()); setMonth(currentMonth()); }}>
+            {t('Today')}
+          </button>
+          <button type="button" className="btn btn-sm px-2" aria-label={t('Previous')} onClick={() => step(-1)}>
+            <Icon name="chevron-left" size={16} />
+          </button>
+          <button type="button" className="btn btn-sm px-2" aria-label={t('Next')} onClick={() => step(1)}>
+            <Icon name="chevron-right" size={16} />
+          </button>
+        </div>
+      </div>
+
+      {error && <Alert onDismiss={() => setError(null)}>{error}</Alert>}
+
+      {/* ==== A handover just happened ==== */}
+      {handedOver !== null && (
+        <Alert kind="good" onDismiss={() => setHandedOver(null)}>
+          {t('Handed over')}: {handedOver.shift_name} · {handedOver.date} {handedOver.start_time}–{handedOver.end_time} →{' '}
+          {handedOver.taken_by}. {t('They add it to their own calendar with their own rate.')}
+        </Alert>
+      )}
+
+      {/* ==== Cover requests ==== */}
+      {coverRequests.length > 0 && (
+        <section className="card border-warn/40 p-4">
+          <h2 className="mb-2 flex items-center gap-2 text-[0.98rem] font-bold text-warn">
+            <Icon name="swap" size={15} />
+            {t('Looking for cover')}
+          </h2>
+          <ul className="flex flex-col gap-1.5">
+            {coverRequests.map((entry) => {
+              const yourOffer = entry.offers.find((offer) => offer.is_you && !offer.accepted) ?? null;
+
+              return (
+                <li key={entry.day_shift_id} className="flex flex-wrap items-center gap-2 text-[0.88rem]">
+                  <span className="h-2.5 w-2.5 rounded-full" style={{ background: entry.member_colour }} />
+                  <strong>{entry.who}</strong> · {entry.date} · {entry.shift_name} {entry.start_time}–{entry.end_time}
+
+                  {entry.is_mine ? (
+                    <span className="ml-auto flex flex-wrap items-center gap-1.5">
+                      {entry.offers.filter((offer) => !offer.accepted).map((offer) => (
+                        <span key={offer.offer_id} className="chip">
+                          {offer.display_name}
+                          <button
+                            type="button"
+                            className="ml-1 font-semibold text-good"
+                            disabled={busy}
+                            onClick={() =>
+                              void run(teamApi.acceptCover(selected!, offer.offer_id).then(setHandedOver))
+                            }
+                          >
+                            {t('Accept')}
+                          </button>
+                        </span>
+                      ))}
+                      {entry.offers.filter((offer) => !offer.accepted).length === 0 && (
+                        <span className="field-hint">{t('No offers yet')}</span>
+                      )}
+                    </span>
+                  ) : yourOffer !== null ? (
+                    <button
+                      type="button"
+                      className="btn btn-sm ml-auto"
+                      disabled={busy}
+                      onClick={() => void run(teamApi.withdrawCover(selected!, yourOffer.offer_id))}
+                    >
+                      {t('Withdraw offer')}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className="btn btn-primary btn-sm ml-auto"
+                      disabled={busy}
+                      onClick={() => void run(teamApi.offerCover(selected!, entry.day_shift_id))}
+                    >
+                      {t('I can take it')}
+                    </button>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
+
+      {/* ==== Gaps ==== */}
+      {uncovered.length > 0 && (
+        <p className="field-hint">
+          {t('Days nobody is on')}: {uncovered.map((day) => day.date.slice(8)).join(', ')}
+        </p>
+      )}
+
+      {/* ==== The grid ==== */}
+      <section className="card overflow-x-auto p-3">
+        <table className="w-full border-separate border-spacing-0">
+          <thead>
+            <tr>
+              <th className="sticky left-0 z-10 bg-surface px-2 py-1 text-left text-[0.78rem] font-semibold text-muted">
+                {rota?.team_name}
+              </th>
+              {days.map((key) => {
+                const weekendDay = [0, 6].includes(new Date(`${key}T00:00:00`).getDay());
+
+                return (
+                  <th
+                    key={key}
+                    className={`min-w-7 px-0.5 py-1 text-center text-[0.68rem] font-medium ${
+                      key === todayKey() ? 'text-(--accent)' : weekendDay ? 'text-warn' : 'text-faint'
+                    }`}
+                  >
+                    <button type="button" onClick={() => setFocusDay((current) => (current === key ? null : key))}>
+                      {key.slice(8)}
+                    </button>
+                  </th>
+                );
+              })}
+              <th className="px-2 py-1 text-right text-[0.72rem] font-semibold text-muted">{t('Hours')}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {grid.map(({ member, cells }) => (
+              <tr key={member.member_id} className="border-t border-border">
+                <td className="sticky left-0 z-10 whitespace-nowrap bg-surface px-2 py-1.5 text-[0.82rem]">
+                  <span className="mr-1.5 inline-block h-2.5 w-2.5 rounded-full" style={{ background: member.colour }} />
+                  {member.display_name}
+                  {member.is_you && <span className="field-hint"> · {t('you')}</span>}
+                </td>
+                {cells.map((cell) => (
+                  <td key={cell.key} className={`px-0.5 py-1 text-center ${cell.key === todayKey() ? 'bg-(--accent-soft)' : ''}`}>
+                    <div className="flex flex-col items-center gap-0.5">
+                      {cell.entries.map((entry) => (
+                        <span
+                          key={entry.day_shift_id}
+                          title={`${entry.shift_name} ${entry.start_time}–${entry.end_time}${entry.needs_cover ? ` · ${t('cover wanted')}` : ''}`}
+                          className={`grid h-4.5 w-4.5 place-items-center rounded text-[0.6rem] font-bold leading-none ${
+                            entry.needs_cover ? 'animate-pulse' : ''
+                          } ${entry.worked ? '' : 'opacity-55'}`}
+                          style={{ background: markColour(entry), color: readableInk(markColour(entry)) }}
+                        >
+                          {entry.symbol ?? entry.shift_name.charAt(0)}
+                        </span>
+                      ))}
+                    </div>
+                  </td>
+                ))}
+                <td className="px-2 py-1.5 text-right text-[0.82rem] tabular">{Math.round(member.hours * 10) / 10}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
+
+      {/* ==== One day, opened ==== */}
+      {focusDay !== null && focusEntries.length > 0 && (
+        <section className="card rise p-4">
+          <h2 className="mb-2 text-[0.98rem] font-bold tabular">{focusDay}</h2>
+          <ul className="flex flex-col gap-1.5">
+            {focusEntries.map((entry) => (
+              <li key={entry.day_shift_id} className="flex flex-wrap items-center gap-2 text-[0.88rem]">
+                <span className="h-2.5 w-2.5 rounded-full" style={{ background: entry.member_colour }} />
+                <strong>{entry.who}</strong> · {entry.shift_name} · {entry.start_time}–{entry.end_time} · {entry.hours}h
+                {entry.pay !== null && (
+                  <span className="chip">
+                    <Money value={entry.pay} />
+                  </span>
+                )}
+                {entry.is_mine && entry.visibility !== null && (
+                  <span className="ml-auto flex items-center gap-1">
+                    {(['default', 'shown', 'hidden'] as Visibility[]).map((option) => (
+                      <button
+                        key={option}
+                        type="button"
+                        className={`btn btn-sm ${entry.visibility === option ? 'btn-primary' : 'btn-quiet'}`}
+                        disabled={busy}
+                        onClick={() =>
+                          void run(
+                            teamApi.setVisibility(entry.day_shift_id, option === 'default' ? null : option === 'shown'),
+                          )
+                        }
+                      >
+                        {t(option === 'default' ? 'Default' : option === 'shown' ? 'Shown' : 'Hidden')}
+                      </button>
+                    ))}
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {/* ==== You on this rota + who shares ==== */}
+      <div className="grid gap-3 lg:grid-cols-2">
+        {you !== null && (
+          <section className="card p-4">
+            <h2 className="mb-2 text-[0.98rem] font-bold">{t('You, on this rota')}</h2>
+
+            <div className="mb-3 flex gap-2">
+              <input
+                className="field-input"
+                defaultValue={you.display_name}
+                maxLength={40}
+                onChange={(event) => setNameDraft(event.target.value)}
+                aria-label={t('Display name')}
+              />
+              <button
+                type="button"
+                className="btn"
+                disabled={busy || nameDraft.trim() === '' || nameDraft === you.display_name}
+                onClick={() => void run(teamApi.updateMembership(selected!, { display_name: nameDraft.trim() }))}
+              >
+                {t('Rename')}
+              </button>
+            </div>
+
+            <span className="field-label">{t('Your colour')}</span>
+            <div className="mb-3 flex gap-1.5">
+              {MEMBER_COLOURS.map((colour) => (
+                <button
+                  key={colour}
+                  type="button"
+                  className={`swatch ${you.colour.toUpperCase() === colour.toUpperCase() ? 'is-active' : ''}`}
+                  style={{ background: colour }}
+                  disabled={busy}
+                  onClick={() => void run(teamApi.updateMembership(selected!, { colour }))}
+                />
+              ))}
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="flex items-center gap-2 text-[0.88rem]">
+                <input
+                  type="checkbox"
+                  checked={you.shares_earnings}
+                  disabled={busy}
+                  onChange={(event) => void run(teamApi.updateMembership(selected!, { share_earnings: event.target.checked }))}
+                />
+                {t('Share my earnings with this crew')}
+              </label>
+              <label className="flex items-center gap-2 text-[0.88rem]">
+                <input
+                  type="checkbox"
+                  checked={you.private_by_default === true}
+                  disabled={busy}
+                  onChange={(event) =>
+                    void run(teamApi.updateMembership(selected!, { private_by_default: event.target.checked }))
+                  }
+                />
+                {t('Hide my shifts unless I show them')}
+              </label>
+              {(you.hidden ?? 0) > 0 && (
+                <p className="field-hint">
+                  {you.hidden} {t('of your shifts are hidden from the crew')}
+                </p>
+              )}
+            </div>
+          </section>
+        )}
+
+        {sharers.length > 0 && (
+          <section className="card p-4">
+            <h2 className="mb-1 text-[0.98rem] font-bold">{t('Who shares their earnings')}</h2>
+            <p className="field-hint mb-2">
+              {(rota?.members ?? []).filter((member) => member.shares_earnings).length} / {rota?.members.length}{' '}
+              {t('of the crew share')}
+            </p>
+            <ul className="flex flex-col gap-1.5">
+              {sharers.map((member) => (
+                <li key={member.member_id} className="grid grid-cols-[7rem_1fr_auto] items-center gap-2 text-[0.85rem]">
+                  <span className="flex min-w-0 items-center gap-1.5">
+                    <span className="h-2 w-2 flex-none rounded-full" style={{ background: member.colour }} />
+                    <span className="truncate">{member.display_name}</span>
+                  </span>
+                  <span className="h-2 overflow-hidden rounded-full bg-surface-2">
+                    <span
+                      className="block h-full rounded-full bg-(--accent)"
+                      style={{
+                        width: `${((member.earned ?? 0) / Math.max(1, ...sharers.map((sharer) => sharer.earned ?? 0))) * 100}%`,
+                      }}
+                    />
+                  </span>
+                  <span className="tabular">
+                    <Money value={member.earned ?? 0} />
+                    {member.hours > 0 && member.earned !== null && (
+                      <span className="field-hint"> · <Money value={member.earned / member.hours} />/h</span>
+                    )}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+      </div>
+    </div>
+  );
+}

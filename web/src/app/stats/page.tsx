@@ -468,6 +468,10 @@ function Stats() {
             <Icon name="note" size={13} />
             {t('Report')}
           </Link>
+          <Link href="/compare" className="btn btn-sm">
+            <Icon name="swap" size={13} />
+            {t('Compare')}
+          </Link>
           <button type="button" className="btn btn-sm" disabled={exporting} onClick={exportPng}>
             <Icon name="download" size={13} />
             PNG

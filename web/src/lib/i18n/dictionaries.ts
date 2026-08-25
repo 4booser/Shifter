@@ -5,6 +5,17 @@
 type Dictionary = Record<string, string>;
 
 export const RU: Dictionary = {
+  'Yearly report': 'Отчёт за год',
+  'Compare periods': 'Сравнение периодов',
+  'Compare': 'Сравнить',
+  'This month vs last': 'Этот месяц и прошлый',
+  'This year vs last': 'Этот год и прошлый',
+  'is ahead of': 'впереди',
+  'is behind': 'позади',
+  'by': 'на',
+  'The hour went from': 'Ставка изменилась с',
+  'to': 'до',
+  'Cumulative, day by working day': 'Накопительно, по рабочим дням',
   'Calendar subscription': 'Календарная подписка',
   'Your shifts appear in Google or Apple Calendar by themselves. Times and names travel; money never does.': 'Смены сами появляются в Google или Apple Calendar. Передаются времена и названия — деньги никогда.',
   'Turn the feed on': 'Включить подписку',
@@ -1215,6 +1226,17 @@ export const RU: Dictionary = {
 };
 
 export const UK: Dictionary = {
+  'Yearly report': 'Звіт за рік',
+  'Compare periods': 'Порівняння періодів',
+  'Compare': 'Порівняти',
+  'This month vs last': 'Цей місяць і минулий',
+  'This year vs last': 'Цей рік і минулий',
+  'is ahead of': 'попереду',
+  'is behind': 'позаду',
+  'by': 'на',
+  'The hour went from': 'Ставка змінилася з',
+  'to': 'до',
+  'Cumulative, day by working day': 'Накопичувально, за робочими днями',
   'Calendar subscription': 'Календарна підписка',
   'Your shifts appear in Google or Apple Calendar by themselves. Times and names travel; money never does.': 'Зміни самі з’являються в Google або Apple Calendar. Передаються часи та назви — гроші ніколи.',
   'Turn the feed on': 'Увімкнути підписку',

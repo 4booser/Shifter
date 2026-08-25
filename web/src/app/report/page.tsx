@@ -44,14 +44,21 @@ function Report() {
   const { format } = useMoney();
 
   const [month, setMonth] = useState<YearMonth>(currentMonth());
+  const [mode, setMode] = useState<'month' | 'year'>('month');
   const [summary, setSummary] = useState<DaysResponse>(EMPTY_SUMMARY);
   const [previous, setPrevious] = useState<DaysResponse>(EMPTY_SUMMARY);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const bounds = monthBounds(firstOf(month));
-    const before = monthBounds(firstOf(addMonths(month, -1)));
+    const bounds =
+      mode === 'month'
+        ? monthBounds(firstOf(month))
+        : { from: `${month.year}-01-01`, to: `${month.year}-12-31` };
+    const before =
+      mode === 'month'
+        ? monthBounds(firstOf(addMonths(month, -1)))
+        : { from: `${month.year - 1}-01-01`, to: `${month.year - 1}-12-31` };
 
     setLoading(true);
     void Promise.all([
@@ -65,7 +72,7 @@ function Report() {
       })
       .catch((caught) => setError(apiErrorMessage(caught)))
       .finally(() => setLoading(false));
-  }, [month]);
+  }, [month, mode]);
 
   const averages = averagesFor(summary);
   const beforeAverages = averagesFor(previous);
@@ -80,6 +87,29 @@ function Report() {
         .sort((a, b) => a.date.localeCompare(b.date)),
     [summary.days],
   );
+
+  /** The year reads month by month; day lines would run to three hundred. */
+  const monthRows = useMemo(() => {
+    if (mode !== 'year') return [];
+
+    const buckets = new Map<string, { hours: number; tips: number; units: number; earned: number; days: number }>();
+
+    for (const day of rows) {
+      const key = day.date.slice(0, 7);
+      const bucket = buckets.get(key) ?? { hours: 0, tips: 0, units: 0, earned: 0, days: 0 };
+
+      bucket.hours += day.hours;
+      bucket.tips += (day.tips ?? 0) + (day.tips_cash ?? 0);
+      bucket.units += day.sales.reduce((sum, sale) => sum + sale.quantity, 0);
+      bucket.earned += day.earned;
+      bucket.days += 1;
+      buckets.set(key, bucket);
+    }
+
+    return [...buckets.entries()].sort(([a], [b]) => a.localeCompare(b));
+  }, [rows, mode]);
+
+  const peakMonth = Math.max(1, ...monthRows.map(([, bucket]) => bucket.earned));
 
   const peakEarned = Math.max(1, ...rows.map((day) => day.earned));
 
@@ -120,14 +150,49 @@ function Report() {
     <div className="flex flex-col gap-4 print-report">
       {/* ==== Header: the month, and the ways out ==== */}
       <div className="flex flex-wrap items-center gap-2">
-        <h1 className="text-[1.3rem] font-bold tracking-tight">{t('Monthly report')}</h1>
+        <h1 className="text-[1.3rem] font-bold tracking-tight">
+          {t(mode === 'month' ? 'Monthly report' : 'Yearly report')}
+        </h1>
+
+        <div className="seg no-print">
+          {(['month', 'year'] as const).map((value) => (
+            <button
+              key={value}
+              type="button"
+              className={`seg-btn ${mode === value ? 'is-active' : ''}`}
+              onClick={() => setMode(value)}
+            >
+              {t(value === 'month' ? 'Month' : 'Year')}
+            </button>
+          ))}
+        </div>
 
         <div className="ml-auto flex items-center gap-1 no-print">
-          <button type="button" className="btn btn-quiet btn-sm" aria-label={t('Previous')} onClick={() => setMonth((value) => addMonths(value, -1))}>
+          <button
+            type="button"
+            className="btn btn-quiet btn-sm"
+            aria-label={t('Previous')}
+            onClick={() =>
+              setMonth((value) =>
+                mode === 'month' ? addMonths(value, -1) : { ...value, year: value.year - 1 },
+              )
+            }
+          >
             <Icon name="chevron-left" size={15} />
           </button>
-          <strong className="w-36 text-center text-[0.95rem] capitalize">{monthLabel(month, lang)}</strong>
-          <button type="button" className="btn btn-quiet btn-sm" aria-label={t('Next')} onClick={() => setMonth((value) => addMonths(value, 1))}>
+          <strong className="w-36 text-center text-[0.95rem] capitalize">
+            {mode === 'month' ? monthLabel(month, lang) : month.year}
+          </strong>
+          <button
+            type="button"
+            className="btn btn-quiet btn-sm"
+            aria-label={t('Next')}
+            onClick={() =>
+              setMonth((value) =>
+                mode === 'month' ? addMonths(value, 1) : { ...value, year: value.year + 1 },
+              )
+            }
+          >
             <Icon name="chevron-right" size={15} />
           </button>
           <button type="button" className="btn btn-sm ml-2" onClick={() => print()}>
@@ -142,7 +207,7 @@ function Report() {
             {t('Statistics')}
           </Link>
         </div>
-        <strong className="hidden text-[0.95rem] capitalize print-only">{monthLabel(month, lang)}</strong>
+        <strong className="hidden text-[0.95rem] capitalize print-only">{mode === 'month' ? monthLabel(month, lang) : month.year}</strong>
       </div>
 
       {error !== null && <Alert onDismiss={() => setError(null)}>{error}</Alert>}
@@ -236,7 +301,43 @@ function Report() {
 
           {/* ==== The ledger ==== */}
           <section className="card reveal overflow-x-auto p-4">
-            <h2 className="mb-2 text-[0.98rem] font-bold">{t('Day by day')}</h2>
+            <h2 className="mb-2 text-[0.98rem] font-bold">{t(mode === 'month' ? 'Day by day' : 'Month by month')}</h2>
+            {mode === 'year' && (
+              <table className="w-full min-w-[34rem] border-collapse text-[0.85rem]">
+                <thead>
+                  <tr className="border-b border-border text-left text-[0.72rem] uppercase tracking-wide text-muted">
+                    <th className="py-1.5 pr-2 font-semibold">{t('Month')}</th>
+                    <th className="py-1.5 pr-2 text-right font-semibold">{t('Days worked')}</th>
+                    <th className="py-1.5 pr-2 text-right font-semibold">{t('Hours')}</th>
+                    <th className="py-1.5 pr-2 text-right font-semibold">{t('Tips')}</th>
+                    <th className="py-1.5 pr-2 text-right font-semibold">{t('Earned')}</th>
+                    <th className="w-28 py-1.5 font-semibold" aria-hidden="true" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {monthRows.map(([key, bucket], index) => (
+                    <tr key={key} className="cell-in border-b border-border/60" style={{ ['--i' as string]: index }}>
+                      <td className="py-1.5 pr-2 capitalize">
+                        {new Date(`${key}-01T00:00:00`).toLocaleDateString(lang, { month: 'long' })}
+                      </td>
+                      <td className="py-1.5 pr-2 text-right tabular">{bucket.days}</td>
+                      <td className="py-1.5 pr-2 text-right tabular">{Math.round(bucket.hours)}</td>
+                      <td className="py-1.5 pr-2 text-right tabular">{bucket.tips > 0 ? format(bucket.tips) : '—'}</td>
+                      <td className="py-1.5 pr-2 text-right font-semibold tabular">{format(bucket.earned)}</td>
+                      <td className="py-1.5">
+                        <span className="block h-1.5 overflow-hidden rounded-full bg-surface-2">
+                          <span
+                            className="grow-w block h-full rounded-full bg-(--accent)"
+                            style={{ width: `${(bucket.earned / peakMonth) * 100}%`, ['--i' as string]: index }}
+                          />
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+            {mode === 'month' && (
             <table className="w-full min-w-[38rem] border-collapse text-[0.85rem]">
               <thead>
                 <tr className="border-b border-border text-left text-[0.72rem] uppercase tracking-wide text-muted">
@@ -295,6 +396,7 @@ function Report() {
                 </tr>
               </tfoot>
             </table>
+            )}
           </section>
         </>
       )}

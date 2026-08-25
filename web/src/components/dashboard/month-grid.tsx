@@ -410,8 +410,38 @@ export function MonthGrid({
     return day !== undefined && (day.sales.length > 0 || (day.tips ?? 0) > 0 || !!day.note);
   };
 
+  /** A horizontal flick on touch turns the page; painting and carrying win. */
+  const swipe = useRef<{ x: number; y: number } | null>(null);
+
+  const onTouchStart = (event: React.TouchEvent) => {
+    if (painting || carry !== null) return;
+
+    swipe.current = { x: event.touches[0].clientX, y: event.touches[0].clientY };
+  };
+
+  const onTouchEnd = (event: React.TouchEvent) => {
+    const from = swipe.current;
+
+    swipe.current = null;
+
+    if (from === null || painting || carry !== null) return;
+
+    const dx = event.changedTouches[0].clientX - from.x;
+    const dy = event.changedTouches[0].clientY - from.y;
+
+    if (Math.abs(dx) < 64 || Math.abs(dy) > 48) return;
+
+    if (dx < 0) calendarActions.next();
+    else calendarActions.previous();
+  };
+
   return (
-    <section className="card min-w-0 p-3 sm:p-4" onPointerUp={onPointerUp}>
+    <section
+      className="card min-w-0 p-3 sm:p-4"
+      onPointerUp={onPointerUp}
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
+    >
       {/* ==== Toolbar ==== */}
       <header className="mb-3 flex flex-wrap items-center gap-2">
         <h2 className="mr-1 text-[1.15rem] font-bold capitalize tracking-tight">

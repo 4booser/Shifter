@@ -140,6 +140,25 @@ function Dashboard() {
       .sort((a, b) => b.date.localeCompare(a.date));
   }, [state.days]);
 
+  // The installed app's icon carries the number of days still open.
+  useEffect(() => {
+    const nav = navigator as Navigator & {
+      setAppBadge?: (count: number) => Promise<void>;
+      clearAppBadge?: () => Promise<void>;
+    };
+
+    if (unclosed.length > 0) void nav.setAppBadge?.(unclosed.length);
+    else void nav.clearAppBadge?.();
+  }, [unclosed.length]);
+
+  // The home-screen shortcut "start a shift" lands here with ?action=start.
+  useEffect(() => {
+    if (new URLSearchParams(location.search).get('action') !== 'start') return;
+
+    history.replaceState(null, '', '/dashboard');
+    setTimeout(() => dispatchEvent(new CustomEvent('shifter:palette')), 600);
+  }, []);
+
   const needsSetup =
     state.locations.filter((location) => !location.archived).length === 0 ||
     state.templates.filter((template) => !template.archived).length === 0;

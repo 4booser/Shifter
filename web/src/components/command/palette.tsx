@@ -122,6 +122,7 @@ export function CommandPalette() {
       { id: 'nav-stats', icon: 'chart', label: t('Statistics'), run: go('/stats') },
       { id: 'nav-wrapped', icon: 'trophy', label: t('Your year'), run: go('/wrapped') },
       { id: 'nav-report', icon: 'note', label: t('Monthly report'), run: go('/report') },
+      { id: 'nav-compare', icon: 'swap', label: t('Compare periods'), run: go('/compare') },
       {
         id: 'tour',
         icon: 'spark',

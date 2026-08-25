@@ -2,12 +2,13 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-import { formatDayLabel } from '@/lib/calendar/calendar-date';
+import { formatDayLabel, todayKey } from '@/lib/calendar/calendar-date';
 import { holidaysInRange } from '@/lib/calendar/holidays';
-import { CalendarEvent, MARK_COLOURS, NOTE_MAX_LENGTH } from '@/lib/calendar/models';
+import { CalendarEvent, MARK_COLOURS, NOTE_MAX_LENGTH, ShiftTemplate } from '@/lib/calendar/models';
 import { useI18n } from '@/lib/i18n';
 import { useMoney } from '@/lib/settings/money';
 import { useSettings } from '@/lib/settings/store';
+import { startLiveShift, useLive } from '@/lib/live/live-shift';
 import { catalogueActions, saveDay, useCalendar } from '@/lib/store/calendar';
 import { Icon } from '@/components/ui/icon';
 import { Money, SwatchRow } from '@/components/ui/bits';
@@ -28,6 +29,11 @@ export function DayPanel() {
   const settings = useSettings((state) => state.settings);
   const key = useCalendar((state) => state.selectedDate);
   const day = useCalendar((state) => (state.selectedDate === null ? undefined : state.days.get(state.selectedDate)));
+  const templates = useCalendar((state) => state.templates);
+  const live = useLive((state) => state.live);
+
+  const templateOf = (shiftId: number): ShiftTemplate | undefined =>
+    templates.find((item) => item.id === shiftId && !item.archived);
   const allPositions = useCalendar((state) => state.positions);
   const positions = allPositions.filter((position) => !position.archived);
   const allEvents = useCalendar((state) => state.events);
@@ -272,15 +278,27 @@ export function DayPanel() {
                   </div>
 
                   {!isWorked && (
-                    <button
-                      type="button"
-                      className={`btn btn-sm mt-1.5 w-full ${wantsCover ? 'border-warn/50 bg-(--warn-soft) text-warn' : 'btn-quiet'}`}
-                      title={t('Ask the team to take this shift')}
-                      onClick={() => setCover((current) => ({ ...current, [entry.shift_id]: !wantsCover }))}
-                    >
-                      <Icon name="swap" size={12} />
-                      {t(wantsCover ? 'Cover wanted' : 'Need cover?')}
-                    </button>
+                    <div className="mt-1.5 flex gap-1.5">
+                      {key === todayKey() && live === null && templateOf(entry.shift_id) !== undefined && (
+                        <button
+                          type="button"
+                          className="btn btn-primary btn-sm flex-1"
+                          onClick={() => startLiveShift(templateOf(entry.shift_id) as ShiftTemplate)}
+                        >
+                          <Icon name="spark" size={12} />
+                          {t('Start shift')}
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        className={`btn btn-sm flex-1 ${wantsCover ? 'border-warn/50 bg-(--warn-soft) text-warn' : 'btn-quiet'}`}
+                        title={t('Ask the team to take this shift')}
+                        onClick={() => setCover((current) => ({ ...current, [entry.shift_id]: !wantsCover }))}
+                      >
+                        <Icon name="swap" size={12} />
+                        {t(wantsCover ? 'Cover wanted' : 'Need cover?')}
+                      </button>
+                    </div>
                   )}
                 </li>
               );

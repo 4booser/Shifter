@@ -93,6 +93,8 @@ export interface Settings {
   colourSchemes: ColourScheme[];
   /** Visible dashboard tiles in order; null means the default set. */
   dashboardTiles: string[] | null;
+  /** How the person is written in the wall rota, for the photo import. */
+  scheduleName: string;
 }
 
 export const ACCENT_PRESETS = [
@@ -172,4 +174,5 @@ export const DEFAULT_SETTINGS: Settings = {
   weekdayShifts: {},
   colourSchemes: [],
   dashboardTiles: null,
+  scheduleName: '',
 };

@@ -47,6 +47,7 @@ services:
       # server without VAPID keys still starts.
       Push__PublicKey: ${VAPID_PUBLIC_KEY:-}
       Push__PrivateKey: ${VAPID_PRIVATE_KEY:-}
+      Import__ApiKey: ${ANTHROPIC_API_KEY:-}
       # No Google__ClientId here on purpose. It would be set even when the
       # variable is unset, and an empty environment variable overrides
       # appsettings.json rather than deferring to it — which silently turns off

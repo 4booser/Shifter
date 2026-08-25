@@ -21,6 +21,7 @@ import {
 import { Delta, Money } from '@/components/ui/bits';
 import { Icon } from '@/components/ui/icon';
 import { ImportModal } from './modals/import-modal';
+import { PhotoImportModal } from './modals/photo-import-modal';
 import { LocationModal } from './modals/location-modal';
 import { PatternModal } from './modals/pattern-modal';
 import { PayoutModal } from './modals/payout-modal';
@@ -40,7 +41,7 @@ export function Sidebar() {
   const archivedTemplates = state.templates.filter((template) => template.archived);
   const archivedPositions = state.positions.filter((position) => position.archived);
 
-  const [modal, setModal] = useState<null | 'shift' | 'sales' | 'location' | 'pattern' | 'rotation' | 'scheme' | 'payout' | 'import'>(null);
+  const [modal, setModal] = useState<null | 'shift' | 'sales' | 'location' | 'pattern' | 'rotation' | 'scheme' | 'payout' | 'import' | 'photo'>(null);
   const [editingShift, setEditingShift] = useState<ShiftTemplate | null>(null);
   const [editingPosition, setEditingPosition] = useState<SalesPosition | null>(null);
   const [editingLocation, setEditingLocation] = useState<WorkLocation | null>(null);
@@ -425,6 +426,9 @@ export function Sidebar() {
           <Icon name="note" size={14} />
           {t('Import a spreadsheet')}
         </button>
+        <button type="button" className="btn w-full" onClick={() => setModal('photo')}>
+          📸 {t('Import from a photo')}
+        </button>
         <button type="button" className="btn btn-quiet w-full" onClick={exportCsv}>
           <Icon name="download" size={14} />
           {t('Export CSV')}
@@ -444,6 +448,7 @@ export function Sidebar() {
       <SchemeModal open={modal === 'scheme'} onClose={() => setModal(null)} />
       <PayoutModal open={modal === 'payout'} onClose={() => setModal(null)} />
       <ImportModal open={modal === 'import'} onClose={() => setModal(null)} />
+      <PhotoImportModal open={modal === 'photo'} onClose={() => setModal(null)} />
     </aside>
   );
 }

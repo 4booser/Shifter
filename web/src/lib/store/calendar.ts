@@ -729,6 +729,46 @@ export async function moveShift(
   void loadSummary();
 }
 
+/**
+ * Places specific templates on specific days — the import's write path. One
+ * remember covers the lot, so a whole recognised month is one Cmd+Z. Days
+ * already holding the template are left alone rather than doubled.
+ */
+export async function placeShifts(entries: { date: string; templateId: number }[]): Promise<void> {
+  const days = get().days;
+  const fresh = entries.filter(
+    (entry) => !days.get(entry.date)?.shifts.some((item) => item.shift_id === entry.templateId),
+  );
+
+  if (fresh.length === 0) return;
+
+  remember('Imported shifts', fresh.map((entry) => entry.date));
+  set({ saving: true, error: null });
+
+  for (const entry of fresh) {
+    const payload = toSavePayload(get().days.get(entry.date));
+
+    payload.shifts.push({
+      shift_id: entry.templateId,
+      worked: entry.date <= todayKey(),
+      needs_cover: false,
+    });
+
+    try {
+      const saved = await calendarApi.saveDay(entry.date, payload);
+
+      set((state) => ({ days: new Map(state.days).set(entry.date, saved) }));
+    } catch (error) {
+      set({ error: apiErrorMessage(error), saving: false });
+
+      return;
+    }
+  }
+
+  set({ saving: false });
+  void loadSummary();
+}
+
 /** Removes every shift from the given days; tips, sales and notes stay. */
 export async function clearShifts(keys: string[]): Promise<void> {
   const days = get().days;

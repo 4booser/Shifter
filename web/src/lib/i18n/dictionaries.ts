@@ -5,6 +5,19 @@
 type Dictionary = Record<string, string>;
 
 export const RU: Dictionary = {
+  'Import from a photo': 'Импорт с фотографии',
+  'How you are written in the rota': 'Как вы записаны в графике',
+  'e.g. Ivanov, or АБ': 'например, Иванов или АБ',
+  'Drop the rota photo here, or tap to choose': 'Бросьте фото графика сюда или нажмите, чтобы выбрать',
+  'Read the photo': 'Распознать фото',
+  'Reading…': 'Распознаю…',
+  'Could not read the photo.': 'Не получилось прочитать фото.',
+  'Photo import is not switched on for this server.': 'Фото-импорт на этом сервере не включён.',
+  'Nothing found for that name — check the spelling above.': 'С таким именем ничего не нашлось — проверьте написание выше.',
+  'day is taken': 'день занят',
+  'skip': 'пропустить',
+  'Schedule imported': 'График импортирован',
+  'Imported shifts': 'Импорт графика',
   'Yearly report': 'Отчёт за год',
   'Compare periods': 'Сравнение периодов',
   'Compare': 'Сравнить',
@@ -1226,6 +1239,19 @@ export const RU: Dictionary = {
 };
 
 export const UK: Dictionary = {
+  'Import from a photo': 'Імпорт із фотографії',
+  'How you are written in the rota': 'Як вас записано у графіку',
+  'e.g. Ivanov, or АБ': 'наприклад, Іванов або АБ',
+  'Drop the rota photo here, or tap to choose': 'Киньте фото графіка сюди або натисніть, щоб обрати',
+  'Read the photo': 'Розпізнати фото',
+  'Reading…': 'Розпізнаю…',
+  'Could not read the photo.': 'Не вдалося прочитати фото.',
+  'Photo import is not switched on for this server.': 'Фото-імпорт на цьому сервері не увімкнено.',
+  'Nothing found for that name — check the spelling above.': 'З таким іменем нічого не знайшлося — перевірте написання вище.',
+  'day is taken': 'день зайнятий',
+  'skip': 'пропустити',
+  'Schedule imported': 'Графік імпортовано',
+  'Imported shifts': 'Імпорт графіка',
   'Yearly report': 'Звіт за рік',
   'Compare periods': 'Порівняння періодів',
   'Compare': 'Порівняти',

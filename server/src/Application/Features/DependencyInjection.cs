@@ -82,6 +82,12 @@ public static class DependencyInjection
         // Web push: options may be empty, in which case the sender reports
         // itself disabled and the scheduler exits without a single pass.
         services.Configure<PushOptions>(configuration.GetSection(PushOptions.Section));
+
+        // Photo import: same contract — no key, no feature, no crash.
+        services.Configure<Shifter.Application.Features.Import.ImportOptions>(
+            configuration.GetSection(Shifter.Application.Features.Import.ImportOptions.Section));
+        services.AddHttpClient();
+        services.AddSingleton<Shifter.Application.Features.Import.PhotoImportService>();
         services.AddSingleton<PushSender>();
         services.AddHostedService<PushScheduler>();
         services.AddSingleton<IHasher, Hasher>();

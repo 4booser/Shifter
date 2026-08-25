@@ -5,6 +5,13 @@
 type Dictionary = Record<string, string>;
 
 export const RU: Dictionary = {
+  'Actually': 'Фактически',
+  'Back to the plan': 'Вернуть по плану',
+  'Break': 'Перерыв',
+  'Breaks': 'Перерывы',
+  'Resume': 'Продолжить',
+  'Shift over?': 'Смена закончилась?',
+  'The planned end passed a while ago — finish or keep going.': 'Плановый конец давно прошёл — завершите или продолжайте.',
   'Redo': 'Вернуть',
   'days selected': 'дней выбрано',
   'actions moved to the panel on the right': 'действия — в панели справа',
@@ -1197,6 +1204,13 @@ export const RU: Dictionary = {
 };
 
 export const UK: Dictionary = {
+  'Actually': 'Фактично',
+  'Back to the plan': 'Повернути за планом',
+  'Break': 'Перерва',
+  'Breaks': 'Перерви',
+  'Resume': 'Продовжити',
+  'Shift over?': 'Зміна закінчилася?',
+  'The planned end passed a while ago — finish or keep going.': 'Плановий кінець давно минув — завершіть або продовжуйте.',
   'Redo': 'Повернути',
   'days selected': 'днів вибрано',
   'actions moved to the panel on the right': 'дії — в панелі праворуч',

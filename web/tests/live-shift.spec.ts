@@ -49,3 +49,30 @@ describe('formatElapsed', () => {
     expect(formatElapsed(3_723_000)).toBe('1:02:03');
   });
 });
+
+import { LiveShift, workedMs } from '@/lib/live/live-shift';
+
+describe('workedMs', () => {
+  const base: LiveShift = { shiftId: 1, date: '2026-03-02', startedAt: 0, breakMs: 0, pausedAt: null };
+
+  it('subtracts banked breaks from the clock', () => {
+    expect(workedMs({ ...base, breakMs: 600_000 }, 3_600_000)).toBe(3_000_000);
+  });
+
+  it('keeps subtracting while a pause is still running', () => {
+    expect(workedMs({ ...base, pausedAt: 1_800_000 }, 3_600_000)).toBe(1_800_000);
+  });
+
+  it('meters pay through the pause-aware clock', () => {
+    // An hour on the clock, half of it on a break, at 200/hour.
+    const paused = { ...base, breakMs: 1_800_000 };
+    const template = {
+      id: 1, name: 'Bar', symbol: null, location_id: null, location_name: null,
+      location_colour: null, colour: null, effective_colour: null,
+      start_time: '10:00', end_time: '18:00', salary_period: 'hour' as const,
+      salary_amount: 200, break_minutes: 0, hours: 8, archived: false,
+    };
+
+    expect(liveTick(template, paused, 3_600_000).earned).toBeCloseTo(100);
+  });
+});

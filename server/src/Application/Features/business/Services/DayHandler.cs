@@ -265,10 +265,23 @@ public partial class DayHandler : IDayHandler
         return shifts
             .Select(shift =>
             {
+                DayShiftSaveDto entry = byShift[shift.Id];
                 DayShift placed = DayShift.From(shift, workedById[shift.Id]);
 
                 // A shift already worked has nothing left to hand over.
-                placed.NeedsCover = !placed.Worked && byShift[shift.Id].needs_cover;
+                placed.NeedsCover = !placed.Worked && entry.needs_cover;
+
+                // The recorded clock, kept only whole: a single honest edge
+                // against a planned one would price an interval nobody worked.
+                if (TimeOnly.TryParse(entry.actual_start, out TimeOnly actualStart)
+                    && TimeOnly.TryParse(entry.actual_end, out TimeOnly actualEnd))
+                {
+                    placed.ActualStart = actualStart;
+                    placed.ActualEnd = actualEnd;
+                }
+
+                if (entry.break_minutes is int breakMinutes && breakMinutes >= 0)
+                    placed.BreakMinutes = breakMinutes;
 
                 return placed;
             })
@@ -609,7 +622,10 @@ public partial class DayHandler : IDayHandler
                 Math.Round(entry.PaidDuration.TotalHours, 2),
                 entry.Pay,
                 entry.Worked,
-                entry.NeedsCover))
+                entry.NeedsCover,
+                entry.ActualStart?.ToString("HH:mm"),
+                entry.ActualEnd?.ToString("HH:mm"),
+                entry.BreakMinutes))
             .ToArray();
 
         decimal salesPay = sales.Sum(entry => entry.earned);

@@ -170,6 +170,11 @@ export interface DayShiftEntry {
   worked: boolean;
   /** Asking the team to take this one. */
   needs_cover: boolean;
+  /** "HH:mm" where the recorded clock differs from the plan; both or neither. */
+  actual_start: string | null;
+  actual_end: string | null;
+  /** Unpaid minutes inside the shift as placed on this day. */
+  break_minutes: number;
 }
 
 /**
@@ -361,7 +366,14 @@ export interface Reconciliation {
 
 /** A day is always sent whole, never patched. */
 export interface DaySave {
-  shifts: { shift_id: number; worked: boolean; needs_cover: boolean }[];
+  shifts: {
+    shift_id: number;
+    worked: boolean;
+    needs_cover: boolean;
+    actual_start?: string | null;
+    actual_end?: string | null;
+    break_minutes?: number | null;
+  }[];
   tips_cash: number | null;
   deductions: number | null;
   sales: { sales_id: number; quantity: number }[];
@@ -446,6 +458,10 @@ export function toSavePayload(day: CalendarDayData | undefined): DaySave {
       shift_id: entry.shift_id,
       worked: entry.worked,
       needs_cover: entry.needs_cover,
+      // The recorded clock survives every unrelated edit of the day.
+      actual_start: entry.actual_start,
+      actual_end: entry.actual_end,
+      break_minutes: entry.break_minutes,
     })),
     sales: (day?.sales ?? []).map((entry) => ({
       sales_id: entry.sales_id,

@@ -28,6 +28,42 @@ public class DayShiftTests
     }
 
     [Fact]
+    public void ActualClockOverridesThePlan()
+    {
+        DayShift entry = DayShift.From(
+            Build.Template(1, start: "11:00", end: "22:00", amount: 100m), worked: true);
+
+        entry.ActualStart = new TimeOnly(10, 45);
+        entry.ActualEnd = new TimeOnly(22, 30);
+
+        Assert.Equal(TimeSpan.FromHours(11.75), entry.Duration);
+        Assert.Equal(1175m, entry.Pay);
+    }
+
+    [Fact]
+    public void ActualClockWrapsPastMidnightToo()
+    {
+        DayShift entry = DayShift.From(
+            Build.Template(1, start: "17:00", end: "23:00"), worked: true);
+
+        entry.ActualStart = new TimeOnly(17, 0);
+        entry.ActualEnd = new TimeOnly(1, 0);
+
+        Assert.Equal(TimeSpan.FromHours(8), entry.Duration);
+    }
+
+    [Fact]
+    public void OneActualEdgeAloneChangesNothing()
+    {
+        DayShift entry = DayShift.From(
+            Build.Template(1, start: "09:00", end: "17:00"), worked: true);
+
+        entry.ActualEnd = new TimeOnly(19, 0);
+
+        Assert.Equal(TimeSpan.FromHours(8), entry.Duration);
+    }
+
+    [Fact]
     public void BreaksLongerThanTheShiftDoNotGoNegative()
     {
         Shift template = Build.Template(1, start: "09:00", end: "10:00");

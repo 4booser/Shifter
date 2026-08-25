@@ -903,6 +903,9 @@ function placeholderFor(template: ShiftTemplate, key: string): DayShiftEntry {
     // Matches the server's rule: a date already past is treated as worked.
     worked: key <= todayKey(),
     needs_cover: false,
+    actual_start: null,
+    actual_end: null,
+    break_minutes: template.break_minutes,
   };
 }
 

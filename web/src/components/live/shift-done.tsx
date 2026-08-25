@@ -129,10 +129,12 @@ export function ShiftDoneOverlay() {
         </div>
 
         <div className="flex justify-center gap-5 text-center text-[0.85rem]">
-          <span>
-            <strong className="block tabular">{format(perHour)}</strong>
-            <span className="field-hint">{t('per hour')}</span>
-          </span>
+          {done.hours > 0 && (
+            <span>
+              <strong className="block tabular">{format(perHour)}</strong>
+              <span className="field-hint">{t('per hour')}</span>
+            </span>
+          )}
           <span>
             <strong className="block tabular">{done.hours}h</strong>
             <span className="field-hint">{t('paid')}</span>

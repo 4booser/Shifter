@@ -38,6 +38,9 @@ function shift(overrides: Partial<CalendarDayData['shifts'][number]> = {}) {
     earned: 800,
     worked: true,
     needs_cover: false,
+    actual_start: null,
+    actual_end: null,
+    break_minutes: 0,
     ...overrides,
   };
 }

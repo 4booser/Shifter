@@ -21,6 +21,10 @@ export interface LiveShift {
   date: string;
   /** Epoch milliseconds. */
   startedAt: number;
+  /** Unpaid time already banked by finished pauses, in milliseconds. */
+  breakMs: number;
+  /** Epoch of the pause running right now; null while on the clock. */
+  pausedAt: number | null;
 }
 
 interface LiveState {
@@ -35,7 +39,7 @@ function read(): LiveShift | null {
   if (raw === null) return null;
 
   try {
-    const parsed = JSON.parse(raw) as LiveShift;
+    const parsed = JSON.parse(raw) as { shiftId: number; date: string; startedAt: number } & Partial<LiveShift>;
 
     // A shift forgotten for over a day is stale, not live.
     if (Date.now() - parsed.startedAt > 26 * 3600_000) {
@@ -44,7 +48,14 @@ function read(): LiveShift | null {
       return null;
     }
 
-    return parsed;
+    // A shift stored by the pre-pause build gains the fields it lacked.
+    return {
+      shiftId: parsed.shiftId,
+      date: parsed.date,
+      startedAt: parsed.startedAt,
+      breakMs: parsed.breakMs ?? 0,
+      pausedAt: parsed.pausedAt ?? null,
+    };
   } catch {
     return null;
   }
@@ -60,7 +71,31 @@ function write(live: LiveShift | null): void {
 }
 
 export function startLiveShift(template: ShiftTemplate): void {
-  write({ shiftId: template.id, date: todayKey(), startedAt: Date.now() });
+  write({ shiftId: template.id, date: todayKey(), startedAt: Date.now(), breakMs: 0, pausedAt: null });
+}
+
+/** The kettle break: the clock stops, the shift does not. */
+export function pauseLiveShift(): void {
+  const live = useLive.getState().live;
+
+  if (live === null || live.pausedAt !== null) return;
+
+  write({ ...live, pausedAt: Date.now() });
+}
+
+export function resumeLiveShift(): void {
+  const live = useLive.getState().live;
+
+  if (live === null || live.pausedAt === null) return;
+
+  write({ ...live, breakMs: live.breakMs + (Date.now() - live.pausedAt), pausedAt: null });
+}
+
+/** Milliseconds actually on the clock, pauses out. */
+export function workedMs(live: LiveShift, now: number): number {
+  const paused = live.breakMs + (live.pausedAt === null ? 0 : now - live.pausedAt);
+
+  return Math.max(0, now - live.startedAt - paused);
 }
 
 export function cancelLiveShift(): void {
@@ -92,18 +127,35 @@ export async function finishLiveShift(template: ShiftTemplate): Promise<void> {
 
   if (live === null) return;
 
+  // A pause never closed rolls into the break on the way out.
+  const now = Date.now();
+  const breakMs = live.breakMs + (live.pausedAt === null ? 0 : now - live.pausedAt);
+
+  const clock = (at: number) => {
+    const stamp = new Date(at);
+
+    return `${`${stamp.getHours()}`.padStart(2, '0')}:${`${stamp.getMinutes()}`.padStart(2, '0')}`;
+  };
+
+  const recorded = {
+    worked: true,
+    actual_start: clock(live.startedAt),
+    actual_end: clock(now),
+    break_minutes: Math.round(breakMs / 60_000),
+  };
+
   const day = useCalendar.getState().days.get(live.date);
   const payload = toSavePayload(day);
 
   if (!payload.shifts.some((entry) => entry.shift_id === live.shiftId)) {
-    payload.shifts.push({ shift_id: live.shiftId, worked: true, needs_cover: false });
+    payload.shifts.push({ shift_id: live.shiftId, needs_cover: false, ...recorded });
   } else {
     payload.shifts = payload.shifts.map((entry) =>
-      entry.shift_id === live.shiftId ? { ...entry, worked: true } : entry,
+      entry.shift_id === live.shiftId ? { ...entry, ...recorded } : entry,
     );
   }
 
-  const elapsed = Date.now() - live.startedAt;
+  const elapsed = workedMs(live, now);
 
   await saveDay(live.date, payload);
 
@@ -138,11 +190,13 @@ export interface LiveTick {
 
 /**
  * What the counter shows at a moment in time. Hourly pay meters by the
- * clock; a fixed day rate fills in proportionally to the planned hours; a
- * weekly or monthly wage cannot honestly tick per-minute, so it does not.
+ * clock with pauses taken out; a fixed day rate fills in proportionally to
+ * the planned hours; a weekly or monthly wage cannot honestly tick
+ * per-minute, so it does not.
  */
-export function liveTick(template: ShiftTemplate, startedAt: number, now: number): LiveTick {
-  const elapsed = Math.max(0, now - startedAt);
+export function liveTick(template: ShiftTemplate, live: LiveShift | number, now: number): LiveTick {
+  const elapsed =
+    typeof live === 'number' ? Math.max(0, now - live) : workedMs(live, now);
   const hours = elapsed / 3600_000;
   const planned = Math.max(1, template.hours) * 3600_000;
   const amount = template.salary_amount ?? 0;

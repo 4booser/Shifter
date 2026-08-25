@@ -270,7 +270,7 @@ function TodayTile({ window, templates }: { window: CalendarDayData[]; templates
   }, [live]);
 
   if (live !== null && template !== undefined) {
-    const tick = liveTick(template, live.startedAt, Date.now());
+    const tick = liveTick(template, live, Date.now());
 
     return (
       <>

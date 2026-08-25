@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import { formatDayLabel, shiftDays, todayKey } from '@/lib/calendar/calendar-date';
 import { holidaysInRange } from '@/lib/calendar/holidays';
-import { CalendarEvent, MARK_COLOURS, NOTE_MAX_LENGTH, ShiftTemplate } from '@/lib/calendar/models';
+import { CalendarEvent, DayShiftEntry, MARK_COLOURS, NOTE_MAX_LENGTH, ShiftTemplate } from '@/lib/calendar/models';
 import { useI18n } from '@/lib/i18n';
 import { useMoney } from '@/lib/settings/money';
 import { useSettings } from '@/lib/settings/store';
@@ -53,6 +53,8 @@ export function DayPanel() {
 
   const [quantities, setQuantities] = useState<Record<number, number>>({});
   const [worked, setWorked] = useState<Record<number, boolean>>({});
+  const [actualStart, setActualStart] = useState<Record<number, string | null>>({});
+  const [actualEnd, setActualEnd] = useState<Record<number, string | null>>({});
   const [cover, setCover] = useState<Record<number, boolean>>({});
   const [tips, setTips] = useState<number | null>(null);
   const [tipsCash, setTipsCash] = useState<number | null>(null);
@@ -160,11 +162,21 @@ export function DayPanel() {
 
   const save = () => {
     void saveDay(key, {
-      shifts: shifts.map((entry) => ({
-        shift_id: entry.shift_id,
-        worked: worked[entry.shift_id] ?? entry.worked,
-        needs_cover: !(worked[entry.shift_id] ?? entry.worked) && (cover[entry.shift_id] ?? false),
-      })),
+      shifts: shifts.map((entry) => {
+        // An explicit null is "back to the plan"; undefined means untouched.
+        const start =
+          entry.shift_id in actualStart ? actualStart[entry.shift_id] : entry.actual_start;
+        const end = entry.shift_id in actualEnd ? actualEnd[entry.shift_id] : entry.actual_end;
+
+        return {
+          shift_id: entry.shift_id,
+          worked: worked[entry.shift_id] ?? entry.worked,
+          needs_cover: !(worked[entry.shift_id] ?? entry.worked) && (cover[entry.shift_id] ?? false),
+          actual_start: start !== null && end !== null ? start : null,
+          actual_end: start !== null && end !== null ? end : null,
+          break_minutes: entry.break_minutes,
+        };
+      }),
       sales: Object.entries(quantities)
         .map(([id, quantity]) => ({ sales_id: Number(id), quantity }))
         .filter((entry) => entry.quantity > 0),
@@ -294,6 +306,20 @@ export function DayPanel() {
                       {t(isWorked ? 'Worked' : 'Planned')}
                     </button>
                   </div>
+
+                  {isWorked && (
+                    <ActualClockRow
+                      entry={entry}
+                      start={entry.shift_id in actualStart ? actualStart[entry.shift_id] : entry.actual_start}
+                      end={entry.shift_id in actualEnd ? actualEnd[entry.shift_id] : entry.actual_end}
+                      onStart={(value) => setActualStart((current) => ({ ...current, [entry.shift_id]: value }))}
+                      onEnd={(value) => setActualEnd((current) => ({ ...current, [entry.shift_id]: value }))}
+                      onClear={() => {
+                        setActualStart((current) => ({ ...current, [entry.shift_id]: null }));
+                        setActualEnd((current) => ({ ...current, [entry.shift_id]: null }));
+                      }}
+                    />
+                  )}
 
                   {!isWorked && (
                     <div className="mt-1.5 flex gap-1.5">
@@ -666,5 +692,79 @@ function BulkPanel({ keys }: { keys: string[] }) {
         </button>
       )}
     </aside>
+  );
+}
+
+/**
+ * The recorded clock of a worked shift: came at 10:47, left at 22:30. Both
+ * edges or neither — the maths refuses half a truth — and the little delta
+ * shows what the honesty is worth against the plan.
+ */
+function ActualClockRow({
+  entry,
+  start,
+  end,
+  onStart,
+  onEnd,
+  onClear,
+}: {
+  entry: DayShiftEntry;
+  start: string | null;
+  end: string | null;
+  onStart: (value: string) => void;
+  onEnd: (value: string) => void;
+  onClear: () => void;
+}) {
+  const { t } = useI18n();
+
+  const minutes = (time: string) => Number(time.slice(0, 2)) * 60 + Number(time.slice(3, 5));
+
+  const spanOf = (from: string, to: string) => {
+    const span = minutes(to) - minutes(from);
+
+    return (span <= 0 ? span + 24 * 60 : span) - entry.break_minutes;
+  };
+
+  const planned = spanOf(entry.start_time, entry.end_time);
+  const recorded = start !== null && end !== null ? spanOf(start, end) : null;
+  const delta = recorded === null ? 0 : recorded - planned;
+
+  return (
+    <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[0.8rem]">
+      <span className="field-hint flex-none">{t('Actually')}</span>
+      <input
+        type="time"
+        className="field-input !w-[5.6rem] !px-1.5 !py-0.5 !text-[0.8rem]"
+        value={start ?? entry.start_time}
+        onChange={(event) => {
+          if (event.target.value) {
+            onStart(event.target.value);
+            if (end === null) onEnd(entry.actual_end ?? entry.end_time);
+          }
+        }}
+      />
+      <span className="text-faint">–</span>
+      <input
+        type="time"
+        className="field-input !w-[5.6rem] !px-1.5 !py-0.5 !text-[0.8rem]"
+        value={end ?? entry.end_time}
+        onChange={(event) => {
+          if (event.target.value) {
+            onEnd(event.target.value);
+            if (start === null) onStart(entry.actual_start ?? entry.start_time);
+          }
+        }}
+      />
+      {recorded !== null && delta !== 0 && (
+        <span className={`tabular text-[0.72rem] font-semibold ${delta > 0 ? 'text-good' : 'text-warn'}`}>
+          {delta > 0 ? '+' : '−'}{Math.abs(Math.round((delta / 60) * 10) / 10)}h
+        </span>
+      )}
+      {(start !== null || entry.actual_start !== null) && (
+        <button type="button" className="btn btn-quiet btn-sm !px-1.5" title={t('Back to the plan')} onClick={onClear}>
+          ↺
+        </button>
+      )}
+    </div>
   );
 }

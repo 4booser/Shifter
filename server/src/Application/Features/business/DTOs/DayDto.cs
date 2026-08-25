@@ -25,7 +25,12 @@ public record DayShiftDto(
     decimal earned,
     bool worked,
     /// <summary>Asking the team to take this one.</summary>
-    bool needs_cover
+    bool needs_cover,
+    /// <summary>"HH:mm" where the recorded reality differs from the plan.</summary>
+    string? actual_start,
+    string? actual_end,
+    /// <summary>Unpaid minutes inside the shift, as placed on this day.</summary>
+    int break_minutes
     );
 
 /// <summary>A day as the calendar reads it, with the money already worked out.</summary>
@@ -124,7 +129,12 @@ public record DayShiftSaveDto(
     int shift_id,
     bool worked,
     /// <summary>Asking the team to take this one. Defaulted so older clients keep working.</summary>
-    bool needs_cover = false
+    bool needs_cover = false,
+    /// <summary>"HH:mm"; both edges or neither, and only meaningful once worked.</summary>
+    string? actual_start = null,
+    string? actual_end = null,
+    /// <summary>Overrides the template's unpaid minutes; null keeps them.</summary>
+    int? break_minutes = null
     );
 
 public record DaySaleSaveDto(

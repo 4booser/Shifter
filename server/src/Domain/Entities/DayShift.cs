@@ -49,13 +49,29 @@ public sealed class DayShift
     /// </summary>
     public bool? TeamVisible { get; set; }
 
-    /// <summary>Clock time between start and end, wrapping past midnight.</summary>
+    /// <summary>
+    /// When the shift actually started, where that differs from the plan. Set
+    /// by the live clock or by hand; null keeps the template's word for it.
+    /// Both must be present to count — one honest edge and one planned edge
+    /// would price an interval nobody worked.
+    /// </summary>
+    public TimeOnly? ActualStart { get; set; }
+
+    public TimeOnly? ActualEnd { get; set; }
+
+    /// <summary>Clock time between start and end, wrapping past midnight.
+    /// The recorded reality wins over the plan when both edges exist.</summary>
     [NotMapped]
     public TimeSpan Duration
     {
         get
         {
-            TimeSpan span = EndTime - StartTime;
+            (TimeOnly from, TimeOnly to) =
+                ActualStart is TimeOnly begin && ActualEnd is TimeOnly finish
+                    ? (begin, finish)
+                    : (StartTime, EndTime);
+
+            TimeSpan span = to - from;
 
             return span < TimeSpan.Zero ? span + TimeSpan.FromDays(1) : span;
         }

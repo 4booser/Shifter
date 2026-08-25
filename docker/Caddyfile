@@ -45,11 +45,13 @@
 	# bundle it cached the first time. The site then looks frozen at an old
 	# release while the server has been shipping new ones for days.
 
-	# The entry points, which must be checked every single time. no-cache does
-	# not forbid storing them — it requires revalidation, so an unchanged file
-	# still costs a 304 rather than a download. Every route is its own .html
-	# now, so the pattern covers them all.
-	@entry path / /sw.js /manifest.webmanifest *.html
+	# Everything that is not a hashed asset must be checked every single time.
+	# no-cache does not forbid storing — it requires revalidation, so an
+	# unchanged file still costs a 304 rather than a download. Matched by
+	# exclusion because the routes are extensionless (/dashboard), and a list
+	# of pages here would go stale the day a page is added: the first blank
+	# response a browser cached heuristically was exactly that.
+	@entry not path /_next/* /icons/*
 	header @entry Cache-Control "no-cache"
 
 	# Hashed builds, where the name changes whenever the contents do. These are

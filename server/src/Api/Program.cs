@@ -99,7 +99,17 @@ try
                 app.Environment.WebRootPath ?? string.Empty,
                 path.TrimStart('/') + ".html");
 
-            if (File.Exists(candidate)) context.Request.Path = path + ".html";
+            if (File.Exists(candidate))
+            {
+                context.Request.Path = path + ".html";
+
+                // WebApplication slips UseRouting in ahead of user middleware,
+                // so by the time this runs the SPA fallback has already been
+                // matched for the extensionless path — and the static files
+                // middleware steps aside whenever an endpoint is set. Clearing
+                // it hands the rewritten path back to static files.
+                context.SetEndpoint(null);
+            }
         }
 
         await next();

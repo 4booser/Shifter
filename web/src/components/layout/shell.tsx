@@ -12,7 +12,7 @@ import { flushOffline, loadCatalogues, useCalendar } from '@/lib/store/calendar'
 import { PointerFx, PressRipple, RevealObserver } from '@/lib/fx';
 import { Toasts } from '@/lib/toast';
 import { useUnlockCheck } from '@/components/achievements/badges';
-import { CommandPalette } from '@/components/command/palette';
+import { CommandPalette, PALETTE_OPEN_EVENT } from '@/components/command/palette';
 import { LiveBar } from '@/components/live/live-bar';
 import { Icon } from '@/components/ui/icon';
 
@@ -108,6 +108,17 @@ export function Shell({ children }: { children: React.ReactNode }) {
                 {pendingOffline}
               </button>
             )}
+
+            <button
+              type="button"
+              className="btn btn-quiet btn-sm"
+              aria-label={t('Command palette')}
+              title="⌘K"
+              onClick={() => dispatchEvent(new CustomEvent(PALETTE_OPEN_EVENT))}
+            >
+              <Icon name="search" size={16} />
+              <kbd className="hidden rounded border border-border px-1 text-[0.62rem] text-muted lg:inline">⌘K</kbd>
+            </button>
 
             <button
               type="button"

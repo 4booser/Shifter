@@ -30,6 +30,9 @@ interface Command {
 /** Dashboard-only actions announce themselves over this event. */
 export const PALETTE_EVENT = 'shifter:cmd';
 
+/** Anything can open the palette by firing this — the header button does. */
+export const PALETTE_OPEN_EVENT = 'shifter:palette';
+
 function score(query: string, label: string): number | null {
   const hay = label.toLowerCase();
   const needle = query.toLowerCase();
@@ -78,9 +81,19 @@ export function CommandPalette() {
       if (event.key === 'Escape') setOpen(false);
     };
 
-    addEventListener('keydown', onKey);
+    const onOpen = () => {
+      setOpen(true);
+      setQuery('');
+      setHot(0);
+    };
 
-    return () => removeEventListener('keydown', onKey);
+    addEventListener('keydown', onKey);
+    addEventListener(PALETTE_OPEN_EVENT, onOpen);
+
+    return () => {
+      removeEventListener('keydown', onKey);
+      removeEventListener(PALETTE_OPEN_EVENT, onOpen);
+    };
   }, []);
 
   useEffect(() => {
@@ -149,6 +162,29 @@ export function CommandPalette() {
           },
         });
       }
+    }
+
+    const accents: { label: string; value: string }[] = [
+      { label: 'Indigo', value: '#4F46E5' },
+      { label: 'Ocean', value: '#0284C7' },
+      { label: 'Teal', value: '#0D9488' },
+      { label: 'Emerald', value: '#16A34A' },
+      { label: 'Violet', value: '#7C3AED' },
+      { label: 'Coral', value: '#E11D48' },
+      { label: 'Amber', value: '#D97706' },
+      { label: 'Rose', value: '#DB2777' },
+    ];
+
+    for (const accent of accents) {
+      list.push({
+        id: `accent-${accent.value}`,
+        icon: 'brush',
+        label: `${t('Accent')}: ${t(accent.label)}`,
+        run: () => {
+          update('accent', accent.value);
+          setOpen(false);
+        },
+      });
     }
 
     for (const theme of THEME_PRESETS) {

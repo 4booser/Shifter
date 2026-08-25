@@ -1145,6 +1145,12 @@ export const RU: Dictionary = {
   'Net': 'На руки',
   'Report': 'Отчёт',
   'Twelve weeks': 'Двенадцать недель',
+  'Around the clock': 'Круглые сутки',
+  'Midnight on top; each sector is what that hour brings.': 'Полночь сверху; каждый сектор — сколько приносит этот час.',
+  'Your hour, week by week': 'Ваш час, неделя за неделей',
+  'Where a raise — or a quiet cut — shows up first.': 'Здесь первым видно повышение — или тихое урезание.',
+  'By place': 'По местам',
+  'Place': 'Место',
 };
 
 export const UK: Dictionary = {
@@ -2275,4 +2281,10 @@ export const UK: Dictionary = {
   'Net': 'На руки',
   'Report': 'Звіт',
   'Twelve weeks': 'Дванадцять тижнів',
+  'Around the clock': 'Цілу добу',
+  'Midnight on top; each sector is what that hour brings.': 'Північ зверху; кожен сектор — скільки приносить ця година.',
+  'Your hour, week by week': 'Ваша година, тиждень за тижнем',
+  'Where a raise — or a quiet cut — shows up first.': 'Тут першим видно підвищення — або тихе урізання.',
+  'By place': 'По місцях',
+  'Place': 'Місце',
 };

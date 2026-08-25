@@ -1057,3 +1057,18 @@ body,
     break-inside: avoid;
   }
 }
+
+/* Donut slices sweep in by unwinding their dash offset. */
+.donut-arc {
+  transition:
+    stroke-width calc(0.2s * var(--motion)) ease,
+    opacity calc(0.2s * var(--motion)) ease;
+  animation: donut-in calc(0.7s * var(--motion)) cubic-bezier(0.2, 0.85, 0.3, 1) backwards;
+  animation-delay: calc(var(--i, 0) * 90ms * var(--motion));
+}
+
+@keyframes donut-in {
+  from {
+    opacity: 0;
+  }
+}

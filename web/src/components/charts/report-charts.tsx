@@ -189,3 +189,165 @@ export function PunchcardChart({ card }: { card: Punchcard }) {
     </div>
   );
 }
+
+/**
+ * The clock face of earnings: 24 sectors, midnight at the top, each hour's
+ * bar reaching out by what it brings in. The polar layout is the point —
+ * night work visibly hangs at the top, evenings on the left.
+ */
+export function HourDial({ hours }: { hours: number[] }) {
+  const { format } = useMoney();
+  const [hover, setHover] = useState<number | null>(null);
+
+  const size = 260;
+  const centre = size / 2;
+  const inner = 44;
+  const outer = 104;
+  const peak = Math.max(...hours, 1);
+
+  const point = (hour: number, radius: number, spread = 0) => {
+    // Midnight up top; each hour is 15 degrees.
+    const angle = ((hour + spread) / 24) * Math.PI * 2 - Math.PI / 2;
+
+    return [centre + Math.cos(angle) * radius, centre + Math.sin(angle) * radius] as const;
+  };
+
+  const sector = (hour: number, radius: number) => {
+    const [x1, y1] = point(hour, inner, 0.08);
+    const [x2, y2] = point(hour, radius, 0.08);
+    const [x3, y3] = point(hour, radius, 0.92);
+    const [x4, y4] = point(hour, inner, 0.92);
+
+    return `M ${x1} ${y1} L ${x2} ${y2} A ${radius} ${radius} 0 0 1 ${x3} ${y3} L ${x4} ${y4} A ${inner} ${inner} 0 0 0 ${x1} ${y1} Z`;
+  };
+
+  return (
+    <div className="relative mx-auto max-w-[17rem]">
+      <svg viewBox={`0 0 ${size} ${size}`} className="block w-full" onPointerLeave={() => setHover(null)}>
+        <circle cx={centre} cy={centre} r={inner - 4} fill="none" stroke="var(--border)" />
+        <circle cx={centre} cy={centre} r={outer + 4} fill="none" stroke="var(--border)" strokeDasharray="2 5" />
+
+        {hours.map((value, hour) => {
+          const radius = inner + 6 + ((outer - inner - 6) * value) / peak;
+          const heat = value / peak;
+
+          return (
+            <g key={hour}>
+              <path
+                className="fade-in"
+                style={stagger(hour % 24)}
+                d={sector(hour, value === 0 ? inner + 3 : radius)}
+                fill={
+                  value === 0
+                    ? 'var(--surface-2)'
+                    : `color-mix(in srgb, var(--accent) ${30 + heat * 70}%, var(--surface-2))`
+                }
+                opacity={hover === null || hover === hour ? 1 : 0.35}
+                onPointerEnter={() => setHover(hour)}
+              />
+            </g>
+          );
+        })}
+
+        {[0, 6, 12, 18].map((hour) => {
+          const [x, y] = point(hour, outer + 15, 0.5);
+
+          return (
+            <text key={hour} x={x} y={y + 3} textAnchor="middle" fontSize="10" fill="var(--faint)">
+              {hour}
+            </text>
+          );
+        })}
+
+        <text x={centre} y={centre - 2} textAnchor="middle" fontSize="11" fill="var(--muted)" fontWeight="600">
+          {hover === null ? '24h' : `${hover}:00`}
+        </text>
+        <text x={centre} y={centre + 13} textAnchor="middle" fontSize="10" fill="var(--faint)">
+          {hover === null ? '' : format(hours[hover])}
+        </text>
+      </svg>
+    </div>
+  );
+}
+
+export interface DonutSlice {
+  label: string;
+  value: number;
+  colour: string;
+}
+
+/** Shares of one whole with the total in the middle; hover names the slice. */
+export function Donut({ slices, centreLabel }: { slices: DonutSlice[]; centreLabel: string }) {
+  const { format, compact } = useMoney();
+  const [hover, setHover] = useState<number | null>(null);
+
+  const total = slices.reduce((sum, slice) => sum + slice.value, 0);
+
+  if (total <= 0) return null;
+
+  const size = 190;
+  const centre = size / 2;
+  const radius = 74;
+  const circumference = 2 * Math.PI * radius;
+  const gap = slices.length > 1 ? 2.5 : 0;
+
+  let offset = 0;
+
+  return (
+    <div className="flex flex-wrap items-center justify-center gap-4">
+      <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size} className="-rotate-90" onPointerLeave={() => setHover(null)}>
+        {slices.map((slice, index) => {
+          const share = slice.value / total;
+          const length = Math.max(0, share * circumference - gap);
+          const start = offset;
+
+          offset += share * circumference;
+
+          return (
+            <circle
+              key={slice.label}
+              className="donut-arc"
+              style={stagger(index)}
+              cx={centre}
+              cy={centre}
+              r={radius}
+              fill="none"
+              stroke={slice.colour}
+              strokeWidth={hover === index ? 26 : 20}
+              strokeLinecap="butt"
+              strokeDasharray={`${length} ${circumference - length}`}
+              strokeDashoffset={-start}
+              opacity={hover === null || hover === index ? 1 : 0.35}
+              onPointerEnter={() => setHover(index)}
+            />
+          );
+        })}
+        <g className="rotate-90" style={{ transformOrigin: 'center' }}>
+          <text x={centre} y={centre - 2} textAnchor="middle" fontSize="15" fontWeight="700" fill="var(--ink)">
+            {hover === null ? compact(total) : compact(slices[hover].value)}
+          </text>
+          <text x={centre} y={centre + 14} textAnchor="middle" fontSize="9.5" fill="var(--faint)">
+            {hover === null ? centreLabel : slices[hover].label}
+          </text>
+        </g>
+      </svg>
+
+      <ul className="flex min-w-40 flex-col gap-1.5">
+        {slices.map((slice, index) => (
+          <li
+            key={slice.label}
+            className="flex cursor-default items-center gap-2 text-[0.82rem]"
+            style={{ opacity: hover === null || hover === index ? 1 : 0.45 }}
+            onPointerEnter={() => setHover(index)}
+            onPointerLeave={() => setHover(null)}
+          >
+            <span className="h-2.5 w-2.5 flex-none rounded-full" style={{ background: slice.colour }} />
+            <span className="min-w-0 flex-1 truncate">{slice.label}</span>
+            <span className="tabular text-muted">{Math.round((slice.value / total) * 100)}%</span>
+            <span className="tabular font-semibold">{format(slice.value)}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}

@@ -1,5 +1,7 @@
 'use client';
 
+import Link from 'next/link';
+
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { calendarApi } from '@/lib/api/calendar';
@@ -35,6 +37,18 @@ import { Icon } from '@/components/ui/icon';
 export const TILE_IDS = ['today', 'pace', 'goal', 'payday', 'streak', 'best', 'hours', 'tips', 'heat'] as const;
 
 export type TileId = (typeof TILE_IDS)[number];
+
+/** Where a tile leads: every fact opens the page that explains it. */
+const TILE_LINKS: Partial<Record<TileId, string>> = {
+  pace: '/stats',
+  goal: '/stats',
+  payday: '/payouts',
+  streak: '/wrapped',
+  best: '/report',
+  hours: '/report',
+  tips: '/stats',
+  heat: '/wrapped',
+};
 
 const TILE_NAMES: Record<TileId, string> = {
   today: 'Today',
@@ -100,8 +114,8 @@ export function TileStrip() {
   return (
     <section aria-label={t('Overview')}>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:[grid-template-columns:repeat(auto-fit,minmax(9.5rem,1fr))]">
-        {visible.map((id, index) => (
-          <div key={id} className="tile glow tilt reveal" style={stagger(index)}>
+        {visible.map((id, index) => {
+          const body = (
             <Tile
               id={id}
               monthDays={monthDays}
@@ -110,8 +124,19 @@ export function TileStrip() {
               schedule={schedule}
               templates={templates}
             />
-          </div>
-        ))}
+          );
+          const href = TILE_LINKS[id];
+
+          return href === undefined ? (
+            <div key={id} className="tile glow tilt reveal" style={stagger(index)}>
+              {body}
+            </div>
+          ) : (
+            <Link key={id} href={href} className="tile glow tilt reveal" style={stagger(index)}>
+              {body}
+            </Link>
+          );
+        })}
       </div>
 
       <div className="mt-1 flex justify-end">
@@ -261,7 +286,7 @@ function TodayTile({ window, templates }: { window: CalendarDayData[]; templates
         <span className="mt-auto flex gap-1">
           <button
             type="button"
-            className="btn btn-primary btn-sm flex-1"
+            className="btn btn-primary btn-sm min-w-0 flex-1 truncate"
             onClick={() => {
               void finishLiveShift().then(() => {
                 fireConfetti();
@@ -271,8 +296,14 @@ function TodayTile({ window, templates }: { window: CalendarDayData[]; templates
           >
             {t('Finish')}
           </button>
-          <button type="button" className="btn btn-quiet btn-sm" onClick={cancelLiveShift}>
-            {t('Cancel')}
+          <button
+            type="button"
+            className="btn btn-quiet btn-sm flex-none !px-2"
+            aria-label={t('Cancel')}
+            title={t('Cancel')}
+            onClick={cancelLiveShift}
+          >
+            ✕
           </button>
         </span>
       </>
@@ -318,6 +349,17 @@ function PaceTile({ monthDays }: { monthDays: CalendarDayData[] }) {
   const bounds = monthBounds(todayKey());
   const forecast = forecastFor(monthDays, bounds.from, bounds.to);
 
+  // The month so far as a tiny cumulative line under the number.
+  const spark = useMemo(() => {
+    const sorted = [...monthDays].filter((day) => day.date <= todayKey()).sort((a, b) => a.date.localeCompare(b.date));
+
+    let running = 0;
+    const values = sorted.map((day) => (running += day.earned));
+    const peak = Math.max(1, ...values);
+
+    return values.map((value, index) => `${(index / Math.max(1, values.length - 1)) * 100},${24 - (value / peak) * 22}`).join(' ');
+  }, [monthDays]);
+
   return (
     <>
       <Label icon="chart">{t('Heading for')}</Label>
@@ -327,6 +369,11 @@ function PaceTile({ monthDays }: { monthDays: CalendarDayData[] }) {
       <span className="field-hint">
         <Money value={forecast.earnedSoFar} /> {t('so far')}
       </span>
+      {spark.length > 0 && (
+        <svg viewBox="0 0 100 26" preserveAspectRatio="none" className="fade-in mt-auto h-6 w-full" aria-hidden="true">
+          <polyline points={spark} fill="none" stroke="var(--accent)" strokeWidth="2" vectorEffect="non-scaling-stroke" opacity="0.8" />
+        </svg>
+      )}
     </>
   );
 }

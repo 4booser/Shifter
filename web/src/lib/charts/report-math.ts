@@ -1,4 +1,5 @@
 import { CalendarDayData, DaysResponse } from '../calendar/models';
+import { shiftDays } from '../calendar/calendar-date';
 
 /**
  * The arithmetic behind the report visualisations, kept pure: a waterfall
@@ -114,4 +115,59 @@ export function punchcard(days: readonly CalendarDayData[]): Punchcard | null {
     maxCount: Math.max(...cells.map((cell) => cell.count)),
     maxPerHour: Math.max(...cells.map((cell) => cell.perHour)),
   };
+}
+
+/** Money attributed to each hour of the clock, spread across shift spans. */
+export function hourDial(days: readonly CalendarDayData[]): number[] {
+  const hours = new Array<number>(24).fill(0);
+
+  for (const day of days) {
+    for (const entry of day.shifts) {
+      if (!entry.worked || entry.hours <= 0 || entry.earned <= 0) continue;
+
+      const start = Number(entry.start_time.slice(0, 2));
+      const end = Number(entry.end_time.slice(0, 2));
+      // Overnight shifts wrap: 22 → 06 spans eight clock hours, not minus.
+      const span = end > start ? end - start : end + 24 - start;
+
+      if (span <= 0) continue;
+
+      const perHour = entry.earned / span;
+
+      for (let offset = 0; offset < span; offset += 1) {
+        hours[(start + offset) % 24] += perHour;
+      }
+    }
+  }
+
+  return hours;
+}
+
+export interface RatePoint {
+  /** Monday of the week. */
+  week: string;
+  perHour: number;
+  hours: number;
+}
+
+/** The paying hour, week by week — the line a raise (or a quiet cut) shows up on. */
+export function rateTrend(days: readonly CalendarDayData[]): RatePoint[] {
+  const weeks = new Map<string, { earned: number; hours: number }>();
+
+  for (const day of days) {
+    if (day.hours <= 0) continue;
+
+    const weekday = (new Date(`${day.date}T00:00:00`).getDay() + 6) % 7;
+    const monday = shiftDays(day.date, -weekday);
+    const bucket = weeks.get(monday) ?? { earned: 0, hours: 0 };
+
+    bucket.earned += day.earned;
+    bucket.hours += day.hours;
+    weeks.set(monday, bucket);
+  }
+
+  return [...weeks.entries()]
+    .filter(([, bucket]) => bucket.hours > 0)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([week, bucket]) => ({ week, perHour: bucket.earned / bucket.hours, hours: bucket.hours }));
 }

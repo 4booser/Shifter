@@ -88,3 +88,77 @@ describe('punchcard', () => {
     expect(punchcard([])).toBeNull();
   });
 });
+
+import { hourDial, rateTrend } from '@/lib/charts/report-math';
+
+describe('hourDial', () => {
+  const day = (start: string, end: string, hours: number, earned: number) => ({
+    date: '2026-03-02',
+    shifts: [
+      {
+        shift_id: 1,
+        name: 'Bar',
+        symbol: null,
+        colour: null,
+        start_time: start,
+        end_time: end,
+        hours,
+        earned,
+        worked: true,
+        needs_cover: false,
+      },
+    ],
+    sales: [],
+    tips: null,
+    tips_cash: null,
+    tip_out: 0,
+    deductions: 0,
+    note: null,
+    colour: null,
+    hours,
+    earned,
+    planned: 0,
+  });
+
+  it('spreads a shift evenly across the hours it spans', () => {
+    const dial = hourDial([day('10:00', '14:00', 4, 400)]);
+
+    expect(dial[10]).toBe(100);
+    expect(dial[13]).toBe(100);
+    expect(dial[14]).toBe(0);
+  });
+
+  it('wraps an overnight shift past midnight', () => {
+    const dial = hourDial([day('22:00', '02:00', 4, 400)]);
+
+    expect(dial[23]).toBe(100);
+    expect(dial[1]).toBe(100);
+    expect(dial[2]).toBe(0);
+  });
+});
+
+describe('rateTrend', () => {
+  it('groups by Monday-anchored weeks and divides honestly', () => {
+    const day = (date: string, hours: number, earned: number) => ({
+      date,
+      shifts: [],
+      sales: [],
+      tips: null,
+      tips_cash: null,
+      tip_out: 0,
+      deductions: 0,
+      note: null,
+      colour: null,
+      hours,
+      earned,
+      planned: 0,
+    });
+
+    // Wed 4 March and Sun 8 March share a week; Mon 9 March starts the next.
+    const trend = rateTrend([day('2026-03-04', 8, 800), day('2026-03-08', 2, 400), day('2026-03-09', 8, 1600)]);
+
+    expect(trend).toHaveLength(2);
+    expect(trend[0]).toMatchObject({ week: '2026-03-02', perHour: 120 });
+    expect(trend[1]).toMatchObject({ week: '2026-03-09', perHour: 200 });
+  });
+});

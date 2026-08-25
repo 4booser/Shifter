@@ -26,8 +26,8 @@ import { useSettings } from '@/lib/settings/store';
 import { Shell } from '@/components/layout/shell';
 import { useReveal } from '@/lib/fx';
 import { GoalsModal } from '@/components/dashboard/modals/goals-modal';
-import { punchcard, waterfall } from '@/lib/charts/report-math';
-import { PunchcardChart, WaterfallChart } from '@/components/charts/report-charts';
+import { hourDial, punchcard, rateTrend, waterfall } from '@/lib/charts/report-math';
+import { HourDial, PunchcardChart, WaterfallChart } from '@/components/charts/report-charts';
 import { AreaChart, ColumnChart, Heatmap, Plot, ProgressRing } from '@/components/charts/charts';
 import { Alert, CountUp, Delta, Money } from '@/components/ui/bits';
 import { Icon } from '@/components/ui/icon';
@@ -183,6 +183,16 @@ function Stats() {
   const forecast = forecastFor(summary.days, range.from, range.to);
   const waterfallSteps = useMemo(() => waterfall(summary), [summary]);
   const card = useMemo(() => punchcard(summary.days), [summary.days]);
+  const dial = useMemo(() => hourDial(summary.days), [summary.days]);
+  const rate = useMemo(
+    () =>
+      rateTrend(summary.days).map((point) => ({
+        label: `${point.week.slice(8)}.${point.week.slice(5, 7)}`,
+        value: point.perHour,
+      })),
+    [summary.days],
+  );
+  const dialTotal = dial.reduce((sum, value) => sum + value, 0);
   const pace = paceToGoal(forecast, active?.target ?? null);
 
   const cumulative = useMemo(() => {
@@ -690,6 +700,22 @@ function Stats() {
         )}
       </div>
 
+      {/* ==== Clock face + rate trend ==== */}
+      {(dialTotal > 0 || rate.length > 1) && (
+        <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+          {dialTotal > 0 && (
+            <Card title={t('Around the clock')} hint={t('Midnight on top; each sector is what that hour brings.')}>
+              <HourDial hours={dial} />
+            </Card>
+          )}
+          {rate.length > 1 && (
+            <Card title={t('Your hour, week by week')} hint={t('Where a raise — or a quiet cut — shows up first.')}>
+              <AreaChart points={rate} />
+            </Card>
+          )}
+        </div>
+      )}
+
       {/* ==== Heatmap ==== */}
       <Card title={t('Every day, at a glance')}>
         <Heatmap values={heatValues} from={range.from === ALL_TIME.from ? `${currentMonth().year}-01-01` : range.from} to={range.to === ALL_TIME.to ? `${currentMonth().year}-12-31` : range.to} />
@@ -838,7 +864,7 @@ function Stats() {
 
 function Kpi({ label, delta: change, children }: { label: string; delta: number | null; children: React.ReactNode }) {
   return (
-    <div className="card reveal p-3">
+    <div className="card reveal lift glow p-3">
       <span className="field-hint block">{label}</span>
       <span className="flex items-baseline gap-2">
         {children}

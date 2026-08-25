@@ -18,7 +18,8 @@ import { delta } from '@/lib/calendar/stats-math';
 import { punchcard, waterfall } from '@/lib/charts/report-math';
 import { useI18n } from '@/lib/i18n';
 import { useMoney } from '@/lib/settings/money';
-import { PunchcardChart, WaterfallChart } from '@/components/charts/report-charts';
+import { Donut, PunchcardChart, WaterfallChart } from '@/components/charts/report-charts';
+import { Sheet, buildXlsx, downloadBlob } from '@/lib/export/xlsx';
 import { Shell } from '@/components/layout/shell';
 import { Alert, CountUp, Delta, Money } from '@/components/ui/bits';
 import { Icon } from '@/components/ui/icon';
@@ -93,6 +94,28 @@ function Report() {
 
   const salesUnits = (day: CalendarDayData) => day.sales.reduce((sum, sale) => sum + sale.quantity, 0);
 
+  const exportXlsx = () => {
+    const sheet: Sheet = {
+      name: t('Monthly report').slice(0, 28),
+      rows: [
+        [t('Date'), t('Shifts'), t('Hours'), t('Tips'), t('Sales'), t('Earned')],
+        ...rows.map((day) => [
+          day.date,
+          day.shifts.filter((entry) => entry.worked).map((entry) => entry.name).join(', '),
+          day.hours,
+          (day.tips ?? 0) + (day.tips_cash ?? 0),
+          salesUnits(day),
+          day.earned,
+        ]),
+        [t('Total'), '', summary.hours, summary.tips_earned, rows.reduce((sum, day) => sum + salesUnits(day), 0), summary.total_earned],
+      ],
+    };
+
+    downloadBlob(`shifter-report-${firstOf(month).slice(0, 7)}.xlsx`, buildXlsx([sheet]));
+  };
+
+  const PLACE_TINTS = ['var(--s1)', 'var(--s2)', 'var(--s3)', 'var(--accent)', 'var(--warn)', 'var(--good)'];
+
   return (
     <div className="flex flex-col gap-4 print-report">
       {/* ==== Header: the month, and the ways out ==== */}
@@ -110,6 +133,10 @@ function Report() {
           <button type="button" className="btn btn-sm ml-2" onClick={() => print()}>
             <Icon name="download" size={13} />
             {t('Print or PDF')}
+          </button>
+          <button type="button" className="btn btn-sm" onClick={exportXlsx}>
+            <Icon name="download" size={13} />
+            XLSX
           </button>
           <Link href="/stats" className="btn btn-quiet btn-sm">
             {t('Statistics')}
@@ -166,6 +193,46 @@ function Report() {
               </section>
             )}
           </div>
+
+          {/* ==== By place ==== */}
+          {summary.by_location.length > 1 && (
+            <section className="card reveal p-4">
+              <h2 className="mb-2 text-[0.98rem] font-bold">{t('By place')}</h2>
+              <div className="grid items-center gap-3 lg:grid-cols-2">
+                <Donut
+                  centreLabel={t('Earned')}
+                  slices={summary.by_location.map((place, index) => ({
+                    label: place.name,
+                    value: place.earned,
+                    colour: place.colour || PLACE_TINTS[index % PLACE_TINTS.length],
+                  }))}
+                />
+                <table className="w-full border-collapse text-[0.85rem]">
+                  <thead>
+                    <tr className="border-b border-border text-left text-[0.72rem] uppercase tracking-wide text-muted">
+                      <th className="py-1.5 pr-2 font-semibold">{t('Place')}</th>
+                      <th className="py-1.5 pr-2 text-right font-semibold">{t('Hours')}</th>
+                      <th className="py-1.5 pr-2 text-right font-semibold">{t('Per hour')}</th>
+                      <th className="py-1.5 text-right font-semibold">{t('Earned')}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {summary.by_location.map((place) => (
+                      <tr key={place.location_id} className="border-b border-border/60">
+                        <td className="flex items-center gap-1.5 py-1.5 pr-2">
+                          <span className="h-2 w-2 flex-none rounded-full" style={{ background: place.colour }} />
+                          {place.name}
+                        </td>
+                        <td className="py-1.5 pr-2 text-right tabular">{Math.round(place.hours * 10) / 10}</td>
+                        <td className="py-1.5 pr-2 text-right tabular">{format(place.per_hour)}</td>
+                        <td className="py-1.5 text-right font-semibold tabular">{format(place.earned)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          )}
 
           {/* ==== The ledger ==== */}
           <section className="card reveal overflow-x-auto p-4">
@@ -237,7 +304,7 @@ function Report() {
 
 function Hero({ label, change, children }: { label: string; change: number | null; children: React.ReactNode }) {
   return (
-    <div className="card reveal glow p-3">
+    <div className="card reveal lift glow p-3">
       <span className="field-hint block">{label}</span>
       <span className="flex items-baseline gap-2">
         {children}

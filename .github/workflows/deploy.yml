@@ -138,13 +138,14 @@ jobs:
             echo "TAG=${{ github.sha }}" >> .env.release
 
             # Nightly database dumps: the script ships with every release and
-            # the cron entry is rewritten idempotently, so changing the
-            # schedule or the script is just another deploy.
+            # the crontab line is rewritten idempotently, so changing the
+            # schedule or the script is just another deploy. The deploy user's
+            # own crontab, because /etc/cron.d is root's and this user is not.
             chmod +x docker/backup.sh
-            printf '%s\n' \
-              'SHELL=/bin/bash' \
-              '17 3 * * * root /opt/shifter/docker/backup.sh >> /var/log/shifter-backup.log 2>&1' \
-              > /etc/cron.d/shifter-backup
+            mkdir -p backups
+            ( crontab -l 2>/dev/null | grep -v shifter-backup ; \
+              echo '17 3 * * * /opt/shifter/docker/backup.sh >> /opt/shifter/backups/backup.log 2>&1 # shifter-backup' \
+            ) | crontab -
 
             docker compose -f compose.prod.yaml --env-file .env --env-file .env.release pull
             docker compose -f compose.prod.yaml --env-file .env --env-file .env.release up -d

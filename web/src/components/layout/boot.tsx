@@ -22,9 +22,26 @@ export function Boot({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!('serviceWorker' in navigator)) return;
 
-    void navigator.serviceWorker.getRegistrations().then((registrations) => {
-      for (const registration of registrations) void registration.unregister();
-    });
+    // Notifications need a living registration; everyone else keeps the old
+    // clean-slate behaviour, which is what retired the legacy offline worker.
+    const wantsPush = (() => {
+      try {
+        const raw = JSON.parse(localStorage.getItem('shifter.settings') ?? '{}') as {
+          notifyTomorrow?: boolean;
+          notifyUnclosed?: boolean;
+        };
+
+        return raw.notifyTomorrow === true || raw.notifyUnclosed === true;
+      } catch {
+        return false;
+      }
+    })();
+
+    if (!wantsPush) {
+      void navigator.serviceWorker.getRegistrations().then((registrations) => {
+        for (const registration of registrations) void registration.unregister();
+      });
+    }
 
     if ('caches' in window) {
       void caches.keys().then((keys) => {

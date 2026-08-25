@@ -43,6 +43,10 @@ services:
       ConnectionStrings__Shifter: "Host=db;Port=5432;Database=shifter;Username=shifter_user;Password=${POSTGRES_PASSWORD}"
       ConnectionStrings__Tokens: "Host=db;Port=5432;Database=tokens;Username=shifter_user;Password=${POSTGRES_PASSWORD}"
       SHIFTER_JWT_KEY: ${SHIFTER_JWT_KEY:?set SHIFTER_JWT_KEY in .env}
+      # Empty when unset, which the app reads as "notifications off" — a
+      # server without VAPID keys still starts.
+      Push__PublicKey: ${VAPID_PUBLIC_KEY:-}
+      Push__PrivateKey: ${VAPID_PRIVATE_KEY:-}
       # No Google__ClientId here on purpose. It would be set even when the
       # variable is unset, and an empty environment variable overrides
       # appsettings.json rather than deferring to it — which silently turns off

@@ -23,10 +23,24 @@ public class ShifterDbContext : DbContext
     public DbSet<Goal> Goals => Set<Goal>();
     public DbSet<WebhookEndpoint> WebhookEndpoints => Set<WebhookEndpoint>();
     public DbSet<WebhookDelivery> WebhookDeliveries => Set<WebhookDelivery>();
+    public DbSet<PushSubscription> PushSubscriptions => Set<PushSubscription>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ShifterDbContext).Assembly);
+
+        // A browser re-subscribing must land on its old row, not add a twin
+        // that doubles every notification.
+        modelBuilder.Entity<PushSubscription>()
+            .HasIndex(subscription => subscription.Endpoint)
+            .IsUnique();
+
+        // A deleted account takes its devices with it.
+        modelBuilder.Entity<PushSubscription>()
+            .HasOne(subscription => subscription.User)
+            .WithMany()
+            .HasForeignKey(subscription => subscription.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         // The registration check and the insert are separate operations, so
         // without this two simultaneous sign-ups could both claim one login.

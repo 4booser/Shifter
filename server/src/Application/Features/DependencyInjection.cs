@@ -5,6 +5,7 @@ using Shifter.Application.Features.Auth.Services;
 using Shifter.Application.Features.Auth.Services.Interfaces;
 using Shifter.Application.Features.business.Services;
 using Shifter.Application.Features.business.Services.Interfaces;
+using Shifter.Application.Features.Push;
 using Shifter.Application.Features.Webhooks.Services;
 using Shifter.Application.Features.Webhooks.Services.Interfaces;
 
@@ -77,6 +78,12 @@ public static class DependencyInjection
             .ValidateOnStart();
 
         services.AddScoped<IJwtService, JwtService>();
+
+        // Web push: options may be empty, in which case the sender reports
+        // itself disabled and the scheduler exits without a single pass.
+        services.Configure<PushOptions>(configuration.GetSection(PushOptions.Section));
+        services.AddSingleton<PushSender>();
+        services.AddHostedService<PushScheduler>();
         services.AddSingleton<IHasher, Hasher>();
         services.AddScoped<IAuthTokenIssuer, AuthTokenIssuer>();
 

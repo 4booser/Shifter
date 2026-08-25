@@ -1,6 +1,9 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+
 import { holidaysCountries } from './holiday-countries';
+import { PushState, pushState, syncPush, testPush } from '@/lib/push';
 import { useI18n, LANGS } from '@/lib/i18n';
 import {
   ACCENT_PRESETS,
@@ -18,6 +21,37 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
   const settings = useSettings((state) => state.settings);
   const update = useSettings((state) => state.update);
   const reset = useSettings((state) => state.reset);
+
+  const [push, setPush] = useState<PushState>('off');
+  const [tested, setTested] = useState(false);
+
+  // Every change to the notification trio re-syncs the server's copy; the
+  // state that comes back is what the hint under the toggles reports.
+  useEffect(() => {
+    if (!open) return;
+
+    let cancelled = false;
+
+    void pushState(settings).then((state) => !cancelled && setPush(state));
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    let cancelled = false;
+
+    void syncPush(settings).then((state) => !cancelled && setPush(state));
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [settings.notifyTomorrow, settings.notifyUnclosed, settings.notifyAt, settings.language]);
 
   return (
     <Modal open={open} title={t('Settings')} onClose={onClose}>
@@ -203,6 +237,54 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
           </label>
         </section>
 
+        {/* Notifications */}
+        <section className="flex flex-col gap-2.5">
+          <span className="field-label">{t('Notifications')}</span>
+          <Toggle
+            on={settings.notifyTomorrow}
+            onChange={(value) => update('notifyTomorrow', value)}
+            label={t('Remind about tomorrow’s shift')}
+            hint={t('The evening before, on this device.')}
+          />
+          <Toggle
+            on={settings.notifyUnclosed}
+            onChange={(value) => update('notifyUnclosed', value)}
+            label={t('Nudge about days left open')}
+            hint={t('A worked day with no tips or sales on it.')}
+          />
+          {(settings.notifyTomorrow || settings.notifyUnclosed) && (
+            <>
+              <label>
+                <span className="field-hint">{t('Send at')}</span>
+                <input
+                  type="time"
+                  className="field-input !w-28"
+                  value={settings.notifyAt}
+                  onChange={(event) => event.target.value && update('notifyAt', event.target.value)}
+                />
+              </label>
+              <p className="field-hint">
+                {push === 'denied' && t('The browser has blocked notifications for this site.')}
+                {push === 'unsupported' && t('This browser cannot show push notifications.')}
+                {push === 'on' && t('This device is subscribed.')}
+              </p>
+              {push === 'on' && (
+                <button
+                  type="button"
+                  className="btn btn-sm self-start"
+                  disabled={tested}
+                  onClick={() => {
+                    setTested(true);
+                    void testPush().finally(() => setTimeout(() => setTested(false), 4000));
+                  }}
+                >
+                  {tested ? t('Sent — check the notification') : t('Send a test')}
+                </button>
+              )}
+            </>
+          )}
+        </section>
+
         {/* Interface */}
         <section className="flex flex-col gap-2.5">
           <span className="field-label">{t('Interface')}</span>
@@ -242,7 +324,7 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
           </label>
           <Toggle on={settings.glass} onChange={(value) => update('glass', value)} label={t('Glass surfaces')} />
           <Toggle on={settings.reduceMotion} onChange={(value) => update('reduceMotion', value)} label={t('Reduce motion')} />
-          <Toggle on={settings.remindUnclosed} onChange={(value) => update('remindUnclosed', value)} label={t('Nudge about days left open')} />
+          <Toggle on={settings.remindUnclosed} onChange={(value) => update('remindUnclosed', value)} label={t('Banner about open days on the calendar')} />
         </section>
 
         {/* Statistics */}

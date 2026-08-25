@@ -5,6 +5,7 @@
 type Dictionary = Record<string, string>;
 
 export const RU: Dictionary = {
+  'Banner about open days on the calendar': 'Баннер о незакрытых днях в календаре',
   // Top bar and navigation
   'Sign out': 'Выйти',
   Stats: 'Статистика',
@@ -1170,9 +1171,20 @@ export const RU: Dictionary = {
   'Got it': 'Понятно',
   'Show the tour': 'Показать тур',
   'Feature tour': 'Тур по функциям',
+  'Notifications': 'Уведомления',
+  'Remind about tomorrow’s shift': 'Напоминать о завтрашней смене',
+  'The evening before, on this device.': 'Накануне вечером, на этом устройстве.',
+  'A worked day with no tips or sales on it.': 'Отработанный день без чаевых и продаж.',
+  'Send at': 'Присылать в',
+  'The browser has blocked notifications for this site.': 'Браузер запретил уведомления для этого сайта.',
+  'This browser cannot show push notifications.': 'Этот браузер не умеет пуш-уведомления.',
+  'This device is subscribed.': 'Это устройство подписано.',
+  'Send a test': 'Отправить тест',
+  'Sent — check the notification': 'Отправлено — проверьте уведомление',
 };
 
 export const UK: Dictionary = {
+  'Banner about open days on the calendar': 'Банер про незакриті дні в календарі',
   'Sign out': 'Вийти',
   Stats: 'Статистика',
   Statistics: 'Статистика',
@@ -2325,4 +2337,14 @@ export const UK: Dictionary = {
   'Got it': 'Зрозуміло',
   'Show the tour': 'Показати тур',
   'Feature tour': 'Тур по функціях',
+  'Notifications': 'Сповіщення',
+  'Remind about tomorrow’s shift': 'Нагадувати про завтрашню зміну',
+  'The evening before, on this device.': 'Напередодні ввечері, на цьому пристрої.',
+  'A worked day with no tips or sales on it.': 'Відпрацьований день без чайових і продажів.',
+  'Send at': 'Надсилати о',
+  'The browser has blocked notifications for this site.': 'Браузер заборонив сповіщення для цього сайту.',
+  'This browser cannot show push notifications.': 'Цей браузер не вміє пуш-сповіщення.',
+  'This device is subscribed.': 'Цей пристрій підписано.',
+  'Send a test': 'Надіслати тест',
+  'Sent — check the notification': 'Надіслано — перевірте сповіщення',
 };

@@ -142,7 +142,7 @@ export function insightsFor(input: InsightInput): Insight[] {
   }
 
   // Overtime is money, and worth seeing named.
-  if (summary.overtime_hours >= 1) {
+  if (summary.overtime_hours >= 1 && summary.overtime_earned > 0) {
     found.push({
       id: 'overtime',
       icon: '🔥',

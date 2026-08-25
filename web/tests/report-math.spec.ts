@@ -1,0 +1,90 @@
+import { punchcard, waterfall } from '@/lib/charts/report-math';
+import { CalendarDayData, DaysResponse, EMPTY_SUMMARY } from '@/lib/calendar/models';
+
+describe('waterfall', () => {
+  const summary: DaysResponse = {
+    ...EMPTY_SUMMARY,
+    shifts_earned: 10_000,
+    tips_earned: 2_000,
+    tip_out: 500,
+    total_earned: 11_500,
+    tax: 1_150,
+    net_earned: 10_350,
+  };
+
+  it('walks from the sources through the deductions to the totals', () => {
+    const steps = waterfall(summary);
+
+    expect(steps.map((step) => step.key)).toEqual(['Shifts', 'Tips', 'Tip-out', 'Earned', 'Tax', 'Net']);
+  });
+
+  it('lands each step where the previous one ended', () => {
+    const steps = waterfall(summary);
+    const tips = steps.find((step) => step.key === 'Tips');
+    const tipOut = steps.find((step) => step.key === 'Tip-out');
+
+    expect(tips).toMatchObject({ from: 10_000, to: 12_000 });
+    // A deduction hangs down from the running total.
+    expect(tipOut).toMatchObject({ from: 11_500, to: 12_000 });
+  });
+
+  it('skips the tax landing when nothing was withheld', () => {
+    const untaxed = { ...summary, tax: 0, net_earned: summary.total_earned };
+    const steps = waterfall(untaxed);
+
+    expect(steps.at(-1)?.key).toBe('Earned');
+  });
+
+  it('is empty on an empty period', () => {
+    expect(waterfall(EMPTY_SUMMARY)).toEqual([]);
+  });
+});
+
+describe('punchcard', () => {
+  const day = (date: string, start: string, hours: number, earned: number): CalendarDayData => ({
+    date,
+    shifts: [
+      {
+        shift_id: 1,
+        name: 'Bar',
+        symbol: null,
+        colour: null,
+        start_time: start,
+        end_time: '23:00',
+        hours,
+        earned,
+        worked: true,
+        needs_cover: false,
+      },
+    ],
+    sales: [],
+    tips: null,
+    tips_cash: null,
+    tip_out: 0,
+    deductions: 0,
+    note: null,
+    colour: null,
+    hours,
+    earned,
+    planned: 0,
+  });
+
+  it('buckets repeat shifts into one growing cell', () => {
+    // Two Mondays at 17:00.
+    const card = punchcard([day('2026-03-02', '17:00', 6, 900), day('2026-03-09', '17:00', 6, 900)]);
+
+    expect(card?.cells).toHaveLength(1);
+    expect(card?.cells[0]).toMatchObject({ weekday: 0, hour: 17, count: 2, perHour: 150 });
+  });
+
+  it('spans only the hours actually worked', () => {
+    const card = punchcard([day('2026-03-02', '08:00', 8, 800), day('2026-03-03', '17:00', 6, 900)]);
+
+    expect(card?.hourFrom).toBe(8);
+    expect(card?.hourTo).toBe(17);
+  });
+
+  it('returns null when nothing was worked', () => {
+    expect(punchcard([])).toBeNull();
+  });
+});

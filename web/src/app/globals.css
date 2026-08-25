@@ -1016,3 +1016,44 @@ body,
   position: relative;
   z-index: 1;
 }
+
+/* ==== Report page ==== */
+
+/* Inline table bars grow from zero on entry. */
+.grow-w {
+  animation: grow-w calc(0.6s * var(--motion)) cubic-bezier(0.2, 0.85, 0.3, 1) backwards;
+  animation-delay: calc(var(--i, 0) * 20ms * var(--motion));
+}
+
+@keyframes grow-w {
+  from {
+    width: 0;
+  }
+}
+
+.print-only {
+  display: none;
+}
+
+@media print {
+  header,
+  nav,
+  .no-print,
+  .toast-stack {
+    display: none !important;
+  }
+
+  .print-only {
+    display: inline;
+  }
+
+  body {
+    background: white;
+  }
+
+  .print-report .card {
+    box-shadow: none;
+    border-color: #ddd;
+    break-inside: avoid;
+  }
+}

@@ -32,7 +32,7 @@ import { Icon } from '@/components/ui/icon';
  * below happens to be navigated.
  */
 
-export const TILE_IDS = ['today', 'pace', 'goal', 'payday', 'streak', 'best', 'hours', 'tips'] as const;
+export const TILE_IDS = ['today', 'pace', 'goal', 'payday', 'streak', 'best', 'hours', 'tips', 'heat'] as const;
 
 export type TileId = (typeof TILE_IDS)[number];
 
@@ -45,6 +45,7 @@ const TILE_NAMES: Record<TileId, string> = {
   best: 'Best day',
   hours: 'Hours',
   tips: 'Tips',
+  heat: 'Twelve weeks',
 };
 
 export function TileStrip() {
@@ -68,7 +69,7 @@ export function TileStrip() {
   useEffect(() => {
     const handle = setTimeout(() => {
       void calendarApi
-        .days(shiftDays(bounds.from, -42), bounds.to)
+        .days(shiftDays(bounds.from, -84), bounds.to)
         .then((response) => setWindowDays(response.days))
         .catch(() => undefined);
     }, 400);
@@ -98,7 +99,7 @@ export function TileStrip() {
 
   return (
     <section aria-label={t('Overview')}>
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:[grid-template-columns:repeat(auto-fit,minmax(9.5rem,1fr))]">
         {visible.map((id, index) => (
           <div key={id} className="tile glow tilt reveal" style={stagger(index)}>
             <Tile
@@ -208,6 +209,8 @@ function Tile(props: {
       return <HoursTile monthDays={props.monthDays} />;
     case 'tips':
       return <TipsTile monthDays={props.monthDays} />;
+    case 'heat':
+      return <HeatTile window={props.window} />;
   }
 }
 
@@ -224,8 +227,10 @@ function Label({ icon, children }: { icon: string; children: React.ReactNode }) 
 function TodayTile({ window, templates }: { window: CalendarDayData[]; templates: ShiftTemplate[] }) {
   const { t } = useI18n();
   const live = useLive((state) => state.live);
+  const events = useCalendar((state) => state.events);
   const today = todayKey();
   const day = window.find((item) => item.date === today);
+  const event = events.find((item) => item.start_date <= today && item.end_date >= today);
   const planned = day?.shifts.find((entry) => !entry.worked);
   const worked = day?.shifts.find((entry) => entry.worked);
   const template = templates.find((item) => item.id === (live?.shiftId ?? planned?.shift_id));
@@ -298,8 +303,12 @@ function TodayTile({ window, templates }: { window: CalendarDayData[]; templates
   return (
     <>
       <Label icon="spark">{t('Today')}</Label>
-      <span className="tile-value">{worked !== undefined ? <Money value={day?.earned ?? 0} /> : '—'}</span>
-      <span className="field-hint">{worked !== undefined ? worked.name : t('Day off')}</span>
+      <span className="tile-value">
+        {worked !== undefined ? <Money value={day?.earned ?? 0} /> : (event?.symbol ?? '—')}
+      </span>
+      <span className="field-hint truncate">
+        {worked !== undefined ? worked.name : (event?.name ?? t('Day off'))}
+      </span>
     </>
   );
 }
@@ -458,6 +467,56 @@ function HoursTile({ monthDays }: { monthDays: CalendarDayData[] }) {
       </span>
       <span className="field-hint">
         {worked} {t('shifts this month')}
+      </span>
+    </>
+  );
+}
+
+/** Twelve weeks of days as a mini heat grid; the year page has the full one. */
+function HeatTile({ window }: { window: CalendarDayData[] }) {
+  const { t } = useI18n();
+  const today = todayKey();
+  const byDate = new Map(window.map((day) => [day.date, day.earned]));
+
+  // Align the grid so today sits in the last column, Monday on top.
+  const weekday = (new Date(`${today}T00:00:00`).getDay() + 6) % 7;
+  const start = shiftDays(today, -(11 * 7 + weekday));
+  const peak = Math.max(1, ...window.map((day) => day.earned));
+
+  const weeks = Array.from({ length: 12 }, (_, weekIndex) =>
+    Array.from({ length: 7 }, (_, dayIndex) => {
+      const key = shiftDays(start, weekIndex * 7 + dayIndex);
+      const value = key > today ? null : (byDate.get(key) ?? 0);
+
+      return { key, value };
+    }),
+  );
+
+  return (
+    <>
+      <Label icon="calendar">{t('Twelve weeks')}</Label>
+      <span className="mt-auto flex gap-[3px]">
+        {weeks.map((week, weekIndex) => (
+          <span key={weekIndex} className="fade-in flex flex-1 flex-col gap-[3px]" style={stagger(weekIndex % 12)}>
+            {week.map((cell) =>
+              cell.value === null ? (
+                <span key={cell.key} className="aspect-square w-full" />
+              ) : (
+                <span
+                  key={cell.key}
+                  className="aspect-square w-full rounded-[2px]"
+                  style={{
+                    background:
+                      cell.value === 0
+                        ? 'var(--surface-2)'
+                        : `color-mix(in srgb, var(--accent) ${25 + (cell.value / peak) * 75}%, var(--surface-2))`,
+                  }}
+                  title={cell.key}
+                />
+              ),
+            )}
+          </span>
+        ))}
       </span>
     </>
   );

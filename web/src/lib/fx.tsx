@@ -38,6 +38,49 @@ export function useReveal<T extends HTMLElement>() {
   return ref;
 }
 
+/**
+ * The safety net under useReveal: a MutationObserver that catches `.reveal`
+ * elements arriving outside any host's render — a badge wall that fetches
+ * before it draws, a panel mounted by someone else's state. Without this,
+ * anything revealed after its page's last render stays at opacity 0 forever.
+ * Mounted once from the shell.
+ */
+export function RevealObserver() {
+  useEffect(() => {
+    let order = 0;
+
+    const admit = (el: HTMLElement) => {
+      el.style.setProperty('--i', String(order % 12));
+      order += 1;
+      el.classList.add('in');
+    };
+
+    const sweep = (root: ParentNode) => {
+      if (root instanceof HTMLElement && root.matches('.reveal:not(.in)')) admit(root);
+
+      root.querySelectorAll?.<HTMLElement>('.reveal:not(.in)').forEach(admit);
+    };
+
+    sweep(document.body);
+
+    const observer = new MutationObserver((mutations) => {
+      order = 0;
+
+      for (const mutation of mutations) {
+        for (const node of mutation.addedNodes) {
+          if (node instanceof HTMLElement) sweep(node);
+        }
+      }
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    return () => observer.disconnect();
+  }, []);
+
+  return null;
+}
+
 /** Sets --i on children so CSS staggers them; cheap and rerender-safe. */
 export function stagger(index: number): React.CSSProperties {
   return { ['--i' as string]: index };

@@ -1128,6 +1128,23 @@ export const RU: Dictionary = {
   'Work every weekday at least once': 'Поработайте в каждый день недели',
   'Sell 100 units': 'Продайте 100 позиций',
   'Collect 5 000 in tips all-time': 'Соберите 5 000 чаевых за всё время',
+
+  // Monthly report and report charts
+  'Monthly report': 'Отчёт за месяц',
+  'Print or PDF': 'Печать / PDF',
+  'How the money assembled': 'Как собрались деньги',
+  'The shape of your week': 'Форма вашей недели',
+  'Sources climb, deductions hang, the landings are yours.': 'Источники поднимают, вычеты снимают, площадки — ваши итоги.',
+  'Size is how often that slot is worked; colour is what its hour pays.': 'Размер — как часто выпадает этот слот, цвет — сколько платит его час.',
+  'Day by day': 'День за днём',
+  'Total': 'Итого',
+  'Nothing recorded this month': 'В этом месяце ничего не записано',
+  'Pick another month above, or go work a shift.': 'Выберите другой месяц сверху — или идите отработайте смену.',
+  'per hour': 'в час',
+  'Wages': 'Оклады',
+  'Net': 'На руки',
+  'Report': 'Отчёт',
+  'Twelve weeks': 'Двенадцать недель',
 };
 
 export const UK: Dictionary = {
@@ -2241,4 +2258,21 @@ export const UK: Dictionary = {
   'Work every weekday at least once': 'Попрацюйте в кожен день тижня',
   'Sell 100 units': 'Продайте 100 позицій',
   'Collect 5 000 in tips all-time': 'Зберіть 5 000 чайових за весь час',
+
+  // Monthly report and report charts
+  'Monthly report': 'Звіт за місяць',
+  'Print or PDF': 'Друк / PDF',
+  'How the money assembled': 'Як зібралися гроші',
+  'The shape of your week': 'Форма вашого тижня',
+  'Sources climb, deductions hang, the landings are yours.': 'Джерела піднімають, відрахування знімають, майданчики — ваші підсумки.',
+  'Size is how often that slot is worked; colour is what its hour pays.': 'Розмір — як часто випадає цей слот, колір — скільки платить його година.',
+  'Day by day': 'День за днем',
+  'Total': 'Разом',
+  'Nothing recorded this month': 'Цього місяця нічого не записано',
+  'Pick another month above, or go work a shift.': 'Оберіть інший місяць зверху — або йдіть відпрацюйте зміну.',
+  'per hour': 'на годину',
+  'Wages': 'Оклади',
+  'Net': 'На руки',
+  'Report': 'Звіт',
+  'Twelve weeks': 'Дванадцять тижнів',
 };

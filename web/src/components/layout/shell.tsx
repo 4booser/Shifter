@@ -9,7 +9,7 @@ import { onSessionChange, readSession } from '@/lib/api/http';
 import { useI18n } from '@/lib/i18n';
 import { useSettings } from '@/lib/settings/store';
 import { flushOffline, loadCatalogues, useCalendar } from '@/lib/store/calendar';
-import { PointerFx, PressRipple } from '@/lib/fx';
+import { PointerFx, PressRipple, RevealObserver } from '@/lib/fx';
 import { Toasts } from '@/lib/toast';
 import { useUnlockCheck } from '@/components/achievements/badges';
 import { CommandPalette } from '@/components/command/palette';
@@ -168,6 +168,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
       <Toasts />
       <PointerFx />
       <PressRipple />
+      <RevealObserver />
 
       {/* Narrow screens: the five destinations as a thumb-height tab bar. */}
       <nav className="fixed inset-x-0 bottom-0 z-40 flex border-t border-border bg-(--surface)/92 backdrop-blur-md md:hidden">

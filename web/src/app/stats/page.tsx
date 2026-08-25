@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 
 import { calendarApi } from '@/lib/api/calendar';
@@ -25,6 +26,8 @@ import { useSettings } from '@/lib/settings/store';
 import { Shell } from '@/components/layout/shell';
 import { useReveal } from '@/lib/fx';
 import { GoalsModal } from '@/components/dashboard/modals/goals-modal';
+import { punchcard, waterfall } from '@/lib/charts/report-math';
+import { PunchcardChart, WaterfallChart } from '@/components/charts/report-charts';
 import { AreaChart, ColumnChart, Heatmap, Plot, ProgressRing } from '@/components/charts/charts';
 import { Alert, CountUp, Delta, Money } from '@/components/ui/bits';
 import { Icon } from '@/components/ui/icon';
@@ -178,6 +181,8 @@ function Stats() {
         };
 
   const forecast = forecastFor(summary.days, range.from, range.to);
+  const waterfallSteps = useMemo(() => waterfall(summary), [summary]);
+  const card = useMemo(() => punchcard(summary.days), [summary.days]);
   const pace = paceToGoal(forecast, active?.target ?? null);
 
   const cumulative = useMemo(() => {
@@ -449,6 +454,10 @@ function Stats() {
           }}
         />
         <span className="ml-auto flex gap-1.5">
+          <Link href="/report" className="btn btn-sm">
+            <Icon name="note" size={13} />
+            {t('Report')}
+          </Link>
           <button type="button" className="btn btn-sm" disabled={exporting} onClick={exportPng}>
             <Icon name="download" size={13} />
             PNG
@@ -663,6 +672,20 @@ function Stats() {
                 )}
               </dl>
             )}
+          </Card>
+        )}
+      </div>
+
+      {/* ==== Waterfall + punchcard ==== */}
+      <div className="grid gap-3 lg:grid-cols-2">
+        {waterfallSteps.length > 0 && (
+          <Card title={t('How the money assembled')} hint={t('Sources climb, deductions hang, the landings are yours.')}>
+            <WaterfallChart steps={waterfallSteps} />
+          </Card>
+        )}
+        {card !== null && (
+          <Card title={t('The shape of your week')} hint={t('Size is how often that slot is worked; colour is what its hour pays.')}>
+            <PunchcardChart card={card} />
           </Card>
         )}
       </div>

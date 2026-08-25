@@ -72,7 +72,13 @@ interface CalendarState {
   paintScope: PaintScope;
   error: string | null;
   saving: boolean;
-  undo: UndoStep | null;
+  /** Newest last; capped, and cleared of redo by any fresh change. */
+  undoStack: UndoStep[];
+  redoStack: UndoStep[];
+  /** The banner can be waved away without forgetting the history. */
+  undoVisible: boolean;
+  /** Extra selected days beyond selectedDate; empty means single-day mode. */
+  multiSelected: ReadonlySet<string>;
   pendingOffline: number;
 }
 
@@ -99,7 +105,10 @@ export const useCalendar = create<CalendarState>(() => ({
   paintScope: 'day',
   error: null,
   saving: false,
-  undo: null,
+  undoStack: [],
+  redoStack: [],
+  undoVisible: false,
+  multiSelected: new Set(),
   pendingOffline: 0,
 }));
 
@@ -245,7 +254,33 @@ export const calendarActions = {
     void loadSummary();
   },
   clearError: () => set({ error: null }),
-  dismissUndo: () => set({ undo: null }),
+  dismissUndo: () => set({ undoVisible: false }),
+
+  /** Cmd-click: a day joins or leaves the selection. */
+  toggleMultiSelect: (key: string) =>
+    set((state) => {
+      const next = new Set(state.multiSelected);
+
+      // The anchor day is part of the selection the first time it grows.
+      if (next.size === 0 && state.selectedDate !== null) next.add(state.selectedDate);
+
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+
+      if (next.size <= 1) return { multiSelected: new Set<string>() };
+
+      return { multiSelected: next };
+    }),
+
+  /** Shift-click: everything between the current day and this one. */
+  rangeSelect: (key: string) =>
+    set((state) => {
+      const from = state.selectedDate ?? key;
+
+      return { multiSelected: new Set(keysBetween(from, key)) };
+    }),
+
+  clearMultiSelect: () => set({ multiSelected: new Set<string>() }),
 
   // ==== Brushes ====
 
@@ -298,28 +333,41 @@ export function patternTemplateFor(key: string): ShiftTemplate | null {
 
 // ==== Undo ====
 
+const UNDO_DEPTH = 20;
+
 /**
- * Keeps what the given days looked like before they are changed. One step
- * deep: a full history would need the server to agree about ordering, and one
- * level covers the mistake people actually make — the last one.
+ * Keeps what the given days looked like before they are changed. A capped
+ * stack: deep enough to walk back a whole painting session, shallow enough
+ * that memory never notices. A fresh change forfeits whatever was redoable —
+ * the timeline has branched and the old branch is gone.
  */
 function remember(label: string, keys: string[]): void {
   const days = get().days;
 
-  set({
-    undo: {
-      label,
-      entries: keys.map((date) => ({ date, payload: toSavePayload(days.get(date)) })),
-    },
-  });
+  const step: UndoStep = {
+    label,
+    entries: keys.map((date) => ({ date, payload: toSavePayload(days.get(date)) })),
+  };
+
+  set((state) => ({
+    undoStack: [...state.undoStack.slice(-(UNDO_DEPTH - 1)), step],
+    redoStack: [],
+    undoVisible: true,
+  }));
 }
 
-export async function undo(): Promise<void> {
-  const step = get().undo;
+/** What the same days look like right now, for the opposite stack. */
+function snapshot(step: UndoStep): UndoStep {
+  const days = get().days;
 
-  if (step === null) return;
+  return {
+    label: step.label,
+    entries: step.entries.map(({ date }) => ({ date, payload: toSavePayload(days.get(date)) })),
+  };
+}
 
-  set({ undo: null, saving: true });
+async function applyStep(step: UndoStep): Promise<void> {
+  set({ saving: true });
 
   for (const entry of step.entries) {
     try {
@@ -334,6 +382,37 @@ export async function undo(): Promise<void> {
 
   set({ saving: false });
   void loadSummary();
+}
+
+export async function undo(): Promise<void> {
+  const step = get().undoStack.at(-1);
+
+  if (step === undefined) return;
+
+  const mirror = snapshot(step);
+
+  set((state) => ({
+    undoStack: state.undoStack.slice(0, -1),
+    redoStack: [...state.redoStack, mirror],
+  }));
+
+  await applyStep(step);
+}
+
+export async function redo(): Promise<void> {
+  const step = get().redoStack.at(-1);
+
+  if (step === undefined) return;
+
+  const mirror = snapshot(step);
+
+  set((state) => ({
+    redoStack: state.redoStack.slice(0, -1),
+    undoStack: [...state.undoStack.slice(-(UNDO_DEPTH - 1)), mirror],
+    undoVisible: true,
+  }));
+
+  await applyStep(step);
 }
 
 // ==== Writes ====
@@ -596,6 +675,87 @@ function replace<T extends { id: number }>(list: T[], item: T): T[] {
   next[index] = item;
 
   return next;
+}
+
+/**
+ * Carries one shift from a day to another — the drag-and-drop write. Both
+ * days change under a single undo step; dropping onto a day that already
+ * holds the shift just removes it from the source, so dragging twice cannot
+ * mint duplicates. Copying leaves the source alone.
+ */
+export async function moveShift(
+  from: string,
+  to: string,
+  shiftId: number,
+  copy: boolean,
+): Promise<void> {
+  if (from === to) return;
+
+  const days = get().days;
+  const source = days.get(from);
+  const entry = source?.shifts.find((item) => item.shift_id === shiftId);
+
+  if (entry === undefined) return;
+
+  remember(copy ? 'Copied a shift' : 'Moved a shift', [from, to]);
+
+  const target = toSavePayload(days.get(to));
+
+  if (!target.shifts.some((item) => item.shift_id === shiftId)) {
+    target.shifts.push({ shift_id: shiftId, worked: entry.worked, needs_cover: entry.needs_cover });
+  }
+
+  const origin = toSavePayload(source);
+
+  if (!copy) origin.shifts = origin.shifts.filter((item) => item.shift_id !== shiftId);
+
+  set({ saving: true, error: null });
+
+  try {
+    const savedTarget = await calendarApi.saveDay(to, target);
+
+    set((state) => ({ days: new Map(state.days).set(to, savedTarget) }));
+
+    if (!copy) {
+      const savedOrigin = await calendarApi.saveDay(from, origin);
+
+      set((state) => ({ days: new Map(state.days).set(from, savedOrigin) }));
+    }
+  } catch (error) {
+    set({ error: apiErrorMessage(error) });
+  }
+
+  set({ saving: false });
+  void loadSummary();
+}
+
+/** Removes every shift from the given days; tips, sales and notes stay. */
+export async function clearShifts(keys: string[]): Promise<void> {
+  const days = get().days;
+  const dirty = keys.filter((key) => (days.get(key)?.shifts.length ?? 0) > 0);
+
+  if (dirty.length === 0) return;
+
+  remember('Cleared shifts', dirty);
+  set({ saving: true, error: null });
+
+  for (const key of dirty) {
+    const payload = toSavePayload(days.get(key));
+
+    payload.shifts = [];
+
+    try {
+      const saved = await calendarApi.saveDay(key, payload);
+
+      set((state) => ({ days: new Map(state.days).set(key, saved) }));
+    } catch (error) {
+      set({ error: apiErrorMessage(error) });
+      break;
+    }
+  }
+
+  set({ saving: false });
+  void loadSummary();
 }
 
 export const catalogueActions = {

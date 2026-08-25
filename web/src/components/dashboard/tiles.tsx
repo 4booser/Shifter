@@ -467,13 +467,27 @@ function StreakTile({ window }: { window: CalendarDayData[] }) {
     cursor = shiftDays(cursor, -1);
   }
 
+  // The best run inside the loaded window, so the current one has a target.
+  let record = 0;
+  let current = 0;
+
+  for (const day of [...window].sort((a, b) => a.date.localeCompare(b.date))) {
+    if (!day.shifts.some((entry) => entry.worked)) continue;
+
+    current = record === 0 || workedOn(shiftDays(day.date, -1)) ? current + 1 : 1;
+    record = Math.max(record, current);
+  }
+
   return (
     <>
       <Label icon="flame">{t('Streak')}</Label>
       <span className={`tile-value ${run >= 3 ? 'text-warn' : ''}`}>
         {run} {run >= 3 && '🔥'}
       </span>
-      <span className="field-hint">{t('days running')}</span>
+      <span className="field-hint">
+        {t('days running')}
+        {record > run && ` · ${t('record')} ${record}`}
+      </span>
     </>
   );
 }

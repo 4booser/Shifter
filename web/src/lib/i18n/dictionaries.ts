@@ -5,6 +5,19 @@
 type Dictionary = Record<string, string>;
 
 export const RU: Dictionary = {
+  'Redo': 'Вернуть',
+  'days selected': 'дней выбрано',
+  'actions moved to the panel on the right': 'действия — в панели справа',
+  'drop on a day': 'отпустите на дне',
+  'Clear shifts on': 'Убрать смены с',
+  'Clear shifts': 'Убрать смены',
+  'Put a shift on every day': 'Поставить смену на каждый день',
+  'No shifts yet — create one in the sidebar.': 'Смен ещё нет — создайте в сайдбаре.',
+  'Moved a shift': 'Смена перенесена',
+  'Copied a shift': 'Смена скопирована',
+  'Cleared shifts': 'Смены убраны',
+  'Copy yesterday’s tips': 'Скопировать вчерашние чаевые',
+  'record': 'рекорд',
   'Banner about open days on the calendar': 'Баннер о незакрытых днях в календаре',
   // Top bar and navigation
   'Sign out': 'Выйти',
@@ -1184,6 +1197,19 @@ export const RU: Dictionary = {
 };
 
 export const UK: Dictionary = {
+  'Redo': 'Повернути',
+  'days selected': 'днів вибрано',
+  'actions moved to the panel on the right': 'дії — в панелі праворуч',
+  'drop on a day': 'відпустіть на дні',
+  'Clear shifts on': 'Прибрати зміни з',
+  'Clear shifts': 'Прибрати зміни',
+  'Put a shift on every day': 'Поставити зміну на кожен день',
+  'No shifts yet — create one in the sidebar.': 'Змін ще немає — створіть у сайдбарі.',
+  'Moved a shift': 'Зміну перенесено',
+  'Copied a shift': 'Зміну скопійовано',
+  'Cleared shifts': 'Зміни прибрано',
+  'Copy yesterday’s tips': 'Скопіювати вчорашні чайові',
+  'record': 'рекорд',
   'Banner about open days on the calendar': 'Банер про незакриті дні в календарі',
   'Sign out': 'Вийти',
   Stats: 'Статистика',

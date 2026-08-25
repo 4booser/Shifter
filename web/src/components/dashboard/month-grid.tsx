@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   WEEKDAY_LABELS,
@@ -22,17 +22,22 @@ import { useSettings } from '@/lib/settings/store';
 import {
   applyToDates,
   calendarActions,
+  clearShifts,
+  moveShift,
   paintColour,
   paintPattern,
   patternTemplateFor,
   scopeOf,
   useCalendar,
 } from '@/lib/store/calendar';
+import { shiftDays } from '@/lib/calendar/calendar-date';
 import { Icon } from '@/components/ui/icon';
 
 /** One line inside a calendar cell: a shift placed on the day, or an event. */
 interface CellEntry {
   kind: 'shift' | 'event';
+  /** Set on shifts, so one can be picked up and carried to another day. */
+  shiftId: number | null;
   symbol: string;
   name: string;
   colour: string | null;
@@ -64,6 +69,13 @@ export function MonthGrid({
   const [anchor, setAnchor] = useState<string | null>(null);
   const [dragging, setDragging] = useState<ReadonlySet<string>>(new Set());
   const [colourBarOpen, setColourBarOpen] = useState(false);
+
+  /** A shift being carried between days; null when nothing is in the air. */
+  const [carry, setCarry] = useState<{ from: string; shiftId: number; name: string; colour: string | null } | null>(null);
+  const [carryOver, setCarryOver] = useState<string | null>(null);
+  const carryGhost = useRef<HTMLDivElement>(null);
+  const carryCandidate = useRef<{ from: string; shiftId: number; name: string; colour: string | null; x: number; y: number; holdTimer: number } | null>(null);
+  const gridRef = useRef<HTMLDivElement>(null);
 
   const weekdays = settings.mondayFirst ? WEEKDAY_LABELS : WEEKDAY_LABELS_SUNDAY;
   const painting = state.brush !== null || state.patternBrush || state.colourBrush !== null;
@@ -129,6 +141,7 @@ export function MonthGrid({
 
     const shifts: CellEntry[] = (day?.shifts ?? []).map((entry) => ({
       kind: 'shift',
+      shiftId: entry.shift_id,
       symbol: entry.symbol ?? entry.name.slice(0, 1).toUpperCase(),
       name: entry.name,
       colour: entry.colour,
@@ -139,6 +152,7 @@ export function MonthGrid({
     return shifts.concat(
       (eventsByDate.get(key) ?? []).map((event) => ({
         kind: 'event',
+        shiftId: null,
         symbol: event.symbol,
         name: event.name,
         colour: event.colour,
@@ -160,10 +174,27 @@ export function MonthGrid({
   };
 
   const onPointerDown = (key: string, event: React.PointerEvent) => {
+    if (!painting) {
+      // Cmd-click grows a selection; Shift-click spans from the current day.
+      if (event.metaKey || event.ctrlKey) {
+        calendarActions.toggleMultiSelect(key);
+
+        return;
+      }
+
+      if (event.shiftKey) {
+        calendarActions.rangeSelect(key);
+
+        return;
+      }
+
+      calendarActions.clearMultiSelect();
+      calendarActions.select(key);
+
+      return;
+    }
+
     calendarActions.select(key);
-
-    if (!painting) return;
-
     event.preventDefault();
     setAnchor(key);
     setDragging(new Set(spread([key])));
@@ -198,6 +229,174 @@ export function MonthGrid({
     if (colourBrush !== null) void paintColour(keys, colourBrush === '' ? null : colourBrush);
     else if (brush === null) paintPattern(keys);
     else void applyToDates(keys, brush);
+  };
+
+  // The carry gesture lives on the window: a shift picked up in one cell is
+  // dropped wherever the pointer lets go, and a ghost chip rides along.
+  useEffect(() => {
+    const move = (event: PointerEvent) => {
+      const candidate = carryCandidate.current;
+
+      if (candidate !== null && carry === null) {
+        const distance = Math.hypot(event.clientX - candidate.x, event.clientY - candidate.y);
+
+        // A mouse commits by moving; a finger that moves early is scrolling.
+        if (event.pointerType === 'touch' && distance > 12) {
+          clearTimeout(candidate.holdTimer);
+          carryCandidate.current = null;
+
+          return;
+        }
+
+        if (event.pointerType !== 'touch' && distance > 7) {
+          setCarry(candidate);
+          carryCandidate.current = null;
+        }
+      }
+
+      const ghost = carryGhost.current;
+
+      if (ghost !== null) {
+        ghost.style.transform = `translate(${event.clientX + 12}px, ${event.clientY + 8}px)`;
+      }
+
+      // Touch never fires enter on the cells underneath; hit-test instead.
+      if (carry !== null && event.pointerType === 'touch') {
+        const cell = document
+          .elementFromPoint(event.clientX, event.clientY)
+          ?.closest<HTMLElement>('[data-day]');
+
+        setCarryOver(cell?.dataset['day'] ?? null);
+      }
+    };
+
+    const up = (event: PointerEvent) => {
+      const candidate = carryCandidate.current;
+
+      if (candidate !== null) {
+        clearTimeout(candidate.holdTimer);
+        carryCandidate.current = null;
+      }
+
+      if (carry !== null) {
+        if (carryOver !== null && carryOver !== carry.from) {
+          void moveShift(carry.from, carryOver, carry.shiftId, event.altKey);
+        }
+
+        setCarry(null);
+        setCarryOver(null);
+      }
+    };
+
+    const cancel = () => {
+      if (carryCandidate.current !== null) {
+        clearTimeout(carryCandidate.current.holdTimer);
+        carryCandidate.current = null;
+      }
+
+      setCarry(null);
+      setCarryOver(null);
+    };
+
+    addEventListener('pointermove', move, { passive: true });
+    addEventListener('pointerup', up);
+    addEventListener('pointercancel', cancel);
+
+    return () => {
+      removeEventListener('pointermove', move);
+      removeEventListener('pointerup', up);
+      removeEventListener('pointercancel', cancel);
+    };
+  }, [carry, carryOver]);
+
+  const pickUp = (key: string, entry: CellEntry, event: React.PointerEvent) => {
+    if (painting || entry.kind !== 'shift' || entry.shiftId === null) return;
+
+    const candidate = {
+      from: key,
+      shiftId: entry.shiftId,
+      name: entry.name,
+      colour: entry.colour,
+      x: event.clientX,
+      y: event.clientY,
+      // A held finger commits without moving; 350ms reads as intent.
+      holdTimer: window.setTimeout(() => {
+        if (carryCandidate.current === candidate) {
+          setCarry(candidate);
+          carryCandidate.current = null;
+        }
+      }, 350),
+    };
+
+    carryCandidate.current = candidate;
+  };
+
+  /** Keyboard drives the grid: arrows walk days, digits place shifts. */
+  const onGridKeyDown = (event: React.KeyboardEvent) => {
+    const key = state.selectedDate ?? todayKey();
+
+    const go = (next: string) => {
+      event.preventDefault();
+      calendarActions.clearMultiSelect();
+
+      const inGrid = weeks.some((week) => week.some((day) => day.key === next));
+
+      if (inGrid) calendarActions.select(next);
+      else calendarActions.openDate(next);
+
+      requestAnimationFrame(() =>
+        gridRef.current?.querySelector<HTMLElement>(`[data-day="${next}"]`)?.focus(),
+      );
+    };
+
+    switch (event.key) {
+      case 'ArrowLeft': return go(shiftDays(key, -1));
+      case 'ArrowRight': return go(shiftDays(key, 1));
+      case 'ArrowUp': return go(shiftDays(key, -7));
+      case 'ArrowDown': return go(shiftDays(key, 7));
+      case 'Escape':
+        calendarActions.clearMultiSelect();
+        calendarActions.clearBrush();
+
+        return;
+      case 't':
+      case 'T':
+        event.preventDefault();
+        calendarActions.today();
+
+        return;
+      case 'Backspace':
+      case 'Delete': {
+        const targets = state.multiSelected.size > 1 ? [...state.multiSelected] : [key];
+        const filled = targets.filter((date) => (state.days.get(date)?.shifts.length ?? 0) > 0);
+
+        if (filled.length === 0) return;
+
+        event.preventDefault();
+
+        if (window.confirm(`${t('Clear shifts on')} ${filled.length} ${t('days')}?`)) {
+          void clearShifts(filled);
+        }
+
+        return;
+      }
+      default: {
+        // 1..9 place the n-th shift from the sidebar on the selection.
+        const index = Number(event.key);
+
+        if (!Number.isInteger(index) || index < 1) return;
+
+        const template = state.templates.filter((item) => !item.archived)[index - 1];
+
+        if (template === undefined) return;
+
+        event.preventDefault();
+
+        const targets = state.multiSelected.size > 1 ? [...state.multiSelected] : [key];
+
+        void applyToDates(targets, template);
+      }
+    }
   };
 
   const dayColour = (key: string) => state.days.get(key)?.colour ?? null;
@@ -362,17 +561,26 @@ export function MonthGrid({
               <span className="grid grid-cols-7 gap-[3px]">
                 {month.weeks.flat().map((day) => {
                   const mark = dayColour(day.key) ?? entries(day.key)[0]?.colour;
+                  const earned = state.days.get(day.key)?.earned ?? 0;
 
                   return (
                     <span
                       key={day.key}
-                      className={`h-2 w-2 rounded-[3px] ${day.inCurrentMonth ? '' : 'opacity-25'}`}
+                      role="button"
+                      title={earned > 0 ? `${day.key.slice(8)}.${day.key.slice(5, 7)} · ${format(earned)}` : undefined}
+                      className={`h-2 w-2 rounded-[3px] ${day.inCurrentMonth ? '' : 'opacity-25'} hover:outline hover:outline-1 hover:outline-(--accent)`}
                       style={{
                         background:
                           entries(day.key).length > 0 || dayColour(day.key)
                             ? (mark ?? 'var(--accent)')
                             : 'var(--surface-2)',
                         outline: day.isToday ? '1.5px solid var(--accent)' : undefined,
+                      }}
+                      onClick={(event) => {
+                        // The month card underneath also navigates; the day wins.
+                        event.stopPropagation();
+                        update('view', 'month');
+                        calendarActions.openDate(day.key);
                       }}
                     />
                   );
@@ -385,7 +593,11 @@ export function MonthGrid({
         /* ==== Month / week grid ==== */
         <div
           key={`${state.month.year}-${state.month.month}-${settings.view}`}
+          ref={gridRef}
+          role="grid"
+          aria-label={monthLabel(state.month, lang)}
           className="grid grid-cols-7 gap-1 sm:gap-1.5"
+          onKeyDown={onGridKeyDown}
         >
           {weekdays.map((name) => (
             <div
@@ -407,7 +619,9 @@ export function MonthGrid({
             const holiday = holidays.get(day.key)?.name ?? null;
             const hours = hoursOf(day.key);
             const selected = day.key === state.selectedDate;
-            const dragged = dragging.has(day.key);
+            const picked = state.multiSelected.has(day.key);
+            const carryTarget = carry !== null && carryOver === day.key && day.key !== carry.from;
+            const dragged = dragging.has(day.key) || carryTarget;
             const weekend = settings.highlightWeekends && isWeekend(day.key);
             const patternHint =
               state.patternBrush && list.length === 0 ? patternTemplateFor(day.key)?.name ?? null : null;
@@ -419,9 +633,12 @@ export function MonthGrid({
                 type="button"
                 title={holiday ?? undefined}
                 aria-pressed={selected}
+                aria-selected={picked || selected}
+                data-day={day.key}
+                tabIndex={selected ? 0 : -1}
                 className={`group cell-in relative flex min-h-[4.6rem] flex-col gap-0.5 overflow-hidden rounded-(--radius) border p-1 text-left transition-all sm:min-h-[5.4rem] sm:p-1.5 ${
                   day.inCurrentMonth ? '' : 'opacity-45'
-                } ${dragged ? 'scale-[0.97] border-(--accent) ring-2 ring-(--ring)' : selected ? 'ring-pulse border-(--accent)' : 'border-transparent hover:border-border-strong'} ${
+                } ${dragged ? 'scale-[0.97] border-(--accent) ring-2 ring-(--ring)' : picked ? 'border-(--accent) bg-(--accent-soft)' : selected ? 'ring-pulse border-(--accent)' : 'border-transparent hover:border-border-strong'} ${
                   painting ? 'cursor-crosshair' : ''
                 }`}
                 style={{
@@ -438,7 +655,11 @@ export function MonthGrid({
                   boxShadow: colour !== null && fill === 'outline' ? `inset 0 0 0 2px ${colour}` : undefined,
                 }}
                 onPointerDown={(event) => onPointerDown(day.key, event)}
-                onPointerEnter={() => onPointerEnter(day.key)}
+                onPointerEnter={() => {
+                  onPointerEnter(day.key);
+
+                  if (carry !== null) setCarryOver(day.key);
+                }}
               >
                 {/* The quieter day-colour treatments. */}
                 {colour !== null && fill === 'edge' && (
@@ -476,7 +697,18 @@ export function MonthGrid({
 
                 <span className="flex min-h-0 flex-1 flex-col gap-[3px]">
                   {visible.map((entry, index) => (
-                    <span key={`${entry.name}-${index}`} className="pop">
+                    <span
+                      key={`${entry.name}-${index}`}
+                      className="pop"
+                      title={entry.time === null ? entry.name : `${entry.name} · ${entry.time}`}
+                      style={{
+                        opacity:
+                          carry !== null && carry.from === day.key && carry.shiftId === entry.shiftId ? 0.3 : undefined,
+                        touchAction: entry.kind === 'shift' ? 'none' : undefined,
+                        cursor: entry.kind === 'shift' && !painting ? 'grab' : undefined,
+                      }}
+                      onPointerDown={(event) => pickUp(day.key, entry, event)}
+                    >
                       <CellMark entry={entry} look={settings.shiftLook} showName={settings.showShiftNamesInCells} />
                     </span>
                   ))}
@@ -497,6 +729,30 @@ export function MonthGrid({
             );
           })}
         </div>
+      )}
+
+      {/* The chip riding under the pointer while a shift is carried. */}
+      {carry !== null && (
+        <div
+          ref={carryGhost}
+          className="pointer-events-none fixed left-0 top-0 z-50 rounded-full border border-(--accent) bg-(--surface) px-2.5 py-1 text-[0.78rem] font-semibold shadow-(--shadow-lg)"
+          style={{ transform: 'translate(-200px, -200px)' }}
+        >
+          {carry.name}
+          <span className="ml-1.5 text-[0.66rem] font-normal text-muted">
+            {carryOver !== null && carryOver !== carry.from ? `→ ${carryOver.slice(8)}` : t('drop on a day')}
+          </span>
+        </div>
+      )}
+
+      {state.multiSelected.size > 1 && (
+        <p className="rise mt-2 flex items-center gap-2 rounded-(--radius) border border-(--accent)/40 bg-(--accent-soft) px-3 py-1.5 text-[0.82rem]">
+          <Icon name="check" size={13} />
+          {state.multiSelected.size} {t('days selected')} — {t('actions moved to the panel on the right')}
+          <button type="button" className="btn btn-quiet btn-sm ml-auto" onClick={calendarActions.clearMultiSelect}>
+            {t('Clear')}
+          </button>
+        </p>
       )}
     </section>
   );

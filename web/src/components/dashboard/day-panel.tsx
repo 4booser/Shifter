@@ -2,14 +2,22 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-import { formatDayLabel, todayKey } from '@/lib/calendar/calendar-date';
+import { formatDayLabel, shiftDays, todayKey } from '@/lib/calendar/calendar-date';
 import { holidaysInRange } from '@/lib/calendar/holidays';
 import { CalendarEvent, MARK_COLOURS, NOTE_MAX_LENGTH, ShiftTemplate } from '@/lib/calendar/models';
 import { useI18n } from '@/lib/i18n';
 import { useMoney } from '@/lib/settings/money';
 import { useSettings } from '@/lib/settings/store';
 import { startLiveShift, useLive } from '@/lib/live/live-shift';
-import { catalogueActions, saveDay, useCalendar } from '@/lib/store/calendar';
+import {
+  applyToDates,
+  calendarActions,
+  catalogueActions,
+  clearShifts,
+  paintColour,
+  saveDay,
+  useCalendar,
+} from '@/lib/store/calendar';
 import { Icon } from '@/components/ui/icon';
 import { Money, SwatchRow } from '@/components/ui/bits';
 import { EventModal } from './modals/event-modal';
@@ -31,6 +39,8 @@ export function DayPanel() {
   const day = useCalendar((state) => (state.selectedDate === null ? undefined : state.days.get(state.selectedDate)));
   const templates = useCalendar((state) => state.templates);
   const live = useLive((state) => state.live);
+  const multiSelected = useCalendar((state) => state.multiSelected);
+  const allDays = useCalendar((state) => state.days);
 
   const templateOf = (shiftId: number): ShiftTemplate | undefined =>
     templates.find((item) => item.id === shiftId && !item.archived);
@@ -123,6 +133,10 @@ export function DayPanel() {
     setColour((current) => (current === null && day.colour !== null ? day.colour : current));
   }, [day]);
 
+  if (multiSelected.size > 1) {
+    return <BulkPanel keys={[...multiSelected].sort()} />;
+  }
+
   if (key === null) {
     return (
       <aside className="card w-full p-4">
@@ -133,6 +147,10 @@ export function DayPanel() {
 
 
   const holiday = holidaysInRange(settings.holidayCountry, key, key).get(key)?.name ?? null;
+
+  // Yesterday's tips, offered as a one-tap copy on a day that has none yet —
+  // the commonest amount to enter is the same as the day before.
+  const yesterdayTips = allDays.get(shiftDays(key, -1))?.tips ?? null;
   const shifts = day?.shifts ?? [];
   const draftSales = positions.reduce((total, position) => {
     const quantity = quantities[position.id] ?? 0;
@@ -418,6 +436,16 @@ export function DayPanel() {
           placeholder="0"
           onChange={(event) => setTips(event.target.value === '' ? null : Number(event.target.value))}
         />
+        {(tips ?? 0) === 0 && yesterdayTips !== null && yesterdayTips > 0 && (
+          <button
+            type="button"
+            className="btn btn-quiet btn-sm mt-1 w-full"
+            onClick={() => setTips(yesterdayTips)}
+          >
+            <Icon name="repeat" size={12} />
+            {t('Copy yesterday’s tips')} · {format(yesterdayTips)}
+          </button>
+        )}
         <div className="mt-1 flex flex-wrap gap-1">
           {TIP_STEPS.map((step) => (
             <button
@@ -537,6 +565,106 @@ export function DayPanel() {
         date={key}
         onClose={() => setEventOpen(false)}
       />
+    </aside>
+  );
+}
+
+/**
+ * The panel's other personality: several days at once. Everything here acts
+ * on the whole selection in one write and one undo step, which is the whole
+ * point of selecting several days.
+ */
+function BulkPanel({ keys }: { keys: string[] }) {
+  const { t } = useI18n();
+  const { format } = useMoney();
+  const templates = useCalendar((state) => state.templates);
+  const days = useCalendar((state) => state.days);
+  const saving = useCalendar((state) => state.saving);
+
+  const active = templates.filter((item) => !item.archived);
+  const earned = keys.reduce((total, key) => total + (days.get(key)?.earned ?? 0), 0);
+  const hours = keys.reduce((total, key) => total + (days.get(key)?.hours ?? 0), 0);
+  const withShifts = keys.filter((key) => (days.get(key)?.shifts.length ?? 0) > 0).length;
+
+  return (
+    <aside className="card rise w-full p-4">
+      <div className="mb-1 flex items-baseline justify-between">
+        <h2 className="text-[1.02rem] font-bold">
+          {keys.length} {t('days selected')}
+        </h2>
+        <button type="button" className="btn btn-quiet btn-sm" onClick={calendarActions.clearMultiSelect}>
+          {t('Clear')}
+        </button>
+      </div>
+      <p className="field-hint mb-3">
+        {keys[0]?.slice(8)}.{keys[0]?.slice(5, 7)} — {keys.at(-1)?.slice(8)}.{keys.at(-1)?.slice(5, 7)}
+        {earned > 0 && <> · {format(earned)}</>}
+        {hours > 0 && <> · {Math.round(hours * 10) / 10}h</>}
+      </p>
+
+      <section className="mb-4">
+        <h3 className="field-label">{t('Put a shift on every day')}</h3>
+        <div className="flex flex-col gap-1.5">
+          {active.map((template) => (
+            <button
+              key={template.id}
+              type="button"
+              className="btn justify-start"
+              disabled={saving}
+              onClick={() => void applyToDates(keys, template)}
+            >
+              <span>{template.symbol ?? '•'}</span>
+              <span className="min-w-0 truncate">{template.name}</span>
+              <span className="ml-auto text-[0.72rem] text-muted">
+                {template.start_time}–{template.end_time}
+              </span>
+            </button>
+          ))}
+          {active.length === 0 && <p className="field-hint">{t('No shifts yet — create one in the sidebar.')}</p>}
+        </div>
+      </section>
+
+      <section className="mb-4">
+        <h3 className="field-label">{t('Colour')}</h3>
+        <div className="flex flex-wrap gap-1.5">
+          {MARK_COLOURS.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              className="swatch"
+              style={{ background: option.value }}
+              title={option.label}
+              disabled={saving}
+              onClick={() => void paintColour(keys, option.value)}
+            />
+          ))}
+          <button
+            type="button"
+            className="swatch grid place-items-center border border-border-strong bg-surface text-muted"
+            title={t('Erase')}
+            disabled={saving}
+            onClick={() => void paintColour(keys, null)}
+          >
+            <Icon name="close" size={12} />
+          </button>
+        </div>
+      </section>
+
+      {withShifts > 0 && (
+        <button
+          type="button"
+          className="btn w-full border-danger/40 text-danger"
+          disabled={saving}
+          onClick={() => {
+            if (window.confirm(`${t('Clear shifts on')} ${withShifts} ${t('days')}?`)) {
+              void clearShifts(keys);
+            }
+          }}
+        >
+          <Icon name="trash" size={13} />
+          {t('Clear shifts')} · {withShifts}
+        </button>
+      )}
     </aside>
   );
 }

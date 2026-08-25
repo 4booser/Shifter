@@ -2,12 +2,14 @@
 
 import { useEffect, useMemo, useState } from 'react';
 
-import { todayKey } from '@/lib/calendar/calendar-date';
+import { monthLabel, todayKey } from '@/lib/calendar/calendar-date';
 import { useI18n } from '@/lib/i18n';
+import { formatMoney } from '@/lib/settings/money';
 import { useSettings } from '@/lib/settings/store';
 import {
   calendarActions,
   loadCatalogues,
+  redo,
   reload,
   undo,
   useCalendar,
@@ -54,6 +56,56 @@ function Dashboard() {
   useEffect(() => {
     reload();
   }, [view, mondayFirst]);
+
+  // Cmd+Z / Shift+Cmd+Z work anywhere on the page except inside a field —
+  // a text box owns its own undo and must keep it.
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      const typing =
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        target?.isContentEditable === true;
+
+      if (typing) return;
+
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'z') {
+        event.preventDefault();
+
+        if (event.shiftKey) void redo();
+        else void undo();
+      }
+
+      if (event.altKey && event.key === 'ArrowLeft') {
+        event.preventDefault();
+        calendarActions.previous();
+      }
+
+      if (event.altKey && event.key === 'ArrowRight') {
+        event.preventDefault();
+        calendarActions.next();
+      }
+    };
+
+    addEventListener('keydown', onKey);
+
+    return () => removeEventListener('keydown', onKey);
+  }, []);
+
+  // The tab is a status line: which month, and what it has brought so far.
+  useEffect(() => {
+    const month = monthLabel(state.month, useSettings.getState().settings.language);
+    const earned = state.summary.total_earned;
+
+    document.title =
+      earned > 0
+        ? `${month} · ${formatMoney(useSettings.getState().settings, earned)} — Shifter`
+        : `${month} — Shifter`;
+
+    return () => {
+      document.title = 'Shifter';
+    };
+  }, [state.month, state.summary.total_earned]);
 
   // The command palette owns Cmd+K and forwards page actions over an event.
   useEffect(() => {
@@ -128,14 +180,26 @@ function Dashboard() {
       </div>
 
       {/* Undo, floating over the calendar where the change happened. */}
-      {state.undo !== null && (
+      {state.undoVisible && (state.undoStack.length > 0 || state.redoStack.length > 0) && (
         <div className="fixed bottom-16 left-1/2 z-50 -translate-x-1/2 md:bottom-6">
           <div className="card flex items-center gap-3 px-4 py-2.5 shadow-(--shadow-lg)">
             <Icon name="repeat" size={15} className="text-muted" />
-            <span className="text-[0.88rem]">{t(state.undo.label)}</span>
-            <button type="button" className="btn btn-primary btn-sm" onClick={() => void undo()}>
-              {t('Undo')}
-            </button>
+            <span className="text-[0.88rem]">
+              {t(state.undoStack.at(-1)?.label ?? state.redoStack.at(-1)?.label ?? '')}
+              {state.undoStack.length > 1 && (
+                <span className="text-faint tabular"> · {state.undoStack.length}</span>
+              )}
+            </span>
+            {state.undoStack.length > 0 && (
+              <button type="button" className="btn btn-primary btn-sm" title="⌘Z" onClick={() => void undo()}>
+                {t('Undo')}
+              </button>
+            )}
+            {state.redoStack.length > 0 && (
+              <button type="button" className="btn btn-sm" title="⇧⌘Z" onClick={() => void redo()}>
+                {t('Redo')}
+              </button>
+            )}
             <button type="button" className="btn btn-quiet btn-sm" aria-label={t('Dismiss')} onClick={calendarActions.dismissUndo}>
               <Icon name="close" size={13} />
             </button>

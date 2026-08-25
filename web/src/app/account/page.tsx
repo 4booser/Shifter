@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { Profile, accountApi, authApi } from '@/lib/api/auth';
 import { apiErrorMessage } from '@/lib/api/http';
 import { useI18n } from '@/lib/i18n';
+import { useReveal } from '@/lib/fx';
 import { Shell } from '@/components/layout/shell';
 import { GoogleButton } from '@/components/auth/google-button';
 import { Alert } from '@/components/ui/bits';
@@ -24,6 +25,7 @@ export default function AccountPage() {
  * sign in, and the two irreversible buttons behind a typed confirmation.
  */
 function Account() {
+  const revealHost = useReveal<HTMLDivElement>();
   const router = useRouter();
   const { t, lang } = useI18n();
 
@@ -77,7 +79,7 @@ function Account() {
       : new Intl.DateTimeFormat(lang, { year: 'numeric', month: 'long' }).format(new Date(profile.created_at));
 
   return (
-    <div className="mx-auto flex max-w-xl flex-col gap-4">
+    <div ref={revealHost} className="mx-auto flex max-w-xl flex-col gap-4">
       <h1 className="text-[1.3rem] font-bold tracking-tight">{t('Account')}</h1>
 
       {error && <Alert onDismiss={() => setError(null)}>{error}</Alert>}
@@ -86,7 +88,7 @@ function Account() {
       {profile !== null && (
         <>
           {/* ==== Who you are ==== */}
-          <section className="card p-4">
+          <section className="card reveal p-4">
             <h2 className="mb-1 text-[0.98rem] font-bold">{t('Who you are')}</h2>
             <p className="field-hint mb-3">
               {t('Signing in as')} <strong>{profile.login}</strong> · {t('Member since')} {memberSince}
@@ -116,7 +118,7 @@ function Account() {
           </section>
 
           {/* ==== Password ==== */}
-          <section className="card p-4">
+          <section className="card reveal p-4">
             <h2 className="mb-2 text-[0.98rem] font-bold">{t(needsPassword ? 'Set a password' : 'Change password')}</h2>
 
             {needsPassword ? (
@@ -181,7 +183,7 @@ function Account() {
           </section>
 
           {/* ==== Sessions and Google ==== */}
-          <section className="card p-4">
+          <section className="card reveal p-4">
             <h2 className="mb-2 text-[0.98rem] font-bold">{t('Sessions and sign-in')}</h2>
 
             <div className="mb-3 flex items-center gap-2 text-[0.9rem]">
@@ -232,7 +234,7 @@ function Account() {
           </section>
 
           {/* ==== Danger ==== */}
-          <section className="card border-danger/40 p-4">
+          <section className="card reveal border-danger/40 p-4">
             <h2 className="mb-1 text-[0.98rem] font-bold text-danger">{t('Delete the account')}</h2>
             <p className="field-hint mb-3">{t('Everything goes: days, shifts, places, history. There is no way back.')}</p>
 

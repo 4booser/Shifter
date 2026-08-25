@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { fromKey, keysBetween } from '@/lib/calendar/calendar-date';
 import { CHART_H, CHART_W, Column, PAD, PLOT_H, PLOT_W, Tick, niceCeiling } from '@/lib/charts/math';
@@ -110,8 +110,12 @@ export function AreaChart({
                 <stop offset="1" stopColor="var(--accent)" stopOpacity="0" />
               </linearGradient>
             </defs>
-            <path d={`${path(coords)} L ${coords[coords.length - 1].x} ${bottom} L ${coords[0].x} ${bottom} Z`} fill="url(#area-wash)" />
-            <path d={path(coords)} fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinejoin="round" />
+            <path
+              className="fade-in"
+              d={`${path(coords)} L ${coords[coords.length - 1].x} ${bottom} L ${coords[0].x} ${bottom} Z`}
+              fill="url(#area-wash)"
+            />
+            <DrawnPath key={points.length + ':' + (points.at(-1)?.value ?? 0)} d={path(coords)} />
           </>
         )}
 
@@ -197,6 +201,8 @@ export function ColumnChart({
           <g key={`${entry.label}-${index}`}>
             {entry.earnedHeight > 0 && (
               <path
+                className="grow-y"
+                style={{ ['--i' as string]: index % 16 }}
                 d={columnPath(entry.x, bottom - entry.earnedHeight, entry.width, entry.earnedHeight)}
                 fill="var(--accent)"
                 opacity={hover === null || hover === index ? 1 : 0.45}
@@ -282,7 +288,7 @@ export function Heatmap({ values, from, to }: { values: ReadonlyMap<string, numb
     <div className="relative">
       <div className="flex gap-[3px] overflow-x-auto pb-1" onPointerLeave={() => setHover(null)}>
         {weeks.map((week, weekIndex) => (
-          <div key={weekIndex} className="flex flex-none flex-col gap-[3px]">
+          <div key={weekIndex} className="fade-in flex flex-none flex-col gap-[3px]" style={{ ['--i' as string]: weekIndex % 30 }}>
             {week.map((cell, dayIndex) =>
               cell === null ? (
                 <span key={dayIndex} className="h-2.5 w-2.5" />
@@ -391,3 +397,20 @@ export function Plot({
 
 /** The ceiling Plot uses, for callers that scale their own marks. */
 export { niceCeiling };
+
+
+/** A line that draws itself: the dash offset needs the real path length. */
+function DrawnPath({ d }: { d: string }) {
+  const ref = useRef<SVGPathElement>(null);
+
+  useEffect(() => {
+    const path = ref.current;
+
+    if (path === null) return;
+
+    path.style.setProperty('--len', String(path.getTotalLength()));
+    path.classList.add('draw-line');
+  }, [d]);
+
+  return <path ref={ref} d={d} fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinejoin="round" />;
+}

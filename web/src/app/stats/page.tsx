@@ -23,6 +23,7 @@ import { useI18n } from '@/lib/i18n';
 import { formatMoney } from '@/lib/settings/money';
 import { useSettings } from '@/lib/settings/store';
 import { Shell } from '@/components/layout/shell';
+import { useReveal } from '@/lib/fx';
 import { GoalsModal } from '@/components/dashboard/modals/goals-modal';
 import { AreaChart, ColumnChart, Heatmap, Plot, ProgressRing } from '@/components/charts/charts';
 import { Alert, CountUp, Delta, Money } from '@/components/ui/bits';
@@ -51,6 +52,7 @@ export default function StatsPage() {
 
 function Stats() {
   const { t, lang } = useI18n();
+  const revealHost = useReveal<HTMLDivElement>();
   const settings = useSettings((state) => state.settings);
 
   const [preset, setPreset] = useState<PresetId>(
@@ -412,7 +414,7 @@ function Stats() {
   };
 
   return (
-    <div className="flex flex-col gap-4">
+    <div ref={revealHost} className="flex flex-col gap-4">
       {/* ==== Range picker + exports ==== */}
       <div className="flex flex-wrap items-center gap-2">
         <h1 className="mr-2 text-[1.3rem] font-bold tracking-tight">{t('Statistics')}</h1>
@@ -574,7 +576,7 @@ function Stats() {
                 return (
                   <div key={month.label} className="group relative flex h-full flex-1 flex-col justify-end" title={`${month.label}: ${formatMoney(settings, total)}`}>
                     <div
-                      className="flex flex-col-reverse gap-[2px] overflow-hidden rounded-t"
+                      className="grow-y flex flex-col-reverse gap-[2px] overflow-hidden rounded-t"
                       style={{ height: `${(total / mixMax) * 100}%` }}
                     >
                       {parts.map((part, index) => (
@@ -710,7 +712,7 @@ function Stats() {
               {byStartHour.map((row) => (
                 <div key={row.hour} className="flex h-full flex-1 flex-col justify-end" title={`${row.label}: ${formatMoney(settings, row.earned)}`}>
                   <span
-                    className="rounded-t"
+                    className="grow-y rounded-t"
                     style={{ height: `${row.height}%`, background: row.best ? 'var(--accent)' : 'color-mix(in srgb, var(--accent) 45%, var(--surface-2))' }}
                   />
                   <span className="mt-0.5 text-center text-[0.62rem] text-faint">{row.label}</span>
@@ -813,7 +815,7 @@ function Stats() {
 
 function Kpi({ label, delta: change, children }: { label: string; delta: number | null; children: React.ReactNode }) {
   return (
-    <div className="card rise p-3">
+    <div className="card reveal p-3">
       <span className="field-hint block">{label}</span>
       <span className="flex items-baseline gap-2">
         {children}
@@ -835,7 +837,7 @@ function Card({
   children: React.ReactNode;
 }) {
   return (
-    <section className="card rise p-4">
+    <section className="card reveal p-4">
       <header className="mb-2.5 flex items-baseline justify-between gap-2">
         <div>
           <h2 className="text-[0.98rem] font-bold">{title}</h2>

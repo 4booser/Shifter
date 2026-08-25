@@ -11,8 +11,8 @@ export function AuthCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="grid min-h-dvh place-items-center px-4 py-10">
-      <div className="card rise w-full max-w-sm p-7">
+    <div className="auth-scene grid min-h-dvh place-items-center px-4 py-10">
+      <div className="card rise glow w-full max-w-sm p-7">
         <div className="mb-6 flex items-center gap-3">
           <span
             className="grid h-10 w-10 place-items-center rounded-xl text-lg font-bold"

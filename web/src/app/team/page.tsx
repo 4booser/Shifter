@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { apiErrorMessage } from '@/lib/api/http';
 import { Team, teamApi } from '@/lib/api/team';
 import { useI18n } from '@/lib/i18n';
+import { useReveal } from '@/lib/fx';
 import { Shell } from '@/components/layout/shell';
 import { Alert } from '@/components/ui/bits';
 import { Icon } from '@/components/ui/icon';
@@ -24,6 +25,7 @@ export default function TeamPage() {
  * do rarely do not.
  */
 function TeamAdmin() {
+  const revealHost = useReveal<HTMLDivElement>();
   const { t } = useI18n();
 
   const [teams, setTeams] = useState<Team[]>([]);
@@ -82,7 +84,7 @@ function TeamAdmin() {
   };
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-4">
+    <div ref={revealHost} className="mx-auto flex max-w-2xl flex-col gap-4">
       <h1 className="text-[1.3rem] font-bold tracking-tight">{t('Team')}</h1>
 
       {error && <Alert onDismiss={() => setError(null)}>{error}</Alert>}
@@ -92,7 +94,7 @@ function TeamAdmin() {
         <p className="field-hint">{t('Loading…')}</p>
       ) : (
         teams.map((team) => (
-          <section key={team.id} className="card p-4">
+          <section key={team.id} className="card reveal p-4">
             <div className="flex flex-wrap items-center gap-2">
               <h2 className="text-[1.05rem] font-bold">{team.name}</h2>
               <span className="chip">
@@ -137,7 +139,7 @@ function TeamAdmin() {
       )}
 
       {/* ==== Join ==== */}
-      <section className="card p-4">
+      <section className="card reveal p-4">
         <h2 className="mb-2 text-[0.98rem] font-bold">{t('Join a crew')}</h2>
         <div className="flex flex-wrap gap-2">
           <input
@@ -172,7 +174,7 @@ function TeamAdmin() {
       </section>
 
       {/* ==== Create ==== */}
-      <section className="card p-4">
+      <section className="card reveal p-4">
         <h2 className="mb-2 text-[0.98rem] font-bold">{t('Start a team')}</h2>
         <div className="flex gap-2">
           <input

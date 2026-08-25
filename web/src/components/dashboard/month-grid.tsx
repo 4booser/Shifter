@@ -48,7 +48,13 @@ const SCOPES = [
   { value: 'month' as const, label: 'Month' },
 ];
 
-export function MonthGrid() {
+export function MonthGrid({
+  onSearch,
+  onSettings,
+}: {
+  onSearch?: () => void;
+  onSettings?: () => void;
+}) {
   const { t, lang } = useI18n();
   const { format } = useMoney();
   const settings = useSettings((state) => state.settings);
@@ -206,7 +212,7 @@ export function MonthGrid() {
   };
 
   return (
-    <section className="card min-w-0 flex-1 p-3 sm:p-4" onPointerUp={onPointerUp}>
+    <section className="card min-w-0 p-3 sm:p-4" onPointerUp={onPointerUp}>
       {/* ==== Toolbar ==== */}
       <header className="mb-3 flex flex-wrap items-center gap-2">
         <h2 className="mr-1 text-[1.15rem] font-bold capitalize tracking-tight">
@@ -251,6 +257,17 @@ export function MonthGrid() {
           <button type="button" className="btn btn-sm" onClick={calendarActions.today}>
             {t('Today')}
           </button>
+
+          {onSearch && (
+            <button type="button" className="btn btn-sm" onClick={onSearch} title="⌘K">
+              <Icon name="search" size={14} />
+            </button>
+          )}
+          {onSettings && (
+            <button type="button" className="btn btn-sm" onClick={onSettings} aria-label={t('Settings')}>
+              <Icon name="sliders" size={14} />
+            </button>
+          )}
 
           <button type="button" className="btn btn-sm px-2" aria-label={t('Previous')} onClick={calendarActions.previous}>
             <Icon name="chevron-left" size={16} />
@@ -366,14 +383,22 @@ export function MonthGrid() {
         </div>
       ) : (
         /* ==== Month / week grid ==== */
-        <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
+        <div
+          key={`${state.month.year}-${state.month.month}-${settings.view}`}
+          className="grid grid-cols-7 gap-1 sm:gap-1.5"
+        >
           {weekdays.map((name) => (
-            <div key={name} className="px-1 pb-1 text-center text-[0.7rem] font-semibold uppercase tracking-wide text-faint">
+            <div
+              key={name}
+              className={`px-1 pb-1 text-center text-[0.7rem] font-semibold uppercase tracking-wide ${
+                settings.highlightWeekends && (name === 'Sat' || name === 'Sun') ? 'text-warn' : 'text-faint'
+              }`}
+            >
               {t(name)}
             </div>
           ))}
 
-          {weeks.flat().map((day) => {
+          {weeks.flat().map((day, cellIndex) => {
             const colour = dayColour(day.key);
             const ink = colour === null ? null : readableInk(colour);
             const list = entries(day.key);
@@ -394,12 +419,13 @@ export function MonthGrid() {
                 type="button"
                 title={holiday ?? undefined}
                 aria-pressed={selected}
-                className={`group relative flex min-h-[4.6rem] flex-col gap-0.5 overflow-hidden rounded-(--radius) border p-1 text-left transition-all sm:min-h-[5.4rem] sm:p-1.5 ${
+                className={`group cell-in relative flex min-h-[4.6rem] flex-col gap-0.5 overflow-hidden rounded-(--radius) border p-1 text-left transition-all sm:min-h-[5.4rem] sm:p-1.5 ${
                   day.inCurrentMonth ? '' : 'opacity-45'
-                } ${dragged ? 'scale-[0.97] border-(--accent) ring-2 ring-(--ring)' : selected ? 'border-(--accent)' : 'border-transparent hover:border-border-strong'} ${
+                } ${dragged ? 'scale-[0.97] border-(--accent) ring-2 ring-(--ring)' : selected ? 'ring-pulse border-(--accent)' : 'border-transparent hover:border-border-strong'} ${
                   painting ? 'cursor-crosshair' : ''
                 }`}
                 style={{
+                  ...({ '--i': cellIndex } as React.CSSProperties),
                   background:
                     colour !== null && (fill === 'full' || fill === 'wash')
                       ? fill === 'full'
@@ -409,8 +435,7 @@ export function MonthGrid() {
                         ? 'var(--surface-2)'
                         : 'var(--surface)',
                   color: colour !== null && fill === 'full' ? (ink ?? undefined) : undefined,
-                  boxShadow:
-                    colour !== null && fill === 'outline' ? `inset 0 0 0 2px ${colour}` : undefined,
+                  boxShadow: colour !== null && fill === 'outline' ? `inset 0 0 0 2px ${colour}` : undefined,
                 }}
                 onPointerDown={(event) => onPointerDown(day.key, event)}
                 onPointerEnter={() => onPointerEnter(day.key)}
@@ -451,7 +476,9 @@ export function MonthGrid() {
 
                 <span className="flex min-h-0 flex-1 flex-col gap-[3px]">
                   {visible.map((entry, index) => (
-                    <CellMark key={index} entry={entry} look={settings.shiftLook} showName={settings.showShiftNamesInCells} />
+                    <span key={`${entry.name}-${index}`} className="pop">
+                      <CellMark entry={entry} look={settings.shiftLook} showName={settings.showShiftNamesInCells} />
+                    </span>
                   ))}
                   {hidden > 0 && <span className="text-[0.64rem] font-medium text-faint">+{hidden}</span>}
                   {patternHint && (

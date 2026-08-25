@@ -23,6 +23,7 @@ import {
   teamApi,
 } from '@/lib/api/team';
 import { useI18n } from '@/lib/i18n';
+import { useReveal } from '@/lib/fx';
 import { Shell } from '@/components/layout/shell';
 import { Alert, Money, Segmented } from '@/components/ui/bits';
 import { Icon } from '@/components/ui/icon';
@@ -43,6 +44,7 @@ export default function SchedulePage() {
  * anybody else, and nothing here can flip somebody else's switch.
  */
 function Schedule() {
+  const revealHost = useReveal<HTMLDivElement>();
   const { t, lang } = useI18n();
 
   const [teams, setTeams] = useState<Team[]>([]);
@@ -177,8 +179,8 @@ function Schedule() {
 
   if (!loading && teams.length === 0) {
     return (
-      <div className="mx-auto max-w-md">
-        <div className="card p-6 text-center">
+      <div ref={revealHost} className="mx-auto max-w-md">
+        <div className="card reveal p-6 text-center">
           <Icon name="users" size={32} className="mx-auto mb-2 text-muted" />
           <h1 className="mb-1 text-[1.1rem] font-bold">{t('No team yet')}</h1>
           <p className="field-hint mb-3">{t('Share a rota with your crew: who is on and when, without anyone’s money.')}</p>
@@ -191,7 +193,7 @@ function Schedule() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div ref={revealHost} className="flex flex-col gap-4">
       {/* ==== Toolbar ==== */}
       <div className="flex flex-wrap items-center gap-2">
         <h1 className="text-[1.3rem] font-bold capitalize tracking-tight">{rangeLabel}</h1>
@@ -251,7 +253,7 @@ function Schedule() {
 
       {/* ==== Cover requests ==== */}
       {coverRequests.length > 0 && (
-        <section className="card border-warn/40 p-4">
+        <section className="card reveal border-warn/40 p-4">
           <h2 className="mb-2 flex items-center gap-2 text-[0.98rem] font-bold text-warn">
             <Icon name="swap" size={15} />
             {t('Looking for cover')}
@@ -320,7 +322,7 @@ function Schedule() {
       )}
 
       {/* ==== The grid ==== */}
-      <section className="card overflow-x-auto p-3">
+      <section className="card reveal overflow-x-auto p-3">
         <table className="w-full border-separate border-spacing-0">
           <thead>
             <tr>
@@ -381,7 +383,7 @@ function Schedule() {
 
       {/* ==== One day, opened ==== */}
       {focusDay !== null && focusEntries.length > 0 && (
-        <section className="card rise p-4">
+        <section className="card reveal p-4">
           <h2 className="mb-2 text-[0.98rem] font-bold tabular">{focusDay}</h2>
           <ul className="flex flex-col gap-1.5">
             {focusEntries.map((entry) => (
@@ -421,7 +423,7 @@ function Schedule() {
       {/* ==== You on this rota + who shares ==== */}
       <div className="grid gap-3 lg:grid-cols-2">
         {you !== null && (
-          <section className="card p-4">
+          <section className="card reveal p-4">
             <h2 className="mb-2 text-[0.98rem] font-bold">{t('You, on this rota')}</h2>
 
             <div className="mb-3 flex gap-2">
@@ -487,7 +489,7 @@ function Schedule() {
         )}
 
         {sharers.length > 0 && (
-          <section className="card p-4">
+          <section className="card reveal p-4">
             <h2 className="mb-1 text-[0.98rem] font-bold">{t('Who shares their earnings')}</h2>
             <p className="field-hint mb-2">
               {(rota?.members ?? []).filter((member) => member.shares_earnings).length} / {rota?.members.length}{' '}

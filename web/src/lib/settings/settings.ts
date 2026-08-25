@@ -89,6 +89,8 @@ export interface Settings {
   holidayCountry: string;
   weekdayShifts: WeekdayShifts;
   colourSchemes: ColourScheme[];
+  /** Visible dashboard tiles in order; null means the default set. */
+  dashboardTiles: string[] | null;
 }
 
 export const ACCENT_PRESETS = [
@@ -165,4 +167,5 @@ export const DEFAULT_SETTINGS: Settings = {
   holidayCountry: '',
   weekdayShifts: {},
   colourSchemes: [],
+  dashboardTiles: null,
 };

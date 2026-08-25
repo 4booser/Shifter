@@ -2,13 +2,18 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { authApi } from '@/lib/api/auth';
 import { onSessionChange, readSession } from '@/lib/api/http';
 import { useI18n } from '@/lib/i18n';
 import { useSettings } from '@/lib/settings/store';
-import { flushOffline, useCalendar } from '@/lib/store/calendar';
+import { flushOffline, loadCatalogues, useCalendar } from '@/lib/store/calendar';
+import { PointerFx, PressRipple } from '@/lib/fx';
+import { Toasts } from '@/lib/toast';
+import { useUnlockCheck } from '@/components/achievements/badges';
+import { CommandPalette } from '@/components/command/palette';
+import { LiveBar } from '@/components/live/live-bar';
 import { Icon } from '@/components/ui/icon';
 
 const NAV: { href: string; label: string; icon: string }[] = [
@@ -49,6 +54,13 @@ export function Shell({ children }: { children: React.ReactNode }) {
     return onSessionChange(check);
   }, [router, pathname]);
 
+  useUnlockCheck(t);
+
+  // Shift templates power the palette and the live bar on every page.
+  useEffect(() => {
+    if (ready) void loadCatalogues();
+  }, [ready]);
+
   // Whatever the offline queue holds goes out as soon as a connection returns.
   useEffect(() => {
     void flushOffline();
@@ -81,27 +93,10 @@ export function Shell({ children }: { children: React.ReactNode }) {
             <span className="hidden text-[1.05rem] sm:inline">Shifter</span>
           </Link>
 
-          <nav className="hidden items-center gap-0.5 md:flex">
-            {NAV.map((item) => {
-              const active = pathname.startsWith(item.href);
-
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[0.85rem] font-medium transition-colors ${
-                    active ? 'text-(--accent-ink)' : 'text-muted hover:bg-surface-2 hover:text-ink'
-                  }`}
-                  style={active ? { background: 'var(--accent)' } : undefined}
-                >
-                  <Icon name={item.icon} size={15} />
-                  {t(item.label)}
-                </Link>
-              );
-            })}
-          </nav>
+          <DesktopNav pathname={pathname} />
 
           <div className="ml-auto flex items-center gap-1">
+            <LiveBar />
             {pendingOffline > 0 && (
               <button
                 type="button"
@@ -169,6 +164,11 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
       <main className="mx-auto max-w-[1440px] px-3 pb-24 pt-4 sm:px-5 md:pb-8">{children}</main>
 
+      <CommandPalette />
+      <Toasts />
+      <PointerFx />
+      <PressRipple />
+
       {/* Narrow screens: the five destinations as a thumb-height tab bar. */}
       <nav className="fixed inset-x-0 bottom-0 z-40 flex border-t border-border bg-(--surface)/92 backdrop-blur-md md:hidden">
         {NAV.map((item) => {
@@ -189,5 +189,72 @@ export function Shell({ children }: { children: React.ReactNode }) {
         })}
       </nav>
     </div>
+  );
+}
+
+
+/**
+ * The desktop nav with a pill that slides between items instead of teleporting
+ * — measured with getBoundingClientRect on every route change and window
+ * resize, then moved with a transform the CSS springs.
+ */
+function DesktopNav({ pathname }: { pathname: string }) {
+  const { t } = useI18n();
+  const host = useRef<HTMLElement>(null);
+  const pill = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    const place = () => {
+      const nav = host.current;
+      const marker = pill.current;
+
+      if (nav === null || marker === null) return;
+
+      const active = nav.querySelector<HTMLElement>('[data-active="true"]');
+
+      if (active === null) {
+        marker.style.opacity = '0';
+
+        return;
+      }
+
+      const navBox = nav.getBoundingClientRect();
+      const box = active.getBoundingClientRect();
+
+      marker.style.opacity = '1';
+      marker.style.width = `${box.width}px`;
+      marker.style.transform = `translateX(${box.left - navBox.left}px)`;
+    };
+
+    place();
+    addEventListener('resize', place);
+
+    // Fonts settling shifts widths a few pixels; re-measure once they load.
+    void document.fonts?.ready.then(place);
+
+    return () => removeEventListener('resize', place);
+  }, [pathname]);
+
+  return (
+    <nav ref={host} className="relative hidden items-center gap-0.5 md:flex">
+      <span ref={pill} className="nav-pill" style={{ opacity: 0 }} aria-hidden="true" />
+      {NAV.map((item) => {
+        const active = pathname.startsWith(item.href);
+
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            data-active={active}
+            className={`relative z-10 flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[0.85rem] font-medium transition-colors ${
+              active ? 'text-(--accent-ink)' : 'text-muted hover:text-ink'
+            }`}
+          >
+            <Icon name={item.icon} size={15} />
+            {t(item.label)}
+          </Link>
+        );
+      })}
+    </nav>
   );
 }

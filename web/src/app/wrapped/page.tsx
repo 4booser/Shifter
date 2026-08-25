@@ -10,6 +10,8 @@ import { averagesFor, bestDay, bestWeek, change, countShifts, longestStreak, res
 import { DaysResponse, EMPTY_SUMMARY } from '@/lib/calendar/models';
 import { useI18n } from '@/lib/i18n';
 import { Shell } from '@/components/layout/shell';
+import { BadgeWall } from '@/components/achievements/badges';
+import { useReveal } from '@/lib/fx';
 import { Heatmap } from '@/components/charts/charts';
 import { Alert, CountUp, Delta, Money } from '@/components/ui/bits';
 import { Icon } from '@/components/ui/icon';
@@ -38,6 +40,7 @@ export default function WrappedPage() {
  */
 function Wrapped() {
   const { t, lang } = useI18n();
+  const revealHost = useReveal<HTMLDivElement>();
 
   const [year, setYear] = useState(currentMonth().year);
   const [summary, setSummary] = useState<DaysResponse>(EMPTY_SUMMARY);
@@ -175,7 +178,7 @@ function Wrapped() {
     new Intl.DateTimeFormat(lang, { day: 'numeric', month: 'short' }).format(fromKey(key));
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-4">
+    <div ref={revealHost} className="mx-auto flex max-w-3xl flex-col gap-4">
       <div className="flex items-center gap-2">
         <h1 className="text-[1.3rem] font-bold tracking-tight">{t('Your year')}</h1>
         <span className="ml-auto flex items-center gap-1">
@@ -204,7 +207,7 @@ function Wrapped() {
       ) : (
         <>
           {/* ==== The badge ==== */}
-          <section className="card rise p-6 text-center">
+          <section className="card reveal p-6 text-center">
             <span className="text-[2.6rem]">{tier.emoji}</span>
             <h2 className="text-[1.35rem] font-bold">{t(tier.name)}</h2>
             <p className="field-hint">
@@ -231,7 +234,7 @@ function Wrapped() {
           </div>
 
           {/* ==== Twelve months, against last year ==== */}
-          <section className="card p-4">
+          <section className="card reveal p-4">
             <h2 className="mb-2 text-[0.98rem] font-bold">{t('Month by month')}</h2>
             <div className="flex h-36 items-end gap-1.5">
               {monthBars.map((bar) => (
@@ -242,7 +245,7 @@ function Wrapped() {
                       <span className="absolute bottom-0 left-0 w-full rounded-t bg-faint/30" style={{ height: `${bar.beforeHeight}%` }} />
                     )}
                     <span
-                      className="relative w-full rounded-t"
+                      className="grow-y relative w-full rounded-t"
                       style={{ height: `${bar.height}%`, background: bar.peak ? 'var(--accent)' : 'color-mix(in srgb, var(--accent) 55%, var(--surface-2))' }}
                     />
                   </div>
@@ -253,7 +256,7 @@ function Wrapped() {
           </section>
 
           {/* ==== The whole year as one grid ==== */}
-          <section className="card p-4">
+          <section className="card reveal p-4">
             <h2 className="mb-2 text-[0.98rem] font-bold">{t('The shape of the year')}</h2>
             <Heatmap values={heatValues} from={`${year}-01-01`} to={`${year}-12-31`} />
           </section>
@@ -293,13 +296,13 @@ function Wrapped() {
             <Superlative emoji="🌙" title={t('Nights')}>
               {Math.round(nightShare)}% {t('of shifts started after 20:00')}
             </Superlative>
-            <Superlative emoji="�_2" title={t('Rest')}>
+            <Superlative emoji="🛌" title={t('Rest')}>
               {rest} {t('days off')}
             </Superlative>
           </div>
 
           {/* ==== Weekday rhythm ==== */}
-          <section className="card p-4">
+          <section className="card reveal p-4">
             <h2 className="mb-2 text-[0.98rem] font-bold">{t('Weekday rhythm')}</h2>
             <ul className="flex flex-col gap-1.5">
               {weekdayRhythm.map((day) => (
@@ -316,6 +319,9 @@ function Wrapped() {
               ))}
             </ul>
           </section>
+
+          {/* ==== Badges ==== */}
+          <BadgeWall />
 
           {/* ==== Where the year is heading ==== */}
           {live && (
@@ -336,7 +342,7 @@ function Wrapped() {
 
 function Big({ label, delta, children }: { label: string; delta: number | null; children: React.ReactNode }) {
   return (
-    <div className="card rise p-3 text-center">
+    <div className="card reveal p-3 text-center">
       {children}
       <span className="field-hint flex items-center justify-center gap-1.5">
         {label} <Delta percent={delta} />
@@ -347,8 +353,8 @@ function Big({ label, delta, children }: { label: string; delta: number | null; 
 
 function Superlative({ emoji, title, children }: { emoji: string; title: string; children: React.ReactNode }) {
   return (
-    <div className="card rise flex items-center gap-3 p-3.5">
-      <span className="text-[1.6rem]">{emoji === '�_2' ? '🛌' : emoji}</span>
+    <div className="card reveal lift flex items-center gap-3 p-3.5">
+      <span className="text-[1.6rem]">{emoji}</span>
       <span className="min-w-0">
         <span className="field-hint block">{title}</span>
         <span className="text-[0.92rem]">{children}</span>

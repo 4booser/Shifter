@@ -67,7 +67,7 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="flex w-full flex-none flex-col gap-4 lg:w-64 xl:w-72">
+    <aside className="order-3 flex w-full flex-none flex-col gap-4 lg:order-none lg:w-64 xl:w-72">
       {/* ==== Places ==== */}
       <section className="card p-3.5">
         <SectionHead
@@ -189,22 +189,22 @@ export function Sidebar() {
 
         {templates.length > 0 && (
           <div className="mt-2 grid grid-cols-2 gap-1.5">
-            <button type="button" className="btn btn-sm" onClick={() => setModal('pattern')}>
-              <Icon name="brush" size={13} />
-              {t('Pattern')}
-            </button>
-            <button type="button" className="btn btn-sm" onClick={() => setModal('rotation')}>
-              <Icon name="repeat" size={13} />
-              {t('Fill a rota')}
-            </button>
-            <button type="button" className="btn btn-sm" onClick={() => setModal('scheme')}>
-              <Icon name="sliders" size={13} />
-              {t('Schemes')}
-            </button>
-            <button type="button" className="btn btn-sm" onClick={copyPreviousWeek}>
-              <Icon name="calendar" size={13} />
-              {t('Repeat week')}
-            </button>
+            {[
+              { icon: 'brush', label: 'Weekly pattern', act: () => setModal('pattern') },
+              { icon: 'repeat', label: 'Fill a rota', act: () => setModal('rotation') },
+              { icon: 'sliders', label: 'Colour schemes', act: () => setModal('scheme') },
+              { icon: 'calendar', label: 'Repeat last week', act: copyPreviousWeek },
+            ].map((action) => (
+              <button
+                key={action.label}
+                type="button"
+                className="btn btn-sm !justify-start !whitespace-normal !py-1.5 text-left leading-tight"
+                onClick={action.act}
+              >
+                <Icon name={action.icon} size={13} />
+                {t(action.label)}
+              </button>
+            ))}
           </div>
         )}
       </section>
@@ -303,12 +303,12 @@ export function Sidebar() {
       <section className="card p-3.5">
         <h2 className="mb-2 text-[0.95rem] font-bold">{t('Earnings')}</h2>
 
-        <div className="seg mb-3 w-full">
+        <div className="mb-3 grid grid-cols-2 gap-1 rounded-(--radius) border border-border bg-surface-2 p-1">
           {SUMMARY_PERIODS.map((period) => (
             <button
               key={period.value}
               type="button"
-              className={`seg-btn flex-1 px-1 text-[0.72rem] ${state.summaryPeriod === period.value ? 'is-active' : ''}`}
+              className={`seg-btn justify-center text-center text-[0.76rem] ${state.summaryPeriod === period.value ? 'is-active' : ''}`}
               onClick={() => calendarActions.setSummaryPeriod(period.value)}
             >
               {t(period.label)}

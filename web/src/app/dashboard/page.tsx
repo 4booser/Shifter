@@ -16,6 +16,10 @@ import { Shell } from '@/components/layout/shell';
 import { DayPanel } from '@/components/dashboard/day-panel';
 import { MonthGrid } from '@/components/dashboard/month-grid';
 import { Sidebar } from '@/components/dashboard/sidebar';
+import { InsightsPanel } from '@/components/dashboard/insights-panel';
+import { TileStrip } from '@/components/dashboard/tiles';
+import { PALETTE_EVENT } from '@/components/command/palette';
+import { useReveal } from '@/lib/fx';
 import { SearchModal } from '@/components/dashboard/modals/search-modal';
 import { SettingsModal } from '@/components/dashboard/modals/settings-modal';
 import { Alert } from '@/components/ui/bits';
@@ -31,6 +35,7 @@ export default function DashboardPage() {
 
 function Dashboard() {
   const { t } = useI18n();
+  const revealHost = useReveal<HTMLDivElement>();
   const state = useCalendar();
   const settings = useSettings((sel) => sel.settings);
   const view = useSettings((sel) => sel.settings.view);
@@ -50,18 +55,19 @@ function Dashboard() {
     reload();
   }, [view, mondayFirst]);
 
-  // Cmd/Ctrl+K opens search, the shortcut people expect.
+  // The command palette owns Cmd+K and forwards page actions over an event.
   useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
-        event.preventDefault();
-        setSearchOpen(true);
-      }
+    const onCommand = (event: Event) => {
+      const detail = (event as CustomEvent<string>).detail;
+
+      if (detail === 'search') setSearchOpen(true);
+      if (detail === 'settings') setSettingsOpen(true);
+      if (detail === 'today') calendarActions.today();
     };
 
-    addEventListener('keydown', onKey);
+    addEventListener(PALETTE_EVENT, onCommand);
 
-    return () => removeEventListener('keydown', onKey);
+    return () => removeEventListener(PALETTE_EVENT, onCommand);
   }, []);
 
   /**
@@ -87,21 +93,7 @@ function Dashboard() {
     state.templates.filter((template) => !template.archived).length === 0;
 
   return (
-    <div className="flex flex-col gap-3">
-      {/* Page toolbar: search + settings, kept off the global shell because
-          they belong to the calendar. */}
-      <div className="flex items-center gap-2">
-        <button type="button" className="btn btn-sm" onClick={() => setSearchOpen(true)}>
-          <Icon name="search" size={14} />
-          {t('Search')}
-          <kbd className="chip hidden sm:inline-flex">⌘K</kbd>
-        </button>
-        <button type="button" className="btn btn-sm ml-auto" onClick={() => setSettingsOpen(true)}>
-          <Icon name="sliders" size={14} />
-          {t('Settings')}
-        </button>
-      </div>
-
+    <div ref={revealHost} className="flex flex-col gap-3">
       {state.error !== null && <Alert onDismiss={calendarActions.clearError}>{state.error}</Alert>}
 
       {settings.remindUnclosed && unclosed.length > 0 && !reminderDismissed && (
@@ -122,10 +114,17 @@ function Dashboard() {
 
       {needsSetup && <Onboarding />}
 
+      {!needsSetup && <TileStrip />}
+      {!needsSetup && <InsightsPanel />}
+
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start">
         <Sidebar />
-        <MonthGrid />
-        <DayPanel />
+        <div className="order-1 min-w-0 flex-1 lg:order-none">
+          <MonthGrid onSearch={() => setSearchOpen(true)} onSettings={() => setSettingsOpen(true)} />
+        </div>
+        <div className="order-2 w-full flex-none lg:order-none lg:w-72 xl:w-80">
+          <DayPanel />
+        </div>
       </div>
 
       {/* Undo, floating over the calendar where the change happened. */}

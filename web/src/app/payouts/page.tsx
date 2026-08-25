@@ -8,6 +8,7 @@ import { addMonths, currentMonth, keysBetween, todayKey } from '@/lib/calendar/c
 import { PayPeriodRow, Reconciliation } from '@/lib/calendar/models';
 import { useI18n } from '@/lib/i18n';
 import { Shell } from '@/components/layout/shell';
+import { useReveal } from '@/lib/fx';
 import { PayoutModal, PayoutPrefill } from '@/components/dashboard/modals/payout-modal';
 import { Alert, Money } from '@/components/ui/bits';
 import { Icon } from '@/components/ui/icon';
@@ -38,6 +39,7 @@ export default function PayoutsPage() {
  */
 function Payouts() {
   const { t, lang } = useI18n();
+  const revealHost = useReveal<HTMLDivElement>();
 
   const [data, setData] = useState<Reconciliation | null>(null);
   const [loading, setLoading] = useState(true);
@@ -145,7 +147,7 @@ function Payouts() {
   };
 
   return (
-    <div className="flex flex-col gap-4">
+    <div ref={revealHost} className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-2">
         <h1 className="text-[1.3rem] font-bold tracking-tight">{t('Payouts')}</h1>
         <button
@@ -165,7 +167,7 @@ function Payouts() {
 
       {/* ==== Next money in ==== */}
       {nextDue !== null && (
-        <section className="card rise flex flex-wrap items-center gap-x-6 gap-y-1 p-4">
+        <section className="card reveal flex flex-wrap items-center gap-x-6 gap-y-1 p-4">
           <div>
             <span className="field-hint block">{t('Next money in')}</span>
             <Money value={nextDue.amount} className="text-[1.6rem] font-bold text-good" />
@@ -180,7 +182,7 @@ function Payouts() {
 
       {/* ==== Shortfall detector, first: the only thing worth acting on today ==== */}
       {shortfalls.map((shortfall) => (
-        <section key={`${shortfall.location_id}-${shortfall.stream}`} className="card rise border-danger/40 bg-(--danger-soft) p-4">
+        <section key={`${shortfall.location_id}-${shortfall.stream}`} className="card reveal border-danger/40 bg-(--danger-soft) p-4">
           <h2 className="mb-1 flex items-center gap-2 font-bold text-danger">
             <Icon name="flame" size={16} />
             {t('Underpaid repeatedly')}
@@ -199,15 +201,15 @@ function Payouts() {
 
       {/* ==== KPI ==== */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-        <div className="card p-3">
+        <div className="card reveal p-3">
           <span className="field-hint block">{t('Awaited')}</span>
           <Money value={data?.awaited ?? 0} className="text-[1.25rem] font-bold" />
         </div>
-        <div className="card p-3">
+        <div className="card reveal p-3">
           <span className="field-hint block">{t('Of that, late')}</span>
           <Money value={data?.overdue ?? 0} className={`text-[1.25rem] font-bold ${(data?.overdue ?? 0) > 0 ? 'text-danger' : ''}`} />
         </div>
-        <div className="card p-3">
+        <div className="card reveal p-3">
           <span className="field-hint block">{t('Gone missing')}</span>
           <Money
             value={periods.filter((row) => row.status === 'short').reduce((total, row) => total + (row.expected - row.paid), 0)}
@@ -218,7 +220,7 @@ function Payouts() {
 
       {/* ==== Reliability strips ==== */}
       {reliability.length > 0 && (
-        <section className="card p-4">
+        <section className="card reveal p-4">
           <h2 className="mb-2 text-[0.98rem] font-bold">{t('How each place has paid')}</h2>
           <div className="flex flex-col gap-2.5">
             {reliability.map((group) => (
@@ -254,7 +256,7 @@ function Payouts() {
       )}
 
       {/* ==== Upcoming ==== */}
-      <section className="card p-4">
+      <section className="card reveal p-4">
         <h2 className="mb-2 text-[0.98rem] font-bold">{t('Expected')}</h2>
         {loading ? (
           <p className="field-hint">{t('Loading…')}</p>
@@ -271,7 +273,7 @@ function Payouts() {
 
       {/* ==== Settled ==== */}
       {settled.length > 0 && (
-        <section className="card p-4">
+        <section className="card reveal p-4">
           <h2 className="mb-2 text-[0.98rem] font-bold">{t('Settled')}</h2>
           <ul className="flex flex-col gap-1.5">
             {settled.map((row) => (

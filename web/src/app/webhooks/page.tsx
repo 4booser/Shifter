@@ -7,6 +7,7 @@ import { Delivery, IngestResult, Webhook, WebhookKind, WebhookSave, webhookApi }
 import { calendarApi } from '@/lib/api/calendar';
 import { ShiftTemplate } from '@/lib/calendar/models';
 import { useI18n } from '@/lib/i18n';
+import { useReveal } from '@/lib/fx';
 import { Shell } from '@/components/layout/shell';
 import { Alert, Money, Segmented } from '@/components/ui/bits';
 import { Icon } from '@/components/ui/icon';
@@ -65,6 +66,7 @@ export default function WebhooksPage() {
  * in the morning needs its body kept for the morning's replay.
  */
 function Webhooks() {
+  const revealHost = useReveal<HTMLDivElement>();
   const { t, lang } = useI18n();
 
   const [hooks, setHooks] = useState<Webhook[]>([]);
@@ -201,7 +203,7 @@ function Webhooks() {
       : new Intl.DateTimeFormat(lang, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-4">
+    <div ref={revealHost} className="mx-auto flex max-w-3xl flex-col gap-4">
       <div className="flex items-center gap-2">
         <h1 className="text-[1.3rem] font-bold tracking-tight">{t('Webhooks')}</h1>
         <button type="button" className="btn btn-primary btn-sm ml-auto" onClick={startNew}>
@@ -214,7 +216,7 @@ function Webhooks() {
       {saved && <Alert kind="good" onDismiss={() => setSaved(null)}>{saved}</Alert>}
 
       {/* ==== What this is ==== */}
-      <section className="card p-4">
+      <section className="card reveal p-4">
         <h2 className="mb-1 flex items-center gap-2 text-[0.98rem] font-bold">
           <Icon name="swap" size={15} />
           {t('Let other software fill the calendar in')}
@@ -246,7 +248,7 @@ function Webhooks() {
 
       {/* ==== The form ==== */}
       {editing !== null && (
-        <section className="card rise p-4">
+        <section className="card reveal p-4">
           <h2 className="mb-3 text-[0.98rem] font-bold">{t(editing === 'new' ? 'New endpoint' : 'Edit endpoint')}</h2>
 
           <div className="flex flex-col gap-3.5">
@@ -350,7 +352,7 @@ function Webhooks() {
       {loading ? (
         <p className="field-hint">{t('Loading…')}</p>
       ) : hooks.length === 0 ? (
-        <section className="card p-4">
+        <section className="card reveal p-4">
           <p className="field-hint">
             {t('No endpoints yet. Make one, then paste its address into whatever should feed the calendar.')}
           </p>

@@ -1,0 +1,482 @@
+'use client';
+
+import { useEffect, useMemo, useRef, useState } from 'react';
+
+import { calendarApi } from '@/lib/api/calendar';
+import { monthBounds, shiftDays, todayKey } from '@/lib/calendar/calendar-date';
+import { forecastFor } from '@/lib/calendar/forecast';
+import { bestDay } from '@/lib/calendar/insights';
+import { CalendarDayData, Goal, Reconciliation, ShiftTemplate } from '@/lib/calendar/models';
+import { activeGoalFor } from '@/lib/calendar/stats-math';
+import { fireConfetti, stagger } from '@/lib/fx';
+import { useI18n } from '@/lib/i18n';
+import {
+  cancelLiveShift,
+  finishLiveShift,
+  formatElapsed,
+  liveTick,
+  startLiveShift,
+  useLive,
+} from '@/lib/live/live-shift';
+import { useMoney } from '@/lib/settings/money';
+import { useSettings } from '@/lib/settings/store';
+import { pushToast } from '@/lib/toast';
+import { useCalendar } from '@/lib/store/calendar';
+import { CountUp, Money } from '@/components/ui/bits';
+import { Icon } from '@/components/ui/icon';
+
+/**
+ * The command-centre strip over the calendar: this month at a glance, one
+ * fact per tile. Everything is derived from a six-week window around today,
+ * so the strip tells the truth about the current month wherever the grid
+ * below happens to be navigated.
+ */
+
+export const TILE_IDS = ['today', 'pace', 'goal', 'payday', 'streak', 'best', 'hours', 'tips'] as const;
+
+export type TileId = (typeof TILE_IDS)[number];
+
+const TILE_NAMES: Record<TileId, string> = {
+  today: 'Today',
+  pace: 'Heading for',
+  goal: 'Goal',
+  payday: 'Next money',
+  streak: 'Streak',
+  best: 'Best day',
+  hours: 'Hours',
+  tips: 'Tips',
+};
+
+export function TileStrip() {
+  const { t } = useI18n();
+  const tiles = useSettings((state) => state.settings.dashboardTiles);
+  const update = useSettings((state) => state.update);
+  const storeDays = useCalendar((state) => state.days);
+  const templates = useCalendar((state) => state.templates);
+  const saving = useCalendar((state) => state.saving);
+
+  const [windowDays, setWindowDays] = useState<CalendarDayData[]>([]);
+  const [goals, setGoals] = useState<Goal[]>([]);
+  const [schedule, setSchedule] = useState<Reconciliation | null>(null);
+  const [customising, setCustomising] = useState(false);
+
+  const today = todayKey();
+  const bounds = monthBounds(today);
+
+  // The tiles' own window: six weeks back for streaks, the month for totals.
+  // Re-fetched after every save, debounced so a burst of painting is one call.
+  useEffect(() => {
+    const handle = setTimeout(() => {
+      void calendarApi
+        .days(shiftDays(bounds.from, -42), bounds.to)
+        .then((response) => setWindowDays(response.days))
+        .catch(() => undefined);
+    }, 400);
+
+    return () => clearTimeout(handle);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storeDays, saving]);
+
+  useEffect(() => {
+    void calendarApi.goals().then(setGoals).catch(() => setGoals([]));
+    void calendarApi
+      .schedule(shiftDays(today, -31), shiftDays(today, 62))
+      .then(setSchedule)
+      .catch(() => setSchedule(null));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const monthDays = useMemo(
+    () => windowDays.filter((day) => day.date >= bounds.from && day.date <= bounds.to),
+    [windowDays, bounds.from, bounds.to],
+  );
+
+  const order = tiles ?? [...TILE_IDS];
+  const visible = order.filter((id): id is TileId => (TILE_IDS as readonly string[]).includes(id));
+
+  if (visible.length === 0 && !customising) return null;
+
+  return (
+    <section aria-label={t('Overview')}>
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8">
+        {visible.map((id, index) => (
+          <div key={id} className="tile glow tilt reveal" style={stagger(index)}>
+            <Tile
+              id={id}
+              monthDays={monthDays}
+              window={windowDays}
+              goals={goals}
+              schedule={schedule}
+              templates={templates}
+            />
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-1 flex justify-end">
+        <div className="relative">
+          <button
+            type="button"
+            className="btn btn-quiet btn-sm text-muted"
+            onClick={() => setCustomising((open) => !open)}
+          >
+            <Icon name="sliders" size={13} />
+            {t('Tiles')}
+          </button>
+
+          {customising && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setCustomising(false)} />
+              <div className="card absolute right-0 z-50 mt-1 w-60 p-2 shadow-(--shadow-lg)">
+                {TILE_IDS.map((id) => {
+                  const at = order.indexOf(id);
+                  const on = at !== -1;
+
+                  const move = (delta: number) => {
+                    const next = [...order];
+                    const to = at + delta;
+
+                    if (to < 0 || to >= next.length) return;
+
+                    next.splice(to, 0, ...next.splice(at, 1));
+                    update('dashboardTiles', next);
+                  };
+
+                  return (
+                    <div key={id} className="flex items-center gap-1.5 rounded-(--radius) px-1.5 py-1 hover:bg-surface-2">
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={on}
+                        className={`h-4 w-7 flex-none rounded-full transition-colors ${on ? 'bg-(--accent)' : 'bg-surface-2 border border-border'}`}
+                        onClick={() =>
+                          update(
+                            'dashboardTiles',
+                            on ? order.filter((item) => item !== id) : [...order, id],
+                          )
+                        }
+                      >
+                        <span
+                          className={`block h-3 w-3 rounded-full bg-white shadow transition-transform ${on ? 'translate-x-3.5' : 'translate-x-0.5'}`}
+                        />
+                      </button>
+                      <span className="flex-1 text-[0.85rem]">{t(TILE_NAMES[id])}</span>
+                      {on && (
+                        <span className="flex gap-0.5">
+                          <button type="button" className="btn btn-quiet btn-sm !px-1" aria-label={t('Up')} onClick={() => move(-1)}>
+                            ↑
+                          </button>
+                          <button type="button" className="btn btn-quiet btn-sm !px-1" aria-label={t('Down')} onClick={() => move(1)}>
+                            ↓
+                          </button>
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Tile(props: {
+  id: TileId;
+  monthDays: CalendarDayData[];
+  window: CalendarDayData[];
+  goals: Goal[];
+  schedule: Reconciliation | null;
+  templates: ShiftTemplate[];
+}) {
+  switch (props.id) {
+    case 'today':
+      return <TodayTile window={props.window} templates={props.templates} />;
+    case 'pace':
+      return <PaceTile monthDays={props.monthDays} />;
+    case 'goal':
+      return <GoalTile monthDays={props.monthDays} goals={props.goals} />;
+    case 'payday':
+      return <PaydayTile schedule={props.schedule} />;
+    case 'streak':
+      return <StreakTile window={props.window} />;
+    case 'best':
+      return <BestTile monthDays={props.monthDays} />;
+    case 'hours':
+      return <HoursTile monthDays={props.monthDays} />;
+    case 'tips':
+      return <TipsTile monthDays={props.monthDays} />;
+  }
+}
+
+function Label({ icon, children }: { icon: string; children: React.ReactNode }) {
+  return (
+    <span className="tile-label">
+      <Icon name={icon} size={12} />
+      {children}
+    </span>
+  );
+}
+
+/** Today's shift: idle, startable, live and ticking, or a day off. */
+function TodayTile({ window, templates }: { window: CalendarDayData[]; templates: ShiftTemplate[] }) {
+  const { t } = useI18n();
+  const live = useLive((state) => state.live);
+  const today = todayKey();
+  const day = window.find((item) => item.date === today);
+  const planned = day?.shifts.find((entry) => !entry.worked);
+  const worked = day?.shifts.find((entry) => entry.worked);
+  const template = templates.find((item) => item.id === (live?.shiftId ?? planned?.shift_id));
+
+  const [, force] = useState(0);
+
+  useEffect(() => {
+    if (live === null) return;
+
+    const handle = setInterval(() => force((n) => n + 1), 1000);
+
+    return () => clearInterval(handle);
+  }, [live]);
+
+  if (live !== null && template !== undefined) {
+    const tick = liveTick(template, live.startedAt, Date.now());
+
+    return (
+      <>
+        <Label icon="spark">{t('On shift')}</Label>
+        <span className="tile-value text-good">
+          {tick.earned === null ? formatElapsed(tick.elapsed) : <Money value={tick.earned} />}
+        </span>
+        <span className="field-hint flex items-center gap-1.5">
+          <span className="live-dot" />
+          {tick.earned === null ? template.name : formatElapsed(tick.elapsed)}
+        </span>
+        <span className="mt-auto flex gap-1">
+          <button
+            type="button"
+            className="btn btn-primary btn-sm flex-1"
+            onClick={() => {
+              void finishLiveShift().then(() => {
+                fireConfetti();
+                pushToast({ icon: '✅', title: t('Shift recorded'), text: template.name });
+              });
+            }}
+          >
+            {t('Finish')}
+          </button>
+          <button type="button" className="btn btn-quiet btn-sm" onClick={cancelLiveShift}>
+            {t('Cancel')}
+          </button>
+        </span>
+      </>
+    );
+  }
+
+  if (planned !== undefined) {
+    return (
+      <>
+        <Label icon="spark">{t('Today')}</Label>
+        <span className="tile-value truncate">{planned.name}</span>
+        <span className="field-hint">
+          {planned.start_time}–{planned.end_time}
+        </span>
+        {template !== undefined && (
+          <button
+            type="button"
+            className="btn btn-primary btn-sm mt-auto"
+            onClick={() => startLiveShift(template)}
+          >
+            {t('Start shift')}
+          </button>
+        )}
+      </>
+    );
+  }
+
+  return (
+    <>
+      <Label icon="spark">{t('Today')}</Label>
+      <span className="tile-value">{worked !== undefined ? <Money value={day?.earned ?? 0} /> : '—'}</span>
+      <span className="field-hint">{worked !== undefined ? worked.name : t('Day off')}</span>
+    </>
+  );
+}
+
+function PaceTile({ monthDays }: { monthDays: CalendarDayData[] }) {
+  const { t } = useI18n();
+  const bounds = monthBounds(todayKey());
+  const forecast = forecastFor(monthDays, bounds.from, bounds.to);
+
+  return (
+    <>
+      <Label icon="chart">{t('Heading for')}</Label>
+      <span className="tile-value">
+        <CountUp value={forecast.projected} />
+      </span>
+      <span className="field-hint">
+        <Money value={forecast.earnedSoFar} /> {t('so far')}
+      </span>
+    </>
+  );
+}
+
+function GoalTile({ monthDays, goals }: { monthDays: CalendarDayData[]; goals: Goal[] }) {
+  const { t } = useI18n();
+  const bounds = monthBounds(todayKey());
+  const active = activeGoalFor(goals, bounds.from, bounds.to);
+  const earned = monthDays.reduce((sum, day) => sum + day.earned, 0);
+
+  if (active === null) {
+    return (
+      <>
+        <Label icon="target">{t('Goal')}</Label>
+        <span className="tile-value">—</span>
+        <span className="field-hint">{t('Set one in statistics')}</span>
+      </>
+    );
+  }
+
+  const share = Math.min(1, earned / active.target);
+  const radius = 26;
+  const circumference = 2 * Math.PI * radius;
+
+  return (
+    <span className="flex items-center gap-2.5">
+      <svg width="64" height="64" viewBox="0 0 64 64" className="-rotate-90 flex-none">
+        <circle className="ring-track" cx="32" cy="32" r={radius} fill="none" strokeWidth="6" />
+        <circle
+          className="ring-fill"
+          cx="32"
+          cy="32"
+          r={radius}
+          fill="none"
+          strokeWidth="6"
+          strokeDasharray={circumference}
+          strokeDashoffset={circumference * (1 - share)}
+        />
+      </svg>
+      <span className="min-w-0">
+        <Label icon="target">{t('Goal')}</Label>
+        <span className="tile-value block">{Math.round(share * 100)}%</span>
+        <span className="field-hint">
+          <Money value={active.target} />
+        </span>
+      </span>
+    </span>
+  );
+}
+
+function PaydayTile({ schedule }: { schedule: Reconciliation | null }) {
+  const { t } = useI18n();
+  const today = todayKey();
+
+  const next = useMemo(() => {
+    const ahead = (schedule?.periods ?? [])
+      .filter((row) => row.paid === 0 && row.due_on >= today && row.expected > 0)
+      .sort((a, b) => a.due_on.localeCompare(b.due_on));
+
+    if (ahead.length === 0) return null;
+
+    const sameDay = ahead.filter((row) => row.due_on === ahead[0].due_on);
+    const days = Math.round(
+      (new Date(`${ahead[0].due_on}T00:00:00`).getTime() - new Date(`${today}T00:00:00`).getTime()) / 86_400_000,
+    );
+
+    return { days, amount: sameDay.reduce((sum, row) => sum + row.expected, 0) };
+  }, [schedule, today]);
+
+  return (
+    <>
+      <Label icon="wallet">{t('Next money')}</Label>
+      <span className="tile-value">{next === null ? '—' : <CountUp value={next.amount} />}</span>
+      <span className="field-hint">
+        {next === null
+          ? t('Nothing due yet')
+          : next.days === 0
+            ? t('lands today')
+            : `${t('in')} ${next.days} ${t('d.')}`}
+      </span>
+    </>
+  );
+}
+
+function StreakTile({ window }: { window: CalendarDayData[] }) {
+  const { t } = useI18n();
+  const byDate = new Map(window.map((day) => [day.date, day]));
+  const today = todayKey();
+
+  const workedOn = (key: string) => byDate.get(key)?.shifts.some((entry) => entry.worked) === true;
+
+  let run = 0;
+  let cursor = workedOn(today) ? today : shiftDays(today, -1);
+
+  while (workedOn(cursor)) {
+    run += 1;
+    cursor = shiftDays(cursor, -1);
+  }
+
+  return (
+    <>
+      <Label icon="flame">{t('Streak')}</Label>
+      <span className={`tile-value ${run >= 3 ? 'text-warn' : ''}`}>
+        {run} {run >= 3 && '🔥'}
+      </span>
+      <span className="field-hint">{t('days running')}</span>
+    </>
+  );
+}
+
+function BestTile({ monthDays }: { monthDays: CalendarDayData[] }) {
+  const { t, lang } = useI18n();
+  const best = bestDay(monthDays);
+
+  return (
+    <>
+      <Label icon="trophy">{t('Best day')}</Label>
+      <span className="tile-value">{best === null ? '—' : <CountUp value={best.value} />}</span>
+      <span className="field-hint">
+        {best === null
+          ? t('Nothing yet this month')
+          : new Date(`${best.date}T00:00:00`).toLocaleDateString(lang, { day: 'numeric', month: 'short' })}
+      </span>
+    </>
+  );
+}
+
+function HoursTile({ monthDays }: { monthDays: CalendarDayData[] }) {
+  const { t } = useI18n();
+  const hours = monthDays.reduce((sum, day) => sum + day.hours, 0);
+  const worked = monthDays.filter((day) => day.shifts.some((entry) => entry.worked)).length;
+
+  return (
+    <>
+      <Label icon="clock">{t('Hours')}</Label>
+      <span className="tile-value">
+        <CountUp value={hours} format={(value) => value.toFixed(value % 1 === 0 ? 0 : 1)} />
+      </span>
+      <span className="field-hint">
+        {worked} {t('shifts this month')}
+      </span>
+    </>
+  );
+}
+
+function TipsTile({ monthDays }: { monthDays: CalendarDayData[] }) {
+  const { t } = useI18n();
+  const tips = monthDays.reduce((sum, day) => sum + (day.tips ?? 0) + (day.tips_cash ?? 0), 0);
+  const earned = monthDays.reduce((sum, day) => sum + day.earned, 0);
+
+  return (
+    <>
+      <Label icon="coins">{t('Tips')}</Label>
+      <span className="tile-value">
+        <CountUp value={tips} />
+      </span>
+      <span className="field-hint">
+        {earned > 0 ? `${Math.round((tips / earned) * 100)}% ${t('of earnings')}` : t('this month')}
+      </span>
+    </>
+  );
+}

@@ -119,11 +119,12 @@ export function DayPanel() {
 
   if (key === null) {
     return (
-      <aside className="card w-full flex-none p-4 lg:w-72 xl:w-80">
+      <aside className="card w-full p-4">
         <p className="field-hint">{t('Pick a day in the calendar.')}</p>
       </aside>
     );
   }
+
 
   const holiday = holidaysInRange(settings.holidayCountry, key, key).get(key)?.name ?? null;
   const shifts = day?.shifts ?? [];
@@ -152,7 +153,10 @@ export function DayPanel() {
   };
 
   return (
-    <aside className="card flex w-full flex-none flex-col gap-4 p-4 lg:w-72 xl:w-80">
+    <aside
+      key={key}
+      className="card rise flex w-full flex-col gap-4 p-4 lg:sticky lg:top-[4.25rem] lg:max-h-[calc(100dvh-5.5rem)] lg:overflow-y-auto"
+    >
       <div>
         <h2 className="flex items-center gap-2 text-[1rem] font-bold capitalize">
           <Icon name="calendar" size={16} className="text-(--accent)" />
@@ -293,55 +297,76 @@ export function DayPanel() {
             {t('Sold today')}
           </h3>
 
-          <ul className="flex flex-col gap-2">
+          <ul className="flex flex-col gap-1.5">
             {positions.map((position) => {
               const quantity = quantities[position.id] ?? 0;
+              const bump = (delta: number) =>
+                setQuantities((current) => ({
+                  ...current,
+                  [position.id]: Math.max(0, (current[position.id] ?? 0) + delta),
+                }));
 
               return (
-                <li key={position.id}>
+                <li
+                  key={position.id}
+                  className={`rounded-(--radius) border p-2 transition-colors ${
+                    quantity > 0 ? 'border-(--accent)/40 bg-(--accent-soft)' : 'border-border'
+                  }`}
+                >
                   <div className="flex items-center gap-2">
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-[0.85rem]">{position.name}</span>
-                      <span className="field-hint block whitespace-nowrap tabular">
+                      <span className="block truncate text-[0.86rem] font-medium">{position.name}</span>
+                      <span className="field-hint whitespace-nowrap tabular">
                         {position.price} × {position.percentage ?? 0}%
+                        {quantity > 0 && (
+                          <span className="font-semibold text-good">
+                            {' '}= <Money value={quantity * position.price * ((position.percentage ?? 0) / 100)} />
+                          </span>
+                        )}
                       </span>
                     </span>
-                    <input
-                      type="number"
-                      min={0}
-                      step={1}
-                      className="field-input w-16 flex-none text-center"
-                      value={quantity === 0 ? '' : quantity}
-                      placeholder="0"
-                      aria-label={position.name}
-                      onChange={(event) =>
-                        setQuantities((current) => ({
-                          ...current,
-                          [position.id]: Math.max(0, Math.floor(Number(event.target.value) || 0)),
-                        }))
-                      }
-                    />
-                  </div>
-                  <div className="mt-1 flex gap-1">
-                    {QUANTITY_STEPS.map((step) => (
+
+                    <span className="flex flex-none items-center gap-1">
                       <button
-                        key={step}
                         type="button"
-                        className="btn btn-quiet btn-sm tabular"
-                        onClick={() =>
+                        className="btn btn-sm !px-2 tabular"
+                        aria-label="−1"
+                        disabled={quantity === 0}
+                        onClick={() => bump(-1)}
+                      >
+                        −
+                      </button>
+                      <input
+                        type="number"
+                        min={0}
+                        step={1}
+                        className="field-input !w-12 !px-1 text-center font-semibold tabular"
+                        value={quantity === 0 ? '' : quantity}
+                        placeholder="0"
+                        aria-label={position.name}
+                        onChange={(event) =>
                           setQuantities((current) => ({
                             ...current,
-                            [position.id]: (current[position.id] ?? 0) + step,
+                            [position.id]: Math.max(0, Math.floor(Number(event.target.value) || 0)),
                           }))
                         }
-                      >
+                      />
+                      <button type="button" className="btn btn-sm !px-2 tabular" aria-label="+1" onClick={() => bump(1)}>
+                        +
+                      </button>
+                    </span>
+                  </div>
+
+                  <div className="mt-1.5 flex gap-1">
+                    {QUANTITY_STEPS.slice(1).map((step) => (
+                      <button key={step} type="button" className="btn btn-quiet btn-sm flex-1 tabular" onClick={() => bump(step)}>
                         +{step}
                       </button>
                     ))}
                     {quantity > 0 && (
                       <button
                         type="button"
-                        className="btn btn-quiet btn-sm text-danger"
+                        className="btn btn-quiet btn-sm flex-1 text-danger"
                         onClick={() => setQuantities((current) => ({ ...current, [position.id]: 0 }))}
                       >
                         {t('Clear')}
@@ -380,7 +405,7 @@ export function DayPanel() {
             <button
               key={step}
               type="button"
-              className="btn btn-quiet btn-sm tabular"
+              className="btn btn-quiet btn-sm flex-1 tabular"
               onClick={() => setTips((current) => (current ?? 0) + step)}
             >
               +{step}

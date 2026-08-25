@@ -452,3 +452,567 @@ dialog.modal[open] {
     transform: translateY(8px);
   }
 }
+
+/* ==== Motion system ==== */
+
+/* Cards and blocks announce themselves once, staggered by --i. A keyframe
+   rather than a transition: it needs no second frame to start from, so the
+   class can be added synchronously and throttled tabs still land on the end
+   state. */
+.reveal {
+  opacity: 0;
+}
+
+.reveal.in {
+  opacity: 1;
+  animation: reveal-in calc(0.5s * var(--motion)) cubic-bezier(0.2, 0.85, 0.3, 1) backwards;
+  animation-delay: calc(var(--i, 0) * 45ms * var(--motion));
+}
+
+@keyframes reveal-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.985);
+  }
+}
+
+/* Route entry: the page slides up under the sticky bar. */
+.page-enter {
+  animation: page-in calc(0.4s * var(--motion)) cubic-bezier(0.2, 0.85, 0.3, 1) backwards;
+}
+
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+/* Calendar cells pour in when the month changes. */
+.cell-in {
+  animation: cell-in calc(0.35s * var(--motion)) cubic-bezier(0.2, 0.85, 0.3, 1) backwards;
+  animation-delay: calc(var(--i, 0) * 6ms * var(--motion));
+}
+
+@keyframes cell-in {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+}
+
+/* A mark that has just been painted lands with a small bounce. */
+.pop {
+  animation: pop calc(0.35s * var(--motion)) cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes pop {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+}
+
+/* Charts: columns grow out of the baseline, lines draw themselves. */
+.grow-y {
+  transform-origin: bottom;
+  animation: grow-y calc(0.55s * var(--motion)) cubic-bezier(0.2, 0.85, 0.3, 1) backwards;
+  animation-delay: calc(var(--i, 0) * 22ms * var(--motion));
+}
+
+@keyframes grow-y {
+  from {
+    transform: scaleY(0.05);
+    opacity: 0;
+  }
+}
+
+.draw-line {
+  stroke-dasharray: var(--len, 2000);
+  stroke-dashoffset: var(--len, 2000);
+  animation: draw calc(1.1s * var(--motion)) cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.fade-in {
+  animation: fade-in calc(0.6s * var(--motion)) ease backwards;
+  animation-delay: calc(var(--i, 0) * 30ms * var(--motion));
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Loading shimmer for figures that have not arrived yet. */
+.shimmer {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface-2);
+  border-radius: var(--radius);
+}
+
+.shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 7%), transparent);
+  animation: shimmer calc(1.4s * var(--motion, 1)) infinite;
+}
+
+@keyframes shimmer {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+/* Interactive cards lift a touch; buttons glow when primary. */
+.lift {
+  transition:
+    transform calc(0.18s * var(--motion)) cubic-bezier(0.2, 0.85, 0.3, 1),
+    box-shadow calc(0.18s * var(--motion)) ease;
+}
+
+.lift:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.btn-primary {
+  box-shadow: 0 1px 2px rgb(0 0 0 / 12%), 0 0 0 0 var(--ring);
+  transition:
+    background calc(0.15s * var(--motion)),
+    box-shadow calc(0.25s * var(--motion)),
+    transform calc(0.1s * var(--motion));
+}
+
+.btn-primary:hover {
+  box-shadow: 0 2px 10px -2px var(--accent), 0 0 0 4px var(--ring);
+}
+
+/* The sliding pill behind the active nav item; JS keeps it under the link. */
+.nav-pill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--accent);
+  transition:
+    transform calc(0.35s * var(--motion)) cubic-bezier(0.3, 1.2, 0.4, 1),
+    width calc(0.35s * var(--motion)) cubic-bezier(0.3, 1.2, 0.4, 1);
+  will-change: transform, width;
+}
+
+/* Selection ring breathes once when a day is picked. */
+.ring-pulse {
+  animation: ring-pulse calc(0.5s * var(--motion)) ease-out;
+}
+
+@keyframes ring-pulse {
+  0% {
+    box-shadow: 0 0 0 0 var(--ring);
+  }
+  70% {
+    box-shadow: 0 0 0 8px transparent;
+  }
+}
+
+/* Toast-style floating notices. */
+.toast-in {
+  animation: toast-in calc(0.35s * var(--motion)) cubic-bezier(0.34, 1.4, 0.64, 1) backwards;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.96);
+  }
+}
+
+/* Theme switches cross-fade rather than snapping. */
+body,
+.card,
+.btn,
+.field-input,
+.seg {
+  transition-property: background-color, border-color, color;
+  transition-duration: calc(0.25s * var(--motion));
+  transition-timing-function: ease;
+}
+
+/* ==== Pointer-reactive surfaces ==== */
+
+/* A sheen that follows the cursor; PointerFx feeds --mx/--my. */
+.glow {
+  position: relative;
+}
+
+.glow::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    240px circle at var(--mx, 50%) var(--my, 50%),
+    color-mix(in srgb, var(--accent) 13%, transparent),
+    transparent 65%
+  );
+  opacity: 0;
+  transition: opacity calc(0.3s * var(--motion)) ease;
+  pointer-events: none;
+}
+
+.glow:hover::after {
+  opacity: 1;
+}
+
+/* Leans toward the pointer; PointerFx feeds the angles. */
+.tilt {
+  transform: perspective(700px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
+  transition: transform calc(0.18s * var(--motion)) ease-out;
+  will-change: transform;
+}
+
+/* Press ripple, appended to .btn by PressRipple. */
+.btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: currentcolor;
+  opacity: 0.18;
+  transform: scale(0);
+  animation: ripple calc(0.55s * var(--motion, 1)) ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes ripple {
+  to {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+
+/* ==== Dashboard tiles ==== */
+
+.tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-height: 6.5rem;
+  padding: 0.85rem 0.95rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  overflow: hidden;
+  transition:
+    border-color calc(0.2s * var(--motion)) ease,
+    box-shadow calc(0.2s * var(--motion)) ease;
+}
+
+.tile:hover {
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+  box-shadow: var(--shadow);
+}
+
+.tile-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.tile-value {
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==== The live-shift pulse ==== */
+
+.live-dot {
+  position: relative;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: var(--good);
+}
+
+.live-dot::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: inherit;
+  animation: live-ping calc(1.6s * var(--motion, 1)) ease-out infinite;
+}
+
+@keyframes live-ping {
+  from {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+
+  to {
+    transform: scale(3.2);
+    opacity: 0;
+  }
+}
+
+/* The goal/progress ring draws itself; the dashoffset comes from React. */
+.ring-track {
+  stroke: var(--border);
+}
+
+.ring-fill {
+  stroke: var(--accent);
+  stroke-linecap: round;
+  transition: stroke-dashoffset calc(0.9s * var(--motion)) cubic-bezier(0.2, 0.85, 0.3, 1);
+}
+
+/* ==== Command palette ==== */
+
+.palette-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  background: color-mix(in srgb, black 42%, transparent);
+  backdrop-filter: blur(3px);
+  animation: fade-in calc(0.18s * var(--motion)) ease backwards;
+}
+
+.palette {
+  position: fixed;
+  left: 50%;
+  top: 14vh;
+  z-index: 91;
+  width: min(37rem, calc(100vw - 2rem));
+  transform: translateX(-50%);
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) * 1.2);
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  animation: palette-in calc(0.24s * var(--motion)) cubic-bezier(0.2, 1.1, 0.3, 1) backwards;
+}
+
+@keyframes palette-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-14px) scale(0.97);
+  }
+}
+
+.palette-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+  padding: 0.55rem 0.9rem;
+  text-align: left;
+  font-size: 0.9rem;
+  animation: rise calc(0.25s * var(--motion)) ease backwards;
+  animation-delay: calc(var(--i, 0) * 18ms * var(--motion));
+}
+
+.palette-row[data-hot='true'] {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+/* ==== Achievements ==== */
+
+.badge-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 1rem 0.6rem 0.8rem;
+  text-align: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.badge-card[data-locked='true'] {
+  opacity: 0.55;
+}
+
+.badge-card[data-locked='true'] .badge-icon {
+  filter: grayscale(1);
+  opacity: 0.6;
+}
+
+.badge-icon {
+  font-size: 1.9rem;
+  line-height: 1;
+  transition: transform calc(0.25s * var(--motion)) cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.badge-card:hover .badge-icon {
+  transform: scale(1.25) rotate(-6deg);
+}
+
+/* A diagonal shine sweeping across unlocked badges now and then. */
+.badge-card[data-locked='false']::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 40%;
+  background: linear-gradient(105deg, transparent, color-mix(in srgb, var(--accent) 16%, white 8%), transparent);
+  animation: badge-shine calc(3.4s * var(--motion, 1)) ease-in-out infinite;
+  animation-delay: calc(var(--i, 0) * 300ms);
+  pointer-events: none;
+}
+
+@keyframes badge-shine {
+  0% {
+    left: -45%;
+  }
+
+  38%,
+  100% {
+    left: 115%;
+  }
+}
+
+/* ==== Toast stack ==== */
+
+.toast-stack {
+  position: fixed;
+  right: 1rem;
+  bottom: 4.5rem;
+  z-index: 95;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+@media (min-width: 768px) {
+  .toast-stack {
+    bottom: 1.25rem;
+  }
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-width: 15rem;
+  max-width: 22rem;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
+  animation: toast-pop calc(0.35s * var(--motion)) cubic-bezier(0.34, 1.4, 0.64, 1) backwards;
+}
+
+.toast[data-leaving='true'] {
+  animation: toast-out calc(0.25s * var(--motion)) ease forwards;
+}
+
+@keyframes toast-pop {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.95);
+  }
+}
+
+@keyframes toast-out {
+  to {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+}
+
+/* ==== Insight cards ==== */
+
+.insight {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  padding: 0.65rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  font-size: 0.85rem;
+  line-height: 1.35;
+}
+
+.insight[data-tone='good'] {
+  border-color: color-mix(in srgb, var(--good) 35%, var(--border));
+  background: var(--good-soft);
+}
+
+.insight[data-tone='warn'] {
+  border-color: color-mix(in srgb, var(--warn) 35%, var(--border));
+  background: var(--warn-soft);
+}
+
+/* ==== Auth backdrop: two slow accent blobs behind the card ==== */
+
+.auth-scene {
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-scene::before,
+.auth-scene::after {
+  content: '';
+  position: absolute;
+  width: 34rem;
+  height: 34rem;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.16;
+  pointer-events: none;
+  animation: blob-drift calc(24s * var(--motion, 1)) ease-in-out infinite alternate;
+}
+
+.auth-scene::before {
+  background: var(--accent);
+  top: -12rem;
+  left: -10rem;
+}
+
+.auth-scene::after {
+  background: var(--good);
+  bottom: -14rem;
+  right: -10rem;
+  animation-delay: calc(-12s * var(--motion, 1));
+}
+
+@keyframes blob-drift {
+  from {
+    transform: translate(0, 0) scale(1);
+  }
+
+  to {
+    transform: translate(6rem, 3rem) scale(1.15);
+  }
+}
+
+.auth-scene > .card {
+  position: relative;
+  z-index: 1;
+}

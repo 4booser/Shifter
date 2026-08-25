@@ -143,7 +143,7 @@ jobs:
             # own crontab, because /etc/cron.d is root's and this user is not.
             chmod +x docker/backup.sh
             mkdir -p backups "$HOME/.cache"
-            ( crontab -l 2>/dev/null | grep -v shifter-backup ; \
+            ( crontab -l 2>/dev/null | grep -v shifter-backup || true ; \
               echo '17 3 * * * /opt/shifter/docker/backup.sh >> /opt/shifter/backups/backup.log 2>&1 # shifter-backup' \
             ) | crontab -
 

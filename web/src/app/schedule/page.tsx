@@ -27,6 +27,9 @@ import { PlannerBoardView } from '@/components/team/planner';
 import { useI18n } from '@/lib/i18n';
 import { useReveal } from '@/lib/fx';
 import { Shell } from '@/components/layout/shell';
+import { drawRotaCard } from '@/lib/export/rota-card';
+import { currentCardTheme } from '@/lib/export/share-card';
+import { downloadBlob } from '@/lib/export/xlsx';
 import { Alert, Money, Segmented } from '@/components/ui/bits';
 import { Icon } from '@/components/ui/icon';
 
@@ -175,6 +178,53 @@ function Schedule() {
       ? new Intl.DateTimeFormat(lang, { month: 'long', year: 'numeric' }).format(new Date(month.year, month.month - 1, 1))
       : `${range.from.slice(8)}–${range.to.slice(8)} ${new Intl.DateTimeFormat(lang, { month: 'short' }).format(new Date(`${range.from}T00:00:00`))}`;
 
+  const shareWeek = () => {
+    if (rota === null) return;
+
+    // Always one week: a month of columns is unreadable in a chat. In month
+    // view the exported week is the one holding today.
+    const bounds = span === 'week' ? range : weekBounds(todayKey());
+    const weekDays = keysBetween(bounds.from, bounds.to);
+    const byMember = new Map<number, Map<string, RotaEntry[]>>();
+
+    for (const entry of rota.entries) {
+      if (entry.date < bounds.from || entry.date > bounds.to) continue;
+
+      const perDay = byMember.get(entry.member_id) ?? new Map<string, RotaEntry[]>();
+      const list = perDay.get(entry.date) ?? [];
+
+      list.push(entry);
+      perDay.set(entry.date, list);
+      byMember.set(entry.member_id, perDay);
+    }
+
+    const short = (time: string) => time.slice(0, 5);
+    const shifts = rota.entries.filter((entry) => entry.date >= bounds.from && entry.date <= bounds.to).length;
+
+    void drawRotaCard(
+      {
+        teamName: rota.team_name,
+        period: `${bounds.from.slice(8)}.${bounds.from.slice(5, 7)} — ${bounds.to.slice(8)}.${bounds.to.slice(5, 7)}`,
+        dayLabels: weekDays.map((key) =>
+          `${new Intl.DateTimeFormat(lang, { weekday: 'short' }).format(new Date(`${key}T00:00:00`))} ${key.slice(8)}`,
+        ),
+        rows: rota.members.map((member) => ({
+          name: member.display_name,
+          colour: member.colour,
+          cells: weekDays.map((key) =>
+            (byMember.get(member.member_id)?.get(key) ?? []).map(
+              (entry) => `${entry.shift_name} ${short(entry.start_time)}–${short(entry.end_time)}`,
+            ),
+          ),
+        })),
+        totalLabel: `${shifts} ${t('assignments')}`,
+      },
+      currentCardTheme(),
+    )
+      .then((blob) => downloadBlob(`rota-${bounds.from}.png`, blob))
+      .catch((caught) => setError(apiErrorMessage(caught)));
+  };
+
   const step = (delta: number) => {
     if (span === 'week') setAnchor((key) => shiftDays(key, delta * 7));
     else setMonth((current) => addMonths(current, delta));
@@ -252,6 +302,12 @@ function Schedule() {
             ]}
             onChange={setSpan}
           />
+          {mode === 'rota' && (
+            <button type="button" className="btn btn-sm" disabled={rota === null} title={t('Week as a picture, for the group chat')} onClick={shareWeek}>
+              <Icon name="download" size={14} />
+              {t('Picture')}
+            </button>
+          )}
           <button type="button" className="btn btn-sm" onClick={() => { setAnchor(todayKey()); setMonth(currentMonth()); }}>
             {t('Today')}
           </button>

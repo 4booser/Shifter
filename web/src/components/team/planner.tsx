@@ -68,6 +68,26 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
     return map;
   }, [board]);
 
+  // The week's load per person, declined cells excluded: a refused shift is
+  // not work, and the manager reads this column exactly to balance work.
+  const load = useMemo(() => {
+    const totals = new Map<number, number>();
+
+    for (const entry of board?.assignments ?? []) {
+      if (entry.status === 'declined') continue;
+
+      const [sh, sm] = entry.start.split(':').map(Number);
+      const [eh, em] = entry.end.split(':').map(Number);
+      let hours = eh + em / 60 - (sh + sm / 60);
+
+      if (hours < 0) hours += 24; // an overnight slot wraps past midnight
+
+      totals.set(entry.user_id, (totals.get(entry.user_id) ?? 0) + hours);
+    }
+
+    return totals;
+  }, [board]);
+
   const drafts = (board?.assignments ?? []).filter((entry) => entry.status === 'draft').length;
   const declined = (board?.assignments ?? []).filter((entry) => entry.status === 'declined').length;
 
@@ -251,6 +271,9 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
                   </th>
                 );
               })}
+              <th className="w-14 p-1.5 text-right text-[0.72rem] font-semibold uppercase tracking-wide text-faint">
+                {t('Hours')}
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -323,6 +346,13 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
                     </td>
                   );
                 })}
+                <td className="p-1.5 text-right align-middle">
+                  {(load.get(member.user_id) ?? 0) > 0 && (
+                    <span className="text-[0.82rem] font-bold tabular">
+                      {Number((load.get(member.user_id) ?? 0).toFixed(1))}
+                    </span>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>

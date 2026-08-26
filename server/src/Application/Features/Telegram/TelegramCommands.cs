@@ -5,6 +5,7 @@ public enum TelegramCommand
     None,
     Link,
     Today,
+    Week,
     Tomorrow,
     Month,
     ClockIn,
@@ -46,6 +47,7 @@ public static class TelegramCommands
         {
             "today" or "сегодня" or "сьогодні" => (TelegramCommand.Today, ""),
             "tomorrow" or "завтра" => (TelegramCommand.Tomorrow, ""),
+            "week" or "неделя" or "тиждень" => (TelegramCommand.Week, ""),
             "month" or "месяц" or "місяць" => (TelegramCommand.Month, ""),
             "in" or "start" or "начал" or "начала" or "почав" or "почала" => (TelegramCommand.ClockIn, ""),
             "out" or "stop" or "закончил" or "закончила" or "закінчив" or "закінчила" => (TelegramCommand.ClockOut, ""),

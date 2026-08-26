@@ -5,6 +5,8 @@
 type Dictionary = Record<string, string>;
 
 export const RU: Dictionary = {
+  'Picture': 'Картинка',
+  'Week as a picture, for the group chat': 'Неделя картинкой — для чата команды',
   'Last week copied': 'Прошлая неделя скопирована',
   'Nothing new — every cell was already taken.': 'Ничего нового — все клетки уже заняты.',
   'What if': 'Что-если',
@@ -1353,6 +1355,8 @@ export const RU: Dictionary = {
 };
 
 export const UK: Dictionary = {
+  'Picture': 'Картинка',
+  'Week as a picture, for the group chat': 'Тиждень картинкою — для чату команди',
   'Last week copied': 'Минулий тиждень скопійовано',
   'Nothing new — every cell was already taken.': 'Нічого нового — усі клітинки вже зайняті.',
   'What if': 'Що-якщо',

@@ -161,6 +161,30 @@ public sealed class TelegramBotService : BackgroundService
             case TelegramCommand.Tomorrow:
                 return await DayLineAsync(days, link.UserId, today.AddDays(1), "Завтра", ct);
 
+            case TelegramCommand.Week:
+            {
+                // Monday-first, like every other week in the product.
+                var monday = today.AddDays(-(((int)today.DayOfWeek + 6) % 7));
+                var summary = await days.ListAsync(link.UserId, monday, monday.AddDays(6), ct);
+                var names = new[] { "пн", "вт", "ср", "чт", "пт", "сб", "вс" };
+
+                var lines = Enumerable.Range(0, 7).Select(offset =>
+                {
+                    var date = monday.AddDays(offset);
+                    var shifts = summary.days.FirstOrDefault(day => day.date == date)?.shifts ?? [];
+                    var text = shifts.Length == 0
+                        ? "—"
+                        : string.Join(", ", shifts.Select(entry =>
+                            $"{entry.name} {entry.start_time}–{entry.end_time}{(entry.worked ? " ✅" : "")}"));
+
+                    return $"{names[offset]} {date:dd.MM} · {text}";
+                });
+
+                return $"Неделя {monday:dd.MM}–{monday.AddDays(6):dd.MM}:\n"
+                    + string.Join('\n', lines)
+                    + $"\nИтого: {summary.days_worked} смен · {Math.Round(summary.hours)} ч";
+            }
+
             case TelegramCommand.Month:
             {
                 var from = new DateOnly(today.Year, today.Month, 1);
@@ -197,7 +221,7 @@ public sealed class TelegramBotService : BackgroundService
             case TelegramCommand.Help:
             case TelegramCommand.None:
             default:
-                return "Понимаю: сегодня · завтра · месяц · начал · закончил · /tz <зона>";
+                return "Понимаю: сегодня · завтра · неделя · месяц · начал · закончил · /tz <зона>";
         }
     }
 

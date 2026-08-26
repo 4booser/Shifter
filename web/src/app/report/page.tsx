@@ -11,6 +11,7 @@ import {
   currentMonth,
   monthBounds,
   monthLabel,
+  shiftDays,
 } from '@/lib/calendar/calendar-date';
 import { averagesFor, bestDay } from '@/lib/calendar/insights';
 import { CalendarDayData, DaysResponse, EMPTY_SUMMARY } from '@/lib/calendar/models';
@@ -147,6 +148,117 @@ function Report() {
 
   const PLACE_TINTS = ['var(--s1)', 'var(--s2)', 'var(--s3)', 'var(--accent)', 'var(--warn)', 'var(--good)'];
 
+  /** The month as a story card: hero number, three facts, weekly bars. */
+  const shareCard = async () => {
+    const W = 1080;
+    const H = 1350;
+    const canvas = document.createElement('canvas');
+
+    canvas.width = W;
+    canvas.height = H;
+
+    const ctx = canvas.getContext('2d');
+
+    if (ctx === null) return;
+
+    const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#4F46E5';
+
+    ctx.fillStyle = '#14151a';
+    ctx.fillRect(0, 0, W, H);
+
+    for (const [x, y] of [[W * 0.12, H * 0.1], [W * 0.92, H * 0.9]] as const) {
+      const glow = ctx.createRadialGradient(x, y, 0, x, y, 620);
+
+      glow.addColorStop(0, `${accent}55`);
+      glow.addColorStop(1, `${accent}00`);
+      ctx.fillStyle = glow;
+      ctx.fillRect(0, 0, W, H);
+    }
+
+    ctx.textAlign = 'center';
+    ctx.fillStyle = 'rgba(255,255,255,0.65)';
+    ctx.font = '600 44px system-ui, -apple-system, sans-serif';
+    ctx.fillText(
+      (mode === 'month' ? monthLabel(month, lang) : `${month.year}`).toUpperCase(),
+      W / 2,
+      170,
+    );
+
+    ctx.fillStyle = '#fff';
+    ctx.font = '800 140px system-ui, -apple-system, sans-serif';
+    ctx.fillText(format(summary.total_earned), W / 2, 360);
+
+    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+    ctx.font = '44px system-ui, -apple-system, sans-serif';
+    ctx.fillText(
+      `${summary.days_worked} ${t('days')} · ${Math.round(summary.hours)} h · ${format(averages.perHour)}/h`,
+      W / 2,
+      450,
+    );
+
+    // Weekly bars along the middle: the month's silhouette.
+    const weekTotals = new Map<string, number>();
+
+    for (const day of rows) {
+      const weekday = (new Date(`${day.date}T00:00:00`).getDay() + 6) % 7;
+      const monday = shiftDays(day.date, -weekday);
+
+      weekTotals.set(monday, (weekTotals.get(monday) ?? 0) + day.earned);
+    }
+
+    const weeks = [...weekTotals.entries()].sort(([a], [b]) => a.localeCompare(b));
+    const peak = Math.max(1, ...weeks.map(([, value]) => value));
+    const barWidth = 120;
+    const gap = 40;
+    const baseline = 980;
+    const left = W / 2 - ((weeks.length * (barWidth + gap)) - gap) / 2;
+
+    weeks.forEach(([, value], index) => {
+      const height = Math.max(14, (value / peak) * 320);
+      const x = left + index * (barWidth + gap);
+      const gradient = ctx.createLinearGradient(0, baseline - height, 0, baseline);
+
+      gradient.addColorStop(0, accent);
+      gradient.addColorStop(1, `${accent}44`);
+      ctx.fillStyle = gradient;
+      ctx.beginPath();
+      ctx.roundRect(x, baseline - height, barWidth, height, 18);
+      ctx.fill();
+    });
+
+    if (best !== null) {
+      ctx.fillStyle = 'rgba(255,255,255,0.55)';
+      ctx.font = '38px system-ui, -apple-system, sans-serif';
+      ctx.fillText(`🏆 ${t('Best day')}: ${format(best.value)}`, W / 2, 1090);
+    }
+
+    ctx.fillStyle = accent;
+    ctx.beginPath();
+    ctx.roundRect(W / 2 - 130, 1170, 260, 88, 44);
+    ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.font = '700 44px system-ui, -apple-system, sans-serif';
+    ctx.fillText('Shifter', W / 2, 1228);
+
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
+
+    if (blob === null) return;
+
+    const file = new File([blob], 'shifter-month.png', { type: 'image/png' });
+
+    if (navigator.canShare?.({ files: [file] })) {
+      await navigator.share({ files: [file] }).catch(() => undefined);
+    } else {
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+
+      link.href = url;
+      link.download = 'shifter-month.png';
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-4 print-report">
       {/* ==== Header: the month, and the ways out ==== */}
@@ -203,6 +315,9 @@ function Report() {
           <button type="button" className="btn btn-sm" onClick={exportXlsx}>
             <Icon name="download" size={13} />
             XLSX
+          </button>
+          <button type="button" className="btn btn-sm" onClick={() => void shareCard()}>
+            📤 {t('Share')}
           </button>
           <Link href="/stats" className="btn btn-quiet btn-sm">
             {t('Statistics')}

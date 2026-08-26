@@ -26,8 +26,8 @@ import { useSettings } from '@/lib/settings/store';
 import { Shell } from '@/components/layout/shell';
 import { useReveal } from '@/lib/fx';
 import { GoalsModal } from '@/components/dashboard/modals/goals-modal';
-import { hourDial, punchcard, rateTrend, waterfall } from '@/lib/charts/report-math';
-import { HourDial, PunchcardChart, WaterfallChart } from '@/components/charts/report-charts';
+import { hourDial, rateTrend, waterfall, weekBands } from '@/lib/charts/report-math';
+import { ClockRing, MoneyFlow, MonthBars, TrendLine, WeekBandsChart } from '@/components/charts/glass-charts';
 import { AreaChart, ColumnChart, Heatmap, Plot, ProgressRing } from '@/components/charts/charts';
 import { Alert, CountUp, Delta, Money } from '@/components/ui/bits';
 import { Icon } from '@/components/ui/icon';
@@ -182,7 +182,7 @@ function Stats() {
 
   const forecast = forecastFor(summary.days, range.from, range.to);
   const waterfallSteps = useMemo(() => waterfall(summary), [summary]);
-  const card = useMemo(() => punchcard(summary.days), [summary.days]);
+  const bands = useMemo(() => weekBands(summary.days), [summary.days]);
   const dial = useMemo(() => hourDial(summary.days), [summary.days]);
   const rate = useMemo(
     () =>
@@ -579,7 +579,13 @@ function Stats() {
           <ColumnChart columns={earningsColumns} ticks={earningsTicks} labelEvery={buckets.data.length > 14 ? 7 : 1} />
         </Card>
         <Card title={t('Twelve months')} hint={t('Is this month normal?')}>
-          <ColumnChart columns={trendColumns} ticks={trendTicks} />
+          <MonthBars
+            rows={trendRaw.map((month, index) => ({
+              label: month.label,
+              value: month.earned,
+              current: index === trendRaw.length - 1,
+            }))}
+          />
         </Card>
       </div>
 
@@ -588,7 +594,7 @@ function Stats() {
         {trendParts.some((month) => month.shifts + month.sales + month.tips > 0) && (
           <Card title={t('What each month was made of')}>
             <Plot max={mixMax} height="11rem">
-              {trendParts.map((month) => {
+              {trendParts.filter((month) => month.shifts + month.sales + month.tips > 0).map((month) => {
                 const total = month.shifts + month.sales + month.tips;
                 const parts = [
                   { value: month.shifts, colour: 'var(--s1)' },
@@ -693,13 +699,13 @@ function Stats() {
       {/* ==== Waterfall + punchcard ==== */}
       <div className="grid gap-3 lg:grid-cols-2">
         {waterfallSteps.length > 0 && (
-          <Card title={t('How the money assembled')} hint={t('Sources climb, deductions hang, the landings are yours.')}>
-            <WaterfallChart steps={waterfallSteps} />
+          <Card title={t('How the money assembled')} hint={t('Every source in one bar; the cuts hang under it.')}>
+            <MoneyFlow steps={waterfallSteps} />
           </Card>
         )}
-        {card !== null && (
-          <Card title={t('The shape of your week')} hint={t('Size is how often that slot is worked; colour is what its hour pays.')}>
-            <PunchcardChart card={card} />
+        {bands.length > 0 && (
+          <Card title={t('The shape of your week')} hint={t('When each weekday starts and ends, and what its hour pays.')}>
+            <WeekBandsChart bands={bands} />
           </Card>
         )}
       </div>
@@ -708,13 +714,13 @@ function Stats() {
       {(dialTotal > 0 || rate.length > 1) && (
         <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
           {dialTotal > 0 && (
-            <Card title={t('Around the clock')} hint={t('Midnight on top; each sector is what that hour brings.')}>
-              <HourDial hours={dial} />
+            <Card title={t('Around the clock')} hint={t('Midnight on top; the brighter the hour, the more it brings.')}>
+              <ClockRing hours={dial} />
             </Card>
           )}
           {rate.length > 1 && (
             <Card title={t('Your hour, week by week')} hint={t('Where a raise — or a quiet cut — shows up first.')}>
-              <AreaChart points={rate} />
+              <TrendLine points={rate} />
             </Card>
           )}
         </div>

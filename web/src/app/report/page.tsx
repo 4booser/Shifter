@@ -15,10 +15,11 @@ import {
 import { averagesFor, bestDay } from '@/lib/calendar/insights';
 import { CalendarDayData, DaysResponse, EMPTY_SUMMARY } from '@/lib/calendar/models';
 import { delta } from '@/lib/calendar/stats-math';
-import { punchcard, waterfall } from '@/lib/charts/report-math';
+import { waterfall, weekBands } from '@/lib/charts/report-math';
 import { useI18n } from '@/lib/i18n';
 import { useMoney } from '@/lib/settings/money';
-import { Donut, PunchcardChart, WaterfallChart } from '@/components/charts/report-charts';
+import { Donut } from '@/components/charts/report-charts';
+import { MoneyFlow, WeekBandsChart } from '@/components/charts/glass-charts';
 import { Sheet, buildXlsx, downloadBlob } from '@/lib/export/xlsx';
 import { Shell } from '@/components/layout/shell';
 import { Alert, CountUp, Delta, Money } from '@/components/ui/bits';
@@ -77,7 +78,7 @@ function Report() {
   const averages = averagesFor(summary);
   const beforeAverages = averagesFor(previous);
   const steps = useMemo(() => waterfall(summary), [summary]);
-  const card = useMemo(() => punchcard(summary.days), [summary.days]);
+  const bands = useMemo(() => weekBands(summary.days), [summary.days]);
   const best = bestDay(summary.days);
 
   const rows = useMemo(
@@ -248,13 +249,13 @@ function Report() {
             {steps.length > 0 && (
               <section className="card reveal p-4">
                 <h2 className="mb-2 text-[0.98rem] font-bold">{t('How the money assembled')}</h2>
-                <WaterfallChart steps={steps} />
+                <MoneyFlow steps={steps} />
               </section>
             )}
-            {card !== null && (
+            {bands.length > 0 && (
               <section className="card reveal p-4">
                 <h2 className="mb-2 text-[0.98rem] font-bold">{t('The shape of your week')}</h2>
-                <PunchcardChart card={card} />
+                <WeekBandsChart bands={bands} />
               </section>
             )}
           </div>

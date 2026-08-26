@@ -168,3 +168,59 @@ describe('rateTrend', () => {
     expect(trend[1]).toMatchObject({ week: '2026-03-09', perHour: 200 });
   });
 });
+
+import { weekBands } from '@/lib/charts/report-math';
+
+describe('weekBands', () => {
+  const day = (date: string, start: string, end: string, hours: number, earned: number) => ({
+    date,
+    shifts: [
+      {
+        shift_id: 1,
+        name: 'Bar',
+        symbol: null,
+        colour: null,
+        start_time: start,
+        end_time: end,
+        hours,
+        earned,
+        worked: true,
+        needs_cover: false,
+        actual_start: null,
+        actual_end: null,
+        break_minutes: 0,
+      },
+    ],
+    sales: [],
+    tips: null,
+    tips_cash: null,
+    tip_out: 0,
+    deductions: 0,
+    note: null,
+    colour: null,
+    hours,
+    earned,
+    planned: 0,
+  });
+
+  it('widens a weekday band to cover every start and end seen', () => {
+    // Two Mondays: 11–22 and 09–18 → the band runs 9 to 22.
+    const bands = weekBands([day('2026-03-02', '11:00', '22:00', 11, 1100), day('2026-03-09', '09:00', '18:00', 9, 900)]);
+
+    expect(bands).toHaveLength(1);
+    expect(bands[0]).toMatchObject({ weekday: 0, from: 9, to: 22, count: 2, perHour: 100 });
+  });
+
+  it('lets an overnight shift run past twenty-four', () => {
+    const bands = weekBands([day('2026-03-06', '22:00', '06:00', 8, 800)]);
+
+    expect(bands[0].from).toBe(22);
+    expect(bands[0].to).toBe(30);
+  });
+
+  it('keeps half-hour starts as fractions', () => {
+    const bands = weekBands([day('2026-03-03', '10:30', '19:00', 8.5, 850)]);
+
+    expect(bands[0].from).toBeCloseTo(10.5);
+  });
+});

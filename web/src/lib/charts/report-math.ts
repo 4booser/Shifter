@@ -171,3 +171,60 @@ export function rateTrend(days: readonly CalendarDayData[]): RatePoint[] {
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([week, bucket]) => ({ week, perHour: bucket.earned / bucket.hours, hours: bucket.hours }));
 }
+
+export interface WeekBand {
+  /** 0 = Monday … 6 = Sunday. */
+  weekday: number;
+  /** Earliest start hour and latest end hour, end may pass 24 for overnight. */
+  from: number;
+  to: number;
+  count: number;
+  hours: number;
+  earned: number;
+  perHour: number;
+}
+
+/**
+ * The week as seven horizontal bands: when each weekday usually starts and
+ * ends, how often it happens, what its hour brings. One glance replaces the
+ * punchcard's grid — and unlike the grid it stays legible when someone works
+ * a single slot.
+ */
+export function weekBands(days: readonly CalendarDayData[]): WeekBand[] {
+  const buckets = new Map<number, { from: number; to: number; count: number; hours: number; earned: number }>();
+
+  for (const day of days) {
+    const weekday = (new Date(`${day.date}T00:00:00`).getDay() + 6) % 7;
+
+    for (const entry of day.shifts) {
+      if (!entry.worked) continue;
+
+      const start = Number(entry.start_time.slice(0, 2)) + Number(entry.start_time.slice(3, 5)) / 60;
+      let end = Number(entry.end_time.slice(0, 2)) + Number(entry.end_time.slice(3, 5)) / 60;
+
+      // Overnight shifts read as running past midnight, not backwards.
+      if (end <= start) end += 24;
+
+      const bucket = buckets.get(weekday) ?? { from: start, to: end, count: 0, hours: 0, earned: 0 };
+
+      bucket.from = Math.min(bucket.from, start);
+      bucket.to = Math.max(bucket.to, end);
+      bucket.count += 1;
+      bucket.hours += entry.hours;
+      bucket.earned += entry.earned;
+      buckets.set(weekday, bucket);
+    }
+  }
+
+  return [...buckets.entries()]
+    .map(([weekday, bucket]) => ({
+      weekday,
+      from: bucket.from,
+      to: bucket.to,
+      count: bucket.count,
+      hours: bucket.hours,
+      earned: bucket.earned,
+      perHour: bucket.hours > 0 ? bucket.earned / bucket.hours : 0,
+    }))
+    .sort((a, b) => a.weekday - b.weekday);
+}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 
 import { fromKey, keysBetween } from '@/lib/calendar/calendar-date';
 import { CHART_H, CHART_W, Column, PAD, PLOT_H, PLOT_W, Tick, niceCeiling } from '@/lib/charts/math';
@@ -173,10 +173,18 @@ export function ColumnChart({
 }) {
   const { format, compact } = useMoney();
   const [hover, setHover] = useState<number | null>(null);
+  const gradientId = useId().replace(/[«»:]/g, '');
 
   const bottom = PAD.top + PLOT_H;
   const peak = columns.reduce((best, entry, index) => (entry.earned > (columns[best]?.earned ?? 0) ? index : best), 0);
   const hovered = hover === null ? null : columns[hover];
+
+  // The average of the days that actually earned, drawn as a quiet line the
+  // bars are measured against.
+  const earners = columns.filter((entry) => entry.earned > 0);
+  const average = earners.length > 1 ? earners.reduce((sum, entry) => sum + entry.earned, 0) / earners.length : null;
+  const ceiling = ticks.at(-1)?.value ?? 1;
+  const averageY = average === null ? null : bottom - (average / ceiling) * PLOT_H;
 
   /** Rounded at the data end, square at the baseline, per the mark spec. */
   const columnPath = (x: number, y: number, width: number, height: number) => {
@@ -188,31 +196,54 @@ export function ColumnChart({
   return (
     <div className="relative">
       <svg viewBox={`0 0 ${CHART_W} ${CHART_H}`} className="block w-full" onPointerLeave={() => setHover(null)}>
+        <defs>
+          <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="var(--accent)" />
+            <stop offset="1" stopColor="color-mix(in srgb, var(--accent) 45%, var(--surface))" />
+          </linearGradient>
+        </defs>
+
         {ticks.map((tick) => (
           <g key={tick.value}>
-            {tick.value > 0 && <line x1={PAD.left} x2={CHART_W - PAD.right} y1={tick.y} y2={tick.y} stroke="var(--border)" strokeDasharray="2 4" />}
+            {tick.value > 0 && <line x1={PAD.left} x2={CHART_W - PAD.right} y1={tick.y} y2={tick.y} stroke="var(--border)" strokeDasharray="2 4" opacity="0.6" />}
             <text x={PAD.left - 8} y={tick.y + 3} textAnchor="end" fontSize="10" fill="var(--faint)">
               {compact(tick.value)}
             </text>
           </g>
         ))}
 
+        {averageY !== null && (
+          <g>
+            <line x1={PAD.left} x2={CHART_W - PAD.right} y1={averageY} y2={averageY} stroke="var(--warn)" strokeDasharray="5 4" opacity="0.7" />
+            <text x={CHART_W - PAD.right} y={averageY - 5} textAnchor="end" fontSize="9.5" fontWeight="600" fill="var(--warn)">
+              ≈ {compact(average ?? 0)}
+            </text>
+          </g>
+        )}
+
         {columns.map((entry, index) => (
           <g key={`${entry.label}-${index}`}>
+            {/* A day with nothing keeps its place as a dot on the baseline:
+                the rhythm of offs is part of the picture. */}
+            {entry.earnedHeight === 0 && entry.plannedHeight === 0 && (
+              <circle cx={entry.centre} cy={bottom - 2} r="1.6" fill="var(--border-strong)" />
+            )}
             {entry.earnedHeight > 0 && (
               <path
                 className="grow-y"
                 style={{ ['--i' as string]: index % 16 }}
                 d={columnPath(entry.x, bottom - entry.earnedHeight, entry.width, entry.earnedHeight)}
-                fill="var(--accent)"
-                opacity={hover === null || hover === index ? 1 : 0.45}
+                fill={`url(#${gradientId})`}
+                stroke={index === peak ? 'color-mix(in srgb, var(--accent) 70%, white 25%)' : 'none'}
+                strokeWidth={index === peak ? 1 : 0}
+                opacity={hover === null || hover === index ? 1 : 0.4}
               />
             )}
             {entry.plannedHeight > 0 && (
               <path
                 d={columnPath(entry.x, bottom - entry.earnedHeight - entry.plannedHeight, entry.width, entry.plannedHeight)}
                 fill="var(--accent)"
-                opacity="0.32"
+                opacity="0.25"
               />
             )}
             {index % labelEvery === 0 && (

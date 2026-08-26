@@ -5,6 +5,11 @@
 type Dictionary = Record<string, string>;
 
 export const RU: Dictionary = {
+  'Every source in one bar; the cuts hang under it.': 'Все источники в одной полосе; вычеты висят под ней.',
+  'When each weekday starts and ends, and what its hour pays.': 'Когда каждый день недели начинается и заканчивается — и сколько платит его час.',
+  'Midnight on top; the brighter the hour, the more it brings.': 'Полночь сверху; чем ярче час, тем больше он приносит.',
+  'the best hour': 'лучший час',
+  'quiet': 'тихо',
   'Import from a photo': 'Импорт с фотографии',
   'How you are written in the rota': 'Как вы записаны в графике',
   'e.g. Ivanov, or АБ': 'например, Иванов или АБ',
@@ -1239,6 +1244,11 @@ export const RU: Dictionary = {
 };
 
 export const UK: Dictionary = {
+  'Every source in one bar; the cuts hang under it.': 'Усі джерела в одній смузі; відрахування висять під нею.',
+  'When each weekday starts and ends, and what its hour pays.': 'Коли кожен день тижня починається і закінчується — і скільки платить його година.',
+  'Midnight on top; the brighter the hour, the more it brings.': 'Північ зверху; що яскравіша година, то більше вона приносить.',
+  'the best hour': 'найкраща година',
+  'quiet': 'тихо',
   'Import from a photo': 'Імпорт із фотографії',
   'How you are written in the rota': 'Як вас записано у графіку',
   'e.g. Ivanov, or АБ': 'наприклад, Іванов або АБ',

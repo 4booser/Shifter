@@ -45,7 +45,7 @@ export interface ColumnDatum {
  * column stranded in the middle of one reads as a missing bar rather than a
  * deliberately thin mark.
  */
-export function buildColumns(data: ColumnDatum[], maxWidth = 24): Column[] {
+export function buildColumns(data: ColumnDatum[], maxWidth = 30): Column[] {
   if (data.length === 0) return [];
 
   const max = niceCeiling(

@@ -192,6 +192,90 @@ export function insightsFor(input: InsightInput): Insight[] {
     });
   }
 
+  // A day that fell well under what that weekday usually brings — the
+  // "did they short me on Tuesday?" detector.
+  const weekdayMedians = new Map<number, number[]>();
+
+  for (const day of summary.days) {
+    if (day.earned <= 0) continue;
+
+    const weekday = new Date(`${day.date}T00:00:00`).getDay();
+    const list = weekdayMedians.get(weekday) ?? [];
+
+    list.push(day.earned);
+    weekdayMedians.set(weekday, list);
+  }
+
+  let worstDip: { date: string; earned: number; usual: number } | null = null;
+
+  for (const day of summary.days) {
+    if (day.earned <= 0) continue;
+
+    const weekday = new Date(`${day.date}T00:00:00`).getDay();
+    const values = [...(weekdayMedians.get(weekday) ?? [])].sort((a, b) => a - b);
+
+    if (values.length < 3) continue;
+
+    const usual = values[Math.floor(values.length / 2)];
+
+    if (day.earned <= usual * 0.6 && (worstDip === null || day.earned / usual < worstDip.earned / worstDip.usual)) {
+      worstDip = { date: day.date, earned: day.earned, usual };
+    }
+  }
+
+  if (worstDip !== null) {
+    found.push({
+      id: 'anomaly-dip',
+      icon: '🔍',
+      tone: 'warn',
+      key: '{date} brought {got} against the usual {usual} — worth a look',
+      vars: {
+        date: `${worstDip.date.slice(8)}.${worstDip.date.slice(5, 7)}`,
+        got: formatMoney(worstDip.earned),
+        usual: formatMoney(worstDip.usual),
+      },
+      weight: 58,
+    });
+  }
+
+  // The last seven days against the seven before them, worked days only.
+  const window = (from: number, to: number) => {
+    let total = 0;
+    let count = 0;
+
+    for (let offset = from; offset < to; offset += 1) {
+      const day = byDate.get(shiftDays(today, -offset));
+
+      if (day !== undefined && day.earned > 0) {
+        total += day.earned;
+        count += 1;
+      }
+    }
+
+    return count >= 2 ? total : null;
+  };
+
+  const lastWeek = window(0, 7);
+  const weekBefore = window(7, 14);
+
+  if (lastWeek !== null && weekBefore !== null) {
+    const drift = (lastWeek / weekBefore - 1) * 100;
+
+    if (Math.abs(drift) >= 15) {
+      found.push({
+        id: 'rolling-week',
+        icon: drift > 0 ? '🌊' : '🍂',
+        tone: drift > 0 ? 'good' : 'info',
+        key:
+          drift > 0
+            ? 'The last seven days ran {pct}% above the seven before'
+            : 'The last seven days ran {pct}% below the seven before',
+        vars: { pct: pct(drift) },
+        weight: 48,
+      });
+    }
+  }
+
   // A large slice of the money arrives as tips.
   if (now.tipShare >= 25 && summary.tips_earned > 0) {
     found.push({

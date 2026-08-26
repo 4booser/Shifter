@@ -96,3 +96,33 @@ describe('insightsFor', () => {
     expect(found.find((insight) => insight.id === 'tips-trend')).toBeUndefined();
   });
 });
+
+describe('insights v2', () => {
+  it('flags a day far under its weekday median', () => {
+    // Four Mondays: three around 1200, one at 500.
+    const days = [
+      day('2026-03-02', 1200),
+      day('2026-03-09', 1250),
+      day('2026-03-16', 500),
+      day('2026-03-23', 1200),
+    ];
+
+    const found = insightsFor(base({ summary: summaryOf(days) }));
+    const dip = found.find((insight) => insight.id === 'anomaly-dip');
+
+    expect(dip?.vars['date']).toBe('16.03');
+  });
+
+  it('compares the rolling weeks around today', () => {
+    // Today is 16.03: the last window is 10–16, the one before is 03–09.
+    const days = [
+      ...['06', '07', '08', '09'].map((d) => day(`2026-03-${d}`, 1000)),
+      ...['13', '14', '15', '16'].map((d) => day(`2026-03-${d}`, 1500)),
+    ];
+
+    const found = insightsFor(base({ summary: summaryOf(days), days }));
+    const rolling = found.find((insight) => insight.id === 'rolling-week');
+
+    expect(rolling?.key).toContain('above');
+  });
+});

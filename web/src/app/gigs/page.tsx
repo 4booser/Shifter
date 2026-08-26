@@ -14,6 +14,7 @@ import { Shell } from '@/components/layout/shell';
 import { Alert } from '@/components/ui/bits';
 import { Icon } from '@/components/ui/icon';
 import { Modal } from '@/components/ui/modal';
+import { TimeAgo } from '@/components/ui/time-ago';
 import { Segmented } from '@/components/ui/bits';
 
 type Span = 'week' | 'month' | 'year';
@@ -483,7 +484,8 @@ function GigCard({ gig, onRespond, onWithdraw }: { gig: Gig; onRespond: () => vo
         {gig.responses > 0 && <span> · {gig.responses} 🙋</span>}
       </p>
       {gig.details !== null && <p className="line-clamp-2 text-[0.85rem] text-muted">{gig.details}</p>}
-      <footer className="mt-auto flex items-center gap-2 pt-1">
+      <footer className="mt-auto flex items-center gap-2 pt-1 text-[0.78rem]">
+        <TimeAgo iso={gig.created_at} />
         {gig.status === 'filled' && <span className="chip border-good/40 bg-(--good-soft) text-good">{t('filled')}</span>}
         {gig.is_mine && <span className="chip">{t('Yours')}</span>}
         {!gig.is_mine && gig.my_response === null && gig.status === 'open' && !past && (
@@ -534,6 +536,7 @@ function MyListings({
             <span className="text-[1.1rem]">{categoryOf(gig.category).emoji}</span>
             <strong className="text-[0.95rem]">{gig.title}</strong>
             <span className="field-hint">{gig.date.slice(8)}.{gig.date.slice(5, 7)} · {gig.start}–{gig.end} · {payLine(format, t, gig)}</span>
+            <TimeAgo iso={gig.created_at} />
             <span className={`chip ${gig.status === 'open' ? 'border-(--accent)/40 text-(--accent)' : gig.status === 'filled' ? 'border-good/40 text-good' : ''}`}>
               {t(gig.status)}
             </span>

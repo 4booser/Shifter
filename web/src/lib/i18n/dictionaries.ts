@@ -5,6 +5,8 @@
 type Dictionary = Record<string, string>;
 
 export const RU: Dictionary = {
+  'just now': 'только что',
+  'ago': 'назад',
   'Freelance': 'Фриланс',
   'Full-time': 'Постоянка',
   'List': 'Список',
@@ -1459,6 +1461,8 @@ export const RU: Dictionary = {
 };
 
 export const UK: Dictionary = {
+  'just now': 'щойно',
+  'ago': 'тому',
   'Freelance': 'Фриланс',
   'Full-time': 'Постійна',
   'List': 'Список',

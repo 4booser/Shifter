@@ -12,6 +12,7 @@ const FORMS: Record<string, Record<Language, string[]>> = {
   people: { en: ['person', 'people'], ru: ['человек', 'человека', 'человек'], uk: ['людина', 'людини', 'людей'] },
   hours: { en: ['hour', 'hours'], ru: ['час', 'часа', 'часов'], uk: ['година', 'години', 'годин'] },
   weeks: { en: ['week', 'weeks'], ru: ['неделя', 'недели', 'недель'], uk: ['тиждень', 'тижні', 'тижнів'] },
+  minutes: { en: ['minute', 'minutes'], ru: ['минуту', 'минуты', 'минут'], uk: ['хвилину', 'хвилини', 'хвилин'] },
 };
 
 export function pluralWord(lang: Language, key: string, count: number): string {

@@ -2,6 +2,9 @@
 
 import Link from 'next/link';
 
+import { useMemo, useState } from 'react';
+
+import { GIG_CATEGORIES } from '@/lib/api/gigs';
 import { useReveal } from '@/lib/fx';
 import { Icon } from '@/components/ui/icon';
 import { CalendarDemo, GigsDemo, LiveShiftDemo, WhatIfDemo } from '@/components/landing/demos';
@@ -11,17 +14,79 @@ import { CalendarDemo, GigsDemo, LiveShiftDemo, WhatIfDemo } from '@/components/
  * screens. Everything here wears the same tokens as the app behind the
  * door — the landing IS the first screenshot.
  */
+const TRADE_RU: Record<string, string> = {
+  managing: 'Управляющий', 'floor-manager': 'Менеджер зала', chef: 'Шеф-повар', 'sous-chef': 'Су-шеф',
+  'shift-lead': 'Старший смены', bartender: 'Бармен', barback: 'Барбек', barista: 'Бариста',
+  sommelier: 'Сомелье', waiter: 'Официант', runner: 'Раннер', host: 'Хостес', cashier: 'Кассир',
+  busser: 'Сборщик столов', 'cook-hot': 'Повар горячего', 'cook-cold': 'Повар холодного',
+  'cook-universal': 'Универсал', prep: 'Заготовщик', grill: 'Гриль', wok: 'Вок', pizzaiolo: 'Пиццайоло',
+  sushi: 'Сушист', pastry: 'Кондитер', baker: 'Пекарь', dishwasher: 'Посудомойщик', cleaner: 'Уборщик',
+  storekeeper: 'Кладовщик', courier: 'Курьер', catering: 'Кейтеринг',
+};
+
+const THEMES = [
+  { id: 'cream', label: 'Крем', dot: '#4f46e5', vars: {} },
+  {
+    id: 'night',
+    label: 'Ночь',
+    dot: '#7b7ef5',
+    vars: {
+      '--bg': '#14131a', '--bg-veil': 'none', '--surface': '#1d1c25', '--surface-2': '#26242f',
+      '--border': '#32303d', '--border-strong': '#4a4759', '--text': '#eceef2',
+      '--muted': '#a3a1b0', '--faint': '#6f6d7d', '--accent': '#7b7ef5',
+      '--accent-soft': 'rgb(123 126 245 / 16%)', '--good': '#4fc98d',
+    },
+  },
+  {
+    id: 'mint',
+    label: 'Мята',
+    dot: '#0d9488',
+    vars: {
+      '--bg': '#eef4f1', '--surface': '#fbfdfc', '--surface-2': '#e4eeea', '--border': '#d2e2db',
+      '--border-strong': '#a9c6ba', '--accent': '#0d9488', '--accent-hover': '#12a898',
+      '--accent-soft': 'rgb(13 148 136 / 12%)',
+    },
+  },
+  {
+    id: 'rose',
+    label: 'Закат',
+    dot: '#db2777',
+    vars: {
+      '--bg': '#f7f0ef', '--surface': '#fdfafa', '--surface-2': '#f3e8e7', '--border': '#e8d7d5',
+      '--border-strong': '#d0b3af', '--accent': '#db2777', '--accent-hover': '#e5378a',
+      '--accent-soft': 'rgb(219 39 119 / 12%)',
+    },
+  },
+] as const;
+
 export function Landing() {
   const revealHost = useReveal<HTMLDivElement>();
+  const [theme, setTheme] = useState(0);
 
   return (
-    <div ref={revealHost} className="min-h-dvh bg-(--bg) text-ink">
+    <div
+      ref={revealHost}
+      className="min-h-dvh bg-(--bg) text-ink transition-colors duration-300"
+      style={THEMES[theme].vars as React.CSSProperties}
+    >
       {/* ==== Top bar ==== */}
       <header className="sticky top-0 z-40 border-b border-border bg-(--bg)/85 backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
           <span className="flex items-center gap-2 text-[1.05rem] font-extrabold tracking-tight">
             <span className="grid h-8 w-8 place-items-center rounded-[10px] bg-(--accent) text-white">S</span>
             Shifter
+          </span>
+          <span className="ml-3 hidden items-center gap-1.5 sm:flex" title="Примерьте тему — в приложении их ещё больше">
+            {THEMES.map((entry, index) => (
+              <button
+                key={entry.id}
+                type="button"
+                aria-label={entry.label}
+                className={`h-5 w-5 rounded-full border-2 transition-transform hover:scale-110 ${theme === index ? 'scale-110 border-ink/60' : 'border-transparent'}`}
+                style={{ background: entry.dot }}
+                onClick={() => setTheme(index)}
+              />
+            ))}
           </span>
           <nav className="ml-auto flex items-center gap-2">
             <Link href="/login" className="btn btn-quiet btn-sm">
@@ -81,6 +146,32 @@ export function Landing() {
               <b>{platform.label}</b>
               <span className={platform.live ? 'text-good' : 'text-muted'}> · {platform.note}</span>
             </span>
+          ))}
+        </section>
+
+        {/* ==== Trade marquee ==== */}
+        <section className="reveal relative -mx-4 mb-12 overflow-hidden border-y border-border bg-surface py-3">
+          <div className="landing-marquee flex w-max gap-2 whitespace-nowrap">
+            {[...GIG_CATEGORIES, ...GIG_CATEGORIES].map((trade, index) => (
+              <span key={`${trade.id}-${index}`} className="chip !border-transparent !bg-transparent text-[0.85rem] text-muted">
+                {trade.emoji} {TRADE_RU[trade.id] ?? trade.label}
+              </span>
+            ))}
+          </div>
+        </section>
+
+        {/* ==== Numbers ==== */}
+        <section className="reveal mb-12 grid grid-cols-2 gap-3 text-center md:grid-cols-4">
+          {[
+            { value: '29', label: 'ролей общепита на бирже' },
+            { value: '×1', label: 'касание, чтобы отметить смену' },
+            { value: '436', label: 'автотестов держат каждую цифру' },
+            { value: '24/7', label: 'бэкапы и телеграм-бот на связи' },
+          ].map((stat) => (
+            <div key={stat.label} className="card !p-4">
+              <p className="text-[1.7rem] font-extrabold tabular text-(--accent)">{stat.value}</p>
+              <p className="text-[0.82rem] text-muted">{stat.label}</p>
+            </div>
           ))}
         </section>
 
@@ -162,6 +253,24 @@ export function Landing() {
               </div>
             </div>
           </div>
+        </section>
+
+        {/* ==== FAQ ==== */}
+        <section className="reveal mx-auto mb-14 max-w-2xl">
+          <h2 className="mb-3 text-center text-[1.4rem] font-extrabold tracking-tight">Коротко о важном</h2>
+          {[
+            { q: 'Это бесплатно?', a: 'Да. Регистрация за минуту, карта не нужна, все функции открыты.' },
+            { q: 'Команда увидит мои деньги?', a: 'Нет. В общем графике коллеги видят только кто и когда работает. Заработок виден лишь тем, кто сам включил «делиться».' },
+            { q: 'А если у меня фото графика из рабочего чата?', a: 'Пришлите его в импорт — Shifter разберёт снимок и расставит смены по дням сам.' },
+            { q: 'Смогу забрать свои данные?', a: 'В один клик: полный экспорт в ZIP (JSON + CSV) и календарная подписка для Google/Apple Calendar.' },
+          ].map((item) => (
+            <details key={item.q} className="card mb-2 !p-0">
+              <summary className="cursor-pointer list-none px-4 py-3 text-[0.95rem] font-bold marker:hidden">
+                {item.q}
+              </summary>
+              <p className="px-4 pb-3 text-[0.9rem] text-muted">{item.a}</p>
+            </details>
+          ))}
         </section>
 
         {/* ==== Final CTA ==== */}

@@ -35,6 +35,7 @@ public record GigDto(
     string city,
     int slots,
     string status,
+    string created_at,
     int responses,
     bool is_mine,
     /// <summary>What the caller's own reply looks like, when they made one.</summary>

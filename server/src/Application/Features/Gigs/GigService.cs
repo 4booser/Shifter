@@ -336,6 +336,7 @@ public sealed class GigService
             gig.City,
             gig.Slots,
             gig.Status switch { GigStatus.Open => "open", GigStatus.Filled => "filled", _ => "closed" },
+            gig.CreatedAt.ToString("O"),
             (gig.Responses ?? []).Count,
             gig.OwnerUserId == userId,
             mine is null ? null : new GigMyResponseDto(mine.Id, mine.AcceptedAt is not null));

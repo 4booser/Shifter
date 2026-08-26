@@ -91,31 +91,43 @@ export function LiveShiftDemo() {
 }
 
 /**
- * A month you can click. Toggling days re-prices the month instantly —
- * the core loop of the product, compressed to one toy.
+ * A month you build the way the app is built: pick a shift preset, paint
+ * days with it. Presets are the product's real trick — a shift is described
+ * once and then it is one tap per day — so the toy teaches the loop.
  */
+const PRESETS = [
+  { id: 0, emoji: '🍸', name: 'Бар', pay: 1350, colour: '#4f46e5' },
+  { id: 1, emoji: '☕', name: 'Кофейня', pay: 950, colour: '#0d9488' },
+  { id: 2, emoji: '🛵', name: 'Доставка', pay: 1600, colour: '#d97706' },
+] as const;
+
 export function CalendarDemo() {
   const [seed, setSeed] = useState(7);
-  const [overrides, setOverrides] = useState<Map<number, boolean>>(new Map());
+  const [brush, setBrush] = useState(0);
+  const [overrides, setOverrides] = useState<Map<number, number | null>>(new Map());
 
   const base = useMemo(() => {
     const random = roll(seed);
-    const days = new Map<number, boolean>();
+    const days = new Map<number, number | null>();
 
-    for (let day = 1; day <= 31; day++) days.set(day, random() < 0.45);
+    for (let day = 1; day <= 31; day++) {
+      const dice = random();
+
+      days.set(day, dice < 0.32 ? 0 : dice < 0.42 ? 1 : dice < 0.5 ? 2 : null);
+    }
 
     return days;
   }, [seed]);
 
-  const isOn = (day: number) => overrides.get(day) ?? base.get(day) ?? false;
-  const worked = Array.from({ length: 31 }, (_, index) => index + 1).filter(isOn);
-  const perShift = 1350;
-  const total = worked.length * perShift;
+  const shiftOf = (day: number) => (overrides.has(day) ? overrides.get(day)! : base.get(day) ?? null);
+  const days = Array.from({ length: 31 }, (_, index) => index + 1);
+  const worked = days.filter((day) => shiftOf(day) !== null);
+  const total = worked.reduce((sum, day) => sum + PRESETS[shiftOf(day)!].pay, 0);
 
   return (
     <div className="card reveal flex h-full flex-col !p-4">
       <header className="mb-2 flex items-baseline justify-between">
-        <b className="text-[0.95rem]">Месяц, который считает сам</b>
+        <b className="text-[0.95rem]">Смена описывается один раз</b>
         <button
           type="button"
           className="btn btn-quiet btn-sm"
@@ -128,30 +140,56 @@ export function CalendarDemo() {
           🎲
         </button>
       </header>
-      <div className="grid grid-cols-7 gap-1">
-        {Array.from({ length: 31 }, (_, index) => index + 1).map((day) => (
+
+      <div className="mb-2 flex flex-wrap gap-1.5">
+        {PRESETS.map((preset) => (
           <button
-            key={day}
+            key={preset.id}
             type="button"
-            className={`aspect-square rounded-[8px] text-[0.7rem] font-semibold tabular transition-all ${
-              isOn(day)
-                ? 'bg-(--accent) text-white shadow-sm'
-                : 'bg-surface-2 text-faint hover:bg-(--accent-soft) hover:text-(--accent)'
-            }`}
-            onClick={() =>
-              setOverrides((current) => {
-                const next = new Map(current);
-
-                next.set(day, !isOn(day));
-
-                return next;
-              })
+            className="chip !py-1 transition-all"
+            style={
+              brush === preset.id
+                ? { borderColor: preset.colour, background: `${preset.colour}1a`, color: preset.colour, fontWeight: 700 }
+                : undefined
             }
+            onClick={() => setBrush(preset.id)}
           >
-            {day}
+            {preset.emoji} {preset.name} · {UAH(preset.pay)}
           </button>
         ))}
       </div>
+
+      <div className="grid grid-cols-7 gap-1">
+        {days.map((day) => {
+          const shift = shiftOf(day);
+
+          return (
+            <button
+              key={day}
+              type="button"
+              className="grid aspect-square place-items-center rounded-[8px] text-[0.7rem] font-semibold tabular transition-all hover:scale-[1.08]"
+              style={
+                shift !== null
+                  ? { background: PRESETS[shift].colour, color: '#fff' }
+                  : { background: 'var(--surface-2)', color: 'var(--faint)' }
+              }
+              title={shift !== null ? `${PRESETS[shift].name} · ${UAH(PRESETS[shift].pay)}` : 'Поставить смену'}
+              onClick={() =>
+                setOverrides((current) => {
+                  const next = new Map(current);
+
+                  next.set(day, shift === brush ? null : brush);
+
+                  return next;
+                })
+              }
+            >
+              {shift !== null ? PRESETS[shift].emoji : day}
+            </button>
+          );
+        })}
+      </div>
+
       <p className="mt-3 text-[0.92rem]">
         <b className="text-[1.15rem] tabular">{UAH(total)}</b>{' '}
         <span className="text-muted">
@@ -159,7 +197,7 @@ export function CalendarDemo() {
           {pluralWord('ru', 'hours', worked.length * 8)}
         </span>
       </p>
-      <p className="field-hint mt-auto pt-1">Кликайте по дням — деньги пересчитываются мгновенно.</p>
+      <p className="field-hint mt-auto pt-1">Выберите пресет и накидайте смен по дням — как в настоящем календаре.</p>
     </div>
   );
 }

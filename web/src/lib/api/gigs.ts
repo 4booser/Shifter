@@ -29,6 +29,7 @@ export interface Gig {
   city: string;
   slots: number;
   status: 'open' | 'filled' | 'closed';
+  created_at: string;
   responses: number;
   is_mine: boolean;
   my_response: { id: number; accepted: boolean } | null;

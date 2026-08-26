@@ -20,14 +20,16 @@ public partial class DayHandler : IDayHandler
     private readonly IShifterCommand _shifterCommand;
     private readonly IShifterQuery _shifterQuery;
     private readonly DayAuditWriter? _audit;
+    private readonly GoalCelebrator? _goals;
 
     // The audit hand is optional so the unit tests, which build this by
     // hand around fakes, stay ignorant of it.
-    public DayHandler(IShifterCommand shifterCommand, IShifterQuery shifterQuery, DayAuditWriter? audit = null)
+    public DayHandler(IShifterCommand shifterCommand, IShifterQuery shifterQuery, DayAuditWriter? audit = null, GoalCelebrator? goals = null)
     {
         _shifterCommand = shifterCommand;
         _shifterQuery = shifterQuery;
         _audit = audit;
+        _goals = goals;
     }
 
     public async Task<DaysDto> ListAsync(
@@ -155,6 +157,13 @@ public partial class DayHandler : IDayHandler
         Day saved = await _shifterCommand.UpsertDayAsync(incoming, ct);
 
         if (_audit is not null) await _audit.WriteAsync(userId, saved, "app", ct);
+
+        // A save is the only moment earned money moves, so it is the only
+        // moment a goal can be crossed.
+        if (_goals is not null)
+            await _goals.CheckAsync(
+                userId, date,
+                async (from, to) => (await ListAsync(userId, from, to, ct)).total_earned, ct);
 
         // Locations carry the tip-out rule, so without them the saved day would
         // come back with a different total than the calendar shows a moment

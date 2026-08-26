@@ -41,4 +41,11 @@ public sealed class Goal
 
     /// <summary>Shown beside the figure; the reason it is that number.</summary>
     public string? Note { get; set; }
+
+    /// <summary>
+    /// The start of the period this goal was last cheered for. One push per
+    /// period per goal: a standing monthly goal congratulates again next
+    /// month because next month starts on a different date.
+    /// </summary>
+    public DateOnly? CelebratedOn { get; set; }
 }

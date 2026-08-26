@@ -26,6 +26,7 @@ import { useSettings } from '@/lib/settings/store';
 import { Shell } from '@/components/layout/shell';
 import { useReveal } from '@/lib/fx';
 import { GoalsModal } from '@/components/dashboard/modals/goals-modal';
+import { WhatIfCard } from '@/components/stats/what-if';
 import { hourDial, rateTrend, waterfall, weekBands } from '@/lib/charts/report-math';
 import { ClockRing, MoneyFlow, MonthBars, TrendLine, WeekBandsChart } from '@/components/charts/glass-charts';
 import { AreaChart, ColumnChart, Heatmap, Plot, ProgressRing } from '@/components/charts/charts';
@@ -572,6 +573,8 @@ function Stats() {
           )}
         </Card>
       </div>
+
+      <WhatIfCard suggestedTarget={active?.target ?? null} />
 
       {/* ==== Earnings + twelve months ==== */}
       <div className="grid gap-3 lg:grid-cols-2">

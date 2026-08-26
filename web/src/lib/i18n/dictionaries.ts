@@ -5,6 +5,16 @@
 type Dictionary = Record<string, string>;
 
 export const RU: Dictionary = {
+  'What if': 'Что-если',
+  'Turn the dials — the money and the date follow.': 'Покрутите ползунки — деньги и дата пересчитаются сами.',
+  'Work a few shifts first — then this card can play with your pace.': 'Отработайте несколько смен — и эта карточка сможет играть с вашим темпом.',
+  'Shifts a week': 'Смен в неделю',
+  'One shift brings': 'Смена приносит',
+  'Aiming for': 'Хочу накопить',
+  'month': 'месяц',
+  'a week at this pace': 'в неделю при таком темпе',
+  'vs your real pace': 'к вашему нынешнему темпу',
+  'in about': 'это ещё примерно',
   'Devices holding a key': 'Устройства с ключом от аккаунта',
   'Every signed-in session. Throw one out and it is signed out on its next breath.': 'Каждая активная сессия. Выгоните одну — и она разлогинится при следующем вдохе.',
   'Unknown device': 'Неизвестное устройство',
@@ -1341,6 +1351,16 @@ export const RU: Dictionary = {
 };
 
 export const UK: Dictionary = {
+  'What if': 'Що-якщо',
+  'Turn the dials — the money and the date follow.': 'Покрутіть повзунки — гроші й дата перерахуються самі.',
+  'Work a few shifts first — then this card can play with your pace.': 'Відпрацюйте кілька змін — і ця картка зможе гратися з вашим темпом.',
+  'Shifts a week': 'Змін на тиждень',
+  'One shift brings': 'Зміна приносить',
+  'Aiming for': 'Хочу накопичити',
+  'month': 'місяць',
+  'a week at this pace': 'на тиждень за такого темпу',
+  'vs your real pace': 'до вашого теперішнього темпу',
+  'in about': 'це ще приблизно',
   'Devices holding a key': 'Пристрої з ключем від акаунта',
   'Every signed-in session. Throw one out and it is signed out on its next breath.': 'Кожна активна сесія. Виженіть одну — і вона розлогіниться при наступному подиху.',
   'Unknown device': 'Невідомий пристрій',

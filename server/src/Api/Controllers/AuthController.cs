@@ -5,7 +5,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Shifter.Api.Extensions;
 using Shifter.Application.Common.Exceptions;
+using Shifter.Application.Common.Exceptions;
 using Shifter.Application.Features.Auth.DTOs;
+using Shifter.Application.Features.Auth.Services;
+using Shifter.Application.Features.Auth.Services.Interfaces;
 
 namespace Shifter.Api.Controllers;
 
@@ -39,13 +42,85 @@ public class AuthController : Controller
     [HttpPost]
     [AllowAnonymous]
     [Route("user/login")]
-    public async Task<ActionResult<AuthResponseDto>> Login(
+    public async Task<IActionResult> Login(
         [FromBody] LoginDto request,
         CancellationToken ct)
     {
-        var result = await _mediator.Send(request, ct);
+        try
+        {
+            return Ok(await _mediator.Send(request, ct));
+        }
+        catch (TwoFactorRequiredException challenge)
+        {
+            // 200 on purpose: the password was right, and the client's next
+            // move is a code, not an error banner.
+            return Ok(new { two_factor_required = true, ticket = challenge.Ticket });
+        }
+    }
 
-        return Ok(result);
+    /// <summary>The second half of a two-factor sign-in.</summary>
+    [HttpPost]
+    [AllowAnonymous]
+    [Route("user/login/2fa")]
+    public async Task<ActionResult<AuthResponseDto>> LoginSecondFactor(
+        [FromBody] SecondFactorBody request,
+        [FromServices] TwoFactorService twoFactor,
+        [FromServices] IAuthTokenIssuer issuer,
+        CancellationToken ct)
+    {
+        var (id, login) = await twoFactor.RedeemAsync(request.ticket, request.code.Trim(), ct);
+
+        return Ok(await issuer.IssueAsync(id, login, ct));
+    }
+
+    public record SecondFactorBody(string ticket, string code);
+
+    public record CodeBody(string code);
+
+    // ==== Managing the second factor ====
+
+    [HttpPost]
+    [Microsoft.AspNetCore.Authorization.Authorize]
+    [Route("2fa/setup")]
+    public async Task<ActionResult> TwoFactorSetup(
+        [FromServices] TwoFactorService twoFactor,
+        CancellationToken ct)
+    {
+        var (secret, url) = await twoFactor.BeginAsync(AuthenticatedUserId(), ct);
+
+        return Ok(new { secret, otpauth_url = url });
+    }
+
+    [HttpPost]
+    [Microsoft.AspNetCore.Authorization.Authorize]
+    [Route("2fa/enable")]
+    public async Task<ActionResult> TwoFactorEnable(
+        [FromBody] CodeBody request,
+        [FromServices] TwoFactorService twoFactor,
+        CancellationToken ct)
+        => Ok(new { backup_codes = await twoFactor.EnableAsync(AuthenticatedUserId(), request.code.Trim(), ct) });
+
+    [HttpPost]
+    [Microsoft.AspNetCore.Authorization.Authorize]
+    [Route("2fa/disable")]
+    public async Task<ActionResult> TwoFactorDisable(
+        [FromBody] CodeBody request,
+        [FromServices] TwoFactorService twoFactor,
+        CancellationToken ct)
+    {
+        await twoFactor.DisableAsync(AuthenticatedUserId(), request.code.Trim(), ct);
+
+        return NoContent();
+    }
+
+    private int AuthenticatedUserId()
+    {
+        var id = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
+
+        if (!int.TryParse(id, out var userId))
+            throw new UnauthorizedException("Token is missing the required claims.");
+
+        return userId;
     }
 
     /// <summary>

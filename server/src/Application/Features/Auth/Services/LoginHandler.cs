@@ -56,6 +56,13 @@ public class LoginHandler : IRequestHandler<LoginDto, AuthResponseDto>
             throw new UnauthorizedException("Invalid login or password.");
         }
 
+        // The password held; the second factor stands between it and tokens.
+        if (TwoFactorService.Required(user))
+        {
+            _logger.LogInformation("User {UserId} passed the password, awaiting the second factor.", user.Id);
+            throw new TwoFactorRequiredException(TwoFactorService.IssueTicket(user.Id));
+        }
+
         _logger.LogInformation("User {UserId} signed in.", user.Id);
 
         return await _issuer.IssueAsync(user.Id, user.Login, ct);

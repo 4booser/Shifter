@@ -32,6 +32,17 @@ public sealed class User
     /// </summary>
     public string? FeedToken { get; set; }
 
+    /// <summary>
+    /// The TOTP secret. Set at setup, meaningful only once
+    /// <see cref="TotpEnabledAt"/> confirms the person proved they hold it.
+    /// </summary>
+    public string? TotpSecret { get; set; }
+
+    public DateTime? TotpEnabledAt { get; set; }
+
+    /// <summary>SHA-256 hashes of the unused backup codes, ';'-joined.</summary>
+    public string? BackupCodeHashes { get; set; }
+
     public bool IsActive { get; set; } = true;
     public DateTime CreatedAt { get; set; }
     public DateTime? LastLogin { get; set; }

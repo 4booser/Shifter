@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import { Profile, accountApi, authApi } from '@/lib/api/auth';
-import { api, apiErrorMessage, readSession } from '@/lib/api/http';
+import { HttpError, api, apiErrorMessage, readSession } from '@/lib/api/http';
 import { useI18n } from '@/lib/i18n';
 import { useReveal } from '@/lib/fx';
 import { Shell } from '@/components/layout/shell';
@@ -235,6 +235,8 @@ function Account() {
 
           <FeedSection />
 
+          <TwoFactorSection hasPassword={profile.has_password} />
+
           <ExportSection />
 
           {/* ==== Danger ==== */}
@@ -412,6 +414,167 @@ function ExportSection() {
         <Icon name="download" size={14} />
         {busy ? '…' : t('Download everything')}
       </button>
+    </section>
+  );
+}
+
+/**
+ * The second lock on the door. Setup shows a QR the authenticator scans and
+ * asks for one code as proof; enabling mints eight one-time backup codes for
+ * the day the phone is gone. Money history deserves at least this much.
+ */
+function TwoFactorSection({ hasPassword }: { hasPassword: boolean }) {
+  const { t } = useI18n();
+  const [stage, setStage] = useState<'idle' | 'setup' | 'backup'>('idle');
+  const [qr, setQr] = useState<string | null>(null);
+  const [secret, setSecret] = useState('');
+  const [code, setCode] = useState('');
+  const [backups, setBackups] = useState<string[]>([]);
+  const [enabled, setEnabled] = useState<boolean | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  // The profile does not say whether 2FA is on; probing setup does — a 409
+  // means it already is.
+  const begin = async () => {
+    setBusy(true);
+    setError(null);
+
+    try {
+      const response = await authApi.twoFactorSetup();
+      const { toDataURL } = await import('qrcode');
+
+      setSecret(response.secret);
+      setQr(await toDataURL(response.otpauth_url, { margin: 1, width: 196 }));
+      setStage('setup');
+      setEnabled(false);
+    } catch (caught) {
+      if (caught instanceof HttpError && caught.status === 409) setEnabled(true);
+      else setError(apiErrorMessage(caught));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const enable = async () => {
+    setBusy(true);
+    setError(null);
+
+    try {
+      const response = await authApi.twoFactorEnable(code.trim());
+
+      setBackups(response.backup_codes);
+      setStage('backup');
+      setEnabled(true);
+      setCode('');
+    } catch (caught) {
+      setError(apiErrorMessage(caught));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const disable = async () => {
+    setBusy(true);
+    setError(null);
+
+    try {
+      await authApi.twoFactorDisable(code.trim());
+      setEnabled(false);
+      setStage('idle');
+      setCode('');
+    } catch (caught) {
+      setError(apiErrorMessage(caught));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  if (!hasPassword) return null;
+
+  return (
+    <section className="card reveal p-4">
+      <h2 className="mb-1 text-[0.98rem] font-bold">🔐 {t('Two-factor sign-in')}</h2>
+      <p className="field-hint mb-3">
+        {t('A rotating code from your phone on top of the password. Backup codes cover a lost phone.')}
+      </p>
+
+      {error !== null && <p className="mb-2 text-[0.85rem] text-danger">{error}</p>}
+
+      {stage === 'idle' && enabled !== true && (
+        <button type="button" className="btn" disabled={busy} onClick={() => void begin()}>
+          {t('Turn it on')}
+        </button>
+      )}
+
+      {enabled === true && stage === 'idle' && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="chip border-good/40 bg-(--good-soft) text-good">{t('On')}</span>
+          <input
+            className="field-input !w-32 text-center tabular"
+            inputMode="numeric"
+            placeholder={t('code')}
+            maxLength={8}
+            value={code}
+            onChange={(event) => setCode(event.target.value.replace(/\D/g, ''))}
+          />
+          <button type="button" className="btn btn-sm text-danger" disabled={busy || code.length < 6} onClick={() => void disable()}>
+            {t('Turn off')}
+          </button>
+        </div>
+      )}
+
+      {stage === 'setup' && (
+        <div className="flex flex-wrap items-start gap-4">
+          {qr !== null && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={qr} alt={t('QR for the authenticator')} className="rounded-(--radius) bg-white p-1.5" />
+          )}
+          <div className="min-w-0 flex-1">
+            <p className="field-hint mb-1">{t('Scan with any authenticator, or paste the secret:')}</p>
+            <code className="mb-3 block break-all rounded-(--radius) border border-border bg-surface-2 px-2 py-1 text-[0.75rem] tabular">
+              {secret}
+            </code>
+            <div className="flex items-center gap-1.5">
+              <input
+                className="field-input !w-36 text-center text-[1.05rem] tracking-[0.3em] tabular"
+                inputMode="numeric"
+                placeholder="000000"
+                maxLength={6}
+                value={code}
+                onChange={(event) => setCode(event.target.value.replace(/\D/g, ''))}
+              />
+              <button type="button" className="btn btn-primary" disabled={busy || code.length !== 6} onClick={() => void enable()}>
+                {t('Confirm')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {stage === 'backup' && (
+        <div>
+          <p className="mb-2 text-[0.9rem] font-semibold text-good">✓ {t('Two-factor is on. Keep these backup codes somewhere safe:')}</p>
+          <div className="mb-2 grid grid-cols-2 gap-1.5 sm:grid-cols-4">
+            {backups.map((backup) => (
+              <code key={backup} className="rounded-(--radius) border border-border bg-surface-2 px-2 py-1 text-center text-[0.85rem] tabular">
+                {backup}
+              </code>
+            ))}
+          </div>
+          <button
+            type="button"
+            className="btn btn-sm"
+            onClick={() => void navigator.clipboard.writeText(backups.join('\n'))}
+          >
+            <Icon name="copy" size={13} />
+            {t('Copy')}
+          </button>
+          <button type="button" className="btn btn-quiet btn-sm ml-1.5" onClick={() => setStage('idle')}>
+            {t('Done')}
+          </button>
+        </div>
+      )}
     </section>
   );
 }

@@ -5,6 +5,16 @@
 type Dictionary = Record<string, string>;
 
 export const RU: Dictionary = {
+  'Enter the six digits from your authenticator, or an eight-digit backup code.': 'Введите шесть цифр из приложения-аутентификатора или восьмизначный резервный код.',
+  'Confirm': 'Подтвердить',
+  'Two-factor sign-in': 'Двухфакторный вход',
+  'A rotating code from your phone on top of the password. Backup codes cover a lost phone.': 'Сменяемый код с телефона поверх пароля. Резервные коды выручат при потере телефона.',
+  'Turn it on': 'Включить',
+  'On': 'Включено',
+  'code': 'код',
+  'Scan with any authenticator, or paste the secret:': 'Отсканируйте любым аутентификатором или вставьте секрет:',
+  'QR for the authenticator': 'QR для аутентификатора',
+  'Two-factor is on. Keep these backup codes somewhere safe:': 'Двухфакторный вход включён. Сохраните резервные коды в надёжном месте:',
   'History': 'История',
   'webhook': 'вебхук',
   'the rota board': 'доска графика',
@@ -1281,6 +1291,16 @@ export const RU: Dictionary = {
 };
 
 export const UK: Dictionary = {
+  'Enter the six digits from your authenticator, or an eight-digit backup code.': 'Введіть шість цифр із застосунку-автентифікатора або восьмизначний резервний код.',
+  'Confirm': 'Підтвердити',
+  'Two-factor sign-in': 'Двофакторний вхід',
+  'A rotating code from your phone on top of the password. Backup codes cover a lost phone.': 'Змінюваний код із телефона поверх пароля. Резервні коди виручать у разі втрати телефона.',
+  'Turn it on': 'Увімкнути',
+  'On': 'Увімкнено',
+  'code': 'код',
+  'Scan with any authenticator, or paste the secret:': 'Відскануйте будь-яким автентифікатором або вставте секрет:',
+  'QR for the authenticator': 'QR для автентифікатора',
+  'Two-factor is on. Keep these backup codes somewhere safe:': 'Двофакторний вхід увімкнено. Збережіть резервні коди в надійному місці:',
   'History': 'Історія',
   'webhook': 'вебхук',
   'the rota board': 'дошка графіка',

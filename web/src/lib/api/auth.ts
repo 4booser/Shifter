@@ -41,8 +41,19 @@ export const authApi = {
     saveSession(await api<AuthResponse>(`${AUTH}/user/register`, { body: request }));
   },
 
-  async login(request: { login: string; password: string }): Promise<void> {
-    saveSession(await api<AuthResponse>(`${AUTH}/user/login`, { body: request }));
+  async login(request: { login: string; password: string }): Promise<string | null> {
+    const response = await api<AuthResponse | { two_factor_required: true; ticket: string }>(
+      `${AUTH}/user/login`,
+      { body: request },
+    );
+
+    // The password held but a code stands in the way: hand the ticket back
+    // instead of a session, and the form asks its second question.
+    if ('two_factor_required' in response) return response.ticket;
+
+    saveSession(response);
+
+    return null;
   },
 
   async googleSignIn(
@@ -69,6 +80,15 @@ export const authApi = {
    * clear happens either way: a failed call must not leave someone stuck
    * signed in on a shared machine.
    */
+  /** The second half of a two-factor sign-in. */
+  async loginSecondFactor(ticket: string, code: string): Promise<void> {
+    saveSession(await api<AuthResponse>(`${AUTH}/user/login/2fa`, { body: { ticket, code } }));
+  },
+
+  twoFactorSetup: () => api<{ secret: string; otpauth_url: string }>(`${AUTH}/2fa/setup`, { method: 'POST', body: {} }),
+  twoFactorEnable: (code: string) => api<{ backup_codes: string[] }>(`${AUTH}/2fa/enable`, { body: { code } }),
+  twoFactorDisable: (code: string) => api<void>(`${AUTH}/2fa/disable`, { body: { code } }),
+
   logout(): void {
     const session = readSession();
 

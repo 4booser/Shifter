@@ -95,7 +95,7 @@ public class FeedController : ControllerBase
         foreach (var entry in events)
         {
             lines.Add("BEGIN:VEVENT");
-            lines.Add($"UID:event-{entry.id}@shifter.ink");
+            lines.Add($"UID:event-{entry.id}-{entry.start_date:yyyyMMdd}@shifter.ink");
             lines.Add($"DTSTART;VALUE=DATE:{entry.start_date:yyyyMMdd}");
             lines.Add($"DTEND;VALUE=DATE:{entry.end_date.AddDays(1):yyyyMMdd}");
             lines.Add($"SUMMARY:{Escape(entry.name)}");

@@ -134,7 +134,12 @@ public class ShifterQuery : IShifterQuery
             .AsNoTracking()
             .Where(item => item.UserId == userId
                 && item.StartDate <= to
-                && item.EndDate >= from)
+                // One-offs overlap by their range; a repeating rule is alive
+                // for the whole stretch until its until-date, whatever its
+                // anchor's EndDate says.
+                && (item.EndDate >= from
+                    || (item.RepeatWeekdays != null
+                        && (item.RepeatUntil == null || item.RepeatUntil >= from))))
             .OrderBy(item => item.StartDate)
             .ThenBy(item => item.Id)
             .ToArrayAsync(ct);

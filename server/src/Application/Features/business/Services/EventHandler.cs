@@ -39,7 +39,15 @@ public partial class EventHandler : IEventHandler
 
         Event[] events = await _shifterQuery.GetEventsInRangeAsync(userId, from, to, ct);
 
-        return events.Select(ToDto).ToArray();
+        // One-offs pass through whole; a repeating event unfolds into one
+        // single-day entry per occurrence, all wearing the rule's id so
+        // editing any of them edits the rule.
+        return events
+            .SelectMany(item => item.Repeats
+                ? EventRecurrence.Occurrences(item, from, to).Select(date => ToOccurrence(item, date))
+                : [ToDto(item)])
+            .OrderBy(dto => dto.start_date)
+            .ToArray();
     }
 
     public async Task<EventDto> CreateAsync(
@@ -107,6 +115,15 @@ public partial class EventHandler : IEventHandler
         if (!HexColour().IsMatch(request.colour ?? string.Empty))
             throw new ValidationException("Colour must be a hex value like #1F3A5F.");
 
+        if (request.repeat_weekdays is not null)
+        {
+            if (EventRecurrence.ParseWeekdays(request.repeat_weekdays).Count == 0)
+                throw new ValidationException("Pick at least one weekday to repeat on.");
+
+            if (request.repeat_until is DateOnly until && until < request.start_date)
+                throw new ValidationException("The repetition cannot end before it starts.");
+        }
+
         if (request.start_date > request.end_date)
             throw new ValidationException("Event start must not be after its end.");
 
@@ -125,7 +142,11 @@ public partial class EventHandler : IEventHandler
         item.Symbol = string.IsNullOrWhiteSpace(request.symbol) ? null : request.symbol.Trim();
         item.Colour = request.colour!.ToUpperInvariant();
         item.StartDate = request.start_date;
-        item.EndDate = request.end_date;
+        item.RepeatWeekdays = request.repeat_weekdays;
+        item.RepeatUntil = request.repeat_weekdays is null ? null : request.repeat_until;
+        // A repeating event is its anchor day plus the rule; a range would
+        // mean "this fortnight, every Tuesday", which nobody means.
+        item.EndDate = request.repeat_weekdays is null ? request.end_date : request.start_date;
         item.StartTime = start;
         item.EndTime = end;
         item.Note = string.IsNullOrWhiteSpace(request.note) ? null : request.note.Trim();
@@ -166,7 +187,23 @@ public partial class EventHandler : IEventHandler
         item.StartTime?.ToString("HH:mm"),
         item.EndTime?.ToString("HH:mm"),
         item.Note,
-        item.Days);
+        item.Days,
+        item.RepeatWeekdays,
+        item.RepeatUntil);
+
+    private static EventDto ToOccurrence(Event item, DateOnly date) => new EventDto(
+        item.Id,
+        item.Name,
+        item.Symbol,
+        item.Colour,
+        date,
+        date,
+        item.StartTime?.ToString("HH:mm"),
+        item.EndTime?.ToString("HH:mm"),
+        item.Note,
+        1,
+        item.RepeatWeekdays,
+        item.RepeatUntil);
 
     [GeneratedRegex("^#[0-9A-Fa-f]{6}$")]
     private static partial Regex HexColour();

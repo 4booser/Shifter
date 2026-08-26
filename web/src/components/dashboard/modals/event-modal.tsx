@@ -36,6 +36,8 @@ export function EventModal({
   const [startTime, setStartTime] = useState('09:00');
   const [endTime, setEndTime] = useState('18:00');
   const [note, setNote] = useState('');
+  const [repeatDays, setRepeatDays] = useState<number[]>([]);
+  const [repeatUntil, setRepeatUntil] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -67,6 +69,8 @@ export function EventModal({
       setStartTime('09:00');
       setEndTime('18:00');
       setNote('');
+      setRepeatDays([]);
+      setRepeatUntil('');
 
       return;
     }
@@ -80,6 +84,12 @@ export function EventModal({
     setStartTime(editing.start_time ?? '09:00');
     setEndTime(editing.end_time ?? '18:00');
     setNote(editing.note ?? '');
+    setRepeatDays(
+      editing.repeat_weekdays === null
+        ? []
+        : editing.repeat_weekdays.split(',').map(Number).filter((day) => day >= 0 && day <= 6),
+    );
+    setRepeatUntil(editing.repeat_until ?? '');
   }, [open, editing, date]);
 
   const days =
@@ -87,7 +97,8 @@ export function EventModal({
       ? 0
       : (Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86_400_000 + 1;
 
-  const valid = name.trim().length > 0 && days > 0;
+  const repeats = repeatDays.length > 0;
+  const valid = name.trim().length > 0 && (repeats ? from !== '' : days > 0);
 
   const submit = async () => {
     if (!valid || saving) return;
@@ -102,10 +113,14 @@ export function EventModal({
           symbol,
           colour,
           start_date: from,
-          end_date: to,
+          // A repeating event is its anchor plus the rule; the server pins
+          // the range to one day either way.
+          end_date: repeats ? from : to,
           start_time: allDay ? null : startTime,
           end_time: allDay ? null : endTime,
           note: note.trim() === '' ? null : note.trim(),
+          repeat_weekdays: repeats ? [...repeatDays].sort((a, b) => a - b).join(',') : null,
+          repeat_until: repeats && repeatUntil !== '' ? repeatUntil : null,
         },
         editing?.id ?? null,
       );
@@ -181,10 +196,46 @@ export function EventModal({
               }}
             />
           </label>
-          <label>
+          {!repeats && (<label>
             <span className="field-label">{t('To')}</span>
             <input type="date" className="field-input" min={from} value={to} onChange={(event) => setTo(event.target.value)} />
-          </label>
+          </label>)}
+
+        <div>
+          <span className="field-label">{t('Repeat on')}</span>
+          <div className="flex gap-1">
+            {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((label, weekday) => (
+              <button
+                key={label}
+                type="button"
+                className={`h-8 flex-1 rounded-(--radius) border text-[0.72rem] font-semibold transition-colors ${
+                  repeatDays.includes(weekday)
+                    ? 'border-(--accent) bg-(--accent) text-(--accent-ink)'
+                    : 'border-border text-muted hover:border-border-strong'
+                }`}
+                onClick={() =>
+                  setRepeatDays((current) =>
+                    current.includes(weekday) ? current.filter((day) => day !== weekday) : [...current, weekday],
+                  )
+                }
+              >
+                {t(label)}
+              </button>
+            ))}
+          </div>
+          {repeats && (
+            <label className="mt-2 block">
+              <span className="field-hint">{t('Until (leave empty to repeat forever)')}</span>
+              <input
+                type="date"
+                className="field-input !w-40"
+                value={repeatUntil}
+                min={from}
+                onChange={(event) => setRepeatUntil(event.target.value)}
+              />
+            </label>
+          )}
+        </div>
         </div>
 
         <label className="flex items-center gap-2 text-[0.88rem]">

@@ -196,6 +196,9 @@ export interface CalendarEvent {
   note: string | null;
   /** How many days it covers, both ends included. */
   days: number;
+  /** Monday-first weekday numbers, comma-joined; null = a one-off. */
+  repeat_weekdays: string | null;
+  repeat_until: string | null;
 }
 
 export interface EventSave {
@@ -207,6 +210,8 @@ export interface EventSave {
   start_time: string | null;
   end_time: string | null;
   note: string | null;
+  repeat_weekdays?: string | null;
+  repeat_until?: string | null;
 }
 
 export interface CalendarDayData {

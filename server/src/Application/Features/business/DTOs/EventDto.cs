@@ -17,7 +17,10 @@ public record EventDto(
     string? end_time,
     string? note,
     /// <summary>How many days it covers, both ends included.</summary>
-    int days
+    int days,
+    /// <summary>Monday-first weekday numbers, comma-joined; null = one-off.</summary>
+    string? repeat_weekdays = null,
+    DateOnly? repeat_until = null
     );
 
 /// <summary>
@@ -33,5 +36,7 @@ public record EventSaveDto(
     DateOnly end_date,
     string? start_time,
     string? end_time,
-    string? note
+    string? note,
+    string? repeat_weekdays = null,
+    DateOnly? repeat_until = null
     );

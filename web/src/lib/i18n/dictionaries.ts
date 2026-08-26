@@ -5,6 +5,8 @@
 type Dictionary = Record<string, string>;
 
 export const RU: Dictionary = {
+  'Repeat on': 'Повторять по',
+  'Until (leave empty to repeat forever)': 'До (пусто — повторять без конца)',
   'Chime when a shift lands': 'Звук при завершении смены',
   'A short sound and a buzz at clock-out.': 'Короткий сигнал и вибрация при клок-ауте.',
   'Command, page, or >2000 to find days…': 'Команда, страница или >2000 — найти дни…',
@@ -1331,6 +1333,8 @@ export const RU: Dictionary = {
 };
 
 export const UK: Dictionary = {
+  'Repeat on': 'Повторювати по',
+  'Until (leave empty to repeat forever)': 'До (порожньо — повторювати без кінця)',
   'Chime when a shift lands': 'Звук при завершенні зміни',
   'A short sound and a buzz at clock-out.': 'Короткий сигнал і вібрація при клок-ауті.',
   'Command, page, or >2000 to find days…': 'Команда, сторінка або >2000 — знайти дні…',

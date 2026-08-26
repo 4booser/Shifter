@@ -45,6 +45,20 @@ public sealed class Event
 
     public string? Note { get; set; }
 
+    /// <summary>
+    /// Weekday numbers the event repeats on, comma-joined, Monday = 0. Null
+    /// means an ordinary one-off. A repeating event is stored as its anchor
+    /// day plus this rule, and the occurrences are conjured at read time —
+    /// "physio every Tue/Thu until December" stays one row however long it
+    /// runs.
+    /// </summary>
+    public string? RepeatWeekdays { get; set; }
+
+    /// <summary>Inclusive end of the repetition; null repeats indefinitely.</summary>
+    public DateOnly? RepeatUntil { get; set; }
+
+    public bool Repeats => RepeatWeekdays is not null;
+
     /// <summary>Whether this event covers the given date.</summary>
     public bool Covers(DateOnly date) => date >= StartDate && date <= EndDate;
 

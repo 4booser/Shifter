@@ -32,6 +32,12 @@
 		X-Content-Type-Options nosniff
 		X-Frame-Options DENY
 		Referrer-Policy strict-origin-when-cross-origin
+		# A year of HTTPS-only. Caddy already redirects; this makes browsers
+		# stop asking. Harmless on the bare-IP :80 config — browsers ignore
+		# HSTS received over plain HTTP.
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		# The app asks for notifications itself; nothing here needs the rest.
+		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
 		-Server
 	}
 

@@ -91,6 +91,7 @@ public static class DependencyInjection
         services.AddSingleton<PushSender>();
         services.AddScoped<IPushNotifier, PushNotifier>();
         services.AddScoped<Shifter.Application.Features.Teams.Services.PlannerService>();
+        services.AddScoped<Shifter.Application.Features.business.Services.DayAuditWriter>();
         services.AddHostedService<PushScheduler>();
         services.AddSingleton<IHasher, Hasher>();
         services.AddScoped<IAuthTokenIssuer, AuthTokenIssuer>();

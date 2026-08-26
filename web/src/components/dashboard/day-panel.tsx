@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { formatDayLabel, shiftDays, todayKey } from '@/lib/calendar/calendar-date';
 import { holidaysInRange } from '@/lib/calendar/holidays';
 import { CalendarEvent, DayShiftEntry, MARK_COLOURS, NOTE_MAX_LENGTH, ShiftTemplate } from '@/lib/calendar/models';
+import { api } from '@/lib/api/http';
 import { useI18n } from '@/lib/i18n';
 import { useMoney } from '@/lib/settings/money';
 import { useSettings } from '@/lib/settings/store';
@@ -591,6 +592,7 @@ export function DayPanel() {
         date={key}
         onClose={() => setEventOpen(false)}
       />
+      <DayHistory dayKey={key} />
     </aside>
   );
 }
@@ -766,5 +768,80 @@ function ActualClockRow({
         </button>
       )}
     </div>
+  );
+}
+
+interface HistoryEntry {
+  at: string;
+  source: string;
+  shift_count: number;
+  worked_count: number;
+  hours: number;
+  earned: number;
+  tips: number;
+  sales_units: number;
+}
+
+/**
+ * The day's paper trail, folded away until asked. Each line is a snapshot
+ * after a write — the answer to "where did my tips go" is reading these
+ * top to bottom.
+ */
+function DayHistory({ dayKey }: { dayKey: string }) {
+  const { t, lang } = useI18n();
+  const { format } = useMoney();
+  const [entries, setEntries] = useState<HistoryEntry[] | null>(null);
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    setEntries(null);
+    setOpen(false);
+  }, [dayKey]);
+
+  const load = () => {
+    if (entries !== null) return;
+
+    void api<{ entries: HistoryEntry[] }>(`/shifter/v1/days/${dayKey}/history`)
+      .then((response) => setEntries(response.entries))
+      .catch(() => setEntries([]));
+  };
+
+  const SOURCES: Record<string, string> = {
+    app: t('you'),
+    webhook: t('webhook'),
+    assignment: t('the rota board'),
+  };
+
+  return (
+    <details
+      className="border-t border-border pt-2"
+      open={open}
+      onToggle={(event) => {
+        setOpen((event.target as HTMLDetailsElement).open);
+        if ((event.target as HTMLDetailsElement).open) load();
+      }}
+    >
+      <summary className="cursor-pointer text-[0.78rem] font-semibold text-muted hover:text-ink">
+        {t('History')}
+      </summary>
+      {entries === null ? (
+        <p className="field-hint mt-1.5">…</p>
+      ) : entries.length === 0 ? (
+        <p className="field-hint mt-1.5">{t('No writes recorded yet.')}</p>
+      ) : (
+        <ul className="mt-1.5 flex flex-col gap-1">
+          {entries.map((entry, index) => (
+            <li key={index} className="text-[0.75rem] text-muted tabular">
+              <span className="text-faint">
+                {new Date(entry.at).toLocaleString(lang, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+              </span>{' '}
+              · {SOURCES[entry.source] ?? entry.source} · {entry.shift_count} {t('sh.')} ·{' '}
+              {format(entry.earned)}
+              {entry.tips > 0 && <> · {t('tips')} {format(entry.tips)}</>}
+            </li>
+          ))}
+        </ul>
+      )}
+    </details>
   );
 }

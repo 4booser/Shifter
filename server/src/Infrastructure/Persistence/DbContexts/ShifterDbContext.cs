@@ -25,10 +25,15 @@ public class ShifterDbContext : DbContext
     public DbSet<WebhookDelivery> WebhookDeliveries => Set<WebhookDelivery>();
     public DbSet<PushSubscription> PushSubscriptions => Set<PushSubscription>();
     public DbSet<PlannedAssignment> PlannedAssignments => Set<PlannedAssignment>();
+    public DbSet<DayAudit> DayAudits => Set<DayAudit>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ShifterDbContext).Assembly);
+
+        // A day's history is read as one day's list, newest first.
+        modelBuilder.Entity<DayAudit>()
+            .HasIndex(audit => new { audit.UserId, audit.Date });
 
         // The board is read week by week, always inside one team.
         modelBuilder.Entity<PlannedAssignment>()

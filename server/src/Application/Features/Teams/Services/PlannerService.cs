@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Shifter.Application.Common.Exceptions;
 using Shifter.Application.Features.Push;
 using Shifter.Application.Features.Teams.DTOs;
+using Shifter.Application.Features.business.Services;
 using Shifter.Infrastructure.Repositories.Interfaces;
 using Shifter.Domain.Entities;
 using Shifter.Domain.Entities.Enums;
@@ -20,12 +21,14 @@ public sealed class PlannerService
     private readonly ShifterDbContext _db;
     private readonly IShifterCommand _days;
     private readonly IPushNotifier _push;
+    private readonly DayAuditWriter _audit;
 
-    public PlannerService(ShifterDbContext db, IShifterCommand days, IPushNotifier push)
+    public PlannerService(ShifterDbContext db, IShifterCommand days, IPushNotifier push, DayAuditWriter audit)
     {
         _db = db;
         _days = days;
         _push = push;
+        _audit = audit;
     }
 
     // ==== Access ====
@@ -283,7 +286,9 @@ public sealed class PlannerService
         // INSERTed as a brand-new Shift with an existing key.
         placement.Shift = null;
 
-        await _days.MergeDayShiftAsync(userId, entry.Date, placement, ct);
+        var mergedDay = await _days.MergeDayShiftAsync(userId, entry.Date, placement, ct);
+
+        await _audit.WriteAsync(userId, mergedDay, "assignment", ct);
 
         entry.Status = AssignmentStatus.Accepted;
         entry.RespondedAt = DateTime.UtcNow;

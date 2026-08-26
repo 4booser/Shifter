@@ -26,11 +26,15 @@ public class WebhookIngestHandler : IWebhookIngestHandler
     private readonly IShifterQuery _shifterQuery;
     private readonly IShifterCommand _shifterCommand;
 
+    private readonly business.Services.DayAuditWriter? _audit;
+
     public WebhookIngestHandler(
         IWebhookRepository webhooks,
         IShifterQuery shifterQuery,
-        IShifterCommand shifterCommand)
+        IShifterCommand shifterCommand,
+        business.Services.DayAuditWriter? audit = null)
     {
+        _audit = audit;
         _webhooks = webhooks;
         _shifterQuery = shifterQuery;
         _shifterCommand = shifterCommand;
@@ -244,7 +248,12 @@ public class WebhookIngestHandler : IWebhookIngestHandler
             await _shifterCommand.MergeDaySalesAsync(endpoint.UserId, salesWrite.Merge, ct);
 
         if (hoursWrite is not null)
-            await _shifterCommand.MergeDayShiftAsync(endpoint.UserId, date, hoursWrite.Placement, ct);
+        {
+            Day auditedDay = await _shifterCommand.MergeDayShiftAsync(endpoint.UserId, date, hoursWrite.Placement, ct);
+
+            if (_audit is not null)
+                await _audit.WriteAsync(endpoint.UserId, auditedDay, "webhook", ct);
+        }
 
         if (options.Log)
             await LogAsync(endpoint, body, DeliveryStatus.Applied, externalId, date, null, ct);

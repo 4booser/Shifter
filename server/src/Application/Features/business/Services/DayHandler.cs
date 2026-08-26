@@ -19,11 +19,15 @@ public partial class DayHandler : IDayHandler
 
     private readonly IShifterCommand _shifterCommand;
     private readonly IShifterQuery _shifterQuery;
+    private readonly DayAuditWriter? _audit;
 
-    public DayHandler(IShifterCommand shifterCommand, IShifterQuery shifterQuery)
+    // The audit hand is optional so the unit tests, which build this by
+    // hand around fakes, stay ignorant of it.
+    public DayHandler(IShifterCommand shifterCommand, IShifterQuery shifterQuery, DayAuditWriter? audit = null)
     {
         _shifterCommand = shifterCommand;
         _shifterQuery = shifterQuery;
+        _audit = audit;
     }
 
     public async Task<DaysDto> ListAsync(
@@ -149,6 +153,8 @@ public partial class DayHandler : IDayHandler
         };
 
         Day saved = await _shifterCommand.UpsertDayAsync(incoming, ct);
+
+        if (_audit is not null) await _audit.WriteAsync(userId, saved, "app", ct);
 
         // Locations carry the tip-out rule, so without them the saved day would
         // come back with a different total than the calendar shows a moment

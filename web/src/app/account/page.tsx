@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import { Profile, accountApi, authApi } from '@/lib/api/auth';
-import { api, apiErrorMessage } from '@/lib/api/http';
+import { api, apiErrorMessage, readSession } from '@/lib/api/http';
 import { useI18n } from '@/lib/i18n';
 import { useReveal } from '@/lib/fx';
 import { Shell } from '@/components/layout/shell';
@@ -235,6 +235,8 @@ function Account() {
 
           <FeedSection />
 
+          <ExportSection />
+
           {/* ==== Danger ==== */}
           <section className="card reveal border-danger/40 p-4">
             <h2 className="mb-1 text-[0.98rem] font-bold text-danger">{t('Delete the account')}</h2>
@@ -368,6 +370,48 @@ function FeedSection() {
           </div>
         </>
       )}
+    </section>
+  );
+}
+
+/** The walk-out button: the whole account as one ZIP, no questions asked. */
+function ExportSection() {
+  const { t } = useI18n();
+  const [busy, setBusy] = useState(false);
+
+  const download = async () => {
+    setBusy(true);
+
+    try {
+      const response = await fetch('/shifter/v1/account/export', {
+        headers: { Authorization: `Bearer ${readSession()?.access_token ?? ''}` },
+      });
+
+      if (!response.ok) return;
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+
+      link.href = url;
+      link.download = `shifter-export-${new Date().toISOString().slice(0, 10)}.zip`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <section className="card reveal p-4">
+      <h2 className="mb-1 text-[0.98rem] font-bold">{t('Your data')}</h2>
+      <p className="field-hint mb-3">
+        {t('One archive with everything: every day as JSON, the ledger as CSV. Yours to keep, any day.')}
+      </p>
+      <button type="button" className="btn" disabled={busy} onClick={() => void download()}>
+        <Icon name="download" size={14} />
+        {busy ? '…' : t('Download everything')}
+      </button>
     </section>
   );
 }

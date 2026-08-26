@@ -5,6 +5,15 @@
 type Dictionary = Record<string, string>;
 
 export const RU: Dictionary = {
+  'History': 'История',
+  'webhook': 'вебхук',
+  'the rota board': 'доска графика',
+  'No writes recorded yet.': 'Записей пока нет.',
+  'sh.': 'см.',
+  'tips': 'чаевые',
+  'Your data': 'Ваши данные',
+  'One archive with everything: every day as JSON, the ledger as CSV. Yours to keep, any day.': 'Один архив со всем: каждый день в JSON, гроссбух в CSV. Ваше — забирайте в любой день.',
+  'Download everything': 'Скачать всё',
   'Planning': 'Планирование',
   'Rota': 'График',
   'Publish the week': 'Опубликовать неделю',
@@ -1272,6 +1281,15 @@ export const RU: Dictionary = {
 };
 
 export const UK: Dictionary = {
+  'History': 'Історія',
+  'webhook': 'вебхук',
+  'the rota board': 'дошка графіка',
+  'No writes recorded yet.': 'Записів поки немає.',
+  'sh.': 'зм.',
+  'tips': 'чайові',
+  'Your data': 'Ваші дані',
+  'One archive with everything: every day as JSON, the ledger as CSV. Yours to keep, any day.': 'Один архів з усім: кожен день у JSON, гросбух у CSV. Ваше — забирайте будь-якого дня.',
+  'Download everything': 'Завантажити все',
   'Planning': 'Планування',
   'Rota': 'Графік',
   'Publish the week': 'Опублікувати тиждень',

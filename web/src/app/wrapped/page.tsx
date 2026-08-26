@@ -206,37 +206,58 @@ function Wrapped() {
         <p className="field-hint">{t('Nothing recorded this year yet.')}</p>
       ) : (
         <>
-          {/* ==== The badge ==== */}
-          <section className="card reveal p-6 text-center">
-            <span className="text-[2.6rem]">{tier.emoji}</span>
-            <h2 className="text-[1.35rem] font-bold">{t(tier.name)}</h2>
-            <p className="field-hint">
-              {live
-                ? `${t('On pace for')} ${Math.round(projectedHours)} ${t('hours this year')}`
-                : `${Math.round(summary.hours)} ${t('hours')}`}
+          {/* ==== The poster: a year that fills the screen ==== */}
+          <section className="reveal relative flex min-h-[72dvh] flex-col items-center justify-center overflow-hidden rounded-[calc(var(--radius)*1.8)] border border-border bg-surface p-6 text-center">
+            {/* The year itself is the wallpaper — enormous and half-there. */}
+            <span
+              aria-hidden
+              className="pointer-events-none absolute inset-0 grid select-none place-items-center font-extrabold leading-none tracking-tighter text-(--accent)"
+              style={{ fontSize: 'clamp(9rem, 32vw, 24rem)', opacity: 0.07 }}
+            >
+              {year}
+            </span>
+            <span className="pop text-[4rem] leading-none" style={{ ['--i' as string]: 1 }}>{tier.emoji}</span>
+            <h2 className="pop mt-2 text-[1.6rem] font-extrabold tracking-tight" style={{ ['--i' as string]: 2 }}>
+              {t(tier.name)}
+            </h2>
+            <span
+              className="pop mt-4 block"
+              style={{ fontSize: 'clamp(3rem, 9vw, 5.5rem)', lineHeight: 1, ['--i' as string]: 3 } as React.CSSProperties}
+            >
+              <CountUp value={summary.total_earned} className="font-extrabold tabular tracking-tight text-good" />
+            </span>
+            <p className="pop mt-3 text-[1.05rem] text-muted" style={{ ['--i' as string]: 4 }}>
+              {totalShifts} {t('shifts')} · {Math.round(summary.hours)} {t('hours')} ·{' '}
+              <Money value={averages.perHour} className="font-semibold text-ink" />/{t('hour')}
             </p>
+            {live && (
+              <p className="pop chip mt-4 !border-(--accent)/40 !bg-(--accent-soft) !text-(--accent)" style={{ ['--i' as string]: 5 }}>
+                {t('On pace for')} {Math.round(projectedHours)} {t('hours this year')}
+              </p>
+            )}
+            <span aria-hidden className="absolute bottom-4 animate-bounce text-faint">↓</span>
           </section>
 
-          {/* ==== Headline numbers ==== */}
+          {/* ==== Headline numbers, poster-sized ==== */}
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
             <Big label={t('Earned')} delta={change(summary.total_earned, previous.total_earned)}>
-              <CountUp value={summary.total_earned} className="text-[1.3rem] font-bold text-good" />
+              <CountUp value={summary.total_earned} className="text-[1.9rem] font-extrabold tracking-tight text-good" />
             </Big>
             <Big label={t('Minutes worked')} delta={change(summary.hours, previous.hours)}>
-              <CountUp value={Math.round(summary.hours * 60)} format={(value) => `${Math.round(value).toLocaleString(lang)}`} className="text-[1.3rem] font-bold" />
+              <CountUp value={Math.round(summary.hours * 60)} format={(value) => `${Math.round(value).toLocaleString(lang)}`} className="text-[1.9rem] font-extrabold tracking-tight" />
             </Big>
             <Big label={t('Shifts')} delta={change(totalShifts, countShifts(previous.days))}>
-              <span className="text-[1.3rem] font-bold tabular">{totalShifts}</span>
+              <span className="text-[1.9rem] font-extrabold tabular tracking-tight">{totalShifts}</span>
             </Big>
             <Big label={t('Per hour')} delta={change(averages.perHour, before.perHour)}>
-              <Money value={averages.perHour} className="text-[1.3rem] font-bold" />
+              <Money value={averages.perHour} className="text-[1.9rem] font-extrabold tracking-tight" />
             </Big>
           </div>
 
           {/* ==== Twelve months, against last year ==== */}
           <section className="card reveal p-4">
             <h2 className="mb-2 text-[0.98rem] font-bold">{t('Month by month')}</h2>
-            <div className="flex h-36 items-end gap-1.5">
+            <div className="flex h-56 items-end gap-1.5">
               {monthBars.map((bar) => (
                 <div key={bar.title} className="group flex h-full flex-1 flex-col justify-end" title={bar.title}>
                   <div className="relative flex h-full items-end">

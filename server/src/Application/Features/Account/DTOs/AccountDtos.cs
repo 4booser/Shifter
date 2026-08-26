@@ -15,7 +15,11 @@ public record ProfileDto(
     bool has_password,
     bool google_linked,
     DateTime created_at,
-    decimal? monthly_goal);
+    decimal? monthly_goal,
+    string? avatar_kind,
+    string? avatar_data,
+    string? contact_phone,
+    string? contact_telegram);
 
 public record GetProfileDto(int UserId) : IRequest<ProfileDto>;
 

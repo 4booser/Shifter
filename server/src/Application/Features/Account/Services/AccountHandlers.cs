@@ -26,7 +26,11 @@ public static class AccountRules
         user.PasswordHash is not null,
         user.GoogleSubject is not null,
         user.CreatedAt,
-        user.MonthlyGoal);
+        user.MonthlyGoal,
+        user.AvatarKind,
+        user.AvatarData,
+        user.ContactPhone,
+        user.ContactTelegram);
 
     public static string RequireName(string? value, string field)
     {

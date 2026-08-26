@@ -32,6 +32,22 @@ public sealed class User
     /// </summary>
     public string? FeedToken { get; set; }
 
+    // ==== Reachability, shared only through an explicit gig response ====
+
+    public string? ContactPhone { get; set; }
+    public string? ContactTelegram { get; set; }
+
+    // ==== The face on the profile ====
+
+    /// <summary>"photo" | "preset" | "weave" | null (initials fallback).</summary>
+    public string? AvatarKind { get; set; }
+
+    /// <summary>
+    /// photo: a small JPEG data URL (≤48KB after client-side crop);
+    /// preset: "emoji|#colour"; weave: the seed the canvas is drawn from.
+    /// </summary>
+    public string? AvatarData { get; set; }
+
     /// <summary>
     /// The TOTP secret. Set at setup, meaningful only once
     /// <see cref="TotpEnabledAt"/> confirms the person proved they hold it.

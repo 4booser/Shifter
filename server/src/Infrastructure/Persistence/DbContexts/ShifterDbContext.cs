@@ -27,6 +27,8 @@ public class ShifterDbContext : DbContext
     public DbSet<PlannedAssignment> PlannedAssignments => Set<PlannedAssignment>();
     public DbSet<DayAudit> DayAudits => Set<DayAudit>();
     public DbSet<TelegramLink> TelegramLinks => Set<TelegramLink>();
+    public DbSet<GigListing> GigListings => Set<GigListing>();
+    public DbSet<GigResponse> GigResponses => Set<GigResponse>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -40,6 +42,24 @@ public class ShifterDbContext : DbContext
         modelBuilder.Entity<TelegramLink>()
             .HasIndex(link => link.UserId)
             .IsUnique();
+
+        // The board reads open gigs by date; owners read their own.
+        modelBuilder.Entity<GigListing>()
+            .HasIndex(gig => new { gig.Status, gig.Date });
+        modelBuilder.Entity<GigListing>()
+            .HasIndex(gig => gig.OwnerUserId);
+
+        // One person answers one listing once.
+        modelBuilder.Entity<GigResponse>()
+            .HasIndex(reply => new { reply.ListingId, reply.UserId })
+            .IsUnique();
+        modelBuilder.Entity<GigResponse>()
+            .HasIndex(reply => reply.UserId);
+        modelBuilder.Entity<GigResponse>()
+            .HasOne(reply => reply.Listing)
+            .WithMany(gig => gig.Responses)
+            .HasForeignKey(reply => reply.ListingId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         // A day's history is read as one day's list, newest first.
         modelBuilder.Entity<DayAudit>()

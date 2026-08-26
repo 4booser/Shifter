@@ -5,6 +5,10 @@
 type Dictionary = Record<string, string>;
 
 export const RU: Dictionary = {
+  'Devices holding a key': 'Устройства с ключом от аккаунта',
+  'Every signed-in session. Throw one out and it is signed out on its next breath.': 'Каждая активная сессия. Выгоните одну — и она разлогинится при следующем вдохе.',
+  'Unknown device': 'Неизвестное устройство',
+  'Browser': 'Браузер',
   'I am here now': 'Я сейчас тут',
   'I am here — update': 'Я тут — обновить',
   'With a pin, the app offers to start a shift when you open it at the place.': 'С меткой приложение само предложит начать смену, когда вы откроете его на месте.',
@@ -1337,6 +1341,10 @@ export const RU: Dictionary = {
 };
 
 export const UK: Dictionary = {
+  'Devices holding a key': 'Пристрої з ключем від акаунта',
+  'Every signed-in session. Throw one out and it is signed out on its next breath.': 'Кожна активна сесія. Виженіть одну — і вона розлогіниться при наступному подиху.',
+  'Unknown device': 'Невідомий пристрій',
+  'Browser': 'Браузер',
   'I am here now': 'Я зараз тут',
   'I am here — update': 'Я тут — оновити',
   'With a pin, the app offers to start a shift when you open it at the place.': 'З міткою застосунок сам запропонує почати зміну, коли ви відкриєте його на місці.',

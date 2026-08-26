@@ -87,6 +87,7 @@ public static class DependencyInjection
         services.Configure<Shifter.Application.Features.Import.ImportOptions>(
             configuration.GetSection(Shifter.Application.Features.Import.ImportOptions.Section));
         services.AddHttpClient();
+        services.AddHttpContextAccessor();
         services.AddSingleton<Shifter.Application.Features.Import.PhotoImportService>();
         services.AddSingleton<PushSender>();
         services.AddScoped<IPushNotifier, PushNotifier>();

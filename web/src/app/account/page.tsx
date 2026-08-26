@@ -237,6 +237,8 @@ function Account() {
 
           <TwoFactorSection hasPassword={profile.has_password} />
 
+          <SessionsSection />
+
           <TelegramSection />
 
           <ExportSection />
@@ -647,6 +649,86 @@ function TelegramSection() {
           )}
         </div>
       )}
+    </section>
+  );
+}
+
+interface SessionRow {
+  id: number;
+  created_at: string;
+  expires_at: string;
+  user_agent: string | null;
+}
+
+/** "Chrome on a Mac, since Tuesday" — every key out there, revocable alone. */
+function SessionsSection() {
+  const { t, lang } = useI18n();
+  const [rows, setRows] = useState<SessionRow[] | null>(null);
+
+  const refresh = () =>
+    void api<{ sessions: SessionRow[] }>('/shifter/v1/account/sessions')
+      .then((response) => setRows(response.sessions))
+      .catch(() => setRows([]));
+
+  useEffect(refresh, []);
+
+  if (rows === null || rows.length === 0) return null;
+
+  const describe = (agent: string | null): string => {
+    if (agent === null) return t('Unknown device');
+
+    const browser = /Edg\//.test(agent)
+      ? 'Edge'
+      : /OPR\//.test(agent)
+        ? 'Opera'
+        : /Firefox\//.test(agent)
+          ? 'Firefox'
+          : /Chrome\//.test(agent)
+            ? 'Chrome'
+            : /Safari\//.test(agent)
+              ? 'Safari'
+              : t('Browser');
+    const os = /iPhone|iPad/.test(agent)
+      ? 'iOS'
+      : /Android/.test(agent)
+        ? 'Android'
+        : /Mac OS X/.test(agent)
+          ? 'macOS'
+          : /Windows/.test(agent)
+            ? 'Windows'
+            : /Linux/.test(agent)
+              ? 'Linux'
+              : '';
+
+    return os === '' ? browser : `${browser} · ${os}`;
+  };
+
+  return (
+    <section className="card reveal p-4">
+      <h2 className="mb-1 text-[0.98rem] font-bold">{t('Devices holding a key')}</h2>
+      <p className="field-hint mb-3">{t('Every signed-in session. Throw one out and it is signed out on its next breath.')}</p>
+      <ul className="flex flex-col gap-1.5">
+        {rows.map((row) => (
+          <li key={row.id} className="flex flex-wrap items-center gap-2 rounded-(--radius) border border-border px-2.5 py-1.5 text-[0.85rem]">
+            <span className="min-w-0 flex-1">
+              <span className="block font-semibold">{describe(row.user_agent)}</span>
+              <span className="field-hint tabular">
+                {t('since')}{' '}
+                {new Date(row.created_at).toLocaleDateString(lang, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+              </span>
+            </span>
+            <button
+              type="button"
+              className="btn btn-quiet btn-sm text-danger"
+              onClick={() =>
+                void api(`/shifter/v1/account/sessions/${row.id}`, { method: 'DELETE' }).then(refresh)
+              }
+            >
+              {t('Sign out')}
+            </button>
+          </li>
+        ))}
+      </ul>
     </section>
   );
 }

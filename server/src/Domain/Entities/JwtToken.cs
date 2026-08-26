@@ -11,6 +11,12 @@ public sealed class JwtToken
     /// <summary>Hash of the value handed to the client; the raw token is never stored.</summary>
     public required string Token { get; set; }
 
+    /// <summary>
+    /// The browser's own description of itself at sign-in, so the sessions
+    /// list can say "Chrome on a Mac, since Tuesday" instead of a hash.
+    /// </summary>
+    public string? UserAgent { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime ExpiresAt { get; set; } = DateTime.UtcNow.AddDays(7);
 

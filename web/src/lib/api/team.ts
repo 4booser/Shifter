@@ -137,3 +137,66 @@ export const teamApi = {
       body: {},
     }),
 };
+
+// ==== The manager's board ====
+
+export type AssignmentStatus = 'draft' | 'published' | 'accepted' | 'declined';
+
+export interface Assignment {
+  id: number;
+  user_id: number;
+  user_name: string;
+  date: string;
+  title: string;
+  start: string;
+  end: string;
+  note: string | null;
+  status: AssignmentStatus;
+}
+
+export interface PlannerMember {
+  user_id: number;
+  display_name: string;
+  colour: string;
+  is_owner: boolean;
+  is_manager: boolean;
+}
+
+export interface PlannerBoard {
+  members: PlannerMember[];
+  assignments: Assignment[];
+  can_plan: boolean;
+  can_grant: boolean;
+}
+
+export interface AssignmentSave {
+  user_id: number;
+  date: string;
+  title: string;
+  start: string;
+  end: string;
+  note: string | null;
+}
+
+export const plannerApi = {
+  board: (teamId: number, from: string, to: string) =>
+    api<PlannerBoard>(`${TEAMS}/${teamId}/planner?from=${from}&to=${to}`),
+  create: (teamId: number, body: AssignmentSave) =>
+    api<Assignment>(`${TEAMS}/${teamId}/planner/assignments`, { body }),
+  update: (teamId: number, id: number, body: AssignmentSave) =>
+    api<Assignment>(`${TEAMS}/${teamId}/planner/assignments/${id}`, { method: 'PUT', body }),
+  remove: (teamId: number, id: number) =>
+    api<void>(`${TEAMS}/${teamId}/planner/assignments/${id}`, { method: 'DELETE' }),
+  publish: (teamId: number, from: string, to: string) =>
+    api<{ published: number; people: number }>(
+      `${TEAMS}/${teamId}/planner/publish?from=${from}&to=${to}`,
+      { method: 'POST', body: {} },
+    ),
+  mine: (teamId: number) => api<Assignment[]>(`${TEAMS}/${teamId}/planner/mine`),
+  accept: (teamId: number, id: number, template_id: number) =>
+    api<Assignment>(`${TEAMS}/${teamId}/planner/assignments/${id}/accept`, { body: { template_id } }),
+  decline: (teamId: number, id: number) =>
+    api<Assignment>(`${TEAMS}/${teamId}/planner/assignments/${id}/decline`, { method: 'POST', body: {} }),
+  setManager: (teamId: number, userId: number, is_manager: boolean) =>
+    api<void>(`${TEAMS}/${teamId}/planner/members/${userId}/manager`, { method: 'PUT', body: { is_manager } }),
+};

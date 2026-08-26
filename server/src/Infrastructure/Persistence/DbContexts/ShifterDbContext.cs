@@ -24,10 +24,25 @@ public class ShifterDbContext : DbContext
     public DbSet<WebhookEndpoint> WebhookEndpoints => Set<WebhookEndpoint>();
     public DbSet<WebhookDelivery> WebhookDeliveries => Set<WebhookDelivery>();
     public DbSet<PushSubscription> PushSubscriptions => Set<PushSubscription>();
+    public DbSet<PlannedAssignment> PlannedAssignments => Set<PlannedAssignment>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ShifterDbContext).Assembly);
+
+        // The board is read week by week, always inside one team.
+        modelBuilder.Entity<PlannedAssignment>()
+            .HasIndex(assignment => new { assignment.TeamId, assignment.Date });
+
+        // "What is waiting for me" is the other frequent question.
+        modelBuilder.Entity<PlannedAssignment>()
+            .HasIndex(assignment => new { assignment.UserId, assignment.Status });
+
+        modelBuilder.Entity<PlannedAssignment>()
+            .HasOne(assignment => assignment.Team)
+            .WithMany()
+            .HasForeignKey(assignment => assignment.TeamId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         // A browser re-subscribing must land on its old row, not add a twin
         // that doubles every notification.

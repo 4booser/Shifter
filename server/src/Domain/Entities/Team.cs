@@ -56,6 +56,13 @@ public sealed class TeamMember
     public bool ShareEarnings { get; set; }
 
     /// <summary>
+    /// May plan other people's time on the board. The owner always may;
+    /// this hands the same board to a shift lead without handing over the
+    /// team itself.
+    /// </summary>
+    public bool IsManager { get; set; }
+
+    /// <summary>
     /// What an unmarked shift does. Off means the crew sees this person's
     /// shifts unless one is marked private; on inverts it, so nothing shows
     /// until it is deliberately shared. Someone holding two jobs wants the

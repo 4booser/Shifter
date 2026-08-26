@@ -22,6 +22,8 @@ import {
   Visibility,
   teamApi,
 } from '@/lib/api/team';
+import { MyAssignments } from '@/components/team/my-assignments';
+import { PlannerBoardView } from '@/components/team/planner';
 import { useI18n } from '@/lib/i18n';
 import { useReveal } from '@/lib/fx';
 import { Shell } from '@/components/layout/shell';
@@ -60,6 +62,7 @@ function Schedule() {
   const [focusDay, setFocusDay] = useState<string | null>(null);
   const [handedOver, setHandedOver] = useState<AcceptedCover | null>(null);
   const [nameDraft, setNameDraft] = useState('');
+  const [mode, setMode] = useState<'rota' | 'planner'>('rota');
 
   const range = useMemo(
     () =>
@@ -196,7 +199,27 @@ function Schedule() {
     <div ref={revealHost} className="flex flex-col gap-4">
       {/* ==== Toolbar ==== */}
       <div className="flex flex-wrap items-center gap-2">
-        <h1 className="text-[1.3rem] font-bold capitalize tracking-tight">{rangeLabel}</h1>
+        <h1 className="text-[1.3rem] font-bold capitalize tracking-tight">
+          {mode === 'planner' ? t('Planning') : rangeLabel}
+        </h1>
+
+        <div className="seg">
+          {(
+            [
+              { value: 'rota' as const, label: 'Rota' },
+              { value: 'planner' as const, label: 'Planning' },
+            ]
+          ).map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              className={`seg-btn ${mode === option.value ? 'is-active' : ''}`}
+              onClick={() => setMode(option.value)}
+            >
+              {t(option.label)}
+            </button>
+          ))}
+        </div>
 
         {teams.length > 1 && (
           <select
@@ -243,6 +266,12 @@ function Schedule() {
 
       {error && <Alert onDismiss={() => setError(null)}>{error}</Alert>}
 
+      {/* ==== The manager's board replaces the rota entirely ==== */}
+      {mode === 'planner' && selected !== null && <PlannerBoardView teamId={selected} />}
+
+      {/* ==== Assignments waiting for the caller's answer ==== */}
+      {mode === 'rota' && selected !== null && <MyAssignments teamId={selected} onAnswered={refresh} />}
+
       {/* ==== A handover just happened ==== */}
       {handedOver !== null && (
         <Alert kind="good" onDismiss={() => setHandedOver(null)}>
@@ -251,6 +280,8 @@ function Schedule() {
         </Alert>
       )}
 
+      {mode === 'rota' && (
+      <>
       {/* ==== Cover requests ==== */}
       {coverRequests.length > 0 && (
         <section className="card reveal border-warn/40 p-4">
@@ -522,6 +553,8 @@ function Schedule() {
           </section>
         )}
       </div>
+      </>
+      )}
     </div>
   );
 }

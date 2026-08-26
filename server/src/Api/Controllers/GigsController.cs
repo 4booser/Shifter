@@ -24,8 +24,9 @@ public class GigsController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> Board(
         [FromQuery] DateOnly from, [FromQuery] DateOnly to,
-        [FromQuery] string? category, [FromQuery] string? city, CancellationToken ct)
-        => Ok(await _gigs.BoardAsync(UserId(), from, to, category, city, ct));
+        [FromQuery] string? category, [FromQuery] string? city,
+        [FromQuery] string? employment, CancellationToken ct)
+        => Ok(await _gigs.BoardAsync(UserId(), from, to, category, city, employment, ct));
 
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] GigSaveDto request, CancellationToken ct)

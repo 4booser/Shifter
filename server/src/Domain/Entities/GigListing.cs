@@ -25,6 +25,24 @@ public enum GigCategory
     Courier = 15,
     Catering = 16,
     FloorManager = 17,
+    Managing = 18,
+    Chef = 19,
+    SousChef = 20,
+    ShiftLead = 21,
+    Sommelier = 22,
+    Busser = 23,
+    CookUniversal = 24,
+    Grill = 25,
+    Wok = 26,
+    Cleaner = 27,
+    Storekeeper = 28,
+}
+
+/// <summary>One night's cover, or a seat on the roster.</summary>
+public enum GigEmployment
+{
+    Freelance = 0,
+    Permanent = 1,
 }
 
 public enum GigStatus
@@ -44,6 +62,11 @@ public enum GigStatus
 public sealed class GigListing
 {
     public const int TitleMax = 80;
+    public const int ScheduleMax = 80;
+    public const int MinPhotos = 3;
+    public const int MaxPhotos = 6;
+    /// <summary>Base64 budget per photo — a client-side 900px JPEG fits well under it.</summary>
+    public const int PhotoBudget = 220_000;
     public const int VenueMax = 60;
     public const int CityMax = 40;
     public const int DetailsMax = 600;
@@ -58,6 +81,19 @@ public sealed class GigListing
     public required string Venue { get; set; }
 
     public GigCategory Category { get; set; }
+
+    public GigEmployment Employment { get; set; } = GigEmployment.Freelance;
+
+    /// <summary>
+    /// The venue, seen: at least three photos, JSON array of small JPEG data
+    /// URLs the client already shrank. A listing without a face is exactly
+    /// the listing people scroll past — and the board is worth looking at
+    /// only when every card can be looked at.
+    /// </summary>
+    public string PhotosJson { get; set; } = "[]";
+
+    /// <summary>Permanent roles: the rhythm in the venue's words — "2/2", "5/2 с 10:00".</summary>
+    public string? Schedule { get; set; }
 
     /// <summary>What the board calls it: "Бармен на закрытие", "Пицца-смена".</summary>
     public required string Title { get; set; }

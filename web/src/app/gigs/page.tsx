@@ -3,9 +3,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { apiErrorMessage } from '@/lib/api/http';
-import { Gig, GigReply, GigSave, GIG_CATEGORIES, categoryOf, gigApi } from '@/lib/api/gigs';
+import { Gig, GigEmployment, GigReply, GigSave, GIG_CATEGORIES, GIG_GROUPS, categoryOf, gigApi, shrinkPhoto } from '@/lib/api/gigs';
 import { accountApi } from '@/lib/api/auth';
-import { keysBetween, monthBounds, todayKey, weekBounds } from '@/lib/calendar/calendar-date';
+import { fromKey, keysBetween, monthBounds, todayKey, weekBounds } from '@/lib/calendar/calendar-date';
 import { useI18n } from '@/lib/i18n';
 import { useMoney } from '@/lib/settings/money';
 import { pushToast } from '@/lib/toast';
@@ -18,6 +18,7 @@ import { Segmented } from '@/components/ui/bits';
 
 type Span = 'week' | 'month' | 'year';
 type View = 'board' | 'mine' | 'replies';
+type Look = 'list' | 'calendar';
 
 export default function GigsPage() {
   return (
@@ -38,6 +39,9 @@ function Gigs() {
   const { format } = useMoney();
 
   const [view, setView] = useState<View>('board');
+  const [employment, setEmployment] = useState<GigEmployment>('freelance');
+  const [look, setLook] = useState<Look>('list');
+  const [focusDay, setFocusDay] = useState<string | null>(null);
   const [span, setSpan] = useState<Span>('month');
   const [anchor, setAnchor] = useState(todayKey());
   const [category, setCategory] = useState<string | null>(null);
@@ -60,12 +64,12 @@ function Gigs() {
 
   const refresh = useCallback(() => {
     void gigApi
-      .board(range.from, range.to, category, city)
+      .board(range.from, range.to, category, city, employment)
       .then(setBoard)
       .catch((caught) => setError(apiErrorMessage(caught)));
     void gigApi.mine().then(setMine).catch(() => setMine([]));
     void gigApi.myReplies().then(setReplies).catch(() => setReplies([]));
-  }, [range, category, city]);
+  }, [range, category, city, employment]);
 
   useEffect(refresh, [refresh]);
 
@@ -104,6 +108,9 @@ function Gigs() {
     id: null,
     venue: '',
     category: 'bartender',
+    employment,
+    photos: [],
+    schedule: null,
     title: '',
     details: null,
     date: todayKey(),
@@ -131,6 +138,30 @@ function Gigs() {
         <span className="ml-auto flex flex-wrap items-center gap-1.5">
           {view === 'board' && (
             <>
+              <Segmented
+                value={employment}
+                options={[
+                  { value: 'freelance', label: t('Freelance') },
+                  { value: 'permanent', label: t('Full-time') },
+                ]}
+                onChange={(value) => {
+                  setEmployment(value);
+                  if (value === 'permanent') setLook('list');
+                }}
+              />
+              {employment === 'freelance' && (
+                <Segmented
+                  value={look}
+                  options={[
+                    { value: 'list', label: t('List') },
+                    { value: 'calendar', label: t('Calendar') },
+                  ]}
+                  onChange={(value) => {
+                    setLook(value);
+                    if (value === 'calendar') setSpan('month');
+                  }}
+                />
+              )}
               <Segmented
                 value={span}
                 options={[
@@ -160,33 +191,54 @@ function Gigs() {
 
       {view === 'board' && (
         <>
-          <div className="flex flex-wrap items-center gap-1.5">
-            <button
-              type="button"
-              className={`chip ${category === null ? 'border-(--accent) bg-(--accent-soft) text-(--accent)' : ''}`}
-              onClick={() => setCategory(null)}
-            >
-              {t('All trades')}
-            </button>
-            {GIG_CATEGORIES.map((entry) => (
+          <div className="flex flex-col gap-1.5">
+            <div className="flex flex-wrap items-center gap-1.5">
               <button
-                key={entry.id}
                 type="button"
-                className={`chip ${category === entry.id ? 'border-(--accent) bg-(--accent-soft) text-(--accent)' : ''}`}
-                onClick={() => setCategory(category === entry.id ? null : entry.id)}
+                className={`chip ${category === null ? 'border-(--accent) bg-(--accent-soft) text-(--accent)' : ''}`}
+                onClick={() => setCategory(null)}
               >
-                {entry.emoji} {t(entry.label)}
+                {t('All trades')}
               </button>
+              <input
+                className="field-input ml-auto !w-36 !py-1 text-[0.85rem]"
+                placeholder={t('City')}
+                value={city}
+                onChange={(event) => setCity(event.target.value)}
+              />
+            </div>
+            {GIG_GROUPS.map((group) => (
+              <div key={group} className="flex flex-wrap items-center gap-1.5">
+                <span className="w-24 flex-none text-[0.68rem] font-semibold uppercase tracking-wide text-faint">
+                  {t(group)}
+                </span>
+                {GIG_CATEGORIES.filter((entry) => entry.group === group).map((entry) => (
+                  <button
+                    key={entry.id}
+                    type="button"
+                    className={`chip ${category === entry.id ? 'border-(--accent) bg-(--accent-soft) text-(--accent)' : ''}`}
+                    onClick={() => setCategory(category === entry.id ? null : entry.id)}
+                  >
+                    {entry.emoji} {t(entry.label)}
+                  </button>
+                ))}
+              </div>
             ))}
-            <input
-              className="field-input ml-auto !w-36 !py-1 text-[0.85rem]"
-              placeholder={t('City')}
-              value={city}
-              onChange={(event) => setCity(event.target.value)}
-            />
           </div>
 
-          {byDate.length === 0 ? (
+          {look === 'calendar' && employment === 'freelance' ? (
+            <GigCalendar
+              from={range.from}
+              to={range.to}
+              gigs={board}
+              focusDay={focusDay}
+              onFocus={setFocusDay}
+              onRespond={setResponding}
+              onWithdraw={(gig) => {
+                void gigApi.withdraw(gig.id).then(refresh).catch((caught) => setError(apiErrorMessage(caught)));
+              }}
+            />
+          ) : byDate.length === 0 ? (
             <div className="card reveal p-8 text-center">
               <p className="mb-1 text-[1.05rem] font-bold">{t('Quiet out there')}</p>
               <p className="field-hint">{t('No gigs in this window yet. Post one — or widen the range.')}</p>
@@ -213,7 +265,7 @@ function Gigs() {
       {view === 'mine' && (
         <MyListings
           rows={mine}
-          onEdit={(gig) => setEditing({ id: gig.id, venue: gig.venue, category: gig.category, title: gig.title, details: gig.details, date: gig.date, start: gig.start, end: gig.end, pay_amount: gig.pay_amount, pay_period: gig.pay_period, city: gig.city, slots: gig.slots })}
+          onEdit={(gig) => setEditing({ id: gig.id, venue: gig.venue, category: gig.category, employment: gig.employment, photos: gig.photos, schedule: gig.schedule, title: gig.title, details: gig.details, date: gig.date, start: gig.start, end: gig.end, pay_amount: gig.pay_amount, pay_period: gig.pay_period, city: gig.city, slots: gig.slots })}
           onChanged={refresh}
           onError={setError}
         />
@@ -259,20 +311,161 @@ function Gigs() {
   );
 }
 
+/** What one gig is worth for the day: hourly pay priced over its slot. */
+function gigWorth(gig: Gig): number {
+  if (gig.pay_period !== 'hour') return gig.pay_amount;
+
+  const minutes = (time: string) => Number(time.slice(0, 2)) * 60 + Number(time.slice(3, 5));
+  let span = minutes(gig.end) - minutes(gig.start);
+
+  if (span <= 0) span += 24 * 60;
+
+  return (span / 60) * gig.pay_amount;
+}
+
+/**
+ * The board as a month: each day says how many covers it needs and what
+ * they add up to. A tap opens the day's cards right under the grid — the
+ * same mental model as the person's own calendar, money in the cells.
+ */
+function GigCalendar({
+  from,
+  to,
+  gigs,
+  focusDay,
+  onFocus,
+  onRespond,
+  onWithdraw,
+}: {
+  from: string;
+  to: string;
+  gigs: Gig[];
+  focusDay: string | null;
+  onFocus: (day: string | null) => void;
+  onRespond: (gig: Gig) => void;
+  onWithdraw: (gig: Gig) => void;
+}) {
+  const { t, lang, n } = useI18n();
+  const { format } = useMoney();
+
+  const keys = keysBetween(from, to);
+  const byDay = new Map<string, Gig[]>();
+
+  for (const gig of gigs) {
+    const list = byDay.get(gig.date) ?? [];
+
+    list.push(gig);
+    byDay.set(gig.date, list);
+  }
+
+  const offset = (fromKey(keys[0]).getDay() + 6) % 7;
+  const cells: (string | null)[] = [...new Array<null>(offset).fill(null), ...keys];
+  const today = todayKey();
+  const weekdays = Array.from({ length: 7 }, (_, day) =>
+    new Intl.DateTimeFormat(lang, { weekday: 'short' }).format(new Date(2024, 0, day + 1)),
+  );
+  const focused = focusDay !== null ? byDay.get(focusDay) ?? [] : [];
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="card reveal p-3">
+        <div className="grid grid-cols-7 gap-1">
+          {weekdays.map((name) => (
+            <span key={name} className="pb-0.5 text-center text-[0.62rem] font-semibold uppercase tracking-wide text-faint">
+              {name}
+            </span>
+          ))}
+          {cells.map((key, index) => {
+            if (key === null) return <span key={`pad-${index}`} />;
+
+            const dayGigs = byDay.get(key) ?? [];
+            const worth = dayGigs.reduce((sum, gig) => sum + gigWorth(gig), 0);
+            const active = focusDay === key;
+
+            return (
+              <button
+                type="button"
+                key={key}
+                disabled={dayGigs.length === 0}
+                className={`relative min-h-16 rounded-(--radius) border p-1 text-left transition-transform ${
+                  dayGigs.length > 0
+                    ? `bg-(--accent-soft) hover:scale-[1.04] ${active ? 'border-(--accent) ring-1 ring-(--accent)' : 'border-transparent'}`
+                    : 'border-transparent bg-surface-2/50'
+                } ${key === today ? 'outline outline-1 outline-(--accent)/40' : ''}`}
+                onClick={() => onFocus(active ? null : key)}
+              >
+                <span className={`absolute left-1.5 top-1 text-[0.64rem] font-semibold tabular ${dayGigs.length > 0 ? 'text-ink/70' : 'text-faint'}`}>
+                  {Number(key.slice(8))}
+                </span>
+                {dayGigs.length > 0 && (
+                  <span className="mt-3.5 block px-0.5">
+                    <span className="block text-[1.02rem] font-bold leading-tight tabular">{dayGigs.length}</span>
+                    <span className="block truncate text-[0.66rem] font-semibold text-good tabular">
+                      {format(Math.round(worth))}
+                    </span>
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+        <p className="field-hint mt-2">
+          {focusDay === null
+            ? t('A day shows how many covers it needs and what they pay together. Tap one.')
+            : `${new Intl.DateTimeFormat(lang, { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date(`${focusDay}T00:00:00`))} · ${n(focused.length, 'shifts')}`}
+        </p>
+      </div>
+
+      {focusDay !== null && (
+        <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+          {focused.map((gig) => (
+            <GigCard key={gig.id} gig={gig} onRespond={() => onRespond(gig)} onWithdraw={() => onWithdraw(gig)} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function payLine(format: (v: number) => string, t: (k: string) => string, gig: Gig) {
-  return `${format(gig.pay_amount)} ${gig.pay_period === 'hour' ? t('per hour') : t('per shift')}`;
+  const period =
+    gig.pay_period === 'hour' ? t('per hour') : gig.pay_period === 'month' ? t('per month') : t('per shift');
+
+  return `${format(gig.pay_amount)} ${period}`;
 }
 
 function GigCard({ gig, onRespond, onWithdraw }: { gig: Gig; onRespond: () => void; onWithdraw: () => void }) {
   const { t } = useI18n();
   const { format } = useMoney();
   const trade = categoryOf(gig.category);
-  const past = gig.date < todayKey();
+  const past = gig.employment === 'freelance' && gig.date < todayKey();
   const dimmed = gig.status !== 'open' || past;
 
+  const [photo, setPhoto] = useState(0);
+
   return (
-    <article className={`card lift relative flex flex-col gap-1.5 p-3 ${dimmed ? 'opacity-60' : ''}`}>
-      <header className="flex items-start justify-between gap-2">
+    <article className={`card lift relative flex flex-col gap-1.5 overflow-hidden p-3 ${dimmed ? 'opacity-60' : ''}`}>
+      {gig.photos.length > 0 && (
+        <button
+          type="button"
+          className="relative -m-3 mb-0 block h-32 overflow-hidden"
+          onClick={() => setPhoto((current) => (current + 1) % gig.photos.length)}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={gig.photos[photo]} alt="" className="h-full w-full object-cover" />
+          {gig.photos.length > 1 && (
+            <span className="absolute bottom-1.5 right-2 flex items-center gap-1">
+              {gig.photos.map((_, index) => (
+                <span
+                  key={index}
+                  className={`h-1.5 rounded-full transition-all ${index === photo ? 'w-4 bg-white' : 'w-1.5 bg-white/60'}`}
+                />
+              ))}
+            </span>
+          )}
+        </button>
+      )}
+      <header className="mt-2 flex items-start justify-between gap-2">
         <span className="flex min-w-0 items-center gap-1.5">
           <span className="text-[1.2rem]">{trade.emoji}</span>
           <span className="min-w-0">
@@ -283,7 +476,9 @@ function GigCard({ gig, onRespond, onWithdraw }: { gig: Gig; onRespond: () => vo
         <b className="whitespace-nowrap text-[0.95rem] tabular text-(--accent)">{payLine(format, t, gig)}</b>
       </header>
       <p className="text-[0.85rem] tabular text-muted">
-        {gig.start}–{gig.end}
+        {gig.employment === 'permanent'
+          ? `${gig.schedule ?? `${gig.start}–${gig.end}`} · ${t('from')} ${gig.date.slice(8)}.${gig.date.slice(5, 7)}`
+          : `${gig.start}–${gig.end}`}
         {gig.slots > 1 && <span> · {gig.slots} {t('people needed')}</span>}
         {gig.responses > 0 && <span> · {gig.responses} 🙋</span>}
       </p>
@@ -474,6 +669,7 @@ function EditModal({
   const { t } = useI18n();
   const [form, setForm] = useState(draft);
   const [busy, setBusy] = useState(false);
+  const [shrinking, setShrinking] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const set = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) =>
@@ -484,7 +680,12 @@ function EditModal({
     setError(null);
 
     try {
-      const body: GigSave = { ...form, details: form.details?.trim() === '' ? null : form.details };
+      const body: GigSave = {
+        ...form,
+        details: form.details?.trim() === '' ? null : form.details,
+        schedule: form.employment === 'permanent' ? (form.schedule?.trim() === '' ? null : form.schedule) : null,
+        pay_period: form.employment === 'freelance' && form.pay_period === 'month' ? 'shift' : form.pay_period,
+      };
 
       if (form.id === null) await gigApi.create(body);
       else await gigApi.update(form.id, body);
@@ -500,6 +701,16 @@ function EditModal({
     <Modal open title={form.id === null ? t('Post a gig') : t('Edit the gig')} onClose={onClose}>
       <div className="flex flex-col gap-2.5">
         {error !== null && <Alert onDismiss={() => setError(null)}>{error}</Alert>}
+
+        <Segmented
+          value={form.employment}
+          options={[
+            { value: 'freelance' as const, label: t('One-off shift') },
+            { value: 'permanent' as const, label: t('Full-time role') },
+          ]}
+          onChange={(value) => set('employment', value)}
+        />
+
         <div className="grid grid-cols-2 gap-2">
           <label>
             <span className="field-label">{t('Venue')}</span>
@@ -510,6 +721,53 @@ function EditModal({
             <input className="field-input w-full" maxLength={40} placeholder={t('Kyiv')} value={form.city} onChange={(event) => set('city', event.target.value)} />
           </label>
         </div>
+        <div>
+          <span className="field-label">
+            {t('Photos of the venue')} · {form.photos.length}/3+
+          </span>
+          <div className="mt-1 flex flex-wrap items-center gap-2">
+            {form.photos.map((photo, index) => (
+              <span key={index} className="relative">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={photo} alt="" className="h-16 w-16 rounded-(--radius) object-cover" />
+                <button
+                  type="button"
+                  aria-label={t('Remove')}
+                  className="absolute -right-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-full bg-danger text-[0.7rem] text-white"
+                  onClick={() => set('photos', form.photos.filter((_, i) => i !== index))}
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+            {form.photos.length < 6 && (
+              <label className="grid h-16 w-16 cursor-pointer place-items-center rounded-(--radius) border border-dashed border-border-strong text-[1.3rem] text-faint hover:border-(--accent) hover:text-(--accent)">
+                {shrinking ? '…' : '+'}
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="hidden"
+                  onChange={(event) => {
+                    const files = [...(event.target.files ?? [])].slice(0, 6 - form.photos.length);
+
+                    event.target.value = '';
+
+                    if (files.length === 0) return;
+
+                    setShrinking(true);
+                    void Promise.all(files.map(shrinkPhoto))
+                      .then((shrunk) => setForm((current) => ({ ...current, photos: [...current.photos, ...shrunk] })))
+                      .catch(() => setError(t('Could not read a photo.')))
+                      .finally(() => setShrinking(false));
+                  }}
+                />
+              </label>
+            )}
+          </div>
+          <p className="field-hint mt-1">{t('At least three — people answer the venues they can see. Shrunk in the browser.')}</p>
+        </div>
+
         <label>
           <span className="field-label">{t('Trade')}</span>
           <select className="field-input w-full" value={form.category} onChange={(event) => set('category', event.target.value as typeof form.category)}>
@@ -526,9 +784,21 @@ function EditModal({
           <span className="field-label">{t('Details')}</span>
           <textarea className="field-input min-h-14 w-full" maxLength={600} placeholder={t('Classics plus shots, own till, tips are yours')} value={form.details ?? ''} onChange={(event) => set('details', event.target.value)} />
         </label>
+        {form.employment === 'permanent' && (
+          <label>
+            <span className="field-label">{t('Schedule, in your words')}</span>
+            <input
+              className="field-input w-full"
+              maxLength={80}
+              placeholder={t('2/2 from 10:00, pay twice a month')}
+              value={form.schedule ?? ''}
+              onChange={(event) => set('schedule', event.target.value)}
+            />
+          </label>
+        )}
         <div className="grid grid-cols-3 gap-2">
           <label>
-            <span className="field-label">{t('Date')}</span>
+            <span className="field-label">{form.employment === 'permanent' ? t('Starting') : t('Date')}</span>
             <input type="date" className="field-input w-full" value={form.date} min={todayKey()} onChange={(event) => set('date', event.target.value)} />
           </label>
           <label>
@@ -547,9 +817,10 @@ function EditModal({
           </label>
           <label>
             <span className="field-label">{t('Per')}</span>
-            <select className="field-input w-full" value={form.pay_period} onChange={(event) => set('pay_period', event.target.value as 'hour' | 'shift')}>
+            <select className="field-input w-full" value={form.pay_period} onChange={(event) => set('pay_period', event.target.value as 'hour' | 'shift' | 'month')}>
               <option value="hour">{t('hour')}</option>
               <option value="shift">{t('shift')}</option>
+              {form.employment === 'permanent' && <option value="month">{t('month')}</option>}
             </select>
           </label>
           <label>
@@ -560,7 +831,7 @@ function EditModal({
         <button
           type="button"
           className="btn btn-primary w-full"
-          disabled={busy || form.title.trim() === '' || form.venue.trim() === '' || form.city.trim() === '' || form.pay_amount <= 0}
+          disabled={busy || shrinking || form.photos.length < 3 || form.title.trim() === '' || form.venue.trim() === '' || form.city.trim() === '' || form.pay_amount <= 0}
           onClick={() => void save()}
         >
           {form.id === null ? t('Publish on the board') : t('Save')}

@@ -28,6 +28,17 @@ public static class GigRules
             [GigCategory.Courier] = "courier",
             [GigCategory.Catering] = "catering",
             [GigCategory.FloorManager] = "floor-manager",
+            [GigCategory.Managing] = "managing",
+            [GigCategory.Chef] = "chef",
+            [GigCategory.SousChef] = "sous-chef",
+            [GigCategory.ShiftLead] = "shift-lead",
+            [GigCategory.Sommelier] = "sommelier",
+            [GigCategory.Busser] = "busser",
+            [GigCategory.CookUniversal] = "cook-universal",
+            [GigCategory.Grill] = "grill",
+            [GigCategory.Wok] = "wok",
+            [GigCategory.Cleaner] = "cleaner",
+            [GigCategory.Storekeeper] = "storekeeper",
         };
 
     public static GigCategory ParseCategory(string? value)
@@ -63,8 +74,43 @@ public static class GigRules
     {
         "hour" => "hour",
         "shift" => "shift",
-        _ => throw new ValidationException("pay_period must be hour or shift."),
+        "month" => "month",
+        _ => throw new ValidationException("pay_period must be hour, shift or month."),
     };
+
+    public static GigEmployment ParseEmployment(string? value) => value?.Trim().ToLowerInvariant() switch
+    {
+        null or "" or "freelance" => GigEmployment.Freelance,
+        "permanent" => GigEmployment.Permanent,
+        _ => throw new ValidationException("employment must be freelance or permanent."),
+    };
+
+    /// <summary>
+    /// Three to six small JPEG data URLs, serialised for the row. The floor
+    /// is the rule that gives the board its face: nobody answers a listing
+    /// they cannot look at.
+    /// </summary>
+    public static string CleanPhotos(string[]? photos)
+    {
+        var list = (photos ?? []).Where(entry => !string.IsNullOrWhiteSpace(entry)).ToArray();
+
+        if (list.Length < GigListing.MinPhotos)
+            throw new ValidationException($"At least {GigListing.MinPhotos} photos of the venue.");
+
+        if (list.Length > GigListing.MaxPhotos)
+            throw new ValidationException($"At most {GigListing.MaxPhotos} photos.");
+
+        foreach (var photo in list)
+        {
+            if (!photo.StartsWith("data:image/jpeg;base64,", StringComparison.Ordinal))
+                throw new ValidationException("Photos are JPEG data URLs shrunk by the client.");
+
+            if (photo.Length > GigListing.PhotoBudget)
+                throw new ValidationException("A photo is too heavy — the client should have shrunk it.");
+        }
+
+        return System.Text.Json.JsonSerializer.Serialize(list);
+    }
 
     public static (TimeOnly Start, TimeOnly End) ParseSlot(string? start, string? end)
     {

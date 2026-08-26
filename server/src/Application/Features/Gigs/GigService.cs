@@ -25,7 +25,7 @@ public sealed class GigService
     }
 
     public async Task<GigDto[]> BoardAsync(
-        int userId, DateOnly from, DateOnly to, string? category, string? city, CancellationToken ct)
+        int userId, DateOnly from, DateOnly to, string? category, string? city, string? employment, CancellationToken ct)
     {
         if (to < from) (from, to) = (to, from);
         if (to.DayNumber - from.DayNumber > 400)
@@ -34,7 +34,15 @@ public sealed class GigService
         var query = _db.GigListings
             .AsNoTracking()
             .Include(gig => gig.Responses)
-            .Where(gig => gig.Date >= from && gig.Date <= to && gig.Status != GigStatus.Closed);
+            .Where(gig => gig.Status != GigStatus.Closed);
+
+        var wanted = GigRules.ParseEmployment(employment);
+
+        // A permanent seat is not pinned to one evening: its Date is merely
+        // "from when", so the date window applies to freelance covers only.
+        query = wanted == GigEmployment.Permanent
+            ? query.Where(gig => gig.Employment == GigEmployment.Permanent)
+            : query.Where(gig => gig.Employment == GigEmployment.Freelance && gig.Date >= from && gig.Date <= to);
 
         if (!string.IsNullOrWhiteSpace(category))
         {
@@ -65,6 +73,12 @@ public sealed class GigService
         var details = GigRules.CleanOptional(request.details, GigListing.DetailsMax, "Details");
         var category = GigRules.ParseCategory(request.category);
         var period = GigRules.ParsePayPeriod(request.pay_period);
+        var employment = GigRules.ParseEmployment(request.employment);
+        var photosJson = GigRules.CleanPhotos(request.photos);
+        var schedule = GigRules.CleanOptional(request.schedule, GigListing.ScheduleMax, "Schedule");
+
+        if (employment == GigEmployment.Freelance && period == "month")
+            throw new ValidationException("A one-off shift cannot pay by the month.");
         var (start, end) = GigRules.ParseSlot(request.start, request.end);
 
         if (!DateOnly.TryParseExact(request.date, "yyyy-MM-dd", out var date))
@@ -106,6 +120,9 @@ public sealed class GigService
         gig.EndTime = end;
         gig.PayAmount = request.pay_amount;
         gig.PayPeriod = period;
+        gig.Employment = employment;
+        gig.PhotosJson = photosJson;
+        gig.Schedule = schedule;
         gig.City = city;
         gig.Slots = request.slots;
 
@@ -291,10 +308,24 @@ public sealed class GigService
     {
         var mine = (gig.Responses ?? []).FirstOrDefault(reply => reply.UserId == userId);
 
+        string[] photos;
+
+        try
+        {
+            photos = System.Text.Json.JsonSerializer.Deserialize<string[]>(gig.PhotosJson) ?? [];
+        }
+        catch
+        {
+            photos = [];
+        }
+
         return new GigDto(
             gig.Id,
             gig.Venue,
             GigRules.CategoryNames[gig.Category],
+            gig.Employment == GigEmployment.Permanent ? "permanent" : "freelance",
+            photos,
+            gig.Schedule,
             gig.Title,
             gig.Details,
             gig.Date.ToString("yyyy-MM-dd"),

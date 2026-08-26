@@ -35,7 +35,7 @@ public class GigRulesTests
 
     [Fact]
     public void Pay_period_refuses_anything_else()
-        => Assert.Throws<ValidationException>(() => GigRules.ParsePayPeriod("month"));
+        => Assert.Throws<ValidationException>(() => GigRules.ParsePayPeriod("year"));
 
     [Fact]
     public void A_slot_keeps_its_edges_and_refuses_a_zero_minute_gig()
@@ -59,4 +59,52 @@ public class GigRulesTests
         Assert.Null(phone);
         Assert.Equal("@vania", telegram);
     }
+
+    [Theory]
+    [InlineData("chef", GigCategory.Chef)]
+    [InlineData("sous-chef", GigCategory.SousChef)]
+    [InlineData("busser", GigCategory.Busser)]
+    [InlineData("storekeeper", GigCategory.Storekeeper)]
+    public void The_widened_taxonomy_parses_too(string wire, GigCategory expected)
+        => Assert.Equal(expected, GigRules.ParseCategory(wire));
+
+    [Fact]
+    public void Employment_defaults_to_freelance_and_reads_both_words()
+    {
+        Assert.Equal(GigEmployment.Freelance, GigRules.ParseEmployment(null));
+        Assert.Equal(GigEmployment.Freelance, GigRules.ParseEmployment("freelance"));
+        Assert.Equal(GigEmployment.Permanent, GigRules.ParseEmployment("Permanent"));
+        Assert.Throws<ValidationException>(() => GigRules.ParseEmployment("intern"));
+    }
+
+    [Fact]
+    public void Month_pay_joins_the_vocabulary()
+        => Assert.Equal("month", GigRules.ParsePayPeriod("month"));
+
+    private static string Photo(int size = 100)
+        => "data:image/jpeg;base64," + new string('A', size);
+
+    [Fact]
+    public void Fewer_than_three_photos_is_no_listing()
+        => Assert.Throws<ValidationException>(() => GigRules.CleanPhotos([Photo(), Photo()]));
+
+    [Fact]
+    public void Three_good_photos_serialise()
+    {
+        var json = GigRules.CleanPhotos([Photo(), Photo(), Photo()]);
+
+        Assert.StartsWith("[", json);
+        Assert.Contains("data:image/jpeg;base64,", json);
+    }
+
+    [Fact]
+    public void A_png_or_an_oversized_photo_is_refused()
+    {
+        var png = "data:image/png;base64," + new string('A', 100);
+
+        Assert.Throws<ValidationException>(() => GigRules.CleanPhotos([png, Photo(), Photo()]));
+        Assert.Throws<ValidationException>(
+            () => GigRules.CleanPhotos([Photo(300_000), Photo(), Photo()]));
+    }
 }
+

@@ -3,22 +3,29 @@
 import { api } from './http';
 
 export type GigCategory =
-  | 'bartender' | 'barback' | 'barista'
-  | 'waiter' | 'runner' | 'host' | 'cashier'
-  | 'cook-hot' | 'cook-cold' | 'prep' | 'pizzaiolo' | 'sushi' | 'pastry' | 'baker'
-  | 'dishwasher' | 'courier' | 'catering' | 'floor-manager';
+  | 'managing' | 'floor-manager' | 'chef' | 'sous-chef' | 'shift-lead'
+  | 'bartender' | 'barback' | 'barista' | 'sommelier'
+  | 'waiter' | 'runner' | 'host' | 'cashier' | 'busser'
+  | 'cook-hot' | 'cook-cold' | 'cook-universal' | 'prep' | 'grill' | 'wok'
+  | 'pizzaiolo' | 'sushi' | 'pastry' | 'baker'
+  | 'dishwasher' | 'cleaner' | 'storekeeper' | 'courier' | 'catering';
+
+export type GigEmployment = 'freelance' | 'permanent';
 
 export interface Gig {
   id: number;
   venue: string;
   category: GigCategory;
+  employment: GigEmployment;
+  photos: string[];
+  schedule: string | null;
   title: string;
   details: string | null;
   date: string;
   start: string;
   end: string;
   pay_amount: number;
-  pay_period: 'hour' | 'shift';
+  pay_period: 'hour' | 'shift' | 'month';
   city: string;
   slots: number;
   status: 'open' | 'filled' | 'closed';
@@ -30,13 +37,16 @@ export interface Gig {
 export interface GigSave {
   venue: string;
   category: GigCategory;
+  employment: GigEmployment;
+  photos: string[];
+  schedule: string | null;
   title: string;
   details: string | null;
   date: string;
   start: string;
   end: string;
   pay_amount: number;
-  pay_period: 'hour' | 'shift';
+  pay_period: 'hour' | 'shift' | 'month';
   city: string;
   slots: number;
 }
@@ -57,10 +67,11 @@ export interface GigReply {
 const GIGS = '/shifter/v1/gigs';
 
 export const gigApi = {
-  board: (from: string, to: string, category: string | null, city: string) => {
+  board: (from: string, to: string, category: string | null, city: string, employment: GigEmployment) => {
     const filters =
       (category !== null ? `&category=${category}` : '')
-      + (city.trim() !== '' ? `&city=${encodeURIComponent(city.trim())}` : '');
+      + (city.trim() !== '' ? `&city=${encodeURIComponent(city.trim())}` : '')
+      + `&employment=${employment}`;
 
     return api<Gig[]>(`${GIGS}?from=${from}&to=${to}${filters}`);
   },
@@ -77,27 +88,85 @@ export const gigApi = {
     api<GigReply>(`${GIGS}/${id}/replies/${replyId}/accept`, { body: {} }),
 };
 
-/** The board's vocabulary: what each trade looks and reads like. */
+/**
+ * The whole trade, grouped the way a venue's org chart reads. Order inside a
+ * group runs senior to junior; the filter bar renders group by group.
+ */
 export const GIG_CATEGORIES: { id: GigCategory; emoji: string; label: string; group: string }[] = [
+  { id: 'managing', emoji: '🎩', label: 'General manager', group: 'Management' },
+  { id: 'floor-manager', emoji: '📋', label: 'Floor manager', group: 'Management' },
+  { id: 'chef', emoji: '👨‍🍳', label: 'Head chef', group: 'Management' },
+  { id: 'sous-chef', emoji: '🥇', label: 'Sous chef', group: 'Management' },
+  { id: 'shift-lead', emoji: '⭐', label: 'Shift lead', group: 'Management' },
   { id: 'bartender', emoji: '🍸', label: 'Bartender', group: 'Bar' },
   { id: 'barback', emoji: '🧊', label: 'Barback', group: 'Bar' },
   { id: 'barista', emoji: '☕', label: 'Barista', group: 'Bar' },
+  { id: 'sommelier', emoji: '🍷', label: 'Sommelier', group: 'Bar' },
   { id: 'waiter', emoji: '🍽️', label: 'Waiter', group: 'Floor' },
   { id: 'runner', emoji: '🏃', label: 'Runner', group: 'Floor' },
   { id: 'host', emoji: '💁', label: 'Host', group: 'Floor' },
   { id: 'cashier', emoji: '💳', label: 'Cashier', group: 'Floor' },
+  { id: 'busser', emoji: '🧹', label: 'Busser', group: 'Floor' },
   { id: 'cook-hot', emoji: '🔥', label: 'Hot line cook', group: 'Kitchen' },
   { id: 'cook-cold', emoji: '🥗', label: 'Cold side cook', group: 'Kitchen' },
+  { id: 'cook-universal', emoji: '🍳', label: 'Line cook, all stations', group: 'Kitchen' },
   { id: 'prep', emoji: '🔪', label: 'Prep cook', group: 'Kitchen' },
+  { id: 'grill', emoji: '🍖', label: 'Grill cook', group: 'Kitchen' },
+  { id: 'wok', emoji: '🥡', label: 'Wok cook', group: 'Kitchen' },
   { id: 'pizzaiolo', emoji: '🍕', label: 'Pizzaiolo', group: 'Kitchen' },
   { id: 'sushi', emoji: '🍣', label: 'Sushi chef', group: 'Kitchen' },
-  { id: 'pastry', emoji: '🍰', label: 'Pastry chef', group: 'Kitchen' },
-  { id: 'baker', emoji: '🥐', label: 'Baker', group: 'Kitchen' },
-  { id: 'dishwasher', emoji: '🫧', label: 'Dishwasher', group: 'Back' },
-  { id: 'courier', emoji: '🛵', label: 'Courier', group: 'Back' },
+  { id: 'pastry', emoji: '🍰', label: 'Pastry chef', group: 'Bakery' },
+  { id: 'baker', emoji: '🥐', label: 'Baker', group: 'Bakery' },
+  { id: 'dishwasher', emoji: '🫧', label: 'Dishwasher', group: 'Back of house' },
+  { id: 'cleaner', emoji: '🧼', label: 'Cleaner', group: 'Back of house' },
+  { id: 'storekeeper', emoji: '📦', label: 'Storekeeper', group: 'Back of house' },
+  { id: 'courier', emoji: '🛵', label: 'Courier', group: 'Delivery' },
   { id: 'catering', emoji: '🥂', label: 'Catering crew', group: 'Events' },
-  { id: 'floor-manager', emoji: '📋', label: 'Floor manager', group: 'Events' },
 ];
+
+export const GIG_GROUPS = ['Management', 'Bar', 'Floor', 'Kitchen', 'Bakery', 'Back of house', 'Delivery', 'Events'];
+
+/** Client-side shrink: centre-fit to 900px, JPEG, stepped down under the wire budget. */
+export function shrinkPhoto(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onerror = () => reject(new Error('read'));
+    reader.onload = () => {
+      const image = new Image();
+
+      image.onerror = () => reject(new Error('decode'));
+      image.onload = () => {
+        const scale = Math.min(1, 900 / Math.max(image.width, image.height));
+        const canvas = document.createElement('canvas');
+
+        canvas.width = Math.round(image.width * scale);
+        canvas.height = Math.round(image.height * scale);
+        const ctx = canvas.getContext('2d');
+
+        if (ctx === null) {
+          reject(new Error('canvas'));
+
+          return;
+        }
+
+        ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+        let quality = 0.8;
+        let url = canvas.toDataURL('image/jpeg', quality);
+
+        while (url.length > 200_000 && quality > 0.35) {
+          quality -= 0.1;
+          url = canvas.toDataURL('image/jpeg', quality);
+        }
+
+        resolve(url);
+      };
+      image.src = String(reader.result);
+    };
+    reader.readAsDataURL(file);
+  });
+}
 
 export const categoryOf = (id: string) =>
   GIG_CATEGORIES.find((entry) => entry.id === id) ?? GIG_CATEGORIES[0];

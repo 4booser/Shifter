@@ -124,6 +124,18 @@ function TeamAdmin() {
                 </button>
                 <button
                   type="button"
+                  className="btn btn-sm"
+                  onClick={() => {
+                    void navigator.clipboard.writeText(`${location.origin}/join?code=${team.invite_code}`);
+                    setCopied(team.id + 1000);
+                    setTimeout(() => setCopied(null), 2000);
+                  }}
+                >
+                  <Icon name={copied === team.id + 1000 ? 'check' : 'swap'} size={13} />
+                  {t(copied === team.id + 1000 ? 'Copied' : 'Copy the invite link')}
+                </button>
+                <button
+                  type="button"
                   className="btn btn-quiet btn-sm"
                   disabled={busy}
                   title={t('A new code locks the old one out')}

@@ -89,6 +89,7 @@ public static class DependencyInjection
         services.AddHttpClient();
         services.AddSingleton<Shifter.Application.Features.Import.PhotoImportService>();
         services.AddSingleton<PushSender>();
+        services.AddScoped<IPushNotifier, PushNotifier>();
         services.AddHostedService<PushScheduler>();
         services.AddSingleton<IHasher, Hasher>();
         services.AddScoped<IAuthTokenIssuer, AuthTokenIssuer>();

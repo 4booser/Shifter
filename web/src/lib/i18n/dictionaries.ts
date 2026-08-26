@@ -5,6 +5,11 @@
 type Dictionary = Record<string, string>;
 
 export const RU: Dictionary = {
+  'You are invited to a crew': 'Вас зовут в команду',
+  'Code': 'Код',
+  'Join the crew': 'Вступить в команду',
+  'Not now': 'Не сейчас',
+  'Copy the invite link': 'Скопировать ссылку-приглашение',
   'Every source in one bar; the cuts hang under it.': 'Все источники в одной полосе; вычеты висят под ней.',
   'When each weekday starts and ends, and what its hour pays.': 'Когда каждый день недели начинается и заканчивается — и сколько платит его час.',
   'Midnight on top; the brighter the hour, the more it brings.': 'Полночь сверху; чем ярче час, тем больше он приносит.',
@@ -1244,6 +1249,11 @@ export const RU: Dictionary = {
 };
 
 export const UK: Dictionary = {
+  'You are invited to a crew': 'Вас кличуть у команду',
+  'Code': 'Код',
+  'Join the crew': 'Вступити в команду',
+  'Not now': 'Не зараз',
+  'Copy the invite link': 'Скопіювати посилання-запрошення',
   'Every source in one bar; the cuts hang under it.': 'Усі джерела в одній смузі; відрахування висять під нею.',
   'When each weekday starts and ends, and what its hour pays.': 'Коли кожен день тижня починається і закінчується — і скільки платить його година.',
   'Midnight on top; the brighter the hour, the more it brings.': 'Північ зверху; що яскравіша година, то більше вона приносить.',

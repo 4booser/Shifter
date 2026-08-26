@@ -1,4 +1,5 @@
 using MediatR;
+using Shifter.Application.Features.Push;
 using Shifter.Application.Common.Exceptions;
 using Shifter.Application.Features.Teams.DTOs;
 using Shifter.Domain.Entities;
@@ -51,8 +52,13 @@ public static class CoverRules
 public class OfferCoverHandler : IRequestHandler<OfferCoverDto, RotaOfferDto>
 {
     private readonly ITeamRepository _teams;
+    private readonly IPushNotifier _push;
 
-    public OfferCoverHandler(ITeamRepository teams) => _teams = teams;
+    public OfferCoverHandler(ITeamRepository teams, IPushNotifier push)
+    {
+        _teams = teams;
+        _push = push;
+    }
 
     public async Task<RotaOfferDto> Handle(OfferCoverDto request, CancellationToken ct)
     {
@@ -92,6 +98,21 @@ public class OfferCoverHandler : IRequestHandler<OfferCoverDto, RotaOfferDto>
 
         await _teams.AddOfferAsync(offer, ct);
 
+        // The owner hears about it wherever they are; accepting stays theirs.
+        var who = caller.DisplayName;
+        var when = $"{offer.Date:dd.MM} · {offer.StartTime:HH\\:mm}–{offer.EndTime:HH\\:mm}";
+
+        await _push.NotifyAsync(
+            shift.OwnerUserId,
+            language => language switch
+            {
+                "ru" => ("Смену готовы забрать", $"{who} берёт «{offer.ShiftName}» {when}. Подтвердите в графике."),
+                "uk" => ("Зміну готові забрати", $"{who} бере «{offer.ShiftName}» {when}. Підтвердьте у графіку."),
+                _ => ("Someone will take your shift", $"{who} offers to take “{offer.ShiftName}” {when}. Confirm on the rota."),
+            },
+            "/schedule",
+            ct);
+
         return CoverRules.ToDto(offer, caller, request.UserId);
     }
 }
@@ -127,7 +148,13 @@ public class AcceptCoverHandler : IRequestHandler<AcceptCoverDto, AcceptedCoverD
 {
     private readonly ITeamRepository _teams;
 
-    public AcceptCoverHandler(ITeamRepository teams) => _teams = teams;
+    private readonly IPushNotifier _push;
+
+    public AcceptCoverHandler(ITeamRepository teams, IPushNotifier push)
+    {
+        _teams = teams;
+        _push = push;
+    }
 
     public async Task<AcceptedCoverDto> Handle(AcceptCoverDto request, CancellationToken ct)
     {
@@ -157,6 +184,21 @@ public class AcceptCoverHandler : IRequestHandler<AcceptCoverDto, AcceptedCoverD
         }
 
         await _teams.AcceptOfferAsync(offer, ct);
+
+        // The taker's half of the handshake: the shift is theirs to place,
+        // at their own rate, which is why it cannot be written for them.
+        var handedWhen = $"{offer.Date:dd.MM} · {offer.StartTime:HH\\:mm}–{offer.EndTime:HH\\:mm}";
+
+        await _push.NotifyAsync(
+            offer.ClaimantUserId,
+            language => language switch
+            {
+                "ru" => ("Смена ваша", $"«{offer.ShiftName}» {handedWhen} отдали вам — поставьте её себе в календарь."),
+                "uk" => ("Зміна ваша", $"«{offer.ShiftName}» {handedWhen} віддали вам — поставте її собі в календар."),
+                _ => ("The shift is yours", $"“{offer.ShiftName}” {handedWhen} was handed to you — place it on your calendar."),
+            },
+            "/dashboard",
+            ct);
 
         return new AcceptedCoverDto(
             offer.Date,

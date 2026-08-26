@@ -13,6 +13,16 @@ namespace Shifter.Tests;
 /// who is allowed to do what: the person offering is not the person who decides,
 /// and a shift can only be given away once.
 /// </summary>
+/// <summary>Push that goes nowhere; the tests are about the swap itself.</summary>
+file sealed class SilentPush : Shifter.Application.Features.Push.IPushNotifier
+{
+    public Task NotifyAsync(
+        int userId,
+        Func<string, (string Title, string Body)> text,
+        string url,
+        CancellationToken ct) => Task.CompletedTask;
+}
+
 public class CoverHandlerTests
 {
     private const int Owner = 1;
@@ -58,11 +68,11 @@ public class CoverHandlerTests
     }
 
     private Task<RotaOfferDto> Offer(int userId = Claimant, int shiftId = ShiftId)
-        => new OfferCoverHandler(_teams).Handle(
+        => new OfferCoverHandler(_teams, new SilentPush()).Handle(
             new OfferCoverDto(userId, TeamId, shiftId), CancellationToken.None);
 
     private Task<AcceptedCoverDto> Accept(int userId, int offerId = 1)
-        => new AcceptCoverHandler(_teams).Handle(
+        => new AcceptCoverHandler(_teams, new SilentPush()).Handle(
             new AcceptCoverDto(userId, TeamId, offerId), CancellationToken.None);
 
     private Task Withdraw(int userId, int offerId = 1)

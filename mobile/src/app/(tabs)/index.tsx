@@ -15,6 +15,7 @@ import { Colors, Palette } from '@/constants/theme';
 import { api } from '@/lib/api';
 import { addMonths, currentMonth, monthBounds, monthCells, monthLabel, todayKey } from '@/lib/calendar';
 import { CalendarDayData, DaysResponse, money } from '@/lib/types';
+import { LiveShift, useLive } from '@/store/live';
 import { useSession } from '@/store/session';
 
 const WEEKDAYS = ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс'];
@@ -28,6 +29,15 @@ export default function CalendarScreen() {
   const palette = Colors[scheme === 'dark' ? 'dark' : 'light'];
   const router = useRouter();
   const signOut = useSession((state) => state.signOut);
+  const live = useLive((state) => state.live);
+  const startLive = useLive((state) => state.start);
+  const hydrateLive = useLive((state) => state.hydrate);
+
+  useFocusEffect(
+    useCallback(() => {
+      void hydrateLive();
+    }, [hydrateLive]),
+  );
 
   const [month, setMonth] = useState(currentMonth());
   const [summary, setSummary] = useState<DaysResponse | null>(null);
@@ -58,6 +68,13 @@ export default function CalendarScreen() {
   );
   const cells = monthCells(month);
   const today = todayKey();
+  const startable = useMemo(() => {
+    const plan = byDate.get(today)?.shifts.find((entry) => !entry.worked);
+
+    if (plan === undefined) return null;
+
+    return { ...plan, rate: null as number | null };
+  }, [byDate, today]);
   const styles = makeStyles(palette);
 
   const cellLook = (day: CalendarDayData | undefined) => {
@@ -153,6 +170,41 @@ export default function CalendarScreen() {
         )}
       </View>
 
+      {live !== null && (
+        <Pressable style={styles.liveCard} onPress={() => router.push('/live')}>
+          <View style={styles.liveDot} />
+          <Text style={styles.liveText}>
+            Смена идёт: {live.symbol ?? '🕐'} {live.name} с {new Date(live.startedAt).toTimeString().slice(0, 5)}
+          </Text>
+          <Ionicons name="chevron-forward" size={16} color={palette.accent} />
+        </Pressable>
+      )}
+
+      {live === null && startable !== null && (
+        <Pressable
+          style={styles.startButton}
+          onPress={() => {
+            const shift: LiveShift = {
+              date: today,
+              shiftId: startable.shift_id,
+              name: startable.name,
+              symbol: startable.symbol,
+              startedAt: new Date().toISOString(),
+              hourlyRate: startable.rate,
+              plannedEnd: startable.end_time,
+            };
+
+            startLive(shift);
+            router.push('/live');
+          }}
+        >
+          <Ionicons name="play" size={16} color="#fff" />
+          <Text style={styles.startText}>
+            Начать смену · {startable.symbol ?? ''} {startable.name}
+          </Text>
+        </Pressable>
+      )}
+
       <Text style={styles.hint}>Тапните день, чтобы отметить смену, чай и штрафы.</Text>
     </ScrollView>
   );
@@ -211,4 +263,27 @@ const makeStyles = (palette: Palette) =>
     cellSymbol: { fontSize: 13 },
     cellMoney: { color: palette.text, fontSize: 9.5, fontWeight: '700', fontVariant: ['tabular-nums'] },
     hint: { color: palette.textSecondary, fontSize: 12.5, textAlign: 'center', marginTop: 4 },
+    liveCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      backgroundColor: palette.accentSoft,
+      borderWidth: 1,
+      borderColor: palette.accent,
+      borderRadius: 14,
+      paddingHorizontal: 12,
+      paddingVertical: 11,
+    },
+    liveDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: palette.accent },
+    liveText: { color: palette.text, fontWeight: '600', flex: 1, fontSize: 13.5 },
+    startButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      backgroundColor: palette.accent,
+      borderRadius: 14,
+      paddingVertical: 13,
+    },
+    startText: { color: '#fff', fontWeight: '700', fontSize: 14.5 },
   });

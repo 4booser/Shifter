@@ -11,7 +11,8 @@ test('a live shift starts from the palette, ticks, finishes onto the day', async
 
   // The palette owns starting; the header button opens it without Cmd+K.
   await page.getByRole('button', { name: 'Command palette' }).click();
-  await page.getByPlaceholder('Type a command or page…').fill('start');
+  // By container, not placeholder: the hint text is copy and copy moves.
+  await page.locator('.palette input').fill('start');
   await page.getByRole('button', { name: /Start shift: Bar/ }).click();
 
   // The pill appears in the header and carries the live dot.

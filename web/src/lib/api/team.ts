@@ -181,6 +181,10 @@ export interface AssignmentSave {
 export const plannerApi = {
   board: (teamId: number, from: string, to: string) =>
     api<PlannerBoard>(`${TEAMS}/${teamId}/planner?from=${from}&to=${to}`),
+  copyWeek: (teamId: number, weekStart: string) =>
+    api<{ copied: number }>(`${TEAMS}/${teamId}/planner/copy-week?week_start=${weekStart}`, {
+      method: 'POST',
+    }),
   create: (teamId: number, body: AssignmentSave) =>
     api<Assignment>(`${TEAMS}/${teamId}/planner/assignments`, { body }),
   update: (teamId: number, id: number, body: AssignmentSave) =>

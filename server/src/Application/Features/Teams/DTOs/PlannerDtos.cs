@@ -43,4 +43,6 @@ public record PlannerBoardDto(
 
 public record PublishResultDto(int published, int people);
 
+public record CopyWeekResultDto(int copied);
+
 public record AcceptAssignmentDto(int template_id);

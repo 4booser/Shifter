@@ -131,6 +131,28 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
     }
   };
 
+  const copyLastWeek = async () => {
+    setBusy(true);
+
+    try {
+      const result = await plannerApi.copyWeek(teamId, range.from);
+
+      pushToast({
+        icon: '📋',
+        title: t('Last week copied'),
+        text:
+          result.copied === 0
+            ? t('Nothing new — every cell was already taken.')
+            : `${result.copied} ${t('assignments')}`,
+      });
+      refresh();
+    } catch (caught) {
+      setError(apiErrorMessage(caught));
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const publish = async () => {
     setBusy(true);
 
@@ -194,6 +216,9 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
               {declined} {t('declined — replan')}
             </span>
           )}
+          <button type="button" className="btn btn-sm" disabled={busy} onClick={() => void copyLastWeek()}>
+            {t('Repeat last week')}
+          </button>
           <button type="button" className="btn btn-primary btn-sm" disabled={busy || drafts === 0} onClick={() => void publish()}>
             <Icon name="check" size={13} />
             {t('Publish the week')}

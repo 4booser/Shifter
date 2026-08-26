@@ -54,6 +54,11 @@ public class PlannerController : ControllerBase
         CancellationToken ct)
         => Ok(await _planner.PublishAsync(teamId, UserId(), from, to, ct));
 
+    [HttpPost("copy-week")]
+    public async Task<IActionResult> CopyWeek(
+        int teamId, [FromQuery(Name = "week_start")] DateOnly weekStart, CancellationToken ct)
+        => Ok(await _planner.CopyWeekAsync(teamId, UserId(), weekStart, ct));
+
     [HttpGet("mine")]
     public async Task<ActionResult<AssignmentDto[]>> Mine(int teamId, CancellationToken ct)
         => Ok(await _planner.MineAsync(teamId, UserId(), ct));

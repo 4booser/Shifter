@@ -244,6 +244,66 @@ public sealed class PlannerService
         return new PublishResultDto(drafts.Count, drafts.Select(entry => entry.UserId).Distinct().Count());
     }
 
+    /// <summary>
+    /// Copies last week's board into the week starting at
+    /// <paramref name="weekStart"/>, as fresh drafts. A cell where the target
+    /// week already has anything — draft, published, answered — is left
+    /// alone, so the copy is safe to press twice and never overwrites a
+    /// conversation already in progress. People who have left the team since
+    /// last week are skipped: a draft for a ghost helps nobody.
+    /// </summary>
+    public async Task<CopyWeekResultDto> CopyWeekAsync(
+        int teamId, int userId, DateOnly weekStart, CancellationToken ct)
+    {
+        var (team, _) = await ManagerAsync(teamId, userId, ct);
+
+        var sourceStart = weekStart.AddDays(-7);
+        var sourceEnd = weekStart.AddDays(-1);
+        var targetEnd = weekStart.AddDays(6);
+
+        var source = await _db.PlannedAssignments
+            .Where(entry => entry.TeamId == teamId
+                && entry.Date >= sourceStart
+                && entry.Date <= sourceEnd)
+            .ToListAsync(ct);
+
+        var taken = (await _db.PlannedAssignments
+            .Where(entry => entry.TeamId == teamId
+                && entry.Date >= weekStart
+                && entry.Date <= targetEnd)
+            .Select(entry => new { entry.UserId, entry.Date })
+            .ToListAsync(ct))
+            .Select(cell => (cell.UserId, cell.Date))
+            .ToHashSet();
+
+        var members = (team.Members ?? []).Select(member => member.UserId).ToHashSet();
+        var copied = 0;
+
+        foreach (var entry in source)
+        {
+            var date = entry.Date.AddDays(7);
+
+            if (!members.Contains(entry.UserId) || taken.Contains((entry.UserId, date))) continue;
+
+            _db.PlannedAssignments.Add(new PlannedAssignment
+            {
+                TeamId = teamId,
+                UserId = entry.UserId,
+                CreatedByUserId = userId,
+                Date = date,
+                Title = entry.Title,
+                StartTime = entry.StartTime,
+                EndTime = entry.EndTime,
+                Note = entry.Note,
+            });
+            copied++;
+        }
+
+        if (copied > 0) await _db.SaveChangesAsync(ct);
+
+        return new CopyWeekResultDto(copied);
+    }
+
     // ==== The person's side ====
 
     public async Task<AssignmentDto[]> MineAsync(int teamId, int userId, CancellationToken ct)

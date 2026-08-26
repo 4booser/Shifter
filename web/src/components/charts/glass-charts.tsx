@@ -2,6 +2,7 @@
 
 import { useId, useMemo, useState } from 'react';
 
+import { formatDayLabel, fromKey, keysBetween, todayKey } from '@/lib/calendar/calendar-date';
 import { WaterfallStep, WeekBand } from '@/lib/charts/report-math';
 import { stagger } from '@/lib/fx';
 import { useI18n } from '@/lib/i18n';
@@ -442,6 +443,139 @@ export function TrendLine({ points }: { points: TrendPoint[] }) {
           </text>
         )}
       </svg>
+    </div>
+  );
+}
+
+/**
+ * The range, day by day, shaped like what it is. A month is drawn as an
+ * actual calendar — big cells, day numbers, money in the fill — because
+ * that is how people think about a month. Anything longer becomes month
+ * strips with a total on the right, so a year is twelve readable rows
+ * rather than a field of 10px dots lost in an empty card.
+ */
+export function DaysAtGlance({
+  values,
+  from,
+  to,
+}: {
+  values: ReadonlyMap<string, number>;
+  from: string;
+  to: string;
+}) {
+  const { lang } = useI18n();
+  const { format } = useMoney();
+  const [hover, setHover] = useState<string | null>(null);
+
+  const keys = useMemo(() => keysBetween(from, to), [from, to]);
+  const peak = useMemo(() => Math.max(1, ...keys.map((key) => values.get(key) ?? 0)), [keys, values]);
+  const today = todayKey();
+
+  const fill = (value: number) =>
+    value === 0
+      ? 'var(--surface-2)'
+      : `color-mix(in srgb, var(--heat) ${25 + Math.round((value / peak) * 75)}%, var(--surface-2))`;
+
+  const readout =
+    hover !== null ? (
+      <>
+        <b className="text-ink">{formatDayLabel(hover, lang)}</b>
+        {' · '}
+        {(values.get(hover) ?? 0) > 0 ? format(values.get(hover) ?? 0) : '—'}
+      </>
+    ) : (
+      <>
+        {keys.filter((key) => (values.get(key) ?? 0) > 0).length} / {keys.length}
+      </>
+    );
+
+  // ==== A month: the calendar itself ====
+  if (keys.length <= 45) {
+    const offset = (fromKey(keys[0]).getDay() + 6) % 7;
+    const cells: (string | null)[] = [...new Array<null>(offset).fill(null), ...keys];
+    const weekdays = Array.from({ length: 7 }, (_, day) =>
+      new Intl.DateTimeFormat(lang, { weekday: 'short' }).format(new Date(2024, 0, day + 1)),
+    );
+
+    return (
+      <div onPointerLeave={() => setHover(null)}>
+        <div className="grid grid-cols-7 gap-1">
+          {weekdays.map((name) => (
+            <span key={name} className="pb-0.5 text-center text-[0.62rem] font-semibold uppercase tracking-wide text-faint">
+              {name}
+            </span>
+          ))}
+          {cells.map((key, index) =>
+            key === null ? (
+              <span key={`pad-${index}`} />
+            ) : (
+              <button
+                type="button"
+                key={key}
+                className={`relative h-11 rounded-(--radius) text-left transition-transform hover:scale-[1.05] ${key === today ? 'ring-2 ring-(--accent)' : ''}`}
+                style={{ background: fill(values.get(key) ?? 0) }}
+                onPointerEnter={() => setHover(key)}
+                onFocus={() => setHover(key)}
+              >
+                <span className={`absolute left-1.5 top-1 text-[0.64rem] font-semibold tabular ${(values.get(key) ?? 0) > 0 ? 'text-ink/70' : 'text-faint'}`}>
+                  {Number(key.slice(8))}
+                </span>
+                {(values.get(key) ?? 0) > 0 && (
+                  <span className="absolute bottom-1 right-1.5 hidden text-[0.7rem] font-bold tabular sm:block">
+                    {format(values.get(key) ?? 0)}
+                  </span>
+                )}
+              </button>
+            ),
+          )}
+        </div>
+        <p className="field-hint mt-2 tabular">{readout}</p>
+      </div>
+    );
+  }
+
+  // ==== Longer: one strip per month, totals on the right ====
+  const months = new Map<string, string[]>();
+
+  for (const key of keys) {
+    const month = key.slice(0, 7);
+    const list = months.get(month) ?? [];
+
+    list.push(key);
+    months.set(month, list);
+  }
+
+  return (
+    <div onPointerLeave={() => setHover(null)}>
+      <div className="flex flex-col gap-1">
+        {[...months.entries()].map(([month, days]) => {
+          const total = days.reduce((sum, key) => sum + (values.get(key) ?? 0), 0);
+
+          return (
+            <div key={month} className="grid grid-cols-[2.6rem_1fr_auto] items-center gap-2">
+              <span className="text-[0.72rem] font-semibold capitalize text-muted">
+                {new Intl.DateTimeFormat(lang, { month: 'short' }).format(new Date(`${month}-15T00:00:00`))}
+              </span>
+              <span className="grid gap-[2px]" style={{ gridTemplateColumns: 'repeat(31, minmax(0, 1fr))' }}>
+                {days.map((key) => (
+                  <button
+                    type="button"
+                    key={key}
+                    className={`h-5 rounded-[3px] ${key === today ? 'ring-1 ring-(--accent)' : ''}`}
+                    style={{ background: fill(values.get(key) ?? 0), gridColumnStart: Number(key.slice(8)) }}
+                    onPointerEnter={() => setHover(key)}
+                    onFocus={() => setHover(key)}
+                  />
+                ))}
+              </span>
+              <span className={`min-w-16 text-right text-[0.78rem] font-semibold tabular ${total === 0 ? 'text-faint' : ''}`}>
+                {total === 0 ? '·' : format(total)}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+      <p className="field-hint mt-2 tabular">{readout}</p>
     </div>
   );
 }

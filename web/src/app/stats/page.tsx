@@ -28,8 +28,8 @@ import { useReveal } from '@/lib/fx';
 import { GoalsModal } from '@/components/dashboard/modals/goals-modal';
 import { WhatIfCard } from '@/components/stats/what-if';
 import { hourDial, rateTrend, waterfall, weekBands } from '@/lib/charts/report-math';
-import { ClockRing, MoneyFlow, MonthBars, TrendLine, WeekBandsChart } from '@/components/charts/glass-charts';
-import { AreaChart, ColumnChart, Heatmap, Plot, ProgressRing } from '@/components/charts/charts';
+import { ClockRing, DaysAtGlance, MoneyFlow, MonthBars, TrendLine, WeekBandsChart } from '@/components/charts/glass-charts';
+import { AreaChart, ColumnChart, Plot, ProgressRing } from '@/components/charts/charts';
 import { Alert, CountUp, Delta, Money } from '@/components/ui/bits';
 import { Icon } from '@/components/ui/icon';
 
@@ -731,7 +731,7 @@ function Stats() {
 
       {/* ==== Heatmap ==== */}
       <Card title={t('Every day, at a glance')}>
-        <Heatmap values={heatValues} from={range.from === ALL_TIME.from ? `${currentMonth().year}-01-01` : range.from} to={range.to === ALL_TIME.to ? `${currentMonth().year}-12-31` : range.to} />
+        <DaysAtGlance values={heatValues} from={range.from === ALL_TIME.from ? `${currentMonth().year}-01-01` : range.from} to={range.to === ALL_TIME.to ? `${currentMonth().year}-12-31` : range.to} />
       </Card>
 
       {/* ==== Weekdays + top shifts + start hour ==== */}

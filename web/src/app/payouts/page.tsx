@@ -38,7 +38,7 @@ export default function PayoutsPage() {
  * which is exactly how a place that quietly pays short goes unnoticed.
  */
 function Payouts() {
-  const { t, lang } = useI18n();
+  const { t, lang, n } = useI18n();
   const revealHost = useReveal<HTMLDivElement>();
 
   const [data, setData] = useState<Reconciliation | null>(null);
@@ -135,7 +135,7 @@ function Payouts() {
     if (days === 0) return t('today');
     if (days < 0) return label(row.due_on);
 
-    return `${t('in')} ${days} ${t('days')}`;
+    return `${t('in')} ${n(days, 'days')}`;
   };
 
   const streamChip = (row: { stream: PayPeriodRow['stream'] }) =>
@@ -173,7 +173,7 @@ function Payouts() {
             <Money value={nextDue.amount} className="text-[1.6rem] font-bold text-good" />
           </div>
           <p className="text-[0.9rem] text-muted">
-            {nextDue.days === 0 ? t('today') : nextDue.days === 1 ? t('tomorrow') : `${t('in')} ${nextDue.days} ${t('days')}`} ·{' '}
+            {nextDue.days === 0 ? t('today') : nextDue.days === 1 ? t('tomorrow') : `${t('in')} ${n(nextDue.days, 'days')}`} ·{' '}
             {label(nextDue.due)}
             {nextDue.where > 1 && <> · {nextDue.where} {t('payments')}</>}
           </p>

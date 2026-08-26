@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { CalendarEvent, EMOJI_GROUPS, MARK_COLOURS } from '@/lib/calendar/models';
 import { apiErrorMessage } from '@/lib/api/http';
 import { useI18n } from '@/lib/i18n';
+import { pluralWord } from '@/lib/i18n/plural';
 import { catalogueActions } from '@/lib/store/calendar';
 import { Alert, SwatchRow } from '@/components/ui/bits';
 import { Modal } from '@/components/ui/modal';
@@ -25,7 +26,7 @@ export function EventModal({
   date: string | null;
   onClose: () => void;
 }) {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
 
   const [name, setName] = useState('');
   const [symbol, setSymbol] = useState<string | null>(null);
@@ -263,7 +264,7 @@ export function EventModal({
 
         {days > 1 && (
           <p className="field-hint">
-            {t('Covers')} <strong>{days}</strong> {t('days')}.
+            {t('Covers')} <strong>{days}</strong> {pluralWord(lang, 'days', days)}.
           </p>
         )}
 

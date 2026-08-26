@@ -30,7 +30,7 @@ interface Draft extends ParsedRow {
  * writes the lot — and one Cmd+Z takes it back.
  */
 export function PhotoImportModal({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { t } = useI18n();
+  const { t, n } = useI18n();
   const settings = useSettings((state) => state.settings);
   const update = useSettings((state) => state.update);
   const templates = useCalendar((state) => state.templates);
@@ -113,7 +113,7 @@ export function PhotoImportModal({ open, onClose }: { open: boolean; onClose: ()
   const apply = async () => {
     await placeShifts(chosen.map((row) => ({ date: row.date, templateId: row.templateId as number })));
     fireConfetti({ y: 0.4 });
-    pushToast({ icon: '📸', title: t('Schedule imported'), text: `${chosen.length} ${t('days')}` });
+    pushToast({ icon: '📸', title: t('Schedule imported'), text: n(chosen.length, 'days') });
     onClose();
     setDrafts(null);
     setFile(null);

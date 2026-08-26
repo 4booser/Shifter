@@ -55,4 +55,23 @@ public static class TelegramCommands
             _ => (TelegramCommand.None, ""),
         };
     }
+
+    /// <summary>
+    /// Russian/Ukrainian three-way declension: 1 смена, 2 смены, 5 смен —
+    /// with the teens trap (11–14 always take the many-form).
+    /// </summary>
+    public static string Plural(int count, string one, string few, string many)
+    {
+        var tens = count % 100;
+        var units = count % 10;
+
+        if (tens is >= 11 and <= 14) return many;
+
+        return units switch
+        {
+            1 => one,
+            >= 2 and <= 4 => few,
+            _ => many,
+        };
+    }
 }

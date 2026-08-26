@@ -26,7 +26,7 @@ export default function TeamPage() {
  */
 function TeamAdmin() {
   const revealHost = useReveal<HTMLDivElement>();
-  const { t } = useI18n();
+  const { t, n } = useI18n();
 
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
@@ -98,7 +98,7 @@ function TeamAdmin() {
             <div className="flex flex-wrap items-center gap-2">
               <h2 className="text-[1.05rem] font-bold">{team.name}</h2>
               <span className="chip">
-                {team.member_count} {t('people')}
+                {n(team.member_count, 'people')}
               </span>
               {team.is_owner && <span className="chip border-(--accent)/40 text-(--accent)">{t('owner')}</span>}
               <span className="ml-auto flex gap-1.5">

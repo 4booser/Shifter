@@ -24,7 +24,7 @@ import { Icon } from '@/components/ui/icon';
  * when declined and needing replanning. Money never appears here.
  */
 export function PlannerBoardView({ teamId }: { teamId: number }) {
-  const { t, lang } = useI18n();
+  const { t, lang, n } = useI18n();
   const templates = useCalendar((state) => state.templates);
 
   const [anchor, setAnchor] = useState(todayKey());
@@ -163,7 +163,7 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
         text:
           result.copied === 0
             ? t('Nothing new — every cell was already taken.')
-            : `${result.copied} ${t('assignments')}`,
+            : n(result.copied, 'assignments'),
       });
       refresh();
     } catch (caught) {
@@ -182,7 +182,7 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
       pushToast({
         icon: '📣',
         title: t('Week published'),
-        text: `${result.published} ${t('assignments')} · ${result.people} ${t('people')}`,
+        text: `${n(result.published, 'assignments')} · ${n(result.people, 'people')}`,
       });
       refresh();
     } catch (caught) {

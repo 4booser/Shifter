@@ -50,7 +50,7 @@ export default function SchedulePage() {
  */
 function Schedule() {
   const revealHost = useReveal<HTMLDivElement>();
-  const { t, lang } = useI18n();
+  const { t, lang, n } = useI18n();
 
   const [teams, setTeams] = useState<Team[]>([]);
   const [selected, setSelected] = useState<number | null>(null);
@@ -217,7 +217,7 @@ function Schedule() {
             ),
           ),
         })),
-        totalLabel: `${shifts} ${t('assignments')}`,
+        totalLabel: n(shifts, 'shifts'),
       },
       currentCardTheme(),
     )

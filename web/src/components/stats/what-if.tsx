@@ -19,7 +19,7 @@ const round = (value: number, step: number) => Math.round(value / step) * step;
  * page above it is showing.
  */
 export function WhatIfCard({ suggestedTarget }: { suggestedTarget: number | null }) {
-  const { t, lang } = useI18n();
+  const { t, lang, n } = useI18n();
   const settings = useSettings((state) => state.settings);
 
   const [baseline, setBaseline] = useState<WhatIfBaseline | null | 'loading'>('loading');
@@ -167,9 +167,7 @@ export function WhatIfCard({ suggestedTarget }: { suggestedTarget: number | null
               <Money value={target} className="font-semibold" />
               {' — '}
               {t('in about')}{' '}
-              <b className="tabular">
-                {result.extraShifts} {t('shifts')}
-              </b>
+              <b className="tabular">{n(result.extraShifts ?? 0, 'shifts')}</b>
               , {formatDayLabel(result.etaKey, lang)}
             </p>
           )}

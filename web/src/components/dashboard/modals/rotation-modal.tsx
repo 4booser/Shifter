@@ -4,6 +4,7 @@ import { useState } from 'react';
 
 import { formatDayLabel, rotationKeys, todayKey } from '@/lib/calendar/calendar-date';
 import { useI18n } from '@/lib/i18n';
+import { pluralWord } from '@/lib/i18n/plural';
 import { applyToDates, useCalendar } from '@/lib/store/calendar';
 import { Modal } from '@/components/ui/modal';
 
@@ -103,7 +104,7 @@ export function RotationModal({ open, onClose }: { open: boolean; onClose: () =>
 
           {dates.length > 0 ? (
             <p className="field-hint">
-              {t('Adds')} <strong>{dates.length}</strong> {t('shifts')} · {formatDayLabel(dates[0], lang)} —{' '}
+              {t('Adds')} <strong>{dates.length}</strong> {pluralWord(lang, 'shifts', dates.length)} · {formatDayLabel(dates[0], lang)} —{' '}
               {formatDayLabel(dates[dates.length - 1], lang)}.
             </p>
           ) : (

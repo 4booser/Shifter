@@ -182,7 +182,7 @@ public sealed class TelegramBotService : BackgroundService
 
                 return $"Неделя {monday:dd.MM}–{monday.AddDays(6):dd.MM}:\n"
                     + string.Join('\n', lines)
-                    + $"\nИтого: {summary.days_worked} смен · {Math.Round(summary.hours)} ч";
+                    + $"\nИтого: {summary.days_worked} {TelegramCommands.Plural(summary.days_worked, "смена", "смены", "смен")} · {Math.Round(summary.hours)} ч";
             }
 
             case TelegramCommand.Month:
@@ -191,7 +191,7 @@ public sealed class TelegramBotService : BackgroundService
                 var to = from.AddMonths(1).AddDays(-1);
                 var summary = await days.ListAsync(link.UserId, from, to, ct);
 
-                return $"Месяц: {summary.days_worked} смен · {Math.Round(summary.hours)} ч · {Math.Round(summary.total_earned):N0}";
+                return $"Месяц: {summary.days_worked} {TelegramCommands.Plural(summary.days_worked, "смена", "смены", "смен")} · {Math.Round(summary.hours)} ч · {Math.Round(summary.total_earned):N0}";
             }
 
             case TelegramCommand.ClockIn:

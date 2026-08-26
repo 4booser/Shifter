@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useState } from 'react';
+import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useMemo, useState } from 'react';
 import {
   Pressable,
   RefreshControl,
@@ -11,54 +13,60 @@ import {
 
 import { Colors, Palette } from '@/constants/theme';
 import { api } from '@/lib/api';
+import { addMonths, currentMonth, monthBounds, monthCells, monthLabel, todayKey } from '@/lib/calendar';
+import { CalendarDayData, DaysResponse, money } from '@/lib/types';
 import { useSession } from '@/store/session';
 
-interface DaysResponse {
-  days: { date: string; earned: number; hours: number; shifts: { name: string; start_time: string; end_time: string; worked: boolean }[] }[];
-  total_earned: number;
-  hours: number;
-  days_worked: number;
-}
-
-const pad = (value: number) => `${value}`.padStart(2, '0');
+const WEEKDAYS = ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс'];
 
 /**
- * M0's proof of life: the month straight off the same API the site uses.
- * The full gesture calendar arrives with phase M1 — this screen already
- * answers the question people open the app with: how is the month going.
+ * The month, the way the web draws it: worked days wear their money,
+ * planned ones an outline, today a ring. A tap opens the day editor.
  */
 export default function CalendarScreen() {
   const scheme = useColorScheme();
   const palette = Colors[scheme === 'dark' ? 'dark' : 'light'];
+  const router = useRouter();
   const signOut = useSession((state) => state.signOut);
 
+  const [month, setMonth] = useState(currentMonth());
   const [summary, setSummary] = useState<DaysResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
-  const now = new Date();
-  const from = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-01`;
-  const to = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate())}`;
+  const bounds = monthBounds(month);
 
   const load = useCallback(async () => {
     try {
-      setSummary(await api<DaysResponse>(`/shifter/v1/days?from=${from}&to=${to}`));
+      setSummary(await api<DaysResponse>(`/shifter/v1/days?from=${bounds.from}&to=${bounds.to}`));
       setError(null);
     } catch {
       setError('Не дотянулись до сервера.');
     }
-  }, [from, to]);
+  }, [bounds.from, bounds.to]);
 
-  useEffect(() => {
-    void load();
-  }, [load]);
+  // Focus, not mount: returning from the day editor must show the edit.
+  useFocusEffect(
+    useCallback(() => {
+      void load();
+    }, [load]),
+  );
 
+  const byDate = useMemo(
+    () => new Map((summary?.days ?? []).map((day) => [day.date, day])),
+    [summary],
+  );
+  const cells = monthCells(month);
+  const today = todayKey();
   const styles = makeStyles(palette);
-  const monthName = now.toLocaleDateString('ru', { month: 'long', year: 'numeric' });
-  const today = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
-  const upcoming = (summary?.days ?? [])
-    .filter((day) => day.date >= today && day.shifts.length > 0)
-    .slice(0, 6);
+
+  const cellLook = (day: CalendarDayData | undefined) => {
+    if (day === undefined || day.shifts.length === 0) return styles.cellEmpty;
+
+    const anyWorked = day.shifts.some((entry) => entry.worked);
+
+    return anyWorked ? styles.cellWorked : styles.cellPlanned;
+  };
 
   return (
     <ScrollView
@@ -75,48 +83,77 @@ export default function CalendarScreen() {
       }
     >
       <View style={styles.headerRow}>
-        <Text style={styles.title}>{monthName[0].toUpperCase() + monthName.slice(1)}</Text>
-        <Pressable onPress={signOut}>
-          <Text style={styles.signOut}>Выйти</Text>
+        <Text style={styles.title}>{monthLabel(month)}</Text>
+        <Pressable onPress={signOut} hitSlop={8}>
+          <Ionicons name="log-out-outline" size={20} color={palette.textSecondary} />
         </Pressable>
+      </View>
+
+      <View style={styles.monthNav}>
+        <Pressable style={styles.navButton} hitSlop={6} onPress={() => setMonth((m) => addMonths(m, -1))}>
+          <Ionicons name="chevron-back" size={18} color={palette.text} />
+        </Pressable>
+        <Pressable style={styles.navButton} onPress={() => setMonth(currentMonth())}>
+          <Text style={styles.navToday}>Сегодня</Text>
+        </Pressable>
+        <Pressable style={styles.navButton} hitSlop={6} onPress={() => setMonth((m) => addMonths(m, 1))}>
+          <Ionicons name="chevron-forward" size={18} color={palette.text} />
+        </Pressable>
+        <View style={styles.summaryPill}>
+          <Text style={styles.summaryText}>
+            {money(summary?.total_earned ?? 0)} · {summary?.days_worked ?? 0} см · {Math.round(summary?.hours ?? 0)} ч
+          </Text>
+        </View>
       </View>
 
       {error !== null && <Text style={styles.error}>{error}</Text>}
 
-      <View style={styles.cards}>
-        <View style={[styles.card, styles.hero]}>
-          <Text style={styles.cardLabel}>Заработано</Text>
-          <Text style={styles.heroValue}>
-            ₴{Math.round(summary?.total_earned ?? 0).toLocaleString('ru')}
+      <View style={styles.weekHead}>
+        {WEEKDAYS.map((name) => (
+          <Text key={name} style={styles.weekDay}>
+            {name}
           </Text>
-        </View>
-        <View style={styles.row}>
-          <View style={[styles.card, styles.half]}>
-            <Text style={styles.cardLabel}>Смен</Text>
-            <Text style={styles.cardValue}>{summary?.days_worked ?? '—'}</Text>
-          </View>
-          <View style={[styles.card, styles.half]}>
-            <Text style={styles.cardLabel}>Часов</Text>
-            <Text style={styles.cardValue}>{Math.round(summary?.hours ?? 0)}</Text>
-          </View>
-        </View>
+        ))}
       </View>
 
-      <Text style={styles.section}>Ближайшие смены</Text>
-      {upcoming.length === 0 && <Text style={styles.empty}>Впереди пока пусто. Календарь — в вебе, полная сетка здесь — в фазе M1.</Text>}
-      {upcoming.map((day) => (
-        <View key={day.date} style={styles.card}>
-          <Text style={styles.dayDate}>
-            {new Date(`${day.date}T00:00:00`).toLocaleDateString('ru', { weekday: 'long', day: 'numeric', month: 'long' })}
-          </Text>
-          {day.shifts.map((shift, index) => (
-            <Text key={index} style={styles.shiftLine}>
-              {shift.name} · {shift.start_time.slice(0, 5)}–{shift.end_time.slice(0, 5)}
-              {shift.worked ? ' ✅' : ''}
-            </Text>
-          ))}
-        </View>
-      ))}
+      <View style={styles.grid}>
+        {cells.map((key, index) =>
+          key === null ? (
+            <View key={`pad-${index}`} style={styles.cellPad} />
+          ) : (
+            <Pressable
+              key={key}
+              style={[styles.cell, cellLook(byDate.get(key)), key === today && styles.cellToday]}
+              onPress={() => router.push(`/day/${key}`)}
+            >
+              <Text
+                style={[
+                  styles.cellDay,
+                  (byDate.get(key)?.shifts.length ?? 0) > 0 && styles.cellDayBusy,
+                ]}
+              >
+                {Number(key.slice(8))}
+              </Text>
+              {(byDate.get(key)?.shifts.length ?? 0) > 0 && (
+                <Text style={styles.cellSymbol} numberOfLines={1}>
+                  {byDate
+                    .get(key)!
+                    .shifts.map((entry) => entry.symbol ?? '•')
+                    .slice(0, 3)
+                    .join('')}
+                </Text>
+              )}
+              {(byDate.get(key)?.earned ?? 0) > 0 && (
+                <Text style={styles.cellMoney} numberOfLines={1}>
+                  {money(byDate.get(key)!.earned)}
+                </Text>
+              )}
+            </Pressable>
+          ),
+        )}
+      </View>
+
+      <Text style={styles.hint}>Тапните день, чтобы отметить смену, чай и штрафы.</Text>
     </ScrollView>
   );
 }
@@ -124,28 +161,54 @@ export default function CalendarScreen() {
 const makeStyles = (palette: Palette) =>
   StyleSheet.create({
     screen: { flex: 1, backgroundColor: palette.background },
-    content: { padding: 16, paddingTop: 60, gap: 10 },
-    headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
-    title: { fontSize: 26, fontWeight: '800', color: palette.text, letterSpacing: -0.5 },
-    signOut: { color: palette.textSecondary, fontWeight: '600' },
-    error: { color: palette.danger },
-    cards: { gap: 8 },
-    card: {
+    content: { padding: 14, paddingTop: 58, gap: 10 },
+    headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+    title: { fontSize: 24, fontWeight: '800', color: palette.text, letterSpacing: -0.5 },
+    monthNav: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+    navButton: {
       backgroundColor: palette.backgroundElement,
       borderWidth: 1,
       borderColor: palette.border,
-      borderRadius: 18,
-      padding: 14,
-      gap: 4,
+      borderRadius: 12,
+      paddingHorizontal: 10,
+      paddingVertical: 7,
     },
-    hero: { alignItems: 'flex-start' },
-    row: { flexDirection: 'row', gap: 8 },
-    half: { flex: 1 },
-    cardLabel: { color: palette.textSecondary, fontSize: 13, fontWeight: '600' },
-    heroValue: { color: palette.text, fontSize: 34, fontWeight: '800', fontVariant: ['tabular-nums'] },
-    cardValue: { color: palette.text, fontSize: 22, fontWeight: '800', fontVariant: ['tabular-nums'] },
-    section: { color: palette.text, fontSize: 17, fontWeight: '800', marginTop: 10 },
-    empty: { color: palette.textSecondary },
-    dayDate: { color: palette.text, fontWeight: '700', textTransform: 'capitalize' },
-    shiftLine: { color: palette.textSecondary, fontVariant: ['tabular-nums'] },
+    navToday: { color: palette.text, fontWeight: '600', fontSize: 13 },
+    summaryPill: { marginLeft: 'auto' },
+    summaryText: { color: palette.textSecondary, fontSize: 12.5, fontVariant: ['tabular-nums'] },
+    error: { color: palette.danger },
+    weekHead: { flexDirection: 'row' },
+    weekDay: {
+      flex: 1,
+      textAlign: 'center',
+      color: palette.textSecondary,
+      fontSize: 11,
+      fontWeight: '700',
+      textTransform: 'uppercase',
+    },
+    grid: { flexDirection: 'row', flexWrap: 'wrap', rowGap: 6 },
+    cellPad: { width: '14.28%' },
+    cell: {
+      width: '14.28%',
+      minHeight: 64,
+      borderRadius: 14,
+      padding: 4,
+      alignItems: 'center',
+      gap: 1,
+      borderWidth: 1,
+      borderColor: 'transparent',
+    },
+    cellEmpty: { backgroundColor: 'transparent' },
+    cellPlanned: {
+      backgroundColor: palette.accentSoft,
+      borderColor: palette.accent,
+      borderStyle: 'dashed',
+    },
+    cellWorked: { backgroundColor: palette.accentSoft, borderColor: palette.accentSoft },
+    cellToday: { borderColor: palette.accent, borderWidth: 2, borderStyle: 'solid' },
+    cellDay: { color: palette.textSecondary, fontSize: 12, fontWeight: '600' },
+    cellDayBusy: { color: palette.text },
+    cellSymbol: { fontSize: 13 },
+    cellMoney: { color: palette.text, fontSize: 9.5, fontWeight: '700', fontVariant: ['tabular-nums'] },
+    hint: { color: palette.textSecondary, fontSize: 12.5, textAlign: 'center', marginTop: 4 },
   });

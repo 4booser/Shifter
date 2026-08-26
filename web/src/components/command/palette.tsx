@@ -11,6 +11,7 @@ import { THEME_PRESETS } from '@/lib/settings/settings';
 import { useSettings } from '@/lib/settings/store';
 import { todayKey } from '@/lib/calendar/calendar-date';
 import { calendarActions, useCalendar } from '@/lib/store/calendar';
+import { useMoney } from '@/lib/settings/money';
 import { Icon } from '@/components/ui/icon';
 
 /**
@@ -123,6 +124,7 @@ export function CommandPalette() {
       { id: 'nav-wrapped', icon: 'trophy', label: t('Your year'), run: go('/wrapped') },
       { id: 'nav-report', icon: 'note', label: t('Monthly report'), run: go('/report') },
       { id: 'nav-compare', icon: 'swap', label: t('Compare periods'), run: go('/compare') },
+      { id: 'nav-whats-new', icon: 'spark', label: t('What’s new'), run: go('/whats-new') },
       {
         id: 'tour',
         icon: 'spark',
@@ -215,14 +217,41 @@ export function CommandPalette() {
     return list;
   }, [t, router, pathname, settings.hideAmounts, update, templates, live]);
 
+  const days = useCalendar((state) => state.days);
+  const { format } = useMoney();
+
   const matches = useMemo(() => {
+    // ">2000" / "<500" digs through the loaded days by what they earned.
+    const amount = query.match(/^([<>])\s*(\d+)$/);
+
+    if (amount !== null) {
+      const above = amount[1] === '>';
+      const bound = Number(amount[2]);
+
+      return [...days.values()]
+        .filter((day) => day.earned > 0 && (above ? day.earned > bound : day.earned < bound))
+        .sort((a, b) => b.earned - a.earned)
+        .slice(0, 9)
+        .map((day): Command => ({
+          id: `day-${day.date}`,
+          icon: 'calendar',
+          label: `${day.date.slice(8)}.${day.date.slice(5, 7)} — ${format(day.earned)}`,
+          run: () => {
+            calendarActions.openDate(day.date);
+            setOpen(false);
+
+            if (pathname !== '/dashboard') router.push('/dashboard');
+          },
+        }));
+    }
+
     return commands
       .map((command) => ({ command, rank: score(query, command.label) }))
       .filter((entry): entry is { command: Command; rank: number } => entry.rank !== null)
       .sort((a, b) => a.rank - b.rank)
       .slice(0, 9)
       .map((entry) => entry.command);
-  }, [commands, query]);
+  }, [commands, query, days, format, pathname, router]);
 
   useEffect(() => setHot(0), [query]);
 
@@ -249,7 +278,7 @@ export function CommandPalette() {
           <input
             ref={input}
             className="w-full bg-transparent text-[0.95rem] outline-none"
-            placeholder={t('Type a command or page…')}
+            placeholder={t('Command, page, or >2000 to find days…')}
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             onKeyDown={onKeyDown}

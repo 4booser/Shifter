@@ -149,6 +149,43 @@ function Dashboard() {
 
     if (unclosed.length > 0) void nav.setAppBadge?.(unclosed.length);
     else void nav.clearAppBadge?.();
+
+    // The browser-tab fallback: a dot burned onto the favicon.
+    const link = document.querySelector<HTMLLinkElement>('link[rel="icon"]') ?? (() => {
+      const created = document.createElement('link');
+
+      created.rel = 'icon';
+      document.head.appendChild(created);
+
+      return created;
+    })();
+
+    if (unclosed.length === 0) {
+      link.href = '/favicon.ico';
+
+      return;
+    }
+
+    const image = new Image();
+
+    image.onload = () => {
+      const canvas = document.createElement('canvas');
+
+      canvas.width = 32;
+      canvas.height = 32;
+
+      const context = canvas.getContext('2d');
+
+      if (context === null) return;
+
+      context.drawImage(image, 0, 0, 32, 32);
+      context.fillStyle = '#e0655f';
+      context.beginPath();
+      context.arc(25, 7, 6.5, 0, Math.PI * 2);
+      context.fill();
+      link.href = canvas.toDataURL('image/png');
+    };
+    image.src = '/icons/icon-192.png';
   }, [unclosed.length]);
 
   // The home-screen shortcut "start a shift" lands here with ?action=start.

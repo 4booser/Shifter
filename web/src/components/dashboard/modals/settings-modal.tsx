@@ -259,6 +259,12 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
             hint={t('Mid-morning, when a pay period lands.')}
           />
           <Toggle
+            on={settings.clockOutChime}
+            onChange={(value) => update('clockOutChime', value)}
+            label={t('Chime when a shift lands')}
+            hint={t('A short sound and a buzz at clock-out.')}
+          />
+          <Toggle
             on={settings.notifyDigest}
             onChange={(value) => update('notifyDigest', value)}
             label={t('Weekly digest')}

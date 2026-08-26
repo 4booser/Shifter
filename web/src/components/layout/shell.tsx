@@ -149,6 +149,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
                     {[
                       { href: '/account', label: 'Account', icon: 'user' },
                       { href: '/webhooks', label: 'Webhooks', icon: 'swap' },
+                      { href: '/whats-new', label: 'What’s new', icon: 'spark' },
                     ].map((item) => (
                       <Link
                         key={item.href}

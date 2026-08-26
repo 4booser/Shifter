@@ -95,6 +95,8 @@ export interface Settings {
   dashboardTiles: string[] | null;
   /** How the person is written in the wall rota, for the photo import. */
   scheduleName: string;
+  /** A short chime and a buzz when a live shift lands. */
+  clockOutChime: boolean;
 }
 
 export const ACCENT_PRESETS = [
@@ -175,4 +177,5 @@ export const DEFAULT_SETTINGS: Settings = {
   colourSchemes: [],
   dashboardTiles: null,
   scheduleName: '',
+  clockOutChime: false,
 };

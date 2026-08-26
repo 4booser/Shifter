@@ -35,6 +35,32 @@ export function ShiftDoneOverlay() {
       setTips('');
       setTipsSaved(false);
       fireConfetti({ y: 0.35, count: 160 });
+
+      // A two-note chime and a buzz, only for those who asked. Synthesised
+      // on the spot: no asset, no fetch, no licence.
+      if (useSettings.getState().settings.clockOutChime) {
+        try {
+          const audio = new AudioContext();
+
+          for (const [at, frequency] of [[0, 660], [0.12, 880]] as const) {
+            const osc = audio.createOscillator();
+            const gain = audio.createGain();
+
+            osc.frequency.value = frequency;
+            osc.type = 'sine';
+            gain.gain.setValueAtTime(0.001, audio.currentTime + at);
+            gain.gain.exponentialRampToValueAtTime(0.12, audio.currentTime + at + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + at + 0.35);
+            osc.connect(gain).connect(audio.destination);
+            osc.start(audio.currentTime + at);
+            osc.stop(audio.currentTime + at + 0.4);
+          }
+        } catch {
+          // No audio is never a problem worth surfacing.
+        }
+
+        navigator.vibrate?.([60, 40, 90]);
+      }
     };
 
     addEventListener(SHIFT_DONE_EVENT, onDone);

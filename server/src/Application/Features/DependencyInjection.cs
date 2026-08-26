@@ -91,6 +91,12 @@ public static class DependencyInjection
         services.AddSingleton<PushSender>();
         services.AddScoped<IPushNotifier, PushNotifier>();
         services.AddScoped<Shifter.Application.Features.Auth.Services.TwoFactorService>();
+
+        services.Configure<Shifter.Application.Features.Telegram.TelegramOptions>(
+            configuration.GetSection(Shifter.Application.Features.Telegram.TelegramOptions.Section));
+        services.AddSingleton<Shifter.Application.Features.Telegram.TelegramBotService>();
+        services.AddHostedService(provider =>
+            provider.GetRequiredService<Shifter.Application.Features.Telegram.TelegramBotService>());
         services.AddScoped<Shifter.Application.Features.Teams.Services.PlannerService>();
         services.AddScoped<Shifter.Application.Features.business.Services.DayAuditWriter>();
         services.AddHostedService<PushScheduler>();

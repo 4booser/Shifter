@@ -237,6 +237,8 @@ function Account() {
 
           <TwoFactorSection hasPassword={profile.has_password} />
 
+          <TelegramSection />
+
           <ExportSection />
 
           {/* ==== Danger ==== */}
@@ -573,6 +575,76 @@ function TwoFactorSection({ hasPassword }: { hasPassword: boolean }) {
           <button type="button" className="btn btn-quiet btn-sm ml-1.5" onClick={() => setStage('idle')}>
             {t('Done')}
           </button>
+        </div>
+      )}
+    </section>
+  );
+}
+
+/**
+ * The bot bridge: a six-digit code carried by hand from here to the chat.
+ * Hidden entirely on servers that run without a bot token.
+ */
+function TelegramSection() {
+  const { t } = useI18n();
+  const [state, setState] = useState<{ linked: boolean; bot: string } | null | 'off'>(null);
+  const [code, setCode] = useState<string | null>(null);
+
+  useEffect(() => {
+    void api<{ linked: boolean; bot: string }>('/shifter/v1/telegram')
+      .then(setState)
+      .catch(() => setState('off'));
+  }, []);
+
+  if (state === null || state === 'off') return null;
+
+  const issue = () =>
+    void api<{ code: string; bot: string }>('/shifter/v1/telegram/link-code', { method: 'POST', body: {} }).then(
+      (response) => setCode(response.code),
+    );
+
+  return (
+    <section className="card reveal p-4">
+      <h2 className="mb-1 text-[0.98rem] font-bold">✈️ Telegram</h2>
+      <p className="field-hint mb-3">
+        {t('«сегодня», «завтра», «месяц», «начал», «закончил» — the calendar answers in the chat.')}
+      </p>
+
+      {state.linked ? (
+        <div className="flex items-center gap-2">
+          <span className="chip border-good/40 bg-(--good-soft) text-good">{t('Linked')}</span>
+          <button
+            type="button"
+            className="btn btn-sm text-danger"
+            onClick={() =>
+              void api('/shifter/v1/telegram', { method: 'DELETE' }).then(() =>
+                setState({ ...state, linked: false }),
+              )
+            }
+          >
+            {t('Unlink')}
+          </button>
+        </div>
+      ) : code === null ? (
+        <button type="button" className="btn" onClick={issue}>
+          {t('Link the chat')}
+        </button>
+      ) : (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="field-hint">{t('Send this code to the bot within five minutes:')}</span>
+          <code className="rounded-(--radius) border border-border bg-surface-2 px-2.5 py-1 text-[1.1rem] font-bold tracking-[0.25em] tabular">
+            {code}
+          </code>
+          {state.bot !== '' && (
+            <a
+              className="btn btn-sm"
+              href={`https://t.me/${state.bot}?start=${code}`}
+              target="_blank"
+              rel="noreferrer"
+            >
+              {t('Open the bot')}
+            </a>
+          )}
         </div>
       )}
     </section>

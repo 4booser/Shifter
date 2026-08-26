@@ -48,6 +48,8 @@ services:
       Push__PublicKey: ${VAPID_PUBLIC_KEY:-}
       Push__PrivateKey: ${VAPID_PRIVATE_KEY:-}
       Import__ApiKey: ${ANTHROPIC_API_KEY:-}
+      Telegram__BotToken: ${TELEGRAM_BOT_TOKEN:-}
+      Telegram__BotName: ${TELEGRAM_BOT_NAME:-}
       # No Google__ClientId here on purpose. It would be set even when the
       # variable is unset, and an empty environment variable overrides
       # appsettings.json rather than deferring to it — which silently turns off

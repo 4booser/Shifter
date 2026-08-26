@@ -5,6 +5,12 @@
 type Dictionary = Record<string, string>;
 
 export const RU: Dictionary = {
+  '«сегодня», «завтра», «месяц», «начал», «закончил» — the calendar answers in the chat.': '«сегодня», «завтра», «месяц», «начал», «закончил» — календарь отвечает прямо в чате.',
+  'Linked': 'Привязан',
+  'Unlink': 'Отвязать',
+  'Link the chat': 'Привязать чат',
+  'Send this code to the bot within five minutes:': 'Пришлите этот код боту в течение пяти минут:',
+  'Open the bot': 'Открыть бота',
   'Enter the six digits from your authenticator, or an eight-digit backup code.': 'Введите шесть цифр из приложения-аутентификатора или восьмизначный резервный код.',
   'Confirm': 'Подтвердить',
   'Two-factor sign-in': 'Двухфакторный вход',
@@ -1291,6 +1297,12 @@ export const RU: Dictionary = {
 };
 
 export const UK: Dictionary = {
+  '«сегодня», «завтра», «месяц», «начал», «закончил» — the calendar answers in the chat.': '«сьогодні», «завтра», «місяць», «почав», «закінчив» — календар відповідає просто в чаті.',
+  'Linked': 'Прив’язано',
+  'Unlink': 'Відв’язати',
+  'Link the chat': 'Прив’язати чат',
+  'Send this code to the bot within five minutes:': 'Надішліть цей код боту протягом п’яти хвилин:',
+  'Open the bot': 'Відкрити бота',
   'Enter the six digits from your authenticator, or an eight-digit backup code.': 'Введіть шість цифр із застосунку-автентифікатора або восьмизначний резервний код.',
   'Confirm': 'Підтвердити',
   'Two-factor sign-in': 'Двофакторний вхід',

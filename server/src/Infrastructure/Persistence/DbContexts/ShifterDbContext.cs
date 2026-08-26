@@ -26,10 +26,20 @@ public class ShifterDbContext : DbContext
     public DbSet<PushSubscription> PushSubscriptions => Set<PushSubscription>();
     public DbSet<PlannedAssignment> PlannedAssignments => Set<PlannedAssignment>();
     public DbSet<DayAudit> DayAudits => Set<DayAudit>();
+    public DbSet<TelegramLink> TelegramLinks => Set<TelegramLink>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ShifterDbContext).Assembly);
+
+        // One account per chat, one chat per account row.
+        modelBuilder.Entity<TelegramLink>()
+            .HasIndex(link => link.ChatId)
+            .IsUnique();
+
+        modelBuilder.Entity<TelegramLink>()
+            .HasIndex(link => link.UserId)
+            .IsUnique();
 
         // A day's history is read as one day's list, newest first.
         modelBuilder.Entity<DayAudit>()

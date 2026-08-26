@@ -4,6 +4,7 @@ import Link from 'next/link';
 
 import { useReveal } from '@/lib/fx';
 import { Icon } from '@/components/ui/icon';
+import { CalendarDemo, GigsDemo, LiveShiftDemo, WhatIfDemo } from '@/components/landing/demos';
 
 /**
  * The public face of the product: what Shifter is, shown with its own real
@@ -56,6 +57,10 @@ export function Landing() {
             <StoreBadge kind="play" />
           </div>
 
+          <div className="reveal mx-auto mt-10">
+            <LiveShiftDemo />
+          </div>
+
           <div className="reveal mx-auto mt-10 max-w-5xl">
             <div className="card overflow-hidden !p-1.5 shadow-(--shadow-lg)">
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -97,6 +102,21 @@ export function Landing() {
               <p className="text-[0.9rem] text-muted">{feature.text}</p>
             </article>
           ))}
+        </section>
+
+        {/* ==== Playground ==== */}
+        <section className="pb-14">
+          <h2 className="reveal mb-1 text-center text-[1.6rem] font-extrabold tracking-tight">
+            Не верьте скриншотам — потрогайте
+          </h2>
+          <p className="reveal mb-5 text-center text-muted">
+            Три настоящих механики Shifter со случайными данными. Кликайте смело: это песочница.
+          </p>
+          <div className="grid gap-3 md:grid-cols-3">
+            <CalendarDemo />
+            <WhatIfDemo />
+            <GigsDemo />
+          </div>
         </section>
 
         {/* ==== Screens ==== */}

@@ -5,6 +5,10 @@
 type Dictionary = Record<string, string>;
 
 export const RU: Dictionary = {
+  'I am here now': 'Я сейчас тут',
+  'I am here — update': 'Я тут — обновить',
+  'With a pin, the app offers to start a shift when you open it at the place.': 'С меткой приложение само предложит начать смену, когда вы откроете его на месте.',
+  'Looks like you are at': 'Похоже, вы в',
   'Repeat on': 'Повторять по',
   'Until (leave empty to repeat forever)': 'До (пусто — повторять без конца)',
   'Chime when a shift lands': 'Звук при завершении смены',
@@ -1333,6 +1337,10 @@ export const RU: Dictionary = {
 };
 
 export const UK: Dictionary = {
+  'I am here now': 'Я зараз тут',
+  'I am here — update': 'Я тут — оновити',
+  'With a pin, the app offers to start a shift when you open it at the place.': 'З міткою застосунок сам запропонує почати зміну, коли ви відкриєте його на місці.',
+  'Looks like you are at': 'Схоже, ви в',
   'Repeat on': 'Повторювати по',
   'Until (leave empty to repeat forever)': 'До (порожньо — повторювати без кінця)',
   'Chime when a shift lands': 'Звук при завершенні зміни',

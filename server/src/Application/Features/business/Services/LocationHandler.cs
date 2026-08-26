@@ -122,6 +122,25 @@ public partial class LocationHandler : ILocationHandler
 
         location.Name = request.name.Trim();
         location.Address = string.IsNullOrWhiteSpace(request.address) ? null : request.address.Trim();
+
+        // Both or neither, and on the planet: a half-set coordinate would put
+        // the nudge in the Gulf of Guinea.
+        if (request.latitude.HasValue != request.longitude.HasValue)
+            throw new ValidationException("Latitude and longitude come together.");
+
+        if (request.latitude is double latitude && request.longitude is double longitude)
+        {
+            if (latitude is < -90 or > 90 || longitude is < -180 or > 180)
+                throw new ValidationException("Those coordinates are not on Earth.");
+
+            location.Latitude = latitude;
+            location.Longitude = longitude;
+        }
+        else
+        {
+            location.Latitude = null;
+            location.Longitude = null;
+        }
         location.Colour = request.colour!.ToUpperInvariant();
         location.PayPeriod = ParsePeriod(request.pay_period);
         location.PayDay = request.pay_day;
@@ -216,7 +235,9 @@ public partial class LocationHandler : ILocationHandler
             location.Archived,
             location.SalesPayPeriod is PayPeriod sales ? PeriodName(sales) : string.Empty,
             location.SalesPayDay,
-            location.SalesPayAnchor
+            location.SalesPayAnchor,
+            location.Latitude,
+            location.Longitude
         );
     }
 

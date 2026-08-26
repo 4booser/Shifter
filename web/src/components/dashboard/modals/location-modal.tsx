@@ -35,6 +35,8 @@ export function LocationModal({
   const [editing, setEditing] = useState<WorkLocation | null>(null);
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [locating, setLocating] = useState(false);
   const [colour, setColour] = useState('#1F3A5F');
   const [period, setPeriod] = useState<PayPeriodKind>('monthly');
   const [payDay, setPayDay] = useState(1);
@@ -57,6 +59,7 @@ export function LocationModal({
     setEditing(null);
     setName('');
     setAddress('');
+    setCoords(null);
     setColour('#1F3A5F');
     setPeriod('monthly');
     setPayDay(1);
@@ -79,6 +82,11 @@ export function LocationModal({
     setEditing(location);
     setName(location.name);
     setAddress(location.address ?? '');
+    setCoords(
+      location.latitude !== null && location.longitude !== null
+        ? { lat: location.latitude, lng: location.longitude }
+        : null,
+    );
     setColour(location.colour);
     setPeriod(location.pay_period);
     setPayDay(location.pay_day);
@@ -121,6 +129,8 @@ export function LocationModal({
         {
           name,
           address: address.trim() === '' ? null : address,
+          latitude: coords?.lat ?? null,
+          longitude: coords?.lng ?? null,
           colour,
           pay_period: period,
           pay_day: needsPayDay ? payDay : 1,
@@ -197,6 +207,37 @@ export function LocationModal({
         <label>
           <span className="field-label">{t('Address')}</span>
           <input className="field-input" value={address} onChange={(event) => setAddress(event.target.value)} />
+          <span className="mt-1.5 flex flex-wrap items-center gap-1.5">
+            <button
+              type="button"
+              className="btn btn-sm"
+              disabled={locating}
+              onClick={() => {
+                setLocating(true);
+                navigator.geolocation.getCurrentPosition(
+                  (position) => {
+                    setCoords({ lat: position.coords.latitude, lng: position.coords.longitude });
+                    setLocating(false);
+                  },
+                  () => setLocating(false),
+                  { enableHighAccuracy: true, timeout: 10_000 },
+                );
+              }}
+            >
+              📍 {locating ? '…' : t(coords === null ? 'I am here now' : 'I am here — update')}
+            </button>
+            {coords !== null && (
+              <>
+                <span className="field-hint tabular">
+                  {coords.lat.toFixed(4)}, {coords.lng.toFixed(4)}
+                </span>
+                <button type="button" className="btn btn-quiet btn-sm" onClick={() => setCoords(null)}>
+                  {t('Clear')}
+                </button>
+              </>
+            )}
+          </span>
+          <span className="field-hint">{t('With a pin, the app offers to start a shift when you open it at the place.')}</span>
         </label>
 
         <div>

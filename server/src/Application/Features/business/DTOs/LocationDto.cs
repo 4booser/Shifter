@@ -31,7 +31,9 @@ public record LocationDto(
     /// </summary>
     string sales_pay_period = "",
     int sales_pay_day = 1,
-    DateOnly sales_pay_anchor = default
+    DateOnly sales_pay_anchor = default,
+    double? latitude = null,
+    double? longitude = null
     );
 
 public record LocationCreateDto(
@@ -53,7 +55,9 @@ public record LocationCreateDto(
     /// <summary>Empty or absent leaves the commission on the main cycle.</summary>
     string? sales_pay_period = null,
     int sales_pay_day = 1,
-    DateOnly? sales_pay_anchor = null
+    DateOnly? sales_pay_anchor = null,
+    double? latitude = null,
+    double? longitude = null
     );
 
 /// <summary>Money and hours attributed to one location inside a range.</summary>

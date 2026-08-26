@@ -21,6 +21,14 @@ public sealed class Location
     /// <summary>Optional: an address is rarely to hand when adding a job.</summary>
     public string? Address { get; set; }
 
+    /// <summary>
+    /// Where the place physically is, set by "I am here" on a phone stood in
+    /// it. Powers the "start a shift here?" nudge; both or neither.
+    /// </summary>
+    public double? Latitude { get; set; }
+
+    public double? Longitude { get; set; }
+
     /// <summary>Hex colour used to tint this location's shifts in the calendar.</summary>
     public string Colour { get; set; } = "#1F3A5F";
 

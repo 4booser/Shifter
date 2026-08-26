@@ -88,6 +88,8 @@ export interface WorkLocation {
   sales_pay_period: PayPeriodKind | '';
   sales_pay_day: number;
   sales_pay_anchor: string;
+  latitude: number | null;
+  longitude: number | null;
 }
 
 export interface WorkLocationCreate {
@@ -111,6 +113,8 @@ export interface WorkLocationCreate {
   sales_pay_period: PayPeriodKind | '';
   sales_pay_day: number;
   sales_pay_anchor: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
 export interface LocationTotal {

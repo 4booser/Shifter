@@ -3,7 +3,10 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import { monthLabel, todayKey } from '@/lib/calendar/calendar-date';
+import { ShiftTemplate } from '@/lib/calendar/models';
 import { useI18n } from '@/lib/i18n';
+import { distanceMetres } from '@/lib/calendar/geo';
+import { startLiveShift, useLive } from '@/lib/live/live-shift';
 import { formatMoney } from '@/lib/settings/money';
 import { useSettings } from '@/lib/settings/store';
 import {
@@ -196,6 +199,63 @@ function Dashboard() {
     setTimeout(() => dispatchEvent(new CustomEvent('shifter:palette')), 600);
   }, []);
 
+  // The at-the-door nudge: today has a planned shift at a pinned place, the
+  // browser has already granted location (never prompt from here), and the
+  // phone stands within 300 metres — offer to start. Once per day.
+  const [nearby, setNearby] = useState<{ template: ShiftTemplate; place: string } | null>(null);
+
+  useEffect(() => {
+    const today = todayKey();
+    const stampKey = 'shifter.geoNudge';
+
+    if (localStorage.getItem(stampKey) === today) return;
+    if (useLive.getState().live !== null) return;
+
+    const day = state.days.get(today);
+    const planned = day?.shifts.find((entry) => !entry.worked);
+
+    if (planned === undefined) return;
+
+    const template = state.templates.find((item) => item.id === planned.shift_id);
+    const place = state.locations.find((item) => item.id === template?.location_id);
+
+    if (template === undefined || place === undefined || place.latitude === null || place.longitude === null)
+      return;
+
+    let cancelled = false;
+
+    void navigator.permissions
+      ?.query({ name: 'geolocation' })
+      .then((status) => {
+        if (cancelled || status.state !== 'granted') return;
+
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            if (cancelled) return;
+
+            const metres = distanceMetres(
+              position.coords.latitude,
+              position.coords.longitude,
+              place.latitude as number,
+              place.longitude as number,
+            );
+
+            if (metres <= 300) {
+              localStorage.setItem(stampKey, today);
+              setNearby({ template, place: place.name });
+            }
+          },
+          () => undefined,
+          { timeout: 8000, maximumAge: 120_000 },
+        );
+      })
+      .catch(() => undefined);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [state.days, state.templates, state.locations]);
+
   const needsSetup =
     state.locations.filter((location) => !location.archived).length === 0 ||
     state.templates.filter((template) => !template.archived).length === 0;
@@ -215,6 +275,24 @@ function Dashboard() {
               onClick={() => calendarActions.select(unclosed[unclosed.length - 1].date)}
             >
               {t('Open the oldest')}
+            </button>
+          </span>
+        </Alert>
+      )}
+
+      {nearby !== null && (
+        <Alert kind="info" onDismiss={() => setNearby(null)}>
+          <span className="flex flex-wrap items-center gap-2">
+            📍 {t('Looks like you are at')} <strong>{nearby.place}</strong>
+            <button
+              type="button"
+              className="btn btn-primary btn-sm"
+              onClick={() => {
+                startLiveShift(nearby.template);
+                setNearby(null);
+              }}
+            >
+              {t('Start shift')}: {nearby.template.name}
             </button>
           </span>
         </Alert>

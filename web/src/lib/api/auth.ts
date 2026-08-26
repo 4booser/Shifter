@@ -11,6 +11,10 @@ export interface CurrentUser {
 
 /** Mirrors ProfileDto. */
 export interface Profile {
+  avatar_kind: string | null;
+  avatar_data: string | null;
+  contact_phone: string | null;
+  contact_telegram: string | null;
   id: number;
   login: string;
   first_name: string;

@@ -8,6 +8,7 @@ import { HttpError, api, apiErrorMessage, readSession } from '@/lib/api/http';
 import { useI18n } from '@/lib/i18n';
 import { useReveal } from '@/lib/fx';
 import { Shell } from '@/components/layout/shell';
+import { AvatarSection } from '@/components/account/avatar-section';
 import { GoogleButton } from '@/components/auth/google-button';
 import { Alert } from '@/components/ui/bits';
 import { Icon } from '@/components/ui/icon';
@@ -232,6 +233,13 @@ function Account() {
               {t('Sign out everywhere')}
             </button>
           </section>
+
+          <AvatarSection
+            name={`${profile.first_name} ${profile.last_name ?? ''}`}
+            kind={profile.avatar_kind}
+            data={profile.avatar_data}
+            onChanged={() => void accountApi.get().then(setProfile).catch(() => undefined)}
+          />
 
           <FeedSection />
 

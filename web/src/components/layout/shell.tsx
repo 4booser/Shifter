@@ -17,10 +17,13 @@ import { LiveBar } from '@/components/live/live-bar';
 import { ShiftDoneOverlay } from '@/components/live/shift-done';
 import { FeatureTour } from '@/components/tour/tour';
 import { Icon } from '@/components/ui/icon';
+import { Avatar } from '@/components/ui/avatar';
+import { Profile, accountApi } from '@/lib/api/auth';
 
 const NAV: { href: string; label: string; icon: string }[] = [
   { href: '/dashboard', label: 'Calendar', icon: 'calendar' },
   { href: '/schedule', label: 'Schedule', icon: 'users' },
+  { href: '/gigs', label: 'Gigs', icon: 'spark' },
   { href: '/payouts', label: 'Payouts', icon: 'wallet' },
   { href: '/stats', label: 'Statistics', icon: 'chart' },
   { href: '/wrapped', label: 'Your year', icon: 'trophy' },
@@ -40,6 +43,11 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const pendingOffline = useCalendar((state) => state.pendingOffline);
   const [ready, setReady] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [face, setFace] = useState<Profile | null>(null);
+
+  useEffect(() => {
+    void accountApi.get().then(setFace).catch(() => undefined);
+  }, []);
 
   // The guard: no session, no page. Client-side, because the export is static.
   useEffect(() => {
@@ -139,7 +147,11 @@ export function Shell({ children }: { children: React.ReactNode }) {
                 aria-label={t('Account')}
                 onClick={() => setMenuOpen((open) => !open)}
               >
-                <Icon name="user" size={16} />
+                {face !== null && face.avatar_kind !== null ? (
+                  <Avatar kind={face.avatar_kind} data={face.avatar_data} name={face.first_name} size={22} />
+                ) : (
+                  <Icon name="user" size={16} />
+                )}
               </button>
 
               {menuOpen && (

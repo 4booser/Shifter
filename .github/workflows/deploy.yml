@@ -40,9 +40,79 @@ jobs:
       - run: npm test
         working-directory: web
 
+  e2e:
+    name: End-to-end
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: shifter_user
+          POSTGRES_PASSWORD: e2e
+          POSTGRES_DB: shifter
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U shifter_user -d shifter"
+          --health-interval 5s --health-timeout 3s --health-retries 20
+    env:
+      ConnectionStrings__Shifter: "Host=localhost;Port=5432;Database=shifter;Username=shifter_user;Password=e2e"
+      ConnectionStrings__Tokens: "Host=localhost;Port=5432;Database=tokens;Username=shifter_user;Password=e2e"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Create the tokens database
+        run: PGPASSWORD=e2e psql -h localhost -U shifter_user -d shifter -c 'CREATE DATABASE tokens;'
+
+      - name: Apply migrations
+        run: |
+          dotnet tool install --global dotnet-ef
+          dotnet ef database update --project server/Shifter.csproj --context ShifterDbContext
+          dotnet ef database update --project server/Shifter.csproj --context TokensDbContext
+
+      - name: Build the SPA into wwwroot
+        run: npm ci && npm run build
+        working-directory: web
+
+      - name: Start the server
+        env:
+          ASPNETCORE_ENVIRONMENT: Production
+          ASPNETCORE_URLS: http://localhost:5208
+          SHIFTER_JWT_KEY: e2e-only-key-thirty-two-characters!!
+        run: |
+          dotnet run --project server/Shifter.csproj -c Release --no-launch-profile &
+          for i in $(seq 1 60); do
+            curl -fsS http://localhost:5208/health >/dev/null 2>&1 && exit 0
+            sleep 2
+          done
+          echo "server never became healthy"; exit 1
+
+      - name: Run Playwright
+        run: |
+          npx playwright install --with-deps chromium
+          npm run e2e
+        working-directory: web
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-traces
+          path: web/test-results
+          retention-days: 7
+
   build:
     name: Build and push
-    needs: test
+    needs: [test, e2e]
     runs-on: ubuntu-latest
     permissions:
       contents: read

@@ -101,6 +101,16 @@ function Schedule() {
   const days = keysBetween(range.from, range.to);
   const you = rota?.members.find((member) => member.is_you) ?? null;
 
+  // member:date → the gig-board outing chip; the rota is exactly where a
+  // colleague's busy Saturday matters.
+  const outings = useMemo(() => {
+    const map = new Map<string, { employment: string; start: string; end: string }>();
+
+    for (const outing of rota?.gig_outings ?? []) map.set(`${outing.member_id}:${outing.date}`, outing);
+
+    return map;
+  }, [rota]);
+
   /** Rows are people, columns are days — built once, not per cell. */
   const grid = useMemo(() => {
     if (rota === null) return [];
@@ -446,6 +456,14 @@ function Schedule() {
                 {cells.map((cell) => (
                   <td key={cell.key} className={`px-0.5 py-1 text-center ${cell.key === todayKey() ? 'bg-(--accent-soft)' : ''}`}>
                     <div className="flex flex-col items-center gap-0.5">
+                      {outings.has(`${member.member_id}:${cell.key}`) && (
+                        <span
+                          className="text-[0.7rem]"
+                          title={`${outings.get(`${member.member_id}:${cell.key}`)!.employment === 'permanent' ? t('Starts a permanent job') : t('Out on a gig')} · ${outings.get(`${member.member_id}:${cell.key}`)!.start}–${outings.get(`${member.member_id}:${cell.key}`)!.end}`}
+                        >
+                          {outings.get(`${member.member_id}:${cell.key}`)!.employment === 'permanent' ? '🏢' : '✨'}
+                        </span>
+                      )}
                       {cell.entries.map((entry) => (
                         <span
                           key={entry.day_shift_id}

@@ -39,7 +39,30 @@ public static class GigRules
             [GigCategory.Wok] = "wok",
             [GigCategory.Cleaner] = "cleaner",
             [GigCategory.Storekeeper] = "storekeeper",
+            [GigCategory.Administrator] = "administrator",
+            [GigCategory.Hookah] = "hookah",
+            [GigCategory.Shawarma] = "shawarma",
+            [GigCategory.Butcher] = "butcher",
+            [GigCategory.Security] = "security",
+            [GigCategory.Dj] = "dj",
+            [GigCategory.Promoter] = "promoter",
         };
+
+    /// <summary>Up to three trades a seeker offers, serialised as wire names.</summary>
+    public static string CleanSeekerCategories(string[]? categories)
+    {
+        var parsed = (categories ?? [])
+            .Select(ParseCategory)
+            .Distinct()
+            .Take(3)
+            .Select(category => CategoryNames[category])
+            .ToArray();
+
+        if (parsed.Length == 0)
+            throw new ValidationException("Pick at least one trade.");
+
+        return string.Join(',', parsed);
+    }
 
     public static GigCategory ParseCategory(string? value)
     {

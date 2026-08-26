@@ -345,6 +345,7 @@ export function ClockRing({ hours }: { hours: number[] }) {
 // ==== The paying hour, week by week: a zoomed line, not an empty area ====
 
 export interface TrendPoint {
+  hours?: number;
   label: string;
   value: number;
 }
@@ -355,16 +356,17 @@ export function TrendLine({ points }: { points: TrendPoint[] }) {
   const [hover, setHover] = useState<number | null>(null);
 
   const W = 640;
-  const H = 190;
-  const PAD = { top: 26, right: 88, bottom: 24, left: 14 };
+  const H = 200;
+  const PAD = { top: 30, right: 76, bottom: 34, left: 46 };
 
   const values = points.map((point) => point.value);
   const low = Math.min(...values);
   const high = Math.max(...values);
-  // A rate deserves a zoomed window: a flat-looking line from zero hides
-  // exactly the drift this chart exists to show.
-  const floor = low === high ? low * 0.9 : low - (high - low) * 0.25;
-  const ceiling = low === high ? high * 1.1 || 1 : high + (high - low) * 0.25;
+  // A zoomed window shows drift, but a window without a scale reads as
+  // nonsense — so the frame carries real ticks, and the floor never dips
+  // below zero: an hourly rate has no negative half-plane.
+  const floor = Math.max(0, low === high ? low * 0.85 : low - (high - low) * 0.3);
+  const ceiling = low === high ? high * 1.15 || 1 : high + (high - low) * 0.3;
 
   const x = (index: number) =>
     PAD.left + (points.length === 1 ? (W - PAD.left - PAD.right) / 2 : ((W - PAD.left - PAD.right) * index) / (points.length - 1));
@@ -377,17 +379,44 @@ export function TrendLine({ points }: { points: TrendPoint[] }) {
 
   if (points.length === 0 || last === undefined) return null;
 
+  const ticks = [floor, (floor + ceiling) / 2, ceiling];
+  const maxHours = Math.max(1, ...points.map((point) => point.hours ?? 0));
+  const area = `${path} L ${x(points.length - 1)} ${H - PAD.bottom} L ${x(0)} ${H - PAD.bottom} Z`;
+  // Labels near the top edge would leave the frame; flip them under the dot.
+  const labelY = (value: number) => (y(value) < PAD.top + 16 ? y(value) + 20 : y(value) - 12);
+  const every = Math.max(1, Math.ceil(points.length / 10));
+
   return (
     <div className="relative">
       <svg viewBox={`0 0 ${W} ${H}`} className="block w-full" onPointerLeave={() => setHover(null)}>
         <defs>{gradient}</defs>
 
-        {/* One reference line at the low point; the window does the rest. */}
-        <line x1={PAD.left} x2={W - PAD.right} y1={y(low)} y2={y(low)} stroke="var(--border)" strokeDasharray="2 5" />
-        <text x={PAD.left} y={y(low) - 6} fontSize="9.5" fill="var(--faint)">
-          {format(low)}
-        </text>
+        {ticks.map((tick) => (
+          <g key={tick}>
+            <line x1={PAD.left} x2={W - PAD.right} y1={y(tick)} y2={y(tick)} stroke="var(--border)" strokeDasharray="2 5" />
+            <text x={PAD.left - 6} y={y(tick) + 3.5} textAnchor="end" fontSize="9.5" fill="var(--faint)">
+              {format(Math.round(tick))}
+            </text>
+          </g>
+        ))}
 
+        {/* Hours behind each week, as quiet context: a spike priced on two
+            hours is a different fact than one priced on forty. */}
+        {points.map((point, index) =>
+          point.hours !== undefined && point.hours > 0 ? (
+            <rect
+              key={`h-${index}`}
+              x={x(index) - 5}
+              y={H - PAD.bottom - (point.hours / maxHours) * 16}
+              width={10}
+              height={(point.hours / maxHours) * 16}
+              rx={2}
+              fill="var(--surface-2)"
+            />
+          ) : null,
+        )}
+
+        {points.length > 1 && <path d={area} fill={`url(#${id})`} opacity="0.14" />}
         {points.length > 1 && (
           <path d={path} fill="none" stroke={`url(#${id})`} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
         )}
@@ -406,23 +435,26 @@ export function TrendLine({ points }: { points: TrendPoint[] }) {
             />
             {(hover === index || index === points.length - 1) && (
               <text
-                x={x(index)}
-                y={y(point.value) - 12}
+                x={Math.min(x(index), W - PAD.right - 4)}
+                y={labelY(point.value)}
                 textAnchor="middle"
                 fontSize="11"
                 fontWeight="700"
                 fill="var(--ink)"
               >
                 {format(point.value)}
+                {point.hours !== undefined ? ` · ${Math.round(point.hours)}ч` : ''}
               </text>
             )}
-            <text x={x(index)} y={H - 6} textAnchor="middle" fontSize="9.5" fill="var(--faint)">
-              {point.label}
-            </text>
+            {(index % every === 0 || index === points.length - 1) && (
+              <text x={x(index)} y={H - 6} textAnchor="middle" fontSize="9.5" fill="var(--faint)">
+                {point.label}
+              </text>
+            )}
             <rect
-              x={x(index) - 18}
+              x={x(index) - (W - PAD.left - PAD.right) / Math.max(1, points.length - 1) / 2}
               y={0}
-              width={36}
+              width={(W - PAD.left - PAD.right) / Math.max(1, points.length - 1)}
               height={H}
               fill="transparent"
               onPointerEnter={() => setHover(index)}
@@ -430,11 +462,10 @@ export function TrendLine({ points }: { points: TrendPoint[] }) {
           </g>
         ))}
 
-        {/* The verdict, riding at the line's end. */}
         {change !== null && Math.abs(change) >= 0.5 && (
           <text
             x={W - PAD.right + 12}
-            y={y(last.value) + 4}
+            y={Math.max(PAD.top + 10, Math.min(H - PAD.bottom - 4, y(last.value) + 4))}
             fontSize="12.5"
             fontWeight="800"
             fill={change >= 0 ? 'var(--good)' : 'var(--danger)'}
@@ -446,6 +477,7 @@ export function TrendLine({ points }: { points: TrendPoint[] }) {
     </div>
   );
 }
+
 
 /**
  * The range, day by day, shaped like what it is. A month is drawn as an

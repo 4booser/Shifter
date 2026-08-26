@@ -29,6 +29,7 @@ public class ShifterDbContext : DbContext
     public DbSet<TelegramLink> TelegramLinks => Set<TelegramLink>();
     public DbSet<GigListing> GigListings => Set<GigListing>();
     public DbSet<GigResponse> GigResponses => Set<GigResponse>();
+    public DbSet<GigSeeker> GigSeekers => Set<GigSeeker>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -48,6 +49,13 @@ public class ShifterDbContext : DbContext
             .HasIndex(gig => new { gig.Status, gig.Date });
         modelBuilder.Entity<GigListing>()
             .HasIndex(gig => gig.OwnerUserId);
+
+        // One card per person; employers browse the active ones.
+        modelBuilder.Entity<GigSeeker>()
+            .HasIndex(seeker => seeker.UserId)
+            .IsUnique();
+        modelBuilder.Entity<GigSeeker>()
+            .HasIndex(seeker => seeker.IsActive);
 
         // One person answers one listing once.
         modelBuilder.Entity<GigResponse>()

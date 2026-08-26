@@ -304,6 +304,125 @@ public sealed class GigService
             true, reply.CreatedAt.ToString("O"));
     }
 
+    // ==== The seekers' side of the board ====
+
+    public async Task<SeekerDto[]> SeekersAsync(
+        int userId, string? category, string? city, string? employment, CancellationToken ct)
+    {
+        var query = _db.GigSeekers
+            .AsNoTracking()
+            .Include(seeker => seeker.User)
+            .Where(seeker => seeker.IsActive);
+
+        if (!string.IsNullOrWhiteSpace(category))
+        {
+            var name = GigRules.CategoryNames[GigRules.ParseCategory(category)];
+
+            query = query.Where(seeker => seeker.CategoriesCsv.Contains(name));
+        }
+
+        if (!string.IsNullOrWhiteSpace(city))
+        {
+            var needle = city.Trim().ToLower();
+
+            query = query.Where(seeker => seeker.City.ToLower().Contains(needle));
+        }
+
+        if (!string.IsNullOrWhiteSpace(employment) && employment != "any")
+        {
+            var wanted = GigRules.ParseEmployment(employment);
+
+            // Null on a card means "either" — it matches both filters.
+            query = query.Where(seeker => seeker.Employment == null || seeker.Employment == wanted);
+        }
+
+        var rows = await query
+            .OrderByDescending(seeker => seeker.UpdatedAt)
+            .Take(200)
+            .ToArrayAsync(ct);
+
+        return rows.Select(seeker => ToSeekerDto(seeker, userId)).ToArray();
+    }
+
+    public async Task<SeekerDto?> MySeekerAsync(int userId, CancellationToken ct)
+    {
+        var mine = await _db.GigSeekers
+            .AsNoTracking()
+            .Include(seeker => seeker.User)
+            .FirstOrDefaultAsync(seeker => seeker.UserId == userId, ct);
+
+        return mine is null ? null : ToSeekerDto(mine, userId);
+    }
+
+    public async Task<SeekerDto> SaveSeekerAsync(int userId, SeekerSaveDto request, CancellationToken ct)
+    {
+        var categories = GigRules.CleanSeekerCategories(request.categories);
+        var city = GigRules.CleanRequired(request.city, GigListing.CityMax, "City");
+        var about = GigRules.CleanOptional(request.about, GigSeeker.AboutMax, "About");
+        var availability = GigRules.CleanOptional(request.availability, GigSeeker.AvailabilityMax, "Availability");
+        var phone = GigRules.CleanOptional(request.phone, GigResponse.ContactMax, "Phone");
+        var telegram = GigRules.CleanOptional(request.telegram, GigResponse.ContactMax, "Telegram");
+
+        if (request.is_active && phone is null && telegram is null)
+            throw new ValidationException("An active card needs a phone or a Telegram — employers have to reach you.");
+
+        GigEmployment? employment = request.employment?.Trim().ToLowerInvariant() switch
+        {
+            null or "" or "any" => null,
+            var value => GigRules.ParseEmployment(value),
+        };
+
+        string? period = null;
+
+        if (request.pay_amount is > 0)
+            period = GigRules.ParsePayPeriod(request.pay_period);
+
+        var seeker = await _db.GigSeekers.FirstOrDefaultAsync(row => row.UserId == userId, ct);
+
+        if (seeker is null)
+        {
+            seeker = new GigSeeker { UserId = userId, CategoriesCsv = categories, City = city };
+            _db.GigSeekers.Add(seeker);
+        }
+
+        seeker.CategoriesCsv = categories;
+        seeker.City = city;
+        seeker.About = about;
+        seeker.Availability = availability;
+        seeker.PayAmount = request.pay_amount is > 0 ? request.pay_amount : null;
+        seeker.PayPeriod = period;
+        seeker.Phone = phone;
+        seeker.Telegram = telegram;
+        seeker.Employment = employment;
+        seeker.IsActive = request.is_active;
+        seeker.UpdatedAt = DateTime.UtcNow;
+
+        await _db.SaveChangesAsync(ct);
+
+        var loaded = await _db.GigSeekers.AsNoTracking().Include(row => row.User).FirstAsync(row => row.Id == seeker.Id, ct);
+
+        return ToSeekerDto(loaded, userId);
+    }
+
+    private static SeekerDto ToSeekerDto(GigSeeker seeker, int userId) => new(
+        seeker.Id,
+        seeker.UserId,
+        $"{seeker.User?.FirstName} {seeker.User?.LastName}".Trim(),
+        seeker.User?.AvatarKind,
+        seeker.User?.AvatarData,
+        seeker.CategoriesCsv.Split(',', StringSplitOptions.RemoveEmptyEntries),
+        seeker.Employment switch { GigEmployment.Freelance => "freelance", GigEmployment.Permanent => "permanent", _ => "any" },
+        seeker.City,
+        seeker.About,
+        seeker.Availability,
+        seeker.PayAmount,
+        seeker.PayPeriod,
+        seeker.Phone,
+        seeker.Telegram,
+        seeker.IsActive,
+        seeker.UserId == userId,
+        seeker.UpdatedAt.ToString("O"));
+
     private static GigDto ToDto(GigListing gig, int userId)
     {
         var mine = (gig.Responses ?? []).FirstOrDefault(reply => reply.UserId == userId);

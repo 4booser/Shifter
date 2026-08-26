@@ -30,6 +30,18 @@ export function LiveShiftDemo() {
   const [done, setDone] = useState<{ seconds: number; earned: number } | null>(null);
   const rate = 260;
 
+  // The visitor should not have to press anything to feel the product:
+  // the shift starts itself a beat after the page settles.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setStartedAt((current) => (current === null && done === null ? Date.now() : current));
+      setNow(Date.now());
+    }, 900);
+
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     if (startedAt === null) return;
 
@@ -303,6 +315,69 @@ export function GigsDemo() {
         );
       })}
       <p className="field-hint mt-auto">Работодатель получает ваши контакты только после этого тапа.</p>
+    </div>
+  );
+}
+
+
+const STRETCH_DAYS = ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс'];
+
+/**
+ * A week whose shifts you stretch. Drag a bar's edge (or just drag on the
+ * bar) and the hours follow, the money follows the hours — the exact
+ * feeling of pulling a shift's actual clock in the day panel.
+ */
+export function StretchWeekDemo() {
+  const rate = 240;
+  const [hours, setHours] = useState<number[]>([8, 0, 6, 8, 10, 12, 0]);
+  const drag = useRef<{ day: number; startY: number; startHours: number } | null>(null);
+
+  const total = hours.reduce((sum, value) => sum + value, 0);
+  const MAX = 14;
+
+  const onMove = (clientY: number) => {
+    if (drag.current === null) return;
+
+    const delta = (drag.current.startY - clientY) / 12;
+    const next = Math.round(Math.min(MAX, Math.max(0, drag.current.startHours + delta)) * 2) / 2;
+
+    setHours((current) => current.map((value, index) => (index === drag.current!.day ? next : value)));
+  };
+
+  return (
+    <div
+      className="card reveal flex h-full flex-col !p-4"
+      onPointerMove={(event) => onMove(event.clientY)}
+      onPointerUp={() => (drag.current = null)}
+      onPointerLeave={() => (drag.current = null)}
+    >
+      <b className="mb-1 text-[0.95rem]">Неделя, которую тянут</b>
+      <p className="field-hint mb-2">Потяните столбик вверх или вниз — часы и деньги идут за рукой.</p>
+      <div className="flex flex-1 items-end justify-between gap-1.5 pt-2" style={{ minHeight: '9rem' }}>
+        {hours.map((value, day) => (
+          <div key={day} className="flex flex-1 flex-col items-center gap-1">
+            <span className="text-[0.68rem] font-bold tabular text-muted">{value > 0 ? `${value}ч` : '·'}</span>
+            <div
+              className="w-full cursor-ns-resize touch-none rounded-t-[8px] transition-[height] duration-75"
+              style={{
+                height: `${Math.max(6, (value / MAX) * 120)}px`,
+                background: value > 0 ? 'var(--accent)' : 'var(--surface-2)',
+                opacity: value > 0 ? 0.55 + (value / MAX) * 0.45 : 1,
+              }}
+              onPointerDown={(event) => {
+                (event.target as HTMLElement).setPointerCapture(event.pointerId);
+                drag.current = { day, startY: event.clientY, startHours: hours[day] };
+              }}
+            />
+            <span className="text-[0.7rem] font-semibold uppercase text-faint">{STRETCH_DAYS[day]}</span>
+          </div>
+        ))}
+      </div>
+      <p className="mt-3 text-[0.92rem]">
+        <b className="text-[1.15rem] tabular">{UAH(total * rate)}</b>{' '}
+        <span className="text-muted">· {total} {pluralWord('ru', 'hours', total)} · {UAH(rate)}/ч</span>
+      </p>
+      <p className="field-hint mt-auto pt-1">В приложении так же тянутся фактические часы смены.</p>
     </div>
   );
 }

@@ -1,5 +1,7 @@
 using System.Security.Cryptography;
 using MediatR;
+
+using Microsoft.EntityFrameworkCore;
 using Shifter.Application.Common.Exceptions;
 using Shifter.Application.Features.Teams.DTOs;
 using Shifter.Domain.Entities;
@@ -350,8 +352,17 @@ public class GetRotaHandler : IRequestHandler<GetRotaDto, RotaDto>
     private const int MaxRangeDays = 120;
 
     private readonly ITeamRepository _teams;
+    private readonly Shifter.Infrastructure.Persistence.DbContexts.ShifterDbContext? _db;
 
-    public GetRotaHandler(ITeamRepository teams) => _teams = teams;
+    // The context is optional the same way the audit writer is: unit tests
+    // build this handler on a fake repository and simply get no outings.
+    public GetRotaHandler(
+        ITeamRepository teams,
+        Shifter.Infrastructure.Persistence.DbContexts.ShifterDbContext? db = null)
+    {
+        _teams = teams;
+        _db = db;
+    }
 
     public async Task<RotaDto> Handle(GetRotaDto request, CancellationToken ct)
     {
@@ -467,7 +478,37 @@ public class GetRotaHandler : IRequestHandler<GetRotaDto, RotaDto>
             })
             .ToArray();
 
-        return new RotaDto(team.Id, team.Name, summary, entries, Days(request, summary, entries));
+        // A colleague who took a gig that week is a colleague who cannot
+        // cover your Saturday: the rota is exactly where that matters.
+        var userIds = members.Select(member => member.UserId).ToArray();
+        var memberByUser = members.ToDictionary(member => member.UserId, member => member.Id);
+        var outings = _db is null ? [] : await _db.GigResponses
+            .AsNoTracking()
+            .Where(reply => reply.AcceptedAt != null
+                && userIds.Contains(reply.UserId)
+                && reply.Listing!.Date >= request.From
+                && reply.Listing.Date <= request.To
+                && reply.Listing.Status != Domain.Entities.GigStatus.Closed)
+            .Select(reply => new
+            {
+                reply.UserId,
+                reply.Listing!.Date,
+                reply.Listing.Employment,
+                reply.Listing.StartTime,
+                reply.Listing.EndTime,
+            })
+            .ToArrayAsync(ct);
+
+        RotaGigDto[] gigOutings = outings
+            .Select(outing => new RotaGigDto(
+                memberByUser[outing.UserId],
+                outing.Date.ToString("yyyy-MM-dd"),
+                outing.Employment == Domain.Entities.GigEmployment.Permanent ? "permanent" : "freelance",
+                outing.StartTime.ToString("HH:mm"),
+                outing.EndTime.ToString("HH:mm")))
+            .ToArray();
+
+        return new RotaDto(team.Id, team.Name, summary, entries, Days(request, summary, entries), gigOutings);
     }
 
     /// <summary>

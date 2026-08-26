@@ -8,7 +8,8 @@ export type GigCategory =
   | 'waiter' | 'runner' | 'host' | 'cashier' | 'busser'
   | 'cook-hot' | 'cook-cold' | 'cook-universal' | 'prep' | 'grill' | 'wok'
   | 'pizzaiolo' | 'sushi' | 'pastry' | 'baker'
-  | 'dishwasher' | 'cleaner' | 'storekeeper' | 'courier' | 'catering';
+  | 'dishwasher' | 'cleaner' | 'storekeeper' | 'courier' | 'catering'
+  | 'administrator' | 'hookah' | 'shawarma' | 'butcher' | 'security' | 'dj' | 'promoter';
 
 export type GigEmployment = 'freelance' | 'permanent';
 
@@ -96,6 +97,7 @@ export const gigApi = {
 export const GIG_CATEGORIES: { id: GigCategory; emoji: string; label: string; group: string }[] = [
   { id: 'managing', emoji: '🎩', label: 'General manager', group: 'Management' },
   { id: 'floor-manager', emoji: '📋', label: 'Floor manager', group: 'Management' },
+  { id: 'administrator', emoji: '🛎️', label: 'Administrator', group: 'Management' },
   { id: 'chef', emoji: '👨‍🍳', label: 'Head chef', group: 'Management' },
   { id: 'sous-chef', emoji: '🥇', label: 'Sous chef', group: 'Management' },
   { id: 'shift-lead', emoji: '⭐', label: 'Shift lead', group: 'Management' },
@@ -103,6 +105,7 @@ export const GIG_CATEGORIES: { id: GigCategory; emoji: string; label: string; gr
   { id: 'barback', emoji: '🧊', label: 'Barback', group: 'Bar' },
   { id: 'barista', emoji: '☕', label: 'Barista', group: 'Bar' },
   { id: 'sommelier', emoji: '🍷', label: 'Sommelier', group: 'Bar' },
+  { id: 'hookah', emoji: '💨', label: 'Hookah master', group: 'Bar' },
   { id: 'waiter', emoji: '🍽️', label: 'Waiter', group: 'Floor' },
   { id: 'runner', emoji: '🏃', label: 'Runner', group: 'Floor' },
   { id: 'host', emoji: '💁', label: 'Host', group: 'Floor' },
@@ -116,13 +119,18 @@ export const GIG_CATEGORIES: { id: GigCategory; emoji: string; label: string; gr
   { id: 'wok', emoji: '🥡', label: 'Wok cook', group: 'Kitchen' },
   { id: 'pizzaiolo', emoji: '🍕', label: 'Pizzaiolo', group: 'Kitchen' },
   { id: 'sushi', emoji: '🍣', label: 'Sushi chef', group: 'Kitchen' },
+  { id: 'shawarma', emoji: '🌯', label: 'Shawarma cook', group: 'Kitchen' },
+  { id: 'butcher', emoji: '🥩', label: 'Butcher', group: 'Kitchen' },
   { id: 'pastry', emoji: '🍰', label: 'Pastry chef', group: 'Bakery' },
   { id: 'baker', emoji: '🥐', label: 'Baker', group: 'Bakery' },
   { id: 'dishwasher', emoji: '🫧', label: 'Dishwasher', group: 'Back of house' },
   { id: 'cleaner', emoji: '🧼', label: 'Cleaner', group: 'Back of house' },
   { id: 'storekeeper', emoji: '📦', label: 'Storekeeper', group: 'Back of house' },
+  { id: 'security', emoji: '🛡️', label: 'Security', group: 'Back of house' },
   { id: 'courier', emoji: '🛵', label: 'Courier', group: 'Delivery' },
   { id: 'catering', emoji: '🥂', label: 'Catering crew', group: 'Events' },
+  { id: 'dj', emoji: '🎧', label: 'DJ', group: 'Events' },
+  { id: 'promoter', emoji: '📣', label: 'Promoter', group: 'Events' },
 ];
 
 export const GIG_GROUPS = ['Management', 'Bar', 'Floor', 'Kitchen', 'Bakery', 'Back of house', 'Delivery', 'Events'];
@@ -171,3 +179,50 @@ export function shrinkPhoto(file: File): Promise<string> {
 
 export const categoryOf = (id: string) =>
   GIG_CATEGORIES.find((entry) => entry.id === id) ?? GIG_CATEGORIES[0];
+
+
+// ==== The seekers' side ====
+
+export interface Seeker {
+  id: number;
+  user_id: number;
+  name: string;
+  avatar_kind: string | null;
+  avatar_data: string | null;
+  categories: GigCategory[];
+  employment: 'freelance' | 'permanent' | 'any';
+  city: string;
+  about: string | null;
+  availability: string | null;
+  pay_amount: number | null;
+  pay_period: 'hour' | 'shift' | 'month' | null;
+  phone: string | null;
+  telegram: string | null;
+  is_active: boolean;
+  is_me: boolean;
+  updated_at: string;
+}
+
+export interface SeekerSave {
+  categories: string[];
+  employment: 'freelance' | 'permanent' | 'any';
+  city: string;
+  about: string | null;
+  availability: string | null;
+  pay_amount: number | null;
+  pay_period: string | null;
+  phone: string | null;
+  telegram: string | null;
+  is_active: boolean;
+}
+
+export const seekerApi = {
+  list: (category: string | null, city: string, employment: string) =>
+    api<Seeker[]>(
+      `${GIGS}/seekers?employment=${employment}`
+      + (category !== null ? `&category=${category}` : '')
+      + (city.trim() !== '' ? `&city=${encodeURIComponent(city.trim())}` : ''),
+    ),
+  mine: () => api<Seeker | Record<string, never>>(`${GIGS}/seeker`),
+  save: (body: SeekerSave) => api<Seeker>(`${GIGS}/seeker`, { method: 'PUT', body }),
+};

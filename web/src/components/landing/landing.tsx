@@ -7,7 +7,7 @@ import { useMemo, useState } from 'react';
 import { GIG_CATEGORIES } from '@/lib/api/gigs';
 import { useReveal } from '@/lib/fx';
 import { Icon } from '@/components/ui/icon';
-import { CalendarDemo, GigsDemo, LiveShiftDemo, WhatIfDemo } from '@/components/landing/demos';
+import { CalendarDemo, GigsDemo, LiveShiftDemo, StretchWeekDemo, WhatIfDemo } from '@/components/landing/demos';
 
 /**
  * The public face of the product: what Shifter is, shown with its own real
@@ -65,6 +65,7 @@ export function Landing() {
 
   return (
     <div
+      id="top"
       ref={revealHost}
       className="min-h-dvh bg-(--bg) text-ink transition-colors duration-300"
       style={THEMES[theme].vars as React.CSSProperties}
@@ -203,8 +204,9 @@ export function Landing() {
           <p className="reveal mb-5 text-center text-muted">
             Три настоящих механики Shifter со случайными данными. Кликайте смело: это песочница.
           </p>
-          <div className="grid gap-3 md:grid-cols-3">
+          <div className="grid gap-3 md:grid-cols-2">
             <CalendarDemo />
+            <StretchWeekDemo />
             <WhatIfDemo />
             <GigsDemo />
           </div>
@@ -255,6 +257,33 @@ export function Landing() {
           </div>
         </section>
 
+        {/* ==== What's new ==== */}
+        <section className="reveal mb-14">
+          <div className="mb-3 flex items-baseline justify-between">
+            <h2 className="text-[1.4rem] font-extrabold tracking-tight">Что нового</h2>
+            <Link href="/whats-new" className="text-[0.85rem] font-semibold text-(--accent)">
+              вся история →
+            </Link>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+            {[
+              { icon: '✨', date: 'август 2026', title: 'Биржа подработок 2.0', text: 'Фриланс и постоянка, 36 ролей, фото заведений, календарь вакансий и анкеты «я ищу».' },
+              { icon: '🧵', date: 'август 2026', title: 'Аватар из вашего графика', text: 'Фото, значок роли — или узор, сотканный из ваших собственных смен.' },
+              { icon: '🎚️', date: 'август 2026', title: 'Что-если калькулятор', text: 'Два ползунка превращают «ещё смену в неделю» в деньги и дату цели.' },
+              { icon: '📱', date: 'в разработке', title: 'Приложение iOS и Android', text: 'Полный паритет, виджеты, живая смена на локскрине и вход по Face ID.' },
+            ].map((item) => (
+              <article key={item.title} className="card lift p-4">
+                <p className="mb-1 flex items-center justify-between text-[0.72rem] font-bold uppercase tracking-wide text-faint">
+                  <span className="text-[1.1rem]">{item.icon}</span>
+                  {item.date}
+                </p>
+                <h3 className="mb-1 text-[0.95rem] font-bold">{item.title}</h3>
+                <p className="text-[0.85rem] text-muted">{item.text}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
         {/* ==== FAQ ==== */}
         <section className="reveal mx-auto mb-14 max-w-2xl">
           <h2 className="mb-3 text-center text-[1.4rem] font-extrabold tracking-tight">Коротко о важном</h2>
@@ -263,6 +292,10 @@ export function Landing() {
             { q: 'Команда увидит мои деньги?', a: 'Нет. В общем графике коллеги видят только кто и когда работает. Заработок виден лишь тем, кто сам включил «делиться».' },
             { q: 'А если у меня фото графика из рабочего чата?', a: 'Пришлите его в импорт — Shifter разберёт снимок и расставит смены по дням сам.' },
             { q: 'Смогу забрать свои данные?', a: 'В один клик: полный экспорт в ZIP (JSON + CSV) и календарная подписка для Google/Apple Calendar.' },
+            { q: 'Как биржа передаёт мои контакты?', a: 'Только по вашему «Я выйду»: в отклик кладётся ровно то, что вы вписали в этот момент. Профиль остаётся закрытым.' },
+            { q: 'У меня несколько работ с разными ставками', a: 'Каждая смена-шаблон несёт свою ставку, переработки и правила места. Календарь смешивает их корректно, статистика раскладывает по местам.' },
+            { q: 'Переработки и ночные считаются?', a: 'Порог недельных часов и множитель настраиваются у места работы; фактические часы смен учитываются в оплате.' },
+            { q: 'Это работает на телефоне?', a: 'Веб отлично живёт на телефоне уже сейчас (можно «Добавить на экран»), а родное приложение для iOS и Android — в разработке.' },
           ].map((item) => (
             <details key={item.q} className="card mb-2 !p-0">
               <summary className="cursor-pointer list-none px-4 py-3 text-[0.95rem] font-bold marker:hidden">
@@ -290,7 +323,12 @@ export function Landing() {
         </section>
       </main>
 
-      <footer className="border-t border-border py-6 text-center text-[0.8rem] text-muted">
+      <footer className="border-t border-border py-8 text-center text-[0.8rem] text-muted">
+        <p className="mb-2 flex flex-wrap items-center justify-center gap-4">
+          <Link href="/login" className="font-semibold text-(--accent)">Войти</Link>
+          <Link href="/whats-new" className="font-semibold text-(--accent)">Что нового</Link>
+          <a href="#top" className="font-semibold text-(--accent)">Наверх ↑</a>
+        </p>
         <span className="font-bold text-ink">Shifter</span> · смены, деньги и команда — под контролем · www.shifter.ink
       </footer>
     </div>

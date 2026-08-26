@@ -190,6 +190,7 @@ function Stats() {
       rateTrend(summary.days).map((point) => ({
         label: `${point.week.slice(8)}.${point.week.slice(5, 7)}`,
         value: point.perHour,
+        hours: point.hours,
       })),
     [summary.days],
   );

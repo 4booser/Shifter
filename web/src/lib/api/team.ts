@@ -97,12 +97,22 @@ export interface RotaDay {
   earned: number | null;
 }
 
+export interface RotaGig {
+  member_id: number;
+  date: string;
+  employment: 'freelance' | 'permanent';
+  start: string;
+  end: string;
+}
+
 export interface Rota {
   team_id: number;
   team_name: string;
   members: RotaMember[];
   entries: RotaEntry[];
   days: RotaDay[];
+  /** Crew members out on the gig board that day — the fact, never the money. */
+  gig_outings: RotaGig[];
 }
 
 const TEAMS = '/shifter/v1/teams';

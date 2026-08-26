@@ -15,10 +15,11 @@ import { Alert } from '@/components/ui/bits';
 import { Icon } from '@/components/ui/icon';
 import { Modal } from '@/components/ui/modal';
 import { TimeAgo } from '@/components/ui/time-ago';
+import { SeekersBoard } from '@/components/gigs/seekers';
 import { Segmented } from '@/components/ui/bits';
 
 type Span = 'week' | 'month' | 'year';
-type View = 'board' | 'mine' | 'replies';
+type View = 'board' | 'people' | 'mine' | 'replies';
 type Look = 'list' | 'calendar';
 
 export default function GigsPage() {
@@ -131,6 +132,7 @@ function Gigs() {
           value={view}
           options={[
             { value: 'board', label: t('Board') },
+            { value: 'people', label: t('People') },
             { value: 'mine', label: `${t('My listings')}${mine.length > 0 ? ` · ${mine.length}` : ''}` },
             { value: 'replies', label: `${t('My replies')}${replies.length > 0 ? ` · ${replies.length}` : ''}` },
           ]}
@@ -262,6 +264,8 @@ function Gigs() {
           )}
         </>
       )}
+
+      {view === 'people' && <SeekersBoard city={city} category={category as never} />}
 
       {view === 'mine' && (
         <MyListings

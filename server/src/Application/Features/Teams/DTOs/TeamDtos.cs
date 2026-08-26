@@ -94,6 +94,9 @@ public record RotaDayDto(
     /// <summary>The day's takings across everyone who shares them.</summary>
     decimal? earned);
 
+/// <summary>A crew member going out on the gig board that day. No money, no venue — just the fact.</summary>
+public record RotaGigDto(int member_id, string date, string employment, string start, string end);
+
 /// <summary>The rota for a range: who is on, when, and for how long.</summary>
 public record RotaDto(
     int team_id,
@@ -101,7 +104,9 @@ public record RotaDto(
     RotaMemberDto[] members,
     RotaEntryDto[] entries,
     /// <summary>Day by day: coverage, spare hands and open cover requests.</summary>
-    RotaDayDto[] days);
+    RotaDayDto[] days,
+    /// <summary>Accepted gig-board outings inside the range, one chip each.</summary>
+    RotaGigDto[] gig_outings);
 
 /// <summary>Offering to take somebody else's shift.</summary>
 public record OfferCoverDto(int UserId, int TeamId, int DayShiftId) : IRequest<RotaOfferDto>;

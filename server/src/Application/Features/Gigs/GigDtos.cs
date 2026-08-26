@@ -59,3 +59,35 @@ public record GigResponseDto(
     string created_at);
 
 public record GigWithResponsesDto(GigDto gig, GigResponseDto[] replies);
+
+
+public record SeekerSaveDto(
+    string[]? categories,
+    string? employment,
+    string? city,
+    string? about,
+    string? availability,
+    decimal? pay_amount,
+    string? pay_period,
+    string? phone,
+    string? telegram,
+    bool is_active);
+
+public record SeekerDto(
+    int id,
+    int user_id,
+    string name,
+    string? avatar_kind,
+    string? avatar_data,
+    string[] categories,
+    string employment,
+    string city,
+    string? about,
+    string? availability,
+    decimal? pay_amount,
+    string? pay_period,
+    string? phone,
+    string? telegram,
+    bool is_active,
+    bool is_me,
+    string updated_at);

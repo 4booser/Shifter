@@ -36,6 +36,13 @@ public enum GigCategory
     Wok = 26,
     Cleaner = 27,
     Storekeeper = 28,
+    Administrator = 29,
+    Hookah = 30,
+    Shawarma = 31,
+    Butcher = 32,
+    Security = 33,
+    Dj = 34,
+    Promoter = 35,
 }
 
 /// <summary>One night's cover, or a seat on the roster.</summary>

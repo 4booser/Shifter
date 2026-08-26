@@ -23,6 +23,7 @@ import { MonthGrid } from '@/components/dashboard/month-grid';
 import { Sidebar } from '@/components/dashboard/sidebar';
 import { InsightsPanel } from '@/components/dashboard/insights-panel';
 import { TileStrip } from '@/components/dashboard/tiles';
+import { TipsTicker } from '@/components/dashboard/tips-ticker';
 import { PALETTE_EVENT } from '@/components/command/palette';
 import { useReveal } from '@/lib/fx';
 import { SearchModal } from '@/components/dashboard/modals/search-modal';
@@ -301,6 +302,7 @@ function Dashboard() {
       {needsSetup && <Onboarding />}
 
       {!needsSetup && <TileStrip />}
+      {!needsSetup && <TipsTicker />}
       {!needsSetup && <InsightsPanel />}
 
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start">

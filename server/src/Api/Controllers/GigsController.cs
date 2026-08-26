@@ -40,6 +40,20 @@ public class GigsController : ControllerBase
     public async Task<IActionResult> SetStatus(int id, [FromBody] GigStatusDto request, CancellationToken ct)
         => Ok(await _gigs.SetStatusAsync(UserId(), id, request.status, ct));
 
+    [HttpGet("seekers")]
+    public async Task<IActionResult> Seekers(
+        [FromQuery] string? category, [FromQuery] string? city,
+        [FromQuery] string? employment, CancellationToken ct)
+        => Ok(await _gigs.SeekersAsync(UserId(), category, city, employment, ct));
+
+    [HttpGet("seeker")]
+    public async Task<IActionResult> MySeeker(CancellationToken ct)
+        => Ok(await _gigs.MySeekerAsync(UserId(), ct) as object ?? new { });
+
+    [HttpPut("seeker")]
+    public async Task<IActionResult> SaveSeeker([FromBody] SeekerSaveDto request, CancellationToken ct)
+        => Ok(await _gigs.SaveSeekerAsync(UserId(), request, ct));
+
     [HttpGet("mine")]
     public async Task<IActionResult> Mine(CancellationToken ct)
         => Ok(await _gigs.MineAsync(UserId(), ct));

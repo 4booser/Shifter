@@ -16,6 +16,7 @@ import { Icon } from '@/components/ui/icon';
 import { Modal } from '@/components/ui/modal';
 import { TimeAgo } from '@/components/ui/time-ago';
 import { SeekersBoard } from '@/components/gigs/seekers';
+import { PendingReviews, Stars } from '@/components/gigs/reviews';
 import { Segmented } from '@/components/ui/bits';
 
 type Span = 'week' | 'month' | 'year';
@@ -191,6 +192,8 @@ function Gigs() {
       </div>
 
       {error && <Alert onDismiss={() => setError(null)}>{error}</Alert>}
+
+      <PendingReviews onChanged={refresh} />
 
       {view === 'board' && (
         <>
@@ -475,7 +478,9 @@ function GigCard({ gig, onRespond, onWithdraw }: { gig: Gig; onRespond: () => vo
           <span className="text-[1.2rem]">{trade.emoji}</span>
           <span className="min-w-0">
             <strong className="block truncate text-[0.95rem] leading-tight">{gig.title}</strong>
-            <span className="field-hint truncate">{gig.venue} · {gig.city}</span>
+            <span className="field-hint flex items-center gap-1.5 truncate">
+              {gig.venue} · {gig.city} <Stars rating={gig.employer_rating} count={gig.employer_count} small />
+            </span>
           </span>
         </span>
         <b className="whitespace-nowrap text-[0.95rem] tabular text-(--accent)">{payLine(format, t, gig)}</b>
@@ -562,6 +567,7 @@ function MyListings({
               {replies.map((reply) => (
                 <li key={reply.id} className="flex flex-wrap items-center gap-2 text-[0.88rem]">
                   <b>{reply.name || t('Somebody')}</b>
+                  <Stars rating={reply.worker_rating} count={reply.worker_count} small />
                   {reply.message !== null && <span className="text-muted">«{reply.message}»</span>}
                   <span className="ml-auto flex items-center gap-2 tabular">
                     {reply.phone !== null && <a className="text-(--accent)" href={`tel:${reply.phone}`}>{reply.phone}</a>}

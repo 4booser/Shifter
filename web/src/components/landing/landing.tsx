@@ -176,6 +176,12 @@ export function Landing() {
           ))}
         </section>
 
+        <p className="reveal -mt-8 mb-12 text-center">
+          <Link href="/roadmap" className="text-[0.88rem] font-semibold text-(--accent)">
+            Открытая разработка: смотреть прогресс по задачам →
+          </Link>
+        </p>
+
         {/* ==== Features ==== */}
         <section className="grid gap-3 pb-14 sm:grid-cols-2 lg:grid-cols-3">
           {[
@@ -327,6 +333,7 @@ export function Landing() {
         <p className="mb-2 flex flex-wrap items-center justify-center gap-4">
           <Link href="/login" className="font-semibold text-(--accent)">Войти</Link>
           <Link href="/whats-new" className="font-semibold text-(--accent)">Что нового</Link>
+          <Link href="/roadmap" className="font-semibold text-(--accent)">Дорожная карта</Link>
           <a href="#top" className="font-semibold text-(--accent)">Наверх ↑</a>
         </p>
         <span className="font-bold text-ink">Shifter</span> · смены, деньги и команда — под контролем · www.shifter.ink

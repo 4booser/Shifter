@@ -40,6 +40,18 @@ public class GigsController : ControllerBase
     public async Task<IActionResult> SetStatus(int id, [FromBody] GigStatusDto request, CancellationToken ct)
         => Ok(await _gigs.SetStatusAsync(UserId(), id, request.status, ct));
 
+    [HttpPost("{id:int}/reviews")]
+    public async Task<IActionResult> Review(int id, [FromBody] ReviewSaveDto request, CancellationToken ct)
+        => Ok(await _gigs.ReviewAsync(UserId(), id, request, ct));
+
+    [HttpGet("reputation/{userId:int}")]
+    public async Task<IActionResult> Reputation(int userId, CancellationToken ct)
+        => Ok(await _gigs.ReputationAsync(userId, ct));
+
+    [HttpGet("reviews/pending")]
+    public async Task<IActionResult> PendingReviews(CancellationToken ct)
+        => Ok(await _gigs.PendingReviewsAsync(UserId(), ct));
+
     [HttpGet("seekers")]
     public async Task<IActionResult> Seekers(
         [FromQuery] string? category, [FromQuery] string? city,

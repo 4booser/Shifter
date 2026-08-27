@@ -31,6 +31,8 @@ export interface Gig {
   slots: number;
   status: 'open' | 'filled' | 'closed';
   created_at: string;
+  employer_rating: number | null;
+  employer_count: number;
   responses: number;
   is_mine: boolean;
   my_response: { id: number; accepted: boolean } | null;
@@ -63,6 +65,8 @@ export interface GigReply {
   phone: string | null;
   telegram: string | null;
   accepted: boolean;
+  worker_rating: number | null;
+  worker_count: number;
   created_at: string;
 }
 
@@ -200,6 +204,8 @@ export interface Seeker {
   telegram: string | null;
   is_active: boolean;
   is_me: boolean;
+  worker_rating: number | null;
+  worker_count: number;
   updated_at: string;
 }
 
@@ -225,4 +231,25 @@ export const seekerApi = {
     ),
   mine: () => api<Seeker | Record<string, never>>(`${GIGS}/seeker`),
   save: (body: SeekerSave) => api<Seeker>(`${GIGS}/seeker`, { method: 'PUT', body }),
+};
+
+
+// ==== Reviews ====
+
+export interface PendingReview {
+  listing_id: number;
+  listing_title: string;
+  date: string;
+  target_user_id: number;
+  target_name: string;
+  by_employer: boolean;
+}
+
+export const WORKER_CHIPS = ['punctual', 'fast', 'self-starter', 'would-rehire'] as const;
+export const EMPLOYER_CHIPS = ['pays-on-time', 'as-promised', 'good-crew', 'would-return'] as const;
+
+export const reviewApi = {
+  pending: () => api<PendingReview[]>(`${GIGS}/reviews/pending`),
+  send: (listingId: number, body: { target_user_id: number; rating: number; chips: string[]; text: string | null }) =>
+    api<unknown>(`${GIGS}/${listingId}/reviews`, { body }),
 };

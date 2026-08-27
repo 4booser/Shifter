@@ -62,7 +62,10 @@ public sealed class GigService
             .OrderBy(gig => gig.Date).ThenBy(gig => gig.StartTime).ThenBy(gig => gig.Id)
             .ToArrayAsync(ct);
 
-        return rows.Select(gig => ToDto(gig, userId)).ToArray();
+        var employerRatings = await RatingsAsync(
+            rows.Select(gig => gig.OwnerUserId).Distinct().ToArray(), byEmployer: false, ct);
+
+        return rows.Select(gig => ToDto(gig, userId, employerRatings)).ToArray();
     }
 
     public async Task<GigDto> SaveAsync(int userId, int? id, GigSaveDto request, CancellationToken ct)
@@ -162,6 +165,10 @@ public sealed class GigService
             .Take(100)
             .ToArrayAsync(ct);
 
+        var workerRatings = await RatingsAsync(
+            rows.SelectMany(gig => gig.Responses ?? []).Select(reply => reply.UserId).Distinct().ToArray(),
+            byEmployer: true, ct);
+
         return rows.Select(gig => new GigWithResponsesDto(
             ToDto(gig, userId),
             (gig.Responses ?? [])
@@ -176,6 +183,8 @@ public sealed class GigService
                     reply.Phone,
                     reply.Telegram,
                     reply.AcceptedAt is not null,
+                    workerRatings.GetValueOrDefault(reply.UserId).Count > 0 ? workerRatings[reply.UserId].Avg : null,
+                    workerRatings.GetValueOrDefault(reply.UserId).Count,
                     reply.CreatedAt.ToString("O")))
                 .ToArray()))
             .ToArray();
@@ -301,7 +310,190 @@ public sealed class GigService
             $"{reply.User?.FirstName} {reply.User?.LastName}".Trim(),
             reply.User?.AvatarKind, reply.User?.AvatarData,
             reply.Message, reply.Phone, reply.Telegram,
-            true, reply.CreatedAt.ToString("O"));
+            true, null, 0, reply.CreatedAt.ToString("O"));
+    }
+
+    /// <summary>Average and count per target, one query for a whole card list.</summary>
+    private async Task<Dictionary<int, (double Avg, int Count)>> RatingsAsync(
+        int[] userIds, bool byEmployer, CancellationToken ct)
+    {
+        if (userIds.Length == 0) return [];
+
+        var rows = await _db.GigReviews
+            .AsNoTracking()
+            .Where(review => review.ByEmployer == byEmployer && userIds.Contains(review.TargetUserId))
+            .GroupBy(review => review.TargetUserId)
+            .Select(group => new { group.Key, Avg = group.Average(review => review.Rating), Count = group.Count() })
+            .ToArrayAsync(ct);
+
+        return rows.ToDictionary(row => row.Key, row => (Math.Round(row.Avg, 2), row.Count));
+    }
+
+    // ==== Reviews: reputation earned one shift at a time ====
+
+    /// <summary>
+    /// Who may review whom for this listing: the owner reviews accepted
+    /// workers, an accepted worker reviews the owner — and only once the
+    /// shift's date has passed, because a verdict on work not yet done is
+    /// just a mood.
+    /// </summary>
+    public async Task<ReviewDto> ReviewAsync(int userId, int listingId, ReviewSaveDto request, CancellationToken ct)
+    {
+        if (request.rating is < 1 or > 5)
+            throw new ValidationException("Rating is one to five stars.");
+
+        var gig = await _db.GigListings
+            .Include(row => row.Responses)
+            .FirstOrDefaultAsync(row => row.Id == listingId, ct)
+            ?? throw new NotFoundException("Gig does not exist.");
+
+        if (gig.Date >= DateOnly.FromDateTime(DateTime.UtcNow.Date).AddDays(1))
+            throw new ConflictException("Review after the shift, not before.");
+
+        var accepted = (gig.Responses ?? []).Where(reply => reply.AcceptedAt is not null).ToArray();
+        bool byEmployer;
+
+        if (gig.OwnerUserId == userId)
+        {
+            if (accepted.All(reply => reply.UserId != request.target_user_id))
+                throw new ValidationException("You can only review somebody you actually took.");
+
+            byEmployer = true;
+        }
+        else if (accepted.Any(reply => reply.UserId == userId))
+        {
+            if (request.target_user_id != gig.OwnerUserId)
+                throw new ValidationException("A worker reviews the venue that hired them.");
+
+            byEmployer = false;
+        }
+        else
+        {
+            throw new ForbiddenException("Reviews belong to the two sides of a worked shift.");
+        }
+
+        if (await _db.GigReviews.AnyAsync(
+                row => row.ListingId == listingId && row.AuthorUserId == userId && row.TargetUserId == request.target_user_id, ct))
+            throw new ConflictException("You already reviewed this one.");
+
+        var review = new GigReview
+        {
+            ListingId = listingId,
+            AuthorUserId = userId,
+            TargetUserId = request.target_user_id,
+            ByEmployer = byEmployer,
+            Rating = request.rating,
+            Chips = GigRules.CleanChips(request.chips, byEmployer),
+            Text = GigRules.CleanOptional(request.text, GigReview.TextMax, "Text"),
+        };
+
+        _db.GigReviews.Add(review);
+        await _db.SaveChangesAsync(ct);
+
+        await _push.NotifyAsync(
+            request.target_user_id,
+            language => language switch
+            {
+                "ru" => ("Новый отзыв ⭐", $"{review.Rating}/5 за «{gig.Title}»."),
+                "uk" => ("Новий відгук ⭐", $"{review.Rating}/5 за «{gig.Title}»."),
+                _ => ("A new review ⭐", $"{review.Rating}/5 for “{gig.Title}”."),
+            },
+            "/gigs",
+            ct);
+
+        var author = await _db.Users.AsNoTracking().FirstAsync(user => user.Id == userId, ct);
+
+        return new ReviewDto(
+            review.Id, userId, $"{author.FirstName} {author.LastName}".Trim(),
+            byEmployer, review.Rating,
+            review.Chips?.Split(',') ?? [], review.Text, review.CreatedAt.ToString("O"));
+    }
+
+    public async Task<ReputationDto> ReputationAsync(int targetUserId, CancellationToken ct)
+    {
+        var reviews = await _db.GigReviews
+            .AsNoTracking()
+            .Where(review => review.TargetUserId == targetUserId)
+            .OrderByDescending(review => review.CreatedAt)
+            .Take(200)
+            .ToArrayAsync(ct);
+
+        var asWorker = reviews.Where(review => review.ByEmployer).ToArray();
+        var asEmployer = reviews.Where(review => !review.ByEmployer).ToArray();
+        var authorIds = reviews.Take(10).Select(review => review.AuthorUserId).Distinct().ToArray();
+        var names = await _db.Users
+            .AsNoTracking()
+            .Where(user => authorIds.Contains(user.Id))
+            .ToDictionaryAsync(user => user.Id, user => $"{user.FirstName} {user.LastName}".Trim(), ct);
+
+        return new ReputationDto(
+            asWorker.Length == 0 ? null : Math.Round(asWorker.Average(review => review.Rating), 2),
+            asWorker.Length,
+            asEmployer.Length == 0 ? null : Math.Round(asEmployer.Average(review => review.Rating), 2),
+            asEmployer.Length,
+            reviews.Take(10)
+                .Select(review => new ReviewDto(
+                    review.Id, review.AuthorUserId, names.GetValueOrDefault(review.AuthorUserId, ""),
+                    review.ByEmployer, review.Rating, review.Chips?.Split(',') ?? [], review.Text,
+                    review.CreatedAt.ToString("O")))
+                .ToArray());
+    }
+
+    /// <summary>The verdicts the caller still owes, both hats at once.</summary>
+    public async Task<PendingReviewDto[]> PendingReviewsAsync(int userId, CancellationToken ct)
+    {
+        var today = DateOnly.FromDateTime(DateTime.UtcNow.Date);
+        var written = await _db.GigReviews
+            .AsNoTracking()
+            .Where(review => review.AuthorUserId == userId)
+            .Select(review => new { review.ListingId, review.TargetUserId })
+            .ToArrayAsync(ct);
+        var done = written.Select(row => (row.ListingId, row.TargetUserId)).ToHashSet();
+
+        // As the employer: accepted workers on my past listings.
+        var minePast = await _db.GigListings
+            .AsNoTracking()
+            .Include(gig => gig.Responses)!
+            .ThenInclude(reply => reply.User)
+            .Where(gig => gig.OwnerUserId == userId && gig.Date <= today)
+            .OrderByDescending(gig => gig.Date)
+            .Take(30)
+            .ToArrayAsync(ct);
+
+        var pending = new List<PendingReviewDto>();
+
+        foreach (var gig in minePast)
+        foreach (var reply in (gig.Responses ?? []).Where(reply => reply.AcceptedAt is not null))
+        {
+            if (done.Contains((gig.Id, reply.UserId))) continue;
+
+            pending.Add(new PendingReviewDto(
+                gig.Id, gig.Title, gig.Date.ToString("yyyy-MM-dd"),
+                reply.UserId, $"{reply.User?.FirstName} {reply.User?.LastName}".Trim(), true));
+        }
+
+        // As the worker: past listings where my reply was accepted.
+        var workedPast = await _db.GigResponses
+            .AsNoTracking()
+            .Include(reply => reply.Listing)!
+            .ThenInclude(gig => gig!.Owner)
+            .Where(reply => reply.UserId == userId && reply.AcceptedAt != null && reply.Listing!.Date <= today)
+            .OrderByDescending(reply => reply.CreatedAt)
+            .Take(30)
+            .ToArrayAsync(ct);
+
+        foreach (var reply in workedPast)
+        {
+            var gig = reply.Listing!;
+
+            if (done.Contains((gig.Id, gig.OwnerUserId))) continue;
+
+            pending.Add(new PendingReviewDto(
+                gig.Id, gig.Title, gig.Date.ToString("yyyy-MM-dd"),
+                gig.OwnerUserId, gig.Venue, false));
+        }
+
+        return pending.Take(20).ToArray();
     }
 
     // ==== The seekers' side of the board ====
@@ -341,7 +533,10 @@ public sealed class GigService
             .Take(200)
             .ToArrayAsync(ct);
 
-        return rows.Select(seeker => ToSeekerDto(seeker, userId)).ToArray();
+        var workerRatings = await RatingsAsync(
+            rows.Select(seeker => seeker.UserId).Distinct().ToArray(), byEmployer: true, ct);
+
+        return rows.Select(seeker => ToSeekerDto(seeker, userId, workerRatings)).ToArray();
     }
 
     public async Task<SeekerDto?> MySeekerAsync(int userId, CancellationToken ct)
@@ -351,7 +546,11 @@ public sealed class GigService
             .Include(seeker => seeker.User)
             .FirstOrDefaultAsync(seeker => seeker.UserId == userId, ct);
 
-        return mine is null ? null : ToSeekerDto(mine, userId);
+        if (mine is null) return null;
+
+        var ratings = await RatingsAsync([mine.UserId], byEmployer: true, ct);
+
+        return ToSeekerDto(mine, userId, ratings);
     }
 
     public async Task<SeekerDto> SaveSeekerAsync(int userId, SeekerSaveDto request, CancellationToken ct)
@@ -401,10 +600,12 @@ public sealed class GigService
 
         var loaded = await _db.GigSeekers.AsNoTracking().Include(row => row.User).FirstAsync(row => row.Id == seeker.Id, ct);
 
-        return ToSeekerDto(loaded, userId);
+        var savedRatings = await RatingsAsync([loaded.UserId], byEmployer: true, ct);
+
+        return ToSeekerDto(loaded, userId, savedRatings);
     }
 
-    private static SeekerDto ToSeekerDto(GigSeeker seeker, int userId) => new(
+    private static SeekerDto ToSeekerDto(GigSeeker seeker, int userId, Dictionary<int, (double Avg, int Count)>? ratings = null) => new(
         seeker.Id,
         seeker.UserId,
         $"{seeker.User?.FirstName} {seeker.User?.LastName}".Trim(),
@@ -421,9 +622,11 @@ public sealed class GigService
         seeker.Telegram,
         seeker.IsActive,
         seeker.UserId == userId,
+        ratings?.GetValueOrDefault(seeker.UserId).Count > 0 ? ratings[seeker.UserId].Avg : null,
+        ratings?.GetValueOrDefault(seeker.UserId).Count ?? 0,
         seeker.UpdatedAt.ToString("O"));
 
-    private static GigDto ToDto(GigListing gig, int userId)
+    private static GigDto ToDto(GigListing gig, int userId, Dictionary<int, (double Avg, int Count)>? employerRatings = null)
     {
         var mine = (gig.Responses ?? []).FirstOrDefault(reply => reply.UserId == userId);
 
@@ -456,6 +659,8 @@ public sealed class GigService
             gig.Slots,
             gig.Status switch { GigStatus.Open => "open", GigStatus.Filled => "filled", _ => "closed" },
             gig.CreatedAt.ToString("O"),
+            employerRatings?.GetValueOrDefault(gig.OwnerUserId).Avg is double avg and > 0 ? avg : null,
+            employerRatings?.GetValueOrDefault(gig.OwnerUserId).Count ?? 0,
             (gig.Responses ?? []).Count,
             gig.OwnerUserId == userId,
             mine is null ? null : new GigMyResponseDto(mine.Id, mine.AcceptedAt is not null));

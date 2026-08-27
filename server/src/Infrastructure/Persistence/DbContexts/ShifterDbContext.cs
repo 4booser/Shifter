@@ -30,6 +30,7 @@ public class ShifterDbContext : DbContext
     public DbSet<GigListing> GigListings => Set<GigListing>();
     public DbSet<GigResponse> GigResponses => Set<GigResponse>();
     public DbSet<GigSeeker> GigSeekers => Set<GigSeeker>();
+    public DbSet<GigReview> GigReviews => Set<GigReview>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -56,6 +57,13 @@ public class ShifterDbContext : DbContext
             .IsUnique();
         modelBuilder.Entity<GigSeeker>()
             .HasIndex(seeker => seeker.IsActive);
+
+        // One verdict per author per target per listing; reputations are read by target.
+        modelBuilder.Entity<GigReview>()
+            .HasIndex(review => new { review.ListingId, review.AuthorUserId, review.TargetUserId })
+            .IsUnique();
+        modelBuilder.Entity<GigReview>()
+            .HasIndex(review => review.TargetUserId);
 
         // One person answers one listing once.
         modelBuilder.Entity<GigResponse>()

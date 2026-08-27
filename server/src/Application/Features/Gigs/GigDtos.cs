@@ -36,6 +36,8 @@ public record GigDto(
     int slots,
     string status,
     string created_at,
+    double? employer_rating,
+    int employer_count,
     int responses,
     bool is_mine,
     /// <summary>What the caller's own reply looks like, when they made one.</summary>
@@ -56,6 +58,8 @@ public record GigResponseDto(
     string? phone,
     string? telegram,
     bool accepted,
+    double? worker_rating,
+    int worker_count,
     string created_at);
 
 public record GigWithResponsesDto(GigDto gig, GigResponseDto[] replies);
@@ -90,4 +94,36 @@ public record SeekerDto(
     string? telegram,
     bool is_active,
     bool is_me,
+    double? worker_rating,
+    int worker_count,
     string updated_at);
+
+
+public record ReviewSaveDto(int target_user_id, int rating, string[]? chips, string? text);
+
+public record ReviewDto(
+    int id,
+    int author_user_id,
+    string author_name,
+    bool by_employer,
+    int rating,
+    string[] chips,
+    string? text,
+    string created_at);
+
+/// <summary>A person's standing: as a worker and as an employer, separately.</summary>
+public record ReputationDto(
+    double? worker_rating,
+    int worker_count,
+    double? employer_rating,
+    int employer_count,
+    ReviewDto[] latest);
+
+/// <summary>A review the caller still owes: who, for which shift, which hat they wear.</summary>
+public record PendingReviewDto(
+    int listing_id,
+    string listing_title,
+    string date,
+    int target_user_id,
+    string target_name,
+    bool by_employer);

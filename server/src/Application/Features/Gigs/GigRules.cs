@@ -147,6 +147,18 @@ public static class GigRules
         return (from, to);
     }
 
+    /// <summary>The chip vocabulary, one set per direction; unknown chips are dropped, not stored.</summary>
+    public static readonly string[] WorkerChips = ["punctual", "fast", "self-starter", "would-rehire"];
+    public static readonly string[] EmployerChips = ["pays-on-time", "as-promised", "good-crew", "would-return"];
+
+    public static string? CleanChips(string[]? chips, bool byEmployer)
+    {
+        var allowed = byEmployer ? WorkerChips : EmployerChips;
+        var kept = (chips ?? []).Where(chip => allowed.Contains(chip)).Distinct().Take(4).ToArray();
+
+        return kept.Length == 0 ? null : string.Join(',', kept);
+    }
+
     /// <summary>
     /// A response must carry at least one way to reach the person — a reply
     /// the owner cannot answer is noise for both sides.

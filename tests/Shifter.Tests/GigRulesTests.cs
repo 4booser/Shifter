@@ -106,5 +106,14 @@ public class GigRulesTests
         Assert.Throws<ValidationException>(
             () => GigRules.CleanPhotos([Photo(300_000), Photo(), Photo()]));
     }
+
+    [Fact]
+    public void Chips_keep_only_their_directions_vocabulary()
+    {
+        Assert.Equal("punctual,fast", GigRules.CleanChips(["punctual", "fast", "pays-on-time", "made-up"], byEmployer: true));
+        Assert.Equal("pays-on-time", GigRules.CleanChips(["pays-on-time", "punctual"], byEmployer: false));
+        Assert.Null(GigRules.CleanChips(["nonsense"], byEmployer: true));
+        Assert.Null(GigRules.CleanChips(null, byEmployer: false));
+    }
 }
 

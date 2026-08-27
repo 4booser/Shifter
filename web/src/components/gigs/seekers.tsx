@@ -11,6 +11,7 @@ import { Alert, Segmented } from '@/components/ui/bits';
 import { Avatar } from '@/components/ui/avatar';
 import { Modal } from '@/components/ui/modal';
 import { TimeAgo } from '@/components/ui/time-ago';
+import { Stars } from '@/components/gigs/reviews';
 
 /**
  * The other half of the marketplace: people saying "I am looking", browsed
@@ -97,7 +98,10 @@ function SeekerCard({ seeker }: { seeker: Seeker }) {
             {seeker.name || t('Somebody')}
             {seeker.is_me && <span className="text-muted"> · {t('you')}</span>}
           </b>
-          <span className="field-hint">{seeker.city} · <TimeAgo iso={seeker.updated_at} /></span>
+          <span className="field-hint flex items-center gap-1.5">
+            {seeker.city} · <TimeAgo iso={seeker.updated_at} />
+            <Stars rating={seeker.worker_rating} count={seeker.worker_count} small />
+          </span>
         </span>
         <span className="chip ml-auto flex-none">
           {seeker.employment === 'any' ? t('any work') : seeker.employment === 'freelance' ? t('covers') : t('a seat')}

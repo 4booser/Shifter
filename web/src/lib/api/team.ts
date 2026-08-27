@@ -152,6 +152,21 @@ export const teamApi = {
 
 export type AssignmentStatus = 'draft' | 'published' | 'accepted' | 'declined';
 
+/**
+ * The stations a rota is counted by. Short on purpose: a vocabulary long
+ * enough to name every job is long enough that nobody fills it in.
+ */
+export type PlanRole = 'bar' | 'kitchen' | 'floor' | 'host' | 'support' | 'manager' | '';
+
+export const PLAN_ROLES: { value: PlanRole; label: string; emoji: string }[] = [
+  { value: 'bar', label: 'Bar', emoji: '🍸' },
+  { value: 'kitchen', label: 'Kitchen', emoji: '🔥' },
+  { value: 'floor', label: 'Floor', emoji: '🍽️' },
+  { value: 'host', label: 'Host', emoji: '💁' },
+  { value: 'support', label: 'Support', emoji: '🧼' },
+  { value: 'manager', label: 'Manager', emoji: '🎩' },
+];
+
 export interface Assignment {
   id: number;
   user_id: number;
@@ -162,6 +177,16 @@ export interface Assignment {
   end: string;
   note: string | null;
   status: AssignmentStatus;
+  /** '' where nobody said. Never guessed from the title. */
+  role: PlanRole;
+}
+
+/** One day's coverage, station by station. */
+export interface CoverageDay {
+  date: string;
+  roles: { role: PlanRole; count: number }[];
+  /** Cells on that day with no station recorded. */
+  unset: number;
 }
 
 export interface PlannerMember {
@@ -187,6 +212,8 @@ export interface PlannerBoard {
   can_grant: boolean;
   /** Days the crew said they cannot work, inside the window. */
   blocked: Blocked[];
+  /** Station counts per day. Only sent to somebody who plans. */
+  coverage: CoverageDay[];
 }
 
 export interface AssignmentSave {
@@ -196,6 +223,7 @@ export interface AssignmentSave {
   start: string;
   end: string;
   note: string | null;
+  role: PlanRole;
 }
 
 export const plannerApi = {

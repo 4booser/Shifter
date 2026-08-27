@@ -5,6 +5,8 @@
 type Dictionary = Record<string, string>;
 
 export const RU: Dictionary = {
+  'Station': 'Станция',
+  'No station set': 'Станция не указана',
   'Settled off the books': 'Закрыто наличными',
   'Written off': 'Списано',
   'Got it in cash': 'Доплатили',
@@ -1671,6 +1673,8 @@ export const RU: Dictionary = {
 };
 
 export const UK: Dictionary = {
+  'Station': 'Станція',
+  'No station set': 'Станцію не вказано',
   'Settled off the books': 'Закрито готівкою',
   'Written off': 'Списано',
   'Got it in cash': 'Доплатили',

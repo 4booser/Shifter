@@ -5,6 +5,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Assignment,
   AssignmentSave,
+  PLAN_ROLES,
+  PlanRole,
   PlannerBoard,
   plannerApi,
 } from '@/lib/api/team';
@@ -44,6 +46,7 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
     title: string;
     start: string;
     end: string;
+    role: PlanRole;
   } | null>(null);
 
   const refresh = useCallback(() => {
@@ -115,6 +118,16 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
     return map;
   }, [board]);
 
+  /**
+   * The same days counted by station, straight from the server. "Two bars and
+   * nobody in the kitchen" is the sentence a manager is reading the board for,
+   * and a head count never says it.
+   */
+  const stations = useMemo(
+    () => new Map((board?.coverage ?? []).map((day) => [day.date, day])),
+    [board],
+  );
+
   const save = async () => {
     if (editing === null) return;
 
@@ -127,6 +140,7 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
       start: editing.start,
       end: editing.end,
       note: null,
+      role: editing.role,
     };
 
     try {
@@ -335,6 +349,32 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
                     <span className={`block text-[0.64rem] tabular ${covered === 0 ? 'text-danger' : 'text-faint'}`}>
                       {covered === 0 ? t('empty') : `×${covered}`}
                     </span>
+
+                    {/* Stations, in the order the enum declares them, so a
+                        Friday and a Saturday read down the same columns. */}
+                    {/* Shown when anything is planned at all: a day whose only
+                        cell has no station is exactly the one worth fixing, and
+                        hiding the count hides that. */}
+                    {((stations.get(day)?.roles.length ?? 0) > 0 ||
+                      (stations.get(day)?.unset ?? 0) > 0) && (
+                      <span className="mt-0.5 flex flex-wrap justify-center gap-x-1 gap-y-0.5 text-[0.62rem] leading-none">
+                        {stations.get(day)?.roles.map((role) => (
+                          <span
+                            key={role.role}
+                            title={t(PLAN_ROLES.find((entry) => entry.value === role.role)?.label ?? role.role)}
+                            className="tabular text-muted"
+                          >
+                            {PLAN_ROLES.find((entry) => entry.value === role.role)?.emoji}
+                            {role.count}
+                          </span>
+                        ))}
+                        {(stations.get(day)?.unset ?? 0) > 0 && (
+                          <span className="tabular text-faint" title={t('No station set')}>
+                            ·{stations.get(day)?.unset}
+                          </span>
+                        )}
+                      </span>
+                    )}
                   </th>
                 );
               })}
@@ -397,11 +437,18 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
                             title={`${entry.title} · ${entry.start}–${entry.end} · ${t(entry.status)}`}
                             onClick={() =>
                               entry.status === 'draft'
-                                ? setEditing({ userId: entry.user_id, date: entry.date, id: entry.id, title: entry.title, start: entry.start, end: entry.end })
+                                ? setEditing({ userId: entry.user_id, date: entry.date, id: entry.id, title: entry.title, start: entry.start, end: entry.end, role: entry.role })
                                 : void remove(entry)
                             }
                           >
-                            <span className="block truncate font-semibold">{entry.title}</span>
+                            <span className="block truncate font-semibold">
+                              {entry.role !== '' && (
+                                <span aria-hidden className="mr-0.5">
+                                  {PLAN_ROLES.find((role) => role.value === entry.role)?.emoji}
+                                </span>
+                              )}
+                              {entry.title}
+                            </span>
                             <span className="tabular">{entry.start}–{entry.end}</span>
                           </button>
                         ))}
@@ -416,6 +463,10 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
                               title: editing?.title ?? templates[0]?.name ?? '',
                               start: editing?.start ?? templates[0]?.start_time ?? '11:00',
                               end: editing?.end ?? templates[0]?.end_time ?? '22:00',
+                              // The station carries over from the last cell:
+                              // a manager filling a Friday is filling one row
+                              // of the same station, not seven different ones.
+                              role: editing?.role ?? '',
                             })
                           }
                         >
@@ -477,6 +528,24 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
                 onChange={(event) => setEditing({ ...editing, title: event.target.value })}
               />
             </label>
+
+            <div className="mb-2">
+              <span className="field-label">{t('Station')}</span>
+              <div className="flex flex-wrap gap-1">
+                {PLAN_ROLES.map((role) => (
+                  <button
+                    key={role.value}
+                    type="button"
+                    className={`btn btn-sm ${editing.role === role.value ? 'btn-primary' : 'btn-quiet'}`}
+                    onClick={() =>
+                      setEditing({ ...editing, role: editing.role === role.value ? '' : role.value })
+                    }
+                  >
+                    {role.emoji} {t(role.label)}
+                  </button>
+                ))}
+              </div>
+            </div>
 
             <div className="mb-3 flex items-center gap-1.5">
               <input

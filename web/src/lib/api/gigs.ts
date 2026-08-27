@@ -37,6 +37,13 @@ export interface Gig {
   responses: number;
   is_mine: boolean;
   my_response: { id: number; accepted: boolean } | null;
+  /**
+   * The unguessable half of the share link, and only the owner is given it.
+   * The preview at /g/… has to work for people who are not signed in, so it
+   * cannot be keyed on the listing's id — counting from one used to walk the
+   * whole board.
+   */
+  share_slug: string | null;
 }
 
 export interface GigSave {

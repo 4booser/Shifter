@@ -42,7 +42,29 @@ const WEEKDAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
 interface YearSummary extends DaysResponse {
   tips_earned: number;
   by_location: { location_id: number; name: string; earned: number; hours: number }[];
+  /** Every time the rate moved on a shift worked in the year, newest first. */
+  raises?: Raise[];
 }
+
+/** One change of rate, read out of the shifts rather than kept in a log. */
+interface Raise {
+  shift_id: number;
+  shift_name: string;
+  location_name: string | null;
+  on: string;
+  before: number;
+  after: number;
+  period: 'hour' | 'day' | 'week' | 'month';
+  worth_since: number;
+  days_ago: number;
+}
+
+const PERIOD_SUFFIX: Record<Raise['period'], string> = {
+  hour: '/час',
+  day: '/день',
+  week: '/неделю',
+  month: '/месяц',
+};
 
 /**
  * The year, in the pocket. Everything here is counted from the same days the
@@ -281,6 +303,21 @@ export default function YearScreen() {
             {summary.tips_earned > 0 && (
               <Fact palette={palette} emoji="🪙" title="Чаевые">
                 {money(summary.tips_earned)} за год
+              </Fact>
+            )}
+            {/* The line worth having is the date itself: almost nobody can name
+                when they last got a raise, and everybody feels it. */}
+            {(summary.raises ?? []).length > 0 && (
+              <Fact palette={palette} emoji="📈" title="Ставка">
+                {said(summary.raises![0].on)} · {money(summary.raises![0].before)} →{' '}
+                {money(summary.raises![0].after)}
+                {PERIOD_SUFFIX[summary.raises![0].period]} ·{' '}
+                {plural(
+                  Math.round(summary.raises![0].days_ago / 30),
+                  'месяц назад',
+                  'месяца назад',
+                  'месяцев назад',
+                )}
               </Fact>
             )}
           </Section>

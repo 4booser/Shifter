@@ -121,6 +121,7 @@ public partial class DayHandler : IDayHandler
             tipOut,
             deductions,
             ByReason(days),
+            RaiseHistory.Of(days, DateOnly.FromDateTime(DateTime.UtcNow)),
             tax,
             totalEarned - tax,
             holiday,

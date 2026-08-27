@@ -16,7 +16,7 @@ import {
 } from '@/lib/calendar/calendar-date';
 import { forecastFor, paceToGoal, projectionSeries } from '@/lib/calendar/forecast';
 import { averagesFor } from '@/lib/calendar/insights';
-import { DaysResponse, DeductionSplit, EMPTY_SUMMARY, Goal, placeName } from '@/lib/calendar/models';
+import { DaysResponse, DeductionSplit, EMPTY_SUMMARY, Goal, placeName, Raise } from '@/lib/calendar/models';
 import { activeGoalFor, delta, earningsBuckets, median, weekdayTotals } from '@/lib/calendar/stats-math';
 import { buildColumns, buildTicks, niceCeiling } from '@/lib/charts/math';
 import { Sheet, buildXlsx, downloadBlob } from '@/lib/export/xlsx';
@@ -44,6 +44,14 @@ const ALL_TIME = { from: '2000-01-01', to: '2099-12-31' };
  * existed as well as everyone who did not bother — it is counted rather than
  * dropped so the split still adds up to the total above it.
  */
+/** How the rate is quoted, printed after the two numbers. */
+const PERIOD_SUFFIX: Record<Raise['period'], string> = {
+  hour: '/hour',
+  day: '/day',
+  week: '/week',
+  month: '/month',
+};
+
 const REASON_LABEL: Record<DeductionSplit['reason'], string> = {
   shortfall: 'Till came up short',
   breakage: 'Breakage',
@@ -754,6 +762,46 @@ function Stats() {
                 </span>
               ))}
             </p>
+          </Card>
+        )}
+
+        {summary.raises.length > 0 && (
+          <Card
+            title={t('When the rate moved')}
+            hint={t('Read out of the shifts themselves, so it is money that actually changed hands.')}
+          >
+            {/* The headline is the part nobody can name off the top of their
+                head and everybody feels: how long it has been. */}
+            <p className="text-[1.6rem] font-extrabold tracking-tight">
+              {n(Math.round(summary.raises[0].days_ago / 30), 'months')}
+            </p>
+            <p className="field-hint">{t('since the last change')}</p>
+
+            <ul className="mt-2.5 flex flex-col gap-1.5">
+              {summary.raises.slice(0, 6).map((raise) => (
+                <li
+                  key={`${raise.shift_id}-${raise.on}`}
+                  className="flex flex-wrap items-baseline gap-x-2 border-t border-border pt-1.5 text-[0.85rem]"
+                >
+                  <span className="tabular text-muted">{raise.on}</span>
+                  <span className="min-w-0 flex-1 truncate">
+                    {raise.location_name ?? raise.shift_name}
+                  </span>
+                  <span className="tabular">
+                    <Money value={raise.before} /> → <Money value={raise.after} />
+                    <span className="text-muted">{t(PERIOD_SUFFIX[raise.period])}</span>
+                  </span>
+                  <span
+                    className={`tabular w-full text-right text-[0.78rem] ${
+                      raise.worth_since < 0 ? 'text-danger' : 'text-good'
+                    }`}
+                  >
+                    {raise.worth_since < 0 ? '−' : '+'}
+                    <Money value={Math.abs(raise.worth_since)} /> {t('since then')}
+                  </span>
+                </li>
+              ))}
+            </ul>
           </Card>
         )}
 

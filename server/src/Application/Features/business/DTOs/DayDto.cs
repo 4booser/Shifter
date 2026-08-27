@@ -101,6 +101,12 @@ public record DaysDto(
     /// till shortfall add up the same and mean completely different things.
     /// </summary>
     DeductionReasonDto[] deductions_by_reason,
+    /// <summary>
+    /// Every time the rate moved on a shift worked in the range, newest first.
+    /// Read out of the placements, so it records money that actually changed
+    /// hands rather than what a template said at some point.
+    /// </summary>
+    RaiseDto[] raises,
     /// <summary>Income tax withheld across the range.</summary>
     decimal tax,
     /// <summary>total_earned minus tax — what actually reaches a pocket.</summary>
@@ -168,6 +174,24 @@ public record ConvertedPlaceDto(
     decimal earned,
     /// <summary>Null where this currency could not be converted.</summary>
     decimal? converted);
+
+/// <summary>
+/// One change of rate: when it happened, what it moved between, and what it has
+/// been worth since. Read out of the shifts themselves, so it describes money
+/// that actually changed hands.
+/// </summary>
+public record RaiseDto(
+    int shift_id,
+    string shift_name,
+    string? location_name,
+    DateOnly on,
+    decimal before,
+    decimal after,
+    /// <summary>hour, day, week or month — the two rates are always in the same one.</summary>
+    string period,
+    /// <summary>What the change has come to since, against work actually done.</summary>
+    decimal worth_since,
+    int days_ago);
 
 /// <summary>Fines of one kind over a range: how much, and how often.</summary>
 public record DeductionReasonDto(string reason, decimal amount, int days);

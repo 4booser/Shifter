@@ -342,6 +342,12 @@ export interface DaysResponse {
    * different things.
    */
   deductions_by_reason: DeductionSplit[];
+  /**
+   * Every time the rate moved on a shift worked in the range, newest first.
+   * Read out of the placements, so it records money that actually changed
+   * hands rather than what a template said at some point.
+   */
+  raises: Raise[];
   tax: number;
   /** total_earned minus tax. */
   net_earned: number;
@@ -388,6 +394,21 @@ export interface DeductionSplit {
   reason: DeductionReason | 'unsaid';
   amount: number;
   days: number;
+}
+
+/** One change of rate: when, between what, and what it has come to since. */
+export interface Raise {
+  shift_id: number;
+  shift_name: string;
+  location_name: string | null;
+  on: string;
+  before: number;
+  after: number;
+  /** hour, day, week or month — the two rates are always in the same one. */
+  period: 'hour' | 'day' | 'week' | 'month';
+  /** What the change has come to since, against work actually done. */
+  worth_since: number;
+  days_ago: number;
 }
 
 export interface Payout {
@@ -552,6 +573,7 @@ export const EMPTY_SUMMARY: DaysResponse = {
   tip_out: 0,
   deductions: 0,
   deductions_by_reason: [],
+  raises: [],
   tax: 0,
   net_earned: 0,
   holiday_accrued: 0,

@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
 import { api } from '@/lib/api/http';
@@ -69,6 +70,16 @@ export function DailyBrief() {
           {brief.tip}
         </p>
       )}
+
+      {/* The commonest reaction to a sentence about your money is a question
+          about it, so the way to ask one is on the card that prompted it. */}
+      <Link
+        href="/assistant"
+        className="relative mt-2.5 inline-flex items-center gap-1 text-[0.85rem] font-semibold text-(--accent) hover:underline"
+      >
+        {t('Ask about this')}
+        <span aria-hidden>›</span>
+      </Link>
     </section>
   );
 }

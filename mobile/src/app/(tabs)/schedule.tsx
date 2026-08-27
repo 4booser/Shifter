@@ -82,6 +82,25 @@ interface RotaGig {
   end: string;
 }
 
+/** A swap in flight: two shifts and two agreements. */
+interface Swap {
+  id: number;
+  mine: boolean;
+  proposer_name: string;
+  target_name: string;
+  proposer_date: string;
+  proposer_shift: string;
+  proposer_start: string;
+  proposer_end: string;
+  target_date: string;
+  target_shift: string;
+  target_start: string;
+  target_end: string;
+  note: string | null;
+  status: 'pending' | 'accepted' | 'declined' | 'cancelled';
+  created_at: string;
+}
+
 interface Rota {
   team_name: string;
   members: RotaMember[];
@@ -125,6 +144,7 @@ export default function ScheduleScreen() {
   const [teamId, setTeamId] = useState<number | null>(null);
   const [board, setBoard] = useState<Board | null>(null);
   const [rota, setRota] = useState<Rota | null>(null);
+  const [swaps, setSwaps] = useState<Swap[]>([]);
   const [mine, setMine] = useState<Assignment[]>([]);
   const [templates, setTemplates] = useState<ShiftTemplate[]>([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -150,15 +170,17 @@ export default function ScheduleScreen() {
     if (teamId === null) return;
 
     try {
-      const [boardData, rotaData, mineData, shifts] = await Promise.all([
+      const [boardData, rotaData, mineData, shifts, swapRows] = await Promise.all([
         api<Board>(`/shifter/v1/teams/${teamId}/planner?from=${span.from}&to=${span.to}`),
         api<Rota>(`/shifter/v1/teams/${teamId}/rota?from=${span.from}&to=${span.to}`),
         api<Assignment[]>(`/shifter/v1/teams/${teamId}/planner/mine`),
         api<ShiftTemplate[]>('/shifter/v1/shifts'),
+        api<Swap[]>(`/shifter/v1/teams/${teamId}/swaps`),
       ]);
 
       setBoard(boardData);
       setRota(rotaData);
+      setSwaps(swapRows);
       setMine(mineData);
       setTemplates(shifts.filter((item) => !item.archived));
       setError(null);
@@ -183,6 +205,20 @@ export default function ScheduleScreen() {
       await load();
     } catch (caught) {
       setError(caught instanceof ApiError ? caught.message : 'Не отправилось.');
+    }
+  };
+
+  const decideSwap = async (swap: Swap, take: boolean) => {
+    if (teamId === null) return;
+
+    try {
+      await api(
+        `/shifter/v1/teams/${teamId}/swaps/${swap.id}/${take ? 'accept' : 'withdraw'}`,
+        { method: 'POST', body: {} },
+      );
+      await load();
+    } catch (caught) {
+      setError(caught instanceof ApiError ? caught.message : 'Не получилось.');
     }
   };
 
@@ -282,6 +318,46 @@ export default function ScheduleScreen() {
                 </Pressable>
               </View>
             ))}
+          </View>
+        )}
+
+        {swaps.filter((swap) => swap.status === 'pending').length > 0 && (
+          <View style={styles.swapBox}>
+            <Text style={styles.offerTitle}>Обмены сменами</Text>
+            {swaps
+              .filter((swap) => swap.status === 'pending')
+              .map((swap) => (
+                <View key={swap.id} style={styles.swapRow}>
+                  <Text style={styles.swapWho}>
+                    {swap.mine
+                      ? `Вы предложили ${swap.target_name}`
+                      : `${swap.proposer_name} предлагает обмен`}
+                  </Text>
+                  <Text style={styles.swapWhat}>
+                    {dayLabel(swap.proposer_date)} · {swap.proposer_shift} {swap.proposer_start}–
+                    {swap.proposer_end}
+                  </Text>
+                  <Text style={styles.swapArrow}>⇅</Text>
+                  <Text style={styles.swapWhat}>
+                    {dayLabel(swap.target_date)} · {swap.target_shift} {swap.target_start}–
+                    {swap.target_end}
+                  </Text>
+                  {swap.note !== null && swap.note !== '' && (
+                    <Text style={styles.swapNote}>«{swap.note}»</Text>
+                  )}
+
+                  {/* Only the other side can agree; the proposer can only take
+                      it back, which is why these are not the same button. */}
+                  <Pressable
+                    style={[swap.mine ? styles.no : styles.yes, styles.swapButton]}
+                    onPress={() => void decideSwap(swap, !swap.mine)}
+                  >
+                    <Text style={swap.mine ? styles.noText : styles.yesText}>
+                      {swap.mine ? 'Отозвать' : 'Согласиться'}
+                    </Text>
+                  </Pressable>
+                </View>
+              ))}
           </View>
         )}
 
@@ -702,6 +778,26 @@ const makeStyles = (palette: Palette) =>
     noText: { color: palette.textSecondary, fontSize: 13 },
 
     sectionTitle: { color: palette.text, fontSize: 17, fontWeight: '700', marginTop: 8 },
+    swapBox: {
+      backgroundColor: palette.backgroundElement,
+      borderColor: palette.border,
+      borderWidth: 1,
+      borderRadius: 18,
+      padding: 14,
+      gap: 10,
+    },
+    swapRow: {
+      borderTopColor: palette.border,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      paddingTop: 10,
+      gap: 3,
+    },
+    swapWho: { color: palette.text, fontSize: 14, fontWeight: '700' },
+    swapWhat: { color: palette.textSecondary, fontSize: 13 },
+    swapArrow: { color: palette.accent, fontSize: 13, fontWeight: '700' },
+    swapNote: { color: palette.textSecondary, fontSize: 12, fontStyle: 'italic', marginTop: 2 },
+    // A column parent would stretch these to the full width otherwise.
+    swapButton: { alignSelf: 'flex-start', marginTop: 8 },
     dayCard: {
       backgroundColor: palette.backgroundElement,
       borderColor: palette.border,

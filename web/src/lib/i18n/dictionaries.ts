@@ -5,6 +5,7 @@
 type Dictionary = Record<string, string>;
 
 export const RU: Dictionary = {
+  'Ask about this': 'Спросить об этом',
   'Assistant': 'Помощник',
   'Ask about your own months': 'Спросите про свои месяцы',
   'Everything it answers with was counted from your own shifts — it never invents a figure.': 'Всё, чем он отвечает, посчитано по вашим сменам — цифры он не выдумывает.',
@@ -1640,6 +1641,7 @@ export const RU: Dictionary = {
 };
 
 export const UK: Dictionary = {
+  'Ask about this': 'Спитати про це',
   'Assistant': 'Помічник',
   'Ask about your own months': 'Спитайте про свої місяці',
   'Everything it answers with was counted from your own shifts — it never invents a figure.': 'Усе, чим він відповідає, пораховано за вашими змінами — цифри він не вигадує.',

@@ -658,7 +658,7 @@ public partial class DayHandler : IDayHandler
                 // reported beside the totals, never added to them.
                 decimal holiday = bucket.ShiftPay * bucket.HolidayPercent / 100m;
 
-                return new LocationTotalDto(
+                LocationTotalDto total = new LocationTotalDto(
                     pair.Key,
                     bucket.Name,
                     bucket.Colour,
@@ -674,6 +674,13 @@ public partial class DayHandler : IDayHandler
                     earned - tax,
                     holiday,
                     bucket.Currency);
+
+                // The journey, where the place knows about one. Worked out from
+                // the finished total so it can never drift from the hours and
+                // the take-home it is a comparison against.
+                return locations.TryGetValue(pair.Key, out Location? where)
+                    ? total with { commute = CommuteMath.For(where, total) }
+                    : total;
             })
             .OrderByDescending(total => total.earned)
             .ToArray();

@@ -5,6 +5,11 @@
 type Dictionary = Record<string, string>;
 
 export const RU: Dictionary = {
+  'Journey here, minutes one way': 'Дорога сюда, минут в одну сторону',
+  'One trip costs': 'Одна поездка стоит',
+  'Used only to show what an hour here is really worth. Never added to what you earned.': 'Нужно только чтобы показать, сколько здесь на самом деле стоит час. К заработку не прибавляется.',
+  'Per hour with travel': 'В час с дорогой',
+  'Which hour is worth more once the journey counts — the question behind holding two jobs.': 'Какой час дороже, если считать дорогу, — вопрос, ради которого держат две работы.',
   'Add different currencies up in': 'Складывать разные валюты в',
   'Do not': 'Не складывать',
   'Only matters if you work somewhere paid in another currency. Converted at the National Bank’s rate, which is shown beside the figure.': 'Нужно, только если где-то платят в другой валюте. Пересчёт по курсу НБУ — он показан рядом с суммой.',
@@ -1722,6 +1727,11 @@ export const RU: Dictionary = {
 };
 
 export const UK: Dictionary = {
+  'Journey here, minutes one way': 'Дорога сюди, хвилин в один бік',
+  'One trip costs': 'Одна поїздка коштує',
+  'Used only to show what an hour here is really worth. Never added to what you earned.': 'Потрібно лише щоб показати, скільки тут насправді вартує година. До заробітку не додається.',
+  'Per hour with travel': 'За годину з дорогою',
+  'Which hour is worth more once the journey counts — the question behind holding two jobs.': 'Яка година дорожча, якщо рахувати дорогу, — питання, заради якого тримають дві роботи.',
   'The palette opens with Cmd+K — every page and action is three keystrokes away.': 'Палітра відкривається по Cmd+K — будь-яка сторінка і дія за три натискання.',
   'A photo of the wall schedule imports itself: Import from photo on the calendar.': 'Фото графіка зі стіни імпортується саме: «Імпорт з фотографії» на календарі.',
   'A whole week repeats in one tap: Repeat last week, on the calendar sidebar.': 'Цілий тиждень повторюється одним дотиком: «Повторити минулий тиждень» у сайдбарі.',

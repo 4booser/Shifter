@@ -57,6 +57,8 @@ export function LocationModal({
   const [breakAfter, setBreakAfter] = useState(0);
   const [breakMinutes, setBreakMinutes] = useState(0);
   const [floor, setFloor] = useState(0);
+  const [commuteMinutes, setCommuteMinutes] = useState(0);
+  const [commuteCost, setCommuteCost] = useState(0);
   const [taxPercent, setTaxPercent] = useState(0);
   const [taxTips, setTaxTips] = useState(false);
   const [holidayPercent, setHolidayPercent] = useState(0);
@@ -118,6 +120,8 @@ export function LocationModal({
     setBreakAfter(location.auto_break_after_hours);
     setBreakMinutes(location.auto_break_minutes);
     setFloor(location.minimum_hourly);
+    setCommuteMinutes(location.commute_minutes ?? 0);
+    setCommuteCost(location.commute_cost ?? 0);
     setTaxPercent(location.tax_percent);
     setTaxTips(location.tax_tips);
     setHolidayPercent(location.holiday_percent);
@@ -167,6 +171,8 @@ export function LocationModal({
           auto_break_after_hours: breakAfter,
           auto_break_minutes: breakMinutes,
           minimum_hourly: floor,
+          commute_minutes: commuteMinutes,
+          commute_cost: commuteCost,
           tax_percent: taxPercent,
           tax_tips: taxTips,
           holiday_percent: holidayPercent,
@@ -430,6 +436,35 @@ export function LocationModal({
             {t('Days here that pay less per hour get flagged. Your own line, not a legal one.')}
           </span>
         </label>
+
+        <div className="grid grid-cols-2 gap-3">
+          <label>
+            <span className="field-label">{t('Journey here, minutes one way')}</span>
+            <input
+              type="number"
+              min={0}
+              max={600}
+              step={5}
+              className="field-input"
+              value={commuteMinutes}
+              onChange={num(setCommuteMinutes)}
+            />
+          </label>
+          <label>
+            <span className="field-label">{t('One trip costs')}</span>
+            <input
+              type="number"
+              min={0}
+              step={5}
+              className="field-input"
+              value={commuteCost}
+              onChange={num(setCommuteCost)}
+            />
+          </label>
+        </div>
+        <p className="field-hint -mt-1">
+          {t('Used only to show what an hour here is really worth. Never added to what you earned.')}
+        </p>
 
         <div className="grid grid-cols-2 gap-3">
           <label>

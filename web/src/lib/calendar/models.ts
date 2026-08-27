@@ -117,6 +117,10 @@ export interface WorkLocation {
   auto_break_minutes: number;
   /** The hourly rate this person will not go under here. 0 is off. */
   minimum_hourly: number;
+  /** The journey here, one way, in minutes. Zero means nobody has said. */
+  commute_minutes: number;
+  /** What one trip costs, one way. */
+  commute_cost: number;
 }
 
 export interface WorkLocationCreate {
@@ -150,6 +154,8 @@ export interface WorkLocationCreate {
   auto_break_after_hours?: number;
   auto_break_minutes?: number;
   minimum_hourly?: number;
+  commute_minutes?: number;
+  commute_cost?: number;
 }
 
 export interface LocationTotal {
@@ -165,6 +171,11 @@ export interface LocationTotal {
   deductions: number;
   /** Everything the place produced per paid hour. */
   per_hour: number;
+  /**
+   * The same place with the journey counted in. Null where nobody has said how
+   * far it is — an unstated commute is not a commute of zero.
+   */
+  commute: Commute | null;
   tax: number;
   /** earned minus tax. */
   net: number;
@@ -409,6 +420,24 @@ export interface Raise {
   /** What the change has come to since, against work actually done. */
   worth_since: number;
   days_ago: number;
+}
+
+/**
+ * What getting to a place costs, and what it does to the hourly rate. An
+ * estimate throughout, which is why it sits beside the earnings rather than
+ * inside them.
+ */
+export interface Commute {
+  /** One way, in minutes. */
+  minutes: number;
+  /** One trip, one way. */
+  cost: number;
+  travel_hours: number;
+  fares: number;
+  hours_with_travel: number;
+  net_after_fares: number;
+  /** The number this is all for: what an hour is really worth here. */
+  per_hour_with_travel: number;
 }
 
 export interface Payout {

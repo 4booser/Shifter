@@ -43,7 +43,11 @@ public record LocationDto(
     decimal auto_break_after_hours = 0m,
     int auto_break_minutes = 0,
     /// <summary>The hourly rate this person will not go under here. Zero is off.</summary>
-    decimal minimum_hourly = 0m
+    decimal minimum_hourly = 0m,
+    /// <summary>The journey here, one way, in minutes. Zero means nobody said.</summary>
+    int commute_minutes = 0,
+    /// <summary>What one trip costs, one way.</summary>
+    decimal commute_cost = 0m
     );
 
 public record LocationCreateDto(
@@ -80,7 +84,9 @@ public record LocationCreateDto(
     /// </summary>
     decimal auto_break_after_hours = 0m,
     int auto_break_minutes = 0,
-    decimal minimum_hourly = 0m
+    decimal minimum_hourly = 0m,
+    int commute_minutes = 0,
+    decimal commute_cost = 0m
     );
 
 /// <summary>Money and hours attributed to one location inside a range.</summary>
@@ -103,5 +109,32 @@ public record LocationTotalDto(
     decimal net,
     /// <summary>Holiday pay accrued here, owed but not yet paid.</summary>
     decimal holiday,
-    string currency
+    string currency,
+    /// <summary>
+    /// The same place with the journey counted in. Null where nobody has said
+    /// how far it is — an unstated commute is not a commute of zero, and
+    /// pretending otherwise would invent a comparison.
+    /// </summary>
+    CommuteDto? commute = null
     );
+
+/// <summary>
+/// What getting to a place costs, and what it does to the hourly rate. An
+/// estimate throughout, which is why it lives in its own object rather than
+/// being folded into the earnings beside it.
+/// </summary>
+public record CommuteDto(
+    /// <summary>One way, in minutes.</summary>
+    int minutes,
+    /// <summary>One trip, one way.</summary>
+    decimal cost,
+    /// <summary>Hours spent travelling to and from, over the range.</summary>
+    double travel_hours,
+    /// <summary>Fares over the range, both ways.</summary>
+    decimal fares,
+    /// <summary>Paid hours plus travelling.</summary>
+    double hours_with_travel,
+    /// <summary>Take-home less the fares.</summary>
+    decimal net_after_fares,
+    /// <summary>The number this is all for: what an hour is really worth here.</summary>
+    decimal per_hour_with_travel);

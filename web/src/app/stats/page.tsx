@@ -407,6 +407,11 @@ function Stats() {
 
   const comparison = summary.by_location.length >= 2 ? summary.by_location : null;
 
+  // The travel column only appears once somebody has said how far a place is.
+  // An empty column reads as "the journey is nothing", which is the exact
+  // wrong answer.
+  const anyCommute = (comparison ?? []).some((place) => place.commute != null);
+
   // ==== Exports ====
 
   const exportPng = () => {
@@ -1100,7 +1105,14 @@ function Stats() {
 
       {/* ==== Places ==== */}
       {comparison !== null && (
-        <Card title={t('Places side by side')} hint={t('Which hour is worth more — the question behind holding two jobs.')}>
+        <Card
+          title={t('Places side by side')}
+          hint={t(
+            anyCommute
+              ? 'Which hour is worth more once the journey counts — the question behind holding two jobs.'
+              : 'Which hour is worth more — the question behind holding two jobs.',
+          )}
+        >
           <div className="overflow-x-auto">
             <table className="w-full text-[0.85rem]">
               <thead className="text-left text-muted">
@@ -1110,6 +1122,11 @@ function Stats() {
                       {column}
                     </th>
                   ))}
+                  {/* Only where somebody has actually said how far a place is.
+                      An empty column would read as "the journey is nothing". */}
+                  {anyCommute && (
+                    <th className="px-2 py-1.5 font-medium">{t('Per hour with travel')}</th>
+                  )}
                 </tr>
               </thead>
               <tbody>
@@ -1142,6 +1159,17 @@ function Stats() {
                           <td className="px-2 py-1.5"><Money value={place.tips} /></td>
                           <td className="px-2 py-1.5 font-semibold"><Money value={place.per_hour} /></td>
                         </>
+                      )}
+                      {anyCommute && (
+                        <td className="px-2 py-1.5 tabular">
+                          {place.commute == null ? (
+                            <span className="text-muted">—</span>
+                          ) : summary.currencies.length > 1 ? (
+                            formatWith(currencyOf(place), place.commute.per_hour_with_travel)
+                          ) : (
+                            <Money value={place.commute.per_hour_with_travel} />
+                          )}
+                        </td>
                       )}
                     </tr>
                   ))}

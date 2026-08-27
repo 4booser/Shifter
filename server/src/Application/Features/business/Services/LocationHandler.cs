@@ -227,6 +227,18 @@ public partial class LocationHandler : ILocationHandler
             request.auto_break_after_hours > 0m ? request.auto_break_minutes : 0;
         location.MinimumHourly = request.minimum_hourly;
 
+        // A journey longer than a working day is a typo, not a commute. The
+        // cap is deliberately generous — some people really do travel two
+        // hours each way — and only refuses what cannot be true.
+        if (request.commute_minutes is < 0 or > 600)
+            throw new ValidationException("A one-way journey must be under ten hours.");
+
+        if (request.commute_cost < 0m)
+            throw new ValidationException("A fare cannot be negative.");
+
+        location.CommuteMinutes = request.commute_minutes;
+        location.CommuteCost = request.commute_cost;
+
         if (request.tax_percent is < 0 or > 100)
             throw new ValidationException("Tax must be between 0 and 100 percent.");
 
@@ -284,7 +296,9 @@ public partial class LocationHandler : ILocationHandler
             location.Longitude,
             location.AutoBreakAfterHours,
             location.AutoBreakMinutes,
-            location.MinimumHourly
+            location.MinimumHourly,
+            location.CommuteMinutes,
+            location.CommuteCost
         );
     }
 

@@ -96,6 +96,24 @@ public sealed class Location
     public decimal MealDeduction { get; set; }
 
     /// <summary>
+    /// One way, in minutes. Zero means nobody has said, which is different from
+    /// living upstairs — an unstated commute is left out of the arithmetic
+    /// entirely rather than counted as free.
+    ///
+    /// This exists because "в час" is the most honest number in the app and
+    /// still incomplete: an hour at the bar round the corner and an hour at the
+    /// bar forty minutes away are not the same hour, and everybody knows it
+    /// without ever having counted it.
+    /// </summary>
+    public int CommuteMinutes { get; set; }
+
+    /// <summary>
+    /// What one trip costs, one way. Metro fare, petrol, the taxi home at four
+    /// in the morning that only this place makes necessary.
+    /// </summary>
+    public decimal CommuteCost { get; set; }
+
+    /// <summary>
     /// A shift longer than this earns an unpaid break automatically, in hours.
     /// Zero is off. The rule exists because the break is a house rule nobody
     /// re-types per shift — and because a template that forgets it prices an

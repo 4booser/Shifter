@@ -2,6 +2,9 @@ using System.Security.Claims;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
+
+using Shifter.Api.Extensions;
 
 using Shifter.Application.Common.Exceptions;
 using Shifter.Application.Features.Brief;
@@ -10,6 +13,10 @@ namespace Shifter.Api.Controllers;
 
 /// <summary>The daily brief, computed by us and worded once a day.</summary>
 [Authorize]
+// The brief rewrites itself whenever the month's total moves, so a client in
+// a loop is a client spending money at the model. The assistant's ceiling
+// fits here for the same reason.
+[EnableRateLimiting(HardeningExtensions.AssistantPolicy)]
 [Route("shifter/v1/brief")]
 public class BriefController : ControllerBase
 {

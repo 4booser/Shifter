@@ -84,8 +84,21 @@ public sealed class NbuRateClient
     /// <summary>The hryvnia itself, which the bank does not quote against itself.</summary>
     public const decimal Hryvnia = 1m;
 
+    /// <summary>
+    /// The currencies this app converts between. An allow-list rather than
+    /// "any three letters", because the code arrives in a query parameter and
+    /// an unknown one that will never resolve costs a walk back through eight
+    /// days of the bank's API on every single request.
+    /// </summary>
+    public static readonly string[] Known =
+        ["UAH", "PLN", "EUR", "USD", "CZK", "GBP", "HUF", "RON", "TRY", "CAD", "CHF", "SEK", "NOK", "ILS"];
+
     public static string Normalise(string? code)
-        => (code ?? string.Empty).Trim().ToUpperInvariant() is { Length: 3 } valid ? valid : "UAH";
+    {
+        var upper = (code ?? string.Empty).Trim().ToUpperInvariant();
+
+        return Known.Contains(upper) ? upper : "UAH";
+    }
 
     /// <summary>
     /// The rate as a reader would check it: no padded zeros, and a full stop

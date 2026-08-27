@@ -67,6 +67,13 @@ public sealed class SwapService
         if ((team.Members ?? []).All(member => member.UserId != targetUserId))
             throw new ValidationException("That person is not in the team.");
 
+        // The shift being asked for has to be one the caller can actually see
+        // on the rota. Without this, hiding a shift from the crew stops
+        // working the moment somebody walks the ids: the proposal succeeds and
+        // hands its name and hours straight back in the reply.
+        if (!Visible(theirs, team, targetUserId))
+            throw new NotFoundException("That shift does not exist.");
+
         // A shift already promised elsewhere cannot be promised again.
         var busy = await _db.ShiftSwaps.AnyAsync(
             swap => swap.Status == SwapStatus.Pending
@@ -230,6 +237,14 @@ public sealed class SwapService
     /// arrive populated here, and a swap that guesses whose shift it is
     /// would be a swap that trades the wrong person's Friday.
     /// </summary>
+    private static bool Visible(DayShift placement, Team team, int ownerUserId)
+    {
+        var owner = (team.Members ?? []).FirstOrDefault(member => member.UserId == ownerUserId);
+
+        return owner is not null
+            && RotaVisibility.Allows(placement.TeamVisible, owner.PrivateByDefault);
+    }
+
     private async Task<(DayShift Placement, Day Day)> PlacementAsync(int dayShiftId, CancellationToken ct)
     {
         var placement = await _db.DayShifts

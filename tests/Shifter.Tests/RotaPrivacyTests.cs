@@ -1,5 +1,6 @@
 using System.Reflection;
 using Shifter.Application.Features.Teams.DTOs;
+using Shifter.Application.Features.Teams.Services;
 using Shifter.Infrastructure.Repositories.Interfaces;
 
 using Xunit;
@@ -223,5 +224,30 @@ public class RotaPrivacyTests
                 "TeamVisible", "UserId", "Worked",
             ],
             Fields(typeof(RotaRow)));
+    }
+
+    // ==== The rule, written once ====
+
+    [Fact]
+    public void AShiftShownOnPurposeIsVisibleHoweverTheDefaultIsSet()
+    {
+        Assert.True(RotaVisibility.Allows(true, ownerPrivateByDefault: true));
+        Assert.True(RotaVisibility.Allows(true, ownerPrivateByDefault: false));
+    }
+
+    [Fact]
+    public void AShiftHiddenOnPurposeStaysHiddenHoweverTheDefaultIsSet()
+    {
+        Assert.False(RotaVisibility.Allows(false, ownerPrivateByDefault: false));
+        Assert.False(RotaVisibility.Allows(false, ownerPrivateByDefault: true));
+    }
+
+    [Fact]
+    public void SayingNothingFallsToTheOwnersDefault()
+    {
+        // "I have not said" is the honest answer for almost every shift, which
+        // is why it is a third state rather than a yes or a no.
+        Assert.True(RotaVisibility.Allows(null, ownerPrivateByDefault: false));
+        Assert.False(RotaVisibility.Allows(null, ownerPrivateByDefault: true));
     }
 }

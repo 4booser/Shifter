@@ -150,3 +150,19 @@ export const toSavePayload = (day: CalendarDayData | undefined): DaySave => ({
 });
 
 export const money = (value: number) => `₴${Math.round(value).toLocaleString('ru')}`;
+
+/**
+ * Russian declines after a number, so a count and its word are one call:
+ * "1 раз", "2 раза", "5 раз". Getting this wrong is the tell that nobody
+ * read the sentence out loud.
+ */
+export const plural = (count: number, one: string, few: string, many: string): string => {
+  const tens = count % 100;
+  const units = count % 10;
+
+  if (tens >= 11 && tens <= 14) return `${count} ${many}`;
+  if (units === 1) return `${count} ${one}`;
+  if (units >= 2 && units <= 4) return `${count} ${few}`;
+
+  return `${count} ${many}`;
+};

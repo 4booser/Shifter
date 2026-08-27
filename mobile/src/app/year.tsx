@@ -16,7 +16,7 @@ import { MonthBars } from '@/components/charts';
 import { Colors, Palette } from '@/constants/theme';
 import { api } from '@/lib/api';
 import { currentMonth, monthBounds } from '@/lib/calendar';
-import { DaysResponse, money } from '@/lib/types';
+import { DaysResponse, money, plural } from '@/lib/types';
 
 /**
  * Hours are the honest measure of a year in hospitality: money moves with the
@@ -255,12 +255,12 @@ export default function YearScreen() {
             )}
             {facts.favourite !== null && (
               <Fact palette={palette} emoji="⭐️" title="Любимая смена">
-                {facts.favourite[0]} · {facts.favourite[1]} раз
+                {facts.favourite[0]} · {plural(facts.favourite[1], 'раз', 'раза', 'раз')}
               </Fact>
             )}
             {facts.busiest !== null && (
               <Fact palette={palette} emoji="📅" title="Чаще всего выходили">
-                {WEEKDAYS[facts.busiest[0]]} · {facts.busiest[1]} раз
+                {WEEKDAYS[facts.busiest[0]]} · {plural(facts.busiest[1], 'раз', 'раза', 'раз')}
               </Fact>
             )}
             {facts.place !== null && (
@@ -276,7 +276,7 @@ export default function YearScreen() {
               после 20:00
             </Fact>
             <Fact palette={palette} emoji="🛌" title="Отдых">
-              {facts.daysOff} дней без смены
+              {plural(facts.daysOff, 'день', 'дня', 'дней')} без смены
             </Fact>
             {summary.tips_earned > 0 && (
               <Fact palette={palette} emoji="🪙" title="Чаевые">

@@ -83,4 +83,25 @@ public class RateTests
         Assert.Equal("11.3285", NbuRateClient.Format(11.328500m));
         Assert.Equal("48", NbuRateClient.Format(48.0000m));
     }
+
+    [Theory]
+    [InlineData("XYZ")]
+    [InlineData("ZZZ")]
+    [InlineData("BTC")]
+    public void AnUnknownCodeIsNotAcceptedAsACurrency(string given)
+    {
+        // The code arrives in a query parameter. One that will never resolve
+        // costs a walk back through eight days of the bank's API on every
+        // single request, driven entirely from outside.
+        Assert.Equal("UAH", NbuRateClient.Normalise(given));
+    }
+
+    [Fact]
+    public void TheCurrenciesOfferedAreTheOnesAccepted()
+    {
+        // The picker on the settings screen must not offer something the
+        // server will silently turn back into hryvnia.
+        foreach (var code in new[] { "UAH", "PLN", "EUR", "USD", "CZK", "GBP" })
+            Assert.Equal(code, NbuRateClient.Normalise(code));
+    }
 }

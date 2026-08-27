@@ -41,6 +41,10 @@ public static class BriefBlocks
 
     private static string Said(DateOnly date) => $"{date.Day} {Months[date.Month - 1]}";
 
+    /// <summary>"1 раз", "2 раза", "5 раз" — Russian declines after a number.</summary>
+    private static string Times(int count) =>
+        $"{count} {Telegram.TelegramCommands.Plural(count, "раз", "раза", "раз")}";
+
     private static readonly string[] Weekdays =
     [
         "воскресенье", "понедельник", "вторник", "среду",
@@ -251,7 +255,7 @@ public static class BriefBlocks
 
         if (clopenings > 0)
             lines.Add(new BriefLineDto(
-                $"Закрытие и открытие подряд: {clopenings} раз — между сменами меньше 11 ч",
+                $"Закрытие и открытие подряд: {Times(clopenings)} — между сменами меньше 11 ч",
                 null,
                 "warn"));
 
@@ -275,7 +279,7 @@ public static class BriefBlocks
             .FirstOrDefault();
 
         if (favourite is not null && favourite.Count() > 1 && placed.Select(s => s.name).Distinct().Count() > 1)
-            lines.Add(new BriefLineDto($"Чаще всего выходили на «{favourite.Key}» — {favourite.Count()} раз"));
+            lines.Add(new BriefLineDto($"Чаще всего выходили на «{favourite.Key}» — {Times(favourite.Count())}"));
 
         if (month.night_hours > 0 && month.hours > 0)
             lines.Add(new BriefLineDto(

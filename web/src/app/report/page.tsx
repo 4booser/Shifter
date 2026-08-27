@@ -44,7 +44,7 @@ const firstOf = ({ year, month }: YearMonth) => `${year}-${`${month}`.padStart(2
  */
 function Report() {
   const { t, lang } = useI18n();
-  const { format } = useMoney();
+  const { format, formatIn } = useMoney();
 
   const [month, setMonth] = useState<YearMonth>(currentMonth());
   const [mode, setMode] = useState<'month' | 'year'>('month');
@@ -409,8 +409,11 @@ function Report() {
                           {placeName(place, t('No place set'))}
                         </td>
                         <td className="py-1.5 pr-2 text-right tabular">{Math.round(place.hours * 10) / 10}</td>
-                        <td className="py-1.5 pr-2 text-right tabular">{format(place.per_hour)}</td>
-                        <td className="py-1.5 text-right font-semibold tabular">{format(place.earned)}</td>
+                        {/* Each place in its own currency: a month in Kraków
+                            printed with a hryvnia mark reads as a tenfold
+                            overstatement of somebody's wages. */}
+                        <td className="py-1.5 pr-2 text-right tabular">{formatIn(place.currency, place.per_hour)}</td>
+                        <td className="py-1.5 text-right font-semibold tabular">{formatIn(place.currency, place.earned)}</td>
                       </tr>
                     ))}
                   </tbody>

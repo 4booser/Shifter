@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 
 import { apiErrorMessage } from '@/lib/api/http';
+import { todayKey } from '@/lib/calendar/calendar-date';
 import { MARK_COLOURS, PAY_PERIODS, PayPeriodKind, WorkLocation } from '@/lib/calendar/models';
 import { useI18n } from '@/lib/i18n';
 import { catalogueActions, useCalendar } from '@/lib/store/calendar';
@@ -11,7 +12,7 @@ import { Icon } from '@/components/ui/icon';
 import { Modal } from '@/components/ui/modal';
 import { confirmDeleteLocation } from './location-delete';
 
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => todayKey();
 
 /**
  * The place manager: the list, the form, and every rule that lives on a place

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { apiErrorMessage } from '@/lib/api/http';
+import { todayKey } from '@/lib/calendar/calendar-date';
 import { Rota, RotaEntry, Swap, swapApi } from '@/lib/api/team';
 import { useI18n } from '@/lib/i18n';
 import { pushToast } from '@/lib/toast';
@@ -134,7 +135,7 @@ function ProposeModal({
   );
 
   // Only what is still ahead: trading yesterday helps nobody.
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayKey();
   const ahead = rota.entries.filter((entry) => entry.date >= today && !entry.worked);
   const ours = ahead.filter((entry) => entry.member_id === you?.member_id);
   const others = ahead.filter((entry) => entry.member_id !== you?.member_id);

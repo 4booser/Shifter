@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 
 import { apiErrorMessage } from '@/lib/api/http';
+import { todayKey } from '@/lib/calendar/calendar-date';
 import { useI18n } from '@/lib/i18n';
 import { catalogueActions, summaryRange, useCalendar } from '@/lib/store/calendar';
 import { Alert, Money } from '@/components/ui/bits';
@@ -60,7 +61,7 @@ export function PayoutModal({
   useEffect(() => {
     if (!open) return;
 
-    const today = new Date().toISOString().slice(0, 10);
+    const today = todayKey();
 
     setError(null);
     setReceived(today);

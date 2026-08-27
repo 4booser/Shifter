@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 
 import { calendarApi } from '@/lib/api/calendar';
+import { todayKey } from '@/lib/calendar/calendar-date';
 import { apiErrorMessage } from '@/lib/api/http';
 import { Goal, GoalPeriod } from '@/lib/calendar/models';
 import { useI18n } from '@/lib/i18n';
@@ -52,7 +53,7 @@ export function GoalsModal({
     setError(null);
     setPeriod('month');
     setDated(false);
-    setAnchor(new Date().toISOString().slice(0, 10));
+    setAnchor(todayKey());
     setAmount(null);
     setNote('');
     load();

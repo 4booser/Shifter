@@ -1,5 +1,8 @@
 'use client';
 
+import { translate } from '@/lib/i18n';
+import { useSettings } from '@/lib/settings/store';
+
 /**
  * The one place requests go through: attaches the bearer token, renews the
  * session in place on a 401 and retries once, and turns the API's error
@@ -119,15 +122,28 @@ async function errorFrom(response: Response): Promise<HttpError> {
 }
 
 export function apiErrorMessage(error: unknown): string {
+  // The server's own words. Translating these needs error codes rather than
+  // sentences, which is a change on the other side; the two messages this
+  // function writes itself are its own responsibility and are translated.
   if (error instanceof HttpError) return error.message;
 
   // A request that never landed. Saying which address was tried turns an
-  // unhelpful message into a diagnosis.
+  // unhelpful message into a diagnosis — and it read in English to every
+  // Russian and Ukrainian user, because this module is not a component and
+  // never went near the dictionary.
   if (error instanceof TypeError) {
-    return `Cannot reach the server at ${location.origin}. Is it running at this address?`;
+    return `${say('Cannot reach the server. Is it running?')} ${location.origin}`;
   }
 
-  return error instanceof Error ? error.message : 'Something went wrong.';
+  return error instanceof Error ? error.message : say('Something went wrong.');
+}
+
+/**
+ * The dictionary, read outside React. The settings store is a plain zustand
+ * store, so its language is available without a hook.
+ */
+function say(key: string): string {
+  return translate(useSettings.getState().settings.language, key);
 }
 
 interface RequestOptions {

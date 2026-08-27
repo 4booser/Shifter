@@ -711,7 +711,7 @@ export function DayPanel() {
  * point of selecting several days.
  */
 function BulkPanel({ keys }: { keys: string[] }) {
-  const { t } = useI18n();
+  const { t, n } = useI18n();
   const { format } = useMoney();
   const templates = useCalendar((state) => state.templates);
   const days = useCalendar((state) => state.days);
@@ -726,7 +726,7 @@ function BulkPanel({ keys }: { keys: string[] }) {
     <aside className="card rise w-full p-4">
       <div className="mb-1 flex items-baseline justify-between">
         <h2 className="text-[1.02rem] font-bold">
-          {keys.length} {t('days selected')}
+          {n(keys.length, 'days')} {t('selected')}
         </h2>
         <button type="button" className="btn btn-quiet btn-sm" onClick={calendarActions.clearMultiSelect}>
           {t('Clear')}

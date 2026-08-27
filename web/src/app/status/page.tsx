@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useI18n } from '@/lib/i18n';
 import { useEffect, useState } from 'react';
 
 import { api } from '@/lib/api/http';
@@ -15,9 +16,9 @@ interface Status {
 }
 
 const NAMES: Record<string, string> = {
-  api: 'Приложение',
-  'calendar-database': 'База календаря',
-  'accounts-database': 'База аккаунтов',
+  api: 'The app',
+  'calendar-database': 'Calendar database',
+  'accounts-database': 'Accounts database',
 };
 
 /**
@@ -26,6 +27,7 @@ const NAMES: Record<string, string> = {
  * only say "fine" is decoration.
  */
 export default function StatusPage() {
+  const { t, lang } = useI18n();
   const revealHost = useReveal<HTMLDivElement>();
   const [status, setStatus] = useState<Status | null>(null);
   const [unreachable, setUnreachable] = useState(false);
@@ -84,12 +86,12 @@ export default function StatusPage() {
             {unreachable ? '🔌' : good ? '✅' : '⚠️'}
           </span>
           <h1 className="text-balance text-[clamp(1.6rem,4vw,2.2rem)] font-extrabold tracking-tight">
-            {unreachable ? 'Не отвечает' : good ? 'Всё работает' : 'Есть проблемы'}
+            {t(unreachable ? 'Not responding' : good ? 'Everything is running' : 'Something is wrong')}
           </h1>
           <p className="mt-1 text-muted">
             {unreachable
-              ? 'Мы не смогли достучаться до сервиса из вашего браузера.'
-              : 'Страница сама переспрашивает сервис каждые 30 секунд.'}
+              ? t('We could not reach the service from your browser.')
+              : t('This page asks again every 30 seconds.')}
           </p>
         </section>
 
@@ -99,9 +101,9 @@ export default function StatusPage() {
               {status.services.map((service) => (
                 <div key={service.name} className="card flex items-center gap-3 p-3">
                   <span className={`h-2.5 w-2.5 flex-none rounded-full ${service.ok ? 'bg-good' : 'bg-danger'}`} />
-                  <b className="text-[0.95rem]">{NAMES[service.name] ?? service.name}</b>
+                  <b className="text-[0.95rem]">{t(NAMES[service.name] ?? service.name)}</b>
                   <span className="ml-auto text-[0.85rem] tabular text-muted">
-                    {service.ok ? `${service.latency_ms} мс` : 'не отвечает'}
+                    {service.ok ? `${service.latency_ms} ${t('ms')}` : t('not responding')}
                   </span>
                 </div>
               ))}
@@ -110,13 +112,13 @@ export default function StatusPage() {
             <section className="reveal grid grid-cols-2 gap-2 text-center">
               <div className="card p-3">
                 <p className="text-[1.2rem] font-extrabold tabular">{uptime(status.uptime_seconds)}</p>
-                <p className="field-hint">без перезапуска</p>
+                <p className="field-hint">{t('without a restart')}</p>
               </div>
               <div className="card p-3">
                 <p className="text-[1.2rem] font-extrabold tabular">
-                  {new Date(status.checked_at).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                  {new Date(status.checked_at).toLocaleTimeString(lang, { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                 </p>
-                <p className="field-hint">последняя проверка</p>
+                <p className="field-hint">{t('last checked')}</p>
               </div>
             </section>
           </>

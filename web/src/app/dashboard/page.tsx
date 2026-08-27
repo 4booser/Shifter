@@ -41,7 +41,7 @@ export default function DashboardPage() {
 }
 
 function Dashboard() {
-  const { t } = useI18n();
+  const { t, n } = useI18n();
   const revealHost = useReveal<HTMLDivElement>();
   const state = useCalendar();
   const settings = useSettings((sel) => sel.settings);
@@ -270,7 +270,7 @@ function Dashboard() {
         <Alert kind="info" onDismiss={() => setReminderDismissed(true)}>
           <span className="flex flex-wrap items-center gap-2">
             <Icon name="clock" size={14} />
-            {unclosed.length} {t('worked days have no tips or sales recorded')}
+            {n(unclosed.length, 'days')} {t('worked have no tips or sales recorded')}
             <button
               type="button"
               className="btn btn-sm"

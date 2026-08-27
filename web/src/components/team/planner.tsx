@@ -343,7 +343,7 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
         <span className="ml-auto flex items-center gap-2">
           {declined > 0 && (
             <span className="chip border-danger/40 bg-(--danger-soft) text-danger">
-              {declined} {t('declined — replan')}
+              {n(declined, 'declines')} — {t('replan')}
             </span>
           )}
           <button type="button" className="btn btn-sm" disabled={busy} onClick={() => void copyLastWeek()}>
@@ -503,7 +503,12 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
                         ))}
                         <button
                           type="button"
-                          className="hidden rounded-(--radius) border border-dashed border-border-strong px-1.5 py-0.5 text-[0.72rem] text-faint hover:border-(--accent) hover:text-(--accent) group-hover:block"
+                          aria-label={t('Add a shift here')}
+                          // Shown on hover and on focus, and never removed from
+                          // the page: `hidden` is display:none, so this was not
+                          // focusable at all — assigning a shift to a person on
+                          // a day was unreachable without a pointer.
+                          className="rounded-(--radius) border border-dashed border-border-strong px-1.5 py-0.5 text-[0.72rem] text-faint opacity-0 transition-opacity hover:border-(--accent) hover:text-(--accent) focus-visible:opacity-100 group-hover:opacity-100"
                           onClick={() =>
                             setEditing({
                               userId: member.user_id,

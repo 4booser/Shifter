@@ -34,7 +34,7 @@ const WEEKDAYS = [
  * paint mode stops needing a template picked first.
  */
 export function PatternModal({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { t } = useI18n();
+  const { t, n } = useI18n();
   const allTemplates = useCalendar((state) => state.templates);
   const templates = allTemplates.filter((template) => !template.archived);
   const month = useCalendar((state) => state.month);
@@ -139,7 +139,7 @@ export function PatternModal({ open, onClose }: { open: boolean; onClose: () => 
           <p className="field-hint">
             {willPlace > 0 ? (
               <>
-                {t('Will place')} <strong>{willPlace}</strong> {t('shifts over')} {dates.length} {t('days')}.
+                {t('Will place')} <strong>{n(willPlace, 'shifts')}</strong> {t('over')} {n(dates.length, 'days')}.
               </>
             ) : (
               t('Nothing to place over those dates.')

@@ -278,6 +278,7 @@ function Assistant() {
             <div className="flex items-center gap-2">
               <button
                 type="button"
+                aria-label={t('Previous month')}
                 className="btn btn-quiet btn-sm"
                 onClick={() => setMonth((at) => addMonths(at, -1))}
               >
@@ -288,6 +289,7 @@ function Assistant() {
               </span>
               <button
                 type="button"
+                aria-label={t('Next month')}
                 className="btn btn-quiet btn-sm"
                 onClick={() => setMonth((at) => addMonths(at, 1))}
               >

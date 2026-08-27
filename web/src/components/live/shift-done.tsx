@@ -195,7 +195,12 @@ export function ShiftDoneOverlay() {
                   value={tips}
                   onChange={(event) => setTips(event.target.value)}
                 />
-                <button type="button" className="btn btn-primary btn-sm" onClick={() => void addTips()}>
+                <button
+                  type="button"
+                  aria-label={t('Confirm the tips')}
+                  className="btn btn-primary btn-sm"
+                  onClick={() => void addTips()}
+                >
                   <Icon name="check" size={13} />
                 </button>
               </div>

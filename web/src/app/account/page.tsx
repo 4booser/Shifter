@@ -354,6 +354,7 @@ function FeedSection() {
             <input readOnly className="field-input flex-1 !text-[0.78rem] tabular" value={url} onFocus={(e) => e.target.select()} />
             <button
               type="button"
+              aria-label={t('Copy the link')}
               className="btn btn-sm"
               onClick={() => {
                 void navigator.clipboard.writeText(url);

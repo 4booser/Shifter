@@ -286,6 +286,7 @@ function Schedule() {
 
         {teams.length > 1 && (
           <select
+          aria-label={t('Team')}
             className="field-input w-auto"
             value={selected ?? ''}
             onChange={(event) => setSelected(Number(event.target.value))}

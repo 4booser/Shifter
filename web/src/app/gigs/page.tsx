@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { apiErrorMessage } from '@/lib/api/http';
 import { Gig, GigEmployment, GigReply, GigSave, GIG_CATEGORIES, GIG_GROUPS, categoryOf, gigApi, shrinkPhoto } from '@/lib/api/gigs';
 import { accountApi } from '@/lib/api/auth';
-import { fromKey, keysBetween, monthBounds, todayKey, weekBounds } from '@/lib/calendar/calendar-date';
+import { fromKey, keysBetween, monthBounds, todayKey, weekBounds, keyOf } from '@/lib/calendar/calendar-date';
 import { useI18n } from '@/lib/i18n';
 import { useMoney } from '@/lib/settings/money';
 import { pushToast } from '@/lib/toast';
@@ -86,7 +86,10 @@ function Gigs() {
     else if (span === 'month') date.setMonth(date.getMonth() + delta);
     else date.setFullYear(date.getFullYear() + delta);
 
-    setAnchor(date.toISOString().slice(0, 10));
+    // Local, not UTC. Converting a local midnight to UTC lands on the previous
+    // day east of Greenwich, so every step lost a day — and on the first of a
+    // month the arrow did nothing at all.
+    setAnchor(keyOf(date));
   };
 
   const rangeLabel =
@@ -748,6 +751,7 @@ function EditModal({
   onDone: () => void;
 }) {
   const { t } = useI18n();
+  const { format } = useMoney();
   const [form, setForm] = useState(draft);
   const [busy, setBusy] = useState(false);
   const [shrinking, setShrinking] = useState(false);
@@ -955,7 +959,7 @@ function EditModal({
               {t('The card will say')}:{' '}
               {[
                 form.pay_amount > 0
-                  ? `₴${form.pay_amount.toLocaleString('ru')} ${form.pay_period === 'hour' ? t('per hour') : form.pay_period === 'month' ? t('per month') : t('per shift')}`
+                  ? `${format(form.pay_amount)} ${form.pay_period === 'hour' ? t('per hour') : form.pay_period === 'month' ? t('per month') : t('per shift')}`
                   : null,
                 form.pay_percent !== null ? `${form.pay_percent}% ${t('of sales')}` : null,
               ]

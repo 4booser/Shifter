@@ -81,6 +81,11 @@ export function bindSettingsToDocument(): () => void {
 
     const root = document.documentElement;
 
+    // Without this the document stays lang="en" forever, so a screen reader
+    // pronounces the whole Cyrillic interface with an English voice — which is
+    // not an inconvenience, it is unintelligible.
+    root.lang = settings.language;
+
     root.dataset['theme'] = settings.theme;
     root.dataset['density'] = settings.density;
     root.dataset['motion'] = settings.reduceMotion ? 'reduced' : 'full';

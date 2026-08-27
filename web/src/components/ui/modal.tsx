@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useId, useRef } from 'react';
 
+import { useI18n } from '@/lib/i18n';
 import { Icon } from './icon';
 
 /**
@@ -22,6 +23,12 @@ export function Modal({
   children: React.ReactNode;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
+  const { t } = useI18n();
+
+  // Without this every modal in the app announces itself as "dialog" and
+  // nothing else — the heading is right there on screen and was never
+  // connected to it.
+  const titleId = useId();
 
   useEffect(() => {
     const dialog = ref.current;
@@ -36,6 +43,7 @@ export function Modal({
     <dialog
       ref={ref}
       className={`modal ${wide ? 'is-wide' : ''}`}
+      aria-labelledby={titleId}
       onClose={onClose}
       onClick={(event) => {
         // The backdrop is painted by the dialog itself, so a click on it
@@ -45,8 +53,8 @@ export function Modal({
     >
       <div className="card flex max-h-[88vh] flex-col overflow-hidden shadow-(--shadow-lg)">
         <header className="flex items-center justify-between border-b border-border px-5 py-3.5">
-          <h2 className="text-[1.02rem] font-semibold">{title}</h2>
-          <button type="button" className="btn btn-quiet btn-sm -mr-1.5" onClick={onClose} aria-label="Close">
+          <h2 id={titleId} className="text-[1.02rem] font-semibold">{title}</h2>
+          <button type="button" className="btn btn-quiet btn-sm -mr-1.5" onClick={onClose} aria-label={t('Close')}>
             <Icon name="close" size={16} />
           </button>
         </header>

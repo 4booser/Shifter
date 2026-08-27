@@ -285,6 +285,7 @@ export function Sidebar() {
                   <button
                     type="button"
                     className="btn btn-quiet btn-sm btn-danger"
+                    aria-label={t('Delete this position')}
                     onClick={() => {
                       if (window.confirm(`${position.name} — ${t('Delete this? It cannot be undone.')}`)) {
                         void catalogueActions.deletePosition(position.id);
@@ -406,7 +407,8 @@ export function Sidebar() {
                   <span className="truncate">{place.name}</span>
                 </dt>
                 <dd className="flex-none tabular">
-                  {Math.round(place.hours * 10) / 10}h · <Money value={place.earned} />
+                  {Math.round(place.hours * 10) / 10}h ·{' '}
+                  <Money value={place.earned} currency={place.currency} />
                 </dd>
               </div>
             ))}

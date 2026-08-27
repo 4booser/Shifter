@@ -528,7 +528,7 @@ function BestTile({ monthDays }: { monthDays: CalendarDayData[] }) {
 }
 
 function HoursTile({ monthDays }: { monthDays: CalendarDayData[] }) {
-  const { t } = useI18n();
+  const { t, n } = useI18n();
   const hours = monthDays.reduce((sum, day) => sum + day.hours, 0);
   const worked = monthDays.filter((day) => day.shifts.some((entry) => entry.worked)).length;
 
@@ -539,7 +539,7 @@ function HoursTile({ monthDays }: { monthDays: CalendarDayData[] }) {
         <CountUp value={hours} format={(value) => value.toFixed(value % 1 === 0 ? 0 : 1)} />
       </span>
       <span className="field-hint">
-        {worked} {t('shifts this month')}
+        {n(worked, 'shifts')} {t('this month')}
       </span>
     </>
   );

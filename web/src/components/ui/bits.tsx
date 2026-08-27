@@ -1,15 +1,33 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { useI18n } from '@/lib/i18n';
 
 import { useMoney } from '@/lib/settings/money';
 import { Icon } from './icon';
 
 /** Money as text, following the currency/privacy settings. */
-export function Money({ value, className }: { value: number | null | undefined; className?: string }) {
-  const { format } = useMoney();
+export function Money({
+  value,
+  className,
+  currency,
+}: {
+  value: number | null | undefined;
+  className?: string;
+  /**
+   * The code this amount is actually in, where it is not the app's own. A
+   * place keeps its own currency, and stamping ₴ on złoty is the one kind of
+   * mistake about money this app must never make.
+   */
+  currency?: string | null;
+}) {
+  const { format, formatIn } = useMoney();
 
-  return <span className={`tabular ${className ?? ''}`}>{format(value)}</span>;
+  return (
+    <span className={`tabular ${className ?? ''}`}>
+      {currency == null ? format(value) : formatIn(currency, value)}
+    </span>
+  );
 }
 
 /**
@@ -214,6 +232,8 @@ export function Alert({
   children: React.ReactNode;
   onDismiss?: () => void;
 }) {
+  const { t } = useI18n();
+
   const tone =
     kind === 'error'
       ? 'border-danger/30 bg-(--danger-soft) text-danger'
@@ -228,7 +248,14 @@ export function Alert({
     >
       <span className="min-w-0 flex-1">{children}</span>
       {onDismiss && (
-        <button type="button" className="btn btn-quiet btn-sm" onClick={onDismiss}>
+        // The icon is decorative, so without a label this reads as just
+        // "button" — on nearly every error banner in the app.
+        <button
+          type="button"
+          className="btn btn-quiet btn-sm"
+          aria-label={t('Dismiss')}
+          onClick={onDismiss}
+        >
           <Icon name="close" size={13} />
         </button>
       )}

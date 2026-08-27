@@ -583,6 +583,7 @@ function Stats() {
         </div>
         <input
           type="date"
+          aria-label={t('From')}
           className="field-input !w-36"
           value={customFrom}
           onChange={(event) => {
@@ -592,6 +593,7 @@ function Stats() {
         />
         <input
           type="date"
+          aria-label={t('To')}
           className="field-input !w-36"
           value={customTo}
           onChange={(event) => {

@@ -1,5 +1,5 @@
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { readdirSync, readFileSync } from 'node:fs';
+import { basename, join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
@@ -69,4 +69,39 @@ describe('the dictionaries', () => {
 
     expect({ missingFromUk, missingFromRu }).toEqual({ missingFromUk: [], missingFromRu: [] });
   });
+
+  it('knows every phrase the code asks it for', () => {
+    // The checks above compare RU with UK, so a phrase missing from both is
+    // invisible to them — and five were, rendering raw English into a Russian
+    // interface. This reads the call sites instead.
+    const files = walk(join(__dirname, '../src')).filter(
+      (file) => file.endsWith('.ts') || file.endsWith('.tsx'),
+    );
+
+    const missing = new Set<string>();
+
+    for (const file of files) {
+      if (file.endsWith('dictionaries.ts')) continue;
+
+      const source = readFileSync(file, 'utf8');
+
+      // Only the literal form. A key built at runtime cannot be checked here,
+      // and there are few enough of those to keep in mind.
+      for (const [, key] of source.matchAll(/\bt\(\s*'((?:[^'\\]|\\.)*)'/g)) {
+        const phrase = key.replace(/\\'/g, "'");
+
+        if (!(phrase in RU) || !(phrase in UK)) missing.add(`${basename(file)}: ${phrase}`);
+      }
+    }
+
+    expect([...missing].sort()).toEqual([]);
+  });
 });
+
+function walk(dir: string): string[] {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const full = join(dir, entry.name);
+
+    return entry.isDirectory() ? walk(full) : [full];
+  });
+}

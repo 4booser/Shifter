@@ -97,6 +97,7 @@ function LoginForm() {
             className="field-input text-center text-[1.3rem] tracking-[0.4em] tabular"
             inputMode="numeric"
             autoFocus
+            aria-label={t('Two-factor code')}
             maxLength={8}
             value={code}
             onChange={(event) => setCode(event.target.value.replace(/\D/g, ''))}

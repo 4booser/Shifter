@@ -63,6 +63,16 @@ export function useMoney() {
 
   return {
     format: (amount: number | null | undefined) => formatMoney(settings, amount ?? 0),
+    /**
+     * An amount in the currency it is actually in. A place carries its own
+     * code, and printing every place's earnings with the app's symbol made a
+     * month in Kraków read as a tenfold overstatement of somebody's wages.
+     * An empty or unset code means "the same as the app's".
+     */
+    formatIn: (code: string | null | undefined, amount: number | null | undefined) =>
+      code != null && code.length === 3
+        ? formatMoneyIn(settings, code, amount ?? 0)
+        : formatMoney(settings, amount ?? 0),
     compact: (amount: number | null | undefined) => formatMoneyCompact(settings, amount ?? 0),
     hideAmounts: settings.hideAmounts,
   };

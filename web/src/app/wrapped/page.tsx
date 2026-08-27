@@ -285,7 +285,7 @@ function Wrapped() {
               <CountUp value={summary.total_earned} className="font-extrabold tabular tracking-tight text-good" />
             </span>
             <p className="pop mt-3 text-[1.05rem] text-muted" style={{ ['--i' as string]: 4 }}>
-              {totalShifts} {t('shifts')} · {Math.round(summary.hours)} {t('hours')} ·{' '}
+              {n(totalShifts, 'shifts')} · {n(Math.round(summary.hours), 'hours')} ·{' '}
               <Money value={averages.perHour} className="font-semibold text-ink" />/{t('hour')}
             </p>
             {live && (
@@ -359,17 +359,18 @@ function Wrapped() {
             )}
             {favouriteShift !== null && (
               <Superlative emoji={favouriteShift.symbol ?? '⭐️'} title={t('Favourite shift')}>
-                {favouriteShift.name} · {favouriteShift.count} {t('times')}
+                {favouriteShift.name} · {n(favouriteShift.count, 'times')}
               </Superlative>
             )}
             {topPlace !== null && (
               <Superlative emoji="🏠" title={t('Top place')}>
-                {placeName(topPlace, t('No place set'))} · <Money value={topPlace.earned} className="font-bold" />
+                {placeName(topPlace, t('No place set'))} ·{' '}
+                <Money value={topPlace.earned} currency={topPlace.currency} className="font-bold" />
               </Superlative>
             )}
             {topSale !== null && (
               <Superlative emoji="🛍️" title={t('Most sold')}>
-                {topSale.name} · {topSale.quantity} {t('units')}
+                {topSale.name} · {n(topSale.quantity, 'units')}
               </Superlative>
             )}
             <Superlative emoji="🌙" title={t('Nights')}>
@@ -408,7 +409,7 @@ function Wrapped() {
               <h2 className="mb-1 text-[0.98rem] font-bold">{t('Where the year is heading')}</h2>
               <p className="text-[0.9rem]">
                 {t('At today’s pace the year ends at')} <Money value={forecast.projected} className="font-bold text-good" />{' '}
-                {t('and')} <strong className="tabular">{Math.round(projectedHours)}</strong> {t('hours')} —{' '}
+                {t('and')} <strong className="tabular">{n(Math.round(projectedHours), 'hours')}</strong> —{' '}
                 <Money value={Math.max(0, forecast.projected - forecast.earnedSoFar)} /> {t('still ahead')}.
               </p>
             </section>

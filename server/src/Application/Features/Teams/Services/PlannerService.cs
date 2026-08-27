@@ -490,7 +490,7 @@ public sealed class PlannerService
             entry.Title = title;
             entry.StartTime = start;
             entry.EndTime = end;
-            entry.Note = request.note;
+            entry.Note = PlannerRules.CleanNote(request.note);
             entry.Role = PlannerRules.ParseRole(request.role);
         }
         else
@@ -754,8 +754,12 @@ public sealed class PlannerService
             .FirstOrDefault(member => member.UserId == entry.UserId)?.DisplayName ?? "?";
         var when = $"{entry.Date:dd.MM} · {entry.StartTime:HH\\:mm}–{entry.EndTime:HH\\:mm}";
 
+        // Nobody to tell if the planner has since deleted their account. The
+        // assignment itself stays; only the name attached to it is gone.
+        if (entry.CreatedByUserId is not int planner) return;
+
         await _push.NotifyAsync(
-            entry.CreatedByUserId,
+            planner,
             language => (accepted, language) switch
             {
                 (true, "ru") => ("Смена принята", $"{who}: «{entry.Title}» {when} — в календаре."),
@@ -829,6 +833,9 @@ public static class PlannerRules
     /// An optional note beside a blocked day. Absent is the normal case —
     /// people mark a day and move on — so nothing here throws.
     /// </summary>
+    /// <summary>As long as a day's note, which is the longest thing anyone writes here.</summary>
+    public const int NoteMax = 500;
+
     public static string? CleanReason(string? reason)
     {
         var cleaned = reason?.Trim();
@@ -836,6 +843,20 @@ public static class PlannerRules
         if (string.IsNullOrEmpty(cleaned)) return null;
 
         return cleaned.Length <= TitleMax ? cleaned : cleaned[..TitleMax];
+    }
+
+    /// <summary>
+    /// The note on an assignment. It was the one free-text field in the app
+    /// with no bound at all — straight into a text column, and copied forward
+    /// by "repeat the week". Every other note in the project is capped.
+    /// </summary>
+    public static string? CleanNote(string? note)
+    {
+        var cleaned = note?.Trim();
+
+        if (string.IsNullOrEmpty(cleaned)) return null;
+
+        return cleaned.Length <= NoteMax ? cleaned : cleaned[..NoteMax];
     }
 
     public static string CleanTitle(string title)

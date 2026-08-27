@@ -540,7 +540,10 @@ function ShareGig({ gig }: { gig: Gig }) {
   const { t } = useI18n();
   const [copied, setCopied] = useState(false);
 
-  const url = typeof window === 'undefined' ? '' : `${window.location.origin}/g/${gig.id}`;
+  // Keyed on the slug rather than the id: a numeric link used to preview,
+  // which meant counting from one walked the whole board without an account.
+  const url =
+    typeof window === 'undefined' ? '' : `${window.location.origin}/g/${gig.share_slug}`;
 
   const share = async () => {
     const text = `${gig.title} — ${gig.venue}`;

@@ -17,8 +17,13 @@ public sealed class PlannedAssignment
 
     /// <summary>Who is being asked to work it.</summary>
     public int UserId { get; set; }
+    public User? User { get; set; }
 
-    public int CreatedByUserId { get; set; }
+    /// <summary>
+    /// Nullable so a planner can leave without deleting the rota they built.
+    /// </summary>
+    public int? CreatedByUserId { get; set; }
+    public User? CreatedBy { get; set; }
 
     public required DateOnly Date { get; set; }
 

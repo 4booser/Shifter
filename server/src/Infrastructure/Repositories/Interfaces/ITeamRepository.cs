@@ -83,7 +83,14 @@ public sealed record CoverShift(
     TimeOnly StartTime,
     TimeOnly EndTime,
     bool NeedsCover,
-    bool Worked);
+    bool Worked,
+    /// <summary>
+    /// Whether the owner has said anything about showing this one. Carried out
+    /// of the query so the caller can apply the same visibility rule the rota
+    /// applies — offering to cover a shift used to confirm that a hidden shift
+    /// exists, which is the whole thing hiding it was supposed to prevent.
+    /// </summary>
+    bool? TeamVisible = null);
 
 /// <summary>What the rota query is allowed to know about someone's day.</summary>
 public sealed record RotaRow(

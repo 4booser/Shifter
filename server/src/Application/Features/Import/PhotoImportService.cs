@@ -45,8 +45,26 @@ public sealed class PhotoImportService
         // The ledger key rolls with the UTC day; yesterday's spend evaporates.
         var key = $"{userId}:{DateOnly.FromDateTime(DateTime.UtcNow.Date):yyyyMMdd}";
 
-        if (Spent.GetValueOrDefault(key) >= _options.DailyLimit)
+        // Reserved before the call, not counted after it. Reading the ledger at
+        // the top and writing it at the bottom is a check-then-act: a hundred
+        // uploads fired at once all read zero and all became billed calls
+        // against a limit of ten. AddOrUpdate is atomic, so the reservation
+        // either wins or loses cleanly.
+        int spent = Spent.AddOrUpdate(key, 1, (_, count) => count + 1);
+
+        if (spent > _options.DailyLimit)
+        {
+            // Hand the reservation back so a refusal does not cost anybody a
+            // slot they never used.
+            Spent.AddOrUpdate(key, 0, (_, count) => Math.Max(0, count - 1));
+
             throw new ValidationException("Daily photo-import limit reached. Tomorrow it resets.");
+        }
+
+        // Yesterday's keys are dropped whenever a new day is first seen: the
+        // ledger is static and lives as long as the process, so without this it
+        // grows one entry per person per day forever.
+        Forget(key);
 
         var payload = new
         {
@@ -86,8 +104,6 @@ public sealed class PhotoImportService
             throw new ValidationException("The reader is unavailable right now. Try again in a minute.");
         }
 
-        Spent.AddOrUpdate(key, 1, (_, count) => count + 1);
-
         using var document = JsonDocument.Parse(body);
         var text = document.RootElement
             .GetProperty("content")
@@ -97,5 +113,18 @@ public sealed class PhotoImportService
             .FirstOrDefault("");
 
         return ScheduleParse.FromModelText(text);
+    }
+
+    /// <summary>
+    /// Drops every key that is not today's. The ledger is a static dictionary
+    /// with a process-long life, so without this it accumulates one entry per
+    /// person per day until the app restarts.
+    /// </summary>
+    private static void Forget(string todayKey)
+    {
+        string today = todayKey[(todayKey.IndexOf(':') + 1)..];
+
+        foreach (string stale in Spent.Keys.Where(key => !key.EndsWith(today, StringComparison.Ordinal)))
+            Spent.TryRemove(stale, out _);
     }
 }

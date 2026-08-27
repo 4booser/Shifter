@@ -185,7 +185,8 @@ public class TeamRepository : ITeamRepository
                 entry.StartTime,
                 entry.EndTime,
                 entry.NeedsCover,
-                entry.Worked))
+                entry.Worked,
+                entry.TeamVisible))
             .FirstOrDefaultAsync(ct);
     }
 

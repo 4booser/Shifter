@@ -20,7 +20,16 @@ public class UserCommand : IUserCommand
 
     public async Task DeleteAsync(User user, CancellationToken ct)
     {
-        // Three tables name a person by id without a foreign key, so nothing
+        // A team outlives its owner. Deleting the crew's whole rota because one
+        // person closed their account would be the wrong answer, and leaving
+        // the team pointing at a user who no longer exists was worse: the
+        // invite code could never be rotated and the team could never be
+        // deleted, so anybody who had ever seen the six-character code was in
+        // for good. Ownership moves to the longest-standing manager, or failing
+        // that the longest-standing member; a team with nobody left goes.
+        await HandOverTeamsAsync(user.Id, ct);
+
+        // These tables name a person by id without a foreign key, so nothing
         // cascades them: a deleted account would leave a Telegram chat still
         // bound to it, reviews naming it, and swap offers waiting on somebody
         // who no longer exists. Cleared explicitly, before the row they point
@@ -39,6 +48,44 @@ public class UserCommand : IUserCommand
 
         _db.Users.Remove(user);
         await _db.SaveChangesAsync(ct);
+    }
+
+    /// <summary>
+    /// Passes on every team this person owns, or removes the ones nobody is
+    /// left to run.
+    /// </summary>
+    private async Task HandOverTeamsAsync(int userId, CancellationToken ct)
+    {
+        Team[] owned = await _db.Teams
+            .Include(team => team.Members)
+            .Where(team => team.OwnerUserId == userId)
+            .ToArrayAsync(ct);
+
+        foreach (Team team in owned)
+        {
+            TeamMember? heir = (team.Members ?? [])
+                .Where(member => member.UserId != userId)
+                // A manager first: they are already trusted with the rota.
+                // Then whoever has been there longest, because the crew knows
+                // them — and it is the one ordering nobody has to be told.
+                .OrderByDescending(member => member.IsManager)
+                .ThenBy(member => member.Id)
+                .FirstOrDefault();
+
+            if (heir is null)
+            {
+                _db.Teams.Remove(team);
+                continue;
+            }
+
+            team.OwnerUserId = heir.UserId;
+            heir.IsManager = true;
+        }
+
+        // The member row of the person leaving goes with them either way.
+        await _db.TeamMembers
+            .Where(member => member.UserId == userId)
+            .ExecuteDeleteAsync(ct);
     }
 
     public async Task SaveAsync(CancellationToken ct)

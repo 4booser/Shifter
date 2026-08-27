@@ -130,6 +130,30 @@ public sealed class GigListing
 
     public GigStatus Status { get; set; } = GigStatus.Open;
 
+    /// <summary>
+    /// The half of the share link that cannot be guessed.
+    ///
+    /// The preview at /g/… is anonymous on purpose — a link pasted into a work
+    /// chat has to unfurl for people who are not signed in. But it used to be
+    /// keyed on the primary key, so counting from one handed the whole board
+    /// to exactly the scraper the board's own rules say must not have it. A
+    /// link still works for anybody who has it; nobody can produce one they
+    /// were not given.
+    /// </summary>
+    public string ShareSlug { get; set; } = NewSlug();
+
+    /// <summary>
+    /// Twelve characters of base32 — short enough to paste, far too much to
+    /// walk. Ambiguous letters are left out so a slug read aloud survives.
+    /// </summary>
+    public static string NewSlug()
+    {
+        const string alphabet = "abcdefghjkmnpqrstuvwxyz23456789";
+        byte[] bytes = System.Security.Cryptography.RandomNumberGenerator.GetBytes(12);
+
+        return string.Concat(bytes.Select(b => alphabet[b % alphabet.Length]));
+    }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public List<GigResponse>? Responses { get; set; }

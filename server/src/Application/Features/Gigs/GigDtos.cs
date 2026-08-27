@@ -43,7 +43,13 @@ public record GigDto(
     int responses,
     bool is_mine,
     /// <summary>What the caller's own reply looks like, when they made one.</summary>
-    GigMyResponseDto? my_response);
+    GigMyResponseDto? my_response,
+    /// <summary>
+    /// The unguessable half of the share link. Only the owner needs it — it is
+    /// what makes a pasted link work for people who are not signed in without
+    /// making the whole board countable.
+    /// </summary>
+    string? share_slug = null);
 
 public record GigMyResponseDto(int id, bool accepted);
 

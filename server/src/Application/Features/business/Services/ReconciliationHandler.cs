@@ -27,6 +27,12 @@ public class ReconciliationHandler : IReconciliationHandler
     /// <summary>A period is only chased once its work is actually finished.</summary>
     private const int GraceDays = 0;
 
+    /// <summary>
+    /// How much of the past one request may ask for. The walk is per pay
+    /// period per place, so this is a cost limit rather than a product one.
+    /// </summary>
+    private const int MaxDays = 366 * 2;
+
     private readonly IShifterQuery _shifterQuery;
     private readonly AppClock _clock;
 
@@ -44,6 +50,14 @@ public class ReconciliationHandler : IReconciliationHandler
     {
         if (from > to)
             throw new ValidationException("Range start must not be after its end.");
+
+        // Every pay period in the range is walked one at a time, and each step
+        // re-aggregates the whole day history — so an open-ended range was
+        // minutes of processor time on a single GET, chosen entirely by the
+        // caller. Two years is longer than anybody reads at once, and every
+        // other range in the app is already bounded.
+        if (to.DayNumber - from.DayNumber > MaxDays)
+            throw new ValidationException($"A range must be at most {MaxDays} days.");
 
         Location[] places = await _shifterQuery.GetLocationsAsync(userId, true, ct);
         Dictionary<int, Location> byId = places.ToDictionary(place => place.Id);

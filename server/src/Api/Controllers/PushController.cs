@@ -21,12 +21,18 @@ public class PushController : ControllerBase
     private readonly ShifterDbContext _db;
     private readonly PushOptions _options;
     private readonly PushSender _sender;
+    private readonly ILogger<PushController> _logger;
 
-    public PushController(ShifterDbContext db, IOptions<PushOptions> options, PushSender sender)
+    public PushController(
+        ShifterDbContext db,
+        IOptions<PushOptions> options,
+        PushSender sender,
+        ILogger<PushController> logger)
     {
         _db = db;
         _options = options.Value;
         _sender = sender;
+        _logger = logger;
     }
 
     /// <summary>
@@ -38,6 +44,15 @@ public class PushController : ControllerBase
     {
         if (string.IsNullOrWhiteSpace(request.token) || !request.token.StartsWith("ExponentPushToken["))
             throw new ValidationException("That is not an Expo push token.");
+
+        // The column carries a unique index, and Postgres refuses a btree entry
+        // past about 2 700 bytes — so an over-long token answered 500 rather
+        // than 400. A real Expo token is under a hundred characters.
+        if (request.token.Length > 200)
+            throw new ValidationException("That is not an Expo push token.");
+
+        if (request.platform?.Length > 32 || request.language?.Length > 16)
+            throw new ValidationException("Platform and language must be short.");
 
         var existing = await _db.DeviceTokens.FirstOrDefaultAsync(device => device.Token == request.token, ct);
 
@@ -55,6 +70,20 @@ public class PushController : ControllerBase
         {
             // A phone handed to somebody else must not keep notifying its
             // previous owner, so the row follows the token, not the account.
+            //
+            // The token is the only proof the caller holds the device, which
+            // means whoever learns it can move somebody's notifications onto
+            // their own account. Recorded so a takeover is at least visible;
+            // the real answer is a secret the device holds and the server
+            // checks, and that is a change to the app rather than to this.
+            if (existing.UserId != CurrentUserId())
+            {
+                _logger.LogWarning(
+                    "Device token moved from user {From} to user {To}",
+                    existing.UserId,
+                    CurrentUserId());
+            }
+
             existing.UserId = CurrentUserId();
             existing.Platform = request.platform ?? existing.Platform;
             existing.Language = request.language ?? existing.Language;

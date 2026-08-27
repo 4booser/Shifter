@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using Shifter.Infrastructure.Repositories.Interfaces;
 using System.Text;
 
 using Microsoft.EntityFrameworkCore;
@@ -22,11 +23,13 @@ public sealed class PasswordResetService
 
     private readonly ShifterDbContext _db;
     private readonly MailSender _mail;
+    private readonly ITokenCommand _tokens;
 
-    public PasswordResetService(ShifterDbContext db, MailSender mail)
+    public PasswordResetService(ShifterDbContext db, MailSender mail, ITokenCommand tokens)
     {
         _db = db;
         _mail = mail;
+        _tokens = tokens;
     }
 
     /// <summary>Hex SHA-256 — the same shape the backup codes use.</summary>
@@ -104,5 +107,12 @@ public sealed class PasswordResetService
         reset.UsedAt = DateTime.UtcNow;
 
         await _db.SaveChangesAsync(ct);
+
+        // A reset is the same situation as a deliberate change: somebody
+        // believes another person is in their account. Changing the password
+        // from inside already revokes every session; the reset link did not,
+        // so whoever had the old password kept refreshing their way back in
+        // for the full life of their refresh token.
+        await _tokens.RevokeAllAsync(reset.User.Id, ct);
     }
 }

@@ -22,9 +22,11 @@ public sealed class CoverOffer
 
     /// <summary>Whose shift it is. They alone can accept an offer on it.</summary>
     public int OwnerUserId { get; set; }
+    public User? Owner { get; set; }
 
     /// <summary>Who is offering to work it.</summary>
     public int ClaimantUserId { get; set; }
+    public User? Claimant { get; set; }
 
     /// <summary>
     /// The placement being offered around, or null once it has been accepted

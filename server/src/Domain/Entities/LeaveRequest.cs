@@ -33,6 +33,7 @@ public sealed class LeaveRequest
 
     /// <summary>Who is asking.</summary>
     public int UserId { get; set; }
+    public User? User { get; set; }
 
     public required DateOnly From { get; set; }
     public required DateOnly To { get; set; }
@@ -47,6 +48,13 @@ public sealed class LeaveRequest
     /// is the state the whole thing exists to make visible.
     /// </summary>
     public int? DecidedByUserId { get; set; }
+
+    /// <summary>
+    /// Nullable and forgotten rather than cascaded: a manager leaving must not
+    /// take everybody's approved holidays with them. The decision stands; only
+    /// the name goes.
+    /// </summary>
+    public User? DecidedBy { get; set; }
     public DateTime? DecidedAt { get; set; }
     public string? DecisionNote { get; set; }
 

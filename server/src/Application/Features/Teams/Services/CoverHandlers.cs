@@ -21,6 +21,22 @@ namespace Shifter.Application.Features.Teams.Services;
 public static class CoverRules
 {
     /// <summary>
+    /// Whether the crew is allowed to see a shift at all — the same rule the
+    /// rota reads. Offering to cover one used to skip it, so walking ids
+    /// confirmed which hidden shifts exist and whether they were worked; where
+    /// the owner had asked for cover on a hidden shift, the offer went through
+    /// and named it back to them.
+    /// </summary>
+    public static bool Shown(CoverShift shift, Team team)
+    {
+        var owner = (team.Members ?? [])
+            .FirstOrDefault(member => member.UserId == shift.OwnerUserId);
+
+        return owner is not null
+            && RotaVisibility.Allows(shift.TeamVisible, owner.PrivateByDefault);
+    }
+
+    /// <summary>
     /// Members of the team the caller belongs to. Membership is the boundary
     /// for every operation here: a shift belonging to someone outside it is not
     /// refused, it is not found.
@@ -67,6 +83,14 @@ public class OfferCoverHandler : IRequestHandler<OfferCoverDto, RotaOfferDto>
 
         CoverShift shift = await _teams.GetCoverShiftAsync(request.DayShiftId, userIds, ct)
             ?? throw new NotFoundException("Shift does not exist.");
+
+        // The same rule the rota reads. Without it, walking ids told you which
+        // hidden shifts exist and whether they were worked — the four possible
+        // answers are distinguishable — and, where the owner had asked for
+        // cover on a hidden shift, the offer went through and named it back to
+        // them. This is the surviving sibling of the swap-proposal leak.
+        if (!CoverRules.Shown(shift, team))
+            throw new NotFoundException("Shift does not exist.");
 
         if (shift.OwnerUserId == request.UserId)
             throw new ValidationException("You cannot take your own shift.");

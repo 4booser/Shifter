@@ -91,6 +91,67 @@ public class ShifterDbContext : DbContext
         modelBuilder.Entity<Availability>()
             .HasIndex(block => new { block.TeamId, block.Date });
 
+        // ==== Everything a person owns goes when they do ====
+        //
+        // These columns named a user by id with no navigation, so EF made no
+        // foreign key at all and account deletion left them behind: an entire
+        // calendar — dates, hours, wages, tips, fines, notes — living forever
+        // under an id that no longer exists. The navigations above are what
+        // make the keys real; the behaviour is written here so the intent is
+        // in one place.
+        modelBuilder.Entity<Day>()
+            .HasOne(day => day.User).WithMany()
+            .HasForeignKey(day => day.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<DayAudit>()
+            .HasOne(entry => entry.User).WithMany()
+            .HasForeignKey(entry => entry.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Availability>()
+            .HasOne(block => block.User).WithMany()
+            .HasForeignKey(block => block.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<LeaveRequest>()
+            .HasOne(request => request.User).WithMany()
+            .HasForeignKey(request => request.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<PlannedAssignment>()
+            .HasOne(entry => entry.User).WithMany()
+            .HasForeignKey(entry => entry.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<CoverOffer>()
+            .HasOne(offer => offer.Owner).WithMany()
+            .HasForeignKey(offer => offer.OwnerUserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<CoverOffer>()
+            .HasOne(offer => offer.Claimant).WithMany()
+            .HasForeignKey(offer => offer.ClaimantUserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // The second person on a row is forgotten rather than cascaded: a
+        // manager leaving must not take everybody's approved holidays or the
+        // rota they built with them. The decision stands; the name goes.
+        modelBuilder.Entity<LeaveRequest>()
+            .HasOne(request => request.DecidedBy).WithMany()
+            .HasForeignKey(request => request.DecidedByUserId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<PlannedAssignment>()
+            .HasOne(entry => entry.CreatedBy).WithMany()
+            .HasForeignKey(entry => entry.CreatedByUserId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // The share link is looked up by slug and must be one listing only.
+        modelBuilder.Entity<GigListing>()
+            .HasIndex(listing => listing.ShareSlug)
+            .IsUnique();
+
         // Read two ways: everything a crew has pending, and one person's own
         // history. No unique key — a person can ask for July and September.
         modelBuilder.Entity<LeaveRequest>()

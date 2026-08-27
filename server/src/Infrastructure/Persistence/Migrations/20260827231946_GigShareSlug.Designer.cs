@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Shifter.Infrastructure.Persistence.DbContexts;
@@ -11,9 +12,11 @@ using Shifter.Infrastructure.Persistence.DbContexts;
 namespace Shifter.Migrations.ShifterDb
 {
     [DbContext(typeof(ShifterDbContext))]
-    partial class ShifterDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260827231946_GigShareSlug")]
+    partial class GigShareSlug
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -78,8 +81,6 @@ namespace Shifter.Migrations.ShifterDb
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("UserId");
 
                     b.HasIndex("TeamId", "Date");
 
@@ -156,10 +157,6 @@ namespace Shifter.Migrations.ShifterDb
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("ClaimantUserId");
-
-                    b.HasIndex("OwnerUserId");
 
                     b.HasIndex("DayShiftId", "ClaimantUserId")
                         .IsUnique()
@@ -251,12 +248,7 @@ namespace Shifter.Migrations.ShifterDb
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("UserId1")
-                        .HasColumnType("integer");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("UserId1");
 
                     b.HasIndex("UserId", "Date")
                         .IsUnique();
@@ -829,10 +821,6 @@ namespace Shifter.Migrations.ShifterDb
 
                     b.HasKey("Id");
 
-                    b.HasIndex("DecidedByUserId");
-
-                    b.HasIndex("UserId");
-
                     b.HasIndex("TeamId", "From");
 
                     b.HasIndex("TeamId", "UserId");
@@ -1085,7 +1073,7 @@ namespace Shifter.Migrations.ShifterDb
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int?>("CreatedByUserId")
+                    b.Property<int>("CreatedByUserId")
                         .HasColumnType("integer");
 
                     b.Property<DateOnly>("Date")
@@ -1123,8 +1111,6 @@ namespace Shifter.Migrations.ShifterDb
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CreatedByUserId");
 
                     b.HasIndex("TeamId", "Date");
 
@@ -1726,15 +1712,7 @@ namespace Shifter.Migrations.ShifterDb
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Shifter.Domain.Entities.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.Navigation("Team");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Shifter.Domain.Entities.Break", b =>
@@ -1748,27 +1726,11 @@ namespace Shifter.Migrations.ShifterDb
 
             modelBuilder.Entity("Shifter.Domain.Entities.CoverOffer", b =>
                 {
-                    b.HasOne("Shifter.Domain.Entities.User", "Claimant")
-                        .WithMany()
-                        .HasForeignKey("ClaimantUserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Shifter.Domain.Entities.User", "Owner")
-                        .WithMany()
-                        .HasForeignKey("OwnerUserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("Shifter.Domain.Entities.Team", "Team")
                         .WithMany()
                         .HasForeignKey("TeamId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Claimant");
-
-                    b.Navigation("Owner");
 
                     b.Navigation("Team");
                 });
@@ -1786,28 +1748,11 @@ namespace Shifter.Migrations.ShifterDb
 
             modelBuilder.Entity("Shifter.Domain.Entities.Day", b =>
                 {
-                    b.HasOne("Shifter.Domain.Entities.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("Shifter.Domain.Entities.User", null)
                         .WithMany("CalendarDays")
-                        .HasForeignKey("UserId1");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("Shifter.Domain.Entities.DayAudit", b =>
-                {
-                    b.HasOne("Shifter.Domain.Entities.User", "User")
-                        .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Shifter.Domain.Entities.DaySale", b =>
@@ -1935,28 +1880,13 @@ namespace Shifter.Migrations.ShifterDb
 
             modelBuilder.Entity("Shifter.Domain.Entities.LeaveRequest", b =>
                 {
-                    b.HasOne("Shifter.Domain.Entities.User", "DecidedBy")
-                        .WithMany()
-                        .HasForeignKey("DecidedByUserId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.HasOne("Shifter.Domain.Entities.Team", "Team")
                         .WithMany()
                         .HasForeignKey("TeamId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Shifter.Domain.Entities.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("DecidedBy");
-
                     b.Navigation("Team");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Shifter.Domain.Entities.Location", b =>
@@ -2011,28 +1941,13 @@ namespace Shifter.Migrations.ShifterDb
 
             modelBuilder.Entity("Shifter.Domain.Entities.PlannedAssignment", b =>
                 {
-                    b.HasOne("Shifter.Domain.Entities.User", "CreatedBy")
-                        .WithMany()
-                        .HasForeignKey("CreatedByUserId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.HasOne("Shifter.Domain.Entities.Team", "Team")
                         .WithMany()
                         .HasForeignKey("TeamId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Shifter.Domain.Entities.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("CreatedBy");
-
                     b.Navigation("Team");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Shifter.Domain.Entities.PushSubscription", b =>

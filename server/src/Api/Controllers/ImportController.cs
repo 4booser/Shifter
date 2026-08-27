@@ -1,4 +1,6 @@
 using System.Security.Claims;
+using Shifter.Api.Extensions;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Shifter.Application.Common.Exceptions;
@@ -13,6 +15,9 @@ namespace Shifter.Api.Controllers;
 /// </summary>
 [Authorize]
 [Route("shifter/v1/import")]
+// A model call costs money, and this one is the most expensive in the app —
+// the same reason the assistant and the daily brief carry a ceiling.
+[EnableRateLimiting(HardeningExtensions.AssistantPolicy)]
 public class ImportController : ControllerBase
 {
     private const int MaxBytes = 8 * 1024 * 1024;

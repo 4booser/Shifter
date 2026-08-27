@@ -19,6 +19,7 @@ public sealed class Availability
     public Team? Team { get; set; }
 
     public int UserId { get; set; }
+    public User? User { get; set; }
 
     public required DateOnly Date { get; set; }
 

@@ -4,6 +4,14 @@ public sealed class Day
 {
     public int Id { get; set; }
     public int UserId { get; set; }
+
+    /// <summary>
+    /// The navigation is what makes the foreign key real. Without it a deleted
+    /// account left every day it ever recorded — dates, hours, wages, tips,
+    /// fines, notes — in the database forever under an id that no longer
+    /// exists.
+    /// </summary>
+    public User? User { get; set; }
     
     public List<DayShift>? Shifts {get; set;}
     

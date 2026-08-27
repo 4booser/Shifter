@@ -27,12 +27,22 @@ public class ShareController : ControllerBase
 
     public ShareController(ShifterDbContext db) => _db = db;
 
+    /// <summary>
+    /// A numeric link is no longer a preview. It used to be, and counting from
+    /// one walked the entire board — every open listing's venue, city, date,
+    /// hours and pay — without an account, which is the one party the board's
+    /// own rules say must not have it. Links already in circulation land on the
+    /// board itself rather than nowhere.
+    /// </summary>
     [HttpGet("{id:int}")]
-    public async Task<IActionResult> Preview(int id, CancellationToken ct)
+    public IActionResult Numeric(int id) => Redirect("/gigs");
+
+    [HttpGet("{slug:length(12)}")]
+    public async Task<IActionResult> Preview(string slug, CancellationToken ct)
     {
         var gig = await _db.GigListings
             .AsNoTracking()
-            .FirstOrDefaultAsync(row => row.Id == id && row.Status != GigStatus.Closed, ct);
+            .FirstOrDefaultAsync(row => row.ShareSlug == slug && row.Status != GigStatus.Closed, ct);
 
         if (gig is null) return Redirect("/gigs");
 
@@ -63,7 +73,7 @@ public class ShareController : ControllerBase
         // The card's first photo is the preview image, served from the sibling
         // endpoint because an og:image must be a URL, never a data URI.
         var origin = $"{Request.Scheme}://{Request.Host}";
-        var image = gig.PhotosJson.Length > 4 ? $"{origin}/g/{id}/photo" : $"{origin}/icon-512.png";
+        var image = gig.PhotosJson.Length > 4 ? $"{origin}/g/{gig.ShareSlug}/photo" : $"{origin}/icon-512.png";
 
         var html = $"""
             <!doctype html>
@@ -78,7 +88,7 @@ public class ShareController : ControllerBase
             <meta property="og:title" content="{Escape(title)}">
             <meta property="og:description" content="{Escape(description)}">
             <meta property="og:image" content="{Escape(image)}">
-            <meta property="og:url" content="{Escape($"{origin}/g/{id}")}">
+            <meta property="og:url" content="{Escape($"{origin}/g/{gig.ShareSlug}")}">
             <meta name="twitter:card" content="summary_large_image">
             <meta http-equiv="refresh" content="0; url=/gigs">
             </head>
@@ -94,12 +104,12 @@ public class ShareController : ControllerBase
     }
 
     /// <summary>The listing's first photo, decoded from its data URL for crawlers.</summary>
-    [HttpGet("{id:int}/photo")]
-    public async Task<IActionResult> Photo(int id, CancellationToken ct)
+    [HttpGet("{slug:length(12)}/photo")]
+    public async Task<IActionResult> Photo(string slug, CancellationToken ct)
     {
         var gig = await _db.GigListings
             .AsNoTracking()
-            .FirstOrDefaultAsync(row => row.Id == id && row.Status != GigStatus.Closed, ct);
+            .FirstOrDefaultAsync(row => row.ShareSlug == slug && row.Status != GigStatus.Closed, ct);
 
         if (gig is null) return NotFound();
 

@@ -33,11 +33,21 @@ public static class DayScalars
         // text on the day, the note and the colour included.
         .Where(property => property.CanWrite
             && !Identity.Contains(property.Name)
-            && !IsOwnedCollection(property.PropertyType))
+            && !IsNavigation(property.PropertyType))
         .ToArray();
 
-    private static bool IsOwnedCollection(Type type)
-        => type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>);
+    /// <summary>
+    /// Anything that points at another row rather than holding a value: an
+    /// owned collection, or a reference to another entity. Copying one of
+    /// those would hand EF a second instance of something it is already
+    /// tracking. Tested against a shape rather than "is enumerable", because a
+    /// string is enumerable too and dropping every string on the day would
+    /// silently lose the note and the colour — which is what the first version
+    /// of this did.
+    /// </summary>
+    private static bool IsNavigation(Type type)
+        => (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>))
+            || type.Namespace == typeof(Day).Namespace;
 
     /// <summary>Every scalar the save carries, by construction rather than by memory.</summary>
     public static void CopyOnto(Day existing, Day incoming)

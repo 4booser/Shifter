@@ -61,15 +61,28 @@ public class GigsController : ControllerBase
     public async Task<IActionResult> Review(int id, [FromBody] ReviewSaveDto request, CancellationToken ct)
         => Ok(await _gigs.ReviewAsync(UserId(), id, request, ct));
 
+    /// <summary>
+    /// Somebody's standing on the board. Readable about people who have put
+    /// themselves in front of you — a card, an open listing, a conversation
+    /// you have already had — and about yourself. Not about anybody whose id
+    /// you can guess.
+    /// </summary>
     [HttpGet("reputation/{userId:int}")]
     public async Task<IActionResult> Reputation(int userId, CancellationToken ct)
-        => Ok(await _gigs.ReputationAsync(userId, ct));
+        => Ok(await _gigs.ReputationAsync(userId, UserId(), ct));
 
     [HttpGet("reviews/pending")]
     public async Task<IActionResult> PendingReviews(CancellationToken ct)
         => Ok(await _gigs.PendingReviewsAsync(UserId(), ct));
 
+    /// <summary>
+    /// The people looking for work. This is the read that actually hands over
+    /// phone numbers, so it carries the same ceiling as the three writes that
+    /// take one — it had none, and two hundred cards a call at the general
+    /// limit is a harvesting tool rather than a job search.
+    /// </summary>
     [HttpGet("seekers")]
+    [EnableRateLimiting(HardeningExtensions.ContactPolicy)]
     public async Task<IActionResult> Seekers(
         [FromQuery] string? category, [FromQuery] string? city,
         [FromQuery] string? employment, CancellationToken ct)

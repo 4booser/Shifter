@@ -499,8 +499,19 @@ public sealed class GigService
             review.Chips?.Split(',') ?? [], review.Text, review.CreatedAt.ToString("O"));
     }
 
-    public async Task<ReputationDto> ReputationAsync(int targetUserId, CancellationToken ct)
+    public async Task<ReputationDto> ReputationAsync(
+        int targetUserId,
+        int callerUserId,
+        CancellationToken ct)
     {
+        // Reputation is public to people who could actually be dealing with
+        // this person — not to anybody who can count. Without this, walking
+        // the id space returned every user's ratings and their ten most recent
+        // reviews with each author's real name attached, and doubled as a
+        // clean "does this account exist" oracle.
+        if (targetUserId != callerUserId && !await OnTheBoardAsync(targetUserId, callerUserId, ct))
+            throw new NotFoundException("No such profile.");
+
         var reviews = await _db.GigReviews
             .AsNoTracking()
             .Where(review => review.TargetUserId == targetUserId)
@@ -527,6 +538,42 @@ public sealed class GigService
                     review.ByEmployer, review.Rating, review.Chips?.Split(',') ?? [], review.Text,
                     review.CreatedAt.ToString("O")))
                 .ToArray());
+    }
+
+    /// <summary>
+    /// Whether this person has put themselves in front of the caller: an
+    /// active card on the board, a listing of theirs the caller answered, or a
+    /// response of theirs to a listing the caller owns. Publishing a card is
+    /// consent to be looked up; merely having an account is not.
+    /// </summary>
+    private async Task<bool> OnTheBoardAsync(int targetUserId, int callerUserId, CancellationToken ct)
+    {
+        if (await _db.GigSeekers.AnyAsync(
+                seeker => seeker.UserId == targetUserId && seeker.IsActive, ct))
+        {
+            return true;
+        }
+
+        if (await _db.GigListings.AnyAsync(
+                listing => listing.OwnerUserId == targetUserId
+                    && listing.Status != GigStatus.Closed, ct))
+        {
+            return true;
+        }
+
+        // Two sides of a conversation that has already happened.
+        if (await _db.GigResponses.AnyAsync(
+                response => response.UserId == targetUserId
+                    && response.Listing != null
+                    && response.Listing.OwnerUserId == callerUserId, ct))
+        {
+            return true;
+        }
+
+        return await _db.GigResponses.AnyAsync(
+            response => response.UserId == callerUserId
+                && response.Listing != null
+                && response.Listing.OwnerUserId == targetUserId, ct);
     }
 
     /// <summary>The verdicts the caller still owes, both hats at once.</summary>
@@ -754,6 +801,10 @@ public sealed class GigService
             employerRatings?.GetValueOrDefault(gig.OwnerUserId).Count ?? 0,
             (gig.Responses ?? []).Count,
             gig.OwnerUserId == userId,
-            mine is null ? null : new GigMyResponseDto(mine.Id, mine.AcceptedAt is not null));
+            mine is null ? null : new GigMyResponseDto(mine.Id, mine.AcceptedAt is not null),
+            // Only to the owner: it is the one person who needs to hand the
+            // link out, and giving it to every reader would make the board
+            // countable again by another route.
+            gig.OwnerUserId == userId ? gig.ShareSlug : null);
     }
 }

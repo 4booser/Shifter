@@ -5,6 +5,19 @@
 type Dictionary = Record<string, string>;
 
 export const RU: Dictionary = {
+  'night hours and public holidays': 'ночных часов и праздники',
+  'public holidays': 'праздничные смены',
+  'Night and holiday premiums': 'Ночные и праздничные надбавки',
+  'Night pays': 'Ночь платит ×',
+  'Night from': 'Ночь с',
+  'until': 'до',
+  'Public holiday pays': 'Праздник платит ×',
+  'Holiday calendar': 'Календарь праздников',
+  'none': 'нет',
+  'Both at 1 — this place pays no premiums.': 'Обе единицы — это место надбавок не платит.',
+  'A holiday shift takes the holiday rate on all its hours; the night rate applies to night hours only.': 'В праздник вся смена идёт по праздничной ставке; ночная — только на ночные часы.',
+  'Night hours': 'Ночные часы',
+  'Premiums': 'Надбавки',
   'Forgot the password?': 'Забыли пароль?',
   'Enter the address from your account and we will send a link.': 'Введите адрес из аккаунта — пришлём ссылку.',
   'Send the link': 'Прислать ссылку',
@@ -1556,6 +1569,19 @@ export const RU: Dictionary = {
 };
 
 export const UK: Dictionary = {
+  'night hours and public holidays': 'нічних годин і свята',
+  'public holidays': 'святкові зміни',
+  'Night and holiday premiums': 'Нічні та святкові надбавки',
+  'Night pays': 'Ніч платить ×',
+  'Night from': 'Ніч з',
+  'until': 'до',
+  'Public holiday pays': 'Свято платить ×',
+  'Holiday calendar': 'Календар свят',
+  'none': 'немає',
+  'Both at 1 — this place pays no premiums.': 'Обидві одиниці — це місце надбавок не платить.',
+  'A holiday shift takes the holiday rate on all its hours; the night rate applies to night hours only.': 'У свято вся зміна йде за святковою ставкою; нічна — лише на нічні години.',
+  'Night hours': 'Нічні години',
+  'Premiums': 'Надбавки',
   'Forgot the password?': 'Забули пароль?',
   'Enter the address from your account and we will send a link.': 'Введіть адресу з акаунта — надішлемо посилання.',
   'Send the link': 'Надіслати посилання',

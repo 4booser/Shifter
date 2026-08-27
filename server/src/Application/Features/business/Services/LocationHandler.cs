@@ -174,6 +174,28 @@ public partial class LocationHandler : ILocationHandler
         location.OvertimeWeeklyHours = request.overtime_weekly_hours;
         location.OvertimeMultiplier = request.overtime_multiplier;
 
+        // A multiplier below one would quietly pay people less for nights,
+        // which is the opposite of what this rule is for.
+        if (request.night_multiplier is < 1m or > 3m)
+            throw new ValidationException("The night multiplier lives between 1 and 3.");
+
+        if (request.public_holiday_multiplier is < 1m or > 3m)
+            throw new ValidationException("The holiday multiplier lives between 1 and 3.");
+
+        if (!string.IsNullOrWhiteSpace(request.holiday_country)
+            && !Holidays.Countries.Contains(request.holiday_country.ToUpperInvariant()))
+            throw new ValidationException("Unknown holiday calendar.");
+
+        location.NightMultiplier = request.night_multiplier;
+        location.PublicHolidayMultiplier = request.public_holiday_multiplier;
+        location.HolidayCountry = request.holiday_country?.ToUpperInvariant() ?? "";
+
+        if (TimeOnly.TryParseExact(request.night_from, "HH:mm", out TimeOnly nightFrom))
+            location.NightFrom = nightFrom;
+
+        if (TimeOnly.TryParseExact(request.night_to, "HH:mm", out TimeOnly nightTo))
+            location.NightTo = nightTo;
+
         if (request.tip_out_of_tips_percent is < 0 or > 100
             || request.tip_out_of_sales_percent is < 0 or > 100)
         {
@@ -225,6 +247,11 @@ public partial class LocationHandler : ILocationHandler
             to,
             location.OvertimeWeeklyHours,
             location.OvertimeMultiplier,
+            location.NightMultiplier,
+            location.NightFrom.ToString("HH:mm"),
+            location.NightTo.ToString("HH:mm"),
+            location.PublicHolidayMultiplier,
+            location.HolidayCountry,
             location.TipOutOfTipsPercent,
             location.TipOutOfSalesPercent,
             location.MealDeduction,

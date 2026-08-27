@@ -62,12 +62,13 @@ public partial class DayHandler : IDayHandler
         decimal shiftsEarned = worked.Sum(entry => entry.Pay);
 
         var (overtimeHours, overtimeExtra) = Overtime(days, byId);
+        var (nightHours, premiumExtra) = Premiums(days, byId);
 
         decimal tipOut = days.Sum(day => TipOutFor(day, byId));
         decimal deductions = days.Sum(day => DeductionsFor(day, byId));
 
         decimal totalEarned =
-            shiftsEarned + salesEarned + tipsEarned + periodEarned + overtimeExtra
+            shiftsEarned + salesEarned + tipsEarned + periodEarned + overtimeExtra + premiumExtra
             - tipOut - deductions;
         decimal plannedEarned =
             planned.Sum(entry => entry.Pay) + PeriodSalary(days, workedOnly: false)
@@ -116,6 +117,8 @@ public partial class DayHandler : IDayHandler
             byLocation,
             overtimeHours,
             overtimeExtra,
+            nightHours,
+            premiumExtra,
             events.Select(EventHandler.ToDto).ToArray()
         );
     }
@@ -396,6 +399,50 @@ public partial class DayHandler : IDayHandler
         }
 
         return (Math.Round(overtimeHours, 2), extra);
+    }
+
+    /// <summary>
+    /// What the night and public-holiday rules add across a range. Both are
+    /// off by default (multiplier 1.0), so a place that never agreed to them
+    /// is priced exactly as before.
+    /// </summary>
+    private static (double NightHours, decimal Extra) Premiums(
+        Day[] days,
+        Dictionary<int, Location> locations)
+    {
+        double nightHours = 0;
+        decimal extra = 0m;
+
+        foreach (Day day in days)
+        {
+            foreach (DayShift entry in (day.Shifts ?? []).Where(shift => shift.Worked))
+            {
+                locations.TryGetValue(entry.Shift?.LocationId ?? 0, out Location? place);
+
+                if (place is null) continue;
+
+                (TimeOnly from, TimeOnly to) =
+                    entry.ActualStart is TimeOnly begin && entry.ActualEnd is TimeOnly finish
+                        ? (begin, finish)
+                        : (entry.StartTime, entry.EndTime);
+
+                double night = PremiumCalculator.NightHours(from, to, place.NightFrom, place.NightTo);
+
+                if (place.NightMultiplier > 1m) nightHours += night;
+
+                if (entry.SalaryPeriod != SalaryPeriod.Hour) continue;
+
+                extra += PremiumCalculator.Extra(
+                    night,
+                    entry.PaidDuration.TotalHours,
+                    entry.SalaryAmount ?? 0m,
+                    place.NightMultiplier,
+                    place.PublicHolidayMultiplier,
+                    Holidays.IsPublicHoliday(place.HolidayCountry, day.Date));
+            }
+        }
+
+        return (Math.Round(nightHours, 2), extra);
     }
 
     /// <summary>

@@ -152,7 +152,11 @@ function Stats() {
         setTrendParts(
           responses.map((response, index) => ({
             label: monthLabel(months[index]),
-            shifts: response.shifts_earned + response.period_earned + response.overtime_earned,
+            shifts:
+              response.shifts_earned
+              + response.period_earned
+              + response.overtime_earned
+              + response.premium_earned,
             sales: response.sales_earned,
             tips: response.tips_earned,
           })),
@@ -248,6 +252,7 @@ function Stats() {
   const sources = [
     { name: 'Shifts', value: summary.shifts_earned },
     { name: 'Overtime', value: summary.overtime_earned },
+    { name: 'Premiums', value: summary.premium_earned },
     { name: 'Salary', value: summary.period_earned },
     { name: 'Sales', value: summary.sales_earned },
     { name: 'Tips', value: summary.tips_earned },
@@ -381,6 +386,7 @@ function Stats() {
         [t('Still planned'), summary.planned_earned],
         [t('Hours'), summary.hours],
         [t('Overtime'), summary.overtime_earned],
+        [t('Premiums'), summary.premium_earned],
         [t('Salary'), summary.period_earned],
         [t('Sales'), summary.sales_earned],
         [t('Tips'), summary.tips_earned],
@@ -816,6 +822,19 @@ function Stats() {
               {new Intl.DateTimeFormat(lang, { weekday: 'long', day: 'numeric', month: 'long' }).format(
                 new Date(`${bestDay.date}T00:00:00`),
               )}
+            </p>
+          </Card>
+        )}
+
+        {summary.premium_earned > 0 && (
+          <Card title={t('Premiums')}>
+            <p className="text-[1.3rem] font-bold text-good">
+              +<Money value={summary.premium_earned} />
+            </p>
+            <p className="field-hint">
+              {summary.night_hours > 0
+                ? `${Math.round(summary.night_hours * 10) / 10} ${t('night hours and public holidays')}`
+                : t('public holidays')}
             </p>
           </Card>
         )}

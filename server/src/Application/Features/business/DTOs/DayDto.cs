@@ -99,6 +99,10 @@ public record DaysDto(
     double overtime_hours,
     /// <summary>The premium those hours earned, on top of the base rate.</summary>
     decimal overtime_earned,
+    /// <summary>Hours that fell inside a place's night window (premium places only).</summary>
+    double night_hours,
+    /// <summary>What the night and public-holiday rules added, on top of the base.</summary>
+    decimal premium_earned,
     /// <summary>
     /// Everything overlapping the range, once each rather than repeated on
     /// every day it covers — a fortnight of leave is one entry, and the client

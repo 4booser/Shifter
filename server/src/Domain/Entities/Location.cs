@@ -61,6 +61,26 @@ public sealed class Location
     public decimal OvertimeMultiplier { get; set; } = 1.5m;
 
     /// <summary>
+    /// Night hours pay this much more. 1.0 means the place does not pay a
+    /// night premium — the default, because inventing one would put money on
+    /// the screen nobody agreed to.
+    /// </summary>
+    public decimal NightMultiplier { get; set; } = 1m;
+
+    /// <summary>The window the premium covers; wraps midnight by design.</summary>
+    public TimeOnly NightFrom { get; set; } = new TimeOnly(22, 0);
+    public TimeOnly NightTo { get; set; } = new TimeOnly(6, 0);
+
+    /// <summary>Public-holiday shifts pay this much more; 1.0 is off.</summary>
+    public decimal PublicHolidayMultiplier { get; set; } = 1m;
+
+    /// <summary>
+    /// Whose holiday calendar decides. Empty means the place keeps no holiday
+    /// premium at all, whatever the multiplier says.
+    /// </summary>
+    public string HolidayCountry { get; set; } = "";
+
+    /// <summary>
     /// Share of tips handed to support staff. Standard in restaurants, and it
     /// comes straight off take-home, so the totals have to know about it.
     /// </summary>

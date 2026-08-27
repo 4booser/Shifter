@@ -69,6 +69,13 @@ export interface WorkLocation {
   current_period_to: string;
   overtime_weekly_hours: number;
   overtime_multiplier: number;
+  /** 1 means the place pays no night premium at all. */
+  night_multiplier: number;
+  night_from: string;
+  night_to: string;
+  public_holiday_multiplier: number;
+  /** '' means no holiday calendar, so no holiday premium. */
+  holiday_country: string;
   tip_out_of_tips_percent: number;
   tip_out_of_sales_percent: number;
   meal_deduction: number;
@@ -101,6 +108,11 @@ export interface WorkLocationCreate {
   pay_anchor: string | null;
   overtime_weekly_hours: number;
   overtime_multiplier: number;
+  night_multiplier: number;
+  night_from: string;
+  night_to: string;
+  public_holiday_multiplier: number;
+  holiday_country: string;
   tip_out_of_tips_percent: number;
   tip_out_of_sales_percent: number;
   meal_deduction: number;
@@ -270,6 +282,10 @@ export interface DaysResponse {
   by_location: LocationTotal[];
   overtime_hours: number;
   overtime_earned: number;
+  /** Hours inside a place's night window, premium places only. */
+  night_hours: number;
+  /** What night and public-holiday rules added on top of the base. */
+  premium_earned: number;
   /**
    * Everything overlapping the range, once each rather than repeated on every
    * day it covers. The store spreads them across the cells.
@@ -416,6 +432,8 @@ export const EMPTY_SUMMARY: DaysResponse = {
   currencies: [],
   by_location: [],
   overtime_hours: 0,
+  night_hours: 0,
+  premium_earned: 0,
   overtime_earned: 0,
   events: [],
 };

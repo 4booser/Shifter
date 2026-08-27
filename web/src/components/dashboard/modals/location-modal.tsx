@@ -46,6 +46,11 @@ export function LocationModal({
   const [salesAnchor, setSalesAnchor] = useState(today());
   const [overtimeHours, setOvertimeHours] = useState(40);
   const [overtimeMultiplier, setOvertimeMultiplier] = useState(1.5);
+  const [nightMultiplier, setNightMultiplier] = useState(1);
+  const [nightFrom, setNightFrom] = useState('22:00');
+  const [nightTo, setNightTo] = useState('06:00');
+  const [holidayMultiplier, setHolidayMultiplier] = useState(1);
+  const [holidayCountry, setHolidayCountry] = useState('');
   const [tipOutTips, setTipOutTips] = useState(0);
   const [tipOutSales, setTipOutSales] = useState(0);
   const [mealDeduction, setMealDeduction] = useState(0);
@@ -96,6 +101,11 @@ export function LocationModal({
     setSalesAnchor(location.sales_pay_anchor ?? today());
     setOvertimeHours(location.overtime_weekly_hours);
     setOvertimeMultiplier(location.overtime_multiplier);
+    setNightMultiplier(location.night_multiplier ?? 1);
+    setNightFrom(location.night_from ?? '22:00');
+    setNightTo(location.night_to ?? '06:00');
+    setHolidayMultiplier(location.public_holiday_multiplier ?? 1);
+    setHolidayCountry(location.holiday_country ?? '');
     setTipOutTips(location.tip_out_of_tips_percent);
     setTipOutSales(location.tip_out_of_sales_percent);
     setMealDeduction(location.meal_deduction);
@@ -137,6 +147,11 @@ export function LocationModal({
           pay_anchor: needsAnchor && anchor !== '' ? anchor : null,
           overtime_weekly_hours: overtimeHours,
           overtime_multiplier: overtimeMultiplier,
+          night_multiplier: nightMultiplier,
+          night_from: nightFrom,
+          night_to: nightTo,
+          public_holiday_multiplier: holidayMultiplier,
+          holiday_country: holidayCountry,
           tip_out_of_tips_percent: tipOutTips,
           tip_out_of_sales_percent: tipOutSales,
           meal_deduction: mealDeduction,
@@ -320,6 +335,46 @@ export function LocationModal({
             <span className="field-label">{t('Paid at')}</span>
             <input type="number" min={1} max={5} step={0.1} className="field-input" value={overtimeMultiplier} onChange={num(setOvertimeMultiplier)} />
           </label>
+        </div>
+
+        {/* Night and holiday premiums: off until somebody turns them on, so
+            a place that never agreed to them is priced exactly as before. */}
+        <div className="rounded-(--radius) border border-border bg-surface-2/40 p-3">
+          <span className="field-label">{t('Night and holiday premiums')}</span>
+          <div className="mt-1.5 grid grid-cols-3 gap-2">
+            <label>
+              <span className="field-hint">{t('Night pays')}</span>
+              <input type="number" min={1} max={3} step={0.05} className="field-input w-full" value={nightMultiplier} onChange={num(setNightMultiplier)} />
+            </label>
+            <label>
+              <span className="field-hint">{t('Night from')}</span>
+              <input type="time" className="field-input w-full" value={nightFrom} onChange={(event) => setNightFrom(event.target.value)} />
+            </label>
+            <label>
+              <span className="field-hint">{t('until')}</span>
+              <input type="time" className="field-input w-full" value={nightTo} onChange={(event) => setNightTo(event.target.value)} />
+            </label>
+          </div>
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            <label>
+              <span className="field-hint">{t('Public holiday pays')}</span>
+              <input type="number" min={1} max={3} step={0.1} className="field-input w-full" value={holidayMultiplier} onChange={num(setHolidayMultiplier)} />
+            </label>
+            <label>
+              <span className="field-hint">{t('Holiday calendar')}</span>
+              <select className="field-input w-full" value={holidayCountry} onChange={(event) => setHolidayCountry(event.target.value)}>
+                <option value="">{t('none')}</option>
+                {['UA', 'PL', 'DE', 'GB', 'US', 'CA'].map((code) => (
+                  <option key={code} value={code}>{code}</option>
+                ))}
+              </select>
+            </label>
+          </div>
+          <p className="field-hint mt-1.5">
+            {nightMultiplier <= 1 && holidayMultiplier <= 1
+              ? t('Both at 1 — this place pays no premiums.')
+              : t('A holiday shift takes the holiday rate on all its hours; the night rate applies to night hours only.')}
+          </p>
         </div>
 
         <div className="grid grid-cols-2 gap-3">

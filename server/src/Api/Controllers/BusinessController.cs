@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Shifter.Application.Features.business.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Shifter.Application.Common.Exceptions;
@@ -203,6 +204,48 @@ public class BusinessController : ControllerBase
         CancellationToken ct)
     {
         await expenses.DeleteAsync(CurrentUserId(), id, ct);
+
+        return NoContent();
+    }
+
+    /// <summary>
+    /// The papers without which somebody is not allowed on shift. An expired
+    /// медкнижка is not a fine, it is being turned away from a shift you were
+    /// counting on — and people remember it on the day it is needed, which is
+    /// the one day it cannot be fixed.
+    /// </summary>
+    [HttpGet]
+    [Route("documents")]
+    public async Task<ActionResult<DocumentDto[]>> Documents(
+        [FromServices] DocumentHandler documents,
+        CancellationToken ct)
+        => Ok(await documents.ListAsync(CurrentUserId(), ct));
+
+    [HttpPost]
+    [Route("documents")]
+    public async Task<ActionResult<DocumentDto>> AddDocument(
+        [FromServices] DocumentHandler documents,
+        [FromBody] DocumentSaveDto request,
+        CancellationToken ct)
+        => Ok(await documents.SaveAsync(CurrentUserId(), null, request, ct));
+
+    [HttpPut]
+    [Route("documents/{id:int}")]
+    public async Task<ActionResult<DocumentDto>> UpdateDocument(
+        [FromServices] DocumentHandler documents,
+        int id,
+        [FromBody] DocumentSaveDto request,
+        CancellationToken ct)
+        => Ok(await documents.SaveAsync(CurrentUserId(), id, request, ct));
+
+    [HttpDelete]
+    [Route("documents/{id:int}")]
+    public async Task<ActionResult> DeleteDocument(
+        [FromServices] DocumentHandler documents,
+        int id,
+        CancellationToken ct)
+    {
+        await documents.DeleteAsync(CurrentUserId(), id, ct);
 
         return NoContent();
     }

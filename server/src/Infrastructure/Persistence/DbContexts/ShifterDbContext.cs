@@ -41,6 +41,7 @@ public class ShifterDbContext : DbContext
     public DbSet<DeviceToken> DeviceTokens => Set<DeviceToken>();
     public DbSet<LeaveRequest> LeaveRequests => Set<LeaveRequest>();
     public DbSet<WorkExpense> Expenses => Set<WorkExpense>();
+    public DbSet<WorkDocument> Documents => Set<WorkDocument>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -150,6 +151,15 @@ public class ShifterDbContext : DbContext
             .HasOne(entry => entry.CreatedBy).WithMany()
             .HasForeignKey(entry => entry.CreatedByUserId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        // Always read as "what of mine runs out soonest".
+        modelBuilder.Entity<WorkDocument>()
+            .HasIndex(document => new { document.UserId, document.ExpiresOn });
+
+        modelBuilder.Entity<WorkDocument>()
+            .HasOne(document => document.User).WithMany()
+            .HasForeignKey(document => document.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         // The share link is looked up by slug and must be one listing only.
         modelBuilder.Entity<GigListing>()

@@ -8,6 +8,7 @@ import { HttpError, api, apiErrorMessage, readSession } from '@/lib/api/http';
 import { useI18n } from '@/lib/i18n';
 import { useReveal } from '@/lib/fx';
 import { Shell } from '@/components/layout/shell';
+import { DocumentsPanel } from '@/components/dashboard/documents-panel';
 import { AvatarSection } from '@/components/account/avatar-section';
 import { ReferralSection } from '@/components/account/referral-section';
 import { GoogleButton } from '@/components/auth/google-button';
@@ -118,6 +119,9 @@ function Account() {
               </button>
             </div>
           </section>
+
+          {/* ==== The papers that gate a shift ==== */}
+          <DocumentsPanel />
 
           {/* ==== Password ==== */}
           <section className="card reveal p-4">

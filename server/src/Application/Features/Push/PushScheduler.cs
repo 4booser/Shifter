@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Shifter.Application.Features.business.Services;
 using Shifter.Application.Features.business.Services.Interfaces;
 using Shifter.Domain.Entities;
 using Shifter.Infrastructure.Persistence.DbContexts;
@@ -61,7 +62,8 @@ public sealed class PushScheduler : BackgroundService
         var db = scope.ServiceProvider.GetRequiredService<ShifterDbContext>();
 
         var subscriptions = await db.PushSubscriptions
-            .Where(s => s.NotifyTomorrow || s.NotifyUnclosed || s.NotifyPayday || s.NotifyDigest || s.NotifyOvertime)
+            .Where(s => s.NotifyTomorrow || s.NotifyUnclosed || s.NotifyPayday || s.NotifyDigest
+                || s.NotifyOvertime || s.NotifyDocuments)
             .ToListAsync(ct);
 
         foreach (var subscription in subscriptions)
@@ -130,6 +132,18 @@ public sealed class PushScheduler : BackgroundService
             {
                 subscription.OvertimeSentOn = today;
                 dead = !await SendOvertimeAsync(scope.ServiceProvider, subscription, today, ct);
+            }
+
+            // The morning slot, because renewing a document is a daytime
+            // errand: a clinic that closes at five is no use to somebody told
+            // about it at nine in the evening.
+            if (!dead
+                && morningOpen
+                && subscription.NotifyDocuments
+                && subscription.DocumentsSentOn != today)
+            {
+                subscription.DocumentsSentOn = today;
+                dead = !await SendDocumentsAsync(scope.ServiceProvider, subscription, today, ct);
             }
 
             if (dead) db.PushSubscriptions.Remove(subscription);
@@ -282,6 +296,49 @@ public sealed class PushScheduler : BackgroundService
         };
 
         return await _sender.SendAsync(subscription, title, body, "/stats");
+    }
+
+    /// <summary>
+    /// A paper running out. Sent once when it enters the month, once when it
+    /// enters the week, and then daily once it has actually expired — because
+    /// past that point every single shift is at risk, and a warning that goes
+    /// quiet is a warning that failed.
+    /// </summary>
+    private async Task<bool> SendDocumentsAsync(
+        IServiceProvider services,
+        PushSubscription subscription,
+        DateOnly today,
+        CancellationToken ct)
+    {
+        var documents = services.GetRequiredService<DocumentHandler>();
+        var mine = await documents.ListAsync(subscription.UserId, ct);
+
+        var worst = mine
+            .Where(document => document.state is "expired" or "urgent" or "soon")
+            .OrderBy(document => document.days_left)
+            .FirstOrDefault();
+
+        if (worst is null) return true;
+
+        // Only on the days the state actually changes, or every day once it is
+        // gone. Otherwise this is a daily nag for a month.
+        bool sayIt = worst.state == "expired"
+            || worst.days_left == DocumentRules.WarnDays
+            || worst.days_left == DocumentRules.UrgentDays;
+
+        if (!sayIt) return true;
+
+        var (title, body) = (worst.state, subscription.Language) switch
+        {
+            ("expired", "ru") => ("Документ просрочен", $"«{worst.name}» закончился. На смену могут не пустить."),
+            ("expired", "uk") => ("Документ прострочено", $"«{worst.name}» скінчився. На зміну можуть не пустити."),
+            ("expired", _) => ("A document has expired", $"“{worst.name}” has run out. It can cost you a shift."),
+            (_, "ru") => ("Документ скоро закончится", $"«{worst.name}» — осталось {worst.days_left} дн."),
+            (_, "uk") => ("Документ скоро скінчиться", $"«{worst.name}» — лишилося {worst.days_left} дн."),
+            (_, _) => ("A document runs out soon", $"“{worst.name}” — {worst.days_left} days left."),
+        };
+
+        return await _sender.SendAsync(subscription, title, body, "/account");
     }
 
     private async Task<bool> SendUnclosedAsync(

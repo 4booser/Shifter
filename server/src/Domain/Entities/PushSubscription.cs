@@ -43,6 +43,13 @@ public sealed class PushSubscription
     /// </summary>
     public bool NotifyOvertime { get; set; }
 
+    /// <summary>
+    /// Papers running out. On by default for nobody — but the first document
+    /// somebody enters is a statement that they want to be told, and the
+    /// settings screen says so.
+    /// </summary>
+    public bool NotifyDocuments { get; set; }
+
     /// <summary>Local "HH:mm" both nudges are sent at.</summary>
     public required string NotifyAt { get; set; }
 
@@ -60,4 +67,5 @@ public sealed class PushSubscription
 
     public DateOnly? DigestSentOn { get; set; }
     public DateOnly? OvertimeSentOn { get; set; }
+    public DateOnly? DocumentsSentOn { get; set; }
 }

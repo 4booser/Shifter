@@ -7,6 +7,7 @@ import {
   DaySave,
   DaysResponse,
   EventSave,
+  DocumentSave,
   Expense,
   ExpenseKind,
   Goal,
@@ -15,6 +16,7 @@ import {
   PayoutCreate,
   PayslipCheck,
   Reconciliation,
+  WorkDocument,
   SalesCreate,
   SalesPosition,
   ShiftCreate,
@@ -72,6 +74,13 @@ export const calendarApi = {
   payouts: (from: string, to: string) => api<Payout[]>(`${API}/payouts?from=${from}&to=${to}`),
   createPayout: (request: PayoutCreate) => api<Payout>(`${API}/payouts`, { body: request }),
   deletePayout: (id: number) => api<void>(`${API}/payouts/${id}`, { method: 'DELETE' }),
+  /** The papers without which somebody is not allowed on shift. */
+  documents: () => api<WorkDocument[]>(`${API}/documents`),
+  saveDocument: (id: number | null, body: DocumentSave) =>
+    id === null
+      ? api<WorkDocument>(`${API}/documents`, { body })
+      : api<WorkDocument>(`${API}/documents/${id}`, { method: 'PUT', body }),
+  deleteDocument: (id: number) => api<void>(`${API}/documents/${id}`, { method: 'DELETE' }),
   /** What the work cost — kept apart from fines, and never inside earnings. */
   expenses: (from: string, to: string) =>
     api<Expense[]>(`${API}/expenses?from=${from}&to=${to}`),

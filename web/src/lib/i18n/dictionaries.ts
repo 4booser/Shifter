@@ -5,6 +5,20 @@
 type Dictionary = Record<string, string>;
 
 export const RU: Dictionary = {
+  'Papers': 'Документы',
+  'A medical book that ran out is a shift you are sent home from.': 'Просроченная медкнижка — это смена, с которой вас отправят домой.',
+  'Medical book': 'Медкнижка',
+  'Food hygiene': 'Санминимум',
+  'Certificate': 'Сертификат',
+  'Licence': 'Права',
+  'Work permit': 'Разрешение на работу',
+  'What it is called': 'Как называется',
+  'Good until': 'Действует до',
+  'Where to renew it, or its number': 'Где продлевать или номер',
+  'Only the date is kept. A photograph of your medical book belongs in your pocket, not on a server.': 'Храним только дату. Фотография медкнижки должна лежать в кармане, а не на сервере.',
+  'Nothing recorded yet.': 'Пока ничего не записано.',
+  'has run out': 'закончился',
+  'runs out in': 'закончится через',
   'Check the payslip': 'Сверить расчётный',
   'Check': 'Сверить',
   'What the app worked out is on the left. Put what the payslip says on the right — only where they differ.': 'Слева — то, что посчитало приложение. Справа впишите, что в расчётном, — только там, где расходится.',
@@ -1792,6 +1806,20 @@ export const RU: Dictionary = {
 };
 
 export const UK: Dictionary = {
+  'Papers': 'Документи',
+  'A medical book that ran out is a shift you are sent home from.': 'Прострочена медкнижка — це зміна, з якої вас відправлять додому.',
+  'Medical book': 'Медкнижка',
+  'Food hygiene': 'Санмінімум',
+  'Certificate': 'Сертифікат',
+  'Licence': 'Права',
+  'Work permit': 'Дозвіл на роботу',
+  'What it is called': 'Як називається',
+  'Good until': 'Дійсний до',
+  'Where to renew it, or its number': 'Де продовжувати або номер',
+  'Only the date is kept. A photograph of your medical book belongs in your pocket, not on a server.': 'Зберігаємо лише дату. Фотографія медкнижки має лежати в кишені, а не на сервері.',
+  'Nothing recorded yet.': 'Поки нічого не записано.',
+  'has run out': 'закінчився',
+  'runs out in': 'закінчиться через',
   'Check the payslip': 'Звірити розрахунковий',
   'Check': 'Звірити',
   'What the app worked out is on the left. Put what the payslip says on the right — only where they differ.': 'Ліворуч — те, що порахував застосунок. Праворуч впишіть, що в розрахунковому, — лише там, де розходиться.',

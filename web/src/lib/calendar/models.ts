@@ -502,6 +502,32 @@ export interface PayslipCheck {
   holiday_accrued: number;
 }
 
+/**
+ * A piece of paper without which somebody is not allowed on shift. The days
+ * left are computed on the server, so the phone and the site cannot disagree
+ * about whether something has expired — which, on a medical book, is the
+ * difference between working a shift and being sent home from it.
+ */
+export type DocumentKind = 'medical' | 'sanitary' | 'certificate' | 'licence' | 'permit' | 'other';
+
+export interface WorkDocument {
+  id: number;
+  kind: DocumentKind;
+  name: string;
+  expires_on: string;
+  note: string | null;
+  /** Negative once it has run out. */
+  days_left: number;
+  state: 'expired' | 'urgent' | 'soon' | 'fine';
+}
+
+export interface DocumentSave {
+  kind: DocumentKind;
+  name: string;
+  expires_on: string;
+  note: string | null;
+}
+
 export interface Payout {
   id: number;
   period_from: string;

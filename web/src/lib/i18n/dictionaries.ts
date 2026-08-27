@@ -5,6 +5,7 @@
 type Dictionary = Record<string, string>;
 
 export const RU: Dictionary = {
+  'No place set': 'Без места',
   'Which nights tip': 'Какие вечера дают чай',
   'The average a day of that weekday brings, and what share of it that was.': 'Сколько в среднем приносит такой день недели и какая это доля от дня.',
   'Best for tips:': 'Лучший на чай:',
@@ -1652,6 +1653,7 @@ export const RU: Dictionary = {
 };
 
 export const UK: Dictionary = {
+  'No place set': 'Без місця',
   'Which nights tip': 'Які вечори дають чай',
   'The average a day of that weekday brings, and what share of it that was.': 'Скільки в середньому приносить такий день тижня і яка це частка від дня.',
   'Best for tips:': 'Найкращий на чай:',

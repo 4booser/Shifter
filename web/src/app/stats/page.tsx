@@ -16,7 +16,7 @@ import {
 } from '@/lib/calendar/calendar-date';
 import { forecastFor, paceToGoal, projectionSeries } from '@/lib/calendar/forecast';
 import { averagesFor } from '@/lib/calendar/insights';
-import { DaysResponse, EMPTY_SUMMARY, Goal } from '@/lib/calendar/models';
+import { DaysResponse, EMPTY_SUMMARY, Goal, placeName } from '@/lib/calendar/models';
 import { activeGoalFor, delta, earningsBuckets, median, weekdayTotals } from '@/lib/calendar/stats-math';
 import { buildColumns, buildTicks, niceCeiling } from '@/lib/charts/math';
 import { Sheet, buildXlsx, downloadBlob } from '@/lib/export/xlsx';
@@ -491,7 +491,7 @@ function Stats() {
       rows: [
         [t('Place of work'), t('Days worked'), t('Hours'), t('Earned'), t('Tips'), t('Sales'), t('Tip-out'), t('Per hour')],
         ...summary.by_location.map((place) => [
-          place.name,
+          placeName(place, t('No place set')),
           place.days_worked,
           place.hours,
           place.earned,
@@ -967,7 +967,7 @@ function Stats() {
                     <tr key={place.location_id} className="border-t border-border">
                       <td className="px-2 py-1.5">
                         <span className="mr-1.5 inline-block h-2 w-2 rounded-full" style={{ background: place.colour }} />
-                        {place.name}
+                        {placeName(place, t('No place set'))}
                         {place.days_worked > 0 && place.days_worked < 3 && (
                           <span className="chip ml-1.5 border-warn/40 text-warn">{t('few shifts')}</span>
                         )}

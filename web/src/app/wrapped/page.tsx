@@ -7,7 +7,7 @@ import { apiErrorMessage } from '@/lib/api/http';
 import { currentMonth, fromKey, todayKey } from '@/lib/calendar/calendar-date';
 import { forecastFor } from '@/lib/calendar/forecast';
 import { averagesFor, bestDay, bestWeek, change, countShifts, longestStreak, restDays } from '@/lib/calendar/insights';
-import { DaysResponse, EMPTY_SUMMARY } from '@/lib/calendar/models';
+import { DaysResponse, EMPTY_SUMMARY, placeName } from '@/lib/calendar/models';
 import { useI18n } from '@/lib/i18n';
 import { Shell } from '@/components/layout/shell';
 import { BadgeWall } from '@/components/achievements/badges';
@@ -306,7 +306,7 @@ function Wrapped() {
             )}
             {topPlace !== null && (
               <Superlative emoji="🏠" title={t('Top place')}>
-                {topPlace.name} · <Money value={topPlace.earned} className="font-bold" />
+                {placeName(topPlace, t('No place set'))} · <Money value={topPlace.earned} className="font-bold" />
               </Superlative>
             )}
             {topSale !== null && (

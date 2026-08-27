@@ -612,3 +612,11 @@ export const EMOJI_GROUPS: EmojiGroup[] = [
 
 /** Flat list, kept for anything that just needs "is this one of ours". */
 export const SHIFT_EMOJIS = EMOJI_GROUPS.flatMap((group) => group.emojis);
+
+/**
+ * What to call a place in a sentence. Shifts with no place land in a
+ * synthetic bucket the server names in English; that name is a placeholder,
+ * not a title, and no localised screen should read it out loud.
+ */
+export const placeName = (total: { location_id: number; name: string }, unplaced: string): string =>
+  total.location_id === 0 ? unplaced : total.name;

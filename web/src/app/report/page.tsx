@@ -14,7 +14,7 @@ import {
   shiftDays,
 } from '@/lib/calendar/calendar-date';
 import { averagesFor, bestDay } from '@/lib/calendar/insights';
-import { CalendarDayData, DaysResponse, EMPTY_SUMMARY } from '@/lib/calendar/models';
+import { CalendarDayData, DaysResponse, EMPTY_SUMMARY, placeName } from '@/lib/calendar/models';
 import { delta } from '@/lib/calendar/stats-math';
 import { waterfall, weekBands } from '@/lib/charts/report-math';
 import { useI18n } from '@/lib/i18n';
@@ -383,7 +383,7 @@ function Report() {
                 <Donut
                   centreLabel={t('Earned')}
                   slices={summary.by_location.map((place, index) => ({
-                    label: place.name,
+                    label: placeName(place, t('No place set')),
                     value: place.earned,
                     colour: place.colour || PLACE_TINTS[index % PLACE_TINTS.length],
                   }))}
@@ -402,7 +402,7 @@ function Report() {
                       <tr key={place.location_id} className="border-b border-border/60">
                         <td className="flex items-center gap-1.5 py-1.5 pr-2">
                           <span className="h-2 w-2 flex-none rounded-full" style={{ background: place.colour }} />
-                          {place.name}
+                          {placeName(place, t('No place set'))}
                         </td>
                         <td className="py-1.5 pr-2 text-right tabular">{Math.round(place.hours * 10) / 10}</td>
                         <td className="py-1.5 pr-2 text-right tabular">{format(place.per_hour)}</td>

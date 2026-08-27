@@ -107,3 +107,24 @@ export function postedAgo(iso: string): string {
  * reads as a broken listing rather than one without pictures.
  */
 export const photosOf = (gig: Gig): string[] => gig.photos.filter((url) => url.trim() !== '');
+
+/**
+ * The vacancy's own terms, in the shape a shift template takes. A gig says
+ * "per shift" where a template says "per day", and its percentage is the same
+ * share of the takings the template already knows how to hold — so an outing
+ * arranged on the board can be priced without anybody retyping the deal.
+ */
+export const templateFromGig = (gig: Gig) => ({
+  name: gig.title.slice(0, 40),
+  symbol: null,
+  location_id: null,
+  start_time: gig.start,
+  end_time: gig.end,
+  salary_period: gig.pay_period === 'shift' ? 'day' : gig.pay_period,
+  salary_amount: gig.pay_amount,
+  break_minutes: 0,
+  colour: null,
+  revenue_percent: gig.pay_percent,
+  tip_source: 'personal',
+  tip_pool_percent: null,
+});

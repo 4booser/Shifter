@@ -19,7 +19,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Palette } from '@/constants/theme';
 import { api, ApiError } from '@/lib/api';
 import { addMonths, currentMonth, dayLabel, monthBounds, todayKey } from '@/lib/calendar';
-import { Gig, payLine, photosOf, postedAgo, tradeOf } from '@/lib/gigs';
+import { DaysResponse, ShiftTemplate, toSavePayload } from '@/lib/types';
+import { Gig, payLine, photosOf, postedAgo, templateFromGig, tradeOf } from '@/lib/gigs';
 
 type Tab = 'freelance' | 'permanent' | 'mine';
 
@@ -231,10 +232,12 @@ function GigSheet({
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState<string | null>(null);
   const [photo, setPhoto] = useState(0);
+  const [added, setAdded] = useState(false);
 
   useEffect(() => {
     setPhoto(0);
     setFailed(null);
+    setAdded(false);
   }, [gig]);
 
   if (gig === null) {
@@ -260,6 +263,55 @@ function GigSheet({
       onChanged();
     } catch (caught) {
       setFailed(caught instanceof ApiError ? caught.message : 'Отклик не ушёл.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  /**
+   * The outing, on the calendar, priced by the deal that was struck. The
+   * vacancy already says the hours and the pay, so nothing about it needs
+   * typing a second time — and a percentage-only gig arrives as a percentage
+   * shift rather than a shift worth nothing.
+   */
+  const addToCalendar = async () => {
+    setBusy(true);
+    setFailed(null);
+
+    try {
+      const template = await api<ShiftTemplate>('/shifter/v1/shifts', {
+        method: 'POST',
+        body: templateFromGig(gig),
+      });
+
+      // The day is sent whole, so whatever is already on it comes back with
+      // the new shift rather than being replaced by it.
+      const existing = await api<DaysResponse>(
+        `/shifter/v1/days?from=${gig.date}&to=${gig.date}`,
+      );
+      const payload = toSavePayload(existing.days[0]);
+
+      await api(`/shifter/v1/days/${gig.date}`, {
+        method: 'PUT',
+        body: {
+          ...payload,
+          shifts: [
+            ...payload.shifts,
+            {
+              shift_id: template.id,
+              worked: false,
+              needs_cover: false,
+              actual_start: null,
+              actual_end: null,
+              break_minutes: null,
+            },
+          ],
+        },
+      });
+
+      setAdded(true);
+    } catch (caught) {
+      setFailed(caught instanceof ApiError ? caught.message : 'Не добавили в календарь.');
     } finally {
       setBusy(false);
     }
@@ -329,6 +381,24 @@ function GigSheet({
                 ? 'Вас взяли. Заведение получило ваши контакты.'
                 : 'Отклик отправлен. Заведение видит ваши контакты.'}
             </Text>
+
+            {gig.my_response.accepted && gig.employment === 'freelance' && (
+              <Pressable
+                style={[styles.primary, (busy || added) && { opacity: 0.6 }]}
+                disabled={busy || added}
+                onPress={() => void addToCalendar()}
+              >
+                <Text style={styles.primaryText}>
+                  {added
+                    ? 'Смена в календаре'
+                    : busy
+                      ? 'Добавляем…'
+                      : `Добавить в календарь · ${payLine(gig)}`}
+                </Text>
+              </Pressable>
+            )}
+
+            {failed !== null && <Text style={styles.error}>{failed}</Text>}
             {!gig.my_response.accepted && (
               <Pressable style={styles.ghost} disabled={busy} onPress={() => void withdraw()}>
                 <Text style={styles.ghostText}>Отозвать отклик</Text>

@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -136,6 +137,7 @@ export default function ScheduleScreen() {
   const palette = Colors[scheme === 'dark' ? 'dark' : 'light'];
   const styles = makeStyles(palette);
   const insets = useSafeAreaInsets();
+  const router = useRouter();
 
   const dates = useMemo(windowDates, []);
   const span = { from: dates[0], to: dates[dates.length - 1] };
@@ -264,7 +266,15 @@ export default function ScheduleScreen() {
           />
         }
       >
-        <Text style={styles.title}>График</Text>
+        <View style={styles.titleRow}>
+          <Text style={styles.title}>График</Text>
+          {board?.can_plan === true && (
+            <Pressable style={styles.boardButton} onPress={() => router.push('/board')}>
+              <Ionicons name="grid-outline" size={15} color={palette.accent} />
+              <Text style={styles.boardButtonText}>Доска</Text>
+            </Pressable>
+          )}
+        </View>
 
         {teams === null && <ActivityIndicator color={palette.accent} />}
 
@@ -728,7 +738,20 @@ const makeStyles = (palette: Palette) =>
   StyleSheet.create({
     screen: { flex: 1, backgroundColor: palette.background },
     content: { padding: 14, paddingBottom: 48, gap: 10 },
+    titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
     title: { color: palette.text, fontSize: 30, fontWeight: '800' },
+    boardButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      borderColor: palette.accent,
+      borderWidth: 1,
+      backgroundColor: palette.accentSoft,
+      borderRadius: 999,
+      paddingHorizontal: 13,
+      paddingVertical: 7,
+    },
+    boardButtonText: { color: palette.accent, fontSize: 13, fontWeight: '700' },
     grow: { flex: 1 },
     error: { color: palette.danger, fontSize: 13 },
     lead: { color: palette.textSecondary, fontSize: 14, lineHeight: 20 },

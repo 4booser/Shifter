@@ -35,6 +35,13 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Shifter открывает галерею, чтобы прочитать фото графика.",
+          "cameraPermission": "Shifter включает камеру, чтобы снять график со стены."
+        }
       ]
     ],
     "experiments": {

@@ -146,3 +146,41 @@ export async function api<T>(
 
   return (await response.json()) as T;
 }
+
+/**
+ * The same door for a file. Multipart cannot go through `api` because that
+ * one declares JSON, and a declared Content-Type overrides the boundary
+ * fetch would otherwise write for the form.
+ */
+export async function upload<T>(path: string, form: FormData, retried = false): Promise<T> {
+  const response = await fetch(`${API_BASE}${path}`, {
+    method: 'POST',
+    headers: current !== null ? { Authorization: `Bearer ${current.access_token}` } : {},
+    body: form,
+  });
+
+  if (response.status === 401 && !retried && current !== null) {
+    const renewed = await refresh();
+
+    if (renewed !== null) return upload<T>(path, form, true);
+
+    setSession(null);
+    authLost?.();
+  }
+
+  if (!response.ok) {
+    let message = `HTTP ${response.status}`;
+
+    try {
+      const body = (await response.json()) as { message?: string };
+
+      if (typeof body.message === 'string') message = body.message;
+    } catch {
+      // The status alone will have to do.
+    }
+
+    throw new ApiError(response.status, message);
+  }
+
+  return (await response.json()) as T;
+}

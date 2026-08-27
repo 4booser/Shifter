@@ -103,6 +103,9 @@ export default function CalendarScreen() {
     >
       <View style={styles.headerRow}>
         <Text style={styles.title}>{monthLabel(month)}</Text>
+        <Pressable onPress={() => router.push('/import')} hitSlop={8}>
+          <Ionicons name="camera-outline" size={22} color={palette.textSecondary} />
+        </Pressable>
         <Pressable onPress={signOut} hitSlop={8}>
           <Ionicons name="log-out-outline" size={20} color={palette.textSecondary} />
         </Pressable>
@@ -216,8 +219,8 @@ const makeStyles = (palette: Palette) =>
   StyleSheet.create({
     screen: { flex: 1, backgroundColor: palette.background },
     content: { padding: 14, gap: 10 },
-    headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-    title: { fontSize: 24, fontWeight: '800', color: palette.text, letterSpacing: -0.5 },
+    headerRow: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+    title: { flex: 1, fontSize: 24, fontWeight: '800', color: palette.text, letterSpacing: -0.5 },
     monthNav: { flexDirection: 'row', alignItems: 'center', gap: 6 },
     navButton: {
       backgroundColor: palette.backgroundElement,

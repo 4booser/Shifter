@@ -105,6 +105,8 @@ public static class DependencyInjection
             configuration.GetSection(Shifter.Application.Features.Brief.BriefOptions.Section));
         services.AddScoped<Shifter.Application.Features.Brief.GeminiBriefClient>();
         services.AddScoped<Shifter.Application.Features.Brief.BriefService>();
+        services.AddScoped<Shifter.Application.Features.Assistant.GeminiAssistantClient>();
+        services.AddScoped<Shifter.Application.Features.Assistant.AssistantService>();
         services.AddScoped<Shifter.Application.Features.business.Services.DayAuditWriter>();
         services.AddScoped<Shifter.Application.Features.business.Services.GoalCelebrator>();
         services.AddScoped<Shifter.Application.Features.Gigs.GigService>();

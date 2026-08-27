@@ -5,6 +5,18 @@
 type Dictionary = Record<string, string>;
 
 export const RU: Dictionary = {
+  'Assistant': 'Помощник',
+  'Ask about your own months': 'Спросите про свои месяцы',
+  'Everything it answers with was counted from your own shifts — it never invents a figure.': 'Всё, чем он отвечает, посчитано по вашим сменам — цифры он не выдумывает.',
+  'Ask about a month, a day, an hour…': 'Спросите про месяц, день, час…',
+  'Ask': 'Спросить',
+  'worded by the model': 'слова — от нейросети',
+  'counted and worded by Shifter': 'посчитал и написал сам Shifter',
+  'A month, written out': 'Месяц словами',
+  'Write it out': 'Разобрать месяц',
+  'Writing…': 'Пишем…',
+  'Fill in the blanks': 'Заполните пробелы',
+  'Each answer lands straight on that day and makes every total truer.': 'Каждый ответ ложится прямо в тот день и делает все итоги честнее.',
   'Percentage': 'Процент',
   'from takings of': 'с выручки',
   'Takings this shift': 'Выручка за смену',
@@ -1628,6 +1640,18 @@ export const RU: Dictionary = {
 };
 
 export const UK: Dictionary = {
+  'Assistant': 'Помічник',
+  'Ask about your own months': 'Спитайте про свої місяці',
+  'Everything it answers with was counted from your own shifts — it never invents a figure.': 'Усе, чим він відповідає, пораховано за вашими змінами — цифри він не вигадує.',
+  'Ask about a month, a day, an hour…': 'Спитайте про місяць, день, годину…',
+  'Ask': 'Спитати',
+  'worded by the model': 'слова — від нейромережі',
+  'counted and worded by Shifter': 'порахував і написав сам Shifter',
+  'A month, written out': 'Місяць словами',
+  'Write it out': 'Розібрати місяць',
+  'Writing…': 'Пишемо…',
+  'Fill in the blanks': 'Заповніть прогалини',
+  'Each answer lands straight on that day and makes every total truer.': 'Кожна відповідь лягає прямо в той день і робить усі підсумки чеснішими.',
   'Percentage': 'Відсоток',
   'from takings of': 'з виторгу',
   'Takings this shift': 'Виторг за зміну',

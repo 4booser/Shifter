@@ -34,6 +34,7 @@ public class ShifterDbContext : DbContext
     public DbSet<PasswordReset> PasswordResets => Set<PasswordReset>();
     public DbSet<ShiftSwap> ShiftSwaps => Set<ShiftSwap>();
     public DbSet<DailyBrief> DailyBriefs => Set<DailyBrief>();
+    public DbSet<AssistantMessage> AssistantMessages => Set<AssistantMessage>();
     public DbSet<Availability> Availabilities => Set<Availability>();
     public DbSet<DeviceToken> DeviceTokens => Set<DeviceToken>();
 
@@ -76,6 +77,10 @@ public class ShifterDbContext : DbContext
             .IsUnique();
         modelBuilder.Entity<Availability>()
             .HasIndex(block => new { block.TeamId, block.Date });
+
+        // The thread is always read newest-first for one person.
+        modelBuilder.Entity<AssistantMessage>()
+            .HasIndex(message => new { message.UserId, message.CreatedAt });
 
         // One brief per person per day.
         modelBuilder.Entity<DailyBrief>()

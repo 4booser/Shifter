@@ -26,6 +26,7 @@ const NAV: { href: string; label: string; icon: string }[] = [
   { href: '/gigs', label: 'Gigs', icon: 'spark' },
   { href: '/payouts', label: 'Payouts', icon: 'wallet' },
   { href: '/stats', label: 'Statistics', icon: 'chart' },
+  { href: '/assistant', label: 'Assistant', icon: 'note' },
   { href: '/wrapped', label: 'Your year', icon: 'trophy' },
 ];
 

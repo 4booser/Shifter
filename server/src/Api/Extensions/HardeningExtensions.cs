@@ -33,6 +33,14 @@ public static class HardeningExtensions
     /// </summary>
     public const string AssistantPolicy = "assistant";
 
+    /// <summary>
+    /// Crash reports from the browser. Anonymous by necessity — a white screen
+    /// can happen before anybody has logged in — so the ceiling has to assume
+    /// the caller is hostile. A page that is genuinely broken sends a handful;
+    /// anything past that is somebody using the log as a writing surface.
+    /// </summary>
+    public const string ClientErrorPolicy = "client-error";
+
     public const string CorsPolicy = "spa";
 
     public static IServiceCollection AddHardening(
@@ -107,6 +115,15 @@ public static class HardeningExtensions
                 _ => new FixedWindowRateLimiterOptions
                 {
                     PermitLimit = 20,
+                    Window = TimeSpan.FromHours(1),
+                    QueueLimit = 0
+                }));
+
+            options.AddPolicy(ClientErrorPolicy, context => RateLimitPartition.GetFixedWindowLimiter(
+                ClientKey(context),
+                _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = 10,
                     Window = TimeSpan.FromHours(1),
                     QueueLimit = 0
                 }));

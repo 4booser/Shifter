@@ -139,6 +139,8 @@ jobs:
           context: .
           target: final
           push: true
+          build-args: |
+            BUILD_REF=${{ github.sha }}
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE }}:${{ github.sha }}
             ${{ env.REGISTRY }}/${{ env.IMAGE }}:latest

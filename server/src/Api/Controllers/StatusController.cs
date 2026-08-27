@@ -2,8 +2,11 @@ using System.Diagnostics;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 
+using Shifter.Api.Extensions;
+using Shifter.Application.Features.Diagnostics;
 using Shifter.Infrastructure.Persistence.DbContexts;
 
 namespace Shifter.Api.Controllers;
@@ -25,12 +28,50 @@ public class StatusController : ControllerBase
 
     private readonly ShifterDbContext _shifter;
     private readonly TokensDbContext _tokens;
+    private readonly ILogger<StatusController> _log;
 
-    public StatusController(ShifterDbContext shifter, TokensDbContext tokens)
+    public StatusController(
+        ShifterDbContext shifter,
+        TokensDbContext tokens,
+        ILogger<StatusController> log)
     {
         _shifter = shifter;
         _tokens = tokens;
+        _log = log;
     }
+
+    /// <summary>
+    /// A crash the browser saw. The page has collected these since the first
+    /// line of script on it, and until now they went nowhere — which meant a
+    /// white screen was something we heard about from the person it happened
+    /// to, days later, described from memory.
+    ///
+    /// Anonymous because a page can break before anybody has logged in, and
+    /// scrubbed on the way in because a stack trace from a live page can carry
+    /// an address or a token in it. Nothing here identifies a person: what
+    /// broke, on which page, on which build.
+    /// </summary>
+    [HttpPost]
+    [Route("client-error")]
+    [EnableRateLimiting(HardeningExtensions.ClientErrorPolicy)]
+    public IActionResult ClientError([FromBody] ClientErrorDto request)
+    {
+        string message = ClientErrorReport.Clean(request.message);
+
+        // An empty report is a client bug of its own, not something to log.
+        if (message.Length == 0) return NoContent();
+
+        _log.LogWarning(
+            "Client error on {Path} (build {Build}): {Message}",
+            ClientErrorReport.CleanPath(request.path),
+            ClientErrorReport.CleanBuild(request.build),
+            message);
+
+        return NoContent();
+    }
+
+    /// <summary>What a broken page is allowed to tell us about itself.</summary>
+    public record ClientErrorDto(string? message, string? path, string? build);
 
     [HttpGet]
     public async Task<IActionResult> Get(CancellationToken ct)

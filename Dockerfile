@@ -6,6 +6,11 @@ WORKDIR /web
 COPY ["web/package.json", "web/package-lock.json", "./"]
 RUN npm ci
 COPY web/ ./
+# Which build a crash report came from. Without it every report from
+# production says "dev" and a fault that was fixed last week goes on being
+# chased.
+ARG BUILD_REF=dev
+ENV NEXT_PUBLIC_BUILD=$BUILD_REF
 # `next build` exports to out/, and the sync script copies that to
 # ../server/wwwroot — which lands at /server/wwwroot here.
 RUN npm run build

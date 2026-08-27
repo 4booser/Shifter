@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
+import { reportCollectedErrors } from '@/lib/diagnostics/report';
 import { bindSettingsToDocument } from '@/lib/settings/store';
 
 /**
@@ -18,6 +19,14 @@ export function Boot({ children }: { children: React.ReactNode }) {
 
   useEffect(() => bindSettingsToDocument(), []);
   useEffect(() => setMounted(true), []);
+
+  // Whatever broke before React got here. Sent once, after the app is up, so a
+  // failing report cannot be the thing that stops the page rendering.
+  useEffect(() => {
+    const timer = setTimeout(reportCollectedErrors, 2_000);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     if (!('serviceWorker' in navigator)) return;

@@ -254,6 +254,15 @@ export const plannerApi = {
   /** Blocks a day, or lifts the block when it is already there. */
   toggleAvailability: (teamId: number, date: string, reason: string | null) =>
     api<Blocked[]>(`${TEAMS}/${teamId}/planner/availability`, { body: { date, reason } }),
+  /** Drafts one slot onto whoever can take it, lightest week first. */
+  fill: (
+    teamId: number,
+    body: { date: string; title: string; start: string; end: string; role: PlanRole; count: number },
+  ) =>
+    api<{ placed: Assignment[]; wanted: number; shortfall: string | null }>(
+      `${TEAMS}/${teamId}/planner/fill`,
+      { body: { ...body, role: body.role === '' ? null : body.role } },
+    ),
   setManager: (teamId: number, userId: number, is_manager: boolean) =>
     api<void>(`${TEAMS}/${teamId}/planner/members/${userId}/manager`, { method: 'PUT', body: { is_manager } }),
 };

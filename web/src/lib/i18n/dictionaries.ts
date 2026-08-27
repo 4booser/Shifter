@@ -5,6 +5,14 @@
 type Dictionary = Record<string, string>;
 
 export const RU: Dictionary = {
+  'Support': 'Подсобка',
+  'Manager': 'Менеджер',
+  'Hand out a shift': 'Раздать смену',
+  'Hand out': 'Раздать',
+  'Handed out': 'Раздали',
+  'Nobody free': 'Свободных нет',
+  'Goes to whoever has the lightest week and has not blocked the day. Drafts, so you can still change them.': 'Достанется тем, у кого неделя легче и кто не отметил «не могу». Черновиками — потом можно поправить.',
+  'How many people': 'Сколько человек',
   'Station': 'Станция',
   'No station set': 'Станция не указана',
   'Settled off the books': 'Закрыто наличными',
@@ -1673,6 +1681,14 @@ export const RU: Dictionary = {
 };
 
 export const UK: Dictionary = {
+  'Support': 'Підсобка',
+  'Manager': 'Менеджер',
+  'Hand out a shift': 'Роздати зміну',
+  'Hand out': 'Роздати',
+  'Handed out': 'Роздали',
+  'Nobody free': 'Вільних немає',
+  'Goes to whoever has the lightest week and has not blocked the day. Drafts, so you can still change them.': 'Дістанеться тим, у кого тиждень легший і хто не позначив «не можу». Чернетками — потім можна виправити.',
+  'How many people': 'Скільки людей',
   'Station': 'Станція',
   'No station set': 'Станцію не вказано',
   'Settled off the books': 'Закрито готівкою',

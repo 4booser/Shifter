@@ -39,6 +39,15 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
   const [busy, setBusy] = useState(false);
 
   /** The cell being edited: who and which day, plus the form. */
+  const [filling, setFilling] = useState<{
+    date: string;
+    title: string;
+    start: string;
+    end: string;
+    role: PlanRole;
+    count: number;
+  } | null>(null);
+
   const [editing, setEditing] = useState<{
     userId: number;
     date: string;
@@ -198,6 +207,29 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
     }
   };
 
+  /** Drafts one slot onto whoever can take it, then says what it could not. */
+  const fill = async () => {
+    if (filling === null) return;
+
+    setBusy(true);
+
+    try {
+      const result = await plannerApi.fill(teamId, filling);
+
+      pushToast({
+        icon: '🎲',
+        title: result.placed.length > 0 ? t('Handed out') : t('Nobody free'),
+        text: result.shortfall ?? n(result.placed.length, 'assignments'),
+      });
+      setFilling(null);
+      refresh();
+    } catch (caught) {
+      setError(apiErrorMessage(caught));
+    } finally {
+      setBusy(false);
+    }
+  };
+
   /**
    * The timesheet accounting asks for on the first of the month: people down
    * the side, days across, hours in the cells, totals on both edges. Built
@@ -316,6 +348,23 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
           )}
           <button type="button" className="btn btn-sm" disabled={busy} onClick={() => void copyLastWeek()}>
             {t('Repeat last week')}
+          </button>
+          <button
+            type="button"
+            className="btn btn-sm"
+            disabled={busy}
+            onClick={() =>
+              setFilling({
+                date: days[0],
+                title: templates.find((item) => !item.archived)?.name ?? '',
+                start: templates.find((item) => !item.archived)?.start_time ?? '18:00',
+                end: templates.find((item) => !item.archived)?.end_time ?? '02:00',
+                role: '',
+                count: 2,
+              })
+            }
+          >
+            🎲 {t('Hand out a shift')}
           </button>
           <button type="button" className="btn btn-sm" disabled={board === null} onClick={exportTimesheet}>
             📄 {t('Timesheet')}
@@ -494,6 +543,102 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
       </p>
 
       {/* ==== Cell editor ==== */}
+      {filling !== null && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/45 p-4" onClick={() => setFilling(null)}>
+          <div className="card rise w-full max-w-xs p-4" onClick={(event) => event.stopPropagation()}>
+            <h3 className="mb-1 text-[0.95rem] font-bold">{t('Hand out a shift')}</h3>
+            <p className="field-hint mb-2">
+              {t('Goes to whoever has the lightest week and has not blocked the day. Drafts, so you can still change them.')}
+            </p>
+
+            <label className="mb-2 block">
+              <span className="field-label">{t('Day')}</span>
+              <select
+                className="field-input"
+                value={filling.date}
+                onChange={(event) => setFilling({ ...filling, date: event.target.value })}
+              >
+                {days.map((day) => (
+                  <option key={day} value={day}>
+                    {new Date(`${day}T00:00:00`).toLocaleDateString(lang, { weekday: 'long', day: 'numeric', month: 'short' })}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="mb-2 block">
+              <span className="field-label">{t('Title')}</span>
+              <input
+                className="field-input"
+                value={filling.title}
+                maxLength={60}
+                onChange={(event) => setFilling({ ...filling, title: event.target.value })}
+              />
+            </label>
+
+            <div className="mb-2 flex items-center gap-1.5">
+              <input
+                type="time"
+                className="field-input"
+                value={filling.start}
+                onChange={(event) => event.target.value && setFilling({ ...filling, start: event.target.value })}
+              />
+              <span className="text-faint">—</span>
+              <input
+                type="time"
+                className="field-input"
+                value={filling.end}
+                onChange={(event) => event.target.value && setFilling({ ...filling, end: event.target.value })}
+              />
+            </div>
+
+            <div className="mb-2">
+              <span className="field-label">{t('Station')}</span>
+              <div className="flex flex-wrap gap-1">
+                {PLAN_ROLES.map((role) => (
+                  <button
+                    key={role.value}
+                    type="button"
+                    className={`btn btn-sm ${filling.role === role.value ? 'btn-primary' : 'btn-quiet'}`}
+                    onClick={() =>
+                      setFilling({ ...filling, role: filling.role === role.value ? '' : role.value })
+                    }
+                  >
+                    {role.emoji} {t(role.label)}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <label className="mb-3 block">
+              <span className="field-label">{t('How many people')}</span>
+              <input
+                type="number"
+                min={1}
+                max={20}
+                className="field-input"
+                value={filling.count}
+                onChange={(event) => setFilling({ ...filling, count: Number(event.target.value) || 1 })}
+              />
+            </label>
+
+            <div className="flex justify-end gap-2">
+              <button type="button" className="btn btn-quiet" onClick={() => setFilling(null)}>
+                {t('Cancel')}
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary"
+                disabled={busy || filling.title.trim() === ''}
+                onClick={() => void fill()}
+              >
+                {t('Hand out')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {editing !== null && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-black/45 p-4" onClick={() => setEditing(null)}>
           <div className="card rise w-full max-w-xs p-4" onClick={(event) => event.stopPropagation()}>

@@ -107,6 +107,7 @@ export default function BoardScreen() {
   const [board, setBoard] = useState<Board | null>(null);
   const [templates, setTemplates] = useState<ShiftTemplate[]>([]);
   const [editing, setEditing] = useState<{ userId: number; date: string; id: number | null } | null>(null);
+  const [filling, setFilling] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -172,6 +173,34 @@ export default function BoardScreen() {
       await load();
     } catch (caught) {
       setError(caught instanceof ApiError ? caught.message : 'Не опубликовалось.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handOut = async (slot: {
+    date: string;
+    title: string;
+    start: string;
+    end: string;
+    role: PlanRole;
+    count: number;
+  }) => {
+    if (teamId === null) return;
+
+    setBusy(true);
+
+    try {
+      const result = await api<{ placed: unknown[]; shortfall: string | null }>(
+        `/shifter/v1/teams/${teamId}/planner/fill`,
+        { method: 'POST', body: { ...slot, role: slot.role === '' ? null : slot.role } },
+      );
+
+      setError(result.shortfall ?? `Раздали ${result.placed.length}.`);
+      setFilling(false);
+      await load();
+    } catch (caught) {
+      setError(caught instanceof ApiError ? caught.message : 'Не раздалось.');
     } finally {
       setBusy(false);
     }
@@ -330,6 +359,10 @@ export default function BoardScreen() {
               человек отметил как «не могу».
             </Text>
 
+            <Pressable style={styles.ghost} onPress={() => setFilling(true)}>
+              <Text style={styles.ghostText}>🎲 Раздать смену</Text>
+            </Pressable>
+
             <Pressable
               style={[styles.primary, (busy || drafts === 0) && { opacity: 0.5 }]}
               disabled={busy || drafts === 0}
@@ -343,6 +376,16 @@ export default function BoardScreen() {
         )}
       </ScrollView>
 
+      <FillSheet
+        open={filling}
+        days={days}
+        templates={templates}
+        palette={palette}
+        busy={busy}
+        onClose={() => setFilling(false)}
+        onFill={handOut}
+      />
+
       <CellEditor
         editing={editing}
         teamId={teamId}
@@ -355,6 +398,149 @@ export default function BoardScreen() {
         }}
       />
     </>
+  );
+}
+
+/**
+ * Handing one slot out. The board decides who — that is the whole reason to
+ * ask it rather than tap seven cells — so this collects only what the slot is
+ * and how many of it are needed.
+ */
+function FillSheet({
+  open,
+  days,
+  templates,
+  palette,
+  busy,
+  onClose,
+  onFill,
+}: {
+  open: boolean;
+  days: string[];
+  templates: ShiftTemplate[];
+  palette: Palette;
+  busy: boolean;
+  onClose: () => void;
+  onFill: (slot: {
+    date: string;
+    title: string;
+    start: string;
+    end: string;
+    role: PlanRole;
+    count: number;
+  }) => void;
+}) {
+  const styles = makeStyles(palette);
+
+  const [date, setDate] = useState(days[0]);
+  const [title, setTitle] = useState('');
+  const [start, setStart] = useState('18:00');
+  const [end, setEnd] = useState('02:00');
+  const [role, setRole] = useState<PlanRole>('');
+  const [count, setCount] = useState('2');
+
+  useEffect(() => {
+    if (!open) return;
+
+    setDate(days[0]);
+
+    if (title === '' && templates.length > 0) {
+      setTitle(templates[0].name);
+      setStart(templates[0].start_time.slice(0, 5));
+      setEnd(templates[0].end_time.slice(0, 5));
+    }
+    // Opening is the trigger; the last values are deliberately kept.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
+  return (
+    <Modal visible={open} animationType="slide" transparent onRequestClose={onClose}>
+      <Pressable style={styles.backdrop} onPress={onClose} />
+      <ScrollView style={styles.tallSheet} contentContainerStyle={styles.sheetInner}>
+        <Text style={styles.sheetTitle}>Раздать смену</Text>
+        <Text style={styles.lead}>
+          Достанется тем, у кого неделя легче и кто не отметил «не могу». Черновиками — потом можно
+          поправить.
+        </Text>
+
+        <Text style={styles.fieldLabel}>День</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.teamRow}>
+          {days.map((day) => (
+            <Pressable
+              key={day}
+              style={[styles.chip, day === date && styles.chipOn]}
+              onPress={() => setDate(day)}
+            >
+              <Text style={[styles.chipText, day === date && styles.chipTextOn]}>
+                {WEEKDAYS[(new Date(`${day}T00:00:00`).getDay() + 6) % 7]} {Number(day.slice(8))}
+              </Text>
+            </Pressable>
+          ))}
+        </ScrollView>
+
+        <Text style={styles.fieldLabel}>Название</Text>
+        <TextInput
+          style={styles.input}
+          value={title}
+          onChangeText={setTitle}
+          maxLength={60}
+          placeholder="Бар"
+          placeholderTextColor={palette.textSecondary}
+        />
+
+        <View style={styles.timeRow}>
+          <View style={styles.grow}>
+            <Text style={styles.fieldLabel}>Начало</Text>
+            <TextInput style={styles.input} value={start} onChangeText={setStart} placeholderTextColor={palette.textSecondary} />
+          </View>
+          <View style={styles.grow}>
+            <Text style={styles.fieldLabel}>Конец</Text>
+            <TextInput style={styles.input} value={end} onChangeText={setEnd} placeholderTextColor={palette.textSecondary} />
+          </View>
+        </View>
+
+        <Text style={styles.fieldLabel}>Станция</Text>
+        <View style={styles.roleRow}>
+          {ROLES.map((item) => (
+            <Pressable
+              key={item.value}
+              style={[styles.chip, role === item.value && styles.chipOn]}
+              onPress={() => setRole(role === item.value ? '' : item.value)}
+            >
+              <Text style={[styles.chipText, role === item.value && styles.chipTextOn]}>
+                {item.emoji} {item.label}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+
+        <Text style={styles.fieldLabel}>Сколько человек</Text>
+        <TextInput
+          style={styles.input}
+          value={count}
+          onChangeText={setCount}
+          keyboardType="numeric"
+          placeholderTextColor={palette.textSecondary}
+        />
+
+        <Pressable
+          style={[styles.primary, (busy || title.trim() === '') && { opacity: 0.5 }]}
+          disabled={busy || title.trim() === ''}
+          onPress={() =>
+            onFill({
+              date,
+              title: title.trim(),
+              start,
+              end,
+              role,
+              count: Math.min(20, Math.max(1, Number(count) || 1)),
+            })
+          }
+        >
+          <Text style={styles.primaryText}>{busy ? 'Раздаём…' : 'Раздать'}</Text>
+        </Pressable>
+      </ScrollView>
+    </Modal>
   );
 }
 
@@ -592,6 +778,17 @@ const makeStyles = (palette: Palette) =>
       gap: 8,
     },
     sheetTitle: { color: palette.text, fontSize: 20, fontWeight: '800' },
+    tallSheet: {
+      position: 'absolute',
+      left: 0,
+      right: 0,
+      bottom: 0,
+      maxHeight: '88%',
+      backgroundColor: palette.background,
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+    },
+    sheetInner: { padding: 20, paddingBottom: 36, gap: 8 },
     fieldLabel: { color: palette.textSecondary, fontSize: 13, marginTop: 6 },
     input: {
       backgroundColor: palette.backgroundElement,
@@ -614,4 +811,13 @@ const makeStyles = (palette: Palette) =>
       marginTop: 14,
     },
     primaryText: { color: '#fff', fontSize: 15, fontWeight: '700' },
+    ghost: {
+      borderColor: palette.border,
+      borderWidth: 1,
+      borderRadius: 999,
+      paddingVertical: 13,
+      alignItems: 'center',
+      marginTop: 10,
+    },
+    ghostText: { color: palette.text, fontSize: 14, fontWeight: '600' },
   });

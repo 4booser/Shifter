@@ -14,6 +14,9 @@ const template = (over: Partial<ShiftTemplate>): ShiftTemplate => ({
   end_time: '18:00',
   salary_period: 'hour',
   salary_amount: 200,
+  revenue_percent: null,
+  tip_source: 'personal',
+  tip_pool_percent: null,
   break_minutes: 0,
   hours: 8,
   archived: false,
@@ -70,7 +73,8 @@ describe('workedMs', () => {
       id: 1, name: 'Bar', symbol: null, location_id: null, location_name: null,
       location_colour: null, colour: null, effective_colour: null,
       start_time: '10:00', end_time: '18:00', salary_period: 'hour' as const,
-      salary_amount: 200, break_minutes: 0, hours: 8, archived: false,
+      salary_amount: 200, revenue_percent: null, tip_source: 'personal' as const,
+      tip_pool_percent: null, break_minutes: 0, hours: 8, archived: false,
     };
 
     expect(liveTick(template, paused, 3_600_000).earned).toBeCloseTo(100);

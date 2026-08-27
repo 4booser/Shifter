@@ -5,6 +5,19 @@
 type Dictionary = Record<string, string>;
 
 export const RU: Dictionary = {
+  'Takings this shift': 'Выручка за смену',
+  'not counted': 'не считаем',
+  'Tip pool today': 'Общак за день',
+  'Your share': 'Ваша доля',
+  'Plus a share of the takings': 'Плюс процент от выручки',
+  'Leave empty for a rate alone. With a percentage, each day asks what the shift took.': 'Оставьте пустым, если только ставка. С процентом каждый день будет спрашивать выручку смены.',
+  'Percentage only: the pay is this share of what the shift takes.': 'Только процент: заработок — эта доля от выручки смены.',
+  'Paid on top of the rate, from what the shift takes that day.': 'Платится сверх ставки, от выручки этой смены.',
+  'Mine': 'Свои',
+  'Share of the pool': 'Доля общака',
+  'Your share of the pool': 'Ваша доля общака',
+  'Each day you enter what the room took; your cut is worked out from it.': 'Каждый день вы вводите общак, а вашу долю мы считаем сами.',
+  'You enter what you were handed, and it is yours alone.': 'Вы вводите то, что дали лично вам, — и это только ваше.',
   'A close-then-open this month: {gap} h between shifts': 'Закрытие и открытие подряд: между сменами {gap} ч',
   '{count} close-then-opens this month, the tightest {gap} h': '{count} раза закрытие→открытие за месяц, самый тесный — {gap} ч',
   'Days I cannot work': 'Дни, когда я не могу',
@@ -1613,6 +1626,19 @@ export const RU: Dictionary = {
 };
 
 export const UK: Dictionary = {
+  'Takings this shift': 'Виторг за зміну',
+  'not counted': 'не рахуємо',
+  'Tip pool today': 'Спільний чай за день',
+  'Your share': 'Ваша частка',
+  'Plus a share of the takings': 'Плюс відсоток від виторгу',
+  'Leave empty for a rate alone. With a percentage, each day asks what the shift took.': 'Лишіть порожнім, якщо тільки ставка. З відсотком кожен день питатиме виторг зміни.',
+  'Percentage only: the pay is this share of what the shift takes.': 'Лише відсоток: заробіток — ця частка від виторгу зміни.',
+  'Paid on top of the rate, from what the shift takes that day.': 'Платиться понад ставку, від виторгу цієї зміни.',
+  'Mine': 'Свої',
+  'Share of the pool': 'Частка спільного',
+  'Your share of the pool': 'Ваша частка спільного',
+  'Each day you enter what the room took; your cut is worked out from it.': 'Щодня ви вводите спільний чай, а вашу частку рахуємо ми.',
+  'You enter what you were handed, and it is yours alone.': 'Ви вводите те, що дали особисто вам, — і це лише ваше.',
   'A close-then-open this month: {gap} h between shifts': 'Закриття і відкриття поспіль: між змінами {gap} год',
   '{count} close-then-opens this month, the tightest {gap} h': '{count} рази закриття→відкриття за місяць, найтісніший — {gap} год',
   'Days I cannot work': 'Дні, коли я не можу',

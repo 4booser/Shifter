@@ -12,6 +12,13 @@ export const SALARY_PERIODS: { value: SalaryPeriod; label: string }[] = [
   { value: 'month', label: 'Month' },
 ];
 
+/**
+ * Where a shift's tips come from. Personal tips are what this person was
+ * handed; a pool share is a slice of what the room took, and the two cannot
+ * be the same field without one of them being a lie.
+ */
+export type TipSource = 'personal' | 'pool';
+
 export interface ShiftTemplate {
   id: number;
   name: string;
@@ -28,6 +35,11 @@ export interface ShiftTemplate {
   end_time: string;
   salary_period: SalaryPeriod;
   salary_amount: number | null;
+  /** A share of the shift's takings, paid on top of the rate. Null means none. */
+  revenue_percent: number | null;
+  tip_source: TipSource;
+  /** This person's slice of the pool, where the tips are pooled. */
+  tip_pool_percent: number | null;
   /** Unpaid minutes inside the shift. */
   break_minutes: number;
   /** Paid hours, breaks already deducted. */
@@ -45,6 +57,9 @@ export interface ShiftCreate {
   end_time: string;
   salary_period: SalaryPeriod;
   salary_amount: number | null;
+  revenue_percent: number | null;
+  tip_source: TipSource;
+  tip_pool_percent: number | null;
   break_minutes: number;
 }
 
@@ -182,6 +197,10 @@ export interface DayShiftEntry {
   end_time: string;
   hours: number;
   earned: number;
+  /** What the shift took, where it was recorded. Null is "not counted". */
+  revenue: number | null;
+  /** The agreed share of it, already inside earned. */
+  revenue_percent: number | null;
   /** False means planned rather than done. */
   worked: boolean;
   /** Asking the team to take this one. */
@@ -242,6 +261,8 @@ export interface CalendarDayData {
   sales: DaySale[];
   tips: number | null;
   tips_cash: number | null;
+  /** What the room took before the split, where the tips are pooled. */
+  tip_pool: number | null;
   /** Handed to support staff; already deducted from earned. */
   tip_out: number;
   /** Meal withholding plus fines; already deducted from earned. */
@@ -403,11 +424,15 @@ export interface DaySave {
     actual_start?: string | null;
     actual_end?: string | null;
     break_minutes?: number | null;
+    /** What this shift took. Null leaves it uncounted, not zero. */
+    revenue?: number | null;
   }[];
   tips_cash: number | null;
   deductions: number | null;
   sales: { sales_id: number; quantity: number }[];
   tips: number | null;
+  /** The day's pool before the split; the server works out the share. */
+  tip_pool: number | null;
   note: string | null;
   /** '#RRGGBB', or null to clear it. */
   colour: string | null;
@@ -494,6 +519,7 @@ export function toSavePayload(day: CalendarDayData | undefined): DaySave {
       actual_start: entry.actual_start,
       actual_end: entry.actual_end,
       break_minutes: entry.break_minutes,
+      revenue: entry.revenue,
     })),
     sales: (day?.sales ?? []).map((entry) => ({
       sales_id: entry.sales_id,
@@ -501,17 +527,26 @@ export function toSavePayload(day: CalendarDayData | undefined): DaySave {
     })),
     tips: day?.tips ?? null,
     tips_cash: day?.tips_cash ?? null,
+    tip_pool: day?.tip_pool ?? null,
     deductions: day?.deductions ?? null,
     note: day?.note ?? null,
     colour: day?.colour ?? null,
   };
 }
 
-/** "350 / hour", or just the period when no amount is set. */
+/**
+ * "350 / hour + 3%", or just the half that exists. A stacked deal is the
+ * ordinary case in hospitality, so the label has to be able to say both.
+ */
 export function rateLabel(template: ShiftTemplate): string {
   const amount = template.salary_amount;
+  const base = amount === null ? `per ${template.salary_period}` : `${amount} / ${template.salary_period}`;
 
-  return amount === null ? `per ${template.salary_period}` : `${amount} / ${template.salary_period}`;
+  return template.revenue_percent === null
+    ? base
+    : amount === null
+      ? `${template.revenue_percent}%`
+      : `${base} + ${template.revenue_percent}%`;
 }
 
 export interface EmojiGroup {

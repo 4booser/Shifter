@@ -60,6 +60,8 @@ export function DayPanel() {
   const [tips, setTips] = useState<number | null>(null);
   const [tipsCash, setTipsCash] = useState<number | null>(null);
   const [deductions, setDeductions] = useState<number | null>(null);
+  const [tipPool, setTipPool] = useState<number | null>(null);
+  const [revenue, setRevenue] = useState<Record<number, number | null>>({});
   const [note, setNote] = useState('');
   const [colour, setColour] = useState<string | null>(null);
   const [eventOpen, setEventOpen] = useState(false);
@@ -90,6 +92,10 @@ export function DayPanel() {
     setCover(covers);
     setTips(day?.tips ?? null);
     setTipsCash(day?.tips_cash ?? null);
+    setTipPool(day?.tip_pool ?? null);
+    setRevenue(
+      Object.fromEntries((day?.shifts ?? []).map((entry) => [entry.shift_id, entry.revenue])),
+    );
     setDeductions(day?.deductions ?? null);
     setNote(day?.note ?? '');
     setColour(day?.colour ?? null);
@@ -155,6 +161,15 @@ export function DayPanel() {
   // the commonest amount to enter is the same as the day before.
   const yesterdayTips = allDays.get(shiftDays(key, -1))?.tips ?? null;
   const shifts = day?.shifts ?? [];
+
+  // The share of the pool this day is owed, or null when nothing on it is
+  // pooled. Several pooled shifts on one day each take their own slice.
+  const pooledShares = shifts
+    .map((entry) => templateOf(entry.shift_id))
+    .filter((template) => template?.tip_source === 'pool')
+    .map((template) => template?.tip_pool_percent ?? 0)
+    .filter((share) => share > 0);
+  const pooled = pooledShares.length === 0 ? null : pooledShares.reduce((a, b) => a + b, 0);
   const draftSales = positions.reduce((total, position) => {
     const quantity = quantities[position.id] ?? 0;
 
@@ -176,6 +191,7 @@ export function DayPanel() {
           actual_start: start !== null && end !== null ? start : null,
           actual_end: start !== null && end !== null ? end : null,
           break_minutes: entry.break_minutes,
+          revenue: entry.shift_id in revenue ? revenue[entry.shift_id] : entry.revenue,
         };
       }),
       sales: Object.entries(quantities)
@@ -183,6 +199,7 @@ export function DayPanel() {
         .filter((entry) => entry.quantity > 0),
       tips,
       tips_cash: tipsCash,
+      tip_pool: tipPool,
       deductions,
       note: note.trim() === '' ? null : note,
       colour,
@@ -307,6 +324,30 @@ export function DayPanel() {
                       {t(isWorked ? 'Worked' : 'Planned')}
                     </button>
                   </div>
+
+                  {/* Only a shift that is actually paid a share asks what it
+                      took: everybody else would be typing a number nothing
+                      reads. */}
+                  {entry.revenue_percent !== null && (
+                    <label className="mt-1.5 block">
+                      <span className="field-label">
+                        {t('Takings this shift')} · {entry.revenue_percent}%
+                      </span>
+                      <input
+                        type="number"
+                        min={0}
+                        className="field-input"
+                        placeholder={t('not counted')}
+                        value={(entry.shift_id in revenue ? revenue[entry.shift_id] : entry.revenue) ?? ''}
+                        onChange={(event) =>
+                          setRevenue((current) => ({
+                            ...current,
+                            [entry.shift_id]: event.target.value === '' ? null : Number(event.target.value),
+                          }))
+                        }
+                      />
+                    </label>
+                  )}
 
                   {isWorked && (
                     <ActualClockRow
@@ -453,8 +494,28 @@ export function DayPanel() {
       <section>
         <h3 className="field-label flex items-center gap-1">
           <Icon name="coins" size={12} />
-          {t('Tips')}
+          {t(pooled === null ? 'Tips' : 'Tip pool today')}
         </h3>
+
+        {pooled !== null ? (
+          <>
+            <input
+              type="number"
+              min={0}
+              className="field-input"
+              value={tipPool ?? ''}
+              placeholder="0"
+              onChange={(event) =>
+                setTipPool(event.target.value === '' ? null : Number(event.target.value))
+              }
+            />
+            <p className="field-hint mt-1">
+              {t('Your share')} · {pooled}% ={' '}
+              <Money value={((tipPool ?? 0) * pooled) / 100} className="font-semibold text-ink" />
+            </p>
+          </>
+        ) : (
+          <>
         <input
           type="number"
           min={0}
@@ -491,7 +552,10 @@ export function DayPanel() {
           )}
         </div>
 
-        {(tips ?? 0) > 0 && (
+        </>
+        )}
+
+        {pooled === null && (tips ?? 0) > 0 && (
           <div className="mt-2 flex items-center gap-2">
             <label className="flex-1">
               <span className="field-label">{t('Of that, cash')}</span>

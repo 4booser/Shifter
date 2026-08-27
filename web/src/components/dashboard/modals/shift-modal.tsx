@@ -9,6 +9,7 @@ import {
   SALARY_PERIODS,
   SalaryPeriod,
   ShiftTemplate,
+  TipSource,
 } from '@/lib/calendar/models';
 import { useI18n } from '@/lib/i18n';
 import { catalogueActions, useCalendar } from '@/lib/store/calendar';
@@ -44,6 +45,9 @@ export function ShiftModal({
   const [breakMinutes, setBreakMinutes] = useState(0);
   const [locationId, setLocationId] = useState<number | null>(null);
   const [colour, setColour] = useState<string | null>(null);
+  const [percent, setPercent] = useState<number | null>(null);
+  const [tipSource, setTipSource] = useState<TipSource>('personal');
+  const [poolShare, setPoolShare] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   // Refills whenever the dialog opens, so a cancelled edit leaves nothing
@@ -61,6 +65,9 @@ export function ShiftModal({
     setBreakMinutes(editing?.break_minutes ?? 0);
     setLocationId(editing?.location_id ?? null);
     setColour(editing?.colour ?? null);
+    setPercent(editing?.revenue_percent ?? null);
+    setTipSource(editing?.tip_source ?? 'personal');
+    setPoolShare(editing?.tip_pool_percent ?? null);
   }, [open, editing]);
 
   /** What the calendar will actually draw, given the place currently chosen. */
@@ -81,6 +88,9 @@ export function ShiftModal({
           break_minutes: breakMinutes,
           location_id: locationId,
           colour,
+          revenue_percent: percent,
+          tip_source: tipSource,
+          tip_pool_percent: poolShare,
         },
         editing?.id ?? null,
       );
@@ -213,6 +223,74 @@ export function ShiftModal({
           />
           <span className="field-hint mt-1 block">{t(PERIOD_HINTS[period])}</span>
         </label>
+
+        {/* A rate and a percentage are two halves of one deal far more often
+            than they are alternatives, so this sits beside the amount rather
+            than replacing it. */}
+        <label>
+          <span className="field-label">{t('Plus a share of the takings')}</span>
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              min={0}
+              max={100}
+              step={0.5}
+              className="field-input"
+              placeholder={t('none')}
+              value={percent ?? ''}
+              onChange={(event) =>
+                setPercent(event.target.value === '' ? null : Number(event.target.value))
+              }
+            />
+            <span className="text-[0.95rem] font-semibold text-muted">%</span>
+          </div>
+          <span className="field-hint mt-1 block">
+            {percent === null
+              ? t('Leave empty for a rate alone. With a percentage, each day asks what the shift took.')
+              : amount === null || amount === 0
+                ? t('Percentage only: the pay is this share of what the shift takes.')
+                : t('Paid on top of the rate, from what the shift takes that day.')}
+          </span>
+        </label>
+
+        <div>
+          <span className="field-label">{t('Tips')}</span>
+          <Segmented
+            value={tipSource}
+            options={[
+              { value: 'personal' as TipSource, label: t('Mine') },
+              { value: 'pool' as TipSource, label: t('Share of the pool') },
+            ]}
+            onChange={setTipSource}
+          />
+
+          {tipSource === 'pool' ? (
+            <label className="mt-2 block">
+              <span className="field-label">{t('Your share of the pool')}</span>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min={0}
+                  max={100}
+                  step={0.5}
+                  className="field-input"
+                  value={poolShare ?? ''}
+                  onChange={(event) =>
+                    setPoolShare(event.target.value === '' ? null : Number(event.target.value))
+                  }
+                />
+                <span className="text-[0.95rem] font-semibold text-muted">%</span>
+              </div>
+              <span className="field-hint mt-1 block">
+                {t('Each day you enter what the room took; your cut is worked out from it.')}
+              </span>
+            </label>
+          ) : (
+            <span className="field-hint mt-1 block">
+              {t('You enter what you were handed, and it is yours alone.')}
+            </span>
+          )}
+        </div>
 
         {editing !== null && (
           <p className="field-hint">

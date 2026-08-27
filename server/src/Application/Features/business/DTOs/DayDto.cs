@@ -23,6 +23,10 @@ public record DayShiftDto(
     string end_time,
     double hours,
     decimal earned,
+    /// <summary>What the shift took, where it was recorded.</summary>
+    decimal? revenue,
+    /// <summary>The agreed share of it, already inside earned.</summary>
+    decimal? revenue_percent,
     bool worked,
     /// <summary>Asking the team to take this one.</summary>
     bool needs_cover,
@@ -40,6 +44,8 @@ public record DayDto(
     DaySaleDto[] sales,
     decimal? tips,
     decimal? tips_cash,
+    /// <summary>What the room took before the split, where the tips are pooled.</summary>
+    decimal? tip_pool,
     /// <summary>Handed to support staff; already deducted from earned.</summary>
     decimal tip_out,
     /// <summary>Meal withholding plus fines; already deducted from earned.</summary>
@@ -126,7 +132,13 @@ public record DaySaveDto(
     /// "#RRGGBB", or null to clear it. Like everything else here it replaces
     /// rather than patches: the day is always sent whole.
     /// </summary>
-    string? colour = null
+    string? colour = null,
+    /// <summary>
+    /// The day's pool before the split. Where a shift on the day takes its
+    /// tips from the pool, the person's own share is worked out from this and
+    /// overwrites tips — the server prices, the client only reports.
+    /// </summary>
+    decimal? tip_pool = null
     );
 
 public record DayShiftSaveDto(
@@ -138,7 +150,9 @@ public record DayShiftSaveDto(
     string? actual_start = null,
     string? actual_end = null,
     /// <summary>Overrides the template's unpaid minutes; null keeps them.</summary>
-    int? break_minutes = null
+    int? break_minutes = null,
+    /// <summary>What this shift took. Null leaves it uncounted, not zero.</summary>
+    decimal? revenue = null
     );
 
 public record DaySaleSaveDto(

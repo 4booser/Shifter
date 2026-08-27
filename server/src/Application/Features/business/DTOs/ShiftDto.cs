@@ -13,6 +13,12 @@ public record ShiftDto(
     string end_time,
     string salary_period,
     decimal? salary_amount,
+    /// <summary>A share of the shift's takings, paid on top of the rate.</summary>
+    decimal? revenue_percent,
+    /// <summary>"personal" or "pool".</summary>
+    string tip_source,
+    /// <summary>This person's slice of the pool, where the tips are pooled.</summary>
+    decimal? tip_pool_percent,
     /// <summary>Unpaid minutes inside the shift; already taken off hours.</summary>
     int break_minutes,
     double hours,
@@ -40,5 +46,14 @@ public record ShiftCreateDto(
     /// "#RRGGBB", or null to go back to borrowing the place's colour. Defaulted
     /// so a client that predates the field does not clear it on every save.
     /// </summary>
-    string? colour = null
+    string? colour = null,
+    /// <summary>
+    /// A share of the takings on top of the rate. Defaulted, like the fields
+    /// below it, so a client written before the pay constructor existed keeps
+    /// saving templates rather than silently clearing their terms.
+    /// </summary>
+    decimal? revenue_percent = null,
+    /// <summary>"personal" or "pool"; anything else reads as personal.</summary>
+    string? tip_source = null,
+    decimal? tip_pool_percent = null
     );

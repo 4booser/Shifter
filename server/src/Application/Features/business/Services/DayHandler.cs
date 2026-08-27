@@ -144,14 +144,22 @@ public partial class DayHandler : IDayHandler
         List<DayShift> shifts = await ResolveShiftsAsync(request.shifts, userId, date, ct);
         List<DaySale> sales = await ResolveSalesAsync(request.sales, userId, ct);
 
+        // Where a shift on the day takes its tips from the pool, the person's
+        // own share is derived rather than typed: the pool is the fact they
+        // can see, their slice of it is arithmetic, and letting both be
+        // entered by hand is how the two stop agreeing.
+        decimal? tips = PooledTips(shifts, request.tip_pool) ?? request.tips;
+        decimal? tipsCash = tips is null ? null : Math.Min(request.tips_cash ?? 0m, tips.Value);
+
         Day incoming = new Day()
         {
             UserId = userId,
             Date = date,
             Shifts = shifts,
             Sales = sales,
-            Tips = request.tips,
-            TipsCash = request.tips_cash,
+            Tips = tips,
+            TipsCash = tipsCash,
+            TipPool = request.tip_pool,
             Deductions = request.deductions,
             Note = string.IsNullOrWhiteSpace(request.note) ? null : request.note.Trim(),
             Colour = NormaliseColour(request.colour)
@@ -254,6 +262,25 @@ public partial class DayHandler : IDayHandler
         return touched.Select(day => ToDto(day, byId)).ToArray();
     }
 
+    /// <summary>
+    /// The person's cut of the day's pool, or null when nothing on the day is
+    /// pooled. Several pooled shifts on one day each take their own agreed
+    /// share of the same pool, which is what a double is: two slices, one hat.
+    /// </summary>
+    private static decimal? PooledTips(List<DayShift> shifts, decimal? pool)
+    {
+        if (pool is not decimal amount || amount <= 0m) return null;
+
+        decimal[] shares = shifts
+            .Where(shift => shift.TipSource == TipSource.Pool && shift.TipPoolPercent > 0m)
+            .Select(shift => shift.TipPoolPercent!.Value)
+            .ToArray();
+
+        if (shares.Length == 0) return null;
+
+        return Math.Round(amount * shares.Sum() / 100m, 2);
+    }
+
     private async Task<List<DayShift>> ResolveShiftsAsync(
         DayShiftSaveDto[]? requested,
         int userId,
@@ -300,6 +327,11 @@ public partial class DayHandler : IDayHandler
 
                 if (entry.break_minutes is int breakMinutes && breakMinutes >= 0)
                     placed.BreakMinutes = breakMinutes;
+
+                // Null stays null: "not counted yet" and "took nothing" are
+                // different answers and only one of them is a zero.
+                if (entry.revenue is decimal revenue && revenue >= 0m)
+                    placed.Revenue = revenue;
 
                 return placed;
             })
@@ -683,6 +715,8 @@ public partial class DayHandler : IDayHandler
                 entry.EndTime.ToString("HH:mm"),
                 Math.Round(entry.PaidDuration.TotalHours, 2),
                 entry.Pay,
+                entry.Revenue,
+                entry.RevenuePercent,
                 entry.Worked,
                 entry.NeedsCover,
                 entry.ActualStart?.ToString("HH:mm"),
@@ -700,6 +734,7 @@ public partial class DayHandler : IDayHandler
             sales,
             day.Tips,
             day.TipsCash,
+            day.TipPool,
             tipOut,
             deductions,
             day.Note,

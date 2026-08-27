@@ -21,6 +21,17 @@ public sealed class DayShift
     // Copied from the template when the shift is placed.
     public SalaryPeriod SalaryPeriod { get; set; }
     public decimal? SalaryAmount { get; set; }
+    public decimal? RevenuePercent { get; set; }
+    public TipSource TipSource { get; set; }
+    public decimal? TipPoolPercent { get; set; }
+
+    /// <summary>
+    /// What this shift took, entered after the fact — the only number in the
+    /// pay that the template cannot know in advance. Null is "not counted",
+    /// which is different from zero and is why a percentage shift with no
+    /// takings recorded pays its base and nothing more.
+    /// </summary>
+    public decimal? Revenue { get; set; }
     public TimeOnly StartTime { get; set; }
     public TimeOnly EndTime { get; set; }
     public int BreakMinutes { get; set; }
@@ -93,13 +104,21 @@ public sealed class DayShift
     /// nothing per shift — they are paid once per period and land on the range
     /// summary instead.
     /// </summary>
+    /// <summary>The rate alone, before any share of the takings.</summary>
     [NotMapped]
-    public decimal Pay => SalaryPeriod switch
+    public decimal BasePay => SalaryPeriod switch
     {
         SalaryPeriod.Hour => (SalaryAmount ?? 0m) * (decimal)PaidDuration.TotalHours,
         SalaryPeriod.Day => SalaryAmount ?? 0m,
         _ => 0m
     };
+
+    /// <summary>The agreed share of what the shift took.</summary>
+    [NotMapped]
+    public decimal RevenuePay => (Revenue ?? 0m) * (RevenuePercent ?? 0m) / 100m;
+
+    [NotMapped]
+    public decimal Pay => BasePay + RevenuePay;
 
     [NotMapped]
     public bool IsPeriodSalary =>
@@ -112,6 +131,9 @@ public sealed class DayShift
         Shift = shift,
         SalaryPeriod = shift.SalaryPeriod,
         SalaryAmount = shift.SalaryAmount,
+        RevenuePercent = shift.RevenuePercent,
+        TipSource = shift.TipSource,
+        TipPoolPercent = shift.TipPoolPercent,
         StartTime = shift.StartTime,
         EndTime = shift.EndTime,
         BreakMinutes = (int)Math.Round(

@@ -12,6 +12,7 @@ function day(date: string, earned: number): CalendarDayData {
     sales: [],
     tips: null,
     tips_cash: null,
+    tip_pool: null,
     tip_out: 0,
     deductions: 0,
     note: null,

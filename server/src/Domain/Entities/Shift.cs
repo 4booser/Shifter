@@ -42,6 +42,25 @@ public sealed class Shift
     /// </summary>
     public SalaryPeriod SalaryPeriod { get; set; } = SalaryPeriod.Hour;
     public decimal? SalaryAmount { get; set; }
+
+    /// <summary>
+    /// A share of what the shift takes, paid on top of the rate rather than
+    /// instead of it. Hospitality stacks the two far more often than it picks
+    /// one — an hourly bartender on 3% of the bar is the ordinary case, not
+    /// the exotic one — so this is a second field and not another
+    /// SalaryPeriod. Null means the shift has no percentage at all.
+    /// </summary>
+    public decimal? RevenuePercent { get; set; }
+
+    /// <summary>Where this shift's tips come from.</summary>
+    public TipSource TipSource { get; set; } = TipSource.Personal;
+
+    /// <summary>
+    /// This person's slice of the day's pool, in percent, when the tips are
+    /// pooled. Null with a pooled source means the split is not agreed yet,
+    /// and nothing is counted rather than a wrong number being invented.
+    /// </summary>
+    public decimal? TipPoolPercent { get; set; }
     
     public required TimeOnly StartTime { get; set; }
     public required TimeOnly EndTime { get; set; }

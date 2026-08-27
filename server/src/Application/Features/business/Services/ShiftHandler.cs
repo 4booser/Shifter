@@ -134,6 +134,13 @@ public partial class ShiftHandler : IShiftHandler
         shift.EndTime = end;
         shift.SalaryPeriod = ParsePeriod(request.salary_period);
         shift.SalaryAmount = request.salary_amount;
+        shift.RevenuePercent = Share(request.revenue_percent);
+        shift.TipSource = ParseTipSource(request.tip_source);
+        shift.TipPoolPercent = shift.TipSource == TipSource.Pool
+            ? Share(request.tip_pool_percent)
+            // A percentage kept against a personal-tips template is a trap for
+            // whoever switches it back later, so it does not survive the save.
+            : null;
 
         // One unpaid stretch per template rather than a named list: the entity
         // supports several, but a shift with two separately timed breaks is not
@@ -151,6 +158,9 @@ public partial class ShiftHandler : IShiftHandler
         shift.EndTime.ToString("HH:mm"),
         PeriodName(shift.SalaryPeriod),
         shift.SalaryAmount,
+        shift.RevenuePercent,
+        shift.TipSource == TipSource.Pool ? "pool" : "personal",
+        shift.TipPoolPercent,
         (int)Math.Round((shift.Duration - shift.PaidDuration).TotalMinutes),
         Math.Round(shift.PaidDuration.TotalHours, 2),
         shift.LocationId,
@@ -162,6 +172,24 @@ public partial class ShiftHandler : IShiftHandler
         shift.Colour ?? shift.Location?.Colour,
         shift.Archived
     );
+
+    private static TipSource ParseTipSource(string? value) =>
+        value?.Trim().ToLowerInvariant() == "pool" ? TipSource.Pool : TipSource.Personal;
+
+    /// <summary>
+    /// A percentage worth storing: zero and nothing mean the same thing here,
+    /// and anything outside nought to a hundred is a typing slip rather than a
+    /// deal anybody struck.
+    /// </summary>
+    private static decimal? Share(decimal? value)
+    {
+        if (value is not decimal share || share <= 0m) return null;
+
+        if (share > 100m)
+            throw new ValidationException("A percentage cannot be over 100.");
+
+        return Math.Round(share, 2);
+    }
 
     /// <summary>
     /// Empty and null both mean "take the place's colour": the client clears

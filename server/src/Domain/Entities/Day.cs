@@ -16,6 +16,14 @@ public sealed class Day
     /// work splits these because they are taxed and paid out differently.
     /// </summary>
     public decimal? TipsCash { get; set; }
+
+    /// <summary>
+    /// The day's tip pool before it is split — what the room took, not what
+    /// this person keeps. Their own share lands in Tips, worked out from the
+    /// shift's agreed percentage, so every reader of Tips keeps reading the
+    /// one number that means "mine".
+    /// </summary>
+    public decimal? TipPool { get; set; }
     /// <summary>
     /// Fines, breakages, till shortfalls — anything the day cost rather than
     /// earned. Kept apart from tip-out so the reasons stay legible.

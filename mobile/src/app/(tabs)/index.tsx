@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { DailyBrief } from '@/components/daily-brief';
 import { Colors, Palette } from '@/constants/theme';
 import { api } from '@/lib/api';
 import { addMonths, currentMonth, monthBounds, monthCells, monthLabel, todayKey } from '@/lib/calendar';
@@ -209,6 +210,8 @@ export default function CalendarScreen() {
       )}
 
       <Text style={styles.hint}>Тапните день, чтобы отметить смену, чай и штрафы.</Text>
+
+      <DailyBrief palette={palette} onOpen={() => router.push('/assistant')} />
     </ScrollView>
   );
 }
@@ -216,7 +219,9 @@ export default function CalendarScreen() {
 const makeStyles = (palette: Palette) =>
   StyleSheet.create({
     screen: { flex: 1, backgroundColor: palette.background },
-    content: { padding: 14, gap: 10 },
+    // The tab bar floats over the scroll view, so the last card needs
+    // room of its own or it reads as cut off.
+    content: { padding: 14, paddingBottom: 40, gap: 10 },
     headerRow: { flexDirection: 'row', alignItems: 'center', gap: 16 },
     title: { flex: 1, fontSize: 24, fontWeight: '800', color: palette.text, letterSpacing: -0.5 },
     monthNav: { flexDirection: 'row', alignItems: 'center', gap: 6 },

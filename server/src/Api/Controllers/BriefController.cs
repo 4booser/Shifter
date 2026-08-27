@@ -36,6 +36,15 @@ public class BriefController : ControllerBase
         });
     }
 
+    /// <summary>
+    /// The day page under the calendar: today, the month, what the figures
+    /// noticed, and what is coming. Sections with nothing to say are absent
+    /// rather than empty — a page that pads itself teaches people to skim it.
+    /// </summary>
+    [HttpGet("blocks")]
+    public async Task<IActionResult> Blocks([FromQuery] DateOnly? date, CancellationToken ct)
+        => Ok(await _briefs.BlocksAsync(UserId(), date ?? DateOnly.FromDateTime(DateTime.UtcNow), ct));
+
     /// <summary>The facts the brief was written from — the "show your work" button.</summary>
     [HttpGet("facts")]
     public async Task<IActionResult> Facts([FromQuery] DateOnly? date, CancellationToken ct)

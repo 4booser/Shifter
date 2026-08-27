@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Palette } from '@/constants/theme';
-import { Brief, assistant } from '@/lib/assistant';
+import { Brief, BriefBlock, assistant } from '@/lib/assistant';
 import { todayKey } from '@/lib/calendar';
 
 /**
@@ -15,6 +15,7 @@ import { todayKey } from '@/lib/calendar';
 export function DailyBrief({ palette, onOpen }: { palette: Palette; onOpen: () => void }) {
   const styles = makeStyles(palette);
   const [brief, setBrief] = useState<Brief | null>(null);
+  const [blocks, setBlocks] = useState<BriefBlock[]>([]);
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
@@ -22,6 +23,13 @@ export function DailyBrief({ palette, onOpen }: { palette: Palette; onOpen: () =
       .brief(todayKey())
       .then(setBrief)
       .catch(() => setFailed(true));
+
+    // The blocks are ours in full; the paragraph above them may be the
+    // model's. They load apart so one being slow never hides the other.
+    void assistant
+      .blocks(todayKey())
+      .then(setBlocks)
+      .catch(() => undefined);
   }, []);
 
   // A brief is a nicety: a server without it should show nothing rather than
@@ -40,6 +48,37 @@ export function DailyBrief({ palette, onOpen }: { palette: Palette; onOpen: () =
       <Text style={styles.body}>{brief.body}</Text>
 
       {brief.tip !== null && brief.tip !== '' && <Text style={styles.tip}>{brief.tip}</Text>}
+
+      {blocks.map((block) => (
+        <View key={block.kind} style={styles.block}>
+          <Text style={styles.blockTitle}>
+            {block.emoji} {block.title}
+          </Text>
+          {block.lines.map((line, index) => (
+            <View key={index} style={styles.line}>
+              <Text
+                style={[
+                  styles.lineText,
+                  line.tone === 'warn' && { color: palette.danger },
+                ]}
+              >
+                {line.text}
+              </Text>
+              {line.value !== null && (
+                <Text
+                  style={[
+                    styles.lineValue,
+                    line.tone === 'good' && { color: palette.good },
+                    line.tone === 'warn' && { color: palette.danger },
+                  ]}
+                >
+                  {line.value}
+                </Text>
+              )}
+            </View>
+          ))}
+        </View>
+      ))}
 
       <View style={styles.foot}>
         <Text style={styles.stamp}>
@@ -70,6 +109,18 @@ const makeStyles = (palette: Palette) =>
     headline: { flex: 1, color: palette.text, fontSize: 16, fontWeight: '700', lineHeight: 22 },
     body: { color: palette.text, fontSize: 14, lineHeight: 20 },
     tip: { color: palette.accent, fontSize: 13.5, lineHeight: 19 },
+    block: {
+      backgroundColor: palette.backgroundSelected,
+      borderRadius: 14,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      gap: 5,
+      marginTop: 2,
+    },
+    blockTitle: { color: palette.text, fontSize: 13.5, fontWeight: '700' },
+    line: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
+    lineText: { flex: 1, color: palette.textSecondary, fontSize: 13, lineHeight: 18 },
+    lineValue: { color: palette.text, fontSize: 13, fontWeight: '700' },
     foot: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 2 },
     stamp: { color: palette.textSecondary, fontSize: 11 },
     ask: { flexDirection: 'row', alignItems: 'center', gap: 2 },

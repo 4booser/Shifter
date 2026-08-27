@@ -31,6 +31,21 @@ export interface AssistantReport {
   source: string;
 }
 
+/** One line of a block: a sentence, sometimes a figure worth setting apart. */
+export interface BriefLine {
+  text: string;
+  value: string | null;
+  /** 'good' or 'warn'. Colour is meaning here, never decoration. */
+  tone: 'good' | 'warn' | null;
+}
+
+export interface BriefBlock {
+  kind: string;
+  emoji: string;
+  title: string;
+  lines: BriefLine[];
+}
+
 export interface Brief {
   date: string;
   headline: string;
@@ -50,4 +65,5 @@ export const assistant = {
   answerGap: (kind: string, date: string, shiftId: number | null, value: number) =>
     api<void>(`${BASE}/gaps`, { method: 'POST', body: { kind, date, shift_id: shiftId, value } }),
   brief: (today: string) => api<Brief>(`/shifter/v1/brief/today?date=${today}`),
+  blocks: (today: string) => api<BriefBlock[]>(`/shifter/v1/brief/blocks?date=${today}`),
 };

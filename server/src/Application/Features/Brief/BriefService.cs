@@ -18,12 +18,18 @@ public sealed class BriefService
     private readonly ShifterDbContext _db;
     private readonly IDayHandler _days;
     private readonly GeminiBriefClient _model;
+    private readonly IReconciliationHandler _reconciliation;
 
-    public BriefService(ShifterDbContext db, IDayHandler days, GeminiBriefClient model)
+    public BriefService(
+        ShifterDbContext db,
+        IDayHandler days,
+        GeminiBriefClient model,
+        IReconciliationHandler reconciliation)
     {
         _db = db;
         _days = days;
         _model = model;
+        _reconciliation = reconciliation;
     }
 
     public async Task<DailyBrief> ForTodayAsync(int userId, DateOnly today, CancellationToken ct)
@@ -32,9 +38,20 @@ public sealed class BriefService
             .AsNoTracking()
             .FirstOrDefaultAsync(brief => brief.UserId == userId && brief.Date == today, ct);
 
-        if (existing is not null) return existing;
-
         var facts = await GatherAsync(userId, today, ct);
+
+        // Same day, same money: the words still describe the situation, so
+        // they stand. Once the month has moved they do not, and a paragraph
+        // quoting yesterday's total beside a table showing today's reads as a
+        // bug rather than as a cache.
+        if (existing is not null && existing.EarnedAtWriting == facts.MonthEarned) return existing;
+
+        if (existing is not null)
+        {
+            await _db.DailyBriefs
+                .Where(brief => brief.Id == existing.Id)
+                .ExecuteDeleteAsync(ct);
+        }
         var written = await _model.WriteAsync(facts, ct);
         var (headline, body, tip, mood) = written ?? BriefWriter.Compose(facts);
 
@@ -47,6 +64,7 @@ public sealed class BriefService
             Tip = string.IsNullOrWhiteSpace(tip) ? null : tip,
             Mood = mood,
             Source = written is null ? "local" : "model",
+            EarnedAtWriting = facts.MonthEarned,
         };
 
         _db.DailyBriefs.Add(brief);
@@ -66,6 +84,53 @@ public sealed class BriefService
         }
 
         return brief;
+    }
+
+    /// <summary>
+    /// The day page: the same brief, plus everything the figures noticed,
+    /// arranged in blocks. The paragraph at the top may be the model's; not
+    /// one line below it is — those are arithmetic against the same days the
+    /// calendar draws.
+    /// </summary>
+    public async Task<BriefBlockDto[]> BlocksAsync(int userId, DateOnly today, CancellationToken ct)
+    {
+        var monthFrom = new DateOnly(today.Year, today.Month, 1);
+        var monthTo = monthFrom.AddMonths(1).AddDays(-1);
+
+        var month = await _days.ListAsync(userId, monthFrom, monthTo, ct);
+        var previous = await _days.ListAsync(
+            userId, monthFrom.AddMonths(-1), monthFrom.AddDays(-1), ct);
+
+        var facts = await GatherAsync(userId, today, ct);
+
+        // Sixty days ahead: far enough to find the next shift on a quiet
+        // rota, near enough that "next" still means something.
+        var soon = await _days.ListAsync(userId, today.AddDays(1), today.AddDays(60), ct);
+        var next = soon.days
+            .Where(day => day.shifts.Length > 0)
+            .OrderBy(day => day.date)
+            .FirstOrDefault();
+        var nextShift = next?.shifts.FirstOrDefault();
+
+        // What lands next, taken from the reconciliation rather than guessed,
+        // so the figure here and the one on the payouts page are the same
+        // figure and not two opinions about it.
+        var schedule = await _reconciliation.BuildAsync(
+            userId, today.AddDays(-45), today.AddDays(60), ct);
+
+        var due = schedule.periods
+            .Where(row => row.settled is null && row.due_on >= today && row.expected > 0m)
+            .OrderBy(row => row.due_on)
+            .FirstOrDefault();
+
+        var ahead = new AheadFacts(
+            next?.date,
+            nextShift?.name,
+            nextShift?.start_time,
+            due is null ? facts.DaysToPayday : due.due_on.DayNumber - today.DayNumber,
+            due?.expected);
+
+        return BriefBlocks.Build(month, previous, today, facts, ahead);
     }
 
     /// <summary>Only finished numbers, straight from the handlers the screens read.</summary>

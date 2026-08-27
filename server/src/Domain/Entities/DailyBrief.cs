@@ -22,5 +22,13 @@ public sealed class DailyBrief
     /// <summary>"model" or "local" — shown to the reader, never hidden.</summary>
     public required string Source { get; set; }
 
+    /// <summary>
+    /// The month's earnings at the moment these words were written. Stored so
+    /// a brief that quotes a total can notice the total has moved: cached
+    /// prose about money is only cheap until it starts contradicting the
+    /// figures on the same screen.
+    /// </summary>
+    public decimal EarnedAtWriting { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

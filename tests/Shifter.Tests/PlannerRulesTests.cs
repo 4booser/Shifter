@@ -64,4 +64,33 @@ public class PlannerRulesTests
         // guessing a station from it would put people in the wrong column.
         Assert.Equal(PlanRole.Unset, PlannerRules.ParseRole(given));
     }
+
+    // ==== The note beside a blocked day ====
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void ABlockedDayNeedsNoReason(string? given)
+    {
+        // People mark a day and move on. This used to be sent through the
+        // title cleaner, which exists to reject an empty title, so blocking a
+        // day without saying why threw and answered 500.
+        Assert.Null(PlannerRules.CleanReason(given));
+    }
+
+    [Fact]
+    public void AReasonIsKeptAndTrimmed()
+    {
+        Assert.Equal("экзамен", PlannerRules.CleanReason("  экзамен  "));
+    }
+
+    [Fact]
+    public void ALongReasonIsCutRatherThanRejected()
+    {
+        // A day off is not worth losing over a long note.
+        var cut = PlannerRules.CleanReason(new string('я', 200));
+
+        Assert.Equal(PlannerRules.TitleMax, cut?.Length);
+    }
 }

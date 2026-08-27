@@ -132,7 +132,11 @@ public sealed class PlannerService
                 TeamId = teamId,
                 UserId = userId,
                 Date = date,
-                Reason = PlannerRules.CleanTitle(request.reason) is { Length: > 0 } reason ? reason : null,
+                // A blocked day usually has no reason attached, and CleanTitle
+                // exists to reject an empty title — passing it a null threw
+                // rather than validated, so blocking a day without saying why
+                // returned a 500.
+                Reason = PlannerRules.CleanReason(request.reason),
             });
 
         await _db.SaveChangesAsync(ct);
@@ -191,6 +195,110 @@ public sealed class PlannerService
             entry.Note,
             entry.Status.ToString().ToLowerInvariant(),
             RoleName(entry.Role));
+
+    // ==== Handing a slot out ====
+
+    /// <summary>
+    /// Fills one slot with the people who can take it, fewest planned hours
+    /// first. Deliberately greedy and deliberately dumb: a rota is argued
+    /// about, so this produces drafts a manager corrects, not a schedule it
+    /// insists on. What it will not do is put somebody on a day they blocked
+    /// or double-book them, because those are the two mistakes a person
+    /// laying out a week by hand actually makes.
+    /// </summary>
+    public async Task<FillResultDto> FillAsync(
+        int teamId, int userId, FillSlotDto request, CancellationToken ct)
+    {
+        var (team, _) = await ManagerAsync(teamId, userId, ct);
+
+        var (date, start, end) = PlannerRules.ParseSlot(request.date, request.start, request.end);
+        var title = PlannerRules.CleanTitle(request.title);
+        var role = PlannerRules.ParseRole(request.role);
+
+        if (request.count is < 1 or > 20)
+            throw new ValidationException("От одного до двадцати человек за раз.");
+
+        // The week the day sits in: hours are balanced across it, because
+        // "fair" over a fortnight is not what anybody argues about.
+        var monday = date.AddDays(-(((int)date.DayOfWeek + 6) % 7));
+        var sunday = monday.AddDays(6);
+
+        var week = await _db.PlannedAssignments
+            .AsNoTracking()
+            .Where(entry => entry.TeamId == teamId
+                && entry.Date >= monday
+                && entry.Date <= sunday
+                && entry.Status != AssignmentStatus.Declined)
+            .ToArrayAsync(ct);
+
+        var blocked = await _db.Availabilities
+            .AsNoTracking()
+            .Where(entry => entry.TeamId == teamId && entry.Date == date)
+            .Select(entry => entry.UserId)
+            .ToArrayAsync(ct);
+
+        var busy = week
+            .Where(entry => entry.Date == date)
+            .Select(entry => entry.UserId)
+            .ToHashSet();
+
+        var hours = week
+            .GroupBy(entry => entry.UserId)
+            .ToDictionary(group => group.Key, group => group.Sum(entry => Span(entry)));
+
+        var candidates = (team.Members ?? [])
+            .Where(member => !blocked.Contains(member.UserId) && !busy.Contains(member.UserId))
+            // Fewest planned hours first, then by name so the same week laid
+            // out twice comes out the same way.
+            .OrderBy(member => hours.GetValueOrDefault(member.UserId, 0d))
+            .ThenBy(member => member.DisplayName, StringComparer.Ordinal)
+            .Take(request.count)
+            .ToArray();
+
+        var names = (team.Members ?? []).ToDictionary(
+            member => member.UserId, member => member.DisplayName);
+
+        List<PlannedAssignment> placed = [];
+
+        foreach (var member in candidates)
+        {
+            var entry = new PlannedAssignment
+            {
+                TeamId = teamId,
+                UserId = member.UserId,
+                CreatedByUserId = userId,
+                Date = date,
+                Title = title,
+                StartTime = start,
+                EndTime = end,
+                Role = role,
+            };
+
+            _db.PlannedAssignments.Add(entry);
+            placed.Add(entry);
+        }
+
+        if (placed.Count > 0) await _db.SaveChangesAsync(ct);
+
+        var missing = request.count - placed.Count;
+
+        return new FillResultDto(
+            placed.Select(entry => ToDto(entry, names)).ToArray(),
+            request.count,
+            missing <= 0
+                ? null
+                : blocked.Length + busy.Count > 0
+                    ? $"Не хватило {missing} — остальные заняты в этот день или отметили «не могу»."
+                    : $"Не хватило {missing} — в команде меньше людей.");
+    }
+
+    /// <summary>Hours of one cell, wrapping past midnight.</summary>
+    private static double Span(PlannedAssignment entry)
+    {
+        var span = entry.EndTime - entry.StartTime;
+
+        return (span < TimeSpan.Zero ? span + TimeSpan.FromDays(1) : span).TotalHours;
+    }
 
     // ==== Drafting ====
 
@@ -556,6 +664,19 @@ public static class PlannerRules
             throw new ValidationException("The shift must last some time.");
 
         return (day, from, to);
+    }
+
+    /// <summary>
+    /// An optional note beside a blocked day. Absent is the normal case —
+    /// people mark a day and move on — so nothing here throws.
+    /// </summary>
+    public static string? CleanReason(string? reason)
+    {
+        var cleaned = reason?.Trim();
+
+        if (string.IsNullOrEmpty(cleaned)) return null;
+
+        return cleaned.Length <= TitleMax ? cleaned : cleaned[..TitleMax];
     }
 
     public static string CleanTitle(string title)

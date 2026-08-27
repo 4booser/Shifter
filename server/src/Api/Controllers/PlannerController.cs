@@ -54,6 +54,15 @@ public class PlannerController : ControllerBase
         CancellationToken ct)
         => Ok(await _planner.PublishAsync(teamId, UserId(), from, to, ct));
 
+    /// <summary>
+    /// Hands one slot out to whoever can take it. Drafts, always — a rota is
+    /// argued about, so this fills a board a manager then corrects.
+    /// </summary>
+    [HttpPost("fill")]
+    public async Task<ActionResult<FillResultDto>> Fill(
+        int teamId, [FromBody] FillSlotDto request, CancellationToken ct)
+        => Ok(await _planner.FillAsync(teamId, UserId(), request, ct));
+
     [HttpPost("copy-week")]
     public async Task<IActionResult> CopyWeek(
         int teamId, [FromQuery(Name = "week_start")] DateOnly weekStart, CancellationToken ct)

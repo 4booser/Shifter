@@ -78,3 +78,22 @@ public record AvailabilityDto(int user_id, string date, string? reason, bool min
 public record AvailabilitySaveDto(string? date, string? reason);
 
 public record AcceptAssignmentDto(int template_id);
+
+/// <summary>
+/// One slot to hand out: this shift, on this day, to this many people. Who
+/// gets it is the planner's job — that is the whole point of asking.
+/// </summary>
+public record FillSlotDto(
+    string date,
+    string title,
+    string start,
+    string end,
+    string? role,
+    int count);
+
+/// <summary>
+/// What the fill did and, more usefully, what it could not do. A planner that
+/// silently hands out three of the four shifts asked for is worse than one
+/// that says which one has nobody left.
+/// </summary>
+public record FillResultDto(AssignmentDto[] placed, int wanted, string? shortfall);

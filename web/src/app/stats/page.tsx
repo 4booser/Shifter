@@ -266,7 +266,11 @@ function Stats() {
 
   /** Sources ranked, and the same five as shares of one whole. */
   const sources = [
-    { name: 'Shifts', value: summary.shifts_earned },
+    // The percentage comes out of the shifts figure it already sits inside:
+    // hidden there it cannot be seen to be working, which is the whole reason
+    // somebody agreed to it.
+    { name: 'Shifts', value: summary.shifts_earned - summary.revenue_earned },
+    { name: 'Percentage', value: summary.revenue_earned },
     { name: 'Overtime', value: summary.overtime_earned },
     { name: 'Premiums', value: summary.premium_earned },
     { name: 'Salary', value: summary.period_earned },
@@ -274,7 +278,15 @@ function Stats() {
     { name: 'Tips', value: summary.tips_earned },
   ].filter((row) => row.value > 0);
   const sourceTotal = sources.reduce((sum, row) => sum + row.value, 0);
-  const SOURCE_TINTS = ['var(--s1)', 'var(--s2)', 'var(--s3)', 'var(--accent)', 'var(--warn)'];
+  const SOURCE_TINTS = [
+    'var(--s1)',
+    'var(--s2)',
+    'var(--s3)',
+    'var(--s4)',
+    'var(--s5)',
+    'var(--accent)',
+    'var(--warn)',
+  ];
 
   const mixMax = niceCeiling(Math.max(1, ...trendParts.map((month) => month.shifts + month.sales + month.tips)));
 
@@ -443,6 +455,7 @@ function Stats() {
         [t('Hours'), summary.hours],
         [t('Overtime'), summary.overtime_earned],
         [t('Premiums'), summary.premium_earned],
+        [t('Percentage'), summary.revenue_earned],
         [t('Salary'), summary.period_earned],
         [t('Sales'), summary.sales_earned],
         [t('Tips'), summary.tips_earned],
@@ -887,6 +900,17 @@ function Stats() {
               {new Intl.DateTimeFormat(lang, { weekday: 'long', day: 'numeric', month: 'long' }).format(
                 new Date(`${bestDay.date}T00:00:00`),
               )}
+            </p>
+          </Card>
+        )}
+
+        {summary.revenue_earned > 0 && (
+          <Card title={t('Percentage')}>
+            <p className="text-[1.5rem] font-extrabold text-good">
+              +<Money value={summary.revenue_earned} />
+            </p>
+            <p className="field-hint">
+              {t('from takings of')} <Money value={summary.revenue_counted} />
             </p>
           </Card>
         )}

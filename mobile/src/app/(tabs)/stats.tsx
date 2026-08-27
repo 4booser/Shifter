@@ -8,8 +8,9 @@ import {
   useColorScheme,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { ClockRing, MoneyFlow, MonthBars } from '@/components/charts';import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ClockRing, MoneyFlow, MonthBars } from '@/components/charts';
 
 import { Colors, Palette } from '@/constants/theme';
 import { api } from '@/lib/api';
@@ -23,6 +24,9 @@ interface Summary extends DaysResponse {
   overtime_earned: number;
   premium_earned: number;
   shifts_earned: number;
+  /** The share of the takings, already inside shifts_earned. */
+  revenue_earned: number;
+  revenue_counted: number;
 }
 
 type Span = 'month' | 'year';
@@ -126,7 +130,11 @@ export default function StatsScreen() {
   const parts = summary === null
     ? []
     : [
-        { name: 'Смены', value: summary.shifts_earned, colour: palette.accent },
+        // The percentage comes out of the shifts figure it already sits
+        // inside: hidden there it cannot be seen to be working, which is the
+        // whole reason somebody agreed to it.
+        { name: 'Смены', value: summary.shifts_earned - summary.revenue_earned, colour: palette.accent },
+        { name: 'Процент', value: summary.revenue_earned, colour: '#B5449C' },
         { name: 'Надбавки', value: summary.premium_earned + summary.overtime_earned, colour: palette.good },
         { name: 'Продажи', value: summary.sales_earned, colour: '#D97706' },
         { name: 'Чаевые', value: summary.tips_earned, colour: '#0891B2' },

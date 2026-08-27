@@ -110,6 +110,14 @@ public record DaysDto(
     /// <summary>What the night and public-holiday rules added, on top of the base.</summary>
     decimal premium_earned,
     /// <summary>
+    /// The share of the takings across the range, already inside shifts_earned.
+    /// Broken out because a percentage is the half of the deal people watch —
+    /// hidden inside one shifts figure it cannot be seen to be working.
+    /// </summary>
+    decimal revenue_earned,
+    /// <summary>What those shifts took, where it was recorded.</summary>
+    decimal revenue_counted,
+    /// <summary>
     /// Everything overlapping the range, once each rather than repeated on
     /// every day it covers — a fortnight of leave is one entry, and the client
     /// spreads it across the cells itself.

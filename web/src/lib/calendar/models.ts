@@ -312,6 +312,10 @@ export interface DaysResponse {
   night_hours: number;
   /** What night and public-holiday rules added on top of the base. */
   premium_earned: number;
+  /** The share of the takings across the range, already inside shifts_earned. */
+  revenue_earned: number;
+  /** What those shifts took, where it was recorded. */
+  revenue_counted: number;
   /**
    * Everything overlapping the range, once each rather than repeated on every
    * day it covers. The store spreads them across the cells.
@@ -465,6 +469,8 @@ export const EMPTY_SUMMARY: DaysResponse = {
   night_hours: 0,
   premium_earned: 0,
   overtime_earned: 0,
+  revenue_earned: 0,
+  revenue_counted: 0,
   events: [],
 };
 

@@ -60,6 +60,8 @@ public partial class DayHandler : IDayHandler
         decimal tipsEarned = days.Sum(day => day.Tips ?? 0m);
         decimal periodEarned = PeriodSalary(days, workedOnly: true);
         decimal shiftsEarned = worked.Sum(entry => entry.Pay);
+        decimal revenueEarned = worked.Sum(entry => entry.RevenuePay);
+        decimal revenueCounted = worked.Sum(entry => entry.Revenue ?? 0m);
 
         var (overtimeHours, overtimeExtra) = Overtime(days, byId);
         var (nightHours, premiumExtra) = Premiums(days, byId);
@@ -119,6 +121,8 @@ public partial class DayHandler : IDayHandler
             overtimeExtra,
             nightHours,
             premiumExtra,
+            revenueEarned,
+            revenueCounted,
             events.Select(EventHandler.ToDto).ToArray()
         );
     }

@@ -5,6 +5,8 @@
 type Dictionary = Record<string, string>;
 
 export const RU: Dictionary = {
+  'Percentage': 'Процент',
+  'from takings of': 'с выручки',
   'Takings this shift': 'Выручка за смену',
   'not counted': 'не считаем',
   'Tip pool today': 'Общак за день',
@@ -1626,6 +1628,8 @@ export const RU: Dictionary = {
 };
 
 export const UK: Dictionary = {
+  'Percentage': 'Відсоток',
+  'from takings of': 'з виторгу',
   'Takings this shift': 'Виторг за зміну',
   'not counted': 'не рахуємо',
   'Tip pool today': 'Спільний чай за день',

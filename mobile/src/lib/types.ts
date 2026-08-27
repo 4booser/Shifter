@@ -9,8 +9,32 @@ export interface ShiftTemplate {
   end_time: string;
   salary_period: string;
   salary_amount: number;
+  /** A share of the shift's takings, paid on top of the rate. */
+  revenue_percent: number | null;
+  tip_source: 'personal' | 'pool';
+  tip_pool_percent: number | null;
   archived: boolean;
 }
+
+/** "₴200 за час + 3%" — the rate, the percentage, or the two stacked. */
+export const rateLine = (template: {
+  salary_amount: number;
+  salary_period: string;
+  revenue_percent: number | null;
+}): string => {
+  const period =
+    template.salary_period === 'hour'
+      ? 'за час'
+      : template.salary_period === 'day'
+        ? 'за смену'
+        : template.salary_period === 'week'
+          ? 'в неделю'
+          : 'в месяц';
+  const base = template.salary_amount > 0 ? `₴${template.salary_amount} ${period}` : null;
+  const percent = template.revenue_percent === null ? null : `${template.revenue_percent}%`;
+
+  return [base, percent].filter((part) => part !== null).join(' + ') || 'без ставки';
+};
 
 export interface DayShiftEntry {
   shift_id: number;

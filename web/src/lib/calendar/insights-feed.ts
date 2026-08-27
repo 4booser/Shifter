@@ -1,5 +1,6 @@
 import { CalendarDayData, DaysResponse } from './models';
 import { Forecast } from './forecast';
+import { clopenings } from './clopening';
 import { averagesFor } from './insights';
 import { shiftDays } from './calendar-date';
 
@@ -285,6 +286,27 @@ export function insightsFor(input: InsightInput): Insight[] {
       key: '{pct}% of everything came as tips',
       vars: { pct: pct(now.tipShare) },
       weight: 35,
+    });
+  }
+
+  // Clopenings: the industry's own word for closing at two and opening at
+  // eight. Worth a high weight — it is the one thing on this list that is
+  // about the person rather than the money.
+  const closeOpen = clopenings(summary.days);
+
+  if (closeOpen.length > 0) {
+    const worst = closeOpen.reduce((least, entry) => (entry.gap < least.gap ? entry : least));
+
+    found.push({
+      id: 'clopening',
+      icon: '😴',
+      tone: 'warn',
+      key:
+        closeOpen.length === 1
+          ? 'A close-then-open this month: {gap} h between shifts'
+          : '{count} close-then-opens this month, the tightest {gap} h',
+      vars: { count: `${closeOpen.length}`, gap: `${worst.gap}` },
+      weight: 78,
     });
   }
 

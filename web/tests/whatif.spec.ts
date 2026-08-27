@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { clopenings } from '@/lib/calendar/clopening';
 import { forecastFor } from '@/lib/calendar/forecast';
 import { whatIfBaseline, whatIfProject } from '@/lib/calendar/whatif';
 import { CalendarDayData } from '@/lib/calendar/models';
@@ -121,5 +122,67 @@ describe('forecastFor with leave', () => {
     const away = new Set(['2026-03-10']);
 
     expect(forecastFor(days, '2026-03-01', '2026-03-31', away).earnedSoFar).toBe(1500);
+  });
+});
+
+describe('clopenings', () => {
+  const shift = (start: string, end: string) => ({
+    shift_id: 1,
+    name: 'Bar',
+    symbol: null,
+    colour: null,
+    start_time: start,
+    end_time: end,
+    worked: true,
+    needs_cover: false,
+    actual_start: null as string | null,
+    actual_end: null as string | null,
+    break_minutes: null,
+    earned: 1000,
+    hours: 8,
+  });
+
+  const withShifts = (date: string, shifts: ReturnType<typeof shift>[]) => ({
+    ...day(date, 1000),
+    shifts: shifts as never,
+  });
+
+  it('catches the classic close-then-open', () => {
+    // Ends 02:00, back at 08:00 — six hours of life in between.
+    const found = clopenings([
+      withShifts('2026-03-02', [shift('18:00', '02:00')]),
+      withShifts('2026-03-03', [shift('08:00', '16:00')]),
+    ]);
+
+    expect(found).toHaveLength(1);
+    expect(found[0].gap).toBe(6);
+  });
+
+  it('leaves a humane turnaround alone', () => {
+    const found = clopenings([
+      withShifts('2026-03-02', [shift('10:00', '18:00')]),
+      withShifts('2026-03-03', [shift('10:00', '18:00')]),
+    ]);
+
+    expect(found).toHaveLength(0);
+  });
+
+  it('does not count a day off as a clopening', () => {
+    const found = clopenings([
+      withShifts('2026-03-02', [shift('18:00', '02:00')]),
+      withShifts('2026-03-04', [shift('08:00', '16:00')]),
+    ]);
+
+    expect(found).toHaveLength(0);
+  });
+
+  it('measures from the recorded clock when there is one', () => {
+    const late = { ...shift('18:00', '02:00'), actual_end: '03:30' };
+    const found = clopenings([
+      withShifts('2026-03-02', [late]),
+      withShifts('2026-03-03', [shift('08:00', '16:00')]),
+    ]);
+
+    expect(found[0].gap).toBe(4.5);
   });
 });

@@ -5,6 +5,8 @@
 type Dictionary = Record<string, string>;
 
 export const RU: Dictionary = {
+  'A close-then-open this month: {gap} h between shifts': 'Закрытие и открытие подряд: между сменами {gap} ч',
+  '{count} close-then-opens this month, the tightest {gap} h': '{count} раза закрытие→открытие за месяц, самый тесный — {gap} ч',
   'Days I cannot work': 'Дни, когда я не могу',
   'Mark days': 'Отметить дни',
   'Tap the days you are not available. The manager sees them while planning.': 'Тапните дни, когда вас не будет. Менеджер увидит их прямо при планировании.',
@@ -1611,6 +1613,8 @@ export const RU: Dictionary = {
 };
 
 export const UK: Dictionary = {
+  'A close-then-open this month: {gap} h between shifts': 'Закриття і відкриття поспіль: між змінами {gap} год',
+  '{count} close-then-opens this month, the tightest {gap} h': '{count} рази закриття→відкриття за місяць, найтісніший — {gap} год',
   'Days I cannot work': 'Дні, коли я не можу',
   'Mark days': 'Позначити дні',
   'Tap the days you are not available. The manager sees them while planning.': 'Тапніть дні, коли вас не буде. Менеджер побачить їх просто під час планування.',

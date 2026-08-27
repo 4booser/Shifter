@@ -287,6 +287,32 @@ export interface CalendarDayData {
 }
 
 /** The range response: days plus the totals worked out for them. */
+/** One rate, and the day the bank actually published it. */
+export interface RateUsed {
+  code: string;
+  rate: string;
+  on: string;
+}
+
+export interface ConvertedPlace {
+  location_id: number;
+  name: string;
+  currency: string;
+  earned: number;
+  /** Null where this currency had no rate; its money is not in the totals. */
+  converted: number | null;
+}
+
+export interface Conversion {
+  base_currency: string;
+  total_earned: number;
+  net_earned: number;
+  by_location: ConvertedPlace[];
+  rates: RateUsed[];
+  /** Currencies the bank had no rate for, named rather than counted as one-to-one. */
+  unconverted: string[];
+}
+
 export interface DaysResponse {
   days: CalendarDayData[];
   hours: number;
@@ -315,6 +341,13 @@ export interface DaysResponse {
   holiday_accrued: number;
   /** More than one entry means the totals mix currencies. */
   currencies: string[];
+  /**
+   * The range restated in one currency. Present only where more than one was
+   * earned in and the client asked for it — converting a range already in one
+   * currency is noise, and noise beside money is how people stop reading
+   * totals.
+   */
+  conversion: Conversion | null;
   by_location: LocationTotal[];
   overtime_hours: number;
   overtime_earned: number;
@@ -481,6 +514,7 @@ export const EMPTY_SUMMARY: DaysResponse = {
   net_earned: 0,
   holiday_accrued: 0,
   currencies: [],
+  conversion: null,
   by_location: [],
   overtime_hours: 0,
   night_hours: 0,

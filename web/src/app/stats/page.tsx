@@ -23,7 +23,7 @@ import { Sheet, buildXlsx, downloadBlob } from '@/lib/export/xlsx';
 import { currentCardTheme, drawShareCard } from '@/lib/export/share-card';
 import { drawStoryCard } from '@/lib/export/story-card';
 import { useI18n } from '@/lib/i18n';
-import { formatMoney } from '@/lib/settings/money';
+import { formatMoney, formatMoneyIn } from '@/lib/settings/money';
 import { useSettings } from '@/lib/settings/store';
 import { Shell } from '@/components/layout/shell';
 import { useReveal } from '@/lib/fx';
@@ -60,6 +60,16 @@ function Stats() {
   const { t, n, lang } = useI18n();
   const revealHost = useReveal<HTMLDivElement>();
   const settings = useSettings((state) => state.settings);
+  const formatWith = (code: string, amount: number) => formatMoneyIn(settings, code, amount);
+
+  /**
+   * A place with no currency set earns in whatever the app is set to, which
+   * is the base — the same rule the server converts by. Falling back to the
+   * first code in the list instead would label unplaced shifts in zloty
+   * purely because Z sorts before U.
+   */
+  const currencyOf = (place: { currency: string }) =>
+    place.currency.length === 3 ? place.currency : settings.baseCurrency;
 
   const [preset, setPreset] = useState<PresetId>(
     (PRESETS.some((entry) => entry.id === settings.statsPeriod) ? settings.statsPeriod : 'month') as PresetId,
@@ -112,7 +122,10 @@ function Stats() {
     setError(null);
 
     void calendarApi
-      .days(from, to)
+      // The base is asked for on this page alone: it is where somebody goes
+      // to see a period as one number, and the conversion is what that means
+      // when the period was earned in two currencies.
+      .days(from, to, settings.baseCurrency)
       .then(setSummary)
       .catch((caught) => setError(apiErrorMessage(caught)));
 
@@ -720,6 +733,61 @@ function Stats() {
           </Card>
         )}
 
+        {summary.conversion !== null && (
+          <Card
+            title={t('All of it in one currency')}
+            hint={t('At the National Bank’s published rate, so you can check it against your own.')}
+          >
+            <p className="text-[1.6rem] font-extrabold tracking-tight text-good">
+              ≈ {formatWith(summary.conversion.base_currency, summary.conversion.total_earned)}
+            </p>
+            {summary.conversion.net_earned !== summary.conversion.total_earned && (
+              <p className="field-hint">
+                {t('On hand')} ≈ {formatWith(summary.conversion.base_currency, summary.conversion.net_earned)}
+              </p>
+            )}
+
+            <ul className="mt-2.5 flex flex-col gap-1">
+              {summary.conversion.by_location.map((place) => (
+                <li
+                  key={place.location_id}
+                  className="flex items-baseline justify-between gap-2 text-[0.86rem]"
+                >
+                  <span className="text-muted">
+                    {placeName(place, t('No place set'))}
+                    <span className="ml-1.5 text-faint">{place.currency}</span>
+                  </span>
+                  <span className="tabular">
+                    {formatWith(place.currency, place.earned)}
+                    {place.currency !== summary.conversion!.base_currency && (
+                      <span className="ml-1.5 font-bold">
+                        {place.converted === null
+                          ? `→ ${t('no rate')}`
+                          : `≈ ${formatWith(summary.conversion!.base_currency, place.converted)}`}
+                      </span>
+                    )}
+                  </span>
+                </li>
+              ))}
+            </ul>
+
+            <p className="field-hint mt-2.5 tabular">
+              {summary.conversion.rates.map((rate) => (
+                <span key={rate.code} className="mr-2.5">
+                  1 {rate.code} = {rate.rate} UAH · {rate.on}
+                </span>
+              ))}
+            </p>
+
+            {summary.conversion.unconverted.length > 0 && (
+              <p className="mt-1 text-[0.82rem] text-warn">
+                {t('No rate for')} {summary.conversion.unconverted.join(', ')} —{' '}
+                {t('that money is not in the total above.')}
+              </p>
+            )}
+          </Card>
+        )}
+
         {sources.length > 0 && (
           <Card title={t('Where the money came from')}>
             {/* Composition strip: shares of one whole. */}
@@ -973,9 +1041,23 @@ function Stats() {
                       </td>
                       <td className="px-2 py-1.5 tabular">{place.days_worked}</td>
                       <td className="px-2 py-1.5 tabular">{Math.round(place.hours * 10) / 10}</td>
-                      <td className="px-2 py-1.5"><Money value={place.earned} /></td>
-                      <td className="px-2 py-1.5"><Money value={place.tips} /></td>
-                      <td className="px-2 py-1.5 font-semibold"><Money value={place.per_hour} /></td>
+                      {/* Where the range mixes currencies, each place is
+                          labelled with its own: printing zloty with a hryvnia
+                          mark makes the comparison this table exists for a
+                          lie. */}
+                      {summary.currencies.length > 1 ? (
+                        <>
+                          <td className="px-2 py-1.5 tabular">{formatWith(currencyOf(place), place.earned)}</td>
+                          <td className="px-2 py-1.5 tabular">{formatWith(currencyOf(place), place.tips)}</td>
+                          <td className="px-2 py-1.5 font-semibold tabular">{formatWith(currencyOf(place), place.per_hour)}</td>
+                        </>
+                      ) : (
+                        <>
+                          <td className="px-2 py-1.5"><Money value={place.earned} /></td>
+                          <td className="px-2 py-1.5"><Money value={place.tips} /></td>
+                          <td className="px-2 py-1.5 font-semibold"><Money value={place.per_hour} /></td>
+                        </>
+                      )}
                     </tr>
                   ))}
               </tbody>

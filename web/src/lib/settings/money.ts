@@ -21,6 +21,26 @@ export function formatMoney(settings: Settings, amount: number): string {
   return currencyBefore ? `${currency}${text}` : `${text} ${currency}`;
 }
 
+/**
+ * An amount labelled with an ISO code rather than the person's own symbol.
+ * Used where two currencies sit side by side: printing both with the same
+ * mark would make the comparison meaningless, which is the whole reason the
+ * two figures are next to each other.
+ */
+export function formatMoneyIn(settings: Settings, code: string, amount: number): string {
+  const { hideAmounts } = settings;
+
+  if (hideAmounts) return `••• ${code}`;
+
+  const text = amount.toLocaleString(settings.language, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: settings.moneyDecimals,
+    useGrouping: settings.groupThousands,
+  });
+
+  return `${text} ${code}`;
+}
+
 /** Short form for chart axes, where the gutter cannot grow with the number. */
 export function formatMoneyCompact(settings: Settings, amount: number): string {
   const { currency, currencyBefore, hideAmounts } = settings;

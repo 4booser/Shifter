@@ -39,7 +39,10 @@ export const calendarApi = {
     api<SalesPosition>(`${API}/sales/${id}/archived?value=${archived}`, { method: 'POST' }),
   deleteSales: (id: number) => api<void>(`${API}/sales/${id}`, { method: 'DELETE' }),
 
-  days: (from: string, to: string) => api<DaysResponse>(`${API}/days?from=${from}&to=${to}`),
+  days: (from: string, to: string, base?: string) =>
+    api<DaysResponse>(
+      `${API}/days?from=${from}&to=${to}${base !== undefined && base !== '' ? `&base=${base}` : ''}`,
+    ),
   saveDay: (date: string, request: DaySave) =>
     api<CalendarDayData>(`${API}/days/${date}`, { method: 'PUT', body: request }),
   colourDays: (days: { date: string; colour: string | null }[]) =>

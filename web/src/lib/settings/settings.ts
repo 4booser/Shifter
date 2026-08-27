@@ -62,6 +62,12 @@ export interface Settings {
   hideAmounts: boolean;
   accent: string;
   currency: string;
+  /**
+   * The ISO code everything is restated in when a range mixes currencies —
+   * separate from the symbol above, which is only how money is printed. Empty
+   * turns the conversion off entirely.
+   */
+  baseCurrency: string;
   currencyBefore: boolean;
   moneyDecimals: 0 | 2;
   groupThousands: boolean;
@@ -148,6 +154,7 @@ export const DEFAULT_SETTINGS: Settings = {
   hideAmounts: false,
   accent: '#4F46E5',
   currency: '$',
+  baseCurrency: 'UAH',
   currencyBefore: false,
   moneyDecimals: 2,
   groupThousands: true,

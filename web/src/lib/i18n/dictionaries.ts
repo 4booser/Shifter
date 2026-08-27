@@ -5,6 +5,12 @@
 type Dictionary = Record<string, string>;
 
 export const RU: Dictionary = {
+  'All of it in one currency': 'Всё в одной валюте',
+  'At the National Bank’s published rate, so you can check it against your own.': 'По курсу НБУ — чтобы вы могли сверить со своим банком.',
+  'On hand': 'На руки',
+  'no rate': 'курса нет',
+  'No rate for': 'Нет курса для',
+  'that money is not in the total above.': 'эти деньги не вошли в сумму выше.',
   'Support': 'Подсобка',
   'Manager': 'Менеджер',
   'Hand out a shift': 'Раздать смену',
@@ -1681,6 +1687,12 @@ export const RU: Dictionary = {
 };
 
 export const UK: Dictionary = {
+  'All of it in one currency': 'Усе в одній валюті',
+  'At the National Bank’s published rate, so you can check it against your own.': 'За курсом НБУ — щоб ви могли звірити зі своїм банком.',
+  'On hand': 'На руки',
+  'no rate': 'курсу немає',
+  'No rate for': 'Немає курсу для',
+  'that money is not in the total above.': 'ці гроші не увійшли до суми вище.',
   'Support': 'Підсобка',
   'Manager': 'Менеджер',
   'Hand out a shift': 'Роздати зміну',

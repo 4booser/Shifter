@@ -33,6 +33,9 @@ public sealed record AssistantFacts(
     decimal BestDayAmount,
     string? BestDayDate,
     string? BusiestWeekday,
+    /// <summary>The weekday whose worked days average the most tips.</summary>
+    string? BestTipWeekday,
+    decimal BestTipAverage,
     decimal LongestShiftHours,
     int DaysOff,
     /// <summary>Place, hours and money — only where a place is set.</summary>

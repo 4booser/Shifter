@@ -33,6 +33,14 @@ public static class AssistantWriter
 
         bool Asks(params string[] words) => words.Any(text.Contains);
 
+        // First, because "в какой день лучше чай" contains both "лучш" and
+        // "чай" and would otherwise be answered with the best day's takings.
+        if (Asks("чаев", "чай", "типс") && Asks("какой день", "день недели", "лучш", "когда"))
+            return facts.BestTipWeekday is null
+                ? "Чаевые пока не отмечены ни на одном дне, так что и сравнивать нечего."
+                : $"Лучше всего платят в {facts.BestTipWeekday} — в среднем {Money(facts.BestTipAverage)} "
+                  + "за такой день.";
+
         if (Asks("лучш", "самый денежн", "рекорд"))
             return facts.BestDayDate is null
                 ? "Пока нет ни одного отработанного дня, так что и лучшего нет."

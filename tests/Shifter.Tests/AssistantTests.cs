@@ -139,7 +139,7 @@ public class AssistantTests
             14, hours, hours <= 0 ? 0m : Math.Round(earned / (decimal)hours, 2),
             16_240m, revenue, 18_000m, tips, 0m, 0m, 0m, 1_600m,
             0m, 0m, 0, 0,
-            2_960m, "2026-03-05", "субботу", 11m, 17,
+            2_960m, "2026-03-05", "субботу", "пятницу", 640m, 11m, 17,
             [new AssistantPlace("Ночной бар", hours, earned)],
             previous,
             ["UAH"]);
@@ -361,5 +361,26 @@ public class AssistantTests
 
         Assert.Equal(new DateOnly(2026, 1, 1), from);
         Assert.Equal(new DateOnly(2026, 1, 31), to);
+    }
+
+    [Fact]
+    public void TheBestTippingDayIsAnsweredSeparatelyFromTheMonthsTotal()
+    {
+        var answer = Flat(AssistantWriter.Answer("в какой день лучше чай?", Facts()));
+
+        Assert.Contains("пятницу", answer);
+        Assert.Contains("640", answer);
+        // Not the month's total, which the plain tips question would give.
+        Assert.DoesNotContain("300", answer);
+    }
+
+    [Fact]
+    public void WithNoTipsRecordedItSaysThereIsNothingToCompare()
+    {
+        var answer = AssistantWriter.Answer(
+            "какой день недели лучший на чай",
+            Facts() with { BestTipWeekday = null, BestTipAverage = 0m });
+
+        Assert.Contains("нечего", answer);
     }
 }

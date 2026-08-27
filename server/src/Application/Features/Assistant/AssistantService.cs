@@ -194,6 +194,16 @@ public sealed class AssistantService
             .OrderByDescending(group => group.Count())
             .FirstOrDefault();
 
+        // Averaged over the worked days of each weekday, not summed: a
+        // weekday worked twice as often would otherwise look twice as
+        // generous. A day with no tips figure is a blank, not a zero.
+        var tipDays = worked
+            .Where(day => day.tips is not null)
+            .GroupBy(day => day.date.DayOfWeek)
+            .Select(group => new { group.Key, Average = group.Average(day => day.tips!.Value) })
+            .OrderByDescending(row => row.Average)
+            .FirstOrDefault();
+
         var longest = range.days
             .SelectMany(day => day.shifts.Where(shift => shift.worked))
             .Select(shift => shift.hours)
@@ -226,6 +236,8 @@ public sealed class AssistantService
             best?.earned ?? 0m,
             best is null ? null : $"{best.date:yyyy-MM-dd}",
             byWeekday is null ? null : Weekday(byWeekday.Key),
+            tipDays is null ? null : Weekday(tipDays.Key),
+            tipDays?.Average ?? 0m,
             (decimal)longest,
             range.days.Count(day => day.shifts.Length == 0),
             range.by_location

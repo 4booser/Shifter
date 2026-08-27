@@ -157,6 +157,35 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
             />
           </div>
           <Toggle on={settings.currencyBefore} onChange={(value) => update('currencyBefore', value)} label={t('Symbol before the amount')} />
+
+          {/* Separate from the symbol above, which is only how money is
+              printed. This is the currency two jobs in two countries get
+              added up in, and it has to be a code the bank quotes. */}
+          <label className="block">
+            <span className="field-label">{t('Add different currencies up in')}</span>
+            <div className="flex flex-wrap gap-1.5">
+              {['UAH', 'PLN', 'EUR', 'USD', 'CZK', 'GBP'].map((code) => (
+                <button
+                  key={code}
+                  type="button"
+                  className={`btn btn-sm ${settings.baseCurrency === code ? 'btn-primary' : ''}`}
+                  onClick={() => update('baseCurrency', code)}
+                >
+                  {code}
+                </button>
+              ))}
+              <button
+                type="button"
+                className={`btn btn-sm ${settings.baseCurrency === '' ? 'btn-primary' : ''}`}
+                onClick={() => update('baseCurrency', '')}
+              >
+                {t('Do not')}
+              </button>
+            </div>
+            <span className="field-hint mt-1 block">
+              {t('Only matters if you work somewhere paid in another currency. Converted at the National Bank’s rate, which is shown beside the figure.')}
+            </span>
+          </label>
           <Segmented
             value={settings.moneyDecimals}
             options={[

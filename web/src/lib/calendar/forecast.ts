@@ -30,10 +30,17 @@ export function forecastFor(
   days: CalendarDayData[],
   from: string,
   to: string,
+  /** Days covered by leave or sickness — outside the pace in both directions. */
+  awayDays: ReadonlySet<string> = new Set(),
 ): Forecast {
   const today = todayKey();
-  const all = keysBetween(from, to);
+  const everything = keysBetween(from, to);
   const byDate = new Map(days.map((day) => [day.date, day]));
+
+  // A fortnight of leave is not a fortnight of laziness: counting it as a
+  // zero-earning day would slander the pace, and projecting the pace onto
+  // it would promise money nobody will earn. It leaves both sums.
+  const all = everything.filter((key) => !awayDays.has(key) || (byDate.get(key)?.earned ?? 0) > 0);
 
   const past = all.filter((key) => key <= today);
   const future = all.filter((key) => key > today);

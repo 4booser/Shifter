@@ -19,6 +19,14 @@ public sealed class Event
     public required string Name { get; set; }
 
     /// <summary>
+    /// What kind of non-working day this is. Ordinary events stay Ordinary and
+    /// behave exactly as they always did; the named kinds are the ones the
+    /// forecast has to treat differently — a fortnight of leave is not a
+    /// fortnight of laziness, and averaging it in slanders the person's pace.
+    /// </summary>
+    public EventKind Kind { get; set; } = EventKind.Ordinary;
+
+    /// <summary>
     /// A short badge for the calendar, same idea as on a shift template: a
     /// string rather than a char so it can hold an emoji.
     /// </summary>

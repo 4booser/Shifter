@@ -5,6 +5,13 @@
 type Dictionary = Record<string, string>;
 
 export const RU: Dictionary = {
+  'Kind of day': 'Что за день',
+  'Ordinary': 'Обычный',
+  'Vacation': 'Отпуск',
+  'Sick leave': 'Больничный',
+  'These days leave the pace alone — a holiday is not a slow week.': 'Такие дни не портят темп — отпуск это не медленная неделя.',
+  'Story': 'Сторис',
+  'A 9:16 card for stories': 'Карточка 9:16 для сторис',
   'Overtime guard': 'Страж переработок',
   '«38 of 40 hours» — while the week can still be changed.': '«38 из 40 часов» — пока неделю ещё можно изменить.',
   'night hours and public holidays': 'ночных часов и праздники',
@@ -1571,6 +1578,13 @@ export const RU: Dictionary = {
 };
 
 export const UK: Dictionary = {
+  'Kind of day': 'Що за день',
+  'Ordinary': 'Звичайний',
+  'Vacation': 'Відпустка',
+  'Sick leave': 'Лікарняний',
+  'These days leave the pace alone — a holiday is not a slow week.': 'Такі дні не псують темп — відпустка це не повільний тиждень.',
+  'Story': 'Сторіс',
+  'A 9:16 card for stories': 'Картка 9:16 для сторіс',
   'Overtime guard': 'Вартовий переробок',
   '«38 of 40 hours» — while the week can still be changed.': '«38 із 40 годин» — поки тиждень ще можна змінити.',
   'night hours and public holidays': 'нічних годин і свята',

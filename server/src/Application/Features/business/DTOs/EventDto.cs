@@ -16,6 +16,8 @@ public record EventDto(
     string? start_time,
     string? end_time,
     string? note,
+    /// <summary>"ordinary" | "vacation" | "sick" | "dayoff".</summary>
+    string kind,
     /// <summary>How many days it covers, both ends included.</summary>
     int days,
     /// <summary>Monday-first weekday numbers, comma-joined; null = one-off.</summary>
@@ -37,6 +39,7 @@ public record EventSaveDto(
     string? start_time,
     string? end_time,
     string? note,
+    string? kind = null,
     string? repeat_weekdays = null,
     DateOnly? repeat_until = null
     );

@@ -12,6 +12,7 @@ import {
   monthBounds,
   shiftDays,
   todayKey,
+  fromKey,
 } from '@/lib/calendar/calendar-date';
 import { forecastFor, paceToGoal, projectionSeries } from '@/lib/calendar/forecast';
 import { averagesFor } from '@/lib/calendar/insights';
@@ -20,6 +21,7 @@ import { activeGoalFor, delta, earningsBuckets, median, weekdayTotals } from '@/
 import { buildColumns, buildTicks, niceCeiling } from '@/lib/charts/math';
 import { Sheet, buildXlsx, downloadBlob } from '@/lib/export/xlsx';
 import { currentCardTheme, drawShareCard } from '@/lib/export/share-card';
+import { drawStoryCard } from '@/lib/export/story-card';
 import { useI18n } from '@/lib/i18n';
 import { formatMoney } from '@/lib/settings/money';
 import { useSettings } from '@/lib/settings/store';
@@ -185,7 +187,21 @@ function Stats() {
           reached: summary.total_earned >= active.target,
         };
 
-  const forecast = forecastFor(summary.days, range.from, range.to);
+  // Leave and sickness are days the person is not available, not days they
+  // failed to earn — the forecast is told so explicitly.
+  const awayDays = useMemo(() => {
+    const away = new Set<string>();
+
+    for (const event of summary.events) {
+      if (event.kind !== 'vacation' && event.kind !== 'sick') continue;
+
+      for (const key of keysBetween(event.start_date, event.end_date)) away.add(key);
+    }
+
+    return away;
+  }, [summary.events]);
+
+  const forecast = forecastFor(summary.days, range.from, range.to, awayDays);
   const waterfallSteps = useMemo(() => waterfall(summary), [summary]);
   const bands = useMemo(() => weekBands(summary.days), [summary.days]);
   const dial = useMemo(() => hourDial(summary.days), [summary.days]);
@@ -377,6 +393,46 @@ function Stats() {
       .finally(() => setExporting(false));
   };
 
+  /** The same period, shaped for a phone screen and a feed. */
+  const exportStory = () => {
+    setExporting(true);
+
+    const byWeekday = new Array(7).fill(0) as number[];
+
+    for (const day of summary.days) {
+      byWeekday[(fromKey(day.date).getDay() + 6) % 7] += day.earned;
+    }
+
+    const peak = Math.max(1, ...byWeekday);
+    const best = [...summary.days].sort((a, b) => b.earned - a.earned)[0];
+    const lines = [
+      averages.perHour > 0 ? `${t('Per hour')}: ${formatMoney(settings, averages.perHour)}` : null,
+      best !== undefined && best.earned > 0
+        ? `${t('Best day')}: ${formatMoney(settings, best.earned)}`
+        : null,
+      summary.tips_earned > 0 ? `${t('Tips')}: ${formatMoney(settings, summary.tips_earned)}` : null,
+      // Never fewer than three: a card with a hole in it reads as broken.
+      `${t('Days worked')}: ${summary.days_worked}`,
+      summary.hours > 0 ? `${t('Hours')}: ${Math.round(summary.hours)}` : null,
+    ].filter((line): line is string => line !== null);
+
+    void drawStoryCard(
+      {
+        period: preset === 'month' ? new Intl.DateTimeFormat(lang, { month: 'long' }).format(fromKey(range.from)) : `${range.from.slice(8)}.${range.from.slice(5, 7)} — ${range.to.slice(8)}.${range.to.slice(5, 7)}`,
+        earned: formatMoney(settings, summary.total_earned),
+        shifts: summary.days_worked,
+        hours: summary.hours,
+        lines,
+        rhythm: byWeekday.map((value) => value / peak),
+        brand: 'shifter.ink',
+      },
+      currentCardTheme(),
+    )
+      .then((blob) => downloadBlob(`shifter-story-${range.from}.png`, blob))
+      .catch((caught) => setError(apiErrorMessage(caught)))
+      .finally(() => setExporting(false));
+  };
+
   const exportXlsx = () => {
     const overview: Sheet = {
       name: t('Statistics').slice(0, 28),
@@ -483,6 +539,15 @@ function Stats() {
           <button type="button" className="btn btn-sm" disabled={exporting} onClick={exportPng}>
             <Icon name="download" size={13} />
             PNG
+          </button>
+          <button
+            type="button"
+            className="btn btn-sm"
+            disabled={exporting}
+            title={t('A 9:16 card for stories')}
+            onClick={exportStory}
+          >
+            📱 {t('Story')}
           </button>
           <button type="button" className="btn btn-sm" onClick={exportXlsx}>
             <Icon name="download" size={13} />

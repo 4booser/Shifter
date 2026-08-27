@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-import { CalendarEvent, EMOJI_GROUPS, MARK_COLOURS } from '@/lib/calendar/models';
+import { CalendarEvent, EMOJI_GROUPS, EventKind, MARK_COLOURS } from '@/lib/calendar/models';
 import { apiErrorMessage } from '@/lib/api/http';
 import { useI18n } from '@/lib/i18n';
 import { pluralWord } from '@/lib/i18n/plural';
@@ -37,6 +37,7 @@ export function EventModal({
   const [startTime, setStartTime] = useState('09:00');
   const [endTime, setEndTime] = useState('18:00');
   const [note, setNote] = useState('');
+  const [kind, setKind] = useState<EventKind>('ordinary');
   const [repeatDays, setRepeatDays] = useState<number[]>([]);
   const [repeatUntil, setRepeatUntil] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -70,6 +71,7 @@ export function EventModal({
       setStartTime('09:00');
       setEndTime('18:00');
       setNote('');
+      setKind('ordinary');
       setRepeatDays([]);
       setRepeatUntil('');
 
@@ -85,6 +87,7 @@ export function EventModal({
     setStartTime(editing.start_time ?? '09:00');
     setEndTime(editing.end_time ?? '18:00');
     setNote(editing.note ?? '');
+    setKind(editing.kind ?? 'ordinary');
     setRepeatDays(
       editing.repeat_weekdays === null
         ? []
@@ -120,6 +123,7 @@ export function EventModal({
           start_time: allDay ? null : startTime,
           end_time: allDay ? null : endTime,
           note: note.trim() === '' ? null : note.trim(),
+          kind,
           repeat_weekdays: repeats ? [...repeatDays].sort((a, b) => a - b).join(',') : null,
           repeat_until: repeats && repeatUntil !== '' ? repeatUntil : null,
         },
@@ -257,6 +261,30 @@ export function EventModal({
           </div>
         )}
 
+
+        <div>
+          <span className="field-label">{t('Kind of day')}</span>
+          <div className="mt-1 flex flex-wrap gap-1.5">
+            {([
+              { id: 'ordinary' as const, emoji: '📌', label: 'Ordinary' },
+              { id: 'vacation' as const, emoji: '🏝️', label: 'Vacation' },
+              { id: 'sick' as const, emoji: '🤒', label: 'Sick leave' },
+              { id: 'dayoff' as const, emoji: '🔁', label: 'Day off' },
+            ]).map((option) => (
+              <button
+                key={option.id}
+                type="button"
+                className={`chip ${kind === option.id ? 'border-(--accent) bg-(--accent-soft) text-(--accent)' : ''}`}
+                onClick={() => setKind(option.id)}
+              >
+                {option.emoji} {t(option.label)}
+              </button>
+            ))}
+          </div>
+          {(kind === 'vacation' || kind === 'sick') && (
+            <p className="field-hint mt-1">{t('These days leave the pace alone — a holiday is not a slow week.')}</p>
+          )}
+        </div>
         <label>
           <span className="field-label">{t('Note')}</span>
           <textarea rows={2} maxLength={500} className="field-input" value={note} onChange={(event) => setNote(event.target.value)} />

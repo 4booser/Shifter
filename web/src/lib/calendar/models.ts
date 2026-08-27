@@ -197,6 +197,8 @@ export interface DayShiftEntry {
  * Something that occupies days without being work. Mirrors EventDto, and like
  * it has nowhere to put money: events mark time, shifts pay for it.
  */
+export type EventKind = 'ordinary' | 'vacation' | 'sick' | 'dayoff';
+
 export interface CalendarEvent {
   id: number;
   name: string;
@@ -210,6 +212,8 @@ export interface CalendarEvent {
   start_time: string | null;
   end_time: string | null;
   note: string | null;
+  /** Leave and sickness leave the pace alone; ordinary events never touched it. */
+  kind: EventKind;
   /** How many days it covers, both ends included. */
   days: number;
   /** Monday-first weekday numbers, comma-joined; null = a one-off. */
@@ -228,6 +232,7 @@ export interface EventSave {
   note: string | null;
   repeat_weekdays?: string | null;
   repeat_until?: string | null;
+  kind: EventKind;
 }
 
 export interface CalendarDayData {

@@ -56,6 +56,7 @@ function event(overrides: Partial<CalendarEvent> = {}): CalendarEvent {
     start_time: null,
     end_time: null,
     note: null,
+    kind: 'ordinary',
     days: 1,
     repeat_weekdays: null,
     repeat_until: null,

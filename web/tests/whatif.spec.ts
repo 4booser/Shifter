@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { forecastFor } from '@/lib/calendar/forecast';
 import { whatIfBaseline, whatIfProject } from '@/lib/calendar/whatif';
 import { CalendarDayData } from '@/lib/calendar/models';
 
@@ -93,5 +94,32 @@ describe('whatIfProject', () => {
     expect(result.weekly).toBe(0);
     expect(result.weeksToTarget).toBeNull();
     expect(result.etaKey).toBeNull();
+  });
+});
+
+describe('forecastFor with leave', () => {
+  const workdays = (dates: string[]) =>
+    dates.map((date) => day(date, 1000));
+
+  it('leaves the pace alone across a fortnight off', () => {
+    // Four worked days out of the first six; then a week of leave.
+    const days = workdays(['2026-03-02', '2026-03-03', '2026-03-04', '2026-03-05']);
+    const away = new Set(
+      ['09', '10', '11', '12', '13', '14', '15'].map((d) => `2026-03-${d}`),
+    );
+
+    const naive = forecastFor(days, '2026-03-01', '2026-03-31');
+    const honest = forecastFor(days, '2026-03-01', '2026-03-31', away);
+
+    // The same money over fewer counted days is a higher, truer pace.
+    expect(honest.perDay).toBeGreaterThan(naive.perDay);
+    expect(honest.earnedSoFar).toBe(naive.earnedSoFar);
+  });
+
+  it('still counts a leave day that somehow earned money', () => {
+    const days = [day('2026-03-10', 1500)];
+    const away = new Set(['2026-03-10']);
+
+    expect(forecastFor(days, '2026-03-01', '2026-03-31', away).earnedSoFar).toBe(1500);
   });
 });

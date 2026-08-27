@@ -150,6 +150,7 @@ public partial class EventHandler : IEventHandler
         item.StartTime = start;
         item.EndTime = end;
         item.Note = string.IsNullOrWhiteSpace(request.note) ? null : request.note.Trim();
+        item.Kind = ParseKind(request.kind);
     }
 
     /// <summary>
@@ -187,6 +188,7 @@ public partial class EventHandler : IEventHandler
         item.StartTime?.ToString("HH:mm"),
         item.EndTime?.ToString("HH:mm"),
         item.Note,
+        KindName(item.Kind),
         item.Days,
         item.RepeatWeekdays,
         item.RepeatUntil);
@@ -201,9 +203,27 @@ public partial class EventHandler : IEventHandler
         item.StartTime?.ToString("HH:mm"),
         item.EndTime?.ToString("HH:mm"),
         item.Note,
+        KindName(item.Kind),
         1,
         item.RepeatWeekdays,
         item.RepeatUntil);
+
+    internal static string KindName(EventKind kind) => kind switch
+    {
+        EventKind.Vacation => "vacation",
+        EventKind.Sick => "sick",
+        EventKind.DayOff => "dayoff",
+        _ => "ordinary",
+    };
+
+    private static EventKind ParseKind(string? value) => value?.Trim().ToLowerInvariant() switch
+    {
+        "vacation" => EventKind.Vacation,
+        "sick" => EventKind.Sick,
+        "dayoff" => EventKind.DayOff,
+        null or "" or "ordinary" => EventKind.Ordinary,
+        _ => throw new ValidationException("kind must be ordinary, vacation, sick or dayoff."),
+    };
 
     [GeneratedRegex("^#[0-9A-Fa-f]{6}$")]
     private static partial Regex HexColour();

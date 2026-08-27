@@ -33,6 +33,15 @@ public static class AssistantWriter
 
         bool Asks(params string[] words) => words.Any(text.Contains);
 
+        // Two currencies cannot be added into one sentence. Saying "22 010"
+        // when part of it is zloty is the same lie as printing zloty with a
+        // hryvnia mark, and here it would be said out loud with confidence.
+        if (facts.Currencies.Length > 1 && !Asks("где", "мест", "заведен"))
+            return $"За {facts.Period} деньги пришли в разных валютах "
+                   + $"({string.Join(", ", facts.Currencies)}), поэтому одной суммой их не назвать. "
+                   + Places(facts)
+                   + " Пересчёт в одну валюту — на странице статистики, там же виден курс.";
+
         // First, because "в какой день лучше чай" contains both "лучш" and
         // "чай" and would otherwise be answered with the best day's takings.
         if (Asks("чаев", "чай", "типс") && Asks("какой день", "день недели", "лучш", "когда"))
@@ -82,11 +91,7 @@ public static class AssistantWriter
         if (Asks("где", "мест", "заведен"))
             return facts.Places.Length == 0
                 ? "Ни одна смена за этот период не привязана к месту работы."
-                : "По местам: "
-                  + string.Join(", ", facts.Places
-                      .OrderByDescending(place => place.Earned)
-                      .Select(place => $"{place.Name} — {Money(place.Earned)} за {Hours(place.Hours)}"))
-                  + ".";
+                : Places(facts);
 
         // The default is the question people ask most: how much.
         var change = Change(facts);
@@ -173,6 +178,26 @@ public static class AssistantWriter
 
         return (summary, paragraphs.ToArray());
     }
+
+    /// <summary>
+    /// A place's earnings in its own currency. The hryvnia keeps its mark
+    /// because that is what everything else on the screen uses; anything else
+    /// gets its code, because a number is only money once you know which.
+    /// </summary>
+    private static string Amount(AssistantPlace place) =>
+        place.Currency == "UAH"
+            ? Money(place.Earned)
+            : $"{Math.Round(place.Earned).ToString("N0", Ru).Replace(',', ' ')} {place.Currency}";
+
+    /// <summary>The places, biggest first. The only honest shape when currencies differ.</summary>
+    private static string Places(AssistantFacts facts) =>
+        facts.Places.Length == 0
+            ? "Ни одна смена не привязана к месту работы."
+            : "По местам: "
+              + string.Join(", ", facts.Places
+                  .OrderByDescending(place => place.Earned)
+                  .Select(place => $"{place.Name} — {Amount(place)} за {Hours(place.Hours)}"))
+              + ".";
 
     /// <summary>How this period sits against the one before it, when both exist.</summary>
     private static string? Change(AssistantFacts facts)

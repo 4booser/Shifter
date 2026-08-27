@@ -140,7 +140,7 @@ public class AssistantTests
             16_240m, revenue, 18_000m, tips, 0m, 0m, 0m, 1_600m,
             0m, 0m, 0, 0,
             2_960m, "2026-03-05", "субботу", "пятницу", 640m, 11m, 17,
-            [new AssistantPlace("Ночной бар", hours, earned)],
+            [new AssistantPlace("Ночной бар", hours, earned, "UAH")],
             previous,
             ["UAH"]);
 
@@ -382,5 +382,34 @@ public class AssistantTests
             Facts() with { BestTipWeekday = null, BestTipAverage = 0m });
 
         Assert.Contains("нечего", answer);
+    }
+
+    // ==== Two currencies cannot be one sentence ====
+
+    [Fact]
+    public void AMixedPeriodRefusesToNameOneTotal()
+    {
+        var answer = AssistantWriter.Answer(
+            "сколько я заработал",
+            Facts() with
+            {
+                Currencies = ["PLN", "UAH"],
+                Places = [new AssistantPlace("Ночной бар", 8, 2_050m, "UAH"), new AssistantPlace("Bar Wroclaw", 16, 640m, "PLN")],
+            });
+
+        Assert.Contains("разных валютах", answer);
+        // Each place in its own currency: 640 zloty must not read as 640 ₴.
+        Assert.Contains("640 PLN", Flat(answer));
+        Assert.Contains("2 050 ₴", Flat(answer));
+        // The plain sum would be hryvnia and zloty added as if they matched.
+        Assert.DoesNotContain("18 140", Flat(answer));
+    }
+
+    [Fact]
+    public void OneCurrencyStillGetsItsTotal()
+    {
+        var answer = Flat(AssistantWriter.Answer("сколько я заработал", Facts()));
+
+        Assert.Contains("18 140", answer);
     }
 }

@@ -247,7 +247,10 @@ public sealed class AssistantService
                 .Select(place => new AssistantPlace(
                     place.location_id == 0 ? "без места" : place.name,
                     place.hours,
-                    place.earned))
+                    place.earned,
+                    // An empty code means the place pays in whatever the app
+                    // is set to, which is the hryvnia here.
+                    place.currency.Length == 3 ? place.currency.ToUpperInvariant() : "UAH"))
                 .ToArray(),
             previous.total_earned,
             range.currencies);

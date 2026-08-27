@@ -44,4 +44,13 @@ public sealed record AssistantFacts(
     decimal PreviousEarned,
     string[] Currencies);
 
-public sealed record AssistantPlace(string Name, double Hours, decimal Earned);
+public sealed record AssistantPlace(
+    string Name,
+    double Hours,
+    decimal Earned,
+    /// <summary>
+    /// What this place pays in. Carried so a list of places never prints one
+    /// currency's amount with another's mark, which is the same lie as adding
+    /// them together, said one level quieter.
+    /// </summary>
+    string Currency);

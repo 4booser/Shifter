@@ -24,6 +24,7 @@ import { Sidebar } from '@/components/dashboard/sidebar';
 import { InsightsPanel } from '@/components/dashboard/insights-panel';
 import { TileStrip } from '@/components/dashboard/tiles';
 import { TipsTicker } from '@/components/dashboard/tips-ticker';
+import { DailyBrief } from '@/components/dashboard/daily-brief';
 import { PALETTE_EVENT } from '@/components/command/palette';
 import { useReveal } from '@/lib/fx';
 import { SearchModal } from '@/components/dashboard/modals/search-modal';
@@ -307,8 +308,11 @@ function Dashboard() {
 
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start">
         <Sidebar />
-        <div className="order-1 min-w-0 flex-1 lg:order-none">
+        <div className="order-1 flex min-w-0 flex-1 flex-col gap-3 lg:order-none">
           <MonthGrid onSearch={() => setSearchOpen(true)} onSettings={() => setSettingsOpen(true)} />
+          {/* The page used to trail off under the grid; the day in words
+              belongs exactly there. */}
+          {!needsSetup && <DailyBrief />}
         </div>
         <div className="order-2 w-full flex-none lg:order-none lg:w-72 xl:w-80" data-tour="daypanel">
           <DayPanel />

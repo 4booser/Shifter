@@ -1,0 +1,74 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+
+import { api } from '@/lib/api/http';
+import { todayKey } from '@/lib/calendar/calendar-date';
+import { useI18n } from '@/lib/i18n';
+
+interface Brief {
+  date: string;
+  headline: string;
+  body: string;
+  tip: string | null;
+  mood: string | null;
+  /** "model" when a model worded it, "local" when the app did. */
+  source: string;
+}
+
+/**
+ * The day in words, under the calendar where the page used to trail off.
+ * The numbers behind it are the app's own — the model, when configured,
+ * only chooses the sentences — and the card says plainly which of the two
+ * wrote it, because a reader deserves to know whose voice they are hearing.
+ */
+export function DailyBrief() {
+  const { t } = useI18n();
+  const [brief, setBrief] = useState<Brief | null>(null);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    void api<Brief>(`/shifter/v1/brief/today?date=${todayKey()}`)
+      .then(setBrief)
+      .catch(() => setFailed(true));
+  }, []);
+
+  if (failed) return null;
+
+  if (brief === null) {
+    return (
+      <section className="card reveal p-4">
+        <span className="block h-4 w-40 animate-pulse rounded bg-surface-2" />
+        <span className="mt-2 block h-3 w-full animate-pulse rounded bg-surface-2" />
+        <span className="mt-1.5 block h-3 w-2/3 animate-pulse rounded bg-surface-2" />
+      </section>
+    );
+  }
+
+  return (
+    <section className="card reveal relative overflow-hidden p-4">
+      {/* A quiet wash so the card reads as commentary, not another table. */}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute -right-16 -top-16 h-44 w-44 rounded-full bg-(--accent-soft)"
+      />
+
+      <header className="relative mb-1.5 flex items-baseline gap-2">
+        <span className="text-[1.35rem] leading-none">{brief.mood ?? '💡'}</span>
+        <h2 className="text-[1.02rem] font-bold leading-tight">{brief.headline}</h2>
+        <span className="ml-auto flex-none text-[0.68rem] uppercase tracking-wide text-faint">
+          {brief.source === 'model' ? t('written by AI') : t('daily summary')}
+        </span>
+      </header>
+
+      <p className="relative text-[0.92rem] leading-relaxed text-muted">{brief.body}</p>
+
+      {brief.tip !== null && (
+        <p className="relative mt-2.5 rounded-(--radius) bg-surface-2/70 px-3 py-2 text-[0.88rem]">
+          <b className="text-(--accent)">{t('Today')}: </b>
+          {brief.tip}
+        </p>
+      )}
+    </section>
+  );
+}

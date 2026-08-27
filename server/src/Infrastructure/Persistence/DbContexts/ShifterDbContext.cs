@@ -33,6 +33,7 @@ public class ShifterDbContext : DbContext
     public DbSet<GigReview> GigReviews => Set<GigReview>();
     public DbSet<PasswordReset> PasswordResets => Set<PasswordReset>();
     public DbSet<ShiftSwap> ShiftSwaps => Set<ShiftSwap>();
+    public DbSet<DailyBrief> DailyBriefs => Set<DailyBrief>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -59,6 +60,11 @@ public class ShifterDbContext : DbContext
             .IsUnique();
         modelBuilder.Entity<GigSeeker>()
             .HasIndex(seeker => seeker.IsActive);
+
+        // One brief per person per day.
+        modelBuilder.Entity<DailyBrief>()
+            .HasIndex(brief => new { brief.UserId, brief.Date })
+            .IsUnique();
 
         // Both sides read their own pending swaps.
         modelBuilder.Entity<ShiftSwap>()

@@ -105,13 +105,30 @@ export function TileStrip() {
     [windowDays, bounds.from, bounds.to],
   );
 
-  const order = tiles ?? [...TILE_IDS];
+  const order: TileId[] = (tiles as TileId[] | undefined) ?? [...TILE_IDS];
   const visible = order.filter((id): id is TileId => (TILE_IDS as readonly string[]).includes(id));
 
   if (visible.length === 0 && !customising) return null;
 
   return (
     <section aria-label={t('Overview')} data-tour="tiles">
+      {/* The customiser rides the section's own header: hanging under the
+          grid it left a stray gap and read as a stranded control. */}
+      <div className="mb-1.5 flex items-center justify-between gap-2">
+        <h2 className="text-[0.72rem] font-semibold uppercase tracking-wide text-faint">{t('Overview')}</h2>
+        <div className="relative">
+          <button
+            type="button"
+            className="btn btn-quiet btn-sm text-muted"
+            onClick={() => setCustomising((open) => !open)}
+          >
+            <Icon name="sliders" size={13} />
+            {t('Tiles')}
+          </button>
+          {customising && <TilePicker order={order} setCustomising={setCustomising} />}
+        </div>
+      </div>
+
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:[grid-template-columns:repeat(auto-fit,minmax(9.5rem,1fr))]">
         {visible.map((id, index) => {
           const body = (
@@ -138,19 +155,24 @@ export function TileStrip() {
         })}
       </div>
 
-      <div className="mt-1 flex justify-end">
-        <div className="relative">
-          <button
-            type="button"
-            className="btn btn-quiet btn-sm text-muted"
-            onClick={() => setCustomising((open) => !open)}
-          >
-            <Icon name="sliders" size={13} />
-            {t('Tiles')}
-          </button>
+    </section>
+  );
+}
 
-          {customising && (
-            <>
+
+/** The tile drawer: which tiles show, and in what order. */
+function TilePicker({
+  order,
+  setCustomising,
+}: {
+  order: TileId[];
+  setCustomising: (open: boolean) => void;
+}) {
+  const { t } = useI18n();
+  const update = useSettings((state) => state.update);
+
+  return (
+    <>
               <div className="fixed inset-0 z-40" onClick={() => setCustomising(false)} />
               <div className="card absolute right-0 z-50 mt-1 w-60 p-2 shadow-(--shadow-lg)">
                 {TILE_IDS.map((id) => {
@@ -200,11 +222,7 @@ export function TileStrip() {
                   );
                 })}
               </div>
-            </>
-          )}
-        </div>
-      </div>
-    </section>
+    </>
   );
 }
 

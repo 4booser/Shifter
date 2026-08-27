@@ -53,6 +53,9 @@ services:
       Mail__ApiKey: ${RESEND_API_KEY:-}
       Mail__From: ${MAIL_FROM:-Shifter <no-reply@shifter.ink>}
       Mail__Origin: https://www.shifter.ink
+      # The daily brief's stylist. Without a key the brief is still written,
+      # locally, from the same facts — only the wording changes.
+      Brief__ApiKey: ${GEMINI_API_KEY:-}
       Telegram__BotName: ${TELEGRAM_BOT_NAME:-}
       # No Google__ClientId here on purpose. It would be set even when the
       # variable is unset, and an empty environment variable overrides

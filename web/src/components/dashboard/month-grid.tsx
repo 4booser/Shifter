@@ -495,6 +495,7 @@ export function MonthGrid({
           {onSettings && (
             <button type="button" className="btn btn-sm" onClick={onSettings} aria-label={t('Settings')}>
               <Icon name="sliders" size={14} />
+              <span className="hidden sm:inline">{t('Settings')}</span>
             </button>
           )}
 

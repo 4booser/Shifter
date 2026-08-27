@@ -5,6 +5,8 @@
 type Dictionary = Record<string, string>;
 
 export const RU: Dictionary = {
+  'written by AI': 'написано ИИ',
+  'daily summary': 'сводка дня',
   'Kind of day': 'Что за день',
   'Ordinary': 'Обычный',
   'Vacation': 'Отпуск',
@@ -1578,6 +1580,8 @@ export const RU: Dictionary = {
 };
 
 export const UK: Dictionary = {
+  'written by AI': 'написано ШІ',
+  'daily summary': 'зведення дня',
   'Kind of day': 'Що за день',
   'Ordinary': 'Звичайний',
   'Vacation': 'Відпустка',

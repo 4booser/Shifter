@@ -214,3 +214,35 @@ export const plannerApi = {
   setManager: (teamId: number, userId: number, is_manager: boolean) =>
     api<void>(`${TEAMS}/${teamId}/planner/members/${userId}/manager`, { method: 'PUT', body: { is_manager } }),
 };
+
+
+// ==== Swaps: two shifts, two agreements ====
+
+export interface Swap {
+  id: number;
+  /** True when the caller is the one who proposed it. */
+  mine: boolean;
+  proposer_name: string;
+  target_name: string;
+  proposer_date: string;
+  proposer_shift: string;
+  proposer_start: string;
+  proposer_end: string;
+  target_date: string;
+  target_shift: string;
+  target_start: string;
+  target_end: string;
+  note: string | null;
+  status: 'pending' | 'accepted' | 'declined' | 'cancelled';
+  created_at: string;
+}
+
+export const swapApi = {
+  list: (teamId: number) => api<Swap[]>(`${TEAMS}/${teamId}/swaps`),
+  propose: (teamId: number, body: { my_day_shift_id: number; their_day_shift_id: number; note: string | null }) =>
+    api<Swap>(`${TEAMS}/${teamId}/swaps`, { body }),
+  accept: (teamId: number, id: number) =>
+    api<Swap>(`${TEAMS}/${teamId}/swaps/${id}/accept`, { method: 'POST', body: {} }),
+  withdraw: (teamId: number, id: number) =>
+    api<Swap>(`${TEAMS}/${teamId}/swaps/${id}/withdraw`, { method: 'POST', body: {} }),
+};

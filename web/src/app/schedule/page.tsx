@@ -27,6 +27,7 @@ import { PlannerBoardView } from '@/components/team/planner';
 import { useI18n } from '@/lib/i18n';
 import { useReveal } from '@/lib/fx';
 import { Shell } from '@/components/layout/shell';
+import { SwapsPanel } from '@/components/team/swaps';
 import { drawRotaCard } from '@/lib/export/rota-card';
 import { currentCardTheme } from '@/lib/export/share-card';
 import { downloadBlob } from '@/lib/export/xlsx';
@@ -348,6 +349,11 @@ function Schedule() {
 
       {mode === 'rota' && (
       <>
+      {/* ==== Swaps: pending trades and the button that starts one ==== */}
+      {selected !== null && rota !== null && rota.members.length > 1 && (
+        <SwapsPanel teamId={selected} rota={rota} onChanged={refresh} />
+      )}
+
       {/* ==== Cover requests ==== */}
       {coverRequests.length > 0 && (
         <section className="card reveal border-warn/40 p-4">

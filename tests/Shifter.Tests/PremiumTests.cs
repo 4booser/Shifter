@@ -104,3 +104,23 @@ public class HolidayTests
             Assert.NotEmpty(Holidays.ForYear(country, 2026));
     }
 }
+
+public class OvertimeWatchTests
+{
+    [Theory]
+    [InlineData(0, OvertimeWatch.Verdict.Quiet)]
+    [InlineData(31.9, OvertimeWatch.Verdict.Quiet)]
+    // The last fifth of the threshold is where a warning can still be acted on.
+    [InlineData(32, OvertimeWatch.Verdict.Approaching)]
+    [InlineData(39.5, OvertimeWatch.Verdict.Approaching)]
+    // Past the line the news is no longer actionable, only arguable.
+    [InlineData(40, OvertimeWatch.Verdict.Crossed)]
+    [InlineData(52, OvertimeWatch.Verdict.Crossed)]
+    public void The_guard_speaks_only_while_the_week_can_change(double worked, OvertimeWatch.Verdict expected)
+        => Assert.Equal(expected, OvertimeWatch.Judge(worked, 40));
+
+    [Fact]
+    public void A_place_without_a_threshold_is_never_guarded()
+        => Assert.Equal(OvertimeWatch.Verdict.Quiet, OvertimeWatch.Judge(80, 0));
+}
+

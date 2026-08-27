@@ -51,7 +51,7 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [settings.notifyTomorrow, settings.notifyUnclosed, settings.notifyPayday, settings.notifyDigest, settings.notifyAt, settings.language]);
+  }, [settings.notifyTomorrow, settings.notifyUnclosed, settings.notifyPayday, settings.notifyDigest, settings.notifyOvertime, settings.notifyAt, settings.language]);
 
   return (
     <Modal open={open} title={t('Settings')} onClose={onClose}>
@@ -270,7 +270,13 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
             label={t('Weekly digest')}
             hint={t('Sunday evening: shifts, hours, money, trend.')}
           />
-          {(settings.notifyTomorrow || settings.notifyUnclosed || settings.notifyPayday || settings.notifyDigest) && (
+          <Toggle
+            on={settings.notifyOvertime}
+            onChange={(value) => update('notifyOvertime', value)}
+            label={t('Overtime guard')}
+            hint={t('«38 of 40 hours» — while the week can still be changed.')}
+          />
+          {(settings.notifyTomorrow || settings.notifyUnclosed || settings.notifyPayday || settings.notifyDigest || settings.notifyOvertime) && (
             <>
               <label>
                 <span className="field-hint">{t('Send at')}</span>

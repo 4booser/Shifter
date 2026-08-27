@@ -19,7 +19,13 @@ export function pushSupported(): boolean {
 }
 
 function wantsPush(settings: Settings): boolean {
-  return settings.notifyTomorrow || settings.notifyUnclosed || settings.notifyPayday || settings.notifyDigest;
+  return (
+    settings.notifyTomorrow
+    || settings.notifyUnclosed
+    || settings.notifyPayday
+    || settings.notifyDigest
+    || settings.notifyOvertime
+  );
 }
 
 /** The applicationServerKey format PushManager insists on. */
@@ -90,6 +96,7 @@ export async function syncPush(settings: Settings): Promise<PushState> {
       notify_unclosed: settings.notifyUnclosed,
       notify_payday: settings.notifyPayday,
       notify_digest: settings.notifyDigest,
+      notify_overtime: settings.notifyOvertime,
       notify_at: settings.notifyAt,
     },
   });

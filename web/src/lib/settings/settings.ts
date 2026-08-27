@@ -84,6 +84,8 @@ export interface Settings {
   notifyTomorrow: boolean;
   notifyPayday: boolean;
   notifyDigest: boolean;
+  /** Warns while the week can still be changed, never after. */
+  notifyOvertime: boolean;
   notifyAt: string;
   cellTimes: CellTimes;
   dayFill: DayFill;
@@ -168,6 +170,7 @@ export const DEFAULT_SETTINGS: Settings = {
   notifyTomorrow: false,
   notifyPayday: false,
   notifyDigest: false,
+  notifyOvertime: false,
   notifyAt: '21:00',
   cellTimes: 'none',
   dayFill: 'edge',

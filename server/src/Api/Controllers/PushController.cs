@@ -76,6 +76,7 @@ public class PushController : ControllerBase
         existing.NotifyUnclosed = request.NotifyUnclosed;
         existing.NotifyPayday = request.NotifyPayday;
         existing.NotifyDigest = request.NotifyDigest;
+        existing.NotifyOvertime = request.NotifyOvertime;
         existing.NotifyAt = request.NotifyAt;
 
         await _db.SaveChangesAsync(ct);

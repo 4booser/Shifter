@@ -37,6 +37,12 @@ public sealed class PushSubscription
     /// <summary>The week in one line, Sunday evening.</summary>
     public bool NotifyDigest { get; set; }
 
+    /// <summary>
+    /// Warns while the week can still be changed: "38 of 40 hours". After the
+    /// threshold the information is only useful for arguing about it.
+    /// </summary>
+    public bool NotifyOvertime { get; set; }
+
     /// <summary>Local "HH:mm" both nudges are sent at.</summary>
     public required string NotifyAt { get; set; }
 
@@ -53,4 +59,5 @@ public sealed class PushSubscription
     public DateOnly? PaydaySentOn { get; set; }
 
     public DateOnly? DigestSentOn { get; set; }
+    public DateOnly? OvertimeSentOn { get; set; }
 }

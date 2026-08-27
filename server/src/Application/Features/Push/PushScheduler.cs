@@ -61,7 +61,7 @@ public sealed class PushScheduler : BackgroundService
         var db = scope.ServiceProvider.GetRequiredService<ShifterDbContext>();
 
         var subscriptions = await db.PushSubscriptions
-            .Where(s => s.NotifyTomorrow || s.NotifyUnclosed || s.NotifyPayday || s.NotifyDigest)
+            .Where(s => s.NotifyTomorrow || s.NotifyUnclosed || s.NotifyPayday || s.NotifyDigest || s.NotifyOvertime)
             .ToListAsync(ct);
 
         foreach (var subscription in subscriptions)
@@ -118,6 +118,18 @@ public sealed class PushScheduler : BackgroundService
             {
                 subscription.DigestSentOn = today;
                 dead = !await SendDigestAsync(scope.ServiceProvider, subscription, today, ct);
+            }
+
+            // The overtime guard rides the evening slot too: a warning about
+            // this week is only useful while the week can still be changed.
+            if (!dead
+                && chosenOpen
+                && subscription.NotifyOvertime
+                && subscription.OvertimeSentOn != today
+                && localNow.DayOfWeek is not DayOfWeek.Sunday)
+            {
+                subscription.OvertimeSentOn = today;
+                dead = !await SendOvertimeAsync(scope.ServiceProvider, subscription, today, ct);
             }
 
             if (dead) db.PushSubscriptions.Remove(subscription);
@@ -228,6 +240,45 @@ public sealed class PushScheduler : BackgroundService
             "ru" => ("Итог недели", $"{week.days_worked} смен · {hours} ч · {earned}{trend}"),
             "uk" => ("Підсумок тижня", $"{week.days_worked} змін · {hours} год · {earned}{trend}"),
             _ => ("Your week", $"{week.days_worked} shifts · {hours} h · {earned}{trend}"),
+        };
+
+        return await _sender.SendAsync(subscription, title, body, "/stats");
+    }
+
+    /// <summary>
+    /// "38 of 40 hours this week." Silent until the last fifth of the
+    /// threshold, silent again once the line is behind — a warning nobody
+    /// can act on is just noise, and this one has to be actionable.
+    /// </summary>
+    private async Task<bool> SendOvertimeAsync(
+        IServiceProvider services,
+        PushSubscription subscription,
+        DateOnly today,
+        CancellationToken ct)
+    {
+        var daysHandler = services.GetRequiredService<IDayHandler>();
+        var monday = today.AddDays(-(((int)today.DayOfWeek + 6) % 7));
+        var week = await daysHandler.ListAsync(subscription.UserId, monday, today, ct);
+
+        // The threshold belongs to the place that is being worked most this
+        // week; with no places configured there is nothing to guard.
+        var busiest = week.by_location.OrderByDescending(place => place.hours).FirstOrDefault();
+
+        if (busiest is null || busiest.hours <= 0) return true;
+
+        var locations = services.GetRequiredService<Shifter.Infrastructure.Repositories.Interfaces.IShifterQuery>();
+        var places = await locations.GetLocationsAsync(subscription.UserId, true, ct);
+        var place = places.FirstOrDefault(row => row.Id == busiest.location_id);
+        var threshold = place?.OvertimeWeeklyHours ?? 40;
+
+        if (OvertimeWatch.Judge(week.hours, threshold) != OvertimeWatch.Verdict.Approaching) return true;
+
+        var worked = Math.Round(week.hours);
+        var (title, body) = subscription.Language switch
+        {
+            "ru" => ("Неделя подходит к порогу", $"{worked} из {threshold:0} ч. Дальше идут переработки."),
+            "uk" => ("Тиждень підходить до порогу", $"{worked} із {threshold:0} год. Далі йдуть переробки."),
+            _ => ("Close to the weekly limit", $"{worked} of {threshold:0} h. Past that it is overtime."),
         };
 
         return await _sender.SendAsync(subscription, title, body, "/stats");

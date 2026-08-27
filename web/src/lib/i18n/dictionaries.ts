@@ -5,6 +5,8 @@
 type Dictionary = Record<string, string>;
 
 export const RU: Dictionary = {
+  'Overtime guard': 'Страж переработок',
+  '«38 of 40 hours» — while the week can still be changed.': '«38 из 40 часов» — пока неделю ещё можно изменить.',
   'night hours and public holidays': 'ночных часов и праздники',
   'public holidays': 'праздничные смены',
   'Night and holiday premiums': 'Ночные и праздничные надбавки',
@@ -1569,6 +1571,8 @@ export const RU: Dictionary = {
 };
 
 export const UK: Dictionary = {
+  'Overtime guard': 'Вартовий переробок',
+  '«38 of 40 hours» — while the week can still be changed.': '«38 із 40 годин» — поки тиждень ще можна змінити.',
   'night hours and public holidays': 'нічних годин і свята',
   'public holidays': 'святкові зміни',
   'Night and holiday premiums': 'Нічні та святкові надбавки',

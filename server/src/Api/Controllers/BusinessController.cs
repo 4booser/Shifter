@@ -260,8 +260,11 @@ public class BusinessController : ControllerBase
     public async Task<ActionResult<DaysDto>> GetDays(
         [FromQuery] DateOnly from,
         [FromQuery] DateOnly to,
+        [FromQuery(Name = "base")] string? @base,
         CancellationToken ct)
-        => Ok(await _dayHandler.ListAsync(CurrentUserId(), from, to, ct));
+        // base is the currency to restate the range in. Absent means the
+        // client does not want a conversion, which is the common case.
+        => Ok(await _dayHandler.ListAsync(CurrentUserId(), from, to, ct, @base));
 
     /// <summary>
     /// Applies one template across many dates at once, for dragging over the

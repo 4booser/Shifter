@@ -107,6 +107,8 @@ public static class DependencyInjection
         services.AddScoped<Shifter.Application.Features.Brief.BriefService>();
         services.AddScoped<Shifter.Application.Features.Assistant.GeminiAssistantClient>();
         services.AddScoped<Shifter.Application.Features.Assistant.AssistantService>();
+        services.AddScoped<Shifter.Application.Features.Money.NbuRateClient>();
+        services.AddScoped<Shifter.Application.Features.Money.RateService>();
         services.AddScoped<Shifter.Application.Features.business.Services.DayAuditWriter>();
         services.AddScoped<Shifter.Application.Features.business.Services.GoalCelebrator>();
         services.AddScoped<Shifter.Application.Features.Gigs.GigService>();

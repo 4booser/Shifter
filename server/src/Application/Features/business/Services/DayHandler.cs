@@ -21,22 +21,30 @@ public partial class DayHandler : IDayHandler
     private readonly IShifterQuery _shifterQuery;
     private readonly DayAuditWriter? _audit;
     private readonly GoalCelebrator? _goals;
+    private readonly Money.RateService? _rates;
 
     // The audit hand is optional so the unit tests, which build this by
     // hand around fakes, stay ignorant of it.
-    public DayHandler(IShifterCommand shifterCommand, IShifterQuery shifterQuery, DayAuditWriter? audit = null, GoalCelebrator? goals = null)
+    public DayHandler(
+        IShifterCommand shifterCommand,
+        IShifterQuery shifterQuery,
+        DayAuditWriter? audit = null,
+        GoalCelebrator? goals = null,
+        Money.RateService? rates = null)
     {
         _shifterCommand = shifterCommand;
         _shifterQuery = shifterQuery;
         _audit = audit;
         _goals = goals;
+        _rates = rates;
     }
 
     public async Task<DaysDto> ListAsync(
         int userId,
         DateOnly from,
         DateOnly to,
-        CancellationToken ct)
+        CancellationToken ct,
+        string? baseCurrency = null)
     {
         if (from > to)
             throw new ValidationException("Range start must not be after its end.");
@@ -123,7 +131,8 @@ public partial class DayHandler : IDayHandler
             premiumExtra,
             revenueEarned,
             revenueCounted,
-            events.Select(EventHandler.ToDto).ToArray()
+            events.Select(EventHandler.ToDto).ToArray(),
+            await ConvertAsync(byLocation, currencies, baseCurrency, to, ct)
         );
     }
 
@@ -220,6 +229,75 @@ public partial class DayHandler : IDayHandler
         Dictionary<int, Location> byId = places.ToDictionary(place => place.Id);
 
         return touched.Select(day => ToDto(day, byId)).ToArray();
+    }
+
+    /// <summary>
+    /// The range in one currency, or null where there is nothing to convert.
+    /// The rate of the last day of the range is used for the whole of it and
+    /// said out loud: one stated rate is something a person can check against
+    /// their own bank, and a per-day reconstruction is not.
+    /// </summary>
+    private async Task<ConversionDto?> ConvertAsync(
+        LocationTotalDto[] byLocation,
+        string[] currencies,
+        string? baseCurrency,
+        DateOnly on,
+        CancellationToken ct)
+    {
+        if (_rates is null || baseCurrency is null) return null;
+
+        var wanted = Money.NbuRateClient.Normalise(baseCurrency);
+
+        // Places with no currency set earn in whatever the app is set to,
+        // which is the base by definition.
+        var codes = byLocation
+            .Select(place => place.currency.Length == 3 ? place.currency.ToUpperInvariant() : wanted)
+            .Distinct()
+            .ToArray();
+
+        // One currency and it is the base: there is nothing to say.
+        if (codes.Length <= 1 && codes.All(code => code == wanted)) return null;
+
+        var rates = await _rates.OnAsync([.. codes, wanted], on, ct);
+
+        List<ConvertedPlaceDto> places = [];
+        List<string> unconverted = [];
+        decimal total = 0m;
+        decimal net = 0m;
+
+        foreach (var place in byLocation)
+        {
+            var code = place.currency.Length == 3 ? place.currency.ToUpperInvariant() : wanted;
+            var converted = Money.RateService.Convert(place.earned, code, wanted, rates);
+
+            places.Add(new ConvertedPlaceDto(
+                place.location_id, place.name, code, place.earned, converted));
+
+            if (converted is null)
+            {
+                if (!unconverted.Contains(code)) unconverted.Add(code);
+
+                continue;
+            }
+
+            total += converted.Value;
+            net += Money.RateService.Convert(place.net, code, wanted, rates) ?? 0m;
+        }
+
+        return new ConversionDto(
+            wanted,
+            Math.Round(total, 2),
+            Math.Round(net, 2),
+            [.. places],
+            rates
+                .Where(rate => codes.Contains(rate.Key))
+                .OrderBy(rate => rate.Key)
+                .Select(rate => new RateUsedDto(
+                    rate.Key,
+                    Money.NbuRateClient.Format(rate.Value.Rate),
+                    rate.Value.On.ToString("yyyy-MM-dd")))
+                .ToArray(),
+            [.. unconverted]);
     }
 
     /// <summary>

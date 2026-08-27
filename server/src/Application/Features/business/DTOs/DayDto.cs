@@ -128,8 +128,42 @@ public record DaysDto(
     /// every day it covers — a fortnight of leave is one entry, and the client
     /// spreads it across the cells itself.
     /// </summary>
-    EventDto[] events
+    EventDto[] events,
+    /// <summary>
+    /// The range restated in one currency, present only where more than one
+    /// was earned in. Converting a range that is already in one currency is
+    /// noise, and noise beside money is how people stop reading totals.
+    /// </summary>
+    ConversionDto? conversion = null
     );
+
+/// <summary>
+/// The same range in one currency, with the rates it was done at. The rates
+/// are part of the answer, not a footnote: a figure nobody can reproduce is
+/// not a figure anybody should act on.
+/// </summary>
+public record ConversionDto(
+    string base_currency,
+    decimal total_earned,
+    decimal net_earned,
+    ConvertedPlaceDto[] by_location,
+    RateUsedDto[] rates,
+    /// <summary>
+    /// Currencies the bank had no rate for. Their money is deliberately
+    /// absent from the totals above rather than counted one-to-one.
+    /// </summary>
+    string[] unconverted);
+
+public record ConvertedPlaceDto(
+    int location_id,
+    string name,
+    string currency,
+    decimal earned,
+    /// <summary>Null where this currency could not be converted.</summary>
+    decimal? converted);
+
+/// <summary>One rate, and the day it was actually published on.</summary>
+public record RateUsedDto(string code, string rate, string on);
 
 /// <summary>
 /// What the client sends when saving a day. It carries the whole contents, not

@@ -36,6 +36,7 @@ public class ShifterDbContext : DbContext
     public DbSet<DailyBrief> DailyBriefs => Set<DailyBrief>();
     public DbSet<AssistantMessage> AssistantMessages => Set<AssistantMessage>();
     public DbSet<PeriodSettlement> PeriodSettlements => Set<PeriodSettlement>();
+    public DbSet<ExchangeRate> ExchangeRates => Set<ExchangeRate>();
     public DbSet<Availability> Availabilities => Set<Availability>();
     public DbSet<DeviceToken> DeviceTokens => Set<DeviceToken>();
 
@@ -92,6 +93,11 @@ public class ShifterDbContext : DbContext
         // a second event, and the unique key says so rather than the service.
         modelBuilder.Entity<PeriodSettlement>()
             .HasIndex(entry => new { entry.UserId, entry.LocationId, entry.PeriodFrom, entry.Stream })
+            .IsUnique();
+
+        // One rate per currency per day, and that is the only way it is read.
+        modelBuilder.Entity<ExchangeRate>()
+            .HasIndex(rate => new { rate.Code, rate.Date })
             .IsUnique();
 
         // The thread is always read newest-first for one person.

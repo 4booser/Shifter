@@ -107,6 +107,19 @@ public record DaysDto(
     /// hands rather than what a template said at some point.
     /// </summary>
     RaiseDto[] raises,
+    /// <summary>
+    /// What the work cost, split by kind. Never subtracted from anything above
+    /// it: take-home is what arrived, and these happened after that.
+    /// </summary>
+    ExpenseKindDto[] expenses_by_kind,
+    /// <summary>Everything the work cost across the range.</summary>
+    decimal expenses,
+    /// <summary>
+    /// What share of the tips the travelling ate, as a percentage. Null where
+    /// there were no tips, or no fares — a percentage of nothing is undefined,
+    /// not large.
+    /// </summary>
+    decimal? travel_share_of_tips,
     /// <summary>Income tax withheld across the range.</summary>
     decimal tax,
     /// <summary>total_earned minus tax — what actually reaches a pocket.</summary>
@@ -192,6 +205,9 @@ public record RaiseDto(
     /// <summary>What the change has come to since, against work actually done.</summary>
     decimal worth_since,
     int days_ago);
+
+/// <summary>Expenses of one kind over a range: how much, and how many of them.</summary>
+public record ExpenseKindDto(string kind, decimal amount, int count);
 
 /// <summary>Fines of one kind over a range: how much, and how often.</summary>
 public record DeductionReasonDto(string reason, decimal amount, int days);

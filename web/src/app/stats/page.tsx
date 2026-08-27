@@ -16,7 +16,15 @@ import {
 } from '@/lib/calendar/calendar-date';
 import { forecastFor, paceToGoal, projectionSeries } from '@/lib/calendar/forecast';
 import { averagesFor } from '@/lib/calendar/insights';
-import { DaysResponse, DeductionSplit, EMPTY_SUMMARY, Goal, placeName, Raise } from '@/lib/calendar/models';
+import {
+  DaysResponse,
+  DeductionSplit,
+  EMPTY_SUMMARY,
+  ExpenseSplit,
+  Goal,
+  placeName,
+  Raise,
+} from '@/lib/calendar/models';
 import { activeGoalFor, delta, earningsBuckets, median, weekdayTotals } from '@/lib/calendar/stats-math';
 import { buildColumns, buildTicks, niceCeiling } from '@/lib/charts/math';
 import { Sheet, buildXlsx, downloadBlob } from '@/lib/export/xlsx';
@@ -50,6 +58,16 @@ const PERIOD_SUFFIX: Record<Raise['period'], string> = {
   day: '/day',
   week: '/week',
   month: '/month',
+};
+
+/** What the work cost, as opposed to what the venue took off somebody. */
+const EXPENSE_LABEL: Record<ExpenseSplit['kind'], string> = {
+  transport: 'Getting there',
+  uniform: 'Uniform',
+  tools: 'Tools',
+  food: 'Food at work',
+  training: 'Training',
+  other: 'Something else',
 };
 
 const REASON_LABEL: Record<DeductionSplit['reason'], string> = {
@@ -935,6 +953,32 @@ function Stats() {
                       <dd><Money value={summary.net_earned} /></dd>
                     </div>
                   </>
+                )}
+
+                {/* Below the take-home line on purpose: this money left after
+                    the wage arrived, and folding it in would stop the app
+                    agreeing with anybody's payslip. */}
+                {summary.expenses > 0 && (
+                  <div className="mt-1 border-t border-border pt-1.5">
+                    <div className="flex justify-between">
+                      <dt className="text-muted">{t('And the work cost you')}</dt>
+                      <dd className="text-muted">−<Money value={summary.expenses} /></dd>
+                    </div>
+                    {summary.expenses_by_kind.map((split) => (
+                      <div key={split.kind} className="flex justify-between pl-3">
+                        <dt className="text-muted text-[0.8rem]">{t(EXPENSE_LABEL[split.kind])}</dt>
+                        <dd className="text-muted text-[0.8rem] tabular">
+                          −<Money value={split.amount} />
+                        </dd>
+                      </div>
+                    ))}
+                    {summary.travel_share_of_tips !== null && (
+                      <p className="field-hint mt-1">
+                        {t('The taxi home ate')} {summary.travel_share_of_tips}%{' '}
+                        {t('of your tips')}
+                      </p>
+                    )}
+                  </div>
                 )}
               </dl>
             )}

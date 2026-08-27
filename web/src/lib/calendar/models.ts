@@ -359,6 +359,19 @@ export interface DaysResponse {
    * hands rather than what a template said at some point.
    */
   raises: Raise[];
+  /**
+   * What the work cost, split by kind. Never subtracted from anything above
+   * it: take-home is what arrived, and these happened after that.
+   */
+  expenses_by_kind: ExpenseSplit[];
+  /** Everything the work cost across the range. */
+  expenses: number;
+  /**
+   * What share of the tips the travelling ate, as a percentage. Null where
+   * there were no tips, or no fares — a percentage of nothing is undefined,
+   * not large.
+   */
+  travel_share_of_tips: number | null;
   tax: number;
   /** total_earned minus tax. */
   net_earned: number;
@@ -438,6 +451,26 @@ export interface Commute {
   net_after_fares: number;
   /** The number this is all for: what an hour is really worth here. */
   per_hour_with_travel: number;
+}
+
+/** What the work cost, as opposed to what the venue took off somebody. */
+export type ExpenseKind = 'transport' | 'uniform' | 'tools' | 'food' | 'training' | 'other';
+
+export interface ExpenseSplit {
+  kind: ExpenseKind;
+  amount: number;
+  count: number;
+}
+
+export interface Expense {
+  id: number;
+  date: string;
+  amount: number;
+  kind: ExpenseKind;
+  note: string | null;
+  /** Null where it belongs to the trade rather than to an employer. */
+  location_id: number | null;
+  location_name: string | null;
 }
 
 export interface Payout {
@@ -603,6 +636,9 @@ export const EMPTY_SUMMARY: DaysResponse = {
   deductions: 0,
   deductions_by_reason: [],
   raises: [],
+  expenses_by_kind: [],
+  expenses: 0,
+  travel_share_of_tips: null,
   tax: 0,
   net_earned: 0,
   holiday_accrued: 0,

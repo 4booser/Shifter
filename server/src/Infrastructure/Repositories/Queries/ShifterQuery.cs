@@ -175,6 +175,25 @@ public class ShifterQuery : IShifterQuery
     /// keeps the rule unambiguous: a payment lands in exactly one range rather
     /// than being split across two when its period straddles a boundary.
     /// </summary>
+    public async Task<WorkExpense[]> GetExpensesAsync(
+        int userId,
+        DateOnly from,
+        DateOnly to,
+        CancellationToken ct)
+        => await _db.Expenses
+            .Include(expense => expense.Location)
+            .AsNoTracking()
+            .Where(expense => expense.UserId == userId
+                && expense.Date >= from
+                && expense.Date <= to)
+            .OrderByDescending(expense => expense.Date)
+            .ToArrayAsync(ct);
+
+    public async Task<WorkExpense?> GetExpenseAsync(int userId, int id, CancellationToken ct)
+        => await _db.Expenses
+            .Include(expense => expense.Location)
+            .FirstOrDefaultAsync(expense => expense.UserId == userId && expense.Id == id, ct);
+
     public async Task<Payout[]> GetPayoutsAsync(
         int userId,
         DateOnly from,

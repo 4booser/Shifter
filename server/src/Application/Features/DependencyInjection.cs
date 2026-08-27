@@ -124,6 +124,7 @@ public static class DependencyInjection
         services.AddScoped<ISalesHandler, SalesHandler>();
         services.AddScoped<IDayHandler, DayHandler>();
         services.AddScoped<IPayoutHandler, PayoutHandler>();
+        services.AddScoped<IExpenseHandler, ExpenseHandler>();
         services.AddScoped<IGoalHandler, GoalHandler>();
         services.AddScoped<ILocationHandler, LocationHandler>();
         services.AddScoped<IReconciliationHandler, ReconciliationHandler>();

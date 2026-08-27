@@ -7,6 +7,8 @@ import {
   DaySave,
   DaysResponse,
   EventSave,
+  Expense,
+  ExpenseKind,
   Goal,
   GoalSave,
   Payout,
@@ -69,6 +71,17 @@ export const calendarApi = {
   payouts: (from: string, to: string) => api<Payout[]>(`${API}/payouts?from=${from}&to=${to}`),
   createPayout: (request: PayoutCreate) => api<Payout>(`${API}/payouts`, { body: request }),
   deletePayout: (id: number) => api<void>(`${API}/payouts/${id}`, { method: 'DELETE' }),
+  /** What the work cost — kept apart from fines, and never inside earnings. */
+  expenses: (from: string, to: string) =>
+    api<Expense[]>(`${API}/expenses?from=${from}&to=${to}`),
+  createExpense: (request: {
+    date: string;
+    amount: number;
+    kind: ExpenseKind;
+    note: string | null;
+    location_id: number | null;
+  }) => api<Expense>(`${API}/expenses`, { body: request }),
+  deleteExpense: (id: number) => api<void>(`${API}/expenses/${id}`, { method: 'DELETE' }),
   /** Draws a line under one shortfall, or lifts it again with kind: null. */
   settlePeriod: (
     location_id: number,

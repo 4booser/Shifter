@@ -25,6 +25,8 @@ public interface IShifterQuery
 
     Task<Payout[]> GetPayoutsAsync(int userId, DateOnly from, DateOnly to, CancellationToken ct);
     Task<Payout?> GetPayoutAsync(int userId, int id, CancellationToken ct);
+    Task<WorkExpense[]> GetExpensesAsync(int userId, DateOnly from, DateOnly to, CancellationToken ct);
+    Task<WorkExpense?> GetExpenseAsync(int userId, int id, CancellationToken ct);
 
     /// <summary>Shortfalls this person has drawn a line under.</summary>
     Task<PeriodSettlement[]> GetSettlementsAsync(int userId, CancellationToken ct);

@@ -9,6 +9,7 @@ import { PayPeriodRow, Reconciliation } from '@/lib/calendar/models';
 import { useI18n } from '@/lib/i18n';
 import { Shell } from '@/components/layout/shell';
 import { useReveal } from '@/lib/fx';
+import { ExpensesPanel } from '@/components/dashboard/expenses-panel';
 import { PayoutModal, PayoutPrefill } from '@/components/dashboard/modals/payout-modal';
 import { Alert, Money } from '@/components/ui/bits';
 import { Empty } from '@/components/ui/empty';
@@ -49,6 +50,23 @@ function Payouts() {
   const [monthsBack, setMonthsBack] = useState(MONTHS_BACK);
   const [payoutOpen, setPayoutOpen] = useState(false);
   const [prefill, setPrefill] = useState<PayoutPrefill | null>(null);
+
+  /**
+   * The stretch the page is about: as far back as the periods reach, and one
+   * month ahead. The expenses panel reads the same window so a fare and the
+   * wage it ate into are always on screen together.
+   */
+  const range = useMemo(() => {
+    const now = currentMonth();
+    const start = addMonths(now, -monthsBack);
+    const ahead = addMonths(now, 2);
+    const last = new Date(ahead.year, ahead.month - 1, 0);
+
+    return {
+      from: `${start.year}-${`${start.month}`.padStart(2, '0')}-01`,
+      to: `${last.getFullYear()}-${`${last.getMonth() + 1}`.padStart(2, '0')}-${`${last.getDate()}`.padStart(2, '0')}`,
+    };
+  }, [monthsBack]);
 
   const load = useCallback(() => {
     const now = currentMonth();
@@ -315,6 +333,9 @@ function Payouts() {
           </button>
         </section>
       )}
+
+      {/* ==== What the work cost ==== */}
+      <ExpensesPanel from={range.from} to={range.to} onChanged={load} />
 
       <PayoutModal
         open={payoutOpen}

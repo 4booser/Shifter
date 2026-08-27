@@ -94,6 +94,18 @@ public class ShifterCommand : IShifterCommand
         await _db.SaveChangesAsync(ct);
     }
 
+    public async Task<bool> AddExpenseAsync(WorkExpense expense, CancellationToken ct)
+    {
+        await _db.Expenses.AddAsync(expense, ct);
+        return await _db.SaveChangesAsync(ct) > 0;
+    }
+
+    public async Task DeleteExpenseAsync(WorkExpense expense, CancellationToken ct)
+    {
+        _db.Expenses.Remove(expense);
+        await _db.SaveChangesAsync(ct);
+    }
+
     public async Task<bool> AddPayoutAsync(Payout payout, CancellationToken ct)
     {
         await _db.Payouts.AddAsync(payout, ct);

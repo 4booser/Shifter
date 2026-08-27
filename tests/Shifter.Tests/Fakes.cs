@@ -15,6 +15,7 @@ public sealed class FakeShifterQuery : IShifterQuery
     public List<Day> Days { get; } = [];
     public List<Location> Locations { get; } = [];
     public List<Payout> Payouts { get; } = [];
+    public List<WorkExpense> Expenses { get; } = [];
     public List<Shift> Shifts { get; } = [];
     public List<Sales> Sales { get; } = [];
     public List<Event> Events { get; } = [];
@@ -37,6 +38,16 @@ public sealed class FakeShifterQuery : IShifterQuery
 
     public Task<Location?> GetLocationAsync(int userId, int id, CancellationToken ct)
         => Task.FromResult(Locations.FirstOrDefault(p => p.UserId == userId && p.Id == id));
+
+    public Task<WorkExpense[]> GetExpensesAsync(int userId, DateOnly from, DateOnly to, CancellationToken ct)
+        => Task.FromResult(Expenses
+            .Where(expense => expense.UserId == userId
+                && expense.Date >= from && expense.Date <= to)
+            .ToArray());
+
+    public Task<WorkExpense?> GetExpenseAsync(int userId, int id, CancellationToken ct)
+        => Task.FromResult(Expenses
+            .FirstOrDefault(expense => expense.UserId == userId && expense.Id == id));
 
     public Task<Payout[]> GetPayoutsAsync(int userId, DateOnly from, DateOnly to, CancellationToken ct)
         => Task.FromResult(Payouts
@@ -234,6 +245,10 @@ public sealed class FakeShifterCommand : IShifterCommand
     public Task<bool> AddSalesAsync(Sales sales, CancellationToken ct) => Task.FromResult(true);
     public Task<bool> AddLocationAsync(Location location, CancellationToken ct) => Task.FromResult(true);
     public Task<bool> AddPayoutAsync(Payout payout, CancellationToken ct) => Task.FromResult(true);
+
+    public Task<bool> AddExpenseAsync(WorkExpense expense, CancellationToken ct) => Task.FromResult(true);
+
+    public Task DeleteExpenseAsync(WorkExpense expense, CancellationToken ct) => Task.CompletedTask;
 
     public Task<bool> AddGoalAsync(Goal item, CancellationToken ct)
     {

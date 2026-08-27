@@ -160,6 +160,40 @@ public class BusinessController : ControllerBase
     }
 
     [HttpGet]
+    [Route("expenses")]
+    public async Task<ActionResult<ExpenseDto[]>> Expenses(
+        [FromServices] IExpenseHandler expenses,
+        [FromQuery] DateOnly from,
+        [FromQuery] DateOnly to,
+        CancellationToken ct)
+        => Ok(await expenses.ListAsync(CurrentUserId(), from, to, ct));
+
+    /// <summary>
+    /// What the work cost: the taxi home, the shoes, the shirt with the logo.
+    /// Kept apart from fines — a fine is what the venue took, an expense is
+    /// what the job cost — and never subtracted from what was earned.
+    /// </summary>
+    [HttpPost]
+    [Route("expenses")]
+    public async Task<ActionResult<ExpenseDto>> AddExpense(
+        [FromServices] IExpenseHandler expenses,
+        [FromBody] ExpenseCreateDto request,
+        CancellationToken ct)
+        => Ok(await expenses.CreateAsync(request, CurrentUserId(), ct));
+
+    [HttpDelete]
+    [Route("expenses/{id:int}")]
+    public async Task<ActionResult> DeleteExpense(
+        [FromServices] IExpenseHandler expenses,
+        int id,
+        CancellationToken ct)
+    {
+        await expenses.DeleteAsync(CurrentUserId(), id, ct);
+
+        return NoContent();
+    }
+
+    [HttpGet]
     [Route("goals")]
     public async Task<ActionResult<GoalItemDto[]>> GetGoals(
         [FromServices] IGoalHandler goals,

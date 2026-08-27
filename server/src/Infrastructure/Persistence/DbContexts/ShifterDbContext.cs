@@ -40,6 +40,7 @@ public class ShifterDbContext : DbContext
     public DbSet<Availability> Availabilities => Set<Availability>();
     public DbSet<DeviceToken> DeviceTokens => Set<DeviceToken>();
     public DbSet<LeaveRequest> LeaveRequests => Set<LeaveRequest>();
+    public DbSet<WorkExpense> Expenses => Set<WorkExpense>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -96,6 +97,25 @@ public class ShifterDbContext : DbContext
             .HasIndex(request => new { request.TeamId, request.From });
         modelBuilder.Entity<LeaveRequest>()
             .HasIndex(request => new { request.TeamId, request.UserId });
+
+        // Always read as a range for one person, exactly like payouts.
+        modelBuilder.Entity<WorkExpense>()
+            .HasIndex(expense => new { expense.UserId, expense.Date });
+
+        // An expense outlives the place that caused it — a taxi home is still
+        // money spent after the bar closes for good — so deleting a place
+        // detaches rather than deletes.
+        modelBuilder.Entity<WorkExpense>()
+            .HasOne(expense => expense.Location)
+            .WithMany()
+            .HasForeignKey(expense => expense.LocationId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<WorkExpense>()
+            .HasOne(expense => expense.User)
+            .WithMany()
+            .HasForeignKey(expense => expense.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         // One line under one period: closing the same shortfall twice is not
         // a second event, and the unique key says so rather than the service.

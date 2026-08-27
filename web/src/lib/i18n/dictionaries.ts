@@ -5,6 +5,21 @@
 type Dictionary = Record<string, string>;
 
 export const RU: Dictionary = {
+  'And the work cost you': 'А работа вам стоила',
+  'What the work cost': 'Что стоила работа',
+  'Never taken off your earnings — this is money that left afterwards.': 'Из заработка не вычитается — это деньги, которые ушли уже потом.',
+  'Getting there': 'Дорога',
+  'Tools': 'Инструмент',
+  'Food at work': 'Еда на работе',
+  'Training': 'Учёба',
+  'How much': 'Сколько',
+  'When': 'Когда',
+  'Which job made it necessary': 'Из-за какой работы',
+  'The trade, not one job': 'Из-за профессии, не из-за работы',
+  'Record it': 'Записать',
+  'Nothing recorded for this stretch.': 'За этот период ничего не записано.',
+  'The taxi home ate': 'Дорога съела',
+  'of your tips': 'чаевых',
   'Journey here, minutes one way': 'Дорога сюда, минут в одну сторону',
   'One trip costs': 'Одна поездка стоит',
   'Used only to show what an hour here is really worth. Never added to what you earned.': 'Нужно только чтобы показать, сколько здесь на самом деле стоит час. К заработку не прибавляется.',
@@ -1727,6 +1742,21 @@ export const RU: Dictionary = {
 };
 
 export const UK: Dictionary = {
+  'And the work cost you': 'А робота вам коштувала',
+  'What the work cost': 'Що коштувала робота',
+  'Never taken off your earnings — this is money that left afterwards.': 'Із заробітку не віднімається — це гроші, які пішли вже потім.',
+  'Getting there': 'Дорога',
+  'Tools': 'Інструмент',
+  'Food at work': 'Їжа на роботі',
+  'Training': 'Навчання',
+  'How much': 'Скільки',
+  'When': 'Коли',
+  'Which job made it necessary': 'Через яку роботу',
+  'The trade, not one job': 'Через професію, не через роботу',
+  'Record it': 'Записати',
+  'Nothing recorded for this stretch.': 'За цей період нічого не записано.',
+  'The taxi home ate': 'Дорога з’їла',
+  'of your tips': 'чайових',
   'Journey here, minutes one way': 'Дорога сюди, хвилин в один бік',
   'One trip costs': 'Одна поїздка коштує',
   'Used only to show what an hour here is really worth. Never added to what you earned.': 'Потрібно лише щоб показати, скільки тут насправді вартує година. До заробітку не додається.',

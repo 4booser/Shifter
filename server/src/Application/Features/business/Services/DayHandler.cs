@@ -77,6 +77,11 @@ public partial class DayHandler : IDayHandler
         decimal tipOut = days.Sum(day => TipOutFor(day, byId));
         decimal deductions = days.Sum(day => DeductionsFor(day, byId));
 
+        // What the work cost. Read here rather than folded into any total: a
+        // taxi home is money that left after the wage arrived, and subtracting
+        // it would stop the app agreeing with anybody's payslip.
+        WorkExpense[] expenses = await _shifterQuery.GetExpensesAsync(userId, from, to, ct);
+
         decimal totalEarned =
             shiftsEarned + salesEarned + tipsEarned + periodEarned + overtimeExtra + premiumExtra
             - tipOut - deductions;
@@ -122,6 +127,9 @@ public partial class DayHandler : IDayHandler
             deductions,
             ByReason(days),
             RaiseHistory.Of(days, DateOnly.FromDateTime(DateTime.UtcNow)),
+            ExpenseRules.ByKind(expenses),
+            expenses.Sum(expense => expense.Amount),
+            ExpenseRules.TravelShareOfTips(expenses, tipsEarned),
             tax,
             totalEarned - tax,
             holiday,

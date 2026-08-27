@@ -127,5 +127,12 @@ public class GigRulesTests
         Assert.Throws<ValidationException>(() => GigRules.ValidatePay(100, 0m));
         Assert.Throws<ValidationException>(() => GigRules.ValidatePay(100, 101m));
     }
+
+    [Fact]
+    public void Every_category_also_has_a_human_name()
+    {
+        foreach (GigCategory category in Enum.GetValues<GigCategory>())
+            Assert.True(GigRules.CategoryRu.ContainsKey(category), category.ToString());
+    }
 }
 

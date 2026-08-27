@@ -503,6 +503,7 @@ function GigCard({ gig, onRespond, onWithdraw }: { gig: Gig; onRespond: () => vo
       {gig.details !== null && <p className="line-clamp-2 text-[0.85rem] text-muted">{gig.details}</p>}
       <footer className="mt-auto flex items-center gap-2 pt-1 text-[0.78rem]">
         <TimeAgo iso={gig.created_at} />
+        <ShareGig gig={gig} />
         {gig.status === 'filled' && <span className="chip border-good/40 bg-(--good-soft) text-good">{t('filled')}</span>}
         {gig.is_mine && <span className="chip">{t('Yours')}</span>}
         {!gig.is_mine && gig.my_response === null && gig.status === 'open' && !past && (
@@ -524,6 +525,52 @@ function GigCard({ gig, onRespond, onWithdraw }: { gig: Gig; onRespond: () => vo
         )}
       </footer>
     </article>
+  );
+}
+
+/**
+ * The link that travels: shifter.ink/g/42 unfurls in a work chat with the
+ * venue, the trade, the pay and the first photo — because that is where
+ * hospitality shifts are actually passed around.
+ */
+function ShareGig({ gig }: { gig: Gig }) {
+  const { t } = useI18n();
+  const [copied, setCopied] = useState(false);
+
+  const url = typeof window === 'undefined' ? '' : `${window.location.origin}/g/${gig.id}`;
+
+  const share = async () => {
+    const text = `${gig.title} — ${gig.venue}`;
+
+    // The native sheet where it exists (every phone), clipboard everywhere else.
+    if (typeof navigator !== 'undefined' && 'share' in navigator) {
+      try {
+        await navigator.share({ title: text, url });
+
+        return;
+      } catch {
+        // Cancelled or unsupported — fall through to the copy.
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      pushToast({ icon: '🔗', title: url });
+    }
+  };
+
+  return (
+    <button
+      type="button"
+      className="text-faint transition-colors hover:text-(--accent)"
+      title={t('Copy a link for the work chat')}
+      onClick={() => void share()}
+    >
+      {copied ? `✓ ${t('copied')}` : '🔗'}
+    </button>
   );
 }
 

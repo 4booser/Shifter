@@ -141,7 +141,7 @@ try
     // SPA fallback: deep links such as /dashboard render the Angular shell so
     // they survive a refresh. Paths under shifter/ are excluded so that unknown
     // API routes still return 404 rather than a page of HTML.
-    app.MapFallbackToFile("{*path:nonfile:regex(^(?!shifter/).*$)}", "index.html");
+    app.MapFallbackToFile("{*path:nonfile:regex(^(?!shifter/|g/).*$)}", "index.html");
 
     app.Run();
 

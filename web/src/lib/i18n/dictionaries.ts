@@ -5,6 +5,8 @@
 type Dictionary = Record<string, string>;
 
 export const RU: Dictionary = {
+  'Copy a link for the work chat': 'Ссылка для рабочего чата',
+  'copied': 'скопировано',
   'Call somebody back': 'Позвать снова',
   'Call back': 'Позвать',
   'Called': 'Позвали',
@@ -1541,6 +1543,8 @@ export const RU: Dictionary = {
 };
 
 export const UK: Dictionary = {
+  'Copy a link for the work chat': 'Посилання для робочого чату',
+  'copied': 'скопійовано',
   'Call somebody back': 'Покликати знову',
   'Call back': 'Покликати',
   'Called': 'Покликали',

@@ -5,8 +5,12 @@ export interface StoryCardData {
   period: string;
   /** Already formatted with the person's currency. */
   earned: string;
-  shifts: number;
-  hours: number;
+  /**
+   * The line under the money — "19 смен · 153 ч". Built by the caller because
+   * only it knows the language: counting words decline, and "ч" is not what
+   * an hour is called in English.
+   */
+  meta: string;
   /** Up to three lines of bragging: "Лучший день — ₴2 615", … */
   lines: string[];
   /** 0..1 per weekday, Monday first — the little rhythm strip. */
@@ -64,7 +68,7 @@ export function drawStoryCard(data: StoryCardData, theme: CardTheme): Promise<Bl
 
   ctx.fillStyle = 'rgba(255,255,255,0.9)';
   ctx.font = '600 48px system-ui, -apple-system, sans-serif';
-  ctx.fillText(`${data.shifts} · ${Math.round(data.hours)} ч`, W / 2, 712);
+  ctx.fillText(data.meta, W / 2, 712);
 
   // The rhythm strip: seven bars, Monday first, tall where the money was.
   const barWidth = 96;

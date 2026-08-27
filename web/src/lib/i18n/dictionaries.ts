@@ -5,6 +5,8 @@
 type Dictionary = Record<string, string>;
 
 export const RU: Dictionary = {
+  'Download the poster': 'Скачать постер',
+  'Drawing…': 'Рисуем…',
   'No place set': 'Без места',
   'Which nights tip': 'Какие вечера дают чай',
   'The average a day of that weekday brings, and what share of it that was.': 'Сколько в среднем приносит такой день недели и какая это доля от дня.',
@@ -850,8 +852,8 @@ export const RU: Dictionary = {
   'Iron shift': 'Железная смена',
   'Backbone of the place': 'Опора заведения',
   'Steady hand': 'Твёрдая рука',
-  'Getting the rhythm': 'Входишь в ритм',
-  'Just getting started': 'Только начинаешь',
+  'Getting the rhythm': 'Входите в ритм',
+  'Just getting started': 'Только начинаете',
   'vs': 'против',
   'Where this year lands': 'Куда идёт этот год',
   'By 31 December': 'К 31 декабря',
@@ -1653,6 +1655,8 @@ export const RU: Dictionary = {
 };
 
 export const UK: Dictionary = {
+  'Download the poster': 'Завантажити постер',
+  'Drawing…': 'Малюємо…',
   'No place set': 'Без місця',
   'Which nights tip': 'Які вечори дають чай',
   'The average a day of that weekday brings, and what share of it that was.': 'Скільки в середньому приносить такий день тижня і яка це частка від дня.',
@@ -2464,8 +2468,8 @@ export const UK: Dictionary = {
   'Iron shift': 'Залізна зміна',
   'Backbone of the place': 'Опора закладу',
   'Steady hand': 'Тверда рука',
-  'Getting the rhythm': 'Входиш у ритм',
-  'Just getting started': 'Тільки починаєш',
+  'Getting the rhythm': 'Входите в ритм',
+  'Just getting started': 'Тільки починаєте',
   'vs': 'проти',
   'Where this year lands': 'Куди йде цей рік',
   'By 31 December': 'До 31 грудня',

@@ -9,6 +9,11 @@ import { forecastFor } from '@/lib/calendar/forecast';
 import { averagesFor, bestDay, bestWeek, change, countShifts, longestStreak, restDays } from '@/lib/calendar/insights';
 import { DaysResponse, EMPTY_SUMMARY, placeName } from '@/lib/calendar/models';
 import { useI18n } from '@/lib/i18n';
+import { currentCardTheme } from '@/lib/export/share-card';
+import { drawStoryCard } from '@/lib/export/story-card';
+import { downloadBlob } from '@/lib/export/xlsx';
+import { formatMoney } from '@/lib/settings/money';
+import { useSettings } from '@/lib/settings/store';
 import { Shell } from '@/components/layout/shell';
 import { BadgeWall } from '@/components/achievements/badges';
 import { useReveal } from '@/lib/fx';
@@ -39,7 +44,7 @@ export default function WrappedPage() {
  * — while the year still runs — where it is heading at today's pace.
  */
 function Wrapped() {
-  const { t, lang } = useI18n();
+  const { t, n, lang } = useI18n();
   const revealHost = useReveal<HTMLDivElement>();
 
   const [year, setYear] = useState(currentMonth().year);
@@ -47,6 +52,8 @@ function Wrapped() {
   const [previous, setPrevious] = useState<DaysResponse>(EMPTY_SUMMARY);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [posting, setPosting] = useState(false);
+  const settings = useSettings((state) => state.settings);
 
   useEffect(() => {
     setLoading(true);
@@ -177,6 +184,43 @@ function Wrapped() {
   const dayLabel = (key: string) =>
     new Intl.DateTimeFormat(lang, { day: 'numeric', month: 'short' }).format(fromKey(key));
 
+  /**
+   * The year as a poster. The same 9:16 card the month already draws, because
+   * the thing people actually post at the end of December is a picture, not a
+   * screenshot of a dashboard with a browser bar across the top.
+   */
+  const poster = () => {
+    setPosting(true);
+    setError(null);
+
+    const lines = [
+      `${tier.emoji} ${t(tier.name)}`,
+      best !== null ? `${t('Best day')}: ${formatMoney(settings, best.value)}` : null,
+      favouriteShift !== null ? `${t('Favourite shift')}: ${favouriteShift.name}` : null,
+      topPlace !== null ? `${t('Top place')}: ${placeName(topPlace, t('No place set'))}` : null,
+      summary.tips_earned > 0 ? `${t('Tips')}: ${formatMoney(settings, summary.tips_earned)}` : null,
+      // Never fewer than three: a card with a hole in it reads as broken.
+      `${t('Per hour')}: ${formatMoney(settings, averages.perHour)}`,
+    ].filter((line): line is string => line !== null);
+
+    const peak = Math.max(1, ...weekdayRhythm.map((day) => day.value));
+
+    void drawStoryCard(
+      {
+        period: `${year}`,
+        earned: formatMoney(settings, summary.total_earned),
+        meta: `${n(totalShifts, 'shifts')} · ${n(Math.round(summary.hours), 'hours')}`,
+        lines,
+        rhythm: weekdayRhythm.map((day) => day.value / peak),
+        brand: 'shifter.ink',
+      },
+      currentCardTheme(),
+    )
+      .then((blob) => downloadBlob(`shifter-${year}.png`, blob))
+      .catch((caught) => setError(apiErrorMessage(caught)))
+      .finally(() => setPosting(false));
+  };
+
   return (
     <div ref={revealHost} className="mx-auto flex max-w-3xl flex-col gap-4">
       <div className="flex items-center gap-2">
@@ -197,6 +241,13 @@ function Wrapped() {
           </button>
         </span>
       </div>
+
+      {days.length > 0 && (
+        <button type="button" className="btn btn-quiet btn-sm self-start" disabled={posting} onClick={poster}>
+          <Icon name="download" size={13} />
+          {posting ? t('Drawing…') : t('Download the poster')}
+        </button>
+      )}
 
       {error && <Alert onDismiss={() => setError(null)}>{error}</Alert>}
 

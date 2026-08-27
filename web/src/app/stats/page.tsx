@@ -57,7 +57,7 @@ export default function StatsPage() {
 }
 
 function Stats() {
-  const { t, lang } = useI18n();
+  const { t, n, lang } = useI18n();
   const revealHost = useReveal<HTMLDivElement>();
   const settings = useSettings((state) => state.settings);
 
@@ -433,8 +433,7 @@ function Stats() {
       {
         period: preset === 'month' ? new Intl.DateTimeFormat(lang, { month: 'long' }).format(fromKey(range.from)) : `${range.from.slice(8)}.${range.from.slice(5, 7)} — ${range.to.slice(8)}.${range.to.slice(5, 7)}`,
         earned: formatMoney(settings, summary.total_earned),
-        shifts: summary.days_worked,
-        hours: summary.hours,
+        meta: `${n(summary.days_worked, 'shifts')} · ${n(Math.round(summary.hours), 'hours')}`,
         lines,
         rhythm: byWeekday.map((value) => value / peak),
         brand: 'shifter.ink',

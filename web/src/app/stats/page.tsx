@@ -29,8 +29,8 @@ import { Shell } from '@/components/layout/shell';
 import { useReveal } from '@/lib/fx';
 import { GoalsModal } from '@/components/dashboard/modals/goals-modal';
 import { WhatIfCard } from '@/components/stats/what-if';
-import { hourDial, rateTrend, waterfall, weekBands } from '@/lib/charts/report-math';
-import { ClockRing, DaysAtGlance, MoneyFlow, MonthBars, TrendLine, WeekBandsChart } from '@/components/charts/glass-charts';
+import { hourDial, rateTrend, tipsByWeekday, waterfall, weekBands } from '@/lib/charts/report-math';
+import { ClockRing, DaysAtGlance, MoneyFlow, MonthBars, TipWeek, TrendLine, WeekBandsChart } from '@/components/charts/glass-charts';
 import { AreaChart, ColumnChart, Plot, ProgressRing } from '@/components/charts/charts';
 import { Alert, CountUp, Delta, Money } from '@/components/ui/bits';
 import { Icon } from '@/components/ui/icon';
@@ -204,6 +204,7 @@ function Stats() {
   const forecast = forecastFor(summary.days, range.from, range.to, awayDays);
   const waterfallSteps = useMemo(() => waterfall(summary), [summary]);
   const bands = useMemo(() => weekBands(summary.days), [summary.days]);
+  const tipWeek = useMemo(() => tipsByWeekday(summary.days), [summary.days]);
   const dial = useMemo(() => hourDial(summary.days), [summary.days]);
   const rate = useMemo(
     () =>
@@ -794,6 +795,11 @@ function Stats() {
         {bands.length > 0 && (
           <Card title={t('The shape of your week')} hint={t('When each weekday starts and ends, and what its hour pays.')}>
             <WeekBandsChart bands={bands} />
+          </Card>
+        )}
+        {tipWeek.length > 1 && (
+          <Card title={t('Which nights tip')} hint={t('The average a day of that weekday brings, and what share of it that was.')}>
+            <TipWeek rows={tipWeek} />
           </Card>
         )}
       </div>

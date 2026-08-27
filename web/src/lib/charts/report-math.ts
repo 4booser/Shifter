@@ -238,3 +238,51 @@ export function weekBands(days: readonly CalendarDayData[]): WeekBand[] {
     }))
     .sort((a, b) => a.weekday - b.weekday);
 }
+
+/** One weekday's tipping: what it averages and what share of the day that is. */
+export interface TipDay {
+  /** 0 = Monday, matching the rest of the week charts. */
+  weekday: number;
+  days: number;
+  /** Average tips on the days of this weekday that had a shift. */
+  average: number;
+  /** Tips as a share of everything those days earned, 0–1. */
+  share: number;
+  total: number;
+}
+
+/**
+ * Which nights actually tip. Averaged over worked days rather than summed,
+ * because a weekday somebody works twice as often would otherwise look twice
+ * as generous — the question is "is Friday worth taking", not "how many
+ * Fridays did I take".
+ */
+export function tipsByWeekday(days: readonly CalendarDayData[]): TipDay[] {
+  const buckets = new Map<number, { days: number; tips: number; earned: number }>();
+
+  for (const day of days) {
+    if (!day.shifts.some((entry) => entry.worked)) continue;
+
+    // A day with no tips figure is a blank, not a zero: counting it as zero
+    // drags an average down with something nobody ever recorded.
+    if (day.tips === null) continue;
+
+    const weekday = (new Date(`${day.date}T00:00:00`).getDay() + 6) % 7;
+    const bucket = buckets.get(weekday) ?? { days: 0, tips: 0, earned: 0 };
+
+    bucket.days += 1;
+    bucket.tips += day.tips;
+    bucket.earned += day.earned;
+    buckets.set(weekday, bucket);
+  }
+
+  return [...buckets.entries()]
+    .map(([weekday, bucket]) => ({
+      weekday,
+      days: bucket.days,
+      average: bucket.tips / bucket.days,
+      share: bucket.earned > 0 ? bucket.tips / bucket.earned : 0,
+      total: bucket.tips,
+    }))
+    .sort((left, right) => left.weekday - right.weekday);
+}

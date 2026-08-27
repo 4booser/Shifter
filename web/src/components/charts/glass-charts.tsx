@@ -3,7 +3,7 @@
 import { useId, useMemo, useState } from 'react';
 
 import { formatDayLabel, fromKey, keysBetween, todayKey } from '@/lib/calendar/calendar-date';
-import { WaterfallStep, WeekBand } from '@/lib/charts/report-math';
+import { TipDay, WaterfallStep, WeekBand } from '@/lib/charts/report-math';
 import { stagger } from '@/lib/fx';
 import { useI18n } from '@/lib/i18n';
 import { useMoney } from '@/lib/settings/money';
@@ -608,6 +608,76 @@ export function DaysAtGlance({
         })}
       </div>
       <p className="field-hint mt-2 tabular">{readout}</p>
+    </div>
+  );
+}
+
+/**
+ * Which nights actually tip. The bar is the average a day of that weekday
+ * brings; the number beside it is what share of the day that was, because
+ * ₴400 on a ₴4 000 night and ₴400 on a ₴800 one are not the same result.
+ */
+export function TipWeek({ rows }: { rows: TipDay[] }) {
+  const { t, n } = useI18n();
+  const { format } = useMoney();
+
+  const peak = Math.max(1, ...rows.map((row) => row.average));
+  const byDay = new Map(rows.map((row) => [row.weekday, row]));
+  const best = rows.reduce<TipDay | null>(
+    (top, row) => (top === null || row.average > top.average ? row : top),
+    null,
+  );
+
+  return (
+    <div className="flex flex-col gap-[7px]">
+      {BAND_DAYS.map((name, weekday) => {
+        const row = byDay.get(weekday);
+
+        return (
+          <div key={name} className="flex items-center gap-2.5">
+            <span
+              className={`w-7 flex-none text-[0.72rem] ${
+                row !== undefined ? 'font-semibold' : 'text-faint'
+              }`}
+            >
+              {t(name)}
+            </span>
+
+            <span className="relative h-[18px] min-w-0 flex-1 overflow-hidden rounded-full bg-surface-2">
+              {row !== undefined && row.average > 0 && (
+                <span
+                  className="absolute inset-y-0 left-0 rounded-full"
+                  style={{
+                    width: `${Math.max(4, (row.average / peak) * 100)}%`,
+                    background: row.weekday === best?.weekday ? 'var(--accent)' : 'var(--s3)',
+                  }}
+                />
+              )}
+            </span>
+
+            <span className="w-[8.5rem] flex-none text-right text-[0.72rem] tabular">
+              {row === undefined ? (
+                <span className="text-faint">·</span>
+              ) : (
+                <>
+                  <b>{format(Math.round(row.average))}</b>
+                  <span className="text-muted"> · {Math.round(row.share * 100)}%</span>
+                </>
+              )}
+            </span>
+          </div>
+        );
+      })}
+
+      {best !== null && (
+        <p className="field-hint mt-1">
+          {t('Best for tips:')} <b className="text-ink">{t(BAND_DAYS[best.weekday])}</b>
+          {' · '}
+          {/* Russian has three forms after a number, so the count and the
+              word are one call rather than a ternary. */}
+          {t('averaging')} {format(Math.round(best.average))} {t('across')} {n(best.days, 'days')}
+        </p>
+      )}
     </div>
   );
 }

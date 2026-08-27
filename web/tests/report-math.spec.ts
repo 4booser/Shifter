@@ -1,4 +1,4 @@
-import { punchcard, waterfall } from '@/lib/charts/report-math';
+import { punchcard, tipsByWeekday, waterfall } from '@/lib/charts/report-math';
 import { CalendarDayData, DaysResponse, EMPTY_SUMMARY } from '@/lib/calendar/models';
 
 describe('waterfall', () => {
@@ -267,5 +267,82 @@ describe('weekBands', () => {
     const bands = weekBands([day('2026-03-03', '10:30', '19:00', 8.5, 850)]);
 
     expect(bands[0].from).toBeCloseTo(10.5);
+  });
+});
+
+describe('tipsByWeekday', () => {
+  const worked = (
+    date: string,
+    tips: number | null,
+    earned = 1_000,
+    hasShift = true,
+  ): CalendarDayData => ({
+    date,
+    shifts: hasShift
+      ? [
+          {
+            shift_id: 1,
+            name: 'Bar',
+            symbol: null,
+            colour: null,
+            start_time: '18:00',
+            end_time: '23:00',
+            hours: 5,
+            earned,
+            revenue: null,
+            revenue_percent: null,
+            worked: true,
+            needs_cover: false,
+            actual_start: null,
+            actual_end: null,
+            break_minutes: 0,
+          },
+        ]
+      : [],
+    sales: [],
+    tips,
+    tips_cash: null,
+    tip_pool: null,
+    tip_out: 0,
+    deductions: 0,
+    note: null,
+    colour: null,
+    below_floor: false,
+    hours: hasShift ? 5 : 0,
+    earned,
+    planned: 0,
+  });
+
+  it('averages over the days worked, not the days counted', () => {
+    // Two Fridays at 200 and 400 average 300, however many Mondays there are.
+    const rows = tipsByWeekday([
+      worked('2026-03-06', 200),
+      worked('2026-03-13', 400),
+      worked('2026-03-02', 100),
+      worked('2026-03-09', 100),
+      worked('2026-03-16', 100),
+    ]);
+
+    const friday = rows.find((row) => row.weekday === 4);
+
+    expect(friday?.average).toBe(300);
+    expect(friday?.days).toBe(2);
+  });
+
+  it('leaves a day with no tips figure out rather than calling it zero', () => {
+    const rows = tipsByWeekday([worked('2026-03-06', 500), worked('2026-03-13', null)]);
+
+    expect(rows.find((row) => row.weekday === 4)?.days).toBe(1);
+    expect(rows.find((row) => row.weekday === 4)?.average).toBe(500);
+  });
+
+  it('reports tips as a share of what those days earned', () => {
+    const rows = tipsByWeekday([worked('2026-03-06', 250, 1_000)]);
+
+    expect(rows.find((row) => row.weekday === 4)?.share).toBeCloseTo(0.25);
+  });
+
+  it('ignores days with nothing worked on them', () => {
+    expect(tipsByWeekday([worked('2026-03-06', 900, 0, false)])).toEqual([]);
   });
 });

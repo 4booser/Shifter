@@ -5,6 +5,11 @@
 type Dictionary = Record<string, string>;
 
 export const RU: Dictionary = {
+  'Which nights tip': 'Какие вечера дают чай',
+  'The average a day of that weekday brings, and what share of it that was.': 'Сколько в среднем приносит такой день недели и какая это доля от дня.',
+  'Best for tips:': 'Лучший на чай:',
+  'averaging': 'в среднем',
+  'across': 'по',
   'Break after, h': 'Перерыв после, ч',
   'Break length, min': 'Длина перерыва, мин',
   'A shift longer than this loses those minutes, unpaid, unless the template already books more.': 'Смена длиннее теряет эти минуты — неоплачиваемо, если в шаблоне не заложено больше.',
@@ -1647,6 +1652,11 @@ export const RU: Dictionary = {
 };
 
 export const UK: Dictionary = {
+  'Which nights tip': 'Які вечори дають чай',
+  'The average a day of that weekday brings, and what share of it that was.': 'Скільки в середньому приносить такий день тижня і яка це частка від дня.',
+  'Best for tips:': 'Найкращий на чай:',
+  'averaging': 'у середньому',
+  'across': 'за',
   'Break after, h': 'Перерва після, год',
   'Break length, min': 'Довжина перерви, хв',
   'A shift longer than this loses those minutes, unpaid, unless the template already books more.': 'Довша зміна втрачає ці хвилини — неоплачувано, якщо в шаблоні не закладено більше.',

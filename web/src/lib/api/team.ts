@@ -205,6 +205,28 @@ export interface Blocked {
   mine: boolean;
 }
 
+/**
+ * One request for time off. Carries the decision as well as the ask, because
+ * the state that matters most is the one in between: waiting.
+ */
+export interface Leave {
+  id: number;
+  user_id: number;
+  user_name: string;
+  from: string;
+  to: string;
+  days: number;
+  reason: string | null;
+  status: 'pending' | 'approved' | 'declined';
+  decided_by: string | null;
+  decided_on: string | null;
+  decision_note: string | null;
+  /** Whether this is the caller's own request. */
+  mine: boolean;
+  /** Whether the caller can answer it. */
+  can_decide: boolean;
+}
+
 export interface PlannerBoard {
   members: PlannerMember[];
   assignments: Assignment[];
@@ -263,6 +285,14 @@ export const plannerApi = {
       `${TEAMS}/${teamId}/planner/fill`,
       { body: { ...body, role: body.role === '' ? null : body.role } },
     ),
+  /** A planner sees the crew's requests; everybody else sees their own. */
+  leave: (teamId: number) => api<Leave[]>(`${TEAMS}/${teamId}/planner/leave`),
+  requestLeave: (teamId: number, from: string, to: string, reason: string | null) =>
+    api<Leave[]>(`${TEAMS}/${teamId}/planner/leave`, { body: { from, to, reason } }),
+  decideLeave: (teamId: number, id: number, approve: boolean, note: string | null) =>
+    api<Leave[]>(`${TEAMS}/${teamId}/planner/leave/${id}/decision`, { body: { approve, note } }),
+  withdrawLeave: (teamId: number, id: number) =>
+    api<Leave[]>(`${TEAMS}/${teamId}/planner/leave/${id}`, { method: 'DELETE' }),
   setManager: (teamId: number, userId: number, is_manager: boolean) =>
     api<void>(`${TEAMS}/${teamId}/planner/members/${userId}/manager`, { method: 'PUT', body: { is_manager } }),
 };

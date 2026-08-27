@@ -18,7 +18,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Palette } from '@/constants/theme';
 import { api, ApiError } from '@/lib/api';
 import { dayLabel, pad, todayKey } from '@/lib/calendar';
-import { rateLine, ShiftTemplate } from '@/lib/types';
+import { plural, rateLine, ShiftTemplate } from '@/lib/types';
 
 interface Team {
   id: number;
@@ -84,6 +84,27 @@ interface RotaGig {
 }
 
 /** A swap in flight: two shifts and two agreements. */
+/**
+ * One request for time off. Not the same thing as blocking a day: blocking says
+ * "I cannot work Tuesday" and obliges nobody, while this covers a stretch and
+ * needs an answer — an unanswered one is a cancelled flight.
+ */
+interface Leave {
+  id: number;
+  user_id: number;
+  user_name: string;
+  from: string;
+  to: string;
+  days: number;
+  reason: string | null;
+  status: 'pending' | 'approved' | 'declined';
+  decided_by: string | null;
+  decided_on: string | null;
+  decision_note: string | null;
+  mine: boolean;
+  can_decide: boolean;
+}
+
 interface Swap {
   id: number;
   mine: boolean;
@@ -147,6 +168,7 @@ export default function ScheduleScreen() {
   const [board, setBoard] = useState<Board | null>(null);
   const [rota, setRota] = useState<Rota | null>(null);
   const [swaps, setSwaps] = useState<Swap[]>([]);
+  const [leave, setLeave] = useState<Leave[]>([]);
   const [mine, setMine] = useState<Assignment[]>([]);
   const [templates, setTemplates] = useState<ShiftTemplate[]>([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -172,17 +194,19 @@ export default function ScheduleScreen() {
     if (teamId === null) return;
 
     try {
-      const [boardData, rotaData, mineData, shifts, swapRows] = await Promise.all([
+      const [boardData, rotaData, mineData, shifts, swapRows, leaveRows] = await Promise.all([
         api<Board>(`/shifter/v1/teams/${teamId}/planner?from=${span.from}&to=${span.to}`),
         api<Rota>(`/shifter/v1/teams/${teamId}/rota?from=${span.from}&to=${span.to}`),
         api<Assignment[]>(`/shifter/v1/teams/${teamId}/planner/mine`),
         api<ShiftTemplate[]>('/shifter/v1/shifts'),
         api<Swap[]>(`/shifter/v1/teams/${teamId}/swaps`),
+        api<Leave[]>(`/shifter/v1/teams/${teamId}/planner/leave`),
       ]);
 
       setBoard(boardData);
       setRota(rotaData);
       setSwaps(swapRows);
+      setLeave(leaveRows);
       setMine(mineData);
       setTemplates(shifts.filter((item) => !item.archived));
       setError(null);
@@ -232,6 +256,27 @@ export default function ScheduleScreen() {
         method: 'POST',
         body: { date, reason: null },
       });
+      await load();
+    } catch (caught) {
+      setError(caught instanceof ApiError ? caught.message : 'Не сохранилось.');
+    }
+  };
+
+  /** Answering somebody's holiday, or taking your own back. */
+  const decideLeave = async (id: number, approve: boolean | null) => {
+    if (teamId === null) return;
+
+    try {
+      setLeave(
+        approve === null
+          ? await api<Leave[]>(`/shifter/v1/teams/${teamId}/planner/leave/${id}`, {
+              method: 'DELETE',
+            })
+          : await api<Leave[]>(`/shifter/v1/teams/${teamId}/planner/leave/${id}/decision`, {
+              method: 'POST',
+              body: { approve, note: null },
+            }),
+      );
       await load();
     } catch (caught) {
       setError(caught instanceof ApiError ? caught.message : 'Не сохранилось.');
@@ -328,6 +373,44 @@ export default function ScheduleScreen() {
                 </Pressable>
               </View>
             ))}
+          </View>
+        )}
+
+        {/* Time off. Waiting requests only: an answered holiday is history,
+            and history belongs on the web where there is room for it. */}
+        {leave.filter((row) => row.status === 'pending').length > 0 && (
+          <View style={styles.offerBox}>
+            <Text style={styles.offerTitle}>Просят выходные</Text>
+            {leave
+              .filter((row) => row.status === 'pending')
+              .map((row) => (
+                <View key={row.id} style={styles.offerRow}>
+                  <View style={styles.grow}>
+                    <Text style={styles.offerWhen}>
+                      {row.mine ? 'Вы' : row.user_name} · {plural(row.days, 'день', 'дня', 'дней')}
+                    </Text>
+                    <Text style={styles.offerWhat}>
+                      {row.from === row.to ? dayLabel(row.from) : `${dayLabel(row.from)} — ${dayLabel(row.to)}`}
+                      {row.reason !== null ? ` · ${row.reason}` : ''}
+                    </Text>
+                  </View>
+                  {row.can_decide && (
+                    <>
+                      <Pressable style={styles.yes} onPress={() => void decideLeave(row.id, true)}>
+                        <Text style={styles.yesText}>Можно</Text>
+                      </Pressable>
+                      <Pressable style={styles.no} onPress={() => void decideLeave(row.id, false)}>
+                        <Text style={styles.noText}>Нет</Text>
+                      </Pressable>
+                    </>
+                  )}
+                  {row.mine && (
+                    <Pressable style={styles.no} onPress={() => void decideLeave(row.id, null)}>
+                      <Text style={styles.noText}>Отозвать</Text>
+                    </Pressable>
+                  )}
+                </View>
+              ))}
           </View>
         )}
 

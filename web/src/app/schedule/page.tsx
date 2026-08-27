@@ -29,6 +29,7 @@ import { useReveal } from '@/lib/fx';
 import { Shell } from '@/components/layout/shell';
 import { SwapsPanel } from '@/components/team/swaps';
 import { AvailabilityStrip } from '@/components/team/availability';
+import { LeavePanel } from '@/components/team/leave';
 import { drawRotaCard } from '@/lib/export/rota-card';
 import { currentCardTheme } from '@/lib/export/share-card';
 import { downloadBlob } from '@/lib/export/xlsx';
@@ -354,6 +355,9 @@ function Schedule() {
       {selected !== null && (
         <AvailabilityStrip teamId={selected} from={range.from} to={range.to} onChanged={refresh} />
       )}
+
+      {/* ==== Time off: a stretch of days that needs an answer ==== */}
+      {selected !== null && <LeavePanel teamId={selected} onChanged={refresh} />}
 
       {/* ==== Swaps: pending trades and the button that starts one ==== */}
       {selected !== null && rota !== null && rota.members.length > 1 && (

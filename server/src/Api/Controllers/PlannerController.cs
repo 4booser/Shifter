@@ -79,6 +79,32 @@ public class PlannerController : ControllerBase
         int teamId, [FromBody] AvailabilitySaveDto request, CancellationToken ct)
         => Ok(await _planner.ToggleAvailabilityAsync(teamId, UserId(), request, ct));
 
+    // ==== Leave ====
+
+    /// <summary>
+    /// A planner sees the crew's requests; everybody else sees their own.
+    /// </summary>
+    [HttpGet("leave")]
+    public async Task<ActionResult<LeaveDto[]>> Leave(int teamId, CancellationToken ct)
+        => Ok(await _planner.LeaveAsync(teamId, UserId(), ct));
+
+    [HttpPost("leave")]
+    public async Task<ActionResult<LeaveDto[]>> RequestLeave(
+        int teamId, [FromBody] LeaveSaveDto request, CancellationToken ct)
+        => Ok(await _planner.RequestLeaveAsync(teamId, UserId(), request, ct));
+
+    /// <summary>Approving or declining. Never your own.</summary>
+    [HttpPost("leave/{id:int}/decision")]
+    public async Task<ActionResult<LeaveDto[]>> DecideLeave(
+        int teamId, int id, [FromBody] LeaveDecisionDto request, CancellationToken ct)
+        => Ok(await _planner.DecideLeaveAsync(teamId, UserId(), id, request, ct));
+
+    /// <summary>Taking it back — plans change, and so do holidays.</summary>
+    [HttpDelete("leave/{id:int}")]
+    public async Task<ActionResult<LeaveDto[]>> WithdrawLeave(
+        int teamId, int id, CancellationToken ct)
+        => Ok(await _planner.WithdrawLeaveAsync(teamId, UserId(), id, ct));
+
     [HttpGet("mine")]
     public async Task<ActionResult<AssignmentDto[]>> Mine(int teamId, CancellationToken ct)
         => Ok(await _planner.MineAsync(teamId, UserId(), ct));

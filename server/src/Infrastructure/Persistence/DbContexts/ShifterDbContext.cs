@@ -39,6 +39,7 @@ public class ShifterDbContext : DbContext
     public DbSet<ExchangeRate> ExchangeRates => Set<ExchangeRate>();
     public DbSet<Availability> Availabilities => Set<Availability>();
     public DbSet<DeviceToken> DeviceTokens => Set<DeviceToken>();
+    public DbSet<LeaveRequest> LeaveRequests => Set<LeaveRequest>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -88,6 +89,13 @@ public class ShifterDbContext : DbContext
             .IsUnique();
         modelBuilder.Entity<Availability>()
             .HasIndex(block => new { block.TeamId, block.Date });
+
+        // Read two ways: everything a crew has pending, and one person's own
+        // history. No unique key — a person can ask for July and September.
+        modelBuilder.Entity<LeaveRequest>()
+            .HasIndex(request => new { request.TeamId, request.From });
+        modelBuilder.Entity<LeaveRequest>()
+            .HasIndex(request => new { request.TeamId, request.UserId });
 
         // One line under one period: closing the same shortfall twice is not
         // a second event, and the unique key says so rather than the service.

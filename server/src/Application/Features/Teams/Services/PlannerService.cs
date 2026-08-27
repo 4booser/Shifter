@@ -161,6 +161,148 @@ public sealed class PlannerService
             .ToArray();
     }
 
+    // ==== Leave: a stretch of days that needs an answer ====
+
+    /// <summary>
+    /// Every request the caller is entitled to see: a planner sees the crew's,
+    /// everybody else sees their own. Waiting first, because that is the list
+    /// somebody has to act on; the rest is history.
+    /// </summary>
+    public async Task<LeaveDto[]> LeaveAsync(int teamId, int userId, CancellationToken ct)
+    {
+        var (team, me) = await MemberAsync(teamId, userId, ct);
+        bool plans = Plans(team, me);
+
+        var requests = await _db.LeaveRequests
+            .AsNoTracking()
+            .Where(entry => entry.TeamId == teamId && (plans || entry.UserId == userId))
+            .ToArrayAsync(ct);
+
+        return Ordered(requests, team, userId, plans);
+    }
+
+    /// <summary>Asking for time off.</summary>
+    public async Task<LeaveDto[]> RequestLeaveAsync(
+        int teamId, int userId, LeaveSaveDto request, CancellationToken ct)
+    {
+        var (team, me) = await MemberAsync(teamId, userId, ct);
+
+        if (!DateOnly.TryParseExact(request.from, "yyyy-MM-dd", out var from)
+            || !DateOnly.TryParseExact(request.to, "yyyy-MM-dd", out var to))
+            throw new ValidationException("from and to must be yyyy-MM-dd.");
+
+        if (from > to)
+            throw new ValidationException("Leave cannot end before it starts.");
+
+        if (to.DayNumber - from.DayNumber + 1 > LeaveRequest.MaxDays)
+            throw new ValidationException(
+                $"Leave cannot be longer than {LeaveRequest.MaxDays} days.");
+
+        var mine = await _db.LeaveRequests
+            .Where(entry => entry.TeamId == teamId
+                && entry.UserId == userId
+                && entry.Status != LeaveStatus.Declined)
+            .ToArrayAsync(ct);
+
+        // Two rows asking for the same fortnight is not two requests — it is
+        // one request nobody can answer cleanly, and a manager approving the
+        // wrong one would leave the other waiting forever.
+        if (mine.Any(entry => LeaveRules.Overlaps(entry, from, to)))
+            throw new ValidationException("You have already asked for some of those days.");
+
+        _db.LeaveRequests.Add(new LeaveRequest
+        {
+            TeamId = teamId,
+            UserId = userId,
+            From = from,
+            To = to,
+            Reason = LeaveRules.CleanReason(request.reason),
+        });
+
+        await _db.SaveChangesAsync(ct);
+
+        return await LeaveAsync(teamId, userId, ct);
+    }
+
+    /// <summary>Answering one. Only a planner may, and never their own.</summary>
+    public async Task<LeaveDto[]> DecideLeaveAsync(
+        int teamId, int userId, int id, LeaveDecisionDto decision, CancellationToken ct)
+    {
+        var (team, _) = await ManagerAsync(teamId, userId, ct);
+
+        var request = await _db.LeaveRequests
+            .FirstOrDefaultAsync(entry => entry.Id == id && entry.TeamId == teamId, ct)
+            ?? throw new NotFoundException("That request does not exist.");
+
+        // Approving your own holiday is not a decision, it is a note to self —
+        // and it would let one manager quietly empty a Saturday.
+        if (request.UserId == userId)
+            throw new ForbiddenException("Somebody else has to answer your own request.");
+
+        request.Status = decision.approve ? LeaveStatus.Approved : LeaveStatus.Declined;
+        request.DecidedByUserId = userId;
+        request.DecidedAt = DateTime.UtcNow;
+        request.DecisionNote = LeaveRules.CleanReason(decision.note);
+
+        await _db.SaveChangesAsync(ct);
+
+        return await LeaveAsync(teamId, userId, ct);
+    }
+
+    /// <summary>
+    /// Withdrawing a request. Whoever asked may take it back at any point,
+    /// approved or not: plans change, and a holiday nobody is taking should
+    /// not keep somebody off the rota. A planner may also clear one out.
+    /// </summary>
+    public async Task<LeaveDto[]> WithdrawLeaveAsync(
+        int teamId, int userId, int id, CancellationToken ct)
+    {
+        var (team, me) = await MemberAsync(teamId, userId, ct);
+
+        var request = await _db.LeaveRequests
+            .FirstOrDefaultAsync(entry => entry.Id == id && entry.TeamId == teamId, ct)
+            ?? throw new NotFoundException("That request does not exist.");
+
+        if (request.UserId != userId && !Plans(team, me))
+            throw new ForbiddenException("That request is not yours.");
+
+        _db.LeaveRequests.Remove(request);
+        await _db.SaveChangesAsync(ct);
+
+        return await LeaveAsync(teamId, userId, ct);
+    }
+
+    private static LeaveDto[] Ordered(
+        LeaveRequest[] requests, Team team, int userId, bool plans)
+    {
+        var names = (team.Members ?? []).ToDictionary(
+            member => member.UserId,
+            member => member.DisplayName);
+
+        return requests
+            // Waiting first: that is the list somebody has to act on. Then by
+            // when the leave starts, because the soonest one is the most
+            // expensive to leave unanswered.
+            .OrderBy(entry => entry.Status == LeaveStatus.Pending ? 0 : 1)
+            .ThenBy(entry => entry.From)
+            .Select(entry => new LeaveDto(
+                entry.Id,
+                entry.UserId,
+                names.GetValueOrDefault(entry.UserId, string.Empty),
+                entry.From.ToString("yyyy-MM-dd"),
+                entry.To.ToString("yyyy-MM-dd"),
+                entry.Days,
+                entry.Reason,
+                entry.Status.ToString().ToLowerInvariant(),
+                entry.DecidedByUserId is int by ? names.GetValueOrDefault(by, string.Empty) : null,
+                entry.DecidedAt?.ToString("yyyy-MM-dd"),
+                entry.DecisionNote,
+                entry.UserId == userId,
+                // Nobody answers their own, however senior they are.
+                plans && entry.UserId != userId && entry.Status == LeaveStatus.Pending))
+            .ToArray();
+    }
+
     private static string RoleName(PlanRole role) =>
         role == PlanRole.Unset ? string.Empty : role.ToString().ToLowerInvariant();
 
@@ -237,6 +379,18 @@ public sealed class PlannerService
             .Select(entry => entry.UserId)
             .ToArrayAsync(ct);
 
+        // Approved leave keeps somebody off the day as firmly as a blocked one.
+        // A request still waiting does not: planning around a question is how
+        // people end up with neither the shift nor the holiday.
+        var onLeave = await _db.LeaveRequests
+            .AsNoTracking()
+            .Where(entry => entry.TeamId == teamId
+                && entry.Status == LeaveStatus.Approved
+                && entry.From <= date
+                && entry.To >= date)
+            .Select(entry => entry.UserId)
+            .ToArrayAsync(ct);
+
         var busy = week
             .Where(entry => entry.Date == date)
             .Select(entry => entry.UserId)
@@ -247,7 +401,9 @@ public sealed class PlannerService
             .ToDictionary(group => group.Key, group => group.Sum(entry => Span(entry)));
 
         var candidates = (team.Members ?? [])
-            .Where(member => !blocked.Contains(member.UserId) && !busy.Contains(member.UserId))
+            .Where(member => !blocked.Contains(member.UserId)
+                && !onLeave.Contains(member.UserId)
+                && !busy.Contains(member.UserId))
             // Fewest planned hours first, then by name so the same week laid
             // out twice comes out the same way.
             .OrderBy(member => hours.GetValueOrDefault(member.UserId, 0d))
@@ -287,8 +443,11 @@ public sealed class PlannerService
             request.count,
             missing <= 0
                 ? null
-                : blocked.Length + busy.Count > 0
-                    ? $"Не хватило {missing} — остальные заняты в этот день или отметили «не могу»."
+                : blocked.Length + onLeave.Length + busy.Count > 0
+                    // Naming the reasons is the point of the line: "не хватило"
+                    // on its own reads as a bug in the app rather than a fact
+                    // about the crew.
+                    ? $"Не хватило {missing} — остальные заняты в этот день, в отпуске или отметили «не могу»."
                     : $"Не хватило {missing} — в команде меньше людей.");
     }
 

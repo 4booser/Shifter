@@ -80,6 +80,32 @@ public record AvailabilitySaveDto(string? date, string? reason);
 public record AcceptAssignmentDto(int template_id);
 
 /// <summary>
+/// One request for time off. Carries the decision as well as the ask, because
+/// the state that matters most is the one in between: waiting.
+/// </summary>
+public record LeaveDto(
+    int id,
+    int user_id,
+    string user_name,
+    string from,
+    string to,
+    int days,
+    string? reason,
+    /// <summary>pending, approved or declined.</summary>
+    string status,
+    string? decided_by,
+    string? decided_on,
+    string? decision_note,
+    /// <summary>Whether this is the caller's own request.</summary>
+    bool mine,
+    /// <summary>Whether the caller can answer it.</summary>
+    bool can_decide);
+
+public record LeaveSaveDto(string? from, string? to, string? reason);
+
+public record LeaveDecisionDto(bool approve, string? note);
+
+/// <summary>
 /// One slot to hand out: this shift, on this day, to this many people. Who
 /// gets it is the planner's job — that is the whole point of asking.
 /// </summary>

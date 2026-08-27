@@ -11,6 +11,7 @@ import { Shell } from '@/components/layout/shell';
 import { useReveal } from '@/lib/fx';
 import { PayoutModal, PayoutPrefill } from '@/components/dashboard/modals/payout-modal';
 import { Alert, Money } from '@/components/ui/bits';
+import { Empty } from '@/components/ui/empty';
 import { Icon } from '@/components/ui/icon';
 
 const MONTHS_BACK = 6;
@@ -261,7 +262,13 @@ function Payouts() {
         {loading ? (
           <p className="field-hint">{t('Loading…')}</p>
         ) : upcoming.length === 0 ? (
-          <p className="field-hint">{t('Nothing on the way. Give a place a pay period and its calendar appears here.')}</p>
+          <Empty
+            icon="wallet"
+            title={t('Nothing on the way yet')}
+            action={{ label: t('Set up a place'), href: '/dashboard' }}
+          >
+            {t('Tell a place when it pays and this page starts checking: what is owed, what is late, and whether what arrived matches what was worked.')}
+          </Empty>
         ) : (
           <ul className="flex flex-col gap-1.5">
             {upcoming.map((row) => (

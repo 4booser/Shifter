@@ -19,6 +19,7 @@ import { BadgeWall } from '@/components/achievements/badges';
 import { useReveal } from '@/lib/fx';
 import { Heatmap } from '@/components/charts/charts';
 import { Alert, CountUp, Delta, Money } from '@/components/ui/bits';
+import { Empty } from '@/components/ui/empty';
 import { Icon } from '@/components/ui/icon';
 
 /** Earned by hours worked in the year — the badge at the top of the page. */
@@ -254,7 +255,13 @@ function Wrapped() {
       {loading ? (
         <p className="field-hint">{t('Loading…')}</p>
       ) : days.length === 0 ? (
-        <p className="field-hint">{t('Nothing recorded this year yet.')}</p>
+        <Empty
+          icon="trophy"
+          title={t('This year has nothing in it yet')}
+          action={{ label: t('Open the calendar'), href: '/dashboard' }}
+        >
+          {t('Mark a few shifts and this page fills itself: your hours, your best day, the shift you worked most — and a poster you can post.')}
+        </Empty>
       ) : (
         <>
           {/* ==== The poster: a year that fills the screen ==== */}

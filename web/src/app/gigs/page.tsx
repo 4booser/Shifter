@@ -12,6 +12,7 @@ import { pushToast } from '@/lib/toast';
 import { useReveal } from '@/lib/fx';
 import { Shell } from '@/components/layout/shell';
 import { Alert } from '@/components/ui/bits';
+import { Empty } from '@/components/ui/empty';
 import { Icon } from '@/components/ui/icon';
 import { Modal } from '@/components/ui/modal';
 import { TimeAgo } from '@/components/ui/time-ago';
@@ -250,7 +251,9 @@ function Gigs() {
           ) : byDate.length === 0 ? (
             <div className="card reveal p-8 text-center">
               <p className="mb-1 text-[1.05rem] font-bold">{t('Quiet out there')}</p>
-              <p className="field-hint">{t('No gigs in this window yet. Post one — or widen the range.')}</p>
+              <Empty icon="spark" title={t('No gigs in this window')}>
+                {t('The board fills up closer to the weekend. Widen the dates, drop the category filter, or post the shift you need covered yourself.')}
+              </Empty>
             </div>
           ) : (
             byDate.map(([date, gigs]) => (

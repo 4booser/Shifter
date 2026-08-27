@@ -24,6 +24,7 @@ import { MoneyFlow, WeekBandsChart } from '@/components/charts/glass-charts';
 import { Sheet, buildXlsx, downloadBlob } from '@/lib/export/xlsx';
 import { Shell } from '@/components/layout/shell';
 import { Alert, CountUp, Delta, Money } from '@/components/ui/bits';
+import { Empty } from '@/components/ui/empty';
 import { Icon } from '@/components/ui/icon';
 
 export default function ReportPage() {
@@ -353,10 +354,13 @@ function Report() {
       {loading && summary.days.length === 0 ? (
         <div className="card shimmer h-48" />
       ) : rows.length === 0 ? (
-        <div className="card reveal p-8 text-center">
-          <p className="text-[1rem] font-semibold">{t('Nothing recorded this month')}</p>
-          <p className="field-hint">{t('Pick another month above, or go work a shift.')}</p>
-        </div>
+        <Empty
+          icon="note"
+          title={t('Nothing recorded this month')}
+          action={{ label: t('Open the calendar'), href: '/dashboard' }}
+        >
+          {t('This is the page you would hand an accountant: every worked day on its own line, the money’s assembly, the month before for comparison. Pick another month above, or mark a shift.')}
+        </Empty>
       ) : (
         <>
           {/* ==== Money assembly + week shape ==== */}

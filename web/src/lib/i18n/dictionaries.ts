@@ -5,6 +5,15 @@
 type Dictionary = Record<string, string>;
 
 export const RU: Dictionary = {
+  'This year has nothing in it yet': 'В этом году пока пусто',
+  'Open the calendar': 'Открыть календарь',
+  'Mark a few shifts and this page fills itself: your hours, your best day, the shift you worked most — and a poster you can post.': 'Отметьте несколько смен — и страница соберётся сама: часы, лучший день, самая частая смена и постер, который можно выложить.',
+  'This is the page you would hand an accountant: every worked day on its own line, the money’s assembly, the month before for comparison. Pick another month above, or mark a shift.': 'Это та страница, которую отдают бухгалтеру: каждый отработанный день строкой, сборка денег и прошлый месяц для сравнения. Выберите другой месяц сверху или отметьте смену.',
+  'Nothing on the way yet': 'Пока ничего не едет',
+  'Set up a place': 'Завести место работы',
+  'Tell a place when it pays and this page starts checking: what is owed, what is late, and whether what arrived matches what was worked.': 'Скажите месту, когда оно платит, — и страница начнёт сверять: сколько должны, что просрочено и сходится ли пришедшее с отработанным.',
+  'No gigs in this window': 'В этом окне подработок нет',
+  'The board fills up closer to the weekend. Widen the dates, drop the category filter, or post the shift you need covered yourself.': 'Доска наполняется ближе к выходным. Расширьте даты, снимите фильтр по роли — или выставьте смену, которую нужно закрыть, сами.',
   'Download the poster': 'Скачать постер',
   'Drawing…': 'Рисуем…',
   'No place set': 'Без места',
@@ -1655,6 +1664,15 @@ export const RU: Dictionary = {
 };
 
 export const UK: Dictionary = {
+  'This year has nothing in it yet': 'Цього року поки порожньо',
+  'Open the calendar': 'Відкрити календар',
+  'Mark a few shifts and this page fills itself: your hours, your best day, the shift you worked most — and a poster you can post.': 'Позначте кілька змін — і сторінка збереться сама: години, найкращий день, найчастіша зміна і постер, який можна викласти.',
+  'This is the page you would hand an accountant: every worked day on its own line, the money’s assembly, the month before for comparison. Pick another month above, or mark a shift.': 'Це та сторінка, яку віддають бухгалтеру: кожен відпрацьований день рядком, збірка грошей і минулий місяць для порівняння. Оберіть інший місяць згори або позначте зміну.',
+  'Nothing on the way yet': 'Поки нічого не їде',
+  'Set up a place': 'Завести місце роботи',
+  'Tell a place when it pays and this page starts checking: what is owed, what is late, and whether what arrived matches what was worked.': 'Скажіть місцю, коли воно платить, — і сторінка почне звіряти: скільки винні, що прострочено і чи сходиться те, що прийшло, з відпрацьованим.',
+  'No gigs in this window': 'У цьому вікні підробітків немає',
+  'The board fills up closer to the weekend. Widen the dates, drop the category filter, or post the shift you need covered yourself.': 'Дошка наповнюється ближче до вихідних. Розширте дати, зніміть фільтр за роллю — або виставте зміну, яку треба закрити, самі.',
   'Download the poster': 'Завантажити постер',
   'Drawing…': 'Малюємо…',
   'No place set': 'Без місця',

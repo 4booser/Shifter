@@ -25,12 +25,18 @@ public sealed class PushNotifier : IPushNotifier
 {
     private readonly ShifterDbContext _db;
     private readonly PushSender _sender;
+    private readonly ExpoPushSender _phones;
     private readonly ILogger<PushNotifier> _logger;
 
-    public PushNotifier(ShifterDbContext db, PushSender sender, ILogger<PushNotifier> logger)
+    public PushNotifier(
+        ShifterDbContext db,
+        PushSender sender,
+        ExpoPushSender phones,
+        ILogger<PushNotifier> logger)
     {
         _db = db;
         _sender = sender;
+        _phones = phones;
         _logger = logger;
     }
 
@@ -41,20 +47,34 @@ public sealed class PushNotifier : IPushNotifier
         string url,
         CancellationToken ct)
     {
-        if (!_sender.Enabled) return;
-
         try
         {
-            var subscriptions = await _db.PushSubscriptions
-                .Where(s => s.UserId == userId)
+            if (_sender.Enabled)
+            {
+                var subscriptions = await _db.PushSubscriptions
+                    .Where(s => s.UserId == userId)
+                    .ToListAsync(ct);
+
+                foreach (var subscription in subscriptions)
+                {
+                    var (title, body) = text(subscription.Language);
+
+                    if (!await _sender.SendAsync(subscription, title, body, url))
+                        _db.PushSubscriptions.Remove(subscription);
+                }
+            }
+
+            // The same message to every phone the person has signed in on.
+            var devices = await _db.DeviceTokens
+                .Where(device => device.UserId == userId)
                 .ToListAsync(ct);
 
-            foreach (var subscription in subscriptions)
+            foreach (var device in devices)
             {
-                var (title, body) = text(subscription.Language);
+                var (title, body) = text(device.Language);
 
-                if (!await _sender.SendAsync(subscription, title, body, url))
-                    _db.PushSubscriptions.Remove(subscription);
+                if (!await _phones.SendAsync(device.Token, title, body, url, ct))
+                    _db.DeviceTokens.Remove(device);
             }
 
             await _db.SaveChangesAsync(ct);

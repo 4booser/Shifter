@@ -29,6 +29,53 @@ public class PushController : ControllerBase
         _sender = sender;
     }
 
+    /// <summary>
+    /// A phone registering its push address. Idempotent by token, so a reopen
+    /// refreshes the row rather than growing the table.
+    /// </summary>
+    [HttpPost("device")]
+    public async Task<IActionResult> Device([FromBody] DeviceTokenDto request, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(request.token) || !request.token.StartsWith("ExponentPushToken["))
+            throw new ValidationException("That is not an Expo push token.");
+
+        var existing = await _db.DeviceTokens.FirstOrDefaultAsync(device => device.Token == request.token, ct);
+
+        if (existing is null)
+        {
+            _db.DeviceTokens.Add(new Shifter.Domain.Entities.DeviceToken
+            {
+                UserId = CurrentUserId(),
+                Token = request.token,
+                Platform = request.platform ?? "unknown",
+                Language = request.language ?? "ru",
+            });
+        }
+        else
+        {
+            // A phone handed to somebody else must not keep notifying its
+            // previous owner, so the row follows the token, not the account.
+            existing.UserId = CurrentUserId();
+            existing.Platform = request.platform ?? existing.Platform;
+            existing.Language = request.language ?? existing.Language;
+            existing.LastSeenAt = DateTime.UtcNow;
+        }
+
+        await _db.SaveChangesAsync(ct);
+
+        return NoContent();
+    }
+
+    [HttpDelete("device/{token}")]
+    public async Task<IActionResult> ForgetDevice(string token, CancellationToken ct)
+    {
+        await _db.DeviceTokens
+            .Where(device => device.Token == token && device.UserId == CurrentUserId())
+            .ExecuteDeleteAsync(ct);
+
+        return NoContent();
+    }
+
     /// <summary>The applicationServerKey the browser subscribes against.</summary>
     [HttpGet("public-key")]
     public ActionResult PublicKey()
@@ -134,3 +181,5 @@ public class PushController : ControllerBase
         return userId;
     }
 }
+
+public record DeviceTokenDto(string? token, string? platform, string? language);

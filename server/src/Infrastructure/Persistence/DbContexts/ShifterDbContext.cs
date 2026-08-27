@@ -35,6 +35,7 @@ public class ShifterDbContext : DbContext
     public DbSet<ShiftSwap> ShiftSwaps => Set<ShiftSwap>();
     public DbSet<DailyBrief> DailyBriefs => Set<DailyBrief>();
     public DbSet<Availability> Availabilities => Set<Availability>();
+    public DbSet<DeviceToken> DeviceTokens => Set<DeviceToken>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -61,6 +62,13 @@ public class ShifterDbContext : DbContext
             .IsUnique();
         modelBuilder.Entity<GigSeeker>()
             .HasIndex(seeker => seeker.IsActive);
+
+        // One row per token, however many phones a person signs in on.
+        modelBuilder.Entity<DeviceToken>()
+            .HasIndex(device => device.Token)
+            .IsUnique();
+        modelBuilder.Entity<DeviceToken>()
+            .HasIndex(device => device.UserId);
 
         // One block per person per day per team; the board reads a range.
         modelBuilder.Entity<Availability>()

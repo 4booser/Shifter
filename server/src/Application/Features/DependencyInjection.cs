@@ -90,6 +90,7 @@ public static class DependencyInjection
         services.AddHttpContextAccessor();
         services.AddSingleton<Shifter.Application.Features.Import.PhotoImportService>();
         services.AddSingleton<PushSender>();
+        services.AddScoped<ExpoPushSender>();
         services.AddScoped<IPushNotifier, PushNotifier>();
         services.AddScoped<Shifter.Application.Features.Auth.Services.TwoFactorService>();
 

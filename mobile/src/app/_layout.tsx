@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useColorScheme } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 
+import { registerForPush, wireNotificationTaps } from '@/lib/notifications';
 import { useSession } from '@/store/session';
 
 SplashScreen.preventAutoHideAsync();
@@ -19,6 +20,16 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (session !== undefined) void SplashScreen.hideAsync();
+  }, [session]);
+
+  // The push address is offered once there is somebody to notify, and the
+  // taps are wired for the app's whole life.
+  useEffect(() => {
+    if (session === null || session === undefined) return;
+
+    void registerForPush('ru');
+
+    return wireNotificationTaps();
   }, [session]);
 
   // Keychain still being read: the splash is covering everything anyway.

@@ -121,9 +121,13 @@ public class ReconciliationHandler : IReconciliationHandler
             Shortfalls(periods),
             // Only settled work counts as awaited; a period still being worked
             // has not been earned in full yet.
-            periods.Where(row => row.settled is null && row.status is "due" or "overdue")
+            periods.Where(row => row.settled is null && row.status is "due" or "overdue" or "partial")
                 .Sum(row => row.expected - row.paid),
-            periods.Where(row => row.settled is null && row.status == "overdue")
+            periods.Where(row => row.settled is null
+                    && (row.status == "overdue"
+                        // A half-paid period whose settlement date has passed is
+                        // late for the rest of it, not merely unfinished.
+                        || (row.status == "partial" && today > row.due_on)))
                 .Sum(row => row.expected - row.paid));
     }
 
@@ -167,11 +171,22 @@ public class ReconciliationHandler : IReconciliationHandler
         decimal expected,
         string stream)
     {
-        decimal paid = payouts
+        Payout[] against = payouts
             .Where(payout => payout.LocationId == place.Id
                 && Settles(payout, stream)
                 && Overlaps(payout, periodFrom, periodTo))
+            .ToArray();
+
+        decimal paid = against.Sum(payout => payout.Amount);
+
+        // An advance is money in hand, so it counts towards what arrived — but
+        // it is also a promise that more is coming, which is the difference
+        // between "they paid short" and "they have not finished paying".
+        decimal advance = against
+            .Where(payout => payout.Kind == "advance")
             .Sum(payout => payout.Amount);
+
+        bool closed = against.Any(payout => payout.Kind != "advance");
 
         decimal difference = paid - expected;
 
@@ -194,9 +209,10 @@ public class ReconciliationHandler : IReconciliationHandler
             paid,
             difference,
             total.hours,
-            Status(periodTo, due, today, paid, difference),
+            Status(periodTo, due, today, paid, difference, advance, closed),
             late,
-            stream);
+            stream,
+            paid_advance: advance);
     }
 
     /// <summary>Every pay period of this place that touches the range.</summary>
@@ -265,12 +281,19 @@ public class ReconciliationHandler : IReconciliationHandler
         DateOnly due,
         DateOnly today,
         decimal paid,
-        decimal difference)
+        decimal difference,
+        decimal advance,
+        bool closed)
     {
         // Still being worked: there is nothing to chase yet.
         if (periodTo >= today) return "open";
 
         if (paid == 0m) return today > due.AddDays(GraceDays) ? "overdue" : "due";
+
+        // The advance arrived and the settlement has not. That is the normal
+        // shape of a month at half the places in this trade, and calling it a
+        // shortfall would train people to ignore the word.
+        if (difference < -Tolerance && advance > 0m && !closed) return "partial";
 
         if (difference < -Tolerance) return "short";
         if (difference > Tolerance) return "over";
@@ -294,7 +317,11 @@ public class ReconciliationHandler : IReconciliationHandler
         foreach (var group in periods.GroupBy(row => (row.location_id, row.stream)))
         {
             PayPeriodDto[] settled = group
-                .Where(row => row.status is not "open")
+                // A period still being worked, or still half-paid, is not
+                // evidence either way — it is skipped rather than allowed to
+                // break a run, or the current month would hide the pattern
+                // behind it every time.
+                .Where(row => row.status is not ("open" or "partial"))
                 .OrderByDescending(row => row.period_from)
                 .ToArray();
 

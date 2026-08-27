@@ -9,6 +9,19 @@ import { Alert, Money } from '@/components/ui/bits';
 import { Icon } from '@/components/ui/icon';
 import { Modal } from '@/components/ui/modal';
 
+import type { PayoutKind } from '@/lib/calendar/models';
+
+/**
+ * Recorded in the order they happen. The advance comes first because it is the
+ * reason this control exists — the rest are here so it is not the odd one out.
+ */
+const KINDS: { value: PayoutKind; label: string }[] = [
+  { value: 'advance', label: 'Advance' },
+  { value: 'settlement', label: 'Settlement' },
+  { value: 'bonus', label: 'Bonus' },
+  { value: 'cash', label: 'In cash' },
+];
+
 /** A period the payment is being recorded against, handed in from a row. */
 export interface PayoutPrefill {
   locationId: number | null;
@@ -41,13 +54,16 @@ export function PayoutModal({
   const [received, setReceived] = useState('');
   const [note, setNote] = useState('');
   const [locationId, setLocationId] = useState<number | null>(null);
+  const [kind, setKind] = useState<PayoutKind>('settlement');
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open) return;
 
+    const today = new Date().toISOString().slice(0, 10);
+
     setError(null);
-    setReceived(new Date().toISOString().slice(0, 10));
+    setReceived(today);
     setNote('');
 
     // Opened against a specific period: the amount is filled in with what was
@@ -57,6 +73,9 @@ export function PayoutModal({
       setTo(prefill.to);
       setAmount(prefill.expected === 0 ? null : Math.round(prefill.expected * 100) / 100);
       setLocationId(prefill.locationId);
+      // Money that arrives before the period has finished is an advance almost
+      // by definition — nobody settles a month they are still working.
+      setKind(prefill.to > today ? 'advance' : 'settlement');
 
       return;
     }
@@ -67,6 +86,7 @@ export function PayoutModal({
     setTo(range.to);
     setAmount(null);
     setLocationId(locations.length === 1 ? locations[0].id : null);
+    setKind(range.to > today ? 'advance' : 'settlement');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, prefill]);
 
@@ -84,6 +104,7 @@ export function PayoutModal({
         note: note.trim() === '' ? null : note,
         location_id: locationId,
         stream: prefill?.stream ?? 'all',
+        kind,
       });
       onSaved?.();
       onClose();
@@ -143,7 +164,29 @@ export function PayoutModal({
           </label>
         </div>
 
-        {difference !== null && (
+        <div>
+          <span className="field-label">{t('What this payment is')}</span>
+          <div className="flex flex-wrap gap-1.5">
+            {KINDS.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                className={`btn btn-sm ${kind === option.value ? 'btn-primary' : 'btn-quiet'}`}
+                aria-pressed={kind === option.value}
+                onClick={() => setKind(option.value)}
+              >
+                {t(option.label)}
+              </button>
+            ))}
+          </div>
+          {kind === 'advance' && (
+            <p className="field-hint mt-1.5">
+              {t('The period stays open until the settlement arrives, and is not counted as underpaid.')}
+            </p>
+          )}
+        </div>
+
+        {difference !== null && kind !== 'advance' && (
           <p className={`field-hint ${difference < 0 ? 'text-danger' : ''}`}>
             {t('Calculation for the period on screen:')} <Money value={summary.total_earned} />.{' '}
             {difference < 0 ? (
@@ -173,6 +216,11 @@ export function PayoutModal({
                 <li key={payout.id} className="flex items-center gap-2 rounded-(--radius) border border-border px-2.5 py-1.5 text-[0.85rem]">
                   <Money value={payout.amount} className="font-semibold" />
                   <span className="field-hint">{payout.received_on}</span>
+                  {payout.kind !== 'settlement' && (
+                    <span className="chip">
+                      {t(KINDS.find((option) => option.value === payout.kind)?.label ?? 'Settlement')}
+                    </span>
+                  )}
                   {payout.location_name && <span className="chip">{payout.location_name}</span>}
                   <button
                     type="button"

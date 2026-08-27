@@ -43,7 +43,8 @@ public class ReconciliationTests
             date, Build.Template(place.Id, location: place, amount: rate)));
     }
 
-    private void Received(Location? place, string from, string to, decimal amount)
+    private void Received(
+        Location? place, string from, string to, decimal amount, string kind = "settlement")
     {
         _query.Payouts.Add(new Payout
         {
@@ -53,6 +54,7 @@ public class ReconciliationTests
             PeriodTo = DateOnly.Parse(to),
             Amount = amount,
             ReceivedOn = DateOnly.Parse(to),
+            Kind = kind,
         });
     }
 
@@ -346,5 +348,89 @@ public class ReconciliationTests
         ReconciliationDto result = await Reconcile("2026-01-01", "2026-03-31");
 
         Assert.True(result.awaited > 0m);
+    }
+
+    // ==== Paid twice a month ====
+
+    [Fact]
+    public async Task AnAdvanceOnItsOwnIsNotAShortfall()
+    {
+        // Half the trade pays аванс then расчёт. On the day the month closes the
+        // advance is all that has arrived, and calling that "they paid you
+        // short" every month is how the word stops meaning anything.
+        Location place = Monthly();
+
+        Worked(place, "2020-01-06");
+        Received(place, "2020-01-01", "2020-01-31", 300m, kind: "advance");
+
+        ReconciliationDto result = await Reconcile("2020-01-01", "2020-01-31");
+
+        PayPeriodDto period = Assert.Single(result.periods);
+
+        Assert.Equal("partial", period.status);
+        Assert.Equal(300m, period.paid_advance);
+        Assert.Equal(500m, result.awaited);
+        Assert.Empty(result.shortfalls);
+    }
+
+    [Fact]
+    public async Task AnAdvanceFollowedByTheSettlementClearsThePeriod()
+    {
+        Location place = Monthly();
+
+        Worked(place, "2020-01-06");
+        Received(place, "2020-01-01", "2020-01-31", 300m, kind: "advance");
+        Received(place, "2020-01-01", "2020-01-31", 500m);
+
+        ReconciliationDto result = await Reconcile("2020-01-01", "2020-01-31");
+
+        PayPeriodDto period = Assert.Single(result.periods);
+
+        Assert.Equal("paid", period.status);
+        Assert.Equal(800m, period.paid);
+        Assert.Equal(300m, period.paid_advance);
+        Assert.Equal(0m, result.awaited);
+    }
+
+    [Fact]
+    public async Task ASettlementThatArrivesShortIsStillAShortfall()
+    {
+        // The advance excuses an unfinished month, not an underpaid one: once
+        // the closing payment lands, the arithmetic speaks again.
+        Location place = Monthly();
+
+        Worked(place, "2020-01-06");
+        Received(place, "2020-01-01", "2020-01-31", 300m, kind: "advance");
+        Received(place, "2020-01-01", "2020-01-31", 200m);
+
+        ReconciliationDto result = await Reconcile("2020-01-01", "2020-01-31");
+
+        Assert.Equal("short", Assert.Single(result.periods).status);
+    }
+
+    [Fact]
+    public async Task AHalfPaidMonthDoesNotHideTheMonthsShortBehindIt()
+    {
+        // The run is read newest first and stops at the first period that came
+        // out right. A half-paid current month is neither right nor wrong yet,
+        // so it must step aside instead of breaking the run — otherwise every
+        // pattern disappears for as long as somebody is owed a settlement.
+        Location place = Monthly();
+
+        Worked(place, "2020-01-06");
+        Received(place, "2020-01-01", "2020-01-31", 700m);
+
+        Worked(place, "2020-02-06");
+        Received(place, "2020-02-01", "2020-02-29", 700m);
+
+        Worked(place, "2020-03-06");
+        Received(place, "2020-03-01", "2020-03-31", 300m, kind: "advance");
+
+        ReconciliationDto result = await Reconcile("2020-01-01", "2020-03-31");
+
+        ShortfallDto pattern = Assert.Single(result.shortfalls);
+
+        Assert.Equal(2, pattern.periods);
+        Assert.Equal(200m, pattern.total_short);
     }
 }

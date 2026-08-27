@@ -61,7 +61,8 @@ public class PayoutHandler : IPayoutHandler
             Amount = request.amount,
             ReceivedOn = request.received_on,
             Note = string.IsNullOrWhiteSpace(request.note) ? null : request.note.Trim(),
-            Stream = ParseStream(request.stream)
+            Stream = ParseStream(request.stream),
+            Kind = ParseKind(request.kind)
         };
 
         if (! await _shifterCommand.AddPayoutAsync(payout, ct))
@@ -91,7 +92,8 @@ public class PayoutHandler : IPayoutHandler
         payout.Note,
         payout.LocationId,
         payout.Location?.Name,
-        payout.Stream
+        payout.Stream,
+        payout.Kind
     );
 
     /// <summary>
@@ -103,5 +105,18 @@ public class PayoutHandler : IPayoutHandler
         "wage" => "wage",
         "commission" => "commission",
         _ => "all"
+    };
+
+    /// <summary>
+    /// Same rule as the stream: an older client sends nothing and means the
+    /// payment that closes the period, which is what every payment was before
+    /// the advance existed.
+    /// </summary>
+    private static string ParseKind(string? value) => value?.ToLowerInvariant() switch
+    {
+        "advance" => "advance",
+        "bonus" => "bonus",
+        "cash" => "cash",
+        _ => "settlement"
     };
 }

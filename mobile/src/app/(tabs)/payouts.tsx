@@ -18,7 +18,21 @@ import { api } from '@/lib/api';
 import { addMonths, currentMonth, monthBounds, shortDate, todayKey } from '@/lib/calendar';
 import { money } from '@/lib/types';
 
-type Status = 'open' | 'due' | 'overdue' | 'paid' | 'short' | 'over';
+type Status = 'open' | 'due' | 'overdue' | 'partial' | 'paid' | 'short' | 'over';
+
+/**
+ * The аванс arrives mid-month and the расчёт closes it. Recorded as one kind of
+ * payment the advance reads as an underpayment every single month, which is how
+ * a warning stops being read.
+ */
+type PayoutKind = 'settlement' | 'advance' | 'bonus' | 'cash';
+
+const KINDS: { value: PayoutKind; label: string }[] = [
+  { value: 'advance', label: 'Аванс' },
+  { value: 'settlement', label: 'Расчёт' },
+  { value: 'bonus', label: 'Премия' },
+  { value: 'cash', label: 'Наличными' },
+];
 
 interface PayPeriodRow {
   location_id: number;
@@ -34,6 +48,8 @@ interface PayPeriodRow {
   status: Status;
   days_late: number;
   stream: 'all' | 'wage' | 'commission';
+  /** How much of what arrived was an advance. */
+  paid_advance: number;
 }
 
 interface Shortfall {
@@ -61,12 +77,14 @@ interface Payout {
   note: string | null;
   location_id: number | null;
   location_name: string | null;
+  kind: PayoutKind;
 }
 
 const STATUS_LABEL: Record<Status, string> = {
   open: 'В работе',
   due: 'Ожидается',
   overdue: 'Просрочено',
+  partial: 'Аванс пришёл',
   paid: 'Закрыто',
   short: 'Недоплачено',
   over: 'Переплата',
@@ -282,7 +300,9 @@ function PeriodCard({
       ? palette.danger
       : row.status === 'paid' || row.status === 'over'
         ? palette.good
-        : palette.textSecondary;
+        : row.status === 'partial'
+          ? palette.accent
+          : palette.textSecondary;
 
   return (
     <View style={styles.card}>
@@ -307,6 +327,8 @@ function PeriodCard({
           <Text style={styles.cardDue}>
             {row.status === 'overdue'
               ? `Ждём с ${shortDate(row.due_on)} — ${row.days_late} дн.`
+              : row.status === 'partial'
+                ? `Аванс ${money(row.paid_advance)} · осталось ${money(row.expected - row.paid)}`
               : row.paid > 0
                 ? `Пришло ${money(row.paid)} · срок ${shortDate(row.due_on)}`
                 : `Срок ${shortDate(row.due_on)}`}
@@ -340,6 +362,7 @@ function PayoutModal({
   const styles = makeStyles(palette);
   const [amount, setAmount] = useState('');
   const [received, setReceived] = useState(todayKey());
+  const [kind, setKind] = useState<PayoutKind>('settlement');
   const [saving, setSaving] = useState(false);
   const [failed, setFailed] = useState(false);
 
@@ -351,6 +374,9 @@ function PayoutModal({
     const left = Math.max(0, Math.round(row.expected - row.paid));
     setAmount(left > 0 ? `${left}` : '');
     setReceived(todayKey());
+    // Money that arrives before the period has finished is an advance almost by
+    // definition — nobody settles a month they are still working.
+    setKind(row.period_to > todayKey() ? 'advance' : 'settlement');
     setFailed(false);
   }, [row]);
 
@@ -369,6 +395,7 @@ function PayoutModal({
           received_on: received,
           location_id: row.location_id,
           note: null,
+          kind,
         },
       });
       onSaved();
@@ -407,6 +434,27 @@ function PayoutModal({
           placeholder="ГГГГ-ММ-ДД"
           placeholderTextColor={palette.textSecondary}
         />
+
+        <Text style={styles.fieldLabel}>Что это</Text>
+        <View style={styles.kindRow}>
+          {KINDS.map((option) => (
+            <Pressable
+              key={option.value}
+              style={[styles.kindChip, kind === option.value && styles.kindChipOn]}
+              onPress={() => setKind(option.value)}
+            >
+              <Text style={[styles.kindText, kind === option.value && styles.kindTextOn]}>
+                {option.label}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+
+        {kind === 'advance' && (
+          <Text style={styles.kindHint}>
+            Период останется открытым до расчёта и не будет считаться недоплаченным.
+          </Text>
+        )}
 
         {failed && <Text style={styles.error}>Не сохранили. Проверьте сумму и дату.</Text>}
 
@@ -545,6 +593,18 @@ const makeStyles = (palette: Palette) =>
       color: palette.text,
       fontSize: 16,
     },
+    kindRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
+    kindChip: {
+      paddingHorizontal: 12,
+      paddingVertical: 7,
+      borderRadius: 999,
+      borderWidth: 1,
+      borderColor: palette.border,
+    },
+    kindChipOn: { backgroundColor: palette.accent, borderColor: palette.accent },
+    kindText: { color: palette.textSecondary, fontSize: 13, fontWeight: '600' },
+    kindTextOn: { color: '#fff' },
+    kindHint: { color: palette.textSecondary, fontSize: 12, marginTop: 8, lineHeight: 17 },
     sheetButtons: { flexDirection: 'row', gap: 10, marginTop: 14 },
     sheetButton: { flex: 1, borderRadius: 999, paddingVertical: 14, alignItems: 'center' },
     sheetGhost: { borderColor: palette.border, borderWidth: 1 },

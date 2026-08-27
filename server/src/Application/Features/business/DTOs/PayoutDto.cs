@@ -11,7 +11,9 @@ public record PayoutDto(
     int? location_id,
     string? location_name,
     /// <summary>Which of the place's payments this settles: all, wage or commission.</summary>
-    string stream = "all"
+    string stream = "all",
+    /// <summary>settlement, advance, bonus or cash.</summary>
+    string kind = "settlement"
     );
 
 public record PayoutCreateDto(
@@ -22,5 +24,7 @@ public record PayoutCreateDto(
     string? note,
     int? location_id,
     /// <summary>Absent means the payment covers everything the place owes.</summary>
-    string? stream = null
+    string? stream = null,
+    /// <summary>Absent means the payment closes the period, as it always did.</summary>
+    string? kind = null
     );

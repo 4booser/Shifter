@@ -18,7 +18,11 @@ public record PayPeriodDto(
     /// <summary>paid minus expected; negative is a shortfall.</summary>
     decimal difference,
     double hours,
-    /// <summary>open, due, overdue, paid, short or over.</summary>
+    /// <summary>
+    /// open, due, overdue, partial, paid, short or over. "partial" is an
+    /// advance with the settlement still to come — money outstanding, but
+    /// nobody has done anything wrong yet.
+    /// </summary>
     string status,
     /// <summary>Days past the due date with nothing recorded; 0 otherwise.</summary>
     int days_late,
@@ -34,7 +38,9 @@ public record PayPeriodDto(
     /// as owed; only one of them is good news.
     /// </summary>
     string? settled = null,
-    string? settled_note = null);
+    string? settled_note = null,
+    /// <summary>How much of what arrived was an advance.</summary>
+    decimal paid_advance = 0m);
 
 /// <summary>
 /// A place that has come up short more than once. One short period is a

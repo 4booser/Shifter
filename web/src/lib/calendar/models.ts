@@ -376,7 +376,16 @@ export interface Payout {
   /** Null when the payment was not attributed to a place. */
   location_id: number | null;
   location_name: string | null;
+  /** What kind of payment it is; see PayoutKind. */
+  kind: PayoutKind;
 }
+
+/**
+ * The аванс arrives mid-month and the расчёт closes it. Recorded as one kind of
+ * payment they look like an underpayment every single month, which is how a
+ * warning stops being read.
+ */
+export type PayoutKind = 'settlement' | 'advance' | 'bonus' | 'cash';
 
 export interface PayoutCreate {
   period_from: string;
@@ -387,6 +396,7 @@ export interface PayoutCreate {
   location_id: number | null;
   /** Which of the place's payments this settles; 'all' where it pays everything. */
   stream: 'all' | 'wage' | 'commission';
+  kind: PayoutKind;
 }
 
 /** How long a goal covers. */
@@ -431,7 +441,11 @@ export interface PayPeriodRow {
   /** paid minus expected; negative is a shortfall. */
   difference: number;
   hours: number;
-  status: 'open' | 'due' | 'overdue' | 'paid' | 'short' | 'over';
+  /**
+   * 'partial' is an advance with the settlement still to come: money is
+   * outstanding, but nobody has done anything wrong yet.
+   */
+  status: 'open' | 'due' | 'overdue' | 'partial' | 'paid' | 'short' | 'over';
   days_late: number;
   /**
    * Which payment this row is. 'all' where a place settles everything at once;
@@ -446,6 +460,8 @@ export interface PayPeriodRow {
    */
   settled: 'paid' | 'written-off' | null;
   settled_note: string | null;
+  /** How much of what arrived was an advance. */
+  paid_advance: number;
 }
 
 /** A place that has come up short more than once running. */

@@ -38,4 +38,17 @@ public sealed class Payout
     /// recorded before the split still matches its period.
     /// </summary>
     public string Stream { get; set; } = "all";
+
+    /// <summary>
+    /// What kind of payment this is: "settlement" for the money that closes a
+    /// period, "advance" for the half that arrives mid-month, "bonus" for
+    /// anything paid on top, "cash" for money handed over outside payroll.
+    ///
+    /// Half of hospitality pays twice — аванс and расчёт — and without this the
+    /// advance reads as the whole payment for the period, so the reconciliation
+    /// calls the place short on the day the period closes and keeps doing it
+    /// every month. An advance is not a shortfall, it is a plan; the difference
+    /// is a label, not a number.
+    /// </summary>
+    public string Kind { get; set; } = "settlement";
 }

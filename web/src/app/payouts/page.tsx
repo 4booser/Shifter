@@ -20,6 +20,7 @@ const STATUS_LABEL: Record<PayPeriodRow['status'], string> = {
   open: 'Being worked',
   due: 'Expected',
   overdue: 'Late',
+  partial: 'Advance paid',
   paid: 'Settled',
   short: 'Underpaid',
   over: 'Overpaid',
@@ -72,7 +73,13 @@ function Payouts() {
   const periods = data?.periods ?? [];
   const shortfalls = data?.shortfalls ?? [];
   const upcoming = periods
-    .filter((row) => row.status === 'due' || row.status === 'overdue' || row.status === 'open')
+    .filter(
+      (row) =>
+        row.status === 'due' ||
+        row.status === 'overdue' ||
+        row.status === 'partial' ||
+        row.status === 'open',
+    )
     .sort((a, b) => a.due_on.localeCompare(b.due_on));
   const settled = periods.filter((row) => row.status === 'paid' || row.status === 'short' || row.status === 'over');
 
@@ -259,7 +266,9 @@ function Payouts() {
                                 ? 'var(--danger)'
                                 : row.status === 'overdue'
                                   ? 'var(--warn)'
-                                  : 'var(--surface-2)',
+                                  : row.status === 'partial'
+                                    ? 'var(--accent)'
+                                    : 'var(--surface-2)',
                       }}
                     />
                   ))}
@@ -377,15 +386,23 @@ function PeriodRow({
 
       <span className="text-right">
         <Money value={row.expected} className="block text-[0.95rem] font-bold" />
-        {row.paid > 0 && row.difference !== 0 && (
-          <span className={`text-[0.78rem] tabular ${row.difference < 0 ? 'text-danger' : 'text-good'}`}>
-            {row.difference < 0 ? '−' : '+'}
-            <Money value={Math.abs(row.difference)} />
+        {row.status === 'partial' ? (
+          <span className="field-hint tabular block">
+            {t('Advance')} <Money value={row.paid_advance} /> · {t('left')}{' '}
+            <Money value={row.expected - row.paid} />
           </span>
+        ) : (
+          row.paid > 0 &&
+          row.difference !== 0 && (
+            <span className={`text-[0.78rem] tabular ${row.difference < 0 ? 'text-danger' : 'text-good'}`}>
+              {row.difference < 0 ? '−' : '+'}
+              <Money value={Math.abs(row.difference)} />
+            </span>
+          )
         )}
       </span>
 
-      {(row.status === 'due' || row.status === 'overdue') && (
+      {(row.status === 'due' || row.status === 'overdue' || row.status === 'partial') && (
         <button type="button" className="btn btn-sm" onClick={() => onRecord(row)}>
           {t('Record')}
         </button>

@@ -334,6 +334,7 @@ export function Landing() {
           <Link href="/login" className="font-semibold text-(--accent)">Войти</Link>
           <Link href="/whats-new" className="font-semibold text-(--accent)">Что нового</Link>
           <Link href="/roadmap" className="font-semibold text-(--accent)">Дорожная карта</Link>
+          <Link href="/status" className="font-semibold text-(--accent)">Статус</Link>
           <a href="#top" className="font-semibold text-(--accent)">Наверх ↑</a>
         </p>
         <span className="font-bold text-ink">Shifter</span> · смены, деньги и команда — под контролем · www.shifter.ink

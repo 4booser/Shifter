@@ -30,6 +30,19 @@ public sealed class Day
     /// </summary>
     public decimal? Deductions { get; set; }
 
+    /// <summary>
+    /// Why the day cost money: "breakage", "shortfall", "late", "waste",
+    /// "uniform" or "other". Null on every day recorded before the reason
+    /// existed, and on any day where nobody bothered to say.
+    ///
+    /// One reason per day rather than a list, matching how tips and the pool
+    /// are already kept: a day usually has one thing go wrong, and a table for
+    /// the rare second one would cost more than it explains. What it buys is
+    /// the difference between "₴1 200 in fines" and "₴900 of that was the till
+    /// coming up short" — the first is bad luck, the second is a question.
+    /// </summary>
+    public string? DeductionReason { get; set; }
+
     public string? Note { get; set; }
 
     /// <summary>

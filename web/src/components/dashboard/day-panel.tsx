@@ -20,6 +20,21 @@ import {
   useCalendar,
 } from '@/lib/store/calendar';
 import { Icon } from '@/components/ui/icon';
+
+import type { DeductionReason } from '@/lib/calendar/models';
+
+/**
+ * Why a day cost money. Kept short on purpose — a list nobody scrolls is a list
+ * people answer honestly, and the note is there for the rest.
+ */
+const REASONS: { value: DeductionReason; label: string }[] = [
+  { value: 'shortfall', label: 'Till came up short' },
+  { value: 'breakage', label: 'Breakage' },
+  { value: 'late', label: 'Turned up late' },
+  { value: 'waste', label: 'Waste' },
+  { value: 'uniform', label: 'Uniform' },
+  { value: 'other', label: 'Something else' },
+];
 import { Money, SwatchRow } from '@/components/ui/bits';
 import { EventModal } from './modals/event-modal';
 
@@ -60,6 +75,7 @@ export function DayPanel() {
   const [tips, setTips] = useState<number | null>(null);
   const [tipsCash, setTipsCash] = useState<number | null>(null);
   const [deductions, setDeductions] = useState<number | null>(null);
+  const [deductionReason, setDeductionReason] = useState<DeductionReason | null>(null);
   const [tipPool, setTipPool] = useState<number | null>(null);
   const [revenue, setRevenue] = useState<Record<number, number | null>>({});
   const [note, setNote] = useState('');
@@ -97,6 +113,7 @@ export function DayPanel() {
       Object.fromEntries((day?.shifts ?? []).map((entry) => [entry.shift_id, entry.revenue])),
     );
     setDeductions(day?.deductions ?? null);
+    setDeductionReason(day?.deduction_reason ?? null);
     setNote(day?.note ?? '');
     setColour(day?.colour ?? null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -202,6 +219,8 @@ export function DayPanel() {
       tips_cash: tipsCash,
       tip_pool: tipPool,
       deductions,
+      // A reason without a fine is noise; the server drops it too.
+      deduction_reason: deductions !== null && deductions > 0 ? deductionReason : null,
       note: note.trim() === '' ? null : note,
       colour,
     });
@@ -596,6 +615,24 @@ export function DayPanel() {
           placeholder="0"
           onChange={(event) => setDeductions(event.target.value === '' ? null : Number(event.target.value))}
         />
+
+        {deductions !== null && deductions > 0 && (
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {REASONS.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                className={`btn btn-sm ${deductionReason === option.value ? 'btn-primary' : 'btn-quiet'}`}
+                aria-pressed={deductionReason === option.value}
+                onClick={() =>
+                  setDeductionReason((current) => (current === option.value ? null : option.value))
+                }
+              >
+                {t(option.label)}
+              </button>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* Note */}

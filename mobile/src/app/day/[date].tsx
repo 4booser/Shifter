@@ -18,7 +18,15 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Colors, Palette } from '@/constants/theme';
 import { api } from '@/lib/api';
-import { CalendarDayData, DaysResponse, money, ShiftTemplate, toSavePayload } from '@/lib/types';
+import {
+  CalendarDayData,
+  DaysResponse,
+  DEDUCTION_REASONS,
+  DeductionReason,
+  money,
+  ShiftTemplate,
+  toSavePayload,
+} from '@/lib/types';
 
 /**
  * One day, editable: which templates are on it, whether they were worked,
@@ -36,6 +44,7 @@ export default function DayScreen() {
   const [templates, setTemplates] = useState<ShiftTemplate[]>([]);
   const [tips, setTips] = useState('');
   const [deductions, setDeductions] = useState('');
+  const [deductionReason, setDeductionReason] = useState<DeductionReason | null>(null);
   const [tipPool, setTipPool] = useState('');
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
@@ -53,6 +62,7 @@ export default function DayScreen() {
         setTemplates(shifts.filter((template) => !template.archived));
         setTips(loaded.tips === null ? '' : `${loaded.tips}`);
         setDeductions(loaded.deductions === 0 ? '' : `${loaded.deductions}`);
+        setDeductionReason(loaded.deduction_reason ?? null);
         setTipPool(loaded.tip_pool === null ? '' : `${loaded.tip_pool}`);
         setNote(loaded.note ?? '');
       })
@@ -153,6 +163,8 @@ export default function DayScreen() {
       payload.tips = tips.trim() === '' ? null : Number(tips) || 0;
       payload.tip_pool = tipPool.trim() === '' ? null : Number(tipPool) || 0;
       payload.deductions = deductions.trim() === '' ? null : Number(deductions) || 0;
+      // A reason without a fine is noise; the server drops it too.
+      payload.deduction_reason = (payload.deductions ?? 0) > 0 ? deductionReason : null;
       payload.note = note.trim() === '' ? null : note.trim();
 
       await api(`/shifter/v1/days/${date}`, { method: 'PUT', body: payload });
@@ -275,6 +287,34 @@ export default function DayScreen() {
               </View>
             </View>
 
+            {(Number(deductions) || 0) > 0 && (
+              <View style={styles.reasonRow}>
+                {DEDUCTION_REASONS.map((option) => (
+                  <Pressable
+                    key={option.value}
+                    style={[
+                      styles.reasonChip,
+                      deductionReason === option.value && styles.reasonChipOn,
+                    ]}
+                    onPress={() =>
+                      setDeductionReason((current) =>
+                        current === option.value ? null : option.value,
+                      )
+                    }
+                  >
+                    <Text
+                      style={[
+                        styles.reasonText,
+                        deductionReason === option.value && styles.reasonTextOn,
+                      ]}
+                    >
+                      {option.label}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            )}
+
             <Text style={styles.fieldLabel}>Заметка</Text>
             <TextInput
               style={[styles.input, styles.noteInput]}
@@ -353,6 +393,17 @@ const makeStyles = (palette: Palette) =>
     workedHint: { color: palette.textSecondary, fontSize: 12 },
     moneyRow: { flexDirection: 'row', gap: 8 },
     moneyField: { flex: 1, gap: 4 },
+    reasonRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 10 },
+    reasonChip: {
+      paddingHorizontal: 12,
+      paddingVertical: 7,
+      borderRadius: 999,
+      borderWidth: 1,
+      borderColor: palette.border,
+    },
+    reasonChipOn: { backgroundColor: palette.accent, borderColor: palette.accent },
+    reasonText: { color: palette.textSecondary, fontSize: 13, fontWeight: '600' },
+    reasonTextOn: { color: '#fff' },
     fieldLabel: { color: palette.textSecondary, fontSize: 12.5, fontWeight: '600' },
     input: {
       borderWidth: 1,

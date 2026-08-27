@@ -389,15 +389,13 @@ public class ShifterCommand : IShifterCommand
             return incoming;
         }
 
-        // Every scalar the save carries, not a subset. Cash tips and deductions
-        // were missing here and simply never persisted on a day that already
-        // existed: the value came back correct in the response, built from the
-        // request, and was gone by the next reload.
-        existing.Tips = incoming.Tips;
-        existing.TipsCash = incoming.TipsCash;
-        existing.Deductions = incoming.Deductions;
-        existing.Note = incoming.Note;
-        existing.Colour = incoming.Colour;
+        // Every scalar the save carries, not a subset. Cash tips, deductions,
+        // the tip pool and the fine's reason were each missing here at some
+        // point and simply never persisted on a day that already existed: the
+        // value came back correct in the response, built from the request, and
+        // was gone by the next reload. The copy is derived from the entity now
+        // so the next field cannot be forgotten.
+        DayScalars.CopyOnto(existing, incoming);
 
         // The client always sends the day in full, so replacing beats diffing:
         // there is no partial update to reconcile. The old rows go explicitly

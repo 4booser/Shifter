@@ -120,6 +120,7 @@ public partial class DayHandler : IDayHandler
             paid == 0m ? 0m : paid - totalEarned,
             tipOut,
             deductions,
+            ByReason(days),
             tax,
             totalEarned - tax,
             holiday,
@@ -174,6 +175,10 @@ public partial class DayHandler : IDayHandler
             TipsCash = tipsCash,
             TipPool = request.tip_pool,
             Deductions = request.deductions,
+            // A reason without a fine is noise, so it is dropped with the fine.
+            DeductionReason = request.deductions > 0m
+                ? ParseDeductionReason(request.deduction_reason)
+                : null,
             Note = string.IsNullOrWhiteSpace(request.note) ? null : request.note.Trim(),
             Colour = NormaliseColour(request.colour)
         };
@@ -698,6 +703,40 @@ public partial class DayHandler : IDayHandler
     /// Everything the day cost: the staff meal withheld by the place plus any
     /// fine recorded on the day.
     /// </summary>
+    /// <summary>
+    /// The reasons a day can cost money. Anything unrecognised — including
+    /// what an older client sends, which is nothing — reads as unsaid rather
+    /// than as "other": the app should not put words in anybody's mouth.
+    /// </summary>
+    private static string? ParseDeductionReason(string? value) => value?.ToLowerInvariant() switch
+    {
+        "breakage" => "breakage",
+        "shortfall" => "shortfall",
+        "late" => "late",
+        "waste" => "waste",
+        "uniform" => "uniform",
+        "other" => "other",
+        _ => null
+    };
+
+    /// <summary>
+    /// Fines grouped by what caused them, largest first, over a range of days.
+    /// Meal withholding is deliberately absent: it is agreed in advance and
+    /// nothing went wrong, so putting it beside a till shortfall would blunt
+    /// the only number on the page worth arguing about.
+    /// </summary>
+    public static DeductionReasonDto[] ByReason(IEnumerable<Day> days)
+        => days
+            .Where(day => (day.Deductions ?? 0m) > 0m)
+            .GroupBy(day => day.DeductionReason ?? "unsaid")
+            .Select(group => new DeductionReasonDto(
+                group.Key,
+                group.Sum(day => day.Deductions ?? 0m),
+                group.Count()))
+            .OrderByDescending(entry => entry.amount)
+            .ThenBy(entry => entry.reason)
+            .ToArray();
+
     private static decimal DeductionsFor(Day day, Dictionary<int, Location> locations)
     {
         decimal fines = day.Deductions ?? 0m;
@@ -830,6 +869,7 @@ public partial class DayHandler : IDayHandler
             day.TipPool,
             tipOut,
             deductions,
+            day.DeductionReason,
             day.Note,
             day.Colour,
             BelowFloor(day, locations),

@@ -43,7 +43,7 @@ public class PlaceRulesTests
     }
 
     private Task<DayDto> Save() => _handler.SaveAsync(
-        new DaySaveDto([new DayShiftSaveDto(1, worked: true)], null, null, null, null, null, null),
+        new DaySaveDto([new DayShiftSaveDto(1, worked: true)], null, null, null, null, null, null, null),
         Build.UserId,
         DateOnly.Parse("2026-03-10"),
         CancellationToken.None);

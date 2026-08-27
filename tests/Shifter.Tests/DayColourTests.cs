@@ -24,7 +24,7 @@ public class DayColourTests
     }
 
     private static DaySaveDto Save(string? colour)
-        => new DaySaveDto(null, null, null, null, null, null, colour);
+        => new DaySaveDto(null, null, null, null, null, null, null, colour: colour);
 
     private Task<DayDto> SaveDay(string? colour)
         => _handler.SaveAsync(

@@ -50,6 +50,8 @@ public record DayDto(
     decimal tip_out,
     /// <summary>Meal withholding plus fines; already deducted from earned.</summary>
     decimal deductions,
+    /// <summary>Why the fine, where it was said: breakage, shortfall, late, waste, uniform, other.</summary>
+    string? deduction_reason,
     string? note,
     /// <summary>Set by hand, as "#RRGGBB". Null means the cell colours itself.</summary>
     string? colour,
@@ -94,6 +96,11 @@ public record DaysDto(
     decimal tip_out,
     /// <summary>Meals withheld plus fines across the range.</summary>
     decimal deductions,
+    /// <summary>
+    /// The fines alone, split by what caused them. Five broken glasses and one
+    /// till shortfall add up the same and mean completely different things.
+    /// </summary>
+    DeductionReasonDto[] deductions_by_reason,
     /// <summary>Income tax withheld across the range.</summary>
     decimal tax,
     /// <summary>total_earned minus tax — what actually reaches a pocket.</summary>
@@ -162,6 +169,9 @@ public record ConvertedPlaceDto(
     /// <summary>Null where this currency could not be converted.</summary>
     decimal? converted);
 
+/// <summary>Fines of one kind over a range: how much, and how often.</summary>
+public record DeductionReasonDto(string reason, decimal amount, int days);
+
 /// <summary>One rate, and the day it was actually published on.</summary>
 public record RateUsedDto(string code, string rate, string on);
 
@@ -175,6 +185,8 @@ public record DaySaveDto(
     decimal? tips,
     decimal? tips_cash,
     decimal? deductions,
+    /// <summary>Absent means unsaid, which is what an older client sends.</summary>
+    string? deduction_reason,
     string? note,
     /// <summary>
     /// "#RRGGBB", or null to clear it. Like everything else here it replaces

@@ -275,6 +275,8 @@ export interface CalendarDayData {
   tip_out: number;
   /** Meal withholding plus fines; already deducted from earned. */
   deductions: number;
+  /** Why the day cost money, where it was said. */
+  deduction_reason?: DeductionReason | null;
   note: string | null;
   /** Set by hand, as '#RRGGBB'. Null means the cell colours itself. */
   colour: string | null;
@@ -334,6 +336,12 @@ export interface DaysResponse {
   tip_out: number;
   /** Meals withheld plus fines across the range. */
   deductions: number;
+  /**
+   * The fines alone, split by what caused them, largest first. Five broken
+   * glasses and one till shortfall add up the same and mean completely
+   * different things.
+   */
+  deductions_by_reason: DeductionSplit[];
   tax: number;
   /** total_earned minus tax. */
   net_earned: number;
@@ -364,6 +372,22 @@ export interface DaysResponse {
    * day it covers. The store spreads them across the cells.
    */
   events: CalendarEvent[];
+}
+
+/** Why a day cost money. 'unsaid' is the bucket for fines nobody labelled. */
+export type DeductionReason =
+  | 'breakage'
+  | 'shortfall'
+  | 'late'
+  | 'waste'
+  | 'uniform'
+  | 'other';
+
+/** Fines of one kind over a range: how much, and on how many days. */
+export interface DeductionSplit {
+  reason: DeductionReason | 'unsaid';
+  amount: number;
+  days: number;
 }
 
 export interface Payout {
@@ -499,6 +523,7 @@ export interface DaySave {
   }[];
   tips_cash: number | null;
   deductions: number | null;
+  deduction_reason?: DeductionReason | null;
   sales: { sales_id: number; quantity: number }[];
   tips: number | null;
   /** The day's pool before the split; the server works out the share. */
@@ -526,6 +551,7 @@ export const EMPTY_SUMMARY: DaysResponse = {
   difference: 0,
   tip_out: 0,
   deductions: 0,
+  deductions_by_reason: [],
   tax: 0,
   net_earned: 0,
   holiday_accrued: 0,
@@ -602,6 +628,7 @@ export function toSavePayload(day: CalendarDayData | undefined): DaySave {
     tips_cash: day?.tips_cash ?? null,
     tip_pool: day?.tip_pool ?? null,
     deductions: day?.deductions ?? null,
+    deduction_reason: day?.deduction_reason ?? null,
     note: day?.note ?? null,
     colour: day?.colour ?? null,
   };

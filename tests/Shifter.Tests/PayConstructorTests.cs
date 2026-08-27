@@ -104,7 +104,7 @@ public class PayConstructorTests
         => handler.SaveAsync(
             new DaySaveDto(
                 shiftIds.Select(id => new DayShiftSaveDto(id, worked: true)).ToArray(),
-                null, tips, null, null, null, null, pool),
+                null, tips, null, null, null, null, null, tip_pool: pool),
             Build.UserId,
             DateOnly.Parse("2026-03-10"),
             CancellationToken.None);

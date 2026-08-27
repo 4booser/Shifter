@@ -46,6 +46,7 @@ public class AssistantTests
             0m,
             null,
             null,
+            null,
             false,
             8,
             1_600m,

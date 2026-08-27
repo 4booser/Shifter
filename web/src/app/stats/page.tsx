@@ -16,7 +16,7 @@ import {
 } from '@/lib/calendar/calendar-date';
 import { forecastFor, paceToGoal, projectionSeries } from '@/lib/calendar/forecast';
 import { averagesFor } from '@/lib/calendar/insights';
-import { DaysResponse, EMPTY_SUMMARY, Goal, placeName } from '@/lib/calendar/models';
+import { DaysResponse, DeductionSplit, EMPTY_SUMMARY, Goal, placeName } from '@/lib/calendar/models';
 import { activeGoalFor, delta, earningsBuckets, median, weekdayTotals } from '@/lib/calendar/stats-math';
 import { buildColumns, buildTicks, niceCeiling } from '@/lib/charts/math';
 import { Sheet, buildXlsx, downloadBlob } from '@/lib/export/xlsx';
@@ -38,6 +38,21 @@ import { Icon } from '@/components/ui/icon';
 type PresetId = 'month' | 'previous' | '3m' | '6m' | 'year' | 'all' | 'custom';
 
 const ALL_TIME = { from: '2000-01-01', to: '2099-12-31' };
+
+/**
+ * What a fine was for. 'unsaid' covers everything recorded before the reason
+ * existed as well as everyone who did not bother — it is counted rather than
+ * dropped so the split still adds up to the total above it.
+ */
+const REASON_LABEL: Record<DeductionSplit['reason'], string> = {
+  shortfall: 'Till came up short',
+  breakage: 'Breakage',
+  late: 'Turned up late',
+  waste: 'Waste',
+  uniform: 'Uniform',
+  other: 'Something else',
+  unsaid: 'Not said',
+};
 
 const PRESETS: { id: PresetId; label: string }[] = [
   { id: 'month', label: 'This month' },
@@ -843,6 +858,19 @@ function Stats() {
                     <dd className="text-danger">−<Money value={summary.deductions} /></dd>
                   </div>
                 )}
+                {/* What the fines were actually for. The total above says how
+                    much; only this says whether it is worth a conversation. */}
+                {summary.deductions_by_reason.map((split) => (
+                  <div key={split.reason} className="flex justify-between pl-3">
+                    <dt className="text-muted text-[0.8rem]">
+                      {t(REASON_LABEL[split.reason])}
+                      {split.days > 1 && <span className="text-muted"> · {n(split.days, 'days')}</span>}
+                    </dt>
+                    <dd className="text-muted text-[0.8rem] tabular">
+                      −<Money value={split.amount} />
+                    </dd>
+                  </div>
+                ))}
                 {summary.tax > 0 && (
                   <>
                     <div className="flex justify-between">

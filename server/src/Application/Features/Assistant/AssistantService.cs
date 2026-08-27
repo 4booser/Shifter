@@ -169,6 +169,7 @@ public sealed class AssistantService
             kind == "tips" ? value : day.tips,
             day.tips_cash,
             day.deductions,
+            day.deduction_reason,
             day.note,
             day.colour,
             kind == "pool" ? value : day.tip_pool);

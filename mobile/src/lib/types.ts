@@ -66,6 +66,8 @@ export interface CalendarDayData {
   /** What the room took before the split, where the tips are pooled. */
   tip_pool: number | null;
   deductions: number;
+  /** Why the day cost money, where it was said. */
+  deduction_reason?: DeductionReason | null;
   note: string | null;
   colour: string | null;
   hours: number;
@@ -126,9 +128,31 @@ export interface DaySave {
   /** The day's pool before the split; the server works out the share. */
   tip_pool: number | null;
   deductions: number | null;
+  deduction_reason?: DeductionReason | null;
   note: string | null;
   colour: string | null;
 }
+
+/**
+ * Why a day cost money. Kept short on purpose — a list nobody scrolls is a list
+ * people answer honestly, and the note is there for the rest.
+ */
+export type DeductionReason =
+  | 'breakage'
+  | 'shortfall'
+  | 'late'
+  | 'waste'
+  | 'uniform'
+  | 'other';
+
+export const DEDUCTION_REASONS: { value: DeductionReason; label: string }[] = [
+  { value: 'shortfall', label: 'Недостача' },
+  { value: 'breakage', label: 'Бой' },
+  { value: 'late', label: 'Опоздание' },
+  { value: 'waste', label: 'Списание' },
+  { value: 'uniform', label: 'Форма' },
+  { value: 'other', label: 'Другое' },
+];
 
 export const toSavePayload = (day: CalendarDayData | undefined): DaySave => ({
   shifts: (day?.shifts ?? []).map((entry) => ({
@@ -145,6 +169,7 @@ export const toSavePayload = (day: CalendarDayData | undefined): DaySave => ({
   tips_cash: day?.tips_cash ?? null,
   tip_pool: day?.tip_pool ?? null,
   deductions: day?.deductions ?? null,
+  deduction_reason: day?.deduction_reason ?? null,
   note: day?.note ?? null,
   colour: day?.colour ?? null,
 });

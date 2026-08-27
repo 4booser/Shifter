@@ -49,6 +49,10 @@ export interface DayShiftEntry {
   actual_end: string | null;
   break_minutes: number | null;
   earned: number;
+  /** What the shift took, where it was recorded. Null is "not counted". */
+  revenue: number | null;
+  /** The agreed share of it, already inside earned. */
+  revenue_percent: number | null;
 }
 
 export interface CalendarDayData {
@@ -56,6 +60,8 @@ export interface CalendarDayData {
   shifts: DayShiftEntry[];
   tips: number | null;
   tips_cash: number | null;
+  /** What the room took before the split, where the tips are pooled. */
+  tip_pool: number | null;
   deductions: number;
   note: string | null;
   colour: string | null;
@@ -79,10 +85,14 @@ export interface DaySave {
     actual_start: string | null;
     actual_end: string | null;
     break_minutes: number | null;
+    /** What this shift took. Null leaves it uncounted, not zero. */
+    revenue: number | null;
   }[];
   sales: { sales_id: number; quantity: number }[];
   tips: number | null;
   tips_cash: number | null;
+  /** The day's pool before the split; the server works out the share. */
+  tip_pool: number | null;
   deductions: number | null;
   note: string | null;
   colour: string | null;
@@ -96,10 +106,12 @@ export const toSavePayload = (day: CalendarDayData | undefined): DaySave => ({
     actual_start: entry.actual_start,
     actual_end: entry.actual_end,
     break_minutes: entry.break_minutes,
+    revenue: entry.revenue,
   })),
   sales: [],
   tips: day?.tips ?? null,
   tips_cash: day?.tips_cash ?? null,
+  tip_pool: day?.tip_pool ?? null,
   deductions: day?.deductions ?? null,
   note: day?.note ?? null,
   colour: day?.colour ?? null,

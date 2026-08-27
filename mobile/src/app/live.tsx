@@ -71,7 +71,13 @@ export default function LiveScreen() {
       const entry = payload.shifts.find((row) => row.shift_id === live.shiftId);
       const stamp = { actual_start: clock(started), actual_end: clock(new Date()), worked: true };
 
-      if (entry === undefined) payload.shifts.push({ shift_id: live.shiftId, needs_cover: false, break_minutes: null, ...stamp });
+      if (entry === undefined) payload.shifts.push({
+          shift_id: live.shiftId,
+          needs_cover: false,
+          break_minutes: null,
+          revenue: null,
+          ...stamp,
+        });
       else Object.assign(entry, stamp);
 
       await api(`/shifter/v1/days/${live.date}`, { method: 'PUT', body: payload });

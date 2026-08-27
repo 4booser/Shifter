@@ -14,6 +14,7 @@ import {
   useColorScheme,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Colors, Palette } from '@/constants/theme';
 import { api } from '@/lib/api';
@@ -29,11 +30,13 @@ export default function DayScreen() {
   const router = useRouter();
   const scheme = useColorScheme();
   const palette = Colors[scheme === 'dark' ? 'dark' : 'light'];
+  const insets = useSafeAreaInsets();
 
   const [day, setDay] = useState<CalendarDayData | null>(null);
   const [templates, setTemplates] = useState<ShiftTemplate[]>([]);
   const [tips, setTips] = useState('');
   const [deductions, setDeductions] = useState('');
+  const [tipPool, setTipPool] = useState('');
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -50,6 +53,7 @@ export default function DayScreen() {
         setTemplates(shifts.filter((template) => !template.archived));
         setTips(loaded.tips === null ? '' : `${loaded.tips}`);
         setDeductions(loaded.deductions === 0 ? '' : `${loaded.deductions}`);
+        setTipPool(loaded.tip_pool === null ? '' : `${loaded.tip_pool}`);
         setNote(loaded.note ?? '');
       })
       .catch(() => setError('День не загрузился.'));
@@ -94,8 +98,35 @@ export default function DayScreen() {
           actual_end: null,
           break_minutes: null,
           earned: 0,
+          revenue: null,
+          revenue_percent: template.revenue_percent,
         },
       ],
+    });
+  };
+
+  /**
+   * The share of the pool this day is owed, or null when nothing on it is
+   * pooled. Several pooled shifts on one day each take their own slice.
+   */
+  const pooledShares = (day?.shifts ?? [])
+    .map((entry) => templates.find((template) => template.id === entry.shift_id))
+    .filter((template) => template?.tip_source === 'pool')
+    .map((template) => template?.tip_pool_percent ?? 0)
+    .filter((share) => share > 0);
+  const pooled = pooledShares.length === 0 ? null : pooledShares.reduce((a, b) => a + b, 0);
+
+  const setRevenue = (shiftId: number, value: string) => {
+    if (day === null) return;
+
+    setDay({
+      ...day,
+      shifts: day.shifts.map((entry) =>
+        entry.shift_id === shiftId
+          // Empty is "not counted", which is not the same answer as zero.
+          ? { ...entry, revenue: value.trim() === '' ? null : Number(value) || 0 }
+          : entry,
+      ),
     });
   };
 
@@ -120,6 +151,7 @@ export default function DayScreen() {
       const payload = toSavePayload(day);
 
       payload.tips = tips.trim() === '' ? null : Number(tips) || 0;
+      payload.tip_pool = tipPool.trim() === '' ? null : Number(tipPool) || 0;
       payload.deductions = deductions.trim() === '' ? null : Number(deductions) || 0;
       payload.note = note.trim() === '' ? null : note.trim();
 
@@ -133,7 +165,7 @@ export default function DayScreen() {
 
   return (
     <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView contentContainerStyle={[styles.content, { paddingTop: insets.top + 12 }]}>
         <View style={styles.headerRow}>
           <Text style={styles.title}>{title}</Text>
           <Pressable onPress={() => router.back()} hitSlop={10}>
@@ -173,19 +205,37 @@ export default function DayScreen() {
             {day.shifts.length > 0 && (
               <View style={styles.card}>
                 {day.shifts.map((entry) => (
-                  <View key={entry.shift_id} style={styles.workedRow}>
-                    <Text style={styles.workedLabel}>
-                      {entry.symbol ?? '🕐'} {entry.name} · {entry.start_time.slice(0, 5)}–{entry.end_time.slice(0, 5)}
-                      {entry.earned > 0 ? ` · ${money(entry.earned)}` : ''}
-                    </Text>
-                    <View style={styles.workedSwitch}>
-                      <Text style={styles.workedHint}>{entry.worked ? 'отработана' : 'план'}</Text>
-                      <Switch
-                        value={entry.worked}
-                        onValueChange={(value) => setWorked(entry.shift_id, value)}
-                        trackColor={{ true: palette.accent, false: palette.border }}
-                      />
+                  <View key={entry.shift_id} style={styles.workedBlock}>
+                    <View style={styles.workedRow}>
+                      <Text style={styles.workedLabel}>
+                        {entry.symbol ?? '🕐'} {entry.name} · {entry.start_time.slice(0, 5)}–{entry.end_time.slice(0, 5)}
+                        {entry.earned > 0 ? ` · ${money(entry.earned)}` : ''}
+                      </Text>
+                      <View style={styles.workedSwitch}>
+                        <Text style={styles.workedHint}>{entry.worked ? 'отработана' : 'план'}</Text>
+                        <Switch
+                          value={entry.worked}
+                          onValueChange={(value) => setWorked(entry.shift_id, value)}
+                          trackColor={{ true: palette.accent, false: palette.border }}
+                        />
+                      </View>
                     </View>
+
+                    {entry.revenue_percent !== null && (
+                      <>
+                        <Text style={styles.fieldLabel}>
+                          Выручка за смену · {entry.revenue_percent}%
+                        </Text>
+                        <TextInput
+                          style={styles.input}
+                          keyboardType="numeric"
+                          placeholder="не считаем"
+                          placeholderTextColor={palette.textSecondary}
+                          value={entry.revenue === null ? '' : `${entry.revenue}`}
+                          onChangeText={(value) => setRevenue(entry.shift_id, value)}
+                        />
+                      </>
+                    )}
                   </View>
                 ))}
               </View>
@@ -194,15 +244,20 @@ export default function DayScreen() {
             <Text style={styles.section}>Деньги дня</Text>
             <View style={styles.moneyRow}>
               <View style={styles.moneyField}>
-                <Text style={styles.fieldLabel}>Чаевые</Text>
+                <Text style={styles.fieldLabel}>{pooled === null ? 'Чаевые' : 'Общак за день'}</Text>
                 <TextInput
                   style={styles.input}
                   keyboardType="numeric"
                   placeholder="0"
                   placeholderTextColor={palette.textSecondary}
-                  value={tips}
-                  onChangeText={setTips}
+                  value={pooled === null ? tips : tipPool}
+                  onChangeText={pooled === null ? setTips : setTipPool}
                 />
+                {pooled !== null && (
+                  <Text style={styles.hintText}>
+                    Ваша доля · {pooled}% = {money(((Number(tipPool) || 0) * pooled) / 100)}
+                  </Text>
+                )}
               </View>
               <View style={styles.moneyField}>
                 <Text style={styles.fieldLabel}>Штрафы и недостачи</Text>
@@ -245,7 +300,7 @@ export default function DayScreen() {
 const makeStyles = (palette: Palette) =>
   StyleSheet.create({
     screen: { flex: 1, backgroundColor: palette.background },
-    content: { padding: 18, paddingTop: 26, gap: 10 },
+    content: { padding: 18, gap: 10 },
     headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
     title: { fontSize: 21, fontWeight: '800', color: palette.text },
     error: { color: palette.danger },
@@ -276,6 +331,7 @@ const makeStyles = (palette: Palette) =>
       padding: 12,
       gap: 10,
     },
+    workedBlock: { gap: 6 },
     workedRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
     workedLabel: { color: palette.text, flexShrink: 1, fontSize: 13.5 },
     workedSwitch: { flexDirection: 'row', alignItems: 'center', gap: 6 },

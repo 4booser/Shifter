@@ -47,3 +47,28 @@ export const monthLabel = ({ year, month }: YearMonth): string => {
 
   return raw[0].toUpperCase() + raw.slice(1);
 };
+
+const MONTHS_SHORT = [
+  'янв', 'фев', 'мар', 'апр', 'мая', 'июн',
+  'июл', 'авг', 'сен', 'окт', 'ноя', 'дек',
+];
+
+const WEEKDAYS_SHORT = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
+
+/** A day key as people say it out loud: "28 авг". */
+export const shortDate = (key: string): string => {
+  const [, month, day] = key.split('-');
+
+  return `${Number(day)} ${MONTHS_SHORT[Number(month) - 1]}`;
+};
+
+/**
+ * The same, with the weekday in front. For a shift the weekday is the whole
+ * question — "which evening am I giving up" — and a bare number does not
+ * answer it.
+ */
+export const dayLabel = (key: string): string => {
+  const date = new Date(`${key}T00:00:00`);
+
+  return `${WEEKDAYS_SHORT[date.getDay()]}, ${shortDate(key)}`;
+};

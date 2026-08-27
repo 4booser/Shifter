@@ -15,7 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Colors, Palette } from '@/constants/theme';
 import { api } from '@/lib/api';
-import { addMonths, currentMonth, monthBounds, todayKey } from '@/lib/calendar';
+import { addMonths, currentMonth, monthBounds, shortDate, todayKey } from '@/lib/calendar';
 import { money } from '@/lib/types';
 
 type Status = 'open' | 'due' | 'overdue' | 'paid' | 'short' | 'over';
@@ -78,16 +78,6 @@ const STREAM_LABEL: Record<PayPeriodRow['stream'], string> = {
   commission: 'процент',
 };
 
-const MONTHS = [
-  'янв', 'фев', 'мар', 'апр', 'мая', 'июн',
-  'июл', 'авг', 'сен', 'окт', 'ноя', 'дек',
-];
-
-/** A day key as people say it out loud: "14 авг". */
-const shortDate = (key: string) => {
-  const [, month, day] = key.split('-');
-  return `${Number(day)} ${MONTHS[Number(month) - 1]}`;
-};
 
 /**
  * Money owed, money late, money in hand. The site's payouts page in the

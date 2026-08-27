@@ -1,0 +1,109 @@
+/**
+ * The trade, named the way people in it speak. The server stores the role as
+ * a slug and prices everything itself; this table is only how the phone says
+ * it out loud, with the emoji doing the work an icon set would.
+ */
+export const TRADES: Record<string, { emoji: string; label: string }> = {
+  managing: { emoji: '🎩', label: 'управляющий' },
+  'floor-manager': { emoji: '📋', label: 'менеджер зала' },
+  administrator: { emoji: '🛎️', label: 'администратор' },
+  chef: { emoji: '👨‍🍳', label: 'шеф-повар' },
+  'sous-chef': { emoji: '🥇', label: 'су-шеф' },
+  'shift-lead': { emoji: '⭐', label: 'старший смены' },
+  bartender: { emoji: '🍸', label: 'бармен' },
+  barback: { emoji: '🧊', label: 'барбек' },
+  barista: { emoji: '☕', label: 'бариста' },
+  sommelier: { emoji: '🍷', label: 'сомелье' },
+  hookah: { emoji: '💨', label: 'кальянщик' },
+  waiter: { emoji: '🍽️', label: 'официант' },
+  runner: { emoji: '🏃', label: 'раннер' },
+  host: { emoji: '💁', label: 'хостес' },
+  cashier: { emoji: '💳', label: 'кассир' },
+  busser: { emoji: '🧹', label: 'сборщик столов' },
+  'cook-hot': { emoji: '🔥', label: 'повар горячего цеха' },
+  'cook-cold': { emoji: '🥗', label: 'повар холодного цеха' },
+  'cook-universal': { emoji: '🍳', label: 'повар-универсал' },
+  prep: { emoji: '🔪', label: 'заготовщик' },
+  grill: { emoji: '🍖', label: 'гриль' },
+  wok: { emoji: '🥡', label: 'вок-повар' },
+  pizzaiolo: { emoji: '🍕', label: 'пиццайоло' },
+  sushi: { emoji: '🍣', label: 'сушист' },
+  shawarma: { emoji: '🌯', label: 'шаурмист' },
+  butcher: { emoji: '🥩', label: 'мясник-обвальщик' },
+  pastry: { emoji: '🍰', label: 'кондитер' },
+  baker: { emoji: '🥐', label: 'пекарь' },
+  dishwasher: { emoji: '🫧', label: 'посудомойщик' },
+  cleaner: { emoji: '🧼', label: 'уборщик' },
+  storekeeper: { emoji: '📦', label: 'кладовщик' },
+  security: { emoji: '🛡️', label: 'охранник' },
+  courier: { emoji: '🛵', label: 'курьер' },
+  catering: { emoji: '🥂', label: 'кейтеринг' },
+  dj: { emoji: '🎧', label: 'диджей' },
+  promoter: { emoji: '📣', label: 'промоутер' },
+};
+
+export const tradeOf = (id: string) => TRADES[id] ?? { emoji: '💼', label: id };
+
+export interface Gig {
+  id: number;
+  venue: string;
+  category: string;
+  employment: 'freelance' | 'permanent';
+  photos: string[];
+  schedule: string | null;
+  title: string;
+  details: string | null;
+  date: string;
+  start: string;
+  end: string;
+  pay_amount: number;
+  pay_period: 'hour' | 'shift' | 'month';
+  pay_percent: number | null;
+  city: string;
+  slots: number;
+  status: string;
+  created_at: string;
+  employer_rating: number | null;
+  employer_count: number;
+  responses: number;
+  is_mine: boolean;
+  my_response: { id: number; accepted: boolean } | null;
+}
+
+/** "₴250 за час + 3% с продаж" — base, percent, or the two stacked. */
+export function payLine(gig: Gig): string {
+  const period =
+    gig.pay_period === 'hour' ? 'за час' : gig.pay_period === 'month' ? 'в месяц' : 'за смену';
+  const base = gig.pay_amount > 0 ? `₴${Math.round(gig.pay_amount).toLocaleString('ru')} ${period}` : null;
+  const percent = gig.pay_percent !== null ? `${gig.pay_percent}% с продаж` : null;
+
+  return [base, percent].filter((part) => part !== null).join(' + ');
+}
+
+/**
+ * How long a vacancy has been sitting there. A fresh post and a three-week
+ * one deserve different amounts of trust, and the exact stamp is a tap away.
+ */
+export function postedAgo(iso: string): string {
+  const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
+
+  if (days <= 0) return 'сегодня';
+  if (days === 1) return 'вчера';
+  if (days < 7) return `${days} дн. назад`;
+  if (days < 31) {
+    const weeks = Math.floor(days / 7);
+
+    return weeks === 1 ? 'неделю назад' : `${weeks} нед. назад`;
+  }
+
+  const months = Math.floor(days / 30);
+
+  return months === 1 ? 'месяц назад' : `${months} мес. назад`;
+}
+
+/**
+ * Only the photos that are actually there. An empty string in the array
+ * still passes a length check and then draws as a blank grey box, which
+ * reads as a broken listing rather than one without pictures.
+ */
+export const photosOf = (gig: Gig): string[] => gig.photos.filter((url) => url.trim() !== '');

@@ -52,6 +52,15 @@ public class ShifterDbContext : DbContext
             .HasIndex(link => link.UserId)
             .IsUnique();
 
+        // A listing belongs to whoever posted it, so it leaves with them.
+        // Without this the foreign key is left at NO ACTION and anybody who
+        // has ever posted a gig simply cannot delete their account.
+        modelBuilder.Entity<GigListing>()
+            .HasOne(gig => gig.Owner)
+            .WithMany()
+            .HasForeignKey(gig => gig.OwnerUserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         // The board reads open gigs by date; owners read their own.
         modelBuilder.Entity<GigListing>()
             .HasIndex(gig => new { gig.Status, gig.Date });

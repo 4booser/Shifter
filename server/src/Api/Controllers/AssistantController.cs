@@ -2,6 +2,9 @@ using System.Security.Claims;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
+
+using Shifter.Api.Extensions;
 
 using Shifter.Application.Common.Exceptions;
 using Shifter.Application.Features.Assistant;
@@ -26,6 +29,7 @@ public class AssistantController : ControllerBase
         => Ok((await _assistant.ThreadAsync(UserId(), ct)).Select(Shape));
 
     [HttpPost("ask")]
+    [EnableRateLimiting(HardeningExtensions.AssistantPolicy)]
     public async Task<IActionResult> Ask([FromBody] AskDto request, CancellationToken ct)
     {
         // The client sends its own dates: a month is a local idea, and asking
@@ -46,6 +50,7 @@ public class AssistantController : ControllerBase
     }
 
     [HttpGet("report")]
+    [EnableRateLimiting(HardeningExtensions.AssistantPolicy)]
     public async Task<IActionResult> Report(
         [FromQuery] DateOnly from, [FromQuery] DateOnly to, CancellationToken ct)
         => Ok(await _assistant.ReportAsync(UserId(), from, to, ct));

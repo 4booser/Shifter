@@ -2,6 +2,9 @@ using System.Security.Claims;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
+
+using Shifter.Api.Extensions;
 
 using Shifter.Application.Common.Exceptions;
 using Shifter.Application.Features.Gigs;
@@ -45,6 +48,7 @@ public class GigsController : ControllerBase
         => Ok(await _gigs.KnownWorkersAsync(UserId(), ct));
 
     [HttpPost("{id:int}/invite/{inviteeUserId:int}")]
+    [EnableRateLimiting(HardeningExtensions.ContactPolicy)]
     public async Task<IActionResult> Invite(int id, int inviteeUserId, CancellationToken ct)
     {
         await _gigs.InviteAsync(UserId(), id, inviteeUserId, ct);
@@ -53,6 +57,7 @@ public class GigsController : ControllerBase
     }
 
     [HttpPost("{id:int}/reviews")]
+    [EnableRateLimiting(HardeningExtensions.ContactPolicy)]
     public async Task<IActionResult> Review(int id, [FromBody] ReviewSaveDto request, CancellationToken ct)
         => Ok(await _gigs.ReviewAsync(UserId(), id, request, ct));
 
@@ -87,6 +92,7 @@ public class GigsController : ControllerBase
         => Ok(await _gigs.MyRepliesAsync(UserId(), ct));
 
     [HttpPost("{id:int}/respond")]
+    [EnableRateLimiting(HardeningExtensions.ContactPolicy)]
     public async Task<IActionResult> Respond(int id, [FromBody] GigRespondDto request, CancellationToken ct)
         => Ok(await _gigs.RespondAsync(UserId(), id, request, ct));
 

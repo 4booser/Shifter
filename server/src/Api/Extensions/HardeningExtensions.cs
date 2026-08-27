@@ -19,6 +19,20 @@ public static class HardeningExtensions
     /// <summary>Everything else, so one client cannot monopolise the server.</summary>
     public const string ApiPolicy = "api";
 
+    /// <summary>
+    /// Actions that hand somebody's phone number to a stranger, or take one.
+    /// The general limit is sized for a calendar fanning out into parallel
+    /// reads and is far too generous for these.
+    /// </summary>
+    public const string ContactPolicy = "contact";
+
+    /// <summary>
+    /// The assistant. Its ceiling is not about load — it is that a model call
+    /// costs money, and an account that has asked forty questions in an hour
+    /// is a loop, not a person.
+    /// </summary>
+    public const string AssistantPolicy = "assistant";
+
     public const string CorsPolicy = "spa";
 
     public static IServiceCollection AddHardening(
@@ -83,6 +97,26 @@ public static class HardeningExtensions
                     TokenLimit = 120,
                     TokensPerPeriod = 30,
                     ReplenishmentPeriod = TimeSpan.FromSeconds(10),
+                    QueueLimit = 0
+                }));
+
+            // Twenty an hour: answering twenty ads in an hour is already a
+            // busy evening, and harvesting contacts at that rate is not.
+            options.AddPolicy(ContactPolicy, context => RateLimitPartition.GetFixedWindowLimiter(
+                ClientKey(context),
+                _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = 20,
+                    Window = TimeSpan.FromHours(1),
+                    QueueLimit = 0
+                }));
+
+            options.AddPolicy(AssistantPolicy, context => RateLimitPartition.GetFixedWindowLimiter(
+                ClientKey(context),
+                _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = 40,
+                    Window = TimeSpan.FromHours(1),
                     QueueLimit = 0
                 }));
         });

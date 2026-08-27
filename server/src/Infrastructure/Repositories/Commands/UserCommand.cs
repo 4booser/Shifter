@@ -20,6 +20,23 @@ public class UserCommand : IUserCommand
 
     public async Task DeleteAsync(User user, CancellationToken ct)
     {
+        // Three tables name a person by id without a foreign key, so nothing
+        // cascades them: a deleted account would leave a Telegram chat still
+        // bound to it, reviews naming it, and swap offers waiting on somebody
+        // who no longer exists. Cleared explicitly, before the row they point
+        // at goes.
+        await _db.TelegramLinks
+            .Where(link => link.UserId == user.Id)
+            .ExecuteDeleteAsync(ct);
+
+        await _db.GigReviews
+            .Where(review => review.AuthorUserId == user.Id || review.TargetUserId == user.Id)
+            .ExecuteDeleteAsync(ct);
+
+        await _db.ShiftSwaps
+            .Where(swap => swap.ProposerUserId == user.Id || swap.TargetUserId == user.Id)
+            .ExecuteDeleteAsync(ct);
+
         _db.Users.Remove(user);
         await _db.SaveChangesAsync(ct);
     }

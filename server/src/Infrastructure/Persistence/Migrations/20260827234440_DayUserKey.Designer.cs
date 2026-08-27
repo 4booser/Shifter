@@ -12,8 +12,8 @@ using Shifter.Infrastructure.Persistence.DbContexts;
 namespace Shifter.Migrations.ShifterDb
 {
     [DbContext(typeof(ShifterDbContext))]
-    [Migration("20260827232302_UserOwnedCascades")]
-    partial class UserOwnedCascades
+    [Migration("20260827234440_DayUserKey")]
+    partial class DayUserKey
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -254,12 +254,7 @@ namespace Shifter.Migrations.ShifterDb
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("UserId1")
-                        .HasColumnType("integer");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("UserId1");
 
                     b.HasIndex("UserId", "Date")
                         .IsUnique();
@@ -1790,14 +1785,10 @@ namespace Shifter.Migrations.ShifterDb
             modelBuilder.Entity("Shifter.Domain.Entities.Day", b =>
                 {
                     b.HasOne("Shifter.Domain.Entities.User", "User")
-                        .WithMany()
+                        .WithMany("CalendarDays")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("Shifter.Domain.Entities.User", null)
-                        .WithMany("CalendarDays")
-                        .HasForeignKey("UserId1");
 
                     b.Navigation("User");
                 });

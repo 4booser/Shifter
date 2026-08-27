@@ -6,10 +6,10 @@ public sealed class Day
     public int UserId { get; set; }
 
     /// <summary>
-    /// The navigation is what makes the foreign key real. Without it a deleted
-    /// account left every day it ever recorded — dates, hours, wages, tips,
-    /// fines, notes — in the database forever under an id that no longer
-    /// exists.
+    /// Paired with <see cref="User.CalendarDays"/>, which is what has always
+    /// made the key real here — this side is for reading, not for the
+    /// cascade. Left unpaired it produced a second relationship on a shadow
+    /// column, which is a foreign key no query knows about.
     /// </summary>
     public User? User { get; set; }
     

@@ -1,0 +1,132 @@
+name: CI
+
+# Nothing was ever compiled before it reached main. The deploy workflow only
+# fires on a push to main, so the first build of any change was the same run
+# that also shipped it — and up to eleven dependency updates a week were merged
+# without once being built. This runs on the proposal instead.
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches-ignore: [main]
+  workflow_dispatch:
+
+# A second push to the same branch cancels the first: the older answer is not
+# worth waiting for.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build and test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - run: dotnet test Shifter.sln --configuration Release
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - run: npm ci
+        working-directory: web
+
+      - run: npm run lint
+        working-directory: web
+
+      - run: npm test
+        working-directory: web
+
+      # The bundle is what people actually load, and it fails for reasons the
+      # tests never see — a missing export, a type only used at build time.
+      - run: npm run build
+        working-directory: web
+
+  mobile:
+    name: Mobile typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      - run: npm ci
+        working-directory: mobile
+
+      # The phone had no automated check at all until now, and its bugs are the
+      # expensive kind: it writes to the same calendar the site reads.
+      - run: npx tsc --noEmit
+        working-directory: mobile
+
+  migrations:
+    name: Migrations on a database with rows in it
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: shifter_user
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: shifter
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U shifter_user -d shifter"
+          --health-interval 5s --health-timeout 3s --health-retries 20
+    env:
+      ConnectionStrings__Shifter: "Host=localhost;Port=5432;Database=shifter;Username=shifter_user;Password=ci"
+      ConnectionStrings__Tokens: "Host=localhost;Port=5432;Database=tokens;Username=shifter_user;Password=ci"
+      SHIFTER_JWT_KEY: ci-only-key-thirty-two-characters!!
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Create the second database
+        run: PGPASSWORD=ci psql -h localhost -U shifter_user -d shifter -c 'CREATE DATABASE tokens;'
+
+      # Migrations have only ever been applied to an empty database, which
+      # makes every failure that matters structurally invisible: a foreign key
+      # over rows that already exist, a unique index over duplicates, a NOT
+      # NULL on a populated table. So: migrate to the previous release, put
+      # rows in, then migrate the rest of the way.
+      - name: Migrate to the last released schema
+        run: |
+          dotnet tool install --global dotnet-ef
+          dotnet restore server/Shifter.csproj
+          git fetch --depth=2 origin main
+          LAST=$(git rev-parse origin/main)
+          git stash push --include-untracked --quiet || true
+          git checkout --quiet "$LAST" -- server/src/Infrastructure/Persistence/Migrations
+          dotnet ef database update --project server/Shifter.csproj --context ShifterDbContext
+          dotnet ef database update --project server/Shifter.csproj --context TokensDbContext
+          git checkout --quiet HEAD -- server/src/Infrastructure/Persistence/Migrations
+          git stash pop --quiet || true
+
+      - name: Put rows in it
+        run: PGPASSWORD=ci psql -h localhost -U shifter_user -d shifter -f .github/seed.sql
+
+      - name: Migrate the rest of the way
+        run: |
+          dotnet ef database update --project server/Shifter.csproj --context ShifterDbContext
+          dotnet ef database update --project server/Shifter.csproj --context TokensDbContext
+
+      - name: The rows are still there
+        run: |
+          PGPASSWORD=ci psql -h localhost -U shifter_user -d shifter -tAc \
+            'SELECT count(*) FROM "Users";' | grep -qv '^0$' \
+            || { echo "the seeded rows did not survive the migration"; exit 1; }

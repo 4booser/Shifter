@@ -38,3 +38,9 @@ README.md
 # Next.js build outputs; the image builds its own.
 web/.next
 web/out
+
+# The development settings hold a keypair and a signing key. Production
+# overrides both through the environment, so this file is only ever read on a
+# laptop — but `dotnet publish` copies every appsettings*.json into the output,
+# so without this the file rides inside every image anybody pulls.
+**/appsettings.Development.json

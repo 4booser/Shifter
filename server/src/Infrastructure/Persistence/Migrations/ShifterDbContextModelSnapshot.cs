@@ -251,12 +251,7 @@ namespace Shifter.Migrations.ShifterDb
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("UserId1")
-                        .HasColumnType("integer");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("UserId1");
 
                     b.HasIndex("UserId", "Date")
                         .IsUnique();
@@ -1787,14 +1782,10 @@ namespace Shifter.Migrations.ShifterDb
             modelBuilder.Entity("Shifter.Domain.Entities.Day", b =>
                 {
                     b.HasOne("Shifter.Domain.Entities.User", "User")
-                        .WithMany()
+                        .WithMany("CalendarDays")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("Shifter.Domain.Entities.User", null)
-                        .WithMany("CalendarDays")
-                        .HasForeignKey("UserId1");
 
                     b.Navigation("User");
                 });

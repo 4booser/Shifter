@@ -4,10 +4,23 @@
 #
 #   docker compose -f compose.prod.yaml pull
 #   docker compose -f compose.prod.yaml up -d
+# Two things every service here shares. Neither was set, and the box has
+# already been to 94% disk once: the proxy and the database are recreated
+# rarely, so their logs — one line per request, forever — were the only thing
+# growing. And on a gigabyte of memory with no limits, the kernel's OOM killer
+# is free to choose the database over the app.
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
+
 services:
   db:
     image: postgres:17-alpine
     restart: unless-stopped
+    logging: *logging
+    mem_limit: 400m
     environment:
       POSTGRES_USER: shifter_user
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
@@ -26,9 +39,11 @@ services:
   migrate:
     image: ${REGISTRY:-ghcr.io/4booser}/shifter-migrate:${TAG:-latest}
     restart: "no"
+    logging: *logging
+    mem_limit: 300m
     environment:
-      ConnectionStrings__Shifter: "Host=db;Port=5432;Database=shifter;Username=shifter_user;Password=${POSTGRES_PASSWORD}"
-      ConnectionStrings__Tokens: "Host=db;Port=5432;Database=tokens;Username=shifter_user;Password=${POSTGRES_PASSWORD}"
+      ConnectionStrings__Shifter: "Host=db;Port=5432;Database=shifter;Username=shifter_user;Password=${POSTGRES_PASSWORD};Maximum Pool Size=30"
+      ConnectionStrings__Tokens: "Host=db;Port=5432;Database=tokens;Username=shifter_user;Password=${POSTGRES_PASSWORD};Maximum Pool Size=30"
       SHIFTER_JWT_KEY: ${SHIFTER_JWT_KEY:?set SHIFTER_JWT_KEY in .env}
     depends_on:
       db:
@@ -37,11 +52,13 @@ services:
   shifter:
     image: ${REGISTRY:-ghcr.io/4booser}/shifter:${TAG:-latest}
     restart: unless-stopped
+    logging: *logging
+    mem_limit: 400m
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_URLS: http://0.0.0.0:8080
-      ConnectionStrings__Shifter: "Host=db;Port=5432;Database=shifter;Username=shifter_user;Password=${POSTGRES_PASSWORD}"
-      ConnectionStrings__Tokens: "Host=db;Port=5432;Database=tokens;Username=shifter_user;Password=${POSTGRES_PASSWORD}"
+      ConnectionStrings__Shifter: "Host=db;Port=5432;Database=shifter;Username=shifter_user;Password=${POSTGRES_PASSWORD};Maximum Pool Size=30"
+      ConnectionStrings__Tokens: "Host=db;Port=5432;Database=tokens;Username=shifter_user;Password=${POSTGRES_PASSWORD};Maximum Pool Size=30"
       SHIFTER_JWT_KEY: ${SHIFTER_JWT_KEY:?set SHIFTER_JWT_KEY in .env}
       # Empty when unset, which the app reads as "notifications off" — a
       # server without VAPID keys still starts.
@@ -79,6 +96,8 @@ services:
   proxy:
     image: caddy:2-alpine
     restart: unless-stopped
+    logging: *logging
+    mem_limit: 128m
     ports:
       - "80:80"
       - "443:443"

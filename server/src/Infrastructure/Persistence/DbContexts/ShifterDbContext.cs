@@ -99,8 +99,12 @@ public class ShifterDbContext : DbContext
         // under an id that no longer exists. The navigations above are what
         // make the keys real; the behaviour is written here so the intent is
         // in one place.
+        // Pointed at the collection User already has. WithMany() with no
+        // argument would leave that collection unclaimed, and EF would build a
+        // second relationship for it on a shadow column — two foreign keys to
+        // the same place, one of which no query knows about.
         modelBuilder.Entity<Day>()
-            .HasOne(day => day.User).WithMany()
+            .HasOne(day => day.User).WithMany(user => user.CalendarDays)
             .HasForeignKey(day => day.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 

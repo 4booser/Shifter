@@ -32,11 +32,16 @@ public static class DependencyInjection
         var tokenDb = configuration.GetConnectionString("Tokens")
                         ?? Fallback("tokens", isDevelopment, "Tokens");
         
+        // Two contexts at Npgsql's default of a hundred connections each is
+        // two hundred against a Postgres that allows a hundred in total — so a
+        // burst answered "sorry, too many clients already", which also failed
+        // the health probes. Bounded, and told to ride out a blip rather than
+        // surface it as a 500.
         services.AddDbContext<ShifterDbContext>(options =>
-            options.UseNpgsql(shifterDb));
+            options.UseNpgsql(shifterDb, Tuning));
 
         services.AddDbContext<TokensDbContext>(options =>
-            options.UseNpgsql(tokenDb));
+            options.UseNpgsql(tokenDb, Tuning));
 
         services.AddScoped<IUserCommand, UserCommand>();
         services.AddScoped<IUserQuery, UserQuery>();
@@ -67,5 +72,18 @@ public static class DependencyInjection
             database);
 
         return string.Format(LocalTemplate, database);
+    }
+
+    /// <summary>
+    /// What each context is allowed to take from the database, and how it
+    /// behaves when the connection wobbles. Thirty apiece leaves headroom on a
+    /// hundred-connection server for the migration job and for a person with
+    /// psql open.
+    /// </summary>
+    private static void Tuning(Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure.NpgsqlDbContextOptionsBuilder options)
+    {
+        options.MaxBatchSize(100);
+        options.CommandTimeout(30);
+        options.EnableRetryOnFailure(3, TimeSpan.FromSeconds(2), null);
     }
 }

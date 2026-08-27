@@ -205,6 +205,14 @@ jobs:
             # Images pushed by Actions are private unless someone changes that
             # by hand, so the pull below needs a login. Doing it here keeps the
             # package private without anyone storing a token on the server.
+            #
+            # The logout is a trap rather than a line at the end: it used to sit
+            # only on the two successful exits inside the health loop, so a
+            # deploy that failed earlier — a bad pull, a migration that aborted
+            # — left the run's registry token sitting in ~/.docker/config.json,
+            # base64 and not encrypted. `set -e` never reached the cleanup.
+            trap 'docker logout ghcr.io >/dev/null 2>&1 || true' EXIT
+
             echo "$REGISTRY_TOKEN" | docker login ghcr.io -u "$REGISTRY_USER" --password-stdin
 
             echo "REGISTRY=${{ env.REGISTRY }}/${{ github.repository_owner }}" > .env.release
@@ -214,10 +222,15 @@ jobs:
             # the crontab line is rewritten idempotently, so changing the
             # schedule or the script is just another deploy. The deploy user's
             # own crontab, because /etc/cron.d is root's and this user is not.
-            chmod +x docker/backup.sh
+            chmod +x docker/backup.sh docker/restore-drill.sh
             mkdir -p backups "$HOME/.cache"
-            ( crontab -l 2>/dev/null | grep -v shifter-backup || true ; \
-              echo '17 3 * * * /opt/shifter/docker/backup.sh >> /opt/shifter/backups/backup.log 2>&1 # shifter-backup' \
+            # And a weekly restore drill, because a dump nobody has ever
+            # restored is a hope rather than a backup. It loads the newest one
+            # into a scratch database and compares row counts against the live
+            # one — an empty restore loads perfectly and is worth nothing.
+            ( crontab -l 2>/dev/null | grep -v -e shifter-backup -e shifter-restore-drill || true ; \
+              echo '17 3 * * * /opt/shifter/docker/backup.sh >> /opt/shifter/backups/backup.log 2>&1 # shifter-backup' ; \
+              echo '41 5 * * 1 /opt/shifter/docker/restore-drill.sh >> /opt/shifter/backups/restore-drill.log 2>&1 # shifter-restore-drill' \
             ) | crontab -
 
             docker compose -f compose.prod.yaml --env-file .env --env-file .env.release pull
@@ -241,21 +254,25 @@ jobs:
             # Wait for the app to report healthy before calling this a success,
             # so a broken release fails the run instead of sitting there.
             for i in $(seq 1 30); do
+              # The word to match is "(healthy)" with its bracket. Matching
+              # 'shifter.*healthy' also matched "(unhealthy)" — the .* spans
+              # the "un" — so a release that started but could not reach the
+              # database was called green on the very first pass, and the only
+              # alarm left was the ten-minute external probe.
               if docker compose -f compose.prod.yaml ps --format '{{.Service}} {{.Status}}' \
-                 | grep -q 'shifter.*healthy'; then
+                 | grep -E '^shifter .*\(healthy\)' >/dev/null; then
                 echo "healthy"
                 # -a matters: every image here is tagged with its commit, so
                 # the plain prune never matched anything and the disk filled
                 # with 1.8 GB migrate images until the box hit 94%. Referenced
                 # images survive; the 48h window keeps a rollback pair around.
                 docker image prune -af --filter "until=48h"
-                docker logout ghcr.io
                 exit 0
               fi
               sleep 5
             done
 
             echo "did not become healthy in time"
+            docker compose -f compose.prod.yaml ps
             docker compose -f compose.prod.yaml logs --tail 60 shifter
-            docker logout ghcr.io
             exit 1

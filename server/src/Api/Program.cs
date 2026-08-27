@@ -63,7 +63,23 @@ try
     // the proxy that address is the proxy itself unless this runs first.
     app.UseForwardedHeaders();
 
-    app.UseSerilogRequestLogging();
+    // The path is redacted on the two routes where the path *is* the
+    // credential. A calendar feed token and a webhook token are the only key
+    // to somebody's whole shift history, and they were written to the log of
+    // every request — permanently, in cleartext, to anybody who can read
+    // `docker logs` or whatever ships them onward.
+    app.UseSerilogRequestLogging(options =>
+        options.GetMessageTemplateProperties = (context, path, elapsed, status) =>
+        [
+            new Serilog.Events.LogEventProperty("RequestMethod",
+                new Serilog.Events.ScalarValue(context.Request.Method)),
+            new Serilog.Events.LogEventProperty("RequestPath",
+                new Serilog.Events.ScalarValue(Redact(path))),
+            new Serilog.Events.LogEventProperty("StatusCode",
+                new Serilog.Events.ScalarValue(status)),
+            new Serilog.Events.LogEventProperty("Elapsed",
+                new Serilog.Events.ScalarValue(elapsed)),
+        ]);
 
     app.UseMiddleware<GlobalExceptionMiddleware>();
 
@@ -156,4 +172,21 @@ catch (Exception exception) when (exception is not HostAbortedException)
 finally
 {
     Log.CloseAndFlush();
+}
+
+/// <summary>
+/// Hides a secret that travels in a path. Two routes are authenticated by the
+/// path itself — the calendar feed and the webhook receiver — so logging the
+/// path logs the credential, and logs outlive the token by years.
+/// </summary>
+static string Redact(string path)
+{
+    foreach (string prefix in new[] { "/feed/", "/shifter/v1/hooks/" })
+    {
+        if (!path.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) continue;
+
+        return $"{prefix}[token]";
+    }
+
+    return path;
 }

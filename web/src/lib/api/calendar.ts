@@ -13,6 +13,7 @@ import {
   GoalSave,
   Payout,
   PayoutCreate,
+  PayslipCheck,
   Reconciliation,
   SalesCreate,
   SalesPosition,
@@ -82,6 +83,9 @@ export const calendarApi = {
     location_id: number | null;
   }) => api<Expense>(`${API}/expenses`, { body: request }),
   deleteExpense: (id: number) => api<void>(`${API}/expenses/${id}`, { method: 'DELETE' }),
+  /** One pay period at one place, in the shape a payslip is written in. */
+  payslipCheck: (location_id: number, on: string) =>
+    api<PayslipCheck>(`${API}/payouts/check?location_id=${location_id}&on=${on}`),
   /** Draws a line under one shortfall, or lifts it again with kind: null. */
   settlePeriod: (
     location_id: number,

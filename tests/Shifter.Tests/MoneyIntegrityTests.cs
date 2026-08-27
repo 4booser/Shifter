@@ -283,4 +283,40 @@ public class MoneyIntegrityTests
 
         Assert.True(month.premium_earned > 0m, "a shift running into the 1st is a holiday shift");
     }
+
+    [Fact]
+    public async Task TenDaysOfASalariedMonthAreWorthTenDaysOfIt()
+    {
+        // The only figure in the app whose answer depended on where somebody
+        // drew the line: asking for the first third of August returned the
+        // whole month's wage, so two halves of a month added up to twice it.
+        Location bar = Place(1, "Bar");
+        Shift monthly = Build.Template(1, location: bar, period: SalaryPeriod.Month, amount: 31_000m);
+
+        // Ten days worked, spread across the month.
+        foreach (int day in new[] { 2, 4, 6, 8, 10, 20, 22, 24, 26, 28 })
+            _query.Days.Add(Build.WorkedDay($"2026-08-{day:00}", monthly));
+
+        DaysDto first = await Range("2026-08-01", "2026-08-15");
+        DaysDto second = await Range("2026-08-16", "2026-08-31");
+        DaysDto whole = await Range("2026-08-01", "2026-08-31");
+
+        Assert.Equal(31_000m, whole.period_earned);
+        Assert.Equal(whole.period_earned, first.period_earned + second.period_earned);
+        // Five of the ten days worked fall in each half.
+        Assert.Equal(15_500m, first.period_earned);
+    }
+
+    [Fact]
+    public async Task ARangeWithNoneOfThePeriodsShiftsInItOwesNothing()
+    {
+        Location bar = Place(1, "Bar");
+        Shift monthly = Build.Template(1, location: bar, period: SalaryPeriod.Month, amount: 31_000m);
+
+        _query.Days.Add(Build.WorkedDay("2026-08-04", monthly));
+
+        DaysDto empty = await Range("2026-08-10", "2026-08-20");
+
+        Assert.Equal(0m, empty.period_earned);
+    }
 }

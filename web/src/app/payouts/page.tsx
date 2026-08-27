@@ -10,6 +10,7 @@ import { useI18n } from '@/lib/i18n';
 import { Shell } from '@/components/layout/shell';
 import { useReveal } from '@/lib/fx';
 import { ExpensesPanel } from '@/components/dashboard/expenses-panel';
+import { PayslipCheckModal } from '@/components/dashboard/payslip-check';
 import { PayoutModal, PayoutPrefill } from '@/components/dashboard/modals/payout-modal';
 import { Alert, Money } from '@/components/ui/bits';
 import { Empty } from '@/components/ui/empty';
@@ -50,6 +51,7 @@ function Payouts() {
   const [monthsBack, setMonthsBack] = useState(MONTHS_BACK);
   const [payoutOpen, setPayoutOpen] = useState(false);
   const [prefill, setPrefill] = useState<PayoutPrefill | null>(null);
+  const [checking, setChecking] = useState<{ locationId: number; on: string } | null>(null);
 
   /**
    * The stretch the page is about: as far back as the periods reach, and one
@@ -313,7 +315,7 @@ function Payouts() {
         ) : (
           <ul className="flex flex-col gap-1.5">
             {upcoming.map((row) => (
-              <PeriodRow key={`${row.location_id}-${row.period_from}-${row.stream}`} row={row} onRecord={record} onSettle={settle} relative={relative} streamChip={streamChip} />
+              <PeriodRow key={`${row.location_id}-${row.period_from}-${row.stream}`} row={row} onRecord={record} onSettle={settle} onCheck={(row) => setChecking({ locationId: row.location_id, on: row.period_from })} relative={relative} streamChip={streamChip} />
             ))}
           </ul>
         )}
@@ -325,7 +327,7 @@ function Payouts() {
           <h2 className="mb-2 text-[0.98rem] font-bold">{t('Settled')}</h2>
           <ul className="flex flex-col gap-1.5">
             {settled.map((row) => (
-              <PeriodRow key={`${row.location_id}-${row.period_from}-${row.stream}`} row={row} onRecord={record} onSettle={settle} relative={relative} streamChip={streamChip} />
+              <PeriodRow key={`${row.location_id}-${row.period_from}-${row.stream}`} row={row} onRecord={record} onSettle={settle} onCheck={(row) => setChecking({ locationId: row.location_id, on: row.period_from })} relative={relative} streamChip={streamChip} />
             ))}
           </ul>
           <button type="button" className="btn btn-quiet btn-sm mt-2" onClick={() => setMonthsBack((months) => months + 6)}>
@@ -333,6 +335,13 @@ function Payouts() {
           </button>
         </section>
       )}
+
+      <PayslipCheckModal
+        open={checking !== null}
+        locationId={checking?.locationId ?? null}
+        on={checking?.on ?? ''}
+        onClose={() => setChecking(null)}
+      />
 
       {/* ==== What the work cost ==== */}
       <ExpensesPanel from={range.from} to={range.to} onChanged={load} />
@@ -351,12 +360,14 @@ function PeriodRow({
   row,
   onRecord,
   onSettle,
+  onCheck,
   relative,
   streamChip,
 }: {
   row: PayPeriodRow;
   onRecord: (row: PayPeriodRow) => void;
   onSettle: (row: PayPeriodRow, kind: 'paid' | 'written-off' | null) => void;
+  onCheck: (row: PayPeriodRow) => void;
   relative: (row: PayPeriodRow) => string;
   streamChip: (row: { stream: PayPeriodRow['stream'] }) => string | null;
 }) {
@@ -426,6 +437,15 @@ function PeriodRow({
       {(row.status === 'due' || row.status === 'overdue' || row.status === 'partial') && (
         <button type="button" className="btn btn-sm" onClick={() => onRecord(row)}>
           {t('Record')}
+        </button>
+      )}
+
+      {/* Not only on a short period: the point is to find the line that is
+          wrong, and a period that adds up to the right total can still have
+          the night hours in the wrong column. */}
+      {row.location_id > 0 && (
+        <button type="button" className="btn btn-quiet btn-sm" onClick={() => onCheck(row)}>
+          {t('Check')}
         </button>
       )}
 

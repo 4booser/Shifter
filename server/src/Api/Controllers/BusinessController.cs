@@ -107,6 +107,20 @@ public class BusinessController : ControllerBase
     /// arithmetic is untouched: the period stays short, it just stops being
     /// chased. A null kind reopens it.
     /// </summary>
+    /// <summary>
+    /// One pay period at one place, in the shape a payslip is written in. The
+    /// schedule above says whether the money arrived; this says which line of
+    /// it did not, which is the version somebody can take to a manager.
+    /// </summary>
+    [HttpGet]
+    [Route("payouts/check")]
+    public async Task<ActionResult<PayslipCheckDto>> PayslipCheck(
+        [FromServices] IReconciliationHandler reconciliation,
+        [FromQuery] int location_id,
+        [FromQuery] DateOnly on,
+        CancellationToken ct)
+        => Ok(await reconciliation.CheckAsync(CurrentUserId(), location_id, on, ct));
+
     [HttpPost]
     [Route("payouts/settle")]
     public async Task<ActionResult> SettlePeriod(

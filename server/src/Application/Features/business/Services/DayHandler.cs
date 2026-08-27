@@ -55,13 +55,17 @@ public partial class DayHandler : IDayHandler
 
         Day[] days = await _shifterQuery.GetDaysInRangeAsync(userId, from, to, ct);
 
-        // Overtime is a weekly threshold, and the calendar is read a month at
-        // a time — so a week straddling the first of the month never reached
-        // its threshold in either month, and the money simply disappeared. The
-        // whole weeks that touch the range are fetched for that reckoning
-        // alone; nothing else is counted from them.
-        Day[] weeks = await _shifterQuery.GetDaysInRangeAsync(
-            userId, from.AddDays(-7), to.AddDays(7), ct);
+        // Two reckonings need to see outside the range they report on.
+        //
+        // Overtime is a weekly threshold and the calendar is read a month at a
+        // time, so a week straddling the first of the month reached it in
+        // neither month and the money disappeared. A salary is earned over a
+        // whole month, so a ten-day range has to know how much of that month
+        // was worked before it can say what those ten days were worth.
+        //
+        // Nothing is counted from these days directly; they are context.
+        Day[] around = await _shifterQuery.GetDaysInRangeAsync(
+            userId, from.AddDays(-35), to.AddDays(35), ct);
 
         Payout[] payouts = await _shifterQuery.GetPayoutsAsync(userId, from, to, ct);
         Event[] events = await _shifterQuery.GetEventsInRangeAsync(userId, from, to, ct);
@@ -79,7 +83,7 @@ public partial class DayHandler : IDayHandler
 
         decimal salesEarned = dtos.SelectMany(day => day.sales).Sum(entry => entry.earned);
         decimal tipsEarned = days.Sum(day => day.Tips ?? 0m);
-        decimal periodEarned = PeriodSalary(days, workedOnly: true);
+        decimal periodEarned = PeriodSalary(days, workedOnly: true, around);
         decimal shiftsEarned = worked.Sum(entry => entry.Pay);
         decimal revenueEarned = worked.Sum(entry => entry.RevenuePay);
         decimal revenueCounted = worked.Sum(entry => entry.Revenue ?? 0m);
@@ -87,7 +91,7 @@ public partial class DayHandler : IDayHandler
         // Both are kept per place and summed here for the headline, so the
         // figure on the dashboard and the figure inside each place's tax are
         // the same arithmetic rather than two that happen to agree.
-        var overtime = OvertimeByPlace(weeks, byId, from, to);
+        var overtime = OvertimeByPlace(around, byId, from, to);
         var premiums = PremiumsByPlace(days, byId);
 
         double overtimeHours = Math.Round(overtime.Values.Sum(pair => pair.Hours), 2);
@@ -107,12 +111,12 @@ public partial class DayHandler : IDayHandler
             shiftsEarned + salesEarned + tipsEarned + periodEarned + overtimeExtra + premiumExtra
             - tipOut - deductions;
         decimal plannedEarned =
-            planned.Sum(entry => entry.Pay) + PeriodSalary(days, workedOnly: false)
+            planned.Sum(entry => entry.Pay) + PeriodSalary(days, workedOnly: false, around)
             - periodEarned;
 
         decimal paid = payouts.Sum(payout => payout.Amount);
 
-        LocationTotalDto[] byLocation = ByLocation(days, byId, weeks);
+        LocationTotalDto[] byLocation = ByLocation(days, byId, around);
 
         // Summed from the per-place figures rather than recomputed: each place
         // taxes differently, and one blended rate would be a fiction.
@@ -664,7 +668,7 @@ public partial class DayHandler : IDayHandler
     internal static LocationTotalDto[] ByLocation(
         Day[] days,
         Dictionary<int, Location> locations,
-        Day[]? weeks = null)
+        Day[]? around = null)
     {
         // Tips and sales sit on the day, not on a shift, so a day split between
         // two places shares them out by the hours each place got. Anything else
@@ -675,7 +679,7 @@ public partial class DayHandler : IDayHandler
         // them a place with a monthly salary reported no tax, no holiday
         // accrual and — the expensive one — an "expected" of zero, so a whole
         // unpaid wage never showed up as owed.
-        Dictionary<int, decimal> periodPay = PeriodSalaryByPlace(days, workedOnly: true);
+        Dictionary<int, decimal> periodPay = PeriodSalaryByPlace(days, workedOnly: true, around);
 
         // Overtime is reckoned over whole weeks and reported only for the days
         // asked about, so a week straddling a month boundary reaches its
@@ -683,7 +687,7 @@ public partial class DayHandler : IDayHandler
         var overtime = days.Length == 0
             ? []
             : OvertimeByPlace(
-                weeks ?? days,
+                around ?? days,
                 locations,
                 days.Min(day => day.Date),
                 days.Max(day => day.Date));
@@ -985,8 +989,21 @@ public partial class DayHandler : IDayHandler
     /// fall inside it. So each template is charged per distinct week or month
     /// in which it was actually worked, not per day.
     /// </summary>
-    private static decimal PeriodSalary(Day[] days, bool workedOnly)
-        => PeriodSalaryByPlace(days, workedOnly).Values.Sum();
+    /// <summary>
+    /// Which week or month a placement's wage belongs to. Weeks are ISO, so a
+    /// week straddling New Year still counts as one week.
+    /// </summary>
+    private static (int ShiftId, int Year, int Slot) SlotOf(DayShift entry, DateOnly date)
+    {
+        DateTime moment = date.ToDateTime(TimeOnly.MinValue);
+
+        return entry.SalaryPeriod == SalaryPeriod.Week
+            ? (entry.ShiftId, ISOWeek.GetYear(moment), ISOWeek.GetWeekOfYear(moment))
+            : (entry.ShiftId, date.Year, date.Month);
+    }
+
+    private static decimal PeriodSalary(Day[] days, bool workedOnly, Day[]? around = null)
+        => PeriodSalaryByPlace(days, workedOnly, around).Values.Sum();
 
     /// <summary>
     /// Weekly and monthly wages, counted once per period they cover and
@@ -995,15 +1012,35 @@ public partial class DayHandler : IDayHandler
     /// holiday accrual and — worst of all — from what the reconciliation says
     /// it is owed.
     /// </summary>
-    private static Dictionary<int, decimal> PeriodSalaryByPlace(Day[] days, bool workedOnly)
+    private static Dictionary<int, decimal> PeriodSalaryByPlace(
+        Day[] days,
+        bool workedOnly,
+        Day[]? around = null)
     {
-        HashSet<(int ShiftId, int Year, int Slot)> counted = [];
         Dictionary<int, decimal> byPlace = [];
 
         if (days.Length == 0) return byPlace;
 
-        DateOnly first = days.Min(day => day.Date);
-        DateOnly last = days.Max(day => day.Date);
+        // How many days of each period were worked, counted over a window
+        // wider than the range. A salary is earned across the whole month, so
+        // ten days of it are worth ten days' share — asking for the first
+        // third of August and being told the whole month's wage is the one
+        // place in the app where the answer depended on where you drew the
+        // line, and two adjacent ranges added up to twice the truth.
+        Dictionary<(int, int, int), int> inPeriod = [];
+
+        foreach (Day day in around ?? days)
+        {
+            foreach (DayShift entry in day.Shifts ?? [])
+            {
+                if (!entry.IsPeriodSalary) continue;
+                if (workedOnly && !entry.Worked) continue;
+
+                var key = SlotOf(entry, day.Date);
+
+                inPeriod[key] = inPeriod.GetValueOrDefault(key) + 1;
+            }
+        }
 
         foreach (Day day in days)
         {
@@ -1012,34 +1049,21 @@ public partial class DayHandler : IDayHandler
                 if (!entry.IsPeriodSalary) continue;
                 if (workedOnly && !entry.Worked) continue;
 
-                DateTime date = day.Date.ToDateTime(TimeOnly.MinValue);
+                var slot = SlotOf(entry, day.Date);
 
-                int slot = entry.SalaryPeriod == SalaryPeriod.Week
-                    ? ISOWeek.GetWeekOfYear(date)
-                    : day.Date.Month;
+                // The day's share of its period's wage. Days worked in the
+                // period, not calendar days: a month with five shifts in it
+                // pays the salary over those five, so any range containing
+                // them adds up to the salary and no range containing none of
+                // them claims a penny of it.
+                int worked = inPeriod.GetValueOrDefault(slot);
 
-                int year = entry.SalaryPeriod == SalaryPeriod.Week
-                    ? ISOWeek.GetYear(date)
-                    : day.Date.Year;
+                if (worked <= 0) continue;
 
-                // A weekly wage belongs to its week, and a week can lie across
-                // a month boundary — so it was charged once to March and once
-                // to April, and anybody adding two months together paid it
-                // twice. It is charged to the Monday of its week instead, and
-                // a range that does not contain that Monday does not owe it.
-                if (entry.SalaryPeriod == SalaryPeriod.Week)
-                {
-                    DateOnly monday = day.Date.AddDays(
-                        -(((int)day.Date.DayOfWeek + 6) % 7));
+                int place = entry.Shift?.LocationId ?? 0;
 
-                    if (monday < first || monday > last) continue;
-                }
-
-                if (!counted.Add((entry.ShiftId, year, slot))) continue;
-
-                int key = entry.Shift?.LocationId ?? 0;
-
-                byPlace[key] = byPlace.GetValueOrDefault(key) + (entry.SalaryAmount ?? 0m);
+                byPlace[place] = byPlace.GetValueOrDefault(place)
+                    + (entry.SalaryAmount ?? 0m) / worked;
             }
         }
 

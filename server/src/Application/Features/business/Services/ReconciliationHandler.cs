@@ -369,4 +369,38 @@ public class ReconciliationHandler : IReconciliationHandler
 
         return found.OrderByDescending(entry => entry.total_short).ToArray();
     }
+
+    /// <summary>
+    /// One pay period at one place, taken apart into the lines a payslip has.
+    ///
+    /// The rest of this class answers "did the money arrive". This answers
+    /// "which part of it did not", which is the question somebody actually
+    /// takes to a manager — a total that disagrees by ₴1 440 is an argument,
+    /// and "the night hours were not paid" is a question with an answer.
+    /// </summary>
+    public async Task<PayslipCheckDto> CheckAsync(
+        int userId,
+        int locationId,
+        DateOnly on,
+        CancellationToken ct)
+    {
+        Location[] places = await _shifterQuery.GetLocationsAsync(userId, true, ct);
+        Dictionary<int, Location> byId = places.ToDictionary(place => place.Id);
+
+        Location place = byId.GetValueOrDefault(locationId)
+            ?? throw new NotFoundException("Place of work does not exist.");
+
+        var (from, to) = PayPeriodCalculator.PeriodFor(place, on);
+
+        Day[] days = await _shifterQuery.GetDaysInRangeAsync(userId, from, to, ct);
+
+        LocationTotalDto total = DayHandler
+            .ByLocation(days, byId)
+            .FirstOrDefault(entry => entry.location_id == place.Id)
+            ?? new LocationTotalDto(
+                place.Id, place.Name, place.Colour, 0, 0m, 0,
+                0m, 0m, 0m, 0m, 0m, 0m, 0m, 0m, place.Currency);
+
+        return PayslipCheck.For(place, days, from, to, total, byId);
+    }
 }

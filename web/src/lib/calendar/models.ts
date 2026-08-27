@@ -473,6 +473,35 @@ export interface Expense {
   location_name: string | null;
 }
 
+/**
+ * One line somebody can check against a payslip: what the app worked out, how
+ * it got there, and room for what the paper says. The formula is the point —
+ * a total that disagrees is an argument, and "6 ч × 200 × 1,2" is a question
+ * with an answer.
+ */
+export interface PayslipLine {
+  kind: 'base' | 'extras' | 'revenue' | 'tips' | 'tip_out' | 'meals' | 'fines' | 'tax';
+  amount: number;
+  formula: string;
+  hours: number;
+  /** True where the line is taken off rather than added. */
+  deducted: boolean;
+}
+
+export interface PayslipCheck {
+  location_id: number;
+  location_name: string;
+  currency: string;
+  period_from: string;
+  period_to: string;
+  hours: number;
+  days_worked: number;
+  lines: PayslipLine[];
+  gross: number;
+  net: number;
+  holiday_accrued: number;
+}
+
 export interface Payout {
   id: number;
   period_from: string;

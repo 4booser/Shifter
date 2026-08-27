@@ -31,6 +31,7 @@ function day(date: string, hours: number, start = '10:00', worked = true): Calen
     deductions: 0,
     note: null,
     colour: null,
+    below_floor: false,
     hours: worked ? hours : 0,
     earned: worked ? hours * 100 : 0,
     planned: worked ? 0 : hours * 100,

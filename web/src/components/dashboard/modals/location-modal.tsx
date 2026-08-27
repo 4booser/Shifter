@@ -54,6 +54,9 @@ export function LocationModal({
   const [tipOutTips, setTipOutTips] = useState(0);
   const [tipOutSales, setTipOutSales] = useState(0);
   const [mealDeduction, setMealDeduction] = useState(0);
+  const [breakAfter, setBreakAfter] = useState(0);
+  const [breakMinutes, setBreakMinutes] = useState(0);
+  const [floor, setFloor] = useState(0);
   const [taxPercent, setTaxPercent] = useState(0);
   const [taxTips, setTaxTips] = useState(false);
   const [holidayPercent, setHolidayPercent] = useState(0);
@@ -77,6 +80,9 @@ export function LocationModal({
     setTipOutTips(0);
     setTipOutSales(0);
     setMealDeduction(0);
+    setBreakAfter(0);
+    setBreakMinutes(0);
+    setFloor(0);
     setTaxPercent(0);
     setTaxTips(false);
     setHolidayPercent(0);
@@ -109,6 +115,9 @@ export function LocationModal({
     setTipOutTips(location.tip_out_of_tips_percent);
     setTipOutSales(location.tip_out_of_sales_percent);
     setMealDeduction(location.meal_deduction);
+    setBreakAfter(location.auto_break_after_hours);
+    setBreakMinutes(location.auto_break_minutes);
+    setFloor(location.minimum_hourly);
     setTaxPercent(location.tax_percent);
     setTaxTips(location.tax_tips);
     setHolidayPercent(location.holiday_percent);
@@ -155,6 +164,9 @@ export function LocationModal({
           tip_out_of_tips_percent: tipOutTips,
           tip_out_of_sales_percent: tipOutSales,
           meal_deduction: mealDeduction,
+          auto_break_after_hours: breakAfter,
+          auto_break_minutes: breakMinutes,
+          minimum_hourly: floor,
           tax_percent: taxPercent,
           tax_tips: taxTips,
           holiday_percent: holidayPercent,
@@ -391,6 +403,32 @@ export function LocationModal({
         <label>
           <span className="field-label">{t('Staff meal, per day worked')}</span>
           <input type="number" min={0} step={10} className="field-input" value={mealDeduction} onChange={num(setMealDeduction)} />
+        </label>
+
+        {/* A house rule nobody re-types per shift. Both halves or neither:
+            a threshold with no minutes cannot fire. */}
+        <div className="grid grid-cols-2 gap-3">
+          <label>
+            <span className="field-label">{t('Break after, h')}</span>
+            <input type="number" min={0} max={24} step={0.5} className="field-input" value={breakAfter} onChange={num(setBreakAfter)} />
+          </label>
+          <label>
+            <span className="field-label">{t('Break length, min')}</span>
+            <input type="number" min={0} max={480} step={5} className="field-input" value={breakMinutes} onChange={num(setBreakMinutes)} />
+          </label>
+        </div>
+        {breakAfter > 0 && breakMinutes > 0 && (
+          <p className="field-hint -mt-1">
+            {t('A shift longer than this loses those minutes, unpaid, unless the template already books more.')}
+          </p>
+        )}
+
+        <label>
+          <span className="field-label">{t('Your floor, per hour')}</span>
+          <input type="number" min={0} step={10} className="field-input" value={floor} onChange={num(setFloor)} />
+          <span className="field-hint mt-1 block">
+            {t('Days here that pay less per hour get flagged. Your own line, not a legal one.')}
+          </span>
         </label>
 
         <div className="grid grid-cols-2 gap-3">

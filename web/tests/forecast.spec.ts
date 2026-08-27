@@ -16,6 +16,7 @@ function day(date: string, earned: number, planned = 0): CalendarDayData {
     deductions: 0,
     note: null,
     colour: null,
+    below_floor: false,
     hours: 0,
     earned,
     planned,

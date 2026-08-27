@@ -5,6 +5,12 @@
 type Dictionary = Record<string, string>;
 
 export const RU: Dictionary = {
+  'Break after, h': 'Перерыв после, ч',
+  'Break length, min': 'Длина перерыва, мин',
+  'A shift longer than this loses those minutes, unpaid, unless the template already books more.': 'Смена длиннее теряет эти минуты — неоплачиваемо, если в шаблоне не заложено больше.',
+  'Your floor, per hour': 'Ваша планка, за час',
+  'Days here that pay less per hour get flagged. Your own line, not a legal one.': 'Дни, где час вышел дешевле, будут помечены. Это ваша черта, а не законная.',
+  'An hour here paid under your floor': 'Час здесь вышел дешевле вашей планки',
   'A period, written out': 'Период словами',
   'Ask about this': 'Спросить об этом',
   'Assistant': 'Помощник',
@@ -1641,6 +1647,12 @@ export const RU: Dictionary = {
 };
 
 export const UK: Dictionary = {
+  'Break after, h': 'Перерва після, год',
+  'Break length, min': 'Довжина перерви, хв',
+  'A shift longer than this loses those minutes, unpaid, unless the template already books more.': 'Довша зміна втрачає ці хвилини — неоплачувано, якщо в шаблоні не закладено більше.',
+  'Your floor, per hour': 'Ваша межа, за годину',
+  'Days here that pay less per hour get flagged. Your own line, not a legal one.': 'Дні, де година вийшла дешевше, будуть позначені. Це ваша межа, а не законна.',
+  'An hour here paid under your floor': 'Година тут вийшла дешевше вашої межі',
   'A period, written out': 'Період словами',
   'Ask about this': 'Спитати про це',
   'Assistant': 'Помічник',

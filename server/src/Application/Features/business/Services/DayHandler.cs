@@ -332,6 +332,17 @@ public partial class DayHandler : IDayHandler
                 if (entry.break_minutes is int breakMinutes && breakMinutes >= 0)
                     placed.BreakMinutes = breakMinutes;
 
+                // The house rule applies itself. It is a floor, not an
+                // override: a template that already books a longer break knows
+                // something the rule does not.
+                if (shift.Location is Location place
+                    && place.AutoBreakAfterHours > 0m
+                    && place.AutoBreakMinutes > placed.BreakMinutes
+                    && (decimal)placed.Duration.TotalHours > place.AutoBreakAfterHours)
+                {
+                    placed.BreakMinutes = place.AutoBreakMinutes;
+                }
+
                 // Null stays null: "not counted yet" and "took nothing" are
                 // different answers and only one of them is a zero.
                 if (entry.revenue is decimal revenue && revenue >= 0m)
@@ -743,10 +754,37 @@ public partial class DayHandler : IDayHandler
             deductions,
             day.Note,
             day.Colour,
+            BelowFloor(day, locations),
             Math.Round(shifts.Where(s => s.worked).Sum(s => s.hours), 2),
             workedPay + salesPay + (day.Tips ?? 0m) - tipOut - deductions,
             plannedPay
         );
+    }
+
+    /// <summary>
+    /// Whether any worked shift on this day came out under the floor its place
+    /// is set to. Judged per shift rather than per day: a good evening does not
+    /// make an underpaid morning acceptable, and averaging them hides it.
+    /// </summary>
+    private static bool BelowFloor(Day day, Dictionary<int, Location> locations)
+    {
+        foreach (var entry in day.Shifts ?? [])
+        {
+            if (!entry.Worked) continue;
+            if (entry.Shift?.LocationId is not int placeId) continue;
+            if (!locations.TryGetValue(placeId, out var place)) continue;
+            if (place.MinimumHourly <= 0m) continue;
+
+            var hours = (decimal)entry.PaidDuration.TotalHours;
+
+            // No hours means no rate to judge: a period wage lands on the
+            // range, not on the shift, and dividing by zero is not a verdict.
+            if (hours <= 0m) continue;
+
+            if (entry.Pay / hours < place.MinimumHourly) return true;
+        }
+
+        return false;
     }
 
     [GeneratedRegex("^#[0-9A-Fa-f]{6}$")]

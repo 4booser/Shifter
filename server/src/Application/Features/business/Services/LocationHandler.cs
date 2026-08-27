@@ -210,6 +210,23 @@ public partial class LocationHandler : ILocationHandler
 
         location.MealDeduction = request.meal_deduction;
 
+        if (request.auto_break_after_hours is < 0m or > 24m)
+            throw new ValidationException("The automatic break threshold must be within a day.");
+
+        if (request.auto_break_minutes is < 0 or > 480)
+            throw new ValidationException("An automatic break must be under eight hours.");
+
+        if (request.minimum_hourly < 0m)
+            throw new ValidationException("A floor cannot be negative.");
+
+        // Half a rule is no rule: a threshold with no minutes, or minutes with
+        // no threshold, would silently do nothing.
+        location.AutoBreakAfterHours =
+            request.auto_break_minutes > 0 ? request.auto_break_after_hours : 0m;
+        location.AutoBreakMinutes =
+            request.auto_break_after_hours > 0m ? request.auto_break_minutes : 0;
+        location.MinimumHourly = request.minimum_hourly;
+
         if (request.tax_percent is < 0 or > 100)
             throw new ValidationException("Tax must be between 0 and 100 percent.");
 
@@ -264,7 +281,10 @@ public partial class LocationHandler : ILocationHandler
             location.SalesPayDay,
             location.SalesPayAnchor,
             location.Latitude,
-            location.Longitude
+            location.Longitude,
+            location.AutoBreakAfterHours,
+            location.AutoBreakMinutes,
+            location.MinimumHourly
         );
     }
 

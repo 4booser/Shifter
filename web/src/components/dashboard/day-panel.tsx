@@ -156,6 +156,7 @@ export function DayPanel() {
 
 
   const holiday = holidaysInRange(settings.holidayCountry, key, key).get(key)?.name ?? null;
+  const belowFloor = day?.below_floor === true;
 
   // Yesterday's tips, offered as a one-tap copy on a day that has none yet —
   // the commonest amount to enter is the same as the day before.
@@ -216,6 +217,12 @@ export function DayPanel() {
           <Icon name="calendar" size={16} className="text-(--accent)" />
           {formatDayLabel(key, lang)}
         </h2>
+        {belowFloor && (
+          <p className="mt-0.5 flex items-center gap-1 text-[0.78rem] text-danger">
+            <Icon name="flame" size={12} />
+            {t('An hour here paid under your floor')}
+          </p>
+        )}
         {holiday && (
           <p className="mt-0.5 flex items-center gap-1 text-[0.78rem] text-warn">
             <Icon name="spark" size={12} />

@@ -38,7 +38,12 @@ public record LocationDto(
     int sales_pay_day = 1,
     DateOnly sales_pay_anchor = default,
     double? latitude = null,
-    double? longitude = null
+    double? longitude = null,
+    /// <summary>Hours after which an unpaid break applies itself. Zero is off.</summary>
+    decimal auto_break_after_hours = 0m,
+    int auto_break_minutes = 0,
+    /// <summary>The hourly rate this person will not go under here. Zero is off.</summary>
+    decimal minimum_hourly = 0m
     );
 
 public record LocationCreateDto(
@@ -67,7 +72,15 @@ public record LocationCreateDto(
     int sales_pay_day = 1,
     DateOnly? sales_pay_anchor = null,
     double? latitude = null,
-    double? longitude = null
+    double? longitude = null,
+    /// <summary>
+    /// Defaulted like everything below the colour: a client written before
+    /// these existed must keep saving places rather than silently clearing
+    /// rules somebody set on the other screen.
+    /// </summary>
+    decimal auto_break_after_hours = 0m,
+    int auto_break_minutes = 0,
+    decimal minimum_hourly = 0m
     );
 
 /// <summary>Money and hours attributed to one location inside a range.</summary>

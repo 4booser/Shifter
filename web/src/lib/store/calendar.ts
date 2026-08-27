@@ -921,6 +921,7 @@ function blankDay(date: string): CalendarDayData {
     deductions: 0,
     note: null,
     colour: null,
+    below_floor: false,
     hours: 0,
     earned: 0,
     planned: 0,

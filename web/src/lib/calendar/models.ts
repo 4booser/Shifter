@@ -112,6 +112,11 @@ export interface WorkLocation {
   sales_pay_anchor: string;
   latitude: number | null;
   longitude: number | null;
+  /** Hours after which an unpaid break applies itself. 0 is off. */
+  auto_break_after_hours: number;
+  auto_break_minutes: number;
+  /** The hourly rate this person will not go under here. 0 is off. */
+  minimum_hourly: number;
 }
 
 export interface WorkLocationCreate {
@@ -142,6 +147,9 @@ export interface WorkLocationCreate {
   sales_pay_anchor: string | null;
   latitude?: number | null;
   longitude?: number | null;
+  auto_break_after_hours?: number;
+  auto_break_minutes?: number;
+  minimum_hourly?: number;
 }
 
 export interface LocationTotal {
@@ -270,6 +278,8 @@ export interface CalendarDayData {
   note: string | null;
   /** Set by hand, as '#RRGGBB'. Null means the cell colours itself. */
   colour: string | null;
+  /** A worked shift on this day paid less per hour than its place's floor. */
+  below_floor: boolean;
   /** Paid hours of the shifts marked worked. */
   hours: number;
   earned: number;

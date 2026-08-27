@@ -96,6 +96,25 @@ public sealed class Location
     public decimal MealDeduction { get; set; }
 
     /// <summary>
+    /// A shift longer than this earns an unpaid break automatically, in hours.
+    /// Zero is off. The rule exists because the break is a house rule nobody
+    /// re-types per shift — and because a template that forgets it prices an
+    /// hour the person spent eating.
+    /// </summary>
+    public decimal AutoBreakAfterHours { get; set; }
+
+    /// <summary>How long that automatic break is, in minutes.</summary>
+    public int AutoBreakMinutes { get; set; }
+
+    /// <summary>
+    /// The hourly rate below which this place is not worth the trip, set by
+    /// the person rather than read off a statute: legal minimums differ by
+    /// country and year, and a wrong number here would be a confident lie
+    /// about somebody's rights. Zero is off.
+    /// </summary>
+    public decimal MinimumHourly { get; set; }
+
+    /// <summary>
     /// Income tax withheld at source, as a percent. Reported apart from the
     /// gross rather than folded into it: people need both figures — the gross
     /// to check against the payslip, the net to plan a month.

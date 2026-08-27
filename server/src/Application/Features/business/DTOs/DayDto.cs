@@ -53,6 +53,12 @@ public record DayDto(
     string? note,
     /// <summary>Set by hand, as "#RRGGBB". Null means the cell colours itself.</summary>
     string? colour,
+    /// <summary>
+    /// A worked shift here paid less per hour than the floor its place is set
+    /// to. Reported rather than corrected: the app cannot pay the difference,
+    /// but it can stop the day passing unnoticed.
+    /// </summary>
+    bool below_floor,
     /// <summary>Paid hours of the shifts marked worked.</summary>
     double hours,
     /// <summary>Money from shifts already worked, plus sales and tips.</summary>

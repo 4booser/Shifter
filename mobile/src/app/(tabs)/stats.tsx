@@ -16,7 +16,7 @@ import { ClockRing, MoneyFlow, MonthBars } from '@/components/charts';
 import { Colors, Palette } from '@/constants/theme';
 import { api } from '@/lib/api';
 import { addMonths, currentMonth, monthBounds, monthLabel } from '@/lib/calendar';
-import { DaysResponse, money } from '@/lib/types';
+import { DaysResponse, money, moneyIn } from '@/lib/types';
 
 interface Summary extends DaysResponse {
   tips_earned: number;
@@ -59,7 +59,11 @@ export default function StatsScreen() {
 
   const load = useCallback(async () => {
     try {
-      setSummary(await api<Summary>(`/shifter/v1/days?from=${bounds.from}&to=${bounds.to}`));
+      // The base is asked for here alone: this is the screen where a period
+      // is meant to read as one number, and that is what a conversion is for.
+      setSummary(
+        await api<Summary>(`/shifter/v1/days?from=${bounds.from}&to=${bounds.to}&base=UAH`),
+      );
       setError(null);
     } catch {
       setError('Не дотянулись до сервера.');
@@ -187,11 +191,67 @@ export default function StatsScreen() {
       {error !== null && <Text style={styles.error}>{error}</Text>}
 
       <View style={styles.kpis}>
-        <Kpi palette={palette} label="Заработано" value={money(summary?.total_earned ?? 0)} strong />
+        {/* Where the range mixes currencies the plain sum is hryvnia and
+            zloty added together as if they were the same money. The converted
+            figure is the only honest headline. */}
+        <Kpi
+          palette={palette}
+          label="Заработано"
+          value={
+            summary?.conversion != null
+              ? `≈ ${moneyIn(summary.conversion.base_currency, summary.conversion.total_earned)}`
+              : money(summary?.total_earned ?? 0)
+          }
+          strong
+        />
         <Kpi palette={palette} label="В час" value={money(perHour)} />
         <Kpi palette={palette} label="Смен" value={`${summary?.days_worked ?? 0}`} />
         <Kpi palette={palette} label="Часов" value={`${Math.round(summary?.hours ?? 0)}`} />
       </View>
+
+      {summary?.conversion != null && (
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Всё в одной валюте</Text>
+          <Text style={styles.convertedTotal}>
+            ≈ {moneyIn(summary.conversion.base_currency, summary.conversion.total_earned)}
+          </Text>
+
+          {summary.conversion.by_location.map((place) => (
+            <View key={place.location_id} style={styles.convertRow}>
+              <Text style={styles.convertPlace} numberOfLines={1}>
+                {place.location_id === 0 ? 'Без места' : place.name}
+                <Text style={styles.convertCode}> {place.currency}</Text>
+              </Text>
+              <Text style={styles.convertValue}>
+                {moneyIn(place.currency, place.earned)}
+                {place.currency !== summary.conversion!.base_currency && (
+                  <Text style={styles.convertStrong}>
+                    {place.converted === null
+                      ? '  → курса нет'
+                      : `  ≈ ${moneyIn(summary.conversion!.base_currency, place.converted)}`}
+                  </Text>
+                )}
+              </Text>
+            </View>
+          ))}
+
+          {/* The rate is part of the answer: a converted wage nobody can
+              check against their own bank is one they will act on and later
+              find was invented. */}
+          <Text style={styles.convertRate}>
+            {summary.conversion.rates
+              .map((rate) => `1 ${rate.code} = ${rate.rate} UAH · ${rate.on}`)
+              .join('   ')}
+          </Text>
+
+          {summary.conversion.unconverted.length > 0 && (
+            <Text style={styles.convertMissing}>
+              Курса нет для {summary.conversion.unconverted.join(', ')} — эти деньги не в сумме
+              выше.
+            </Text>
+          )}
+        </View>
+      )}
 
       {parts.length > 0 && (
         <View style={styles.card}>
@@ -291,5 +351,13 @@ const makeStyles = (palette: Palette) =>
       padding: 14,
       gap: 10,
     },
+    convertedTotal: { color: palette.good, fontSize: 24, fontWeight: '800', marginTop: 4 },
+    convertRow: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 10, marginTop: 6 },
+    convertPlace: { color: palette.textSecondary, fontSize: 13, flexShrink: 1 },
+    convertCode: { color: palette.textSecondary, fontSize: 11 },
+    convertValue: { color: palette.text, fontSize: 13 },
+    convertStrong: { color: palette.text, fontWeight: '700' },
+    convertRate: { color: palette.textSecondary, fontSize: 11, marginTop: 10 },
+    convertMissing: { color: palette.danger, fontSize: 12, marginTop: 6, lineHeight: 17 },
     cardTitle: { color: palette.text, fontSize: 15, fontWeight: '800' },
   });

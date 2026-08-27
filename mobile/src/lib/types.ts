@@ -73,12 +73,41 @@ export interface CalendarDayData {
   planned: number;
 }
 
+/** One rate, and the day the bank actually published it. */
+export interface RateUsed {
+  code: string;
+  rate: string;
+  on: string;
+}
+
+export interface Conversion {
+  base_currency: string;
+  total_earned: number;
+  net_earned: number;
+  by_location: {
+    location_id: number;
+    name: string;
+    currency: string;
+    earned: number;
+    converted: number | null;
+  }[];
+  rates: RateUsed[];
+  /** Currencies with no published rate; their money is not in the totals. */
+  unconverted: string[];
+}
+
 export interface DaysResponse {
   days: CalendarDayData[];
   total_earned: number;
   hours: number;
   days_worked: number;
+  /** Present only where the range mixes currencies and one was asked for. */
+  conversion?: Conversion | null;
 }
+
+/** An amount labelled with its ISO code, for money that sits beside other money. */
+export const moneyIn = (code: string, value: number) =>
+  `${Math.round(value).toLocaleString('ru')} ${code}`;
 
 export interface DaySave {
   shifts: {

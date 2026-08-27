@@ -586,8 +586,17 @@ function Stats() {
 
       {/* ==== KPI row ==== */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
-        <Kpi label={t('Earned')} delta={delta(summary.total_earned, previous.total_earned)}>
-          <CountUp value={summary.total_earned} className="text-[1.25rem] font-bold text-good" />
+        {/* Where the range mixes currencies the plain sum is hryvnia and
+            zloty added together as if they were the same money, so the
+            converted figure is the only honest headline. */}
+        <Kpi label={t('Earned')} delta={summary.conversion === null ? delta(summary.total_earned, previous.total_earned) : null}>
+          {summary.conversion === null ? (
+            <CountUp value={summary.total_earned} className="text-[1.25rem] font-bold text-good" />
+          ) : (
+            <span className="text-[1.25rem] font-bold text-good tabular">
+              ≈ {formatWith(summary.conversion.base_currency, summary.conversion.total_earned)}
+            </span>
+          )}
         </Kpi>
         <Kpi label={t('Hours')} delta={delta(summary.hours, previous.hours)}>
           <CountUp value={summary.hours} format={(value) => `${Math.round(value)}`} className="text-[1.25rem] font-bold" />

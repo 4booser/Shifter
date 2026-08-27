@@ -1,4 +1,5 @@
 using System.Globalization;
+using Shifter.Application.Common.Time;
 using System.Text.RegularExpressions;
 using Shifter.Application.Common.Exceptions;
 using Shifter.Application.Features.business.DTOs;
@@ -22,6 +23,7 @@ public partial class DayHandler : IDayHandler
     private readonly DayAuditWriter? _audit;
     private readonly GoalCelebrator? _goals;
     private readonly Money.RateService? _rates;
+    private readonly AppClock _clock;
 
     // The audit hand is optional so the unit tests, which build this by
     // hand around fakes, stay ignorant of it.
@@ -30,13 +32,15 @@ public partial class DayHandler : IDayHandler
         IShifterQuery shifterQuery,
         DayAuditWriter? audit = null,
         GoalCelebrator? goals = null,
-        Money.RateService? rates = null)
+        Money.RateService? rates = null,
+        AppClock? clock = null)
     {
         _shifterCommand = shifterCommand;
         _shifterQuery = shifterQuery;
         _audit = audit;
         _goals = goals;
         _rates = rates;
+        _clock = clock ?? new AppClock();
     }
 
     public async Task<DaysDto> ListAsync(
@@ -50,6 +54,15 @@ public partial class DayHandler : IDayHandler
             throw new ValidationException("Range start must not be after its end.");
 
         Day[] days = await _shifterQuery.GetDaysInRangeAsync(userId, from, to, ct);
+
+        // Overtime is a weekly threshold, and the calendar is read a month at
+        // a time — so a week straddling the first of the month never reached
+        // its threshold in either month, and the money simply disappeared. The
+        // whole weeks that touch the range are fetched for that reckoning
+        // alone; nothing else is counted from them.
+        Day[] weeks = await _shifterQuery.GetDaysInRangeAsync(
+            userId, from.AddDays(-7), to.AddDays(7), ct);
+
         Payout[] payouts = await _shifterQuery.GetPayoutsAsync(userId, from, to, ct);
         Event[] events = await _shifterQuery.GetEventsInRangeAsync(userId, from, to, ct);
 
@@ -71,8 +84,16 @@ public partial class DayHandler : IDayHandler
         decimal revenueEarned = worked.Sum(entry => entry.RevenuePay);
         decimal revenueCounted = worked.Sum(entry => entry.Revenue ?? 0m);
 
-        var (overtimeHours, overtimeExtra) = Overtime(days, byId);
-        var (nightHours, premiumExtra) = Premiums(days, byId);
+        // Both are kept per place and summed here for the headline, so the
+        // figure on the dashboard and the figure inside each place's tax are
+        // the same arithmetic rather than two that happen to agree.
+        var overtime = OvertimeByPlace(weeks, byId, from, to);
+        var premiums = PremiumsByPlace(days, byId);
+
+        double overtimeHours = Math.Round(overtime.Values.Sum(pair => pair.Hours), 2);
+        decimal overtimeExtra = overtime.Values.Sum(pair => pair.Extra);
+        double nightHours = Math.Round(premiums.Values.Sum(pair => pair.Night), 2);
+        decimal premiumExtra = premiums.Values.Sum(pair => pair.Extra);
 
         decimal tipOut = days.Sum(day => TipOutFor(day, byId));
         decimal deductions = days.Sum(day => DeductionsFor(day, byId));
@@ -91,7 +112,7 @@ public partial class DayHandler : IDayHandler
 
         decimal paid = payouts.Sum(payout => payout.Amount);
 
-        LocationTotalDto[] byLocation = ByLocation(days, byId);
+        LocationTotalDto[] byLocation = ByLocation(days, byId, weeks);
 
         // Summed from the per-place figures rather than recomputed: each place
         // taxes differently, and one blended rate would be a fiction.
@@ -126,7 +147,7 @@ public partial class DayHandler : IDayHandler
             tipOut,
             deductions,
             ByReason(days),
-            RaiseHistory.Of(days, DateOnly.FromDateTime(DateTime.UtcNow)),
+            RaiseHistory.Of(days, _clock.Today),
             ExpenseRules.ByKind(expenses),
             expenses.Sum(expense => expense.Amount),
             ExpenseRules.TravelShareOfTips(expenses, tipsEarned),
@@ -493,9 +514,16 @@ public partial class DayHandler : IDayHandler
     /// Hours are taken in date order, so the overtime is whatever was worked
     /// after crossing the line — which is how it is actually paid.
     /// </summary>
-    private static (double Hours, decimal Extra) Overtime(
+    /// <summary>
+    /// Overtime, kept per place. It used to be returned as one pair, which is
+    /// why none of it ever reached the per-place figures — and therefore never
+    /// reached tax, holiday accrual or the reconciliation's "expected".
+    /// </summary>
+    private static Dictionary<int, (double Hours, decimal Extra)> OvertimeByPlace(
         Day[] days,
-        Dictionary<int, Location> locations)
+        Dictionary<int, Location> locations,
+        DateOnly? from = null,
+        DateOnly? to = null)
     {
         var byWeek = days
             .SelectMany(day => (day.Shifts ?? []).Select(entry => (day.Date, entry)))
@@ -505,8 +533,7 @@ public partial class DayHandler : IDayHandler
                 Year: ISOWeek.GetYear(pair.Date.ToDateTime(TimeOnly.MinValue)),
                 Week: ISOWeek.GetWeekOfYear(pair.Date.ToDateTime(TimeOnly.MinValue))));
 
-        double overtimeHours = 0;
-        decimal extra = 0m;
+        Dictionary<int, (double Hours, decimal Extra)> byPlace = [];
 
         foreach (var week in byWeek)
         {
@@ -517,7 +544,7 @@ public partial class DayHandler : IDayHandler
 
             double running = 0;
 
-            foreach (var (_, entry) in week.OrderBy(pair => pair.Date))
+            foreach (var (on, entry) in week.OrderBy(pair => pair.Date))
             {
                 double hours = entry.PaidDuration.TotalHours;
                 double before = running;
@@ -529,15 +556,23 @@ public partial class DayHandler : IDayHandler
                 // Only the part of this shift that sits past the line.
                 double over = running - Math.Max(before, threshold);
 
-                overtimeHours += over;
+                // The whole week is walked so the threshold is reached where
+                // it really is; only the days the caller asked about are
+                // reported, or a month would count its neighbours' overtime.
+                if (from is DateOnly start && on < start) continue;
+                if (to is DateOnly end && on > end) continue;
 
-                if (entry.SalaryPeriod != SalaryPeriod.Hour) continue;
+                decimal paid = entry.SalaryPeriod == SalaryPeriod.Hour
+                    ? (decimal)over * (entry.SalaryAmount ?? 0m) * (multiplier - 1m)
+                    : 0m;
 
-                extra += (decimal)over * (entry.SalaryAmount ?? 0m) * (multiplier - 1m);
+                var (hoursSoFar, extraSoFar) = byPlace.GetValueOrDefault(week.Key.Location);
+
+                byPlace[week.Key.Location] = (hoursSoFar + over, extraSoFar + paid);
             }
         }
 
-        return (Math.Round(overtimeHours, 2), extra);
+        return byPlace;
     }
 
     /// <summary>
@@ -545,12 +580,16 @@ public partial class DayHandler : IDayHandler
     /// off by default (multiplier 1.0), so a place that never agreed to them
     /// is priced exactly as before.
     /// </summary>
-    private static (double NightHours, decimal Extra) Premiums(
+    /// <summary>
+    /// Night and holiday premiums, kept per place for the same reason overtime
+    /// is: a figure that only exists in the headline is a figure the tax, the
+    /// holiday accrual and the reconciliation never see.
+    /// </summary>
+    private static Dictionary<int, (double Night, decimal Extra)> PremiumsByPlace(
         Day[] days,
         Dictionary<int, Location> locations)
     {
-        double nightHours = 0;
-        decimal extra = 0m;
+        Dictionary<int, (double Night, decimal Extra)> byPlace = [];
 
         foreach (Day day in days)
         {
@@ -567,21 +606,55 @@ public partial class DayHandler : IDayHandler
 
                 double night = PremiumCalculator.NightHours(from, to, place.NightFrom, place.NightTo);
 
-                if (place.NightMultiplier > 1m) nightHours += night;
+                // The premium is paid on hours somebody is paid for. Counting
+                // it on the raw clock paid the night rate through an unpaid
+                // break — the two figures were measured from different bases.
+                double clock = (entry.ActualStart is TimeOnly && entry.ActualEnd is TimeOnly
+                    ? PremiumCalculator.Span(from, to)
+                    : entry.Duration.TotalHours);
 
-                if (entry.SalaryPeriod != SalaryPeriod.Hour) continue;
+                double paidShare = clock <= 0 ? 0 : entry.PaidDuration.TotalHours / clock;
 
-                extra += PremiumCalculator.Extra(
-                    night,
-                    entry.PaidDuration.TotalHours,
-                    entry.SalaryAmount ?? 0m,
-                    place.NightMultiplier,
-                    place.PublicHolidayMultiplier,
-                    Holidays.IsPublicHoliday(place.HolidayCountry, day.Date));
+                night = Math.Min(night * paidShare, entry.PaidDuration.TotalHours);
+
+                decimal earned = entry.SalaryPeriod == SalaryPeriod.Hour
+                    ? PremiumCalculator.Extra(
+                        night,
+                        entry.PaidDuration.TotalHours,
+                        entry.SalaryAmount ?? 0m,
+                        place.NightMultiplier,
+                        place.PublicHolidayMultiplier,
+                        HolidayHours(entry, day.Date, place))
+                    : 0m;
+
+                int key = entry.Shift?.LocationId ?? 0;
+                var (nightSoFar, extraSoFar) = byPlace.GetValueOrDefault(key);
+
+                byPlace[key] = (
+                    nightSoFar + (place.NightMultiplier > 1m ? night : 0),
+                    extraSoFar + earned);
             }
         }
 
-        return (Math.Round(nightHours, 2), extra);
+        return byPlace;
+    }
+
+    /// <summary>
+    /// Whether a shift touches a public holiday, judged by the hours rather
+    /// than by the date it happens to be filed under. A shift running
+    /// 22:00 to 06:00 on the 31st spends most of itself on the 1st, and reading
+    /// only the 31st paid the holiday rate on exactly the wrong nights.
+    /// </summary>
+    private static bool HolidayHours(DayShift entry, DateOnly date, Location place)
+    {
+        if (Holidays.IsPublicHoliday(place.HolidayCountry, date)) return true;
+
+        // Past midnight the shift is on the next day, so that day's status
+        // counts too. Only whole-shift for now: the premium itself is applied
+        // to the whole shift, and splitting it is a separate change.
+        bool wraps = entry.EndTime <= entry.StartTime;
+
+        return wraps && Holidays.IsPublicHoliday(place.HolidayCountry, date.AddDays(1));
     }
 
     /// <summary>
@@ -590,40 +663,57 @@ public partial class DayHandler : IDayHandler
     /// </summary>
     internal static LocationTotalDto[] ByLocation(
         Day[] days,
-        Dictionary<int, Location> locations)
+        Dictionary<int, Location> locations,
+        Day[]? weeks = null)
     {
         // Tips and sales sit on the day, not on a shift, so a day split between
         // two places shares them out by the hours each place got. Anything else
         // would hand one location money the other earned.
         Dictionary<int, LocationAccumulator> totals = [];
 
+        // The three figures that used to exist only in the headline. Without
+        // them a place with a monthly salary reported no tax, no holiday
+        // accrual and — the expensive one — an "expected" of zero, so a whole
+        // unpaid wage never showed up as owed.
+        Dictionary<int, decimal> periodPay = PeriodSalaryByPlace(days, workedOnly: true);
+
+        // Overtime is reckoned over whole weeks and reported only for the days
+        // asked about, so a week straddling a month boundary reaches its
+        // threshold instead of falling short in both months.
+        var overtime = days.Length == 0
+            ? []
+            : OvertimeByPlace(
+                weeks ?? days,
+                locations,
+                days.Min(day => day.Date),
+                days.Max(day => day.Date));
+
+        var premiums = PremiumsByPlace(days, locations);
+
         foreach (Day day in days)
         {
+            DaySplit split = SplitOf(day);
             DayShift[] worked = (day.Shifts ?? []).Where(entry => entry.Worked).ToArray();
 
-            if (worked.Length == 0) continue;
-
-            double dayHours = worked.Sum(entry => entry.PaidDuration.TotalHours);
-            decimal dayTips = day.Tips ?? 0m;
-            decimal daySales = (day.Sales ?? []).Sum(entry => entry.Earned);
-            decimal dayTipOut = TipOutFor(day, locations);
-            decimal dayDeductions = DeductionsFor(day, locations);
-
-            foreach (var group in worked.GroupBy(entry => entry.Shift?.LocationId ?? 0))
+            foreach (int key in split.Weight.Keys)
             {
-                double groupHours = group.Sum(entry => entry.PaidDuration.TotalHours);
-                decimal share = dayHours == 0 ? 0m : (decimal)(groupHours / dayHours);
+                DayShift[] here = worked
+                    .Where(entry => (entry.Shift?.LocationId ?? 0) == key)
+                    .ToArray();
 
-                if (!totals.TryGetValue(group.Key, out LocationAccumulator? bucket))
+                decimal share = split.Share(key);
+
+                if (!totals.TryGetValue(key, out LocationAccumulator? bucket))
                 {
-                    Location? place = group
+                    Location? place = (day.Shifts ?? [])
+                        .Where(entry => (entry.Shift?.LocationId ?? 0) == key)
                         .Select(entry => entry.Shift?.Location)
                         .FirstOrDefault(location => location is not null);
 
                     // The rules come from the map, not from the navigation
                     // property: a no-tracking read gives a fresh Location
                     // instance per day and only the map is authoritative.
-                    locations.TryGetValue(group.Key, out Location? rules);
+                    locations.TryGetValue(key, out Location? rules);
 
                     bucket = new LocationAccumulator
                     {
@@ -635,18 +725,30 @@ public partial class DayHandler : IDayHandler
                         HolidayPercent = rules?.HolidayPercent ?? 0m,
                     };
 
-                    totals[group.Key] = bucket;
+                    totals[key] = bucket;
                 }
 
-                bucket.Hours += groupHours;
-                bucket.ShiftPay += group.Sum(entry => entry.Pay);
-                bucket.Tips += dayTips * share;
-                bucket.Sales += daySales * share;
-                bucket.TipOut += dayTipOut * share;
-                bucket.Deductions += dayDeductions * share;
-                bucket.Days += 1;
+                bucket.Hours += here.Sum(entry => entry.PaidDuration.TotalHours);
+                bucket.ShiftPay += here.Sum(entry => entry.Pay);
+                bucket.Tips += split.Tips * share;
+                bucket.Sales += split.Sales * share;
+                bucket.TipOut += split.TipOut(key, locations);
+                bucket.Deductions += split.Deductions(key, locations);
+                if (here.Length > 0) bucket.Days += 1;
             }
         }
+
+        // Added once at the end rather than per day: a weekly wage belongs to
+        // its week, not to each day of it, and the overtime and premium figures
+        // are already whole.
+        foreach (var (key, amount) in periodPay)
+            Bucket(totals, key, locations).ShiftPay += amount;
+
+        foreach (var (key, pair) in overtime)
+            Bucket(totals, key, locations).ShiftPay += pair.Extra;
+
+        foreach (var (key, pair) in premiums)
+            Bucket(totals, key, locations).ShiftPay += pair.Extra;
 
         return totals
             .Select(pair =>
@@ -692,6 +794,34 @@ public partial class DayHandler : IDayHandler
             })
             .OrderByDescending(total => total.earned)
             .ToArray();
+    }
+
+    /// <summary>
+    /// The bucket for a place, made if it is not there yet. A place can owe a
+    /// monthly wage in a range where the daily figures happen to be empty.
+    /// </summary>
+    private static LocationAccumulator Bucket(
+        Dictionary<int, LocationAccumulator> totals,
+        int key,
+        Dictionary<int, Location> locations)
+    {
+        if (totals.TryGetValue(key, out LocationAccumulator? found)) return found;
+
+        locations.TryGetValue(key, out Location? rules);
+
+        LocationAccumulator made = new LocationAccumulator
+        {
+            Name = rules?.Name ?? "No location",
+            Colour = rules?.Colour ?? "#8D97A5",
+            Currency = rules?.Currency ?? string.Empty,
+            TaxPercent = rules?.TaxPercent ?? 0m,
+            TaxTips = rules?.TaxTips ?? false,
+            HolidayPercent = rules?.HolidayPercent ?? 0m,
+        };
+
+        totals[key] = made;
+
+        return made;
     }
 
     private sealed class LocationAccumulator
@@ -755,43 +885,99 @@ public partial class DayHandler : IDayHandler
 
     private static decimal DeductionsFor(Day day, Dictionary<int, Location> locations)
     {
-        decimal fines = day.Deductions ?? 0m;
-        decimal meals = 0m;
+        DaySplit split = SplitOf(day);
 
-        // One meal per place worked that day, not per shift: a split shift at
-        // the same restaurant is still one sitting.
-        foreach (int locationId in (day.Shifts ?? [])
-            .Where(entry => entry.Worked)
-            .Select(entry => entry.Shift?.LocationId ?? 0)
-            .Distinct())
+        return split.Weight.Keys.Sum(place => split.Deductions(place, locations));
+    }
+
+    /// <summary>
+    /// How one day divides between the places worked on it.
+    ///
+    /// Written once because three separate readings of it disagreed. Tip-out
+    /// took the rule of whichever place happened to be listed first and applied
+    /// it to the whole day — including the other employer's tips — and the
+    /// order was not even stable. The staff meal was pooled across places and
+    /// then re-split by hours, so one bar's lunch was charged to the cafe next
+    /// door, and to that cafe's line in the reconciliation.
+    /// </summary>
+    private sealed record DaySplit(
+        Dictionary<int, double> Weight,
+        double Hours,
+        decimal Tips,
+        decimal Sales,
+        decimal GrossSales,
+        decimal Fine)
+    {
+        public double Total => Weight.Values.Sum();
+
+        public decimal Share(int place)
+            => Total <= 0 ? 0m : (decimal)(Weight.GetValueOrDefault(place) / Total);
+
+        /// <summary>Each place's own rule, on its own share of the day.</summary>
+        public decimal TipOut(int place, Dictionary<int, Location> locations)
         {
-            if (locations.TryGetValue(locationId, out Location? place))
-                meals += place.MealDeduction;
+            if (!locations.TryGetValue(place, out Location? rules)) return 0m;
+
+            decimal share = Share(place);
+
+            return Tips * share * rules.TipOutOfTipsPercent / 100m
+                + GrossSales * share * rules.TipOutOfSalesPercent / 100m;
         }
 
-        return fines + meals;
+        /// <summary>
+        /// The fine follows the hours, because a fine belongs to the day. The
+        /// staff meal does not: it is a house rule of one place, charged once
+        /// for the day worked there.
+        /// </summary>
+        public decimal Deductions(int place, Dictionary<int, Location> locations)
+            => Fine * Share(place)
+                + (locations.TryGetValue(place, out Location? rules) ? rules.MealDeduction : 0m);
+    }
+
+    private static DaySplit SplitOf(Day day)
+    {
+        DayShift[] worked = (day.Shifts ?? []).Where(entry => entry.Worked).ToArray();
+
+        double hours = worked.Sum(entry => entry.PaidDuration.TotalHours);
+
+        // Hours where there are hours. A day whose worked shifts price by the
+        // day, or whose only money is tips on a shift still marked planned,
+        // still has to land somewhere — otherwise it stays in the total and
+        // disappears from every per-place figure, and the parts stop summing
+        // to the whole.
+        Dictionary<int, double> weight;
+
+        if (hours > 0)
+        {
+            weight = worked
+                .GroupBy(entry => entry.Shift?.LocationId ?? 0)
+                .ToDictionary(group => group.Key, group => group.Sum(e => e.PaidDuration.TotalHours));
+        }
+        else
+        {
+            DayShift[] present = worked.Length > 0 ? worked : (day.Shifts ?? []).ToArray();
+
+            weight = present.Length > 0
+                ? present
+                    .GroupBy(entry => entry.Shift?.LocationId ?? 0)
+                    .ToDictionary(group => group.Key, group => (double)group.Count())
+                : new Dictionary<int, double> { [0] = 1 };
+        }
+
+        return new DaySplit(
+            weight,
+            hours,
+            day.Tips ?? 0m,
+            (day.Sales ?? []).Sum(entry => entry.Earned),
+            (day.Sales ?? []).Sum(entry => entry.Quantity * entry.UnitPrice),
+            day.Deductions ?? 0m);
     }
 
     private static decimal TipOutFor(Day day, Dictionary<int, Location> locations)
     {
-        DayShift[] worked = (day.Shifts ?? []).Where(entry => entry.Worked).ToArray();
+        DaySplit split = SplitOf(day);
 
-        if (worked.Length == 0) return 0m;
-
-        Location? place = worked
-            .Select(entry =>
-                entry.Shift?.LocationId is int id && locations.TryGetValue(id, out Location? l)
-                    ? l
-                    : null)
-            .FirstOrDefault(location => location is not null);
-
-        if (place is null) return 0m;
-
-        decimal tips = day.Tips ?? 0m;
-        decimal sales = (day.Sales ?? []).Sum(entry => entry.Quantity * entry.UnitPrice);
-
-        return tips * place.TipOutOfTipsPercent / 100m
-            + sales * place.TipOutOfSalesPercent / 100m;
+        return split.Weight.Keys.Sum(place => split.TipOut(place, locations));
     }
 
     /// <summary>
@@ -800,9 +986,24 @@ public partial class DayHandler : IDayHandler
     /// in which it was actually worked, not per day.
     /// </summary>
     private static decimal PeriodSalary(Day[] days, bool workedOnly)
+        => PeriodSalaryByPlace(days, workedOnly).Values.Sum();
+
+    /// <summary>
+    /// Weekly and monthly wages, counted once per period they cover and
+    /// attributed to the place that owes them. Without the attribution the
+    /// whole of somebody's salary was missing from that place's tax, its
+    /// holiday accrual and — worst of all — from what the reconciliation says
+    /// it is owed.
+    /// </summary>
+    private static Dictionary<int, decimal> PeriodSalaryByPlace(Day[] days, bool workedOnly)
     {
         HashSet<(int ShiftId, int Year, int Slot)> counted = [];
-        decimal total = 0m;
+        Dictionary<int, decimal> byPlace = [];
+
+        if (days.Length == 0) return byPlace;
+
+        DateOnly first = days.Min(day => day.Date);
+        DateOnly last = days.Max(day => day.Date);
 
         foreach (Day day in days)
         {
@@ -821,12 +1022,28 @@ public partial class DayHandler : IDayHandler
                     ? ISOWeek.GetYear(date)
                     : day.Date.Year;
 
-                if (counted.Add((entry.ShiftId, year, slot)))
-                    total += entry.SalaryAmount ?? 0m;
+                // A weekly wage belongs to its week, and a week can lie across
+                // a month boundary — so it was charged once to March and once
+                // to April, and anybody adding two months together paid it
+                // twice. It is charged to the Monday of its week instead, and
+                // a range that does not contain that Monday does not owe it.
+                if (entry.SalaryPeriod == SalaryPeriod.Week)
+                {
+                    DateOnly monday = day.Date.AddDays(
+                        -(((int)day.Date.DayOfWeek + 6) % 7));
+
+                    if (monday < first || monday > last) continue;
+                }
+
+                if (!counted.Add((entry.ShiftId, year, slot))) continue;
+
+                int key = entry.Shift?.LocationId ?? 0;
+
+                byPlace[key] = byPlace.GetValueOrDefault(key) + (entry.SalaryAmount ?? 0m);
             }
         }
 
-        return total;
+        return byPlace;
     }
 
     /// <summary>

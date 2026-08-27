@@ -120,6 +120,11 @@ public static class DependencyInjection
         services.AddSingleton<IHasher, Hasher>();
         services.AddScoped<IAuthTokenIssuer, AuthTokenIssuer>();
 
+        // One clock for the whole app, so "today" means the same thing in the
+        // reconciliation, the rate history and a place's current pay period.
+        services.AddSingleton(new Shifter.Application.Common.Time.AppClock(
+            configuration["App:TimeZone"]));
+
         services.AddScoped<IShiftHandler, ShiftHandler>();
         services.AddScoped<ISalesHandler, SalesHandler>();
         services.AddScoped<IDayHandler, DayHandler>();

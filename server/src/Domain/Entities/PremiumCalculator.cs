@@ -12,6 +12,21 @@ public static class PremiumCalculator
     /// midnight (22:00–06:00 is the usual one) and so may a shift, so both are
     /// unrolled onto a minute line and intersected on two consecutive days.
     /// </summary>
+    /// <summary>
+    /// How long a shift runs on the clock, wrapping midnight. This is the base
+    /// the night hours are measured against, which is not the same as the base
+    /// the wage is measured against — the difference is the unpaid break, and
+    /// paying the night premium through it was worth about 35 a shift.
+    /// </summary>
+    public static double Span(TimeOnly start, TimeOnly end)
+    {
+        double minutes = end.ToTimeSpan().TotalMinutes - start.ToTimeSpan().TotalMinutes;
+
+        if (minutes <= 0) minutes += 24 * 60;
+
+        return minutes / 60;
+    }
+
     public static double NightHours(TimeOnly start, TimeOnly end, TimeOnly from, TimeOnly to)
     {
         var shiftStart = start.ToTimeSpan().TotalMinutes;

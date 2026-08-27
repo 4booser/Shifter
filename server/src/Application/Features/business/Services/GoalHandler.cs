@@ -1,4 +1,5 @@
 using Shifter.Application.Common.Exceptions;
+using Shifter.Application.Common.Time;
 using Shifter.Application.Features.business.DTOs;
 using Shifter.Application.Features.business.Services.Interfaces;
 using Shifter.Domain.Entities;
@@ -12,18 +13,25 @@ public sealed class GoalHandler : IGoalHandler
 
     private readonly IShifterQuery _shifterQuery;
     private readonly IShifterCommand _shifterCommand;
+    private readonly AppClock _clock;
 
-    public GoalHandler(IShifterQuery shifterQuery, IShifterCommand shifterCommand)
+    public GoalHandler(
+        IShifterQuery shifterQuery,
+        IShifterCommand shifterCommand,
+        AppClock? clock = null)
     {
         _shifterQuery = shifterQuery;
         _shifterCommand = shifterCommand;
+        _clock = clock ?? new AppClock();
     }
 
     public async Task<GoalItemDto[]> ListAsync(int userId, CancellationToken ct)
     {
         Goal[] goals = await _shifterQuery.GetGoalsAsync(userId, ct);
 
-        return goals.Select(ToDto).ToArray();
+        DateOnly today = _clock.Today;
+
+        return goals.Select(goal => ToDto(goal, today)).ToArray();
     }
 
     public async Task<GoalItemDto> SaveAsync(GoalSaveDto request, int userId, CancellationToken ct)
@@ -52,7 +60,7 @@ public sealed class GoalHandler : IGoalHandler
             existing.Note = note;
             await _shifterCommand.UpdateGoalAsync(existing, ct);
 
-            return ToDto(existing);
+            return ToDto(existing, _clock.Today);
         }
 
         Goal goal = new Goal
@@ -67,7 +75,7 @@ public sealed class GoalHandler : IGoalHandler
         if (!await _shifterCommand.AddGoalAsync(goal, ct))
             throw new ForbiddenException("Can`t add goal.");
 
-        return ToDto(goal);
+        return ToDto(goal, _clock.Today);
     }
 
     public async Task DeleteAsync(int userId, int id, CancellationToken ct)
@@ -78,13 +86,13 @@ public sealed class GoalHandler : IGoalHandler
         await _shifterCommand.DeleteGoalAsync(goal, ct);
     }
 
-    private static GoalItemDto ToDto(Goal goal)
+    private static GoalItemDto ToDto(Goal goal, DateOnly today)
     {
         // The period containing today, so the client can say "this month" beside
         // a standing goal without working the boundaries out itself.
         var (from, to) = GoalCalculator.PeriodFor(
             goal.Period,
-            goal.Anchor ?? DateOnly.FromDateTime(DateTime.UtcNow));
+            goal.Anchor ?? today);
 
         return new GoalItemDto(
             goal.Id,

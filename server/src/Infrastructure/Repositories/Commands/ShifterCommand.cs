@@ -409,14 +409,18 @@ public class ShifterCommand : IShifterCommand
         // so the next field cannot be forgotten.
         DayScalars.CopyOnto(existing, incoming);
 
-        // The client always sends the day in full, so replacing beats diffing:
-        // there is no partial update to reconcile. The old rows go explicitly
-        // because both sides are owned entities now, not a join table EF can
-        // rewire by itself.
-        if (existing.Shifts is { Count: > 0 })
-            _db.DayShifts.RemoveRange(existing.Shifts);
+        // A placement that is already on this day keeps the terms it was made
+        // under and takes only the save's edits. Replacing it outright — which
+        // is what this did — meant the snapshot on DayShift protected nothing:
+        // reprice a template in April, open a March day to add a note, and
+        // March silently earned more, while the raise vanished from a history
+        // that is read out of these very snapshots.
+        var (kept, dropped) = DayShiftEdit.Merge(existing.Shifts, incoming.Shifts);
 
-        existing.Shifts = incoming.Shifts;
+        // Whatever nobody claimed was taken off the day.
+        if (dropped.Count > 0) _db.DayShifts.RemoveRange(dropped);
+
+        existing.Shifts = kept;
 
         if (existing.Sales is { Count: > 0 })
             _db.DaySales.RemoveRange(existing.Sales);

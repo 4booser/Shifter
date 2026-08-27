@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using Shifter.Application.Common.Time;
 using Shifter.Application.Common.Exceptions;
 using Shifter.Application.Features.business.DTOs;
 using Shifter.Application.Features.business.Services.Interfaces;
@@ -13,11 +14,16 @@ public partial class LocationHandler : ILocationHandler
 
     private readonly IShifterCommand _shifterCommand;
     private readonly IShifterQuery _shifterQuery;
+    private readonly AppClock _clock;
 
-    public LocationHandler(IShifterCommand shifterCommand, IShifterQuery shifterQuery)
+    public LocationHandler(
+        IShifterCommand shifterCommand,
+        IShifterQuery shifterQuery,
+        AppClock? clock = null)
     {
         _shifterCommand = shifterCommand;
         _shifterQuery = shifterQuery;
+        _clock = clock ?? new AppClock();
     }
 
     public async Task<LocationDto[]> ListAsync(
@@ -27,7 +33,9 @@ public partial class LocationHandler : ILocationHandler
     {
         Location[] locations = await _shifterQuery.GetLocationsAsync(userId, includeArchived, ct);
 
-        return locations.Select(ToDto).ToArray();
+        DateOnly today = _clock.Today;
+
+        return locations.Select(place => ToDto(place, today)).ToArray();
     }
 
     public async Task<LocationDto> CreateAsync(
@@ -259,10 +267,12 @@ public partial class LocationHandler : ILocationHandler
         location.Currency = currency;
     }
 
-    internal static LocationDto ToDto(Location location)
+    internal static LocationDto ToDto(Location location, DateOnly? today = null)
     {
+        // The date is handed in rather than read from the machine: "today" is
+        // a local question, and UTC answers it wrong for three hours a night.
         var (from, to) = PayPeriodCalculator.PeriodFor(
-            location, DateOnly.FromDateTime(DateTime.UtcNow));
+            location, today ?? new AppClock().Today);
 
         return new LocationDto(
             location.Id,

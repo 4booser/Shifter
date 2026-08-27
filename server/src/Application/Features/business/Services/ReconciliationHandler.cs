@@ -1,4 +1,5 @@
 using Shifter.Application.Common.Exceptions;
+using Shifter.Application.Common.Time;
 using Shifter.Application.Features.business.DTOs;
 using Shifter.Application.Features.business.Services.Interfaces;
 using Shifter.Domain.Entities;
@@ -27,9 +28,13 @@ public class ReconciliationHandler : IReconciliationHandler
     private const int GraceDays = 0;
 
     private readonly IShifterQuery _shifterQuery;
+    private readonly AppClock _clock;
 
-    public ReconciliationHandler(IShifterQuery shifterQuery)
-        => _shifterQuery = shifterQuery;
+    public ReconciliationHandler(IShifterQuery shifterQuery, AppClock? clock = null)
+    {
+        _shifterQuery = shifterQuery;
+        _clock = clock ?? new AppClock();
+    }
 
     public async Task<ReconciliationDto> BuildAsync(
         int userId,
@@ -56,7 +61,7 @@ public class ReconciliationHandler : IReconciliationHandler
         Dictionary<(int, DateOnly, string), PeriodSettlement> lines = closed.ToDictionary(
             entry => (entry.LocationId, entry.PeriodFrom, entry.Stream));
 
-        DateOnly today = DateOnly.FromDateTime(DateTime.UtcNow);
+        DateOnly today = _clock.Today;
         List<PayPeriodDto> rows = [];
 
         foreach (Location place in places)

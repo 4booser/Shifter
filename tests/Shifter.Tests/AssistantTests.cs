@@ -149,6 +149,7 @@ public class AssistantTests
         var answer = Flat(AssistantWriter.Answer("сколько я заработал?", Facts()));
 
         Assert.Contains("18 140", answer);
+        // Russian declines after a number: fourteen shifts are "смен".
         Assert.Contains("14 смен", answer);
     }
 
@@ -233,5 +234,131 @@ public class AssistantTests
 
         Assert.Contains("не было", summary);
         Assert.Single(paragraphs);
+    }
+
+    // ==== Which period a question is about ====
+
+    private static (DateOnly From, DateOnly To) Period(string question)
+        // The fallback is the current month, which is what the client sends.
+        => AssistantPeriod.Of(question, Today, new DateOnly(2026, 3, 1), new DateOnly(2026, 3, 31));
+
+    [Fact]
+    public void AQuestionWithNoPeriodKeepsTheOneTheClientSent()
+    {
+        Assert.Equal((new DateOnly(2026, 3, 1), new DateOnly(2026, 3, 31)), Period("сколько я заработал"));
+    }
+
+    [Fact]
+    public void ANamedMonthWinsOverTheClientsRange()
+    {
+        var (from, to) = Period("а сколько вышло в январе?");
+
+        Assert.Equal(new DateOnly(2026, 1, 1), from);
+        Assert.Equal(new DateOnly(2026, 1, 31), to);
+    }
+
+    [Fact]
+    public void AMonthStillAheadMeansLastYears()
+    {
+        // Asked in March, "в декабре" cannot be about a December yet to come.
+        var (from, to) = Period("сколько было в декабре");
+
+        Assert.Equal(new DateOnly(2025, 12, 1), from);
+        Assert.Equal(new DateOnly(2025, 12, 31), to);
+    }
+
+    [Fact]
+    public void LastMonthIsTheMonthBefore()
+    {
+        var (from, to) = Period("а в прошлом месяце?");
+
+        Assert.Equal(new DateOnly(2026, 2, 1), from);
+        Assert.Equal(new DateOnly(2026, 2, 28), to);
+    }
+
+    [Fact]
+    public void ThisWeekRunsMondayToSunday()
+    {
+        // The 20th of March 2026 is a Friday.
+        var (from, to) = Period("сколько на этой неделе");
+
+        Assert.Equal(new DateOnly(2026, 3, 16), from);
+        Assert.Equal(new DateOnly(2026, 3, 22), to);
+    }
+
+    [Fact]
+    public void LastWeekIsTheSevenDaysBeforeThisOne()
+    {
+        var (from, to) = Period("а на прошлой неделе?");
+
+        Assert.Equal(new DateOnly(2026, 3, 9), from);
+        Assert.Equal(new DateOnly(2026, 3, 15), to);
+    }
+
+    [Fact]
+    public void YesterdayIsOneDay()
+    {
+        Assert.Equal((new DateOnly(2026, 3, 19), new DateOnly(2026, 3, 19)), Period("сколько вышло вчера"));
+    }
+
+    [Fact]
+    public void TheYearIsTheWholeYear()
+    {
+        var (from, to) = Period("сколько за год");
+
+        Assert.Equal(new DateOnly(2026, 1, 1), from);
+        Assert.Equal(new DateOnly(2026, 12, 31), to);
+    }
+
+    [Theory]
+    [InlineData(1, "1 смена")]
+    [InlineData(2, "2 смены")]
+    [InlineData(5, "5 смен")]
+    [InlineData(11, "11 смен")]
+    [InlineData(21, "21 смена")]
+    [InlineData(22, "22 смены")]
+    public void TheShiftCountDeclines(int count, string expected)
+    {
+        var answer = Flat(AssistantWriter.Answer("сколько заработал", Facts() with { Shifts = count }));
+
+        Assert.Contains(expected, answer);
+    }
+
+    [Fact]
+    public void AnEmptyPeriodIsASentenceRatherThanARowOfZeros()
+    {
+        var answer = AssistantWriter.Answer(
+            "сколько вышло",
+            Facts(earned: 0m, hours: 0, tips: 0m, revenue: 0m) with { Shifts = 0, Period = "этот день" });
+
+        Assert.Equal("За этот день отработанных смен нет.", answer);
+    }
+
+    [Fact]
+    public void ANamedDayIsOneDayRatherThanItsWholeMonth()
+    {
+        var (from, to) = Period("сколько было 14 января");
+
+        Assert.Equal(new DateOnly(2026, 1, 14), from);
+        Assert.Equal(new DateOnly(2026, 1, 14), to);
+    }
+
+    [Fact]
+    public void ADayThatCannotExistFallsBackToTheMonth()
+    {
+        // No 31st of February; the question is about February all the same.
+        var (from, to) = Period("31 февраля");
+
+        Assert.Equal(new DateOnly(2026, 2, 1), from);
+        Assert.Equal(new DateOnly(2026, 2, 28), to);
+    }
+
+    [Fact]
+    public void ABareMonthStaysAWholeMonth()
+    {
+        var (from, to) = Period("а в январе?");
+
+        Assert.Equal(new DateOnly(2026, 1, 1), from);
+        Assert.Equal(new DateOnly(2026, 1, 31), to);
     }
 }

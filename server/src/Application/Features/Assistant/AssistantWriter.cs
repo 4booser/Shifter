@@ -19,6 +19,13 @@ public static class AssistantWriter
     private static string Hours(double value) =>
         $"{Math.Round(value, value < 10 ? 1 : 0).ToString(Ru)} ч";
 
+    /// <summary>
+    /// "1 смена", "2 смены", "5 смен". Russian declines after a number and
+    /// getting it wrong is the tell that nobody read the sentence out loud.
+    /// </summary>
+    private static string Shifts(int count) =>
+        $"{count} {Telegram.TelegramCommands.Plural(count, "смена", "смены", "смен")}";
+
     /// <summary>A plain reply to a plain question, from figures we counted.</summary>
     public static string Answer(string question, AssistantFacts facts)
     {
@@ -76,7 +83,13 @@ public static class AssistantWriter
         // The default is the question people ask most: how much.
         var change = Change(facts);
 
-        return $"За {facts.Period} заработано {Money(facts.Earned)} — {facts.Shifts} смен, {Hours(facts.Hours)}, "
+        // A period with nothing in it is a sentence, not a row of zeros.
+        if (facts.Shifts == 0)
+            return facts.Planned > 0
+                ? $"За {facts.Period} отработанных смен нет — в плане {Money(facts.Planned)}."
+                : $"За {facts.Period} отработанных смен нет.";
+
+        return $"За {facts.Period} заработано {Money(facts.Earned)} — {Shifts(facts.Shifts)}, {Hours(facts.Hours)}, "
                + $"по {Money(facts.PerHour)} в час."
                + (change is null ? "" : $" {change}")
                + (facts.Planned > 0 ? $" Ещё {Money(facts.Planned)} в плане." : "");
@@ -87,7 +100,7 @@ public static class AssistantWriter
     {
         var summary = facts.Shifts == 0
             ? $"За {facts.Period} отработанных смен не было."
-            : $"За {facts.Period} — {Money(facts.Earned)} за {facts.Shifts} смен и {Hours(facts.Hours)}, "
+            : $"За {facts.Period} — {Money(facts.Earned)} за {Shifts(facts.Shifts)} и {Hours(facts.Hours)}, "
               + $"по {Money(facts.PerHour)} в час.";
 
         var paragraphs = new List<string>();

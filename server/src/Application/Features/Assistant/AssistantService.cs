@@ -62,7 +62,10 @@ public sealed class AssistantService
             Text = trimmed,
         });
 
-        var facts = await FactsAsync(userId, from, to, ct);
+        // The question can name its own period; the client's range is only
+        // what to fall back on when it does not.
+        var (asked, until) = AssistantPeriod.Of(trimmed, today, from, to);
+        var facts = await FactsAsync(userId, asked, until, ct, today);
         var local = AssistantWriter.Answer(trimmed, facts);
         var dressed = await _model.AnswerAsync(trimmed, facts, local, ct);
 
@@ -174,7 +177,7 @@ public sealed class AssistantService
     }
 
     private async Task<AssistantFacts> FactsAsync(
-        int userId, DateOnly from, DateOnly to, CancellationToken ct)
+        int userId, DateOnly from, DateOnly to, CancellationToken ct, DateOnly? today = null)
     {
         var range = await _days.ListAsync(userId, from, to, ct);
 
@@ -200,7 +203,7 @@ public sealed class AssistantService
         return new AssistantFacts(
             $"{from:yyyy-MM-dd}",
             $"{to:yyyy-MM-dd}",
-            Name(from, to),
+            Name(from, to, today),
             range.total_earned,
             range.planned_earned,
             range.net_earned,
@@ -239,9 +242,19 @@ public sealed class AssistantService
     }
 
     /// <summary>What to call this span in a sentence.</summary>
-    private static string Name(DateOnly from, DateOnly to)
+    private static string Name(DateOnly from, DateOnly to, DateOnly? today = null)
     {
         var days = to.DayNumber - from.DayNumber + 1;
+
+        // One day is named the way somebody would say it out loud, which for
+        // the two nearest days is not a date at all.
+        if (days == 1 && today is DateOnly now)
+        {
+            if (from == now) return "сегодняшний день";
+            if (from == now.AddDays(-1)) return "вчерашний день";
+
+            return Said(from);
+        }
 
         if (from.Day == 1 && to == new DateOnly(from.Year, from.Month, DateTime.DaysInMonth(from.Year, from.Month)))
             return $"{Month(from.Month)} {from.Year}";
@@ -250,9 +263,21 @@ public sealed class AssistantService
             return $"{from.Year} год";
 
         if (days == 7) return "неделю";
-        if (days == 1) return "этот день";
+        if (days == 1) return Said(from);
 
         return $"{days} дн. с {from:dd.MM} по {to:dd.MM}";
+    }
+
+    /// <summary>"26 августа" — a day as people say it.</summary>
+    private static string Said(DateOnly date)
+    {
+        string[] months =
+        [
+            "января", "февраля", "марта", "апреля", "мая", "июня",
+            "июля", "августа", "сентября", "октября", "ноября", "декабря",
+        ];
+
+        return $"{date.Day} {months[date.Month - 1]}";
     }
 
     private static string Month(int month) => month switch

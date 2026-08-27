@@ -5,6 +5,7 @@
 type Dictionary = Record<string, string>;
 
 export const RU: Dictionary = {
+  'A period, written out': 'Период словами',
   'Ask about this': 'Спросить об этом',
   'Assistant': 'Помощник',
   'Ask about your own months': 'Спросите про свои месяцы',
@@ -13,8 +14,7 @@ export const RU: Dictionary = {
   'Ask': 'Спросить',
   'worded by the model': 'слова — от нейросети',
   'counted and worded by Shifter': 'посчитал и написал сам Shifter',
-  'A month, written out': 'Месяц словами',
-  'Write it out': 'Разобрать месяц',
+  'Write it out': 'Собрать разбор',
   'Writing…': 'Пишем…',
   'Fill in the blanks': 'Заполните пробелы',
   'Each answer lands straight on that day and makes every total truer.': 'Каждый ответ ложится прямо в тот день и делает все итоги честнее.',
@@ -1641,6 +1641,7 @@ export const RU: Dictionary = {
 };
 
 export const UK: Dictionary = {
+  'A period, written out': 'Період словами',
   'Ask about this': 'Спитати про це',
   'Assistant': 'Помічник',
   'Ask about your own months': 'Спитайте про свої місяці',
@@ -1649,8 +1650,7 @@ export const UK: Dictionary = {
   'Ask': 'Спитати',
   'worded by the model': 'слова — від нейромережі',
   'counted and worded by Shifter': 'порахував і написав сам Shifter',
-  'A month, written out': 'Місяць словами',
-  'Write it out': 'Розібрати місяць',
+  'Write it out': 'Зібрати розбір',
   'Writing…': 'Пишемо…',
   'Fill in the blanks': 'Заповніть прогалини',
   'Each answer lands straight on that day and makes every total truer.': 'Кожна відповідь лягає прямо в той день і робить усі підсумки чеснішими.',

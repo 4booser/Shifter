@@ -11,6 +11,7 @@ import {
   monthBounds,
   monthLabel,
   todayKey,
+  weekBounds,
 } from '@/lib/calendar/calendar-date';
 import { useI18n } from '@/lib/i18n';
 import { Shell } from '@/components/layout/shell';
@@ -27,6 +28,34 @@ export default function AssistantPage() {
 
 /** monthBounds works from a day inside the month, so the first of it will do. */
 const firstOf = ({ year, month }: YearMonth) => `${year}-${`${month}`.padStart(2, '0')}-01`;
+
+type Span = 'day' | 'week' | 'month' | 'year';
+
+const SPAN_LABEL: Record<Span, string> = {
+  day: 'Today',
+  week: 'Week',
+  month: 'Month',
+  year: 'Year',
+};
+
+/**
+ * The days a written-out period covers. Only the month is navigable: nobody
+ * asks to have the third week of last April written out, and a picker for it
+ * would cost more attention than it saves.
+ */
+function spanBounds(span: Span, month: YearMonth): { from: string; to: string } {
+  if (span === 'day') return { from: todayKey(), to: todayKey() };
+
+  if (span === 'week') return weekBounds(todayKey());
+
+  if (span === 'year') {
+    const year = currentMonth().year;
+
+    return { from: `${year}-01-01`, to: `${year}-12-31` };
+  }
+
+  return monthBounds(firstOf(month));
+}
 
 /** What people actually want to know, offered before they have to phrase it. */
 const OPENERS = [
@@ -53,6 +82,7 @@ function Assistant() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [month, setMonth] = useState<YearMonth>(currentMonth());
+  const [span, setSpan] = useState<Span>('month');
   const [report, setReport] = useState<AssistantReport | null>(null);
   const [writing, setWriting] = useState(false);
 
@@ -105,12 +135,12 @@ function Assistant() {
     [busy],
   );
 
-  const makeReport = async (at: YearMonth) => {
+  const makeReport = async () => {
     setWriting(true);
     setError(null);
 
     try {
-      const bounds = monthBounds(firstOf(at));
+      const bounds = spanBounds(span, month);
 
       setReport(await assistantApi.report(bounds.from, bounds.to));
     } catch (caught) {
@@ -228,34 +258,49 @@ function Assistant() {
         <section className="card flex flex-col gap-3 p-4">
           <h2 className="flex items-center gap-2 text-[1rem] font-bold">
             <Icon name="note" size={15} className="text-(--accent)" />
-            {t('A month, written out')}
+            {t('A period, written out')}
           </h2>
 
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              className="btn btn-quiet btn-sm"
-              onClick={() => setMonth((at) => addMonths(at, -1))}
-            >
-              ‹
-            </button>
-            <span className="flex-1 text-center text-[0.9rem] font-semibold capitalize tabular">
-              {monthLabel(month, lang)}
-            </span>
-            <button
-              type="button"
-              className="btn btn-quiet btn-sm"
-              onClick={() => setMonth((at) => addMonths(at, 1))}
-            >
-              ›
-            </button>
+          <div className="flex gap-1.5">
+            {(['day', 'week', 'month', 'year'] as Span[]).map((option) => (
+              <button
+                key={option}
+                type="button"
+                className={`btn btn-sm flex-1 ${span === option ? 'btn-primary' : 'btn-quiet'}`}
+                onClick={() => setSpan(option)}
+              >
+                {t(SPAN_LABEL[option])}
+              </button>
+            ))}
           </div>
+
+          {span === 'month' && (
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                className="btn btn-quiet btn-sm"
+                onClick={() => setMonth((at) => addMonths(at, -1))}
+              >
+                ‹
+              </button>
+              <span className="flex-1 text-center text-[0.9rem] font-semibold capitalize tabular">
+                {monthLabel(month, lang)}
+              </span>
+              <button
+                type="button"
+                className="btn btn-quiet btn-sm"
+                onClick={() => setMonth((at) => addMonths(at, 1))}
+              >
+                ›
+              </button>
+            </div>
+          )}
 
           <button
             type="button"
             className="btn btn-primary"
             disabled={writing}
-            onClick={() => void makeReport(month)}
+            onClick={() => void makeReport()}
           >
             {writing ? t('Writing…') : t('Write it out')}
           </button>

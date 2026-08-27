@@ -25,6 +25,14 @@ public sealed class PlannedAssignment
     /// <summary>What the board calls it: "Bar", "Открытие", a code.</summary>
     public required string Title { get; set; }
 
+    /// <summary>
+    /// Which station this cell covers. A title is what a house calls the
+    /// shift and differs between houses; the role is the thing a rota is
+    /// actually short of — "two bars and nobody in the kitchen" cannot be
+    /// read off free text.
+    /// </summary>
+    public PlanRole Role { get; set; } = PlanRole.Unset;
+
     public TimeOnly StartTime { get; set; }
     public TimeOnly EndTime { get; set; }
 

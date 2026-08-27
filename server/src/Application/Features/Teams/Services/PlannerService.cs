@@ -96,7 +96,11 @@ public sealed class PlannerService
             team.OwnerUserId == userId,
             // The blocked days ride along with the board: a manager should
             // learn about a conflict while drafting, not after publishing.
-            await BlocksAsync(teamId, userId, from, to, ct));
+            await BlocksAsync(teamId, userId, from, to, ct),
+            // Only somebody who plans sees coverage: it is a statement about
+            // everyone's week, and a member's board holds only their own rows,
+            // so counting from it would be a confident wrong answer.
+            plans ? Coverage(rows) : []);
     }
 
     // ==== Availability: the days people have said they cannot work ====
@@ -153,6 +157,28 @@ public sealed class PlannerService
             .ToArray();
     }
 
+    private static string RoleName(PlanRole role) =>
+        role == PlanRole.Unset ? string.Empty : role.ToString().ToLowerInvariant();
+
+    /// <summary>
+    /// What each day is covered by. Drafts count: the point of the readout is
+    /// to catch a hole while the week can still be changed.
+    /// </summary>
+    private static CoverageDayDto[] Coverage(PlannedAssignment[] rows) => rows
+        .Where(entry => entry.Status != AssignmentStatus.Declined)
+        .GroupBy(entry => entry.Date)
+        .OrderBy(group => group.Key)
+        .Select(group => new CoverageDayDto(
+            group.Key.ToString("yyyy-MM-dd"),
+            group
+                .Where(entry => entry.Role != PlanRole.Unset)
+                .GroupBy(entry => entry.Role)
+                .OrderBy(role => role.Key)
+                .Select(role => new CoverageRoleDto(RoleName(role.Key), role.Count()))
+                .ToArray(),
+            group.Count(entry => entry.Role == PlanRole.Unset)))
+        .ToArray();
+
     private static AssignmentDto ToDto(PlannedAssignment entry, IReadOnlyDictionary<int, string> names)
         => new(
             entry.Id,
@@ -163,7 +189,8 @@ public sealed class PlannerService
             entry.StartTime.ToString("HH:mm"),
             entry.EndTime.ToString("HH:mm"),
             entry.Note,
-            entry.Status.ToString().ToLowerInvariant());
+            entry.Status.ToString().ToLowerInvariant(),
+            RoleName(entry.Role));
 
     // ==== Drafting ====
 
@@ -197,6 +224,7 @@ public sealed class PlannerService
             entry.StartTime = start;
             entry.EndTime = end;
             entry.Note = request.note;
+            entry.Role = PlannerRules.ParseRole(request.role);
         }
         else
         {
@@ -210,6 +238,7 @@ public sealed class PlannerService
                 StartTime = start,
                 EndTime = end,
                 Note = request.note,
+                Role = PlannerRules.ParseRole(request.role),
             };
             _db.PlannedAssignments.Add(entry);
         }
@@ -352,6 +381,7 @@ public sealed class PlannerService
                 StartTime = entry.StartTime,
                 EndTime = entry.EndTime,
                 Note = entry.Note,
+                Role = entry.Role,
             });
             copied++;
         }
@@ -498,6 +528,18 @@ public sealed class PlannerService
 public static class PlannerRules
 {
     public const int TitleMax = 60;
+
+    /// <summary>The station, or Unset where nobody said. Never guessed from a title.</summary>
+    public static PlanRole ParseRole(string? value) => value?.Trim().ToLowerInvariant() switch
+    {
+        "bar" => PlanRole.Bar,
+        "kitchen" => PlanRole.Kitchen,
+        "floor" => PlanRole.Floor,
+        "host" => PlanRole.Host,
+        "support" => PlanRole.Support,
+        "manager" => PlanRole.Manager,
+        _ => PlanRole.Unset,
+    };
 
     public static (DateOnly Date, TimeOnly Start, TimeOnly End) ParseSlot(
         string date, string start, string end)

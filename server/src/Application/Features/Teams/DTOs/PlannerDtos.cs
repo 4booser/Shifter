@@ -11,7 +11,12 @@ public record AssignmentDto(
     string end,
     string? note,
     /// <summary>draft, published, accepted or declined.</summary>
-    string status
+    string status,
+    /// <summary>
+    /// The station this cell covers: "bar", "kitchen", "floor", "host",
+    /// "support", "manager", or "" where nobody said.
+    /// </summary>
+    string role = ""
     );
 
 public record AssignmentSaveDto(
@@ -20,8 +25,22 @@ public record AssignmentSaveDto(
     string title,
     string start,
     string end,
-    string? note
+    string? note,
+    /// <summary>
+    /// Defaulted so a client written before roles existed keeps drafting
+    /// rather than silently clearing the station on every edit.
+    /// </summary>
+    string? role = null
     );
+
+/// <summary>
+/// One day's coverage, station by station. The number a manager is actually
+/// looking for on a board is not "how many people" but "how many bars", and
+/// nothing else on the screen answers it.
+/// </summary>
+public record CoverageDayDto(string date, CoverageRoleDto[] roles, int unset);
+
+public record CoverageRoleDto(string role, int count);
 
 public record PlannerMemberDto(
     int user_id,
@@ -40,7 +59,13 @@ public record PlannerBoardDto(
     /// <summary>Whether the caller may hand the board to others (owner).</summary>
     bool can_grant,
     /// <summary>Days the crew has blocked inside the window.</summary>
-    AvailabilityDto[] blocked
+    AvailabilityDto[] blocked,
+    /// <summary>
+    /// Station counts per day across the window. Only days with something
+    /// planned appear — an empty day is short of everything, and saying so
+    /// seven times is noise rather than information.
+    /// </summary>
+    CoverageDayDto[] coverage
     );
 
 public record PublishResultDto(int published, int people);

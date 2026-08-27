@@ -9,7 +9,8 @@ import {
   View,
 } from 'react-native';
 
-import { ClockRing, MoneyFlow, MonthBars } from '@/components/charts';
+import { ClockRing, MoneyFlow, MonthBars } from '@/components/charts';import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import { Colors, Palette } from '@/constants/theme';
 import { api } from '@/lib/api';
 import { addMonths, currentMonth, monthBounds, monthLabel } from '@/lib/calendar';
@@ -35,6 +36,7 @@ type Span = 'month' | 'year';
 export default function StatsScreen() {
   const scheme = useColorScheme();
   const palette = Colors[scheme === 'dark' ? 'dark' : 'light'];
+  const insets = useSafeAreaInsets();
   const styles = makeStyles(palette);
 
   const [span, setSpan] = useState<Span>('month');
@@ -135,7 +137,7 @@ export default function StatsScreen() {
   return (
     <ScrollView
       style={styles.screen}
-      contentContainerStyle={styles.content}
+      contentContainerStyle={[styles.content, { paddingTop: insets.top + 10 }]}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
@@ -229,7 +231,7 @@ function Kpi({
 const makeStyles = (palette: Palette) =>
   StyleSheet.create({
     screen: { flex: 1, backgroundColor: palette.background },
-    content: { padding: 14, paddingTop: 58, gap: 10 },
+    content: { padding: 14, gap: 10 },
     title: { fontSize: 24, fontWeight: '800', color: palette.text, letterSpacing: -0.5 },
     toolbar: { flexDirection: 'row', alignItems: 'center', gap: 6 },
     segment: {

@@ -1,22 +1,564 @@
-import { StyleSheet, Text, useColorScheme, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  ActivityIndicator,
+  Modal,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  useColorScheme,
+  View,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Colors } from '@/constants/theme';
+import { Colors, Palette } from '@/constants/theme';
+import { api } from '@/lib/api';
+import { addMonths, currentMonth, monthBounds, todayKey } from '@/lib/calendar';
+import { money } from '@/lib/types';
 
-export default function Placeholder() {
+type Status = 'open' | 'due' | 'overdue' | 'paid' | 'short' | 'over';
+
+interface PayPeriodRow {
+  location_id: number;
+  location_name: string;
+  colour: string;
+  period_from: string;
+  period_to: string;
+  due_on: string;
+  expected: number;
+  paid: number;
+  difference: number;
+  hours: number;
+  status: Status;
+  days_late: number;
+  stream: 'all' | 'wage' | 'commission';
+}
+
+interface Shortfall {
+  location_id: number;
+  location_name: string;
+  periods: number;
+  total_short: number;
+  since: string;
+  stream: 'all' | 'wage' | 'commission';
+}
+
+interface Reconciliation {
+  periods: PayPeriodRow[];
+  shortfalls: Shortfall[];
+  awaited: number;
+  overdue: number;
+}
+
+interface Payout {
+  id: number;
+  period_from: string;
+  period_to: string;
+  amount: number;
+  received_on: string;
+  note: string | null;
+  location_id: number | null;
+  location_name: string | null;
+}
+
+const STATUS_LABEL: Record<Status, string> = {
+  open: 'В работе',
+  due: 'Ожидается',
+  overdue: 'Просрочено',
+  paid: 'Закрыто',
+  short: 'Недоплачено',
+  over: 'Переплата',
+};
+
+const STREAM_LABEL: Record<PayPeriodRow['stream'], string> = {
+  all: '',
+  wage: 'ставка',
+  commission: 'процент',
+};
+
+const MONTHS = [
+  'янв', 'фев', 'мар', 'апр', 'мая', 'июн',
+  'июл', 'авг', 'сен', 'окт', 'ноя', 'дек',
+];
+
+/** A day key as people say it out loud: "14 авг". */
+const shortDate = (key: string) => {
+  const [, month, day] = key.split('-');
+  return `${Number(day)} ${MONTHS[Number(month) - 1]}`;
+};
+
+/**
+ * Money owed, money late, money in hand. The site's payouts page in the
+ * pocket: the server does the reconciliation, the phone only asks and draws,
+ * so "you are owed ₴N" is the same sentence in both places.
+ */
+export default function PayoutsScreen() {
   const scheme = useColorScheme();
   const palette = Colors[scheme === 'dark' ? 'dark' : 'light'];
+  const insets = useSafeAreaInsets();
+  const styles = makeStyles(palette);
+
+  const [data, setData] = useState<Reconciliation | null>(null);
+  const [history, setHistory] = useState<Payout[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [prefill, setPrefill] = useState<PayPeriodRow | null>(null);
+
+  // Half a year back and a month forward: enough to see what is still owed
+  // without asking the server for a lifetime of history on every open.
+  const range = useMemo(() => {
+    const now = currentMonth();
+    return {
+      from: monthBounds(addMonths(now, -6)).from,
+      to: monthBounds(addMonths(now, 1)).to,
+    };
+  }, []);
+
+  const load = useCallback(async () => {
+    try {
+      const [schedule, payouts] = await Promise.all([
+        api<Reconciliation>(`/shifter/v1/payouts/schedule?from=${range.from}&to=${range.to}`),
+        api<Payout[]>(`/shifter/v1/payouts?from=${range.from}&to=${range.to}`),
+      ]);
+
+      setData(schedule);
+      setHistory(payouts);
+      setError(null);
+    } catch {
+      setError('Не дотянулись до сервера.');
+    }
+  }, [range.from, range.to]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const periods = data?.periods ?? [];
+  const ahead = periods.filter((row) => row.status !== 'paid' && row.status !== 'over');
+  const settled = periods.filter((row) => row.status === 'paid' || row.status === 'over');
 
   return (
-    <View style={[styles.screen, { backgroundColor: palette.background }]}>
-      <Text style={[styles.title, { color: palette.text }]}>Выплаты</Text>
-      <Text style={{ color: palette.textSecondary, textAlign: 'center' }}>
-        Едет в фазе M2 мобильного плана. Пока — на www.shifter.ink.
-      </Text>
+    <>
+      <ScrollView
+        style={styles.screen}
+        contentContainerStyle={[styles.content, { paddingTop: insets.top + 10 }]}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => {
+              setRefreshing(true);
+              void load().finally(() => setRefreshing(false));
+            }}
+          />
+        }
+      >
+        <Text style={styles.title}>Выплаты</Text>
+
+        {error !== null && <Text style={styles.error}>{error}</Text>}
+        {data === null && error === null && <ActivityIndicator color={palette.accent} />}
+
+        {data !== null && (
+          <View style={styles.heroRow}>
+            <View style={styles.hero}>
+              <Text style={styles.heroLabel}>Ждём</Text>
+              <Text style={styles.heroValue}>{money(data.awaited)}</Text>
+            </View>
+            <View style={styles.hero}>
+              <Text style={styles.heroLabel}>Просрочено</Text>
+              <Text style={[styles.heroValue, data.overdue > 0 && { color: palette.danger }]}>
+                {money(data.overdue)}
+              </Text>
+            </View>
+          </View>
+        )}
+
+        {(data?.shortfalls.length ?? 0) > 0 && (
+          <View style={styles.warning}>
+            <Text style={styles.warningTitle}>Заплатили меньше, чем начислено</Text>
+            {data?.shortfalls.map((short) => (
+              <Text key={`${short.location_id}-${short.stream}`} style={styles.warningLine}>
+                {short.location_name}
+                {short.stream !== 'all' ? ` · ${STREAM_LABEL[short.stream]}` : ''} — не хватает{' '}
+                {money(short.total_short)} с {shortDate(short.since)}
+              </Text>
+            ))}
+          </View>
+        )}
+
+        {ahead.length > 0 && (
+          <Section title="Ещё не в кармане" palette={palette}>
+            {ahead.map((row) => (
+              <PeriodCard
+                key={`${row.location_id}-${row.period_from}-${row.stream}`}
+                row={row}
+                palette={palette}
+                onMark={() => setPrefill(row)}
+              />
+            ))}
+          </Section>
+        )}
+
+        {settled.length > 0 && (
+          <Section title="Закрытые периоды" palette={palette}>
+            {settled.map((row) => (
+              <PeriodCard
+                key={`${row.location_id}-${row.period_from}-${row.stream}`}
+                row={row}
+                palette={palette}
+                onMark={() => setPrefill(row)}
+              />
+            ))}
+          </Section>
+        )}
+
+        {history.length > 0 && (
+          <Section title="Что уже пришло" palette={palette}>
+            {history.map((payout) => (
+              <View key={payout.id} style={styles.payoutRow}>
+                <View style={styles.grow}>
+                  <Text style={styles.payoutAmount}>{money(payout.amount)}</Text>
+                  <Text style={styles.payoutMeta}>
+                    {shortDate(payout.received_on)}
+                    {payout.location_name !== null ? ` · ${payout.location_name}` : ''}
+                  </Text>
+                </View>
+                <Pressable
+                  hitSlop={10}
+                  onPress={() => {
+                    void api(`/shifter/v1/payouts/${payout.id}`, { method: 'DELETE' }).then(load);
+                  }}
+                >
+                  <Text style={styles.remove}>Убрать</Text>
+                </Pressable>
+              </View>
+            ))}
+          </Section>
+        )}
+
+        {data !== null && periods.length === 0 && history.length === 0 && (
+          <Text style={styles.empty}>
+            Ещё нечего сверять. Добавьте место работы и график выплат — и здесь появится, кто
+            сколько должен.
+          </Text>
+        )}
+      </ScrollView>
+
+      <PayoutModal
+        row={prefill}
+        palette={palette}
+        onClose={() => setPrefill(null)}
+        onSaved={() => {
+          setPrefill(null);
+          void load();
+        }}
+      />
+    </>
+  );
+}
+
+function Section({
+  title,
+  palette,
+  children,
+}: {
+  title: string;
+  palette: Palette;
+  children: React.ReactNode;
+}) {
+  const styles = makeStyles(palette);
+
+  return (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>{title}</Text>
+      {children}
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32, gap: 8 },
-  title: { fontSize: 22, fontWeight: '800' },
-});
+function PeriodCard({
+  row,
+  palette,
+  onMark,
+}: {
+  row: PayPeriodRow;
+  palette: Palette;
+  onMark: () => void;
+}) {
+  const styles = makeStyles(palette);
+  const tone =
+    row.status === 'overdue' || row.status === 'short'
+      ? palette.danger
+      : row.status === 'paid' || row.status === 'over'
+        ? palette.good
+        : palette.textSecondary;
+
+  return (
+    <View style={styles.card}>
+      <View style={styles.cardHead}>
+        <View style={[styles.dot, { backgroundColor: row.colour }]} />
+        <Text style={styles.cardPlace} numberOfLines={1}>
+          {row.location_name}
+          {row.stream !== 'all' ? ` · ${STREAM_LABEL[row.stream]}` : ''}
+        </Text>
+        <Text style={[styles.pill, { color: tone, borderColor: tone }]}>
+          {STATUS_LABEL[row.status]}
+        </Text>
+      </View>
+
+      <Text style={styles.cardPeriod}>
+        {shortDate(row.period_from)} — {shortDate(row.period_to)} · {Math.round(row.hours)} ч
+      </Text>
+
+      <View style={styles.cardFoot}>
+        <View style={styles.grow}>
+          <Text style={styles.cardExpected}>{money(row.expected)}</Text>
+          <Text style={styles.cardDue}>
+            {row.status === 'overdue'
+              ? `Ждём с ${shortDate(row.due_on)} — ${row.days_late} дн.`
+              : row.paid > 0
+                ? `Пришло ${money(row.paid)} · срок ${shortDate(row.due_on)}`
+                : `Срок ${shortDate(row.due_on)}`}
+          </Text>
+        </View>
+
+        <Pressable style={styles.markButton} onPress={onMark}>
+          <Text style={styles.markText}>Отметить</Text>
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
+/**
+ * Recording a payment is one number and one date. Everything else is already
+ * known from the period the person tapped, so the form is prefilled and a
+ * thumb can finish it.
+ */
+function PayoutModal({
+  row,
+  palette,
+  onClose,
+  onSaved,
+}: {
+  row: PayPeriodRow | null;
+  palette: Palette;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const styles = makeStyles(palette);
+  const [amount, setAmount] = useState('');
+  const [received, setReceived] = useState(todayKey());
+  const [saving, setSaving] = useState(false);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    if (row === null) return;
+
+    // What is still missing, not the whole period: a second instalment must
+    // not re-enter money already recorded.
+    const left = Math.max(0, Math.round(row.expected - row.paid));
+    setAmount(left > 0 ? `${left}` : '');
+    setReceived(todayKey());
+    setFailed(false);
+  }, [row]);
+
+  const save = async () => {
+    if (row === null) return;
+
+    setSaving(true);
+
+    try {
+      await api('/shifter/v1/payouts', {
+        method: 'POST',
+        body: {
+          period_from: row.period_from,
+          period_to: row.period_to,
+          amount: Number(amount.replace(',', '.')) || 0,
+          received_on: received,
+          location_id: row.location_id,
+          note: null,
+        },
+      });
+      onSaved();
+    } catch {
+      setFailed(true);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Modal visible={row !== null} animationType="slide" transparent onRequestClose={onClose}>
+      <Pressable style={styles.backdrop} onPress={onClose} />
+      <View style={styles.sheet}>
+        <Text style={styles.sheetTitle}>Пришли деньги</Text>
+        <Text style={styles.sheetMeta}>
+          {row?.location_name} · {row !== null ? shortDate(row.period_from) : ''} —{' '}
+          {row !== null ? shortDate(row.period_to) : ''}
+        </Text>
+
+        <Text style={styles.fieldLabel}>Сколько</Text>
+        <TextInput
+          style={styles.input}
+          value={amount}
+          onChangeText={setAmount}
+          keyboardType="numeric"
+          placeholder="0"
+          placeholderTextColor={palette.textSecondary}
+        />
+
+        <Text style={styles.fieldLabel}>Когда</Text>
+        <TextInput
+          style={styles.input}
+          value={received}
+          onChangeText={setReceived}
+          placeholder="ГГГГ-ММ-ДД"
+          placeholderTextColor={palette.textSecondary}
+        />
+
+        {failed && <Text style={styles.error}>Не сохранили. Проверьте сумму и дату.</Text>}
+
+        <View style={styles.sheetButtons}>
+          <Pressable style={[styles.sheetButton, styles.sheetGhost]} onPress={onClose}>
+            <Text style={styles.sheetGhostText}>Отмена</Text>
+          </Pressable>
+          <Pressable
+            style={[styles.sheetButton, styles.sheetPrimary, saving && { opacity: 0.6 }]}
+            disabled={saving}
+            onPress={() => void save()}
+          >
+            <Text style={styles.sheetPrimaryText}>{saving ? 'Сохраняем…' : 'Записать'}</Text>
+          </Pressable>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+const makeStyles = (palette: Palette) =>
+  StyleSheet.create({
+    screen: { flex: 1, backgroundColor: palette.background },
+    content: { padding: 16, paddingBottom: 48, gap: 14 },
+    title: { color: palette.text, fontSize: 30, fontWeight: '800' },
+    error: { color: palette.danger, fontSize: 13 },
+    empty: { color: palette.textSecondary, fontSize: 14, lineHeight: 20 },
+    grow: { flex: 1 },
+
+    heroRow: { flexDirection: 'row', gap: 10 },
+    hero: {
+      flex: 1,
+      backgroundColor: palette.backgroundElement,
+      borderColor: palette.border,
+      borderWidth: 1,
+      borderRadius: 16,
+      padding: 14,
+      gap: 4,
+    },
+    heroLabel: { color: palette.textSecondary, fontSize: 13 },
+    heroValue: { color: palette.text, fontSize: 24, fontWeight: '800' },
+
+    warning: {
+      backgroundColor: palette.backgroundElement,
+      borderColor: palette.danger,
+      borderWidth: 1,
+      borderRadius: 16,
+      padding: 14,
+      gap: 6,
+    },
+    warningTitle: { color: palette.danger, fontSize: 15, fontWeight: '700' },
+    warningLine: { color: palette.text, fontSize: 13, lineHeight: 19 },
+
+    section: { gap: 10 },
+    sectionTitle: { color: palette.text, fontSize: 17, fontWeight: '700', marginTop: 6 },
+
+    card: {
+      backgroundColor: palette.backgroundElement,
+      borderColor: palette.border,
+      borderWidth: 1,
+      borderRadius: 16,
+      padding: 14,
+      gap: 8,
+    },
+    cardHead: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    dot: { width: 10, height: 10, borderRadius: 5 },
+    cardPlace: { color: palette.text, fontSize: 15, fontWeight: '700', flex: 1 },
+    pill: {
+      fontSize: 11,
+      fontWeight: '700',
+      borderWidth: 1,
+      borderRadius: 999,
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+      overflow: 'hidden',
+    },
+    cardPeriod: { color: palette.textSecondary, fontSize: 13 },
+    cardFoot: { flexDirection: 'row', alignItems: 'flex-end', gap: 10 },
+    cardExpected: { color: palette.text, fontSize: 20, fontWeight: '800' },
+    cardDue: { color: palette.textSecondary, fontSize: 12, marginTop: 2 },
+    markButton: {
+      backgroundColor: palette.accentSoft,
+      borderColor: palette.accent,
+      borderWidth: 1,
+      borderRadius: 999,
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+    },
+    markText: { color: palette.accent, fontSize: 13, fontWeight: '700' },
+
+    payoutRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      backgroundColor: palette.backgroundElement,
+      borderColor: palette.border,
+      borderWidth: 1,
+      borderRadius: 14,
+      paddingHorizontal: 14,
+      paddingVertical: 10,
+    },
+    payoutAmount: { color: palette.text, fontSize: 16, fontWeight: '700' },
+    payoutMeta: { color: palette.textSecondary, fontSize: 12, marginTop: 2 },
+    remove: { color: palette.danger, fontSize: 13 },
+
+    backdrop: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0,0,0,0.35)',
+    },
+    sheet: {
+      position: 'absolute',
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: palette.background,
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+      padding: 20,
+      paddingBottom: 36,
+      gap: 8,
+    },
+    sheetTitle: { color: palette.text, fontSize: 20, fontWeight: '800' },
+    sheetMeta: { color: palette.textSecondary, fontSize: 13, marginBottom: 6 },
+    fieldLabel: { color: palette.textSecondary, fontSize: 13, marginTop: 6 },
+    input: {
+      backgroundColor: palette.backgroundElement,
+      borderColor: palette.border,
+      borderWidth: 1,
+      borderRadius: 12,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      color: palette.text,
+      fontSize: 16,
+    },
+    sheetButtons: { flexDirection: 'row', gap: 10, marginTop: 14 },
+    sheetButton: { flex: 1, borderRadius: 999, paddingVertical: 14, alignItems: 'center' },
+    sheetGhost: { borderColor: palette.border, borderWidth: 1 },
+    sheetGhostText: { color: palette.text, fontSize: 15, fontWeight: '600' },
+    sheetPrimary: { backgroundColor: palette.accent },
+    sheetPrimaryText: { color: '#fff', fontSize: 15, fontWeight: '700' },
+  });

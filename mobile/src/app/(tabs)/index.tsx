@@ -10,6 +10,7 @@ import {
   useColorScheme,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Colors, Palette } from '@/constants/theme';
 import { api } from '@/lib/api';
@@ -27,6 +28,7 @@ const WEEKDAYS = ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс'];
 export default function CalendarScreen() {
   const scheme = useColorScheme();
   const palette = Colors[scheme === 'dark' ? 'dark' : 'light'];
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const signOut = useSession((state) => state.signOut);
   const live = useLive((state) => state.live);
@@ -88,7 +90,7 @@ export default function CalendarScreen() {
   return (
     <ScrollView
       style={styles.screen}
-      contentContainerStyle={styles.content}
+      contentContainerStyle={[styles.content, { paddingTop: insets.top + 10 }]}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
@@ -213,7 +215,7 @@ export default function CalendarScreen() {
 const makeStyles = (palette: Palette) =>
   StyleSheet.create({
     screen: { flex: 1, backgroundColor: palette.background },
-    content: { padding: 14, paddingTop: 58, gap: 10 },
+    content: { padding: 14, gap: 10 },
     headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
     title: { fontSize: 24, fontWeight: '800', color: palette.text, letterSpacing: -0.5 },
     monthNav: { flexDirection: 'row', alignItems: 'center', gap: 6 },

@@ -17,6 +17,7 @@ import { Modal } from '@/components/ui/modal';
 import { TimeAgo } from '@/components/ui/time-ago';
 import { SeekersBoard } from '@/components/gigs/seekers';
 import { PendingReviews, Stars } from '@/components/gigs/reviews';
+import { CallBack } from '@/components/gigs/call-back';
 import { Segmented } from '@/components/ui/bits';
 
 type Span = 'week' | 'month' | 'year';
@@ -53,6 +54,7 @@ function Gigs() {
   const [mine, setMine] = useState<{ gig: Gig; replies: GigReply[] }[]>([]);
   const [replies, setReplies] = useState<Gig[]>([]);
   const [responding, setResponding] = useState<Gig | null>(null);
+  const [callingBack, setCallingBack] = useState<Gig | null>(null);
   const [editing, setEditing] = useState<GigSave & { id: number | null } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -274,6 +276,7 @@ function Gigs() {
       {view === 'mine' && (
         <MyListings
           rows={mine}
+          onCallBack={setCallingBack}
           onEdit={(gig) => setEditing({ id: gig.id, venue: gig.venue, category: gig.category, employment: gig.employment, photos: gig.photos, schedule: gig.schedule, title: gig.title, details: gig.details, date: gig.date, start: gig.start, end: gig.end, pay_amount: gig.pay_amount, pay_period: gig.pay_period, pay_percent: gig.pay_percent, city: gig.city, slots: gig.slots })}
           onChanged={refresh}
           onError={setError}
@@ -292,6 +295,8 @@ function Gigs() {
           ))}
         </div>
       )}
+
+      {callingBack !== null && <CallBack gig={callingBack} onClose={() => setCallingBack(null)} />}
 
       {responding !== null && (
         <RespondModal
@@ -525,11 +530,13 @@ function GigCard({ gig, onRespond, onWithdraw }: { gig: Gig; onRespond: () => vo
 function MyListings({
   rows,
   onEdit,
+  onCallBack,
   onChanged,
   onError,
 }: {
   rows: { gig: Gig; replies: GigReply[] }[];
   onEdit: (gig: Gig) => void;
+  onCallBack: (gig: Gig) => void;
   onChanged: () => void;
   onError: (message: string) => void;
 }) {
@@ -553,6 +560,11 @@ function MyListings({
               {t(gig.status)}
             </span>
             <span className="ml-auto flex gap-1.5">
+              {gig.status === 'open' && (
+                <button type="button" className="btn btn-sm" onClick={() => onCallBack(gig)}>
+                  👋 {t('Call somebody back')}
+                </button>
+              )}
               <button type="button" className="btn btn-quiet btn-sm" onClick={() => onEdit(gig)}>{t('Edit')}</button>
               {gig.status !== 'closed' ? (
                 <button type="button" className="btn btn-quiet btn-sm text-danger" onClick={() => void gigApi.setStatus(gig.id, 'closed').then(onChanged).catch((c) => onError(apiErrorMessage(c)))}>

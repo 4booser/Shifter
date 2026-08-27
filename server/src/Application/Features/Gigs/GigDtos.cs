@@ -129,3 +129,19 @@ public record PendingReviewDto(
     int target_user_id,
     string target_name,
     bool by_employer);
+
+
+/// <summary>Somebody this venue has worked with before, worth calling directly.</summary>
+public record KnownWorkerDto(
+    int user_id,
+    string name,
+    string? avatar_kind,
+    string? avatar_data,
+    int times_worked,
+    string last_worked,
+    double? rating,
+    int rating_count,
+    string? phone,
+    string? telegram);
+
+public record InviteDto(int listing_id, int user_id);

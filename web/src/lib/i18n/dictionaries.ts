@@ -5,6 +5,13 @@
 type Dictionary = Record<string, string>;
 
 export const RU: Dictionary = {
+  'Call somebody back': 'Позвать снова',
+  'Call back': 'Позвать',
+  'Called': 'Позвали',
+  'Called back': 'Позвали снова',
+  'a push is on its way': 'уведомление уже летит',
+  'Nobody has worked with you through the board yet — take somebody once, and they show up here.': 'С вами через биржу ещё никто не работал — возьмите человека однажды, и он появится здесь.',
+  'An invite is a nudge, not a booking — they still answer on the board.': 'Приглашение — это подсказка, а не бронь: человек всё равно отвечает сам.',
   'of sales': 'с продаж',
   'percent of sales': 'процент с продаж',
   'Percent of sales': 'Процент с продаж',
@@ -1534,6 +1541,13 @@ export const RU: Dictionary = {
 };
 
 export const UK: Dictionary = {
+  'Call somebody back': 'Покликати знову',
+  'Call back': 'Покликати',
+  'Called': 'Покликали',
+  'Called back': 'Покликали знову',
+  'a push is on its way': 'сповіщення вже летить',
+  'Nobody has worked with you through the board yet — take somebody once, and they show up here.': 'З вами через біржу ще ніхто не працював — візьміть людину одного разу, і вона з’явиться тут.',
+  'An invite is a nudge, not a booking — they still answer on the board.': 'Запрошення — це підказка, а не бронь: людина все одно відповідає сама.',
   'of sales': 'з продажів',
   'percent of sales': 'відсоток з продажів',
   'Percent of sales': 'Відсоток з продажів',

@@ -40,6 +40,18 @@ public class GigsController : ControllerBase
     public async Task<IActionResult> SetStatus(int id, [FromBody] GigStatusDto request, CancellationToken ct)
         => Ok(await _gigs.SetStatusAsync(UserId(), id, request.status, ct));
 
+    [HttpGet("known-workers")]
+    public async Task<IActionResult> KnownWorkers(CancellationToken ct)
+        => Ok(await _gigs.KnownWorkersAsync(UserId(), ct));
+
+    [HttpPost("{id:int}/invite/{inviteeUserId:int}")]
+    public async Task<IActionResult> Invite(int id, int inviteeUserId, CancellationToken ct)
+    {
+        await _gigs.InviteAsync(UserId(), id, inviteeUserId, ct);
+
+        return NoContent();
+    }
+
     [HttpPost("{id:int}/reviews")]
     public async Task<IActionResult> Review(int id, [FromBody] ReviewSaveDto request, CancellationToken ct)
         => Ok(await _gigs.ReviewAsync(UserId(), id, request, ct));

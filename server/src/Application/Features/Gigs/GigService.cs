@@ -329,6 +329,96 @@ public sealed class GigService
         return rows.ToDictionary(row => row.Key, row => (Math.Round(row.Avg, 2), row.Count));
     }
 
+    // ==== Calling back somebody who already worked out ====
+
+    /// <summary>
+    /// The people this venue has actually taken before, newest first. The
+    /// contacts are the ones they already handed over on those shifts —
+    /// nothing new is disclosed by remembering them.
+    /// </summary>
+    public async Task<KnownWorkerDto[]> KnownWorkersAsync(int userId, CancellationToken ct)
+    {
+        var replies = await _db.GigResponses
+            .AsNoTracking()
+            .Include(reply => reply.User)
+            .Include(reply => reply.Listing)
+            .Where(reply => reply.AcceptedAt != null && reply.Listing!.OwnerUserId == userId)
+            .OrderByDescending(reply => reply.Listing!.Date)
+            .Take(200)
+            .ToArrayAsync(ct);
+
+        var grouped = replies
+            .GroupBy(reply => reply.UserId)
+            .Select(group => new
+            {
+                UserId = group.Key,
+                Person = group.First().User,
+                Times = group.Count(),
+                Last = group.Max(reply => reply.Listing!.Date),
+                // The freshest contacts they shared, not the oldest.
+                Phone = group.OrderByDescending(reply => reply.CreatedAt).Select(reply => reply.Phone).FirstOrDefault(value => value != null),
+                Telegram = group.OrderByDescending(reply => reply.CreatedAt).Select(reply => reply.Telegram).FirstOrDefault(value => value != null),
+            })
+            .OrderByDescending(entry => entry.Last)
+            .Take(24)
+            .ToArray();
+
+        var ratings = await RatingsAsync(grouped.Select(entry => entry.UserId).ToArray(), byEmployer: true, ct);
+
+        return grouped
+            .Select(entry => new KnownWorkerDto(
+                entry.UserId,
+                $"{entry.Person?.FirstName} {entry.Person?.LastName}".Trim(),
+                entry.Person?.AvatarKind,
+                entry.Person?.AvatarData,
+                entry.Times,
+                entry.Last.ToString("yyyy-MM-dd"),
+                ratings.GetValueOrDefault(entry.UserId).Count > 0 ? ratings[entry.UserId].Avg : null,
+                ratings.GetValueOrDefault(entry.UserId).Count,
+                entry.Phone,
+                entry.Telegram))
+            .ToArray();
+    }
+
+    /// <summary>
+    /// "Come work this one too": a direct push to somebody who worked here
+    /// before. It invites, it does not book — the person still answers on
+    /// the board, so consent stays theirs.
+    /// </summary>
+    public async Task InviteAsync(int userId, int listingId, int inviteeUserId, CancellationToken ct)
+    {
+        var gig = await _db.GigListings
+            .Include(row => row.Responses)
+            .FirstOrDefaultAsync(row => row.Id == listingId && row.OwnerUserId == userId, ct)
+            ?? throw new NotFoundException("Gig does not exist.");
+
+        if (gig.Status != GigStatus.Open)
+            throw new ConflictException("This gig is no longer open.");
+
+        var workedHere = await _db.GigResponses
+            .AsNoTracking()
+            .AnyAsync(reply => reply.UserId == inviteeUserId
+                && reply.AcceptedAt != null
+                && reply.Listing!.OwnerUserId == userId, ct);
+
+        if (!workedHere)
+            throw new ValidationException("You can only call back somebody who has worked with you.");
+
+        if ((gig.Responses ?? []).Any(reply => reply.UserId == inviteeUserId))
+            throw new ConflictException("They already answered this one.");
+
+        await _push.NotifyAsync(
+            inviteeUserId,
+            language => language switch
+            {
+                "ru" => ("Вас зовут снова 👋", $"{gig.Venue}: «{gig.Title}» {gig.Date:dd.MM}. Откройте подработки."),
+                "uk" => ("Вас кличуть знову 👋", $"{gig.Venue}: «{gig.Title}» {gig.Date:dd.MM}. Відкрийте підробітки."),
+                _ => ("Called back 👋", $"{gig.Venue}: “{gig.Title}” {gig.Date:dd.MM}. Open the gig board."),
+            },
+            "/gigs",
+            ct);
+    }
+
     // ==== Reviews: reputation earned one shift at a time ====
 
     /// <summary>

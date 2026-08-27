@@ -255,3 +255,25 @@ export const reviewApi = {
   send: (listingId: number, body: { target_user_id: number; rating: number; chips: string[]; text: string | null }) =>
     api<unknown>(`${GIGS}/${listingId}/reviews`, { body }),
 };
+
+
+// ==== Calling back somebody who already worked out ====
+
+export interface KnownWorker {
+  user_id: number;
+  name: string;
+  avatar_kind: string | null;
+  avatar_data: string | null;
+  times_worked: number;
+  last_worked: string;
+  rating: number | null;
+  rating_count: number;
+  phone: string | null;
+  telegram: string | null;
+}
+
+export const inviteApi = {
+  known: () => api<KnownWorker[]>(`${GIGS}/known-workers`),
+  invite: (listingId: number, userId: number) =>
+    api<void>(`${GIGS}/${listingId}/invite/${userId}`, { method: 'POST', body: {} }),
+};

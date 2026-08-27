@@ -13,6 +13,7 @@ import { keysBetween, shiftDays, todayKey, weekBounds } from '@/lib/calendar/cal
 import { stagger } from '@/lib/fx';
 import { useI18n } from '@/lib/i18n';
 import { pushToast } from '@/lib/toast';
+import { Sheet, buildXlsx, downloadBlob } from '@/lib/export/xlsx';
 import { useCalendar } from '@/lib/store/calendar';
 import { Alert } from '@/components/ui/bits';
 import { Icon } from '@/components/ui/icon';
@@ -173,6 +174,59 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
     }
   };
 
+  /**
+   * The timesheet accounting asks for on the first of the month: people down
+   * the side, days across, hours in the cells, totals on both edges. Built
+   * from the board that is already on screen, so it can never disagree with
+   * what the manager published.
+   */
+  const exportTimesheet = () => {
+    if (board === null) return;
+
+    const header = ['', ...days.map((day) => day.slice(8))];
+    const rows: (string | number)[][] = [[...header, 'Итого']];
+
+    for (const member of board.members) {
+      const cells = days.map((day) => {
+        const assignments = (byCell.get(`${member.user_id}:${day}`) ?? []).filter(
+          (entry) => entry.status !== 'declined',
+        );
+
+        return assignments.reduce((total, entry) => {
+          const [sh, sm] = entry.start.split(':').map(Number);
+          const [eh, em] = entry.end.split(':').map(Number);
+          let hours = eh + em / 60 - (sh + sm / 60);
+
+          if (hours < 0) hours += 24;
+
+          return total + hours;
+        }, 0);
+      });
+
+      rows.push([
+        member.display_name,
+        ...cells.map((hours) => (hours === 0 ? '' : Math.round(hours * 10) / 10)),
+        Math.round(cells.reduce((sum, hours) => sum + hours, 0) * 10) / 10,
+      ]);
+    }
+
+    // The column of daily totals: how many hands the venue bought each day.
+    rows.push([
+      'Всего',
+      ...days.map((_, index) =>
+        Math.round(
+          rows.slice(1).reduce((sum, row) => sum + (Number(row[index + 1]) || 0), 0) * 10,
+        ) / 10,
+      ),
+      Math.round(rows.slice(1).reduce((sum, row) => sum + (Number(row.at(-1)) || 0), 0) * 10) / 10,
+    ]);
+
+    const sheet: Sheet = { name: 'Табель', rows };
+
+    downloadBlob(`timesheet-${range.from}.xlsx`, buildXlsx([sheet]));
+    pushToast({ icon: '📄', title: t('Timesheet saved'), text: `${range.from} — ${range.to}` });
+  };
+
   const publish = async () => {
     setBusy(true);
 
@@ -238,6 +292,9 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
           )}
           <button type="button" className="btn btn-sm" disabled={busy} onClick={() => void copyLastWeek()}>
             {t('Repeat last week')}
+          </button>
+          <button type="button" className="btn btn-sm" disabled={board === null} onClick={exportTimesheet}>
+            📄 {t('Timesheet')}
           </button>
           <button type="button" className="btn btn-primary btn-sm" disabled={busy || drafts === 0} onClick={() => void publish()}>
             <Icon name="check" size={13} />

@@ -62,7 +62,13 @@ export default function RegisterPage() {
     setError(null);
 
     try {
-      await authApi.register({ ...form, last_name: form.last_name.trim() || null });
+      await authApi.register({
+        ...form,
+        last_name: form.last_name.trim() || null,
+        // The invite that brought them, if any: read at submit so a refresh
+        // on the way through the form cannot lose it.
+        referral: new URLSearchParams(window.location.search).get('ref'),
+      });
       router.replace('/dashboard');
     } catch (caught) {
       setError(apiErrorMessage(caught));

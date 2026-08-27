@@ -108,6 +108,39 @@ public class AvatarController : ControllerBase
         return Ok(new { email = user.Email });
     }
 
+    /// <summary>
+    /// This account's invite link, minted on first ask, plus how many people
+    /// have arrived through it. A referral is a thank-you, not a funnel: it
+    /// counts arrivals and nothing about them.
+    /// </summary>
+    [HttpGet("/shifter/v1/account/referral")]
+    public async Task<IActionResult> Referral(CancellationToken ct)
+    {
+        var user = await _db.Users.FirstOrDefaultAsync(row => row.Id == UserId(), ct)
+            ?? throw new NotFoundException("No such account.");
+
+        if (string.IsNullOrWhiteSpace(user.ReferralCode))
+        {
+            // Short enough to read out loud, long enough not to collide.
+            for (var attempt = 0; attempt < 5; attempt++)
+            {
+                var candidate = Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(4))
+                    .ToLowerInvariant();
+
+                if (await _db.Users.AnyAsync(row => row.ReferralCode == candidate, ct)) continue;
+
+                user.ReferralCode = candidate;
+                break;
+            }
+
+            await _db.SaveChangesAsync(ct);
+        }
+
+        var invited = await _db.Users.CountAsync(row => row.InvitedByUserId == user.Id, ct);
+
+        return Ok(new { code = user.ReferralCode, invited });
+    }
+
     [HttpPut("contacts")]
     public async Task<IActionResult> Contacts([FromBody] ContactsDto request, CancellationToken ct)
     {

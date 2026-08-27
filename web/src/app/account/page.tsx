@@ -9,6 +9,7 @@ import { useI18n } from '@/lib/i18n';
 import { useReveal } from '@/lib/fx';
 import { Shell } from '@/components/layout/shell';
 import { AvatarSection } from '@/components/account/avatar-section';
+import { ReferralSection } from '@/components/account/referral-section';
 import { GoogleButton } from '@/components/auth/google-button';
 import { Alert } from '@/components/ui/bits';
 import { Icon } from '@/components/ui/icon';
@@ -241,6 +242,8 @@ function Account() {
             email={profile.email}
             onChanged={() => void accountApi.get().then(setProfile).catch(() => undefined)}
           />
+
+          <ReferralSection />
 
           <FeedSection />
 

@@ -1,4 +1,6 @@
 using MediatR;
+
+using Microsoft.EntityFrameworkCore;
 using Shifter.Application.Common.Exceptions;
 using Shifter.Application.Features.Auth.DTOs;
 using Shifter.Application.Features.Auth.Services.Interfaces;
@@ -18,13 +20,17 @@ public class RegisterHandler : IRequestHandler<RegisterDto, AuthResponseDto>
         IAuthTokenIssuer issuer,
         IUserCommand userCommand,
         IUserQuery userQuery,
-        ILogger<RegisterHandler> logger)
+        ILogger<RegisterHandler> logger,
+        Shifter.Infrastructure.Persistence.DbContexts.ShifterDbContext? db = null)
     {
         _issuer = issuer;
         _userCommand = userCommand;
         _userQuery = userQuery;
         _logger = logger;
+        _db = db;
     }
+
+    private readonly Shifter.Infrastructure.Persistence.DbContexts.ShifterDbContext? _db;
     
     public async Task<AuthResponseDto> Handle(RegisterDto request, CancellationToken ct)
     {
@@ -64,6 +70,19 @@ public class RegisterHandler : IRequestHandler<RegisterDto, AuthResponseDto>
         if (await _userQuery.GetByLoginAsync(user.Login, ct) != null)
             throw new ConflictException("User with this login already exists.");
         
+        // An invite link only ever adds a link between two accounts; an
+        // unknown or self-referring code is dropped rather than refused,
+        // because nobody should fail to sign up over a mistyped URL.
+        if (_db is not null && !string.IsNullOrWhiteSpace(request.referral))
+        {
+            var code = request.referral.Trim().ToLowerInvariant();
+            var inviter = await _db.Users
+                .AsNoTracking()
+                .FirstOrDefaultAsync(row => row.ReferralCode == code, ct);
+
+            if (inviter is not null) user.InvitedByUserId = inviter.Id;
+        }
+
         if (! await _userCommand.AddAsync(user, ct))
             throw new ForbiddenException("Can`t add user.");
         

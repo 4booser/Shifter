@@ -42,6 +42,8 @@ export const authApi = {
     password: string;
     first_name: string;
     last_name: string | null;
+    /** Whoever's invite link brought them here; the server ignores unknown ones. */
+    referral?: string | null;
   }): Promise<void> {
     saveSession(await api<AuthResponse>(`${AUTH}/user/register`, { body: request }));
   },
@@ -121,6 +123,7 @@ export const passwordApi = {
 };
 
 export const accountApi = {
+  referral: () => api<{ code: string; invited: number }>('/shifter/v1/account/referral'),
   setEmail: (email: string | null) =>
     api<{ email: string | null }>('/shifter/v1/account/avatar/email', { method: 'PUT', body: { email } }),
   get: () => api<Profile>('/shifter/v1/account'),

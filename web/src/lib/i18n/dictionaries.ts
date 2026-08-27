@@ -5,6 +5,13 @@
 type Dictionary = Record<string, string>;
 
 export const RU: Dictionary = {
+  'Bring a colleague': 'Позовите коллегу',
+  'Your own link. Nothing about them ever reaches you — only the count.': 'Ваша личная ссылка. О пришедших вы не узнаете ничего, кроме их числа.',
+  'Nobody has come through it yet.': 'По ней пока никто не пришёл.',
+  'arrived through your link': 'пришли по вашей ссылке',
+  'Shifter counts my shifts and my money. Try it:': 'Shifter считает мои смены и деньги. Попробуй:',
+  'Timesheet': 'Табель',
+  'Timesheet saved': 'Табель сохранён',
   'Swaps': 'Обмены',
   'Offer a swap': 'Предложить обмен',
   'Nothing waiting. Offer a trade and it appears here for both of you.': 'Ничего не ждёт ответа. Предложите обмен — он появится здесь у обоих.',
@@ -1599,6 +1606,13 @@ export const RU: Dictionary = {
 };
 
 export const UK: Dictionary = {
+  'Bring a colleague': 'Покличте колегу',
+  'Your own link. Nothing about them ever reaches you — only the count.': 'Ваше особисте посилання. Про тих, хто прийшов, ви не дізнаєтесь нічого, крім їхньої кількості.',
+  'Nobody has come through it yet.': 'За ним поки ніхто не прийшов.',
+  'arrived through your link': 'прийшли за вашим посиланням',
+  'Shifter counts my shifts and my money. Try it:': 'Shifter рахує мої зміни та гроші. Спробуй:',
+  'Timesheet': 'Табель',
+  'Timesheet saved': 'Табель збережено',
   'Swaps': 'Обміни',
   'Offer a swap': 'Запропонувати обмін',
   'Nothing waiting. Offer a trade and it appears here for both of you.': 'Нічого не чекає відповіді. Запропонуйте обмін — він з’явиться тут в обох.',

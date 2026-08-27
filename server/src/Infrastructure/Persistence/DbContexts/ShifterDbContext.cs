@@ -80,6 +80,9 @@ public class ShifterDbContext : DbContext
             .IsUnique();
         modelBuilder.Entity<User>()
             .HasIndex(user => user.Email);
+        modelBuilder.Entity<User>()
+            .HasIndex(user => user.ReferralCode)
+            .IsUnique();
 
         // One verdict per author per target per listing; reputations are read by target.
         modelBuilder.Entity<GigReview>()

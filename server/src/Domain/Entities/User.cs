@@ -33,6 +33,15 @@ public sealed class User
     public string? FeedToken { get; set; }
 
     /// <summary>
+    /// The short code in this person's invite link. Minted on first use, so
+    /// accounts that never invite anybody carry nothing extra.
+    /// </summary>
+    public string? ReferralCode { get; set; }
+
+    /// <summary>Who brought them in; null for everyone who arrived on their own.</summary>
+    public int? InvitedByUserId { get; set; }
+
+    /// <summary>
     /// The address a lost password is recovered through. Optional and
     /// private: it is never shown to anyone else and never travels with a
     /// gig response — the contacts below do that job.

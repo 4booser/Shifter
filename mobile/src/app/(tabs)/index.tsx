@@ -17,7 +17,6 @@ import { api } from '@/lib/api';
 import { addMonths, currentMonth, monthBounds, monthCells, monthLabel, todayKey } from '@/lib/calendar';
 import { CalendarDayData, DaysResponse, money } from '@/lib/types';
 import { LiveShift, useLive } from '@/store/live';
-import { useSession } from '@/store/session';
 
 const WEEKDAYS = ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс'];
 
@@ -30,7 +29,6 @@ export default function CalendarScreen() {
   const palette = Colors[scheme === 'dark' ? 'dark' : 'light'];
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const signOut = useSession((state) => state.signOut);
   const live = useLive((state) => state.live);
   const startLive = useLive((state) => state.start);
   const hydrateLive = useLive((state) => state.hydrate);
@@ -106,8 +104,8 @@ export default function CalendarScreen() {
         <Pressable onPress={() => router.push('/import')} hitSlop={8}>
           <Ionicons name="camera-outline" size={22} color={palette.textSecondary} />
         </Pressable>
-        <Pressable onPress={signOut} hitSlop={8}>
-          <Ionicons name="log-out-outline" size={20} color={palette.textSecondary} />
+        <Pressable onPress={() => router.push('/settings')} hitSlop={8}>
+          <Ionicons name="settings-outline" size={21} color={palette.textSecondary} />
         </Pressable>
       </View>
 

@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useColorScheme } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 
+import { LockGate } from '@/components/lock-gate';
 import { registerForPush, wireNotificationTaps } from '@/lib/notifications';
 import { useSession } from '@/store/session';
 
@@ -36,7 +37,7 @@ export default function RootLayout() {
   if (session === undefined) return null;
 
   return (
-    <>
+    <LockGate>
       <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Protected guard={session !== null}>
@@ -44,11 +45,12 @@ export default function RootLayout() {
           <Stack.Screen name="day/[date]" options={{ presentation: 'modal' }} />
           <Stack.Screen name="live" options={{ presentation: 'fullScreenModal' }} />
           <Stack.Screen name="import" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="settings" options={{ presentation: 'modal' }} />
         </Stack.Protected>
         <Stack.Protected guard={session === null}>
           <Stack.Screen name="login" />
         </Stack.Protected>
       </Stack>
-    </>
+    </LockGate>
   );
 }

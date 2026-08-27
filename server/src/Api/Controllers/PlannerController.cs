@@ -59,6 +59,17 @@ public class PlannerController : ControllerBase
         int teamId, [FromQuery(Name = "week_start")] DateOnly weekStart, CancellationToken ct)
         => Ok(await _planner.CopyWeekAsync(teamId, UserId(), weekStart, ct));
 
+    [HttpGet("availability")]
+    public async Task<IActionResult> Availability(
+        int teamId, [FromQuery] DateOnly from, [FromQuery] DateOnly to, CancellationToken ct)
+        => Ok(await _planner.AvailabilityAsync(teamId, UserId(), from, to, ct));
+
+    /// <summary>Blocks a day, or lifts the block when it is already there.</summary>
+    [HttpPost("availability")]
+    public async Task<IActionResult> ToggleAvailability(
+        int teamId, [FromBody] AvailabilitySaveDto request, CancellationToken ct)
+        => Ok(await _planner.ToggleAvailabilityAsync(teamId, UserId(), request, ct));
+
     [HttpGet("mine")]
     public async Task<ActionResult<AssignmentDto[]>> Mine(int teamId, CancellationToken ct)
         => Ok(await _planner.MineAsync(teamId, UserId(), ct));

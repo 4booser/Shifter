@@ -34,6 +34,7 @@ public class ShifterDbContext : DbContext
     public DbSet<PasswordReset> PasswordResets => Set<PasswordReset>();
     public DbSet<ShiftSwap> ShiftSwaps => Set<ShiftSwap>();
     public DbSet<DailyBrief> DailyBriefs => Set<DailyBrief>();
+    public DbSet<Availability> Availabilities => Set<Availability>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -60,6 +61,13 @@ public class ShifterDbContext : DbContext
             .IsUnique();
         modelBuilder.Entity<GigSeeker>()
             .HasIndex(seeker => seeker.IsActive);
+
+        // One block per person per day per team; the board reads a range.
+        modelBuilder.Entity<Availability>()
+            .HasIndex(block => new { block.TeamId, block.UserId, block.Date })
+            .IsUnique();
+        modelBuilder.Entity<Availability>()
+            .HasIndex(block => new { block.TeamId, block.Date });
 
         // One brief per person per day.
         modelBuilder.Entity<DailyBrief>()

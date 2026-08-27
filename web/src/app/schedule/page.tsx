@@ -28,6 +28,7 @@ import { useI18n } from '@/lib/i18n';
 import { useReveal } from '@/lib/fx';
 import { Shell } from '@/components/layout/shell';
 import { SwapsPanel } from '@/components/team/swaps';
+import { AvailabilityStrip } from '@/components/team/availability';
 import { drawRotaCard } from '@/lib/export/rota-card';
 import { currentCardTheme } from '@/lib/export/share-card';
 import { downloadBlob } from '@/lib/export/xlsx';
@@ -349,6 +350,11 @@ function Schedule() {
 
       {mode === 'rota' && (
       <>
+      {/* ==== The days this person cannot work ==== */}
+      {selected !== null && (
+        <AvailabilityStrip teamId={selected} from={range.from} to={range.to} onChanged={refresh} />
+      )}
+
       {/* ==== Swaps: pending trades and the button that starts one ==== */}
       {selected !== null && rota !== null && rota.members.length > 1 && (
         <SwapsPanel teamId={selected} rota={rota} onChanged={refresh} />

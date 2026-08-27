@@ -172,11 +172,21 @@ export interface PlannerMember {
   is_manager: boolean;
 }
 
+export interface Blocked {
+  user_id: number;
+  date: string;
+  reason: string | null;
+  /** True on the caller's own blocks. */
+  mine: boolean;
+}
+
 export interface PlannerBoard {
   members: PlannerMember[];
   assignments: Assignment[];
   can_plan: boolean;
   can_grant: boolean;
+  /** Days the crew said they cannot work, inside the window. */
+  blocked: Blocked[];
 }
 
 export interface AssignmentSave {
@@ -211,6 +221,11 @@ export const plannerApi = {
     api<Assignment>(`${TEAMS}/${teamId}/planner/assignments/${id}/accept`, { body: { template_id } }),
   decline: (teamId: number, id: number) =>
     api<Assignment>(`${TEAMS}/${teamId}/planner/assignments/${id}/decline`, { method: 'POST', body: {} }),
+  availability: (teamId: number, from: string, to: string) =>
+    api<Blocked[]>(`${TEAMS}/${teamId}/planner/availability?from=${from}&to=${to}`),
+  /** Blocks a day, or lifts the block when it is already there. */
+  toggleAvailability: (teamId: number, date: string, reason: string | null) =>
+    api<Blocked[]>(`${TEAMS}/${teamId}/planner/availability`, { body: { date, reason } }),
   setManager: (teamId: number, userId: number, is_manager: boolean) =>
     api<void>(`${TEAMS}/${teamId}/planner/members/${userId}/manager`, { method: 'PUT', body: { is_manager } }),
 };

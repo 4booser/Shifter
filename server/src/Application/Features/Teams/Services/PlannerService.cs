@@ -93,7 +93,64 @@ public sealed class PlannerService
             members,
             rows.Select(entry => ToDto(entry, names)).ToArray(),
             plans,
-            team.OwnerUserId == userId);
+            team.OwnerUserId == userId,
+            // The blocked days ride along with the board: a manager should
+            // learn about a conflict while drafting, not after publishing.
+            await BlocksAsync(teamId, userId, from, to, ct));
+    }
+
+    // ==== Availability: the days people have said they cannot work ====
+
+    public async Task<AvailabilityDto[]> AvailabilityAsync(
+        int teamId, int userId, DateOnly from, DateOnly to, CancellationToken ct)
+    {
+        await MemberAsync(teamId, userId, ct);
+
+        return await BlocksAsync(teamId, userId, from, to, ct);
+    }
+
+    /// <summary>Blocking a day, or lifting the block by sending it again.</summary>
+    public async Task<AvailabilityDto[]> ToggleAvailabilityAsync(
+        int teamId, int userId, AvailabilitySaveDto request, CancellationToken ct)
+    {
+        await MemberAsync(teamId, userId, ct);
+
+        if (!DateOnly.TryParseExact(request.date, "yyyy-MM-dd", out var date))
+            throw new ValidationException("date must be yyyy-MM-dd.");
+
+        var existing = await _db.Availabilities
+            .FirstOrDefaultAsync(block => block.TeamId == teamId && block.UserId == userId && block.Date == date, ct);
+
+        if (existing is not null) _db.Availabilities.Remove(existing);
+        else
+            _db.Availabilities.Add(new Availability
+            {
+                TeamId = teamId,
+                UserId = userId,
+                Date = date,
+                Reason = PlannerRules.CleanTitle(request.reason) is { Length: > 0 } reason ? reason : null,
+            });
+
+        await _db.SaveChangesAsync(ct);
+
+        return await BlocksAsync(teamId, userId, date.AddDays(-31), date.AddDays(31), ct);
+    }
+
+    private async Task<AvailabilityDto[]> BlocksAsync(
+        int teamId, int userId, DateOnly from, DateOnly to, CancellationToken ct)
+    {
+        var blocks = await _db.Availabilities
+            .AsNoTracking()
+            .Where(block => block.TeamId == teamId && block.Date >= from && block.Date <= to)
+            .ToArrayAsync(ct);
+
+        return blocks
+            .Select(block => new AvailabilityDto(
+                block.UserId,
+                block.Date.ToString("yyyy-MM-dd"),
+                block.Reason,
+                block.UserId == userId))
+            .ToArray();
     }
 
     private static AssignmentDto ToDto(PlannedAssignment entry, IReadOnlyDictionary<int, string> names)

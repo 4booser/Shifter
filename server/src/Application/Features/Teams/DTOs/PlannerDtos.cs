@@ -38,11 +38,18 @@ public record PlannerBoardDto(
     /// <summary>Whether the caller may write to the board.</summary>
     bool can_plan,
     /// <summary>Whether the caller may hand the board to others (owner).</summary>
-    bool can_grant
+    bool can_grant,
+    /// <summary>Days the crew has blocked inside the window.</summary>
+    AvailabilityDto[] blocked
     );
 
 public record PublishResultDto(int published, int people);
 
 public record CopyWeekResultDto(int copied);
+
+/// <summary>A day somebody has blocked, as the board and the crew see it.</summary>
+public record AvailabilityDto(int user_id, string date, string? reason, bool mine);
+
+public record AvailabilitySaveDto(string? date, string? reason);
 
 public record AcceptAssignmentDto(int template_id);

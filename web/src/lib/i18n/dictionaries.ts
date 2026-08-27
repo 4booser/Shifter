@@ -5,6 +5,11 @@
 type Dictionary = Record<string, string>;
 
 export const RU: Dictionary = {
+  'Days I cannot work': 'Дни, когда я не могу',
+  'Mark days': 'Отметить дни',
+  'Tap the days you are not available. The manager sees them while planning.': 'Тапните дни, когда вас не будет. Менеджер увидит их прямо при планировании.',
+  'Nothing blocked in this window.': 'В этом окне ничего не отмечено.',
+  'Cannot work': 'Не может выйти',
   'Bring a colleague': 'Позовите коллегу',
   'Your own link. Nothing about them ever reaches you — only the count.': 'Ваша личная ссылка. О пришедших вы не узнаете ничего, кроме их числа.',
   'Nobody has come through it yet.': 'По ней пока никто не пришёл.',
@@ -1606,6 +1611,11 @@ export const RU: Dictionary = {
 };
 
 export const UK: Dictionary = {
+  'Days I cannot work': 'Дні, коли я не можу',
+  'Mark days': 'Позначити дні',
+  'Tap the days you are not available. The manager sees them while planning.': 'Тапніть дні, коли вас не буде. Менеджер побачить їх просто під час планування.',
+  'Nothing blocked in this window.': 'У цьому вікні нічого не позначено.',
+  'Cannot work': 'Не може вийти',
   'Bring a colleague': 'Покличте колегу',
   'Your own link. Nothing about them ever reaches you — only the count.': 'Ваше особисте посилання. Про тих, хто прийшов, ви не дізнаєтесь нічого, крім їхньої кількості.',
   'Nobody has come through it yet.': 'За ним поки ніхто не прийшов.',

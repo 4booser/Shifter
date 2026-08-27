@@ -89,6 +89,16 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
     return totals;
   }, [board]);
 
+  // member:date → the reason they cannot work it, so a draft can be argued
+  // with while it is still a draft.
+  const blocked = useMemo(() => {
+    const map = new Map<string, string | null>();
+
+    for (const block of board?.blocked ?? []) map.set(`${block.user_id}:${block.date}`, block.reason);
+
+    return map;
+  }, [board]);
+
   const drafts = (board?.assignments ?? []).filter((entry) => entry.status === 'draft').length;
   const declined = (board?.assignments ?? []).filter((entry) => entry.status === 'declined').length;
 
@@ -362,9 +372,21 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
                 </td>
                 {days.map((day) => {
                   const cell = byCell.get(`${member.user_id}:${day}`) ?? [];
+                  const away = blocked.has(`${member.user_id}:${day}`);
+                  const clash = away && cell.length > 0;
 
                   return (
-                    <td key={day} className="group h-14 min-w-24 p-1 align-top">
+                    <td
+                      key={day}
+                      title={away ? `${t('Cannot work')}${blocked.get(`${member.user_id}:${day}`) ? `: ${blocked.get(`${member.user_id}:${day}`)}` : ''}` : undefined}
+                      className={`group h-14 min-w-24 p-1 align-top ${
+                        clash
+                          ? 'bg-(--danger-soft)'
+                          : away
+                            ? 'bg-surface-2/70 [background-image:repeating-linear-gradient(45deg,transparent,transparent_5px,var(--border)_5px,var(--border)_6px)]'
+                            : ''
+                      }`}
+                    >
                       <span className="flex flex-col gap-1">
                         {cell.map((entry) => (
                           <button

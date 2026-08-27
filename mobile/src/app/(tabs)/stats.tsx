@@ -16,9 +16,30 @@ import { ClockRing, MoneyFlow, MonthBars } from '@/components/charts';
 import { Colors, Palette } from '@/constants/theme';
 import { api } from '@/lib/api';
 import { addMonths, currentMonth, monthBounds, monthLabel } from '@/lib/calendar';
-import { DaysResponse, money, moneyIn } from '@/lib/types';
+import { DaysResponse, money, moneyIn, plural } from '@/lib/types';
+
+/** Money and hours at one place, and what the journey does to them. */
+interface PlaceTotal {
+  location_id: number;
+  name: string;
+  colour: string;
+  hours: number;
+  earned: number;
+  days_worked: number;
+  tips: number;
+  per_hour: number;
+  currency: string;
+  /**
+   * Null where nobody has said how far the place is. An unstated commute is
+   * not a commute of zero, and printing "the same" would invent a comparison.
+   */
+  commute: { travel_hours: number; fares: number; per_hour_with_travel: number } | null;
+}
 
 interface Summary extends DaysResponse {
+  by_location?: PlaceTotal[];
+  /** Every currency the range touches. More than one means ₴ is a lie. */
+  currencies?: string[];
   tips_earned: number;
   sales_earned: number;
   period_earned: number;
@@ -51,6 +72,17 @@ export default function StatsScreen() {
   const [months, setMonths] = useState<{ label: string; value: number; current: boolean }[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  /**
+   * A place's hourly rate in the currency it is actually paid in. Where the
+   * range touches only one currency the app's own symbol is right and reads
+   * better; where it touches several, stamping ₴ on złoty is exactly the
+   * confident lie about money this app does not tell.
+   */
+  const rate = (place: { currency: string }, value: number) =>
+    (summary?.currencies ?? []).length > 1
+      ? moneyIn(place.currency === '' ? (summary?.conversion?.base_currency ?? 'UAH') : place.currency, value)
+      : money(value);
 
   const bounds =
     span === 'month'
@@ -209,6 +241,47 @@ export default function StatsScreen() {
         <Kpi palette={palette} label="Часов" value={`${Math.round(summary?.hours ?? 0)}`} />
       </View>
 
+      {/* Which hour is worth more — the question behind holding two jobs. */}
+      {(summary?.by_location ?? []).length >= 2 && (
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Места бок о бок</Text>
+
+          {[...(summary?.by_location ?? [])]
+            .sort(
+              (a, b) =>
+                (b.commute?.per_hour_with_travel ?? b.per_hour) -
+                (a.commute?.per_hour_with_travel ?? a.per_hour),
+            )
+            .map((place) => (
+              <View key={place.location_id} style={styles.placeRow}>
+                <View style={[styles.placeDot, { backgroundColor: place.colour }]} />
+                <View style={styles.grow}>
+                  <Text style={styles.placeName} numberOfLines={1}>
+                    {place.location_id === 0 ? 'Без места' : place.name}
+                  </Text>
+                  <Text style={styles.placeMeta}>
+                    {plural(place.days_worked, 'смена', 'смены', 'смен')} ·{' '}
+                    {Math.round(place.hours)} ч
+                    {place.commute !== null &&
+                      ` · +${Math.round(place.commute.travel_hours)} ч в пути`}
+                  </Text>
+                </View>
+                <View style={styles.placeMoney}>
+                  {/* The commute figure leads where there is one: it is the
+                      number that decides which job to keep. */}
+                  <Text style={styles.placeHour}>
+                    {rate(place, place.commute?.per_hour_with_travel ?? place.per_hour)}
+                    <Text style={styles.placeHourUnit}>/час</Text>
+                  </Text>
+                  {place.commute !== null && (
+                    <Text style={styles.placeWas}>без дороги {rate(place, place.per_hour)}</Text>
+                  )}
+                </View>
+              </View>
+            ))}
+        </View>
+      )}
+
       {summary?.conversion != null && (
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Всё в одной валюте</Text>
@@ -352,6 +425,15 @@ const makeStyles = (palette: Palette) =>
       gap: 10,
     },
     convertedTotal: { color: palette.good, fontSize: 24, fontWeight: '800', marginTop: 4 },
+    placeRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 10 },
+    placeDot: { width: 9, height: 9, borderRadius: 999 },
+    grow: { flex: 1, minWidth: 0 },
+    placeName: { color: palette.text, fontSize: 15, fontWeight: '600' },
+    placeMeta: { color: palette.textSecondary, fontSize: 12, marginTop: 2 },
+    placeMoney: { alignItems: 'flex-end' },
+    placeHour: { color: palette.text, fontSize: 16, fontWeight: '800' },
+    placeHourUnit: { color: palette.textSecondary, fontSize: 12, fontWeight: '600' },
+    placeWas: { color: palette.textSecondary, fontSize: 11, marginTop: 2 },
     convertRow: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 10, marginTop: 6 },
     convertPlace: { color: palette.textSecondary, fontSize: 13, flexShrink: 1 },
     convertCode: { color: palette.textSecondary, fontSize: 11 },

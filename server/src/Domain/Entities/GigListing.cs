@@ -117,6 +117,12 @@ public sealed class GigListing
     /// <summary>"hour" or "shift".</summary>
     public required string PayPeriod { get; set; }
 
+    /// <summary>
+    /// Percent of sales on top of (or instead of) the base — hospitality's
+    /// oldest sweetener. Null means the pay is the base alone.
+    /// </summary>
+    public decimal? PayPercent { get; set; }
+
     public required string City { get; set; }
 
     /// <summary>How many people this listing needs. Accepted responses count against it.</summary>

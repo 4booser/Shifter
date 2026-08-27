@@ -27,6 +27,7 @@ export interface Gig {
   end: string;
   pay_amount: number;
   pay_period: 'hour' | 'shift' | 'month';
+  pay_percent: number | null;
   city: string;
   slots: number;
   status: 'open' | 'filled' | 'closed';
@@ -51,6 +52,7 @@ export interface GigSave {
   end: string;
   pay_amount: number;
   pay_period: 'hour' | 'shift' | 'month';
+  pay_percent: number | null;
   city: string;
   slots: number;
 }

@@ -15,6 +15,7 @@ public record GigSaveDto(
     string? end,
     decimal pay_amount,
     string? pay_period,
+    decimal? pay_percent,
     string? city,
     int slots);
 
@@ -32,6 +33,7 @@ public record GigDto(
     string end,
     decimal pay_amount,
     string pay_period,
+    decimal? pay_percent,
     string city,
     int slots,
     string status,

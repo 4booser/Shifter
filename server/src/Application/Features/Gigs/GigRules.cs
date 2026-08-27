@@ -147,6 +147,29 @@ public static class GigRules
         return (from, to);
     }
 
+    /// <summary>
+    /// The pay is a base, a percent of sales, or both — but never neither.
+    /// Pure so the arithmetic of what a listing may promise is testable.
+    /// </summary>
+    public static decimal? ValidatePay(decimal amount, decimal? percent)
+    {
+        if (amount < 0)
+            throw new ValidationException("The base pay cannot be negative.");
+
+        if (percent is decimal value)
+        {
+            if (value is <= 0 or > 100)
+                throw new ValidationException("A percent lives between 0 and 100.");
+
+            return Math.Round(value, 1);
+        }
+
+        if (amount <= 0)
+            throw new ValidationException("Name a base pay, a percent of sales, or both.");
+
+        return null;
+    }
+
     /// <summary>The chip vocabulary, one set per direction; unknown chips are dropped, not stored.</summary>
     public static readonly string[] WorkerChips = ["punctual", "fast", "self-starter", "would-rehire"];
     public static readonly string[] EmployerChips = ["pays-on-time", "as-promised", "good-crew", "would-return"];

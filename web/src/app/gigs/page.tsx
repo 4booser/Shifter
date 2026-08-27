@@ -121,6 +121,7 @@ function Gigs() {
     end: '23:00',
     pay_amount: 0,
     pay_period: 'hour',
+    pay_percent: null,
     city: '',
     slots: 1,
   });
@@ -273,7 +274,7 @@ function Gigs() {
       {view === 'mine' && (
         <MyListings
           rows={mine}
-          onEdit={(gig) => setEditing({ id: gig.id, venue: gig.venue, category: gig.category, employment: gig.employment, photos: gig.photos, schedule: gig.schedule, title: gig.title, details: gig.details, date: gig.date, start: gig.start, end: gig.end, pay_amount: gig.pay_amount, pay_period: gig.pay_period, city: gig.city, slots: gig.slots })}
+          onEdit={(gig) => setEditing({ id: gig.id, venue: gig.venue, category: gig.category, employment: gig.employment, photos: gig.photos, schedule: gig.schedule, title: gig.title, details: gig.details, date: gig.date, start: gig.start, end: gig.end, pay_amount: gig.pay_amount, pay_period: gig.pay_period, pay_percent: gig.pay_percent, city: gig.city, slots: gig.slots })}
           onChanged={refresh}
           onError={setError}
         />
@@ -438,8 +439,10 @@ function GigCalendar({
 function payLine(format: (v: number) => string, t: (k: string) => string, gig: Gig) {
   const period =
     gig.pay_period === 'hour' ? t('per hour') : gig.pay_period === 'month' ? t('per month') : t('per shift');
+  const base = gig.pay_amount > 0 ? `${format(gig.pay_amount)} ${period}` : null;
+  const percent = gig.pay_percent !== null ? `${gig.pay_percent}% ${t('of sales')}` : null;
 
-  return `${format(gig.pay_amount)} ${period}`;
+  return [base, percent].filter((part) => part !== null).join(' + ');
 }
 
 function GigCard({ gig, onRespond, onWithdraw }: { gig: Gig; onRespond: () => void; onWithdraw: () => void }) {
@@ -823,28 +826,88 @@ function EditModal({
             <input type="time" className="field-input w-full" value={form.end} onChange={(event) => set('end', event.target.value)} />
           </label>
         </div>
-        <div className="grid grid-cols-3 gap-2">
-          <label>
-            <span className="field-label">{t('Pay')}</span>
-            <input type="number" inputMode="numeric" min={0} className="field-input w-full" value={form.pay_amount === 0 ? '' : form.pay_amount} placeholder="250" onChange={(event) => set('pay_amount', Number(event.target.value) || 0)} />
-          </label>
-          <label>
-            <span className="field-label">{t('Per')}</span>
-            <select className="field-input w-full" value={form.pay_period} onChange={(event) => set('pay_period', event.target.value as 'hour' | 'shift' | 'month')}>
-              <option value="hour">{t('hour')}</option>
-              <option value="shift">{t('shift')}</option>
-              {form.employment === 'permanent' && <option value="month">{t('month')}</option>}
-            </select>
-          </label>
-          <label>
-            <span className="field-label">{t('People')}</span>
-            <input type="number" min={1} max={20} className="field-input w-full" value={form.slots} onChange={(event) => set('slots', Math.max(1, Number(event.target.value) || 1))} />
-          </label>
+        <div className="rounded-(--radius) border border-border bg-surface-2/40 p-3">
+          <span className="field-label">{t('Pay — stack it how the venue really pays')}</span>
+          <div className="mt-1.5 grid grid-cols-[1fr_auto] gap-2">
+            <input
+              type="number"
+              inputMode="numeric"
+              min={0}
+              className="field-input w-full"
+              value={form.pay_amount === 0 ? '' : form.pay_amount}
+              placeholder={form.pay_percent !== null ? t('0 — percent only') : '250'}
+              onChange={(event) => set('pay_amount', Number(event.target.value) || 0)}
+            />
+            <Segmented
+              value={form.pay_period}
+              options={[
+                { value: 'hour' as const, label: t('per hour') },
+                { value: 'shift' as const, label: t('per shift') },
+                ...(form.employment === 'permanent' ? [{ value: 'month' as const, label: t('per month') }] : []),
+              ]}
+              onChange={(value) => set('pay_period', value)}
+            />
+          </div>
+
+          {form.pay_percent === null ? (
+            <button
+              type="button"
+              className="btn btn-quiet btn-sm mt-2"
+              onClick={() => set('pay_percent', 5)}
+            >
+              + {t('percent of sales')}
+            </button>
+          ) : (
+            <div className="mt-2.5">
+              <span className="field-hint flex items-center justify-between">
+                <span>{t('Percent of sales')}</span>
+                <span className="flex items-center gap-1.5">
+                  <b className="tabular text-ink">{form.pay_percent}%</b>
+                  <button
+                    type="button"
+                    aria-label={t('Remove')}
+                    className="grid h-5 w-5 place-items-center rounded-full bg-surface-2 text-[0.7rem] text-muted hover:text-danger"
+                    onClick={() => set('pay_percent', null)}
+                  >
+                    ×
+                  </button>
+                </span>
+              </span>
+              <input
+                type="range"
+                min={0.5}
+                max={30}
+                step={0.5}
+                className="w-full"
+                value={form.pay_percent}
+                onChange={(event) => set('pay_percent', Number(event.target.value))}
+              />
+            </div>
+          )}
+
+          {(form.pay_amount > 0 || form.pay_percent !== null) && (
+            <p className="mt-2 rounded-(--radius) bg-(--accent-soft) px-2.5 py-1.5 text-[0.85rem] font-semibold text-(--accent)">
+              {t('The card will say')}:{' '}
+              {[
+                form.pay_amount > 0
+                  ? `₴${form.pay_amount.toLocaleString('ru')} ${form.pay_period === 'hour' ? t('per hour') : form.pay_period === 'month' ? t('per month') : t('per shift')}`
+                  : null,
+                form.pay_percent !== null ? `${form.pay_percent}% ${t('of sales')}` : null,
+              ]
+                .filter(Boolean)
+                .join(' + ')}
+            </p>
+          )}
         </div>
+
+        <label>
+          <span className="field-label">{t('People')}</span>
+          <input type="number" min={1} max={20} className="field-input w-full" value={form.slots} onChange={(event) => set('slots', Math.max(1, Number(event.target.value) || 1))} />
+        </label>
         <button
           type="button"
           className="btn btn-primary w-full"
-          disabled={busy || shrinking || form.photos.length < 3 || form.title.trim() === '' || form.venue.trim() === '' || form.city.trim() === '' || form.pay_amount <= 0}
+          disabled={busy || shrinking || form.photos.length < 3 || form.title.trim() === '' || form.venue.trim() === '' || form.city.trim() === '' || (form.pay_amount <= 0 && form.pay_percent === null)}
           onClick={() => void save()}
         >
           {form.id === null ? t('Publish on the board') : t('Save')}

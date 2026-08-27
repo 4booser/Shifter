@@ -115,5 +115,17 @@ public class GigRulesTests
         Assert.Null(GigRules.CleanChips(["nonsense"], byEmployer: true));
         Assert.Null(GigRules.CleanChips(null, byEmployer: false));
     }
+
+    [Fact]
+    public void Pay_is_a_base_a_percent_or_both_but_never_neither()
+    {
+        Assert.Null(GigRules.ValidatePay(250, null));
+        Assert.Equal(5m, GigRules.ValidatePay(25_000, 5m));
+        Assert.Equal(7.5m, GigRules.ValidatePay(0, 7.46m));
+        Assert.Throws<ValidationException>(() => GigRules.ValidatePay(0, null));
+        Assert.Throws<ValidationException>(() => GigRules.ValidatePay(-1, 5m));
+        Assert.Throws<ValidationException>(() => GigRules.ValidatePay(100, 0m));
+        Assert.Throws<ValidationException>(() => GigRules.ValidatePay(100, 101m));
+    }
 }
 

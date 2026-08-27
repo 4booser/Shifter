@@ -87,8 +87,7 @@ public sealed class GigService
         if (!DateOnly.TryParseExact(request.date, "yyyy-MM-dd", out var date))
             throw new ValidationException("date must be yyyy-MM-dd.");
 
-        if (request.pay_amount <= 0)
-            throw new ValidationException("The pay has to be above zero.");
+        var percent = GigRules.ValidatePay(request.pay_amount, request.pay_percent);
 
         if (request.slots is < 1 or > GigListing.MaxSlots)
             throw new ValidationException($"Slots must be between 1 and {GigListing.MaxSlots}.");
@@ -123,6 +122,7 @@ public sealed class GigService
         gig.EndTime = end;
         gig.PayAmount = request.pay_amount;
         gig.PayPeriod = period;
+        gig.PayPercent = percent;
         gig.Employment = employment;
         gig.PhotosJson = photosJson;
         gig.Schedule = schedule;
@@ -655,6 +655,7 @@ public sealed class GigService
             gig.EndTime.ToString("HH:mm"),
             gig.PayAmount,
             gig.PayPeriod,
+            gig.PayPercent,
             gig.City,
             gig.Slots,
             gig.Status switch { GigStatus.Open => "open", GigStatus.Filled => "filled", _ => "closed" },

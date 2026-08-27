@@ -5,6 +5,12 @@
 type Dictionary = Record<string, string>;
 
 export const RU: Dictionary = {
+  'of sales': 'с продаж',
+  'percent of sales': 'процент с продаж',
+  'Percent of sales': 'Процент с продаж',
+  'Pay — stack it how the venue really pays': 'Оплата — соберите как платят на самом деле',
+  '0 — percent only': '0 — только процент',
+  'The card will say': 'В объявлении будет',
   'A shift happened — rate it.': 'Смена состоялась — оцените её.',
   'How was': 'Как вам',
   'How was working at': 'Каково было работать в',
@@ -1528,6 +1534,12 @@ export const RU: Dictionary = {
 };
 
 export const UK: Dictionary = {
+  'of sales': 'з продажів',
+  'percent of sales': 'відсоток з продажів',
+  'Percent of sales': 'Відсоток з продажів',
+  'Pay — stack it how the venue really pays': 'Оплата — зберіть як платять насправді',
+  '0 — percent only': '0 — тільки відсоток',
+  'The card will say': 'В оголошенні буде',
   'A shift happened — rate it.': 'Зміна відбулася — оцініть її.',
   'How was': 'Як вам',
   'How was working at': 'Як було працювати в',

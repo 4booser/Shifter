@@ -13,6 +13,9 @@ export interface ShiftTemplate {
   revenue_percent: number | null;
   tip_source: 'personal' | 'pool';
   tip_pool_percent: number | null;
+  /** Unpaid minutes inside the shift; already taken off hours. */
+  break_minutes: number;
+  location_id: number | null;
   archived: boolean;
 }
 

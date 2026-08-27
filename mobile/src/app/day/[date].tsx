@@ -180,7 +180,10 @@ export default function DayScreen() {
           <>
             <Text style={styles.section}>Смены</Text>
             {templates.length === 0 && (
-              <Text style={styles.hintText}>Шаблонов пока нет — заведите смену на сайте, и она появится здесь.</Text>
+              <Pressable style={styles.makeFirst} onPress={() => router.push('/templates')}>
+                <Ionicons name="add-circle-outline" size={18} color={palette.accent} />
+                <Text style={styles.makeFirstText}>Заведите первую смену</Text>
+              </Pressable>
             )}
             <View style={styles.templateWrap}>
               {templates.map((template) => (
@@ -306,6 +309,18 @@ const makeStyles = (palette: Palette) =>
     error: { color: palette.danger },
     section: { fontSize: 15, fontWeight: '800', color: palette.text, marginTop: 6 },
     hintText: { color: palette.textSecondary },
+    makeFirst: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      borderColor: palette.accent,
+      borderWidth: 1,
+      backgroundColor: palette.accentSoft,
+      borderRadius: 999,
+      paddingVertical: 12,
+    },
+    makeFirstText: { color: palette.accent, fontSize: 14, fontWeight: '700' },
     templateWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
     template: {
       flexDirection: 'row',

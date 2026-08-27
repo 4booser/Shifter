@@ -48,6 +48,7 @@ export default function RootLayout() {
           <Stack.Screen name="settings" options={{ presentation: 'modal' }} />
           <Stack.Screen name="assistant" options={{ presentation: 'modal' }} />
           <Stack.Screen name="year" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="templates" options={{ presentation: 'modal' }} />
         </Stack.Protected>
         <Stack.Protected guard={session === null}>
           <Stack.Screen name="login" />

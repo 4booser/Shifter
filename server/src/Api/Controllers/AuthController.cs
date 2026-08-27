@@ -23,9 +23,44 @@ namespace Shifter.Api.Controllers;
 public class AuthController : Controller
 {
     private readonly IMediator _mediator;
+    private readonly Shifter.Application.Features.Auth.Services.PasswordResetService _resets;
+    private readonly IWebHostEnvironment _environment;
 
-    public AuthController(IMediator mediator)
-        => _mediator = mediator;
+    public AuthController(
+        IMediator mediator,
+        Shifter.Application.Features.Auth.Services.PasswordResetService resets,
+        IWebHostEnvironment environment)
+    {
+        _mediator = mediator;
+        _resets = resets;
+        _environment = environment;
+    }
+
+    /// <summary>
+    /// Always 202, known address or not: an endpoint that says "no such
+    /// account" is an endpoint that enumerates accounts. In development the
+    /// token comes back in the body so the flow can be exercised without a
+    /// mail provider; in production it lives only in the letter.
+    /// </summary>
+    [HttpPost]
+    [AllowAnonymous]
+    [Route("password/forgot")]
+    public async Task<IActionResult> Forgot([FromBody] ForgotBody request, CancellationToken ct)
+    {
+        var token = await _resets.RequestAsync(request.email, _environment.IsDevelopment(), ct);
+
+        return Accepted(token is null ? new { } : new { dev_token = token } as object);
+    }
+
+    [HttpPost]
+    [AllowAnonymous]
+    [Route("password/reset")]
+    public async Task<IActionResult> Reset([FromBody] ResetBody request, CancellationToken ct)
+    {
+        await _resets.RedeemAsync(request.token, request.password, ct);
+
+        return NoContent();
+    }
 
     [HttpPost]
     [AllowAnonymous]
@@ -246,3 +281,7 @@ public class AuthController : Controller
         return Ok(new { id = userId, login });
     }
 }
+
+public record ForgotBody(string? email);
+
+public record ResetBody(string? token, string? password);

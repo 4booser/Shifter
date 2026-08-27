@@ -32,6 +32,13 @@ public sealed class User
     /// </summary>
     public string? FeedToken { get; set; }
 
+    /// <summary>
+    /// The address a lost password is recovered through. Optional and
+    /// private: it is never shown to anyone else and never travels with a
+    /// gig response — the contacts below do that job.
+    /// </summary>
+    public string? Email { get; set; }
+
     // ==== Reachability, shared only through an explicit gig response ====
 
     public string? ContactPhone { get; set; }

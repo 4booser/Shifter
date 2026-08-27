@@ -31,6 +31,7 @@ public class ShifterDbContext : DbContext
     public DbSet<GigResponse> GigResponses => Set<GigResponse>();
     public DbSet<GigSeeker> GigSeekers => Set<GigSeeker>();
     public DbSet<GigReview> GigReviews => Set<GigReview>();
+    public DbSet<PasswordReset> PasswordResets => Set<PasswordReset>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -57,6 +58,13 @@ public class ShifterDbContext : DbContext
             .IsUnique();
         modelBuilder.Entity<GigSeeker>()
             .HasIndex(seeker => seeker.IsActive);
+
+        // A reset is looked up by its hash, and an address by itself.
+        modelBuilder.Entity<PasswordReset>()
+            .HasIndex(reset => reset.TokenHash)
+            .IsUnique();
+        modelBuilder.Entity<User>()
+            .HasIndex(user => user.Email);
 
         // One verdict per author per target per listing; reputations are read by target.
         modelBuilder.Entity<GigReview>()

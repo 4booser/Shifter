@@ -19,7 +19,8 @@ public record ProfileDto(
     string? avatar_kind,
     string? avatar_data,
     string? contact_phone,
-    string? contact_telegram);
+    string? contact_telegram,
+    string? email);
 
 public record GetProfileDto(int UserId) : IRequest<ProfileDto>;
 

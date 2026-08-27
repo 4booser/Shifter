@@ -11,6 +11,7 @@ export interface CurrentUser {
 
 /** Mirrors ProfileDto. */
 export interface Profile {
+  email: string | null;
   avatar_kind: string | null;
   avatar_data: string | null;
   contact_phone: string | null;
@@ -111,7 +112,17 @@ export const authApi = {
   },
 };
 
+export const passwordApi = {
+  /** Always resolves: the server refuses to say whether the address is known. */
+  forgot: (email: string) =>
+    api<{ dev_token?: string }>('/shifter/v1/auth/password/forgot', { body: { email } }),
+  reset: (token: string, password: string) =>
+    api<void>('/shifter/v1/auth/password/reset', { body: { token, password } }),
+};
+
 export const accountApi = {
+  setEmail: (email: string | null) =>
+    api<{ email: string | null }>('/shifter/v1/account/avatar/email', { method: 'PUT', body: { email } }),
   get: () => api<Profile>('/shifter/v1/account'),
   update: (first_name: string, last_name: string | null) =>
     api<Profile>('/shifter/v1/account', { method: 'PUT', body: { first_name, last_name } }),

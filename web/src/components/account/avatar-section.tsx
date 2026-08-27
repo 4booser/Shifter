@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { api, apiErrorMessage } from '@/lib/api/http';
+import { accountApi } from '@/lib/api/auth';
 import { calendarApi } from '@/lib/api/calendar';
 import { keyOf, todayKey } from '@/lib/calendar/calendar-date';
 import { MEMBER_COLOURS } from '@/lib/api/team';
@@ -23,11 +24,13 @@ export function AvatarSection({
   name,
   kind,
   data,
+  email,
   onChanged,
 }: {
   name: string;
   kind: string | null;
   data: string | null;
+  email: string | null;
   onChanged: () => void;
 }) {
   const { t } = useI18n();
@@ -124,6 +127,8 @@ export function AvatarSection({
 
       {error !== null && <Alert onDismiss={() => setError(null)}>{error}</Alert>}
 
+      <EmailRow email={email} onSaved={onChanged} />
+
       <div className="grid gap-3 sm:grid-cols-3">
         <div className="rounded-(--radius) border border-border p-3">
           <p className="mb-2 text-[0.85rem] font-semibold">{t('A photo')}</p>
@@ -188,5 +193,58 @@ export function AvatarSection({
         </div>
       </div>
     </section>
+  );
+}
+
+/**
+ * The recovery address, the only thing standing between a forgotten
+ * password and a lost account. Private: it never travels with a gig reply.
+ */
+function EmailRow({ email, onSaved }: { email: string | null; onSaved: () => void }) {
+  const { t } = useI18n();
+  const [value, setValue] = useState(email ?? '');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const changed = value.trim().toLowerCase() !== (email ?? '');
+
+  const save = () => {
+    setBusy(true);
+    setError(null);
+
+    void accountApi
+      .setEmail(value.trim() === '' ? null : value.trim())
+      .then(() => {
+        onSaved();
+        pushToast({ icon: '✉️', title: t('Saved') });
+      })
+      .catch((caught) => setError(apiErrorMessage(caught)))
+      .finally(() => setBusy(false));
+  };
+
+  return (
+    <div className="mb-3 rounded-(--radius) border border-border p-3">
+      <span className="field-label">{t('Email for password recovery')}</span>
+      <div className="mt-1 flex flex-wrap gap-2">
+        <input
+          type="email"
+          inputMode="email"
+          autoCapitalize="none"
+          className="field-input min-w-48 flex-1"
+          placeholder="you@example.com"
+          value={value}
+          onChange={(event) => setValue(event.target.value)}
+        />
+        <button type="button" className="btn" disabled={busy || !changed} onClick={save}>
+          {t('Save')}
+        </button>
+      </div>
+      {error !== null && <p className="mt-1 text-[0.85rem] text-danger">{error}</p>}
+      <p className="field-hint mt-1">
+        {email === null
+          ? t('Without it a forgotten password cannot be recovered. Nobody else ever sees this address.')
+          : t('Nobody else ever sees this address — it is only for recovery letters.')}
+      </p>
+    </div>
   );
 }

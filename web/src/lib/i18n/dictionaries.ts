@@ -5,6 +5,19 @@
 type Dictionary = Record<string, string>;
 
 export const RU: Dictionary = {
+  'Forgot the password?': 'Забыли пароль?',
+  'Enter the address from your account and we will send a link.': 'Введите адрес из аккаунта — пришлём ссылку.',
+  'Send the link': 'Прислать ссылку',
+  'Check the letter': 'Проверьте почту',
+  'If that address belongs to an account, a link is on its way. It lives an hour and works once.': 'Если такой адрес есть в аккаунте, ссылка уже летит. Она живёт час и срабатывает один раз.',
+  'Back to sign in': 'Вернуться ко входу',
+  'At least 8 characters. The link works once.': 'Минимум 8 символов. Ссылка одноразовая.',
+  'Save the password': 'Сохранить пароль',
+  'Password changed': 'Пароль изменён',
+  'Sign in with the new one.': 'Войдите с новым.',
+  'Email for password recovery': 'Почта для восстановления пароля',
+  'Without it a forgotten password cannot be recovered. Nobody else ever sees this address.': 'Без неё забытый пароль не восстановить. Этот адрес не видит никто, кроме вас.',
+  'Nobody else ever sees this address — it is only for recovery letters.': 'Этот адрес не видит никто, кроме вас, — он только для писем восстановления.',
   'Copy a link for the work chat': 'Ссылка для рабочего чата',
   'copied': 'скопировано',
   'Call somebody back': 'Позвать снова',
@@ -1543,6 +1556,19 @@ export const RU: Dictionary = {
 };
 
 export const UK: Dictionary = {
+  'Forgot the password?': 'Забули пароль?',
+  'Enter the address from your account and we will send a link.': 'Введіть адресу з акаунта — надішлемо посилання.',
+  'Send the link': 'Надіслати посилання',
+  'Check the letter': 'Перевірте пошту',
+  'If that address belongs to an account, a link is on its way. It lives an hour and works once.': 'Якщо така адреса є в акаунті, посилання вже летить. Воно живе годину й спрацьовує один раз.',
+  'Back to sign in': 'Повернутися до входу',
+  'At least 8 characters. The link works once.': 'Мінімум 8 символів. Посилання одноразове.',
+  'Save the password': 'Зберегти пароль',
+  'Password changed': 'Пароль змінено',
+  'Sign in with the new one.': 'Увійдіть із новим.',
+  'Email for password recovery': 'Пошта для відновлення пароля',
+  'Without it a forgotten password cannot be recovered. Nobody else ever sees this address.': 'Без неї забутий пароль не відновити. Цю адресу не бачить ніхто, крім вас.',
+  'Nobody else ever sees this address — it is only for recovery letters.': 'Цю адресу не бачить ніхто, крім вас, — вона лише для листів відновлення.',
   'Copy a link for the work chat': 'Посилання для робочого чату',
   'copied': 'скопійовано',
   'Call somebody back': 'Покликати знову',

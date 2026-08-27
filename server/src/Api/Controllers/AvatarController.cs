@@ -74,6 +74,40 @@ public class AvatarController : ControllerBase
         return Ok(new { kind = user.AvatarKind, data = user.AvatarData });
     }
 
+    /// <summary>
+    /// The recovery address. Stored lowercase, unverified on purpose: a
+    /// wrong address simply never receives a reset, and demanding a
+    /// verification round-trip before the person has lost anything is a
+    /// tax on people who are just filling in a profile.
+    /// </summary>
+    [HttpPut("email")]
+    public async Task<IActionResult> Email([FromBody] EmailDto request, CancellationToken ct)
+    {
+        var user = await _db.Users.FirstOrDefaultAsync(row => row.Id == UserId(), ct)
+            ?? throw new NotFoundException("No such account.");
+
+        var address = request.email?.Trim().ToLowerInvariant();
+
+        if (string.IsNullOrEmpty(address))
+        {
+            user.Email = null;
+        }
+        else
+        {
+            if (address.Length > 120 || !System.Text.RegularExpressions.Regex.IsMatch(address, @"^[^@\s]+@[^@\s.]+\.[^@\s]+$"))
+                throw new ValidationException("That does not look like an email address.");
+
+            if (await _db.Users.AnyAsync(row => row.Email == address && row.Id != user.Id, ct))
+                throw new ConflictException("Another account already uses that address.");
+
+            user.Email = address;
+        }
+
+        await _db.SaveChangesAsync(ct);
+
+        return Ok(new { email = user.Email });
+    }
+
     [HttpPut("contacts")]
     public async Task<IActionResult> Contacts([FromBody] ContactsDto request, CancellationToken ct)
     {
@@ -110,3 +144,4 @@ public class AvatarController : ControllerBase
 
 public record AvatarDto(string? kind, string? data);
 public record ContactsDto(string? phone, string? telegram);
+public record EmailDto(string? email);

@@ -30,7 +30,8 @@ public static class AccountRules
         user.AvatarKind,
         user.AvatarData,
         user.ContactPhone,
-        user.ContactTelegram);
+        user.ContactTelegram,
+        user.Email);
 
     public static string RequireName(string? value, string field)
     {

@@ -238,6 +238,7 @@ function Account() {
             name={`${profile.first_name} ${profile.last_name ?? ''}`}
             kind={profile.avatar_kind}
             data={profile.avatar_data}
+            email={profile.email}
             onChanged={() => void accountApi.get().then(setProfile).catch(() => undefined)}
           />
 

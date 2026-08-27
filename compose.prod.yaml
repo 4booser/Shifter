@@ -49,6 +49,10 @@ services:
       Push__PrivateKey: ${VAPID_PRIVATE_KEY:-}
       Import__ApiKey: ${ANTHROPIC_API_KEY:-}
       Telegram__BotToken: ${TELEGRAM_BOT_TOKEN:-}
+      # Transactional mail (password recovery). No key, no letters, no crash.
+      Mail__ApiKey: ${RESEND_API_KEY:-}
+      Mail__From: ${MAIL_FROM:-Shifter <no-reply@shifter.ink>}
+      Mail__Origin: https://www.shifter.ink
       Telegram__BotName: ${TELEGRAM_BOT_NAME:-}
       # No Google__ClientId here on purpose. It would be set even when the
       # variable is unset, and an empty environment variable overrides

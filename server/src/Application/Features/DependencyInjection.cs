@@ -102,6 +102,10 @@ public static class DependencyInjection
         services.AddScoped<Shifter.Application.Features.business.Services.DayAuditWriter>();
         services.AddScoped<Shifter.Application.Features.business.Services.GoalCelebrator>();
         services.AddScoped<Shifter.Application.Features.Gigs.GigService>();
+        services.Configure<Shifter.Application.Features.Mail.MailOptions>(
+            configuration.GetSection(Shifter.Application.Features.Mail.MailOptions.Section));
+        services.AddScoped<Shifter.Application.Features.Mail.MailSender>();
+        services.AddScoped<Shifter.Application.Features.Auth.Services.PasswordResetService>();
         services.AddHostedService<PushScheduler>();
         services.AddSingleton<IHasher, Hasher>();
         services.AddScoped<IAuthTokenIssuer, AuthTokenIssuer>();

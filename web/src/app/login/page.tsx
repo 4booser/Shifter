@@ -148,6 +148,11 @@ function LoginForm() {
             {t('Create one')}
           </Link>
         </p>
+        <p className="text-center text-[0.82rem]">
+          <Link href="/reset" className="text-muted hover:text-(--accent) hover:underline">
+            {t('Forgot the password?')}
+          </Link>
+        </p>
       </form>
       )}
     </AuthCard>

@@ -38,6 +38,37 @@ describe('waterfall', () => {
   it('is empty on an empty period', () => {
     expect(waterfall(EMPTY_SUMMARY)).toEqual([]);
   });
+
+  it('splits the percentage out of the shifts it was counted inside', () => {
+    const steps = waterfall({
+      ...summary,
+      shifts_earned: 10_000,
+      revenue_earned: 2_500,
+      revenue_counted: 50_000,
+    });
+
+    expect(steps.find((step) => step.key === 'Shifts')?.value).toBe(7_500);
+    expect(steps.find((step) => step.key === 'Percentage')?.value).toBe(2_500);
+  });
+
+  it('counts the premiums that used to be left out of the bar', () => {
+    const steps = waterfall({
+      ...summary,
+      premium_earned: 1_600,
+      overtime_earned: 400,
+      total_earned: 13_500,
+    });
+
+    // Only the steps before the first landing: tax hangs off it afterwards.
+    const earned = steps.findIndex((step) => step.kind === 'total');
+    const walked = steps
+      .slice(0, earned)
+      .reduce((sum, step) => sum + (step.kind === 'plus' ? step.value : -step.value), 0);
+
+    // What the pieces add up to is what the total says.
+    expect(walked).toBe(13_500);
+    expect(steps[earned]).toMatchObject({ key: 'Earned', value: 13_500 });
+  });
 });
 
 describe('punchcard', () => {

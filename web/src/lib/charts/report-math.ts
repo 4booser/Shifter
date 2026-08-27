@@ -38,7 +38,17 @@ export function waterfall(summary: DaysResponse): WaterfallStep[] {
     steps.push({ key, value, kind, from: Math.min(from, running), to: Math.max(from, running) });
   };
 
-  if (summary.shifts_earned > 0) push('Shifts', summary.shifts_earned, 'plus');
+  // The percentage comes out of the shifts figure it already sits inside, so
+  // the two together are still exactly what the shifts earned.
+  const rate = summary.shifts_earned - summary.revenue_earned;
+
+  if (rate > 0) push('Shifts', rate, 'plus');
+  if (summary.revenue_earned > 0) push('Percentage', summary.revenue_earned, 'plus');
+
+  // Overtime and premiums are paid on top of the base and were missing here,
+  // which left the pieces adding up to less than the total they landed on.
+  if (summary.overtime_earned > 0) push('Overtime', summary.overtime_earned, 'plus');
+  if (summary.premium_earned > 0) push('Premiums', summary.premium_earned, 'plus');
   if (summary.period_earned > 0) push('Wages', summary.period_earned, 'plus');
   if (summary.sales_earned > 0) push('Sales', summary.sales_earned, 'plus');
   if (summary.tips_earned > 0) push('Tips', summary.tips_earned, 'plus');

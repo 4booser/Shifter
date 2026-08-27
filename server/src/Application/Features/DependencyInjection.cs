@@ -99,6 +99,7 @@ public static class DependencyInjection
         services.AddHostedService(provider =>
             provider.GetRequiredService<Shifter.Application.Features.Telegram.TelegramBotService>());
         services.AddScoped<Shifter.Application.Features.Teams.Services.PlannerService>();
+        services.AddScoped<Shifter.Application.Features.Teams.Services.SwapService>();
         services.AddScoped<Shifter.Application.Features.business.Services.DayAuditWriter>();
         services.AddScoped<Shifter.Application.Features.business.Services.GoalCelebrator>();
         services.AddScoped<Shifter.Application.Features.Gigs.GigService>();

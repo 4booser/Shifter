@@ -32,6 +32,7 @@ public class ShifterDbContext : DbContext
     public DbSet<GigSeeker> GigSeekers => Set<GigSeeker>();
     public DbSet<GigReview> GigReviews => Set<GigReview>();
     public DbSet<PasswordReset> PasswordResets => Set<PasswordReset>();
+    public DbSet<ShiftSwap> ShiftSwaps => Set<ShiftSwap>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -58,6 +59,14 @@ public class ShifterDbContext : DbContext
             .IsUnique();
         modelBuilder.Entity<GigSeeker>()
             .HasIndex(seeker => seeker.IsActive);
+
+        // Both sides read their own pending swaps.
+        modelBuilder.Entity<ShiftSwap>()
+            .HasIndex(swap => new { swap.TeamId, swap.Status });
+        modelBuilder.Entity<ShiftSwap>()
+            .HasIndex(swap => swap.TargetUserId);
+        modelBuilder.Entity<ShiftSwap>()
+            .HasIndex(swap => swap.ProposerUserId);
 
         // A reset is looked up by its hash, and an address by itself.
         modelBuilder.Entity<PasswordReset>()

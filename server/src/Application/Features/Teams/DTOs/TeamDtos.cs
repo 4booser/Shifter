@@ -183,3 +183,24 @@ public record MembershipBody(
     bool? private_by_default);
 
 public record VisibilityBody(bool? visible);
+
+/// <summary>One proposed trade, from the caller's point of view.</summary>
+public record SwapDto(
+    int id,
+    bool mine,
+    string proposer_name,
+    string target_name,
+    string proposer_date,
+    string proposer_shift,
+    string proposer_start,
+    string proposer_end,
+    string target_date,
+    string target_shift,
+    string target_start,
+    string target_end,
+    string? note,
+    string status,
+    string created_at);
+
+public record SwapProposeDto(int my_day_shift_id, int their_day_shift_id, string? note);
+

@@ -18,7 +18,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Colors, Palette } from '@/constants/theme';
 import { api } from '@/lib/api';
+import { todayKey } from '@/lib/calendar';
 import {
+  blankDay,
   CalendarDayData,
   DaysResponse,
   DEDUCTION_REASONS,
@@ -56,7 +58,9 @@ export default function DayScreen() {
       api<ShiftTemplate[]>('/shifter/v1/shifts'),
     ])
       .then(([summary, shifts]) => {
-        const loaded = summary.days[0];
+        // The server only returns days it has: an untouched date comes back
+        // as an empty list, not as a blank day.
+        const loaded = summary.days[0] ?? blankDay(date);
 
         setDay(loaded);
         setTemplates(shifts.filter((template) => !template.archived));
@@ -102,7 +106,10 @@ export default function DayScreen() {
           colour: template.colour,
           start_time: template.start_time,
           end_time: template.end_time,
-          worked: date <= new Date().toISOString().slice(0, 10),
+          // Local, not UTC: at half past midnight in Kyiv the UTC date is still
+          // yesterday, so a bartender who had just closed added their shift as
+          // a plan and the night's money was missing from the month.
+          worked: date <= todayKey(),
           needs_cover: false,
           actual_start: null,
           actual_end: null,
@@ -161,6 +168,10 @@ export default function DayScreen() {
       const payload = toSavePayload(day);
 
       payload.tips = tips.trim() === '' ? null : Number(tips) || 0;
+      // Same clamp again: the total has just been retyped, and the cash half
+      // the phone cannot show must not be left larger than it.
+      payload.tips_cash =
+        payload.tips_cash == null ? null : Math.min(payload.tips_cash, payload.tips ?? 0);
       payload.tip_pool = tipPool.trim() === '' ? null : Number(tipPool) || 0;
       payload.deductions = deductions.trim() === '' ? null : Number(deductions) || 0;
       // A reason without a fine is noise; the server drops it too.

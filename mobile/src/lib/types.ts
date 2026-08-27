@@ -61,6 +61,12 @@ export interface DayShiftEntry {
 export interface CalendarDayData {
   date: string;
   shifts: DayShiftEntry[];
+  /**
+   * The positions sold that day. The phone does not let anybody edit these
+   * yet, but it has to carry them back: a save replaces the day whole, so
+   * sending an empty list deleted them and the commission with them.
+   */
+  sales?: { sales_id: number; quantity: number }[];
   tips: number | null;
   tips_cash: number | null;
   /** What the room took before the split, where the tips are pooled. */
@@ -154,6 +160,30 @@ export const DEDUCTION_REASONS: { value: DeductionReason; label: string }[] = [
   { value: 'other', label: 'Другое' },
 ];
 
+/**
+ * A day the server has never heard of.
+ *
+ * Only days that exist come back from the range query, so tapping any empty
+ * cell handed the day screen `undefined` — it printed "День не загрузился",
+ * kept the template palette on screen, and then crashed on the first tap.
+ * That is the first thing anybody does with a new account.
+ */
+export const blankDay = (date: string): CalendarDayData => ({
+  date,
+  shifts: [],
+  sales: [],
+  tips: null,
+  tips_cash: null,
+  tip_pool: null,
+  deductions: 0,
+  deduction_reason: null,
+  note: null,
+  colour: null,
+  hours: 0,
+  earned: 0,
+  planned: 0,
+});
+
 export const toSavePayload = (day: CalendarDayData | undefined): DaySave => ({
   shifts: (day?.shifts ?? []).map((entry) => ({
     shift_id: entry.shift_id,
@@ -164,9 +194,21 @@ export const toSavePayload = (day: CalendarDayData | undefined): DaySave => ({
     break_minutes: entry.break_minutes,
     revenue: entry.revenue,
   })),
-  sales: [],
+  // Carried through untouched. Sending [] here wiped every position recorded
+  // on the web, along with its commission, on any save from the phone —
+  // including finishing a shift and adding a gig to the calendar.
+  sales: (day?.sales ?? []).map((entry) => ({
+    sales_id: entry.sales_id,
+    quantity: entry.quantity,
+  })),
   tips: day?.tips ?? null,
-  tips_cash: day?.tips_cash ?? null,
+  // Clamped rather than carried: the phone has no field for the cash half, so
+  // lowering the total on the phone used to be refused outright by the server
+  // — with an English error, and nothing on the phone could unstick it.
+  tips_cash:
+    day?.tips_cash == null
+      ? null
+      : Math.min(day.tips_cash, day.tips ?? 0),
   tip_pool: day?.tip_pool ?? null,
   deductions: day?.deductions ?? null,
   deduction_reason: day?.deduction_reason ?? null,

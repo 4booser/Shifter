@@ -27,11 +27,15 @@ interface Place {
   archived: boolean;
 }
 
-type Period = 'hour' | 'day' | 'month';
+// The week was missing here, so a weekly template opened as hourly and saving
+// it without touching anything priced it forty times high. The server has
+// always accepted it and the phone's own rate line already prints "в неделю".
+type Period = 'hour' | 'day' | 'week' | 'month';
 
 const PERIOD_LABEL: Record<Period, string> = {
   hour: 'за час',
   day: 'за смену',
+  week: 'в неделю',
   month: 'в месяц',
 };
 
@@ -212,8 +216,8 @@ function TemplateEditor({
     setStart(template?.start_time.slice(0, 5) ?? '18:00');
     setEnd(template?.end_time.slice(0, 5) ?? '02:00');
     setPeriod(
-      template?.salary_period === 'day' || template?.salary_period === 'month'
-        ? template.salary_period
+      template !== null && template.salary_period in PERIOD_LABEL
+        ? (template.salary_period as Period)
         : 'hour',
     );
     setAmount(template === null ? '' : `${template.salary_amount}`);
@@ -245,7 +249,10 @@ function TemplateEditor({
       salary_period: period,
       salary_amount: Number(amount.replace(',', '.')) || 0,
       break_minutes: Number(breakMinutes) || 0,
-      colour: null,
+      // Carried, not cleared. The contract defaults this to absent precisely so
+      // an older client cannot wipe it; sending an explicit null threw away a
+      // colour chosen on the web the moment the template was opened here.
+      colour: template?.colour ?? null,
       revenue_percent: percent.trim() === '' ? null : Number(percent.replace(',', '.')),
       tip_source: pooled ? 'pool' : 'personal',
       tip_pool_percent:

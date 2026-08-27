@@ -84,6 +84,17 @@ export default function StatsScreen() {
       ? moneyIn(place.currency === '' ? (summary?.conversion?.base_currency ?? 'UAH') : place.currency, value)
       : money(value);
 
+  /**
+   * An amount in the currency the totals are actually in. Where the range
+   * touches one currency the app's own symbol is right and reads better; where
+   * it touches several, everything is already converted and printing ₴ on it
+   * would be the confident lie this app does not tell.
+   */
+  const amount = (value: number) =>
+    (summary?.currencies ?? []).length > 1
+      ? moneyIn(summary?.conversion?.base_currency ?? 'UAH', value)
+      : money(value);
+
   const bounds =
     span === 'month'
       ? monthBounds(month)
@@ -149,16 +160,15 @@ export default function StatsScreen() {
 
         const start = Number(shift.start_time.slice(0, 2));
         const end = Number(shift.end_time.slice(0, 2));
-        let cursor = start;
 
-        // An overnight shift wraps; without this the small hours look empty
-        // for exactly the people who work them.
-        for (let guard = 0; guard < 24; guard++) {
-          hours[cursor % 24] += 1;
-          cursor += 1;
+        // How many hours the shift spans, wrapping midnight. Counted first
+        // rather than walked until the end hour comes round: a handover that
+        // starts and ends in the same hour never met that condition until all
+        // twenty-four had been marked, so the dial lit up completely and
+        // "лучший час" reported midnight.
+        const span = end === start ? 1 : (end - start + 24) % 24;
 
-          if (cursor % 24 === end) break;
-        }
+        for (let step = 0; step < span; step++) hours[(start + step) % 24] += 1;
       }
     }
 
@@ -178,7 +188,12 @@ export default function StatsScreen() {
         { name: 'Чаевые', value: summary.tips_earned, colour: '#0891B2' },
       ].filter((part) => part.value > 0);
 
-  const perHour = summary === null || summary.hours <= 0 ? 0 : summary.total_earned / summary.hours;
+  // Converted where the range mixes currencies: adding złoty to hryvnia and
+  // dividing by hours is a number with no meaning at all.
+  const perHour =
+    summary === null || summary.hours <= 0
+      ? 0
+      : (summary.conversion?.total_earned ?? summary.total_earned) / summary.hours;
 
   return (
     <ScrollView
@@ -236,7 +251,18 @@ export default function StatsScreen() {
           }
           strong
         />
-        <Kpi palette={palette} label="В час" value={money(perHour)} />
+        {/* Every other figure on this screen is guarded; this one stamped a
+            hryvnia sign on a sum of hryvnia and złoty, directly above the card
+            that exists to say the range mixes currencies. */}
+        <Kpi
+          palette={palette}
+          label="В час"
+          value={
+            (summary?.currencies ?? []).length > 1
+              ? moneyIn(summary?.conversion?.base_currency ?? 'UAH', perHour)
+              : money(perHour)
+          }
+        />
         <Kpi palette={palette} label="Смен" value={`${summary?.days_worked ?? 0}`} />
         <Kpi palette={palette} label="Часов" value={`${Math.round(summary?.hours ?? 0)}`} />
       </View>
@@ -329,7 +355,7 @@ export default function StatsScreen() {
       {parts.length > 0 && (
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Откуда пришли деньги</Text>
-          <MoneyFlow parts={parts} palette={palette} />
+          <MoneyFlow parts={parts} palette={palette} format={amount} />
         </View>
       )}
 
@@ -343,7 +369,7 @@ export default function StatsScreen() {
       {months.length > 0 && (
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Двенадцать месяцев</Text>
-          <MonthBars rows={months} palette={palette} />
+          <MonthBars rows={months} palette={palette} format={amount} />
         </View>
       )}
     </ScrollView>
@@ -374,7 +400,9 @@ function Kpi({
 const makeStyles = (palette: Palette) =>
   StyleSheet.create({
     screen: { flex: 1, backgroundColor: palette.background },
-    content: { padding: 14, gap: 10 },
+    // The last card ended flush against the tab bar; every other screen
+    // leaves room for it.
+    content: { padding: 14, gap: 10, paddingBottom: 44 },
     title: { fontSize: 24, fontWeight: '800', color: palette.text, letterSpacing: -0.5 },
     toolbar: { flexDirection: 'row', alignItems: 'center', gap: 6 },
     segment: {

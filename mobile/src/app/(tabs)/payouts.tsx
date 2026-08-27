@@ -396,6 +396,10 @@ function PayoutModal({
           location_id: row.location_id,
           note: null,
           kind,
+          // The row knows which payment it is and showed it on screen; not
+          // sending it booked a commission against the wage, so the commission
+          // stayed overdue and the wage flipped to overpaid.
+          stream: row.stream,
         },
       });
       onSaved();

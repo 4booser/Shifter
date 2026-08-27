@@ -238,6 +238,13 @@ function GigSheet({
     setPhoto(0);
     setFailed(null);
     setAdded(false);
+    // The contact fields have to go with the rest. A draft left in one listing
+    // survived into the next, so the "Позвонить" button on a listing you had
+    // been accepted for dialled your own number, and a few words about
+    // yourself arrived at a venue you never wrote them for.
+    setPhone('');
+    setTelegram('');
+    setMessage('');
   }, [gig]);
 
   if (gig === null) {

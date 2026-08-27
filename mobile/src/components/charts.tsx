@@ -12,9 +12,16 @@ import { money } from '@/lib/types';
 export function MonthBars({
   rows,
   palette,
+  format = money,
 }: {
   rows: { label: string; value: number; current?: boolean }[];
   palette: Palette;
+  /**
+   * How to print an amount. Handed in because the caller is the only one that
+   * knows whether the range mixes currencies — the default stamps a hryvnia
+   * sign, which is a lie on a month that also holds złoty.
+   */
+  format?: (value: number) => string;
 }) {
   const peak = Math.max(1, ...rows.map((row) => row.value));
   const styles = makeStyles(palette);
@@ -43,7 +50,7 @@ export function MonthBars({
             )}
           </View>
           <Text style={[styles.rowValue, row.value === peak && styles.rowValuePeak]}>
-            {row.value > 0 ? money(row.value) : '·'}
+            {row.value > 0 ? format(row.value) : '·'}
           </Text>
         </View>
       ))}
@@ -59,9 +66,11 @@ export function MonthBars({
 export function MoneyFlow({
   parts,
   palette,
+  format = money,
 }: {
   parts: { name: string; value: number; colour: string }[];
   palette: Palette;
+  format?: (value: number) => string;
 }) {
   const total = parts.reduce((sum, part) => sum + part.value, 0);
   const styles = makeStyles(palette);
@@ -100,7 +109,7 @@ export function MoneyFlow({
           <View key={part.name} style={styles.legendRow}>
             <View style={[styles.dot, { backgroundColor: part.colour }]} />
             <Text style={styles.legendName}>{part.name}</Text>
-            <Text style={styles.legendValue}>{money(part.value)}</Text>
+            <Text style={styles.legendValue}>{format(part.value)}</Text>
           </View>
         ))}
       </View>

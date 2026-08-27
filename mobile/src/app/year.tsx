@@ -237,7 +237,7 @@ export default function YearScreen() {
             <Text style={styles.tierEmoji}>{tier.emoji}</Text>
             <Text style={styles.tierName}>{tier.name}</Text>
             <Text style={styles.tierMeta}>
-              {facts.shifts} смен · {Math.round(summary.hours)} ч · {money(summary.total_earned)}
+              {plural(facts.shifts, 'смена', 'смены', 'смен')} · {Math.round(summary.hours)} ч · {money(summary.total_earned)}
             </Text>
           </View>
 

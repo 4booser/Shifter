@@ -16,7 +16,7 @@ import { DailyBrief } from '@/components/daily-brief';
 import { Colors, Palette } from '@/constants/theme';
 import { api } from '@/lib/api';
 import { addMonths, currentMonth, monthBounds, monthCells, monthLabel, todayKey } from '@/lib/calendar';
-import { CalendarDayData, DaysResponse, money } from '@/lib/types';
+import { CalendarDayData, DaysResponse, money, ShiftTemplate } from '@/lib/types';
 import { LiveShift, useLive } from '@/store/live';
 
 const WEEKDAYS = ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс'];
@@ -42,6 +42,7 @@ export default function CalendarScreen() {
 
   const [month, setMonth] = useState(currentMonth());
   const [summary, setSummary] = useState<DaysResponse | null>(null);
+  const [templates, setTemplates] = useState<ShiftTemplate[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -49,8 +50,24 @@ export default function CalendarScreen() {
 
   const load = useCallback(async () => {
     try {
-      setSummary(await api<DaysResponse>(`/shifter/v1/days?from=${bounds.from}&to=${bounds.to}`));
+      // The templates come along for the rate: a placement carries no rate at
+      // all, so the live screen's headline — "₴N уже ваши" — was unreachable
+      // for every shift ever started.
+      const days = await api<DaysResponse>(
+        `/shifter/v1/days?from=${bounds.from}&to=${bounds.to}`,
+      );
+
+      setSummary(days);
       setError(null);
+
+      // Separately and forgivingly: the templates are only needed for the live
+      // shift's rate, and the calendar must not refuse to draw because a second
+      // request failed.
+      try {
+        setTemplates(await api<ShiftTemplate[]>('/shifter/v1/shifts'));
+      } catch {
+        // The clock still runs; it just cannot say what the hour is worth.
+      }
     } catch {
       setError('Не дотянулись до сервера.');
     }
@@ -74,8 +91,17 @@ export default function CalendarScreen() {
 
     if (plan === undefined) return null;
 
-    return { ...plan, rate: null as number | null };
-  }, [byDate, today]);
+    // Only an hourly rate ticks up by the second; a day or a month has no
+    // per-second meaning, and inventing one would put a number on screen
+    // nobody agreed to.
+    const template = templates.find((entry) => entry.id === plan.shift_id);
+    const rate =
+      template !== undefined && template.salary_period === 'hour'
+        ? template.salary_amount
+        : null;
+
+    return { ...plan, rate };
+  }, [byDate, today, templates]);
   const styles = makeStyles(palette);
 
   const cellLook = (day: CalendarDayData | undefined) => {

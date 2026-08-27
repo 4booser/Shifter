@@ -76,6 +76,36 @@ public static class BriefBlocks
         if (shifts.Length == 0)
         {
             lines.Add(new BriefLineDto("Смен на сегодня не поставлено."));
+
+            // How long the rest has been, counted backwards from today. A
+            // fourth day off in a row is worth knowing about; so is a first.
+            var rest = 0;
+
+            for (var cursor = today; !month.days.Any(row =>
+                     row.date == cursor && row.shifts.Any(shift => shift.worked)); cursor = cursor.AddDays(-1))
+            {
+                rest++;
+
+                if (cursor.Day == 1) break;
+            }
+
+            var last = month.days
+                .Where(row => row.date < today && row.shifts.Any(shift => shift.worked))
+                .OrderByDescending(row => row.date)
+                .FirstOrDefault();
+
+            if (last is not null)
+                lines.Add(new BriefLineDto(
+                    rest > 1
+                        ? $"Без смены {rest} дн. — последняя была {Said(last.date)}"
+                        : $"Последняя смена была вчера, {Said(last.date)}",
+                    Money(last.earned)));
+
+            var off = month.days.Count(row => row.date <= today && !row.shifts.Any(shift => shift.worked))
+                + Enumerable.Range(1, today.Day).Count(day =>
+                    !month.days.Any(row => row.date.Day == day));
+
+            if (off > 1) lines.Add(new BriefLineDto($"Выходных с начала месяца: {off}"));
         }
         else
         {
@@ -162,7 +192,12 @@ public static class BriefBlocks
     {
         List<BriefLineDto> lines = [];
 
-        var worked = month.days.Where(day => day.shifts.Any(shift => shift.worked)).ToArray();
+        // Up to today only. A future day carrying a worked flag is a data
+        // oddity, and "лучший день — 29 августа" said on the 27th reads as a
+        // bug whatever put it there.
+        var worked = month.days
+            .Where(day => day.date <= today && day.shifts.Any(shift => shift.worked))
+            .ToArray();
 
         var best = worked.OrderByDescending(day => day.earned).FirstOrDefault();
 
@@ -220,6 +255,64 @@ public static class BriefBlocks
                 null,
                 "warn"));
 
+        // The average shift: the figure people compare a new job against.
+        var placed = worked.SelectMany(day => day.shifts.Where(shift => shift.worked)).ToArray();
+
+        if (placed.Length > 1)
+            lines.Add(new BriefLineDto(
+                $"Средняя смена — {Hours(placed.Average(shift => shift.hours))}",
+                Money(placed.Average(shift => shift.earned))));
+
+        var longest = placed.OrderByDescending(shift => shift.hours).FirstOrDefault();
+
+        if (longest is not null && longest.hours >= 10)
+            lines.Add(new BriefLineDto(
+                $"Самая длинная смена — {Hours(longest.hours)}", null, longest.hours >= 12 ? "warn" : null));
+
+        var favourite = placed
+            .GroupBy(shift => shift.name)
+            .OrderByDescending(group => group.Count())
+            .FirstOrDefault();
+
+        if (favourite is not null && favourite.Count() > 1 && placed.Select(s => s.name).Distinct().Count() > 1)
+            lines.Add(new BriefLineDto($"Чаще всего выходили на «{favourite.Key}» — {favourite.Count()} раз"));
+
+        if (month.night_hours > 0 && month.hours > 0)
+            lines.Add(new BriefLineDto(
+                $"Ночных часов {Hours(month.night_hours)} — {Math.Round(month.night_hours / month.hours * 100)}% всех"));
+
+        // Weekend against weekday, per shift rather than in total: two Saturdays
+        // and twelve Tuesdays would otherwise say the wrong thing.
+        var weekend = placed.Where(shift => IsWeekend(worked, shift)).ToArray();
+        var weekday = placed.Except(weekend).ToArray();
+
+        if (weekend.Length > 0 && weekday.Length > 0)
+        {
+            var weekendAverage = weekend.Average(shift => shift.earned);
+            var weekdayAverage = weekday.Average(shift => shift.earned);
+
+            if (weekdayAverage > 0m && Math.Abs(weekendAverage - weekdayAverage) / weekdayAverage > 0.15m)
+                lines.Add(new BriefLineDto(
+                    weekendAverage > weekdayAverage
+                        ? $"Выходная смена приносит на {Math.Round((weekendAverage / weekdayAverage - 1m) * 100m)}% больше будней"
+                        : $"Выходная смена приносит на {Math.Round((1m - weekendAverage / weekdayAverage) * 100m)}% меньше будней",
+                    Money(weekendAverage)));
+        }
+
+        if (month.sales_earned > 0)
+            lines.Add(new BriefLineDto("Продажи принесли", Money(month.sales_earned), "good"));
+
+        // Shifts placed in the past and never marked: the totals are waiting
+        // on them, and nothing else will point it out.
+        var unmarked = month.days
+            .Where(day => day.date < today)
+            .SelectMany(day => day.shifts.Where(shift => !shift.worked))
+            .Count();
+
+        if (unmarked > 0)
+            lines.Add(new BriefLineDto(
+                $"Прошедших смен без отметки «отработана»: {unmarked}", null, "warn"));
+
         if (month.tip_out > 0)
             lines.Add(new BriefLineDto("Отдано персоналу из чаевых", Money(month.tip_out)));
 
@@ -236,6 +329,15 @@ public static class BriefBlocks
         }
 
         return new BriefBlockDto("observations", "🔍", "Что видно по цифрам", [.. lines]);
+    }
+
+    /// <summary>Whether the day this shift sits on is a Saturday or Sunday.</summary>
+    private static bool IsWeekend(DayDto[] days, DayShiftDto shift)
+    {
+        var day = days.FirstOrDefault(row => row.shifts.Contains(shift));
+
+        return day is not null
+            && day.date.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday;
     }
 
     /// <summary>

@@ -106,6 +106,44 @@ public class ShifterCommand : IShifterCommand
         await _db.SaveChangesAsync(ct);
     }
 
+    public async Task SettlePeriodAsync(
+        int userId, int locationId, DateOnly periodFrom, string stream,
+        string? kind, string? note, CancellationToken ct)
+    {
+        PeriodSettlement? existing = await _db.PeriodSettlements.FirstOrDefaultAsync(
+            entry => entry.UserId == userId
+                && entry.LocationId == locationId
+                && entry.PeriodFrom == periodFrom
+                && entry.Stream == stream,
+            ct);
+
+        // No kind means "reopen it": the line was drawn by mistake, or the
+        // conversation with the place started again.
+        if (kind is null)
+        {
+            if (existing is not null) _db.PeriodSettlements.Remove(existing);
+        }
+        else if (existing is null)
+        {
+            _db.PeriodSettlements.Add(new PeriodSettlement
+            {
+                UserId = userId,
+                LocationId = locationId,
+                PeriodFrom = periodFrom,
+                Stream = stream,
+                Kind = kind,
+                Note = note,
+            });
+        }
+        else
+        {
+            existing.Kind = kind;
+            existing.Note = note;
+        }
+
+        await _db.SaveChangesAsync(ct);
+    }
+
     public async Task SaveAsync(CancellationToken ct)
     {
         await _db.SaveChangesAsync(ct);

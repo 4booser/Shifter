@@ -142,6 +142,14 @@ function Payouts() {
   const streamChip = (row: { stream: PayPeriodRow['stream'] }) =>
     row.stream === 'commission' ? t('Commission') : row.stream === 'wage' ? t('Wage') : null;
 
+  /** Draws the line, or lifts it. Either way the schedule is re-read. */
+  const settle = (row: PayPeriodRow, kind: 'paid' | 'written-off' | null) => {
+    void calendarApi
+      .settlePeriod(row.location_id, row.period_from, row.stream, kind, null)
+      .then(load)
+      .catch((caught) => setError(apiErrorMessage(caught)));
+  };
+
   const record = (row: PayPeriodRow) => {
     setPrefill({ locationId: row.location_id, from: row.period_from, to: row.period_to, expected: row.expected, stream: row.stream });
     setPayoutOpen(true);
@@ -213,7 +221,11 @@ function Payouts() {
         <div className="card reveal p-3">
           <span className="field-hint block">{t('Gone missing')}</span>
           <Money
-            value={periods.filter((row) => row.status === 'short').reduce((total, row) => total + (row.expected - row.paid), 0)}
+            // A shortfall somebody has drawn a line under is not still owed:
+            // leaving it in this figure is the nagging the line exists to stop.
+            value={periods
+              .filter((row) => row.settled === null && row.status === 'short')
+              .reduce((total, row) => total + (row.expected - row.paid), 0)}
             className="text-[1.25rem] font-bold"
           />
         </div>
@@ -239,13 +251,15 @@ function Payouts() {
                       className="h-3.5 w-3.5 rounded"
                       style={{
                         background:
-                          row.status === 'paid' || row.status === 'over'
-                            ? 'var(--good)'
-                            : row.status === 'short'
-                              ? 'var(--danger)'
-                              : row.status === 'overdue'
-                                ? 'var(--warn)'
-                                : 'var(--surface-2)',
+                          row.settled !== null
+                            ? 'var(--surface-2)'
+                            : row.status === 'paid' || row.status === 'over'
+                              ? 'var(--good)'
+                              : row.status === 'short'
+                                ? 'var(--danger)'
+                                : row.status === 'overdue'
+                                  ? 'var(--warn)'
+                                  : 'var(--surface-2)',
                       }}
                     />
                   ))}
@@ -272,7 +286,7 @@ function Payouts() {
         ) : (
           <ul className="flex flex-col gap-1.5">
             {upcoming.map((row) => (
-              <PeriodRow key={`${row.location_id}-${row.period_from}-${row.stream}`} row={row} onRecord={record} relative={relative} streamChip={streamChip} />
+              <PeriodRow key={`${row.location_id}-${row.period_from}-${row.stream}`} row={row} onRecord={record} onSettle={settle} relative={relative} streamChip={streamChip} />
             ))}
           </ul>
         )}
@@ -284,7 +298,7 @@ function Payouts() {
           <h2 className="mb-2 text-[0.98rem] font-bold">{t('Settled')}</h2>
           <ul className="flex flex-col gap-1.5">
             {settled.map((row) => (
-              <PeriodRow key={`${row.location_id}-${row.period_from}-${row.stream}`} row={row} onRecord={record} relative={relative} streamChip={streamChip} />
+              <PeriodRow key={`${row.location_id}-${row.period_from}-${row.stream}`} row={row} onRecord={record} onSettle={settle} relative={relative} streamChip={streamChip} />
             ))}
           </ul>
           <button type="button" className="btn btn-quiet btn-sm mt-2" onClick={() => setMonthsBack((months) => months + 6)}>
@@ -306,15 +320,22 @@ function Payouts() {
 function PeriodRow({
   row,
   onRecord,
+  onSettle,
   relative,
   streamChip,
 }: {
   row: PayPeriodRow;
   onRecord: (row: PayPeriodRow) => void;
+  onSettle: (row: PayPeriodRow, kind: 'paid' | 'written-off' | null) => void;
   relative: (row: PayPeriodRow) => string;
   streamChip: (row: { stream: PayPeriodRow['stream'] }) => string | null;
 }) {
   const { t } = useI18n();
+
+  // A shortfall somebody has finished arguing about: still short, no longer
+  // chased. Only these two states can be closed — an open month has nothing
+  // to close yet.
+  const chaseable = row.settled === null && (row.status === 'short' || row.status === 'overdue');
 
   const tone =
     row.status === 'short' || row.status === 'overdue'
@@ -332,15 +353,22 @@ function PeriodRow({
           {streamChip(row) && <span className="chip">{streamChip(row)}</span>}
           <span
             className={`chip ${
-              row.status === 'short' || row.status === 'overdue'
-                ? 'border-danger/40 text-danger'
-                : row.status === 'paid' || row.status === 'over'
-                  ? 'border-good/40 text-good'
-                  : ''
+              row.settled !== null
+                ? 'text-muted'
+                : row.status === 'short' || row.status === 'overdue'
+                  ? 'border-danger/40 text-danger'
+                  : row.status === 'paid' || row.status === 'over'
+                    ? 'border-good/40 text-good'
+                    : ''
             }`}
           >
             {t(STATUS_LABEL[row.status])}
           </span>
+          {row.settled !== null && (
+            <span className="chip text-muted">
+              {t(row.settled === 'paid' ? 'Settled off the books' : 'Written off')}
+            </span>
+          )}
         </span>
         <span className="field-hint tabular">
           {row.period_from} — {row.period_to} · {relative(row)}
@@ -360,6 +388,33 @@ function PeriodRow({
       {(row.status === 'due' || row.status === 'overdue') && (
         <button type="button" className="btn btn-sm" onClick={() => onRecord(row)}>
           {t('Record')}
+        </button>
+      )}
+
+      {chaseable && (
+        <span className="flex gap-1.5">
+          <button
+            type="button"
+            className="btn btn-quiet btn-sm"
+            title={t('The difference arrived in cash or in kind')}
+            onClick={() => onSettle(row, 'paid')}
+          >
+            {t('Got it in cash')}
+          </button>
+          <button
+            type="button"
+            className="btn btn-quiet btn-sm"
+            title={t('Stop counting this as owed')}
+            onClick={() => onSettle(row, 'written-off')}
+          >
+            {t('Let it go')}
+          </button>
+        </span>
+      )}
+
+      {row.settled !== null && (
+        <button type="button" className="btn btn-quiet btn-sm" onClick={() => onSettle(row, null)}>
+          {t('Chase it again')}
         </button>
       )}
     </li>

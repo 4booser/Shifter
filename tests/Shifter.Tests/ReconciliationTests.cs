@@ -254,4 +254,97 @@ public class ReconciliationTests
         Assert.Equal("open", Assert.Single(result.periods).status);
         Assert.Equal(0m, result.awaited);
     }
+
+    // ==== Drawing a line under a shortfall ====
+
+    private void Close(Location place, string periodFrom, string kind = "written-off")
+        => _query.Settlements.Add(new PeriodSettlement
+        {
+            UserId = Build.UserId,
+            LocationId = place.Id,
+            PeriodFrom = DateOnly.Parse(periodFrom),
+            Stream = "all",
+            Kind = kind,
+        });
+
+    /// <summary>Two short months at one place: the shape a shortfall needs.</summary>
+    private Location TwoShortMonths()
+    {
+        Location place = Monthly();
+
+        foreach (var date in new[] { "2026-01-10", "2026-01-20", "2026-02-10", "2026-02-20" })
+            Worked(place, date, rate: 100m);
+
+        Received(place, "2026-01-01", "2026-01-31", 500m);
+        Received(place, "2026-02-01", "2026-02-28", 500m);
+
+        return place;
+    }
+
+    [Fact]
+    public async Task TwoShortMonthsAreAPattern()
+    {
+        TwoShortMonths();
+
+        ReconciliationDto result = await Reconcile("2026-01-01", "2026-03-31");
+
+        Assert.Single(result.shortfalls);
+        Assert.Equal(2, result.shortfalls[0].periods);
+    }
+
+    [Fact]
+    public async Task AClosedMonthBreaksTheRun()
+    {
+        Location place = TwoShortMonths();
+
+        // The line under February leaves one short month, which is a rounding
+        // argument rather than a pattern.
+        Close(place, "2026-02-01");
+
+        ReconciliationDto result = await Reconcile("2026-01-01", "2026-03-31");
+
+        Assert.Empty(result.shortfalls);
+    }
+
+    [Fact]
+    public async Task TheArithmeticIsNotTouchedByTheLine()
+    {
+        Location place = TwoShortMonths();
+
+        Close(place, "2026-02-01");
+
+        ReconciliationDto result = await Reconcile("2026-01-01", "2026-03-31");
+        PayPeriodDto february = result.periods.Single(row => row.period_from.Month == 2);
+
+        // Still short, still says how short — it just stopped being chased.
+        Assert.Equal("short", february.status);
+        Assert.Equal("written-off", february.settled);
+        Assert.True(february.difference < 0);
+    }
+
+    [Fact]
+    public async Task AClosedPeriodStopsCountingAsOwed()
+    {
+        Location place = Monthly();
+
+        Worked(place, "2026-01-10", rate: 100m);
+        Close(place, "2026-01-01");
+
+        ReconciliationDto result = await Reconcile("2026-01-01", "2026-03-31");
+
+        Assert.Equal(0m, result.awaited);
+        Assert.Equal(0m, result.overdue);
+    }
+
+    [Fact]
+    public async Task AnUnclosedPeriodStillCountsAsOwed()
+    {
+        Location place = Monthly();
+
+        Worked(place, "2026-01-10", rate: 100m);
+
+        ReconciliationDto result = await Reconcile("2026-01-01", "2026-03-31");
+
+        Assert.True(result.awaited > 0m);
+    }
 }

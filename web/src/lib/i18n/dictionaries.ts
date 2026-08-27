@@ -5,6 +5,13 @@
 type Dictionary = Record<string, string>;
 
 export const RU: Dictionary = {
+  'Settled off the books': 'Закрыто наличными',
+  'Written off': 'Списано',
+  'Got it in cash': 'Доплатили',
+  'Let it go': 'Забыть',
+  'Chase it again': 'Снова считать долгом',
+  'The difference arrived in cash or in kind': 'Разницу отдали наличными или иначе',
+  'Stop counting this as owed': 'Перестать считать это долгом',
   'This year has nothing in it yet': 'В этом году пока пусто',
   'Open the calendar': 'Открыть календарь',
   'Mark a few shifts and this page fills itself: your hours, your best day, the shift you worked most — and a poster you can post.': 'Отметьте несколько смен — и страница соберётся сама: часы, лучший день, самая частая смена и постер, который можно выложить.',
@@ -1664,6 +1671,13 @@ export const RU: Dictionary = {
 };
 
 export const UK: Dictionary = {
+  'Settled off the books': 'Закрито готівкою',
+  'Written off': 'Списано',
+  'Got it in cash': 'Доплатили',
+  'Let it go': 'Забути',
+  'Chase it again': 'Знову вважати боргом',
+  'The difference arrived in cash or in kind': 'Різницю віддали готівкою або інакше',
+  'Stop counting this as owed': 'Перестати вважати це боргом',
   'This year has nothing in it yet': 'Цього року поки порожньо',
   'Open the calendar': 'Відкрити календар',
   'Mark a few shifts and this page fills itself: your hours, your best day, the shift you worked most — and a poster you can post.': 'Позначте кілька змін — і сторінка збереться сама: години, найкращий день, найчастіша зміна і постер, який можна викласти.',

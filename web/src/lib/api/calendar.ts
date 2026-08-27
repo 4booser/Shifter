@@ -66,6 +66,17 @@ export const calendarApi = {
   payouts: (from: string, to: string) => api<Payout[]>(`${API}/payouts?from=${from}&to=${to}`),
   createPayout: (request: PayoutCreate) => api<Payout>(`${API}/payouts`, { body: request }),
   deletePayout: (id: number) => api<void>(`${API}/payouts/${id}`, { method: 'DELETE' }),
+  /** Draws a line under one shortfall, or lifts it again with kind: null. */
+  settlePeriod: (
+    location_id: number,
+    period_from: string,
+    stream: string,
+    kind: 'paid' | 'written-off' | null,
+    note: string | null,
+  ) =>
+    api<void>(`${API}/payouts/settle`, {
+      body: { location_id, period_from, stream, kind, note },
+    }),
 
   createEvent: (request: EventSave) => api<CalendarEvent>(`${API}/events`, { body: request }),
   updateEvent: (id: number, request: EventSave) =>

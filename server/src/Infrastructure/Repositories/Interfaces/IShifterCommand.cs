@@ -27,6 +27,11 @@ public interface IShifterCommand
     Task<bool> AddPayoutAsync(Payout payout, CancellationToken ct);
     Task DeletePayoutAsync(Payout payout, CancellationToken ct);
 
+    /// <summary>Closes one shortfall, or reopens it when kind is null.</summary>
+    Task SettlePeriodAsync(
+        int userId, int locationId, DateOnly periodFrom, string stream,
+        string? kind, string? note, CancellationToken ct);
+
     Task<bool> AddEventAsync(Event item, CancellationToken ct);
     Task DeleteEventAsync(Event item, CancellationToken ct);
 

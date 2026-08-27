@@ -406,6 +406,13 @@ export interface PayPeriodRow {
    * which case two rows can cover overlapping days without being duplicates.
    */
   stream: 'all' | 'wage' | 'commission';
+  /**
+   * Set where this shortfall has been closed: 'paid' if the money arrived off
+   * the books, 'written-off' if it never will. Both stop it counting as owed;
+   * only one of them is good news.
+   */
+  settled: 'paid' | 'written-off' | null;
+  settled_note: string | null;
 }
 
 /** A place that has come up short more than once running. */

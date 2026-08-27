@@ -52,6 +52,10 @@ public class ReconciliationHandler : IReconciliationHandler
         Payout[] payouts = await _shifterQuery.GetPayoutsAsync(
             userId, from.AddDays(-45), to.AddDays(45), ct);
 
+        PeriodSettlement[] closed = await _shifterQuery.GetSettlementsAsync(userId, ct);
+        Dictionary<(int, DateOnly, string), PeriodSettlement> lines = closed.ToDictionary(
+            entry => (entry.LocationId, entry.PeriodFrom, entry.Stream));
+
         DateOnly today = DateOnly.FromDateTime(DateTime.UtcNow);
         List<PayPeriodDto> rows = [];
 
@@ -104,6 +108,12 @@ public class ReconciliationHandler : IReconciliationHandler
         PayPeriodDto[] periods = rows
             .OrderByDescending(row => row.period_from)
             .ThenBy(row => row.location_name)
+            // A shortfall somebody has drawn a line under is still a short
+            // period — the arithmetic did not change — but it stops being
+            // owed, so it carries the line rather than being hidden.
+            .Select(row => lines.TryGetValue((row.location_id, row.period_from, row.stream), out var line)
+                ? row with { settled = line.Kind, settled_note = line.Note }
+                : row)
             .ToArray();
 
         return new ReconciliationDto(
@@ -111,9 +121,9 @@ public class ReconciliationHandler : IReconciliationHandler
             Shortfalls(periods),
             // Only settled work counts as awaited; a period still being worked
             // has not been earned in full yet.
-            periods.Where(row => row.status is "due" or "overdue")
+            periods.Where(row => row.settled is null && row.status is "due" or "overdue")
                 .Sum(row => row.expected - row.paid),
-            periods.Where(row => row.status == "overdue")
+            periods.Where(row => row.settled is null && row.status == "overdue")
                 .Sum(row => row.expected - row.paid));
     }
 
@@ -292,7 +302,10 @@ public class ReconciliationHandler : IReconciliationHandler
 
             foreach (PayPeriodDto row in settled)
             {
-                if (row.status is "short" or "overdue") run.Add(row);
+                // A closed period breaks the run like a settled one: the
+                // claim being made is "this keeps happening to me", and a
+                // month somebody has finished arguing about does not.
+                if (row.settled is null && row.status is "short" or "overdue") run.Add(row);
                 else break;
             }
 

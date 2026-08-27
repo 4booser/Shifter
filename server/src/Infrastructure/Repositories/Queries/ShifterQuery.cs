@@ -195,4 +195,14 @@ public class ShifterQuery : IShifterQuery
             .Include(payout => payout.Location)
             .FirstOrDefaultAsync(p => p.UserId == userId && p.Id == id, ct);
     }
+
+    public async Task<PeriodSettlement[]> GetSettlementsAsync(int userId, CancellationToken ct)
+    {
+        // Every one of them, not a window: a line drawn under an old period
+        // has to keep holding when somebody scrolls back to that month.
+        return await _db.PeriodSettlements
+            .AsNoTracking()
+            .Where(entry => entry.UserId == userId)
+            .ToArrayAsync(ct);
+    }
 }

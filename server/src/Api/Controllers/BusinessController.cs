@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Shifter.Application.Common.Exceptions;
+using Shifter.Infrastructure.Repositories.Interfaces;
 using Shifter.Application.Features.business.DTOs;
 using Shifter.Application.Features.business.Services.Interfaces;
 
@@ -100,6 +101,39 @@ public class BusinessController : ControllerBase
         [FromQuery] DateOnly to,
         CancellationToken ct)
         => Ok(await reconciliation.BuildAsync(CurrentUserId(), from, to, ct));
+
+    /// <summary>
+    /// Draws a line under one shortfall, or lifts the line again. The
+    /// arithmetic is untouched: the period stays short, it just stops being
+    /// chased. A null kind reopens it.
+    /// </summary>
+    [HttpPost]
+    [Route("payouts/settle")]
+    public async Task<ActionResult> SettlePeriod(
+        [FromServices] IShifterCommand command,
+        [FromBody] SettlePeriodDto request,
+        CancellationToken ct)
+    {
+        if (request.kind is not (null or "paid" or "written-off"))
+            throw new ValidationException("A shortfall is either paid off the books or written off.");
+
+        if (request.stream is not ("all" or "wage" or "commission"))
+            throw new ValidationException("There is no such payment.");
+
+        if (request.note?.Length > Shifter.Domain.Entities.PeriodSettlement.NoteMax)
+            throw new ValidationException("The note is too long.");
+
+        await command.SettlePeriodAsync(
+            CurrentUserId(),
+            request.location_id,
+            request.period_from,
+            request.stream,
+            request.kind,
+            string.IsNullOrWhiteSpace(request.note) ? null : request.note.Trim(),
+            ct);
+
+        return NoContent();
+    }
 
     [HttpGet]
     [Route("payouts")]
@@ -313,3 +347,16 @@ public class BusinessController : ControllerBase
         return userId;
     }
 }
+
+/// <summary>
+/// Drawing a line under one shortfall. Identified the way the rows are — a
+/// place, the day its period starts, and which payment — because that is the
+/// only thing both sides of the wire agree on about a period.
+/// </summary>
+public record SettlePeriodDto(
+    int location_id,
+    DateOnly period_from,
+    string stream,
+    /// <summary>"paid", "written-off", or null to reopen it.</summary>
+    string? kind,
+    string? note);

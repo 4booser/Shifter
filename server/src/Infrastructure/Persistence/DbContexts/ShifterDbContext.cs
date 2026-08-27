@@ -35,6 +35,7 @@ public class ShifterDbContext : DbContext
     public DbSet<ShiftSwap> ShiftSwaps => Set<ShiftSwap>();
     public DbSet<DailyBrief> DailyBriefs => Set<DailyBrief>();
     public DbSet<AssistantMessage> AssistantMessages => Set<AssistantMessage>();
+    public DbSet<PeriodSettlement> PeriodSettlements => Set<PeriodSettlement>();
     public DbSet<Availability> Availabilities => Set<Availability>();
     public DbSet<DeviceToken> DeviceTokens => Set<DeviceToken>();
 
@@ -77,6 +78,12 @@ public class ShifterDbContext : DbContext
             .IsUnique();
         modelBuilder.Entity<Availability>()
             .HasIndex(block => new { block.TeamId, block.Date });
+
+        // One line under one period: closing the same shortfall twice is not
+        // a second event, and the unique key says so rather than the service.
+        modelBuilder.Entity<PeriodSettlement>()
+            .HasIndex(entry => new { entry.UserId, entry.LocationId, entry.PeriodFrom, entry.Stream })
+            .IsUnique();
 
         // The thread is always read newest-first for one person.
         modelBuilder.Entity<AssistantMessage>()

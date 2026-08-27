@@ -19,6 +19,10 @@ public sealed class FakeShifterQuery : IShifterQuery
     public List<Sales> Sales { get; } = [];
     public List<Event> Events { get; } = [];
     public List<Goal> Goals { get; } = [];
+    public List<PeriodSettlement> Settlements { get; } = [];
+
+    public Task<PeriodSettlement[]> GetSettlementsAsync(int userId, CancellationToken ct)
+        => Task.FromResult(Settlements.Where(entry => entry.UserId == userId).ToArray());
 
     public Task<Day[]> GetDaysInRangeAsync(int userId, DateOnly from, DateOnly to, CancellationToken ct)
         => Task.FromResult(Days
@@ -268,6 +272,34 @@ public sealed class FakeShifterCommand : IShifterCommand
     {
         Events.Remove(item);
         Deleted.Add(item);
+
+        return Task.CompletedTask;
+    }
+
+    public Task SettlePeriodAsync(
+        int userId, int locationId, DateOnly periodFrom, string stream,
+        string? kind, string? note, CancellationToken ct)
+    {
+        List<PeriodSettlement> rows = _query?.Settlements ?? [];
+
+        rows.RemoveAll(entry =>
+            entry.UserId == userId
+            && entry.LocationId == locationId
+            && entry.PeriodFrom == periodFrom
+            && entry.Stream == stream);
+
+        if (kind is not null)
+        {
+            rows.Add(new PeriodSettlement
+            {
+                UserId = userId,
+                LocationId = locationId,
+                PeriodFrom = periodFrom,
+                Stream = stream,
+                Kind = kind,
+                Note = note,
+            });
+        }
 
         return Task.CompletedTask;
     }

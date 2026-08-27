@@ -27,7 +27,14 @@ public record PayPeriodDto(
     /// or "wage" and "commission" where the percentage runs on its own cycle.
     /// Two rows can then cover the same days without reading as a duplicate.
     /// </summary>
-    string stream = "all");
+    string stream = "all",
+    /// <summary>
+    /// Set where this shortfall has been closed: "paid" if the money arrived
+    /// off the books, "written-off" if it never will. Both stop it counting
+    /// as owed; only one of them is good news.
+    /// </summary>
+    string? settled = null,
+    string? settled_note = null);
 
 /// <summary>
 /// A place that has come up short more than once. One short period is a

@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Pressable,
@@ -41,6 +42,7 @@ export default function StatsScreen() {
   const scheme = useColorScheme();
   const palette = Colors[scheme === 'dark' ? 'dark' : 'light'];
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const styles = makeStyles(palette);
 
   const [span, setSpan] = useState<Span>('month');

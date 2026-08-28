@@ -200,6 +200,62 @@ public class BusinessController : ControllerBase
         CancellationToken ct)
         => Ok(await expenses.CreateAsync(request, CurrentUserId(), ct));
 
+    /// <summary>
+    /// Costs that come round: a travel pass, a locker, the whip-round for the
+    /// staff room. Nobody records these, because recording something is what
+    /// you do while thinking about it and the nature of a standing cost is
+    /// that you are not.
+    /// </summary>
+    [HttpGet]
+    [Route("expenses/rules")]
+    public async Task<ActionResult<ExpenseRuleDto[]>> ExpenseRules(
+        [FromServices] IExpenseHandler expenses,
+        CancellationToken ct)
+        => Ok(await expenses.RulesAsync(CurrentUserId(), Today, ct));
+
+    [HttpPost]
+    [Route("expenses/rules")]
+    public async Task<ActionResult<ExpenseRuleDto>> AddExpenseRule(
+        [FromServices] IExpenseHandler expenses,
+        [FromBody] ExpenseRuleSaveDto request,
+        CancellationToken ct)
+        => Ok(await expenses.CreateRuleAsync(request, CurrentUserId(), Today, ct));
+
+    [HttpPut]
+    [Route("expenses/rules/{id:int}")]
+    public async Task<ActionResult<ExpenseRuleDto>> UpdateExpenseRule(
+        [FromServices] IExpenseHandler expenses,
+        int id,
+        [FromBody] ExpenseRuleSaveDto request,
+        CancellationToken ct)
+        => Ok(await expenses.UpdateRuleAsync(request, CurrentUserId(), id, Today, ct));
+
+    /// <summary>
+    /// One month off, one button. Not an edit to the rule — the pass is still
+    /// bought every month, it was simply not bought in August.
+    /// </summary>
+    [HttpPut]
+    [Route("expenses/rules/{id:int}/skip")]
+    public async Task<ActionResult<ExpenseRuleDto>> SkipExpense(
+        [FromServices] IExpenseHandler expenses,
+        int id,
+        [FromQuery] DateOnly day,
+        [FromQuery] bool skipped,
+        CancellationToken ct)
+        => Ok(await expenses.SkipAsync(CurrentUserId(), id, day, skipped, Today, ct));
+
+    [HttpDelete]
+    [Route("expenses/rules/{id:int}")]
+    public async Task<ActionResult> DeleteExpenseRule(
+        [FromServices] IExpenseHandler expenses,
+        int id,
+        CancellationToken ct)
+    {
+        await expenses.DeleteRuleAsync(CurrentUserId(), id, ct);
+
+        return NoContent();
+    }
+
     [HttpDelete]
     [Route("expenses/{id:int}")]
     public async Task<ActionResult> DeleteExpense(
@@ -505,6 +561,14 @@ public class BusinessController : ControllerBase
 
         return NoContent();
     }
+
+    /// <summary>
+    /// The day here rather than in UTC. Between nine in the evening and
+    /// midnight the two disagree, which is exactly when this trade lays out
+    /// the week — and "when is it next due", answered from yesterday, is wrong
+    /// in the only direction that matters.
+    /// </summary>
+    private static DateOnly Today => new Shifter.Application.Common.Time.AppClock().Today;
 
     /// <summary>
     /// Read from the token, never from the request. A user id in the body or

@@ -94,6 +94,24 @@ public class ShifterCommand : IShifterCommand
         await _db.SaveChangesAsync(ct);
     }
 
+    public async Task<bool> AddExpenseRuleAsync(ExpenseRule rule, CancellationToken ct)
+    {
+        await _db.ExpenseRules.AddAsync(rule, ct);
+        return await _db.SaveChangesAsync(ct) > 0;
+    }
+
+    public async Task DeleteExpenseRuleAsync(ExpenseRule rule, CancellationToken ct)
+    {
+        // The expenses somebody already confirmed stay. Stopping a travel pass
+        // in June must not remove the five months of it that were paid.
+        await _db.Expenses
+            .Where(expense => expense.RuleId == rule.Id)
+            .ExecuteUpdateAsync(row => row.SetProperty(expense => expense.RuleId, (int?)null), ct);
+
+        _db.ExpenseRules.Remove(rule);
+        await _db.SaveChangesAsync(ct);
+    }
+
     public async Task<bool> AddEventTemplateAsync(EventTemplate item, CancellationToken ct)
     {
         await _db.EventTemplates.AddAsync(item, ct);

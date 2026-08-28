@@ -122,6 +122,19 @@ public class ShifterQuery : IShifterQuery
             ct);
     }
 
+    public async Task<ExpenseRule[]> GetExpenseRulesAsync(int userId, CancellationToken ct)
+        => await _db.ExpenseRules
+            .Include(rule => rule.Location)
+            .AsNoTracking()
+            .Where(rule => rule.UserId == userId)
+            .OrderBy(rule => rule.Note)
+            .ToArrayAsync(ct);
+
+    public async Task<ExpenseRule?> GetExpenseRuleAsync(int userId, int id, CancellationToken ct)
+        => await _db.ExpenseRules
+            .Include(rule => rule.Location)
+            .FirstOrDefaultAsync(rule => rule.Id == id && rule.UserId == userId, ct);
+
     public async Task<EventTemplate[]> GetEventTemplatesAsync(
         int userId,
         bool includeArchived,

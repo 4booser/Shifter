@@ -42,4 +42,15 @@ public sealed class WorkExpense
     public string Kind { get; set; } = "other";
 
     public string? Note { get; set; }
+
+    /// <summary>
+    /// The standing cost this came from, when it came from one.
+    ///
+    /// A conjured occurrence is a prediction; the moment somebody confirms or
+    /// corrects it, a real row is written carrying this, and the prediction
+    /// for that day steps aside. Without it the two would both be shown and
+    /// the month would count the travel pass twice.
+    /// </summary>
+    public int? RuleId { get; set; }
+    public ExpenseRule? Rule { get; set; }
 }

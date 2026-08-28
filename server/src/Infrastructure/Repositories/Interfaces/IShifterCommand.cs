@@ -37,6 +37,10 @@ public interface IShifterCommand
     Task<bool> AddEventAsync(Event item, CancellationToken ct);
     Task DeleteEventAsync(Event item, CancellationToken ct);
 
+    Task<bool> AddExpenseRuleAsync(ExpenseRule rule, CancellationToken ct);
+    /// <summary>Detaches the expenses it produced, then removes the rule.</summary>
+    Task DeleteExpenseRuleAsync(ExpenseRule rule, CancellationToken ct);
+
     Task<bool> AddEventTemplateAsync(EventTemplate item, CancellationToken ct);
     /// <summary>
     /// Detaches the events that came from it, then removes the row. The days

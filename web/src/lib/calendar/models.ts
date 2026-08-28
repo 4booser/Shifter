@@ -507,6 +507,54 @@ export interface Expense {
   /** Null where it belongs to the trade rather than to an employer. */
   location_id: number | null;
   location_name: string | null;
+  /**
+   * True where nobody has confirmed it: a standing cost says it happens, and
+   * the day has not come or has not been checked. An estimate never mixes
+   * with a fact, so it is labelled rather than quietly counted as one.
+   */
+  expected: boolean;
+  /** The standing cost it came from, where it came from one. */
+  rule_id: number | null;
+}
+
+/**
+ * A cost that comes round: a travel pass, a locker, the whip-round for the
+ * staff room. Nobody records these — recording something is what you do while
+ * thinking about it, and the nature of a standing cost is that you are not.
+ */
+export interface ExpenseRule {
+  id: number;
+  amount: number;
+  kind: ExpenseKind;
+  note: string;
+  /** "month" or "week". */
+  period: 'month' | 'week';
+  /** 1..28 for a monthly rhythm. */
+  day_of_month: number;
+  /** Monday = 0, for a weekly one. */
+  weekday: number;
+  starts_on: string;
+  ends_on: string | null;
+  location_id: number | null;
+  location_name: string | null;
+  /** Occurrences called off, so a screen can offer to put one back. */
+  skipped: string[];
+  /** When it next falls due, or null once it has ended. */
+  next: string | null;
+  /** What it comes to in a month, whatever its rhythm. */
+  monthly: number;
+}
+
+export interface ExpenseRuleSave {
+  amount: number;
+  kind: ExpenseKind;
+  note: string;
+  period: 'month' | 'week';
+  day_of_month: number;
+  weekday: number;
+  starts_on: string;
+  ends_on: string | null;
+  location_id: number | null;
 }
 
 /**

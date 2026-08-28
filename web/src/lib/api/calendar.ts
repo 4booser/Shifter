@@ -12,6 +12,8 @@ import {
   DocumentSave,
   Expense,
   ExpenseKind,
+  ExpenseRule,
+  ExpenseRuleSave,
   Goal,
   GoalSave,
   Payout,
@@ -97,6 +99,20 @@ export const calendarApi = {
     location_id: number | null;
   }) => api<Expense>(`${API}/expenses`, { body: request }),
   deleteExpense: (id: number) => api<void>(`${API}/expenses/${id}`, { method: 'DELETE' }),
+
+  /** Costs that come round, and the occurrences they conjure. */
+  expenseRules: () => api<ExpenseRule[]>(`${API}/expenses/rules`),
+  createExpenseRule: (request: ExpenseRuleSave) =>
+    api<ExpenseRule>(`${API}/expenses/rules`, { body: request }),
+  updateExpenseRule: (id: number, request: ExpenseRuleSave) =>
+    api<ExpenseRule>(`${API}/expenses/rules/${id}`, { method: 'PUT', body: request }),
+  /** One month off, one button. Not an edit to the rule. */
+  skipExpense: (id: number, day: string, skipped: boolean) =>
+    api<ExpenseRule>(`${API}/expenses/rules/${id}/skip?day=${day}&skipped=${skipped}`, {
+      method: 'PUT',
+    }),
+  deleteExpenseRule: (id: number) =>
+    api<void>(`${API}/expenses/rules/${id}`, { method: 'DELETE' }),
   /** One pay period at one place, in the shape a payslip is written in. */
   payslipCheck: (location_id: number, on: string) =>
     api<PayslipCheck>(`${API}/payouts/check?location_id=${location_id}&on=${on}`),

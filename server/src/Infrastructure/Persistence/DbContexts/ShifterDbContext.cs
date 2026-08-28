@@ -20,6 +20,7 @@ public class ShifterDbContext : DbContext
     public DbSet<TeamMember> TeamMembers => Set<TeamMember>();
     public DbSet<Event> Events => Set<Event>();
     public DbSet<EventTemplate> EventTemplates => Set<EventTemplate>();
+    public DbSet<ExpenseRule> ExpenseRules => Set<ExpenseRule>();
     public DbSet<CoverOffer> CoverOffers => Set<CoverOffer>();
     public DbSet<Goal> Goals => Set<Goal>();
     public DbSet<WebhookEndpoint> WebhookEndpoints => Set<WebhookEndpoint>();
@@ -280,6 +281,17 @@ public class ShifterDbContext : DbContext
             .IsUnique();
         modelBuilder.Entity<GigReview>()
             .HasIndex(review => review.TargetUserId);
+
+        modelBuilder.Entity<ExpenseRule>()
+            .HasIndex(rule => rule.UserId);
+
+        // Stopping a standing cost must not remove the months of it that were
+        // already paid, so the expenses it produced merely lose the link.
+        modelBuilder.Entity<WorkExpense>()
+            .HasOne(expense => expense.Rule)
+            .WithMany()
+            .HasForeignKey(expense => expense.RuleId)
+            .OnDelete(DeleteBehavior.SetNull);
 
         // The palette is read whole, per person, on every calendar load.
         modelBuilder.Entity<EventTemplate>()

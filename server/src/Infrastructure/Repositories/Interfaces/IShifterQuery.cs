@@ -36,6 +36,10 @@ public interface IShifterQuery
 
     /// <summary>The event palette: what somebody puts on days that is not work.</summary>
     Task<EventTemplate[]> GetEventTemplatesAsync(int userId, bool includeArchived, CancellationToken ct);
+
+    /// <summary>Costs that come round: a travel pass, a locker, a whip-round.</summary>
+    Task<ExpenseRule[]> GetExpenseRulesAsync(int userId, CancellationToken ct);
+    Task<ExpenseRule?> GetExpenseRuleAsync(int userId, int id, CancellationToken ct);
     Task<EventTemplate?> GetEventTemplateAsync(int userId, int id, CancellationToken ct);
     Task<Event?> GetEventAsync(int userId, int id, CancellationToken ct);
 

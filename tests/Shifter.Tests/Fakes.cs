@@ -101,6 +101,14 @@ public sealed class FakeShifterQuery : IShifterQuery
         => Task.FromResult(Goals.FirstOrDefault(
             item => item.UserId == userId && item.Period == period && item.Anchor == anchor));
 
+    public List<ExpenseRule> ExpenseRules { get; } = [];
+
+    public Task<ExpenseRule[]> GetExpenseRulesAsync(int userId, CancellationToken ct)
+        => Task.FromResult(ExpenseRules.Where(rule => rule.UserId == userId).ToArray());
+
+    public Task<ExpenseRule?> GetExpenseRuleAsync(int userId, int id, CancellationToken ct)
+        => Task.FromResult(ExpenseRules.FirstOrDefault(rule => rule.Id == id && rule.UserId == userId));
+
     public List<EventTemplate> EventTemplates { get; } = [];
 
     public Task<EventTemplate[]> GetEventTemplatesAsync(int userId, bool includeArchived, CancellationToken ct)
@@ -294,6 +302,28 @@ public sealed class FakeShifterCommand : IShifterCommand
     public List<EventTemplate> EventTemplates => _query?.EventTemplates ?? _ownTemplates;
 
     private readonly List<EventTemplate> _ownTemplates = [];
+
+    public List<ExpenseRule> ExpenseRules => _query?.ExpenseRules ?? _ownRules;
+
+    private readonly List<ExpenseRule> _ownRules = [];
+
+    public Task<bool> AddExpenseRuleAsync(ExpenseRule rule, CancellationToken ct)
+    {
+        if (rule.Id == 0) rule.Id = ExpenseRules.Count + 1;
+
+        ExpenseRules.Add(rule);
+
+        return Task.FromResult(true);
+    }
+
+    public Task DeleteExpenseRuleAsync(ExpenseRule rule, CancellationToken ct)
+    {
+        foreach (var row in _query?.Expenses ?? []) if (row.RuleId == rule.Id) row.RuleId = null;
+
+        ExpenseRules.Remove(rule);
+
+        return Task.CompletedTask;
+    }
 
     public Task<bool> AddEventTemplateAsync(EventTemplate item, CancellationToken ct)
     {

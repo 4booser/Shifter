@@ -586,6 +586,7 @@ export default function BankScreen() {
       {view === 'analysis' && (
         <BankAnalysis
           items={mono.items}
+          days={[...days.values()]}
           month={currentMonth()}
           earned={earned}
           palette={palette}

@@ -1,11 +1,23 @@
+import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { Appear, Roll } from '@/components/motion';
 import { Palette } from '@/constants/theme';
 import { monthBounds, shortDate, YearMonth } from '@/lib/calendar';
 import { moneyLasted, MonoStatementItem, periodTotals, spendingByCategory } from '@/lib/mono';
-import { money } from '@/lib/types';
+import { closingCosts, realHourly, spendingByDayKind } from '@/lib/mono-work';
+import { CalendarDayData, money } from '@/lib/types';
 import { t } from '@/lib/i18n';
+
+/** The matcher's own kinds, in the words somebody would use. */
+const KIND_NAMES: Record<string, string> = {
+  transport: 'дорога',
+  food: 'еда',
+  uniform: 'форма',
+  tools: 'инструмент',
+  training: 'учёба',
+  other: 'прочее',
+};
 
 /**
  * What the work brought and what it cost, side by side with what the month
@@ -19,6 +31,7 @@ import { t } from '@/lib/i18n';
  */
 export function BankAnalysis({
   items,
+  days,
   month,
   earned,
   palette,
@@ -27,6 +40,8 @@ export function BankAnalysis({
   floor,
 }: {
   items: MonoStatementItem[];
+  /** The rota, which is the half of this arithmetic the bank does not have. */
+  days: CalendarDayData[];
   month: YearMonth;
   /** What Shifter says was earned this month. */
   earned: number;
@@ -40,6 +55,11 @@ export function BankAnalysis({
   const categories = spendingByCategory(items, bounds.from, bounds.to);
   const peak = Math.max(1, ...categories.map((row) => row.total));
   const lasted = paidOn === null ? null : moneyLasted(items, paidOn, floor);
+
+  // The three questions neither application can answer alone.
+  const rate = realHourly(items, days, bounds.from, bounds.to);
+  const split = spendingByDayKind(items, days, bounds.from, bounds.to);
+  const closing = closingCosts(items, days, bounds.from, bounds.to);
 
   if (items.length === 0) {
     return (
@@ -92,6 +112,74 @@ export function BankAnalysis({
         <Text style={styles.note}>
           С {shortDate(paidOn)} до дня, когда на счету осталось меньше {money(floor)}.
         </Text>
+      )}
+
+      {rate !== null && (
+        <Appear index={2}>
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>{t('Сколько на самом деле стоит час')}</Text>
+            <View style={styles.rateRow}>
+              <View style={styles.rateHalf}>
+                <Text style={styles.rateBig}>{money(Math.round(rate.headline))}</Text>
+                <Text style={styles.rateLabel}>{t('по графику')}</Text>
+              </View>
+              <Ionicons name="arrow-forward" size={16} color={palette.textSecondary} />
+              <View style={styles.rateHalf}>
+                <Text style={[styles.rateBig, { color: palette.accent }]}>
+                  {money(Math.round(rate.real))}
+                </Text>
+                <Text style={styles.rateLabel}>{t('после трат на работу')}</Text>
+              </View>
+            </View>
+            {/* Only spending that lands on a working day and in a category
+                that can plausibly be about work. Counting the supermarket
+                would make every job look ruinous and would be about
+                groceries. */}
+            <Text style={styles.cardNote}>
+              {t('За')} {Math.round(rate.hours)} {t('ч работа принесла')} {money(rate.earned)}
+              {rate.costs > 0
+                ? `, ${t('а добраться и поесть на смене стоило')} ${money(rate.costs)}.`
+                : `. ${t('Трат на работу в выписке не нашлось.')}`}
+            </Text>
+          </View>
+        </Appear>
+      )}
+
+      {split !== null && split.onShift > split.off && (
+        <Appear index={3}>
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>{t('Рабочий день против выходного')}</Text>
+            <Text style={styles.cardNote}>
+              {t('В день со сменой уходит на')} {money(Math.round(split.onShift - split.off))}{' '}
+              {t('больше')} — {money(Math.round(split.onShift))} {t('против')}{' '}
+              {money(Math.round(split.off))}.
+              {split.differences.length > 0 && (
+                <>
+                  {' '}
+                  {t('Больше всего разницы в категории')}{' '}
+                  {t(KIND_NAMES[split.differences[0].kind] ?? split.differences[0].kind)}.
+                </>
+              )}
+            </Text>
+            <Text style={styles.cardFaint}>
+              {split.onShiftDays} {t('рабочих дней и')} {split.offDays} {t('выходных в этом месяце')}
+            </Text>
+          </View>
+        </Appear>
+      )}
+
+      {closing.closings > 0 && (
+        <Appear index={4}>
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>{t('Во что обошлись закрытия')}</Text>
+            <Text style={styles.cardNote}>
+              {closing.closings} {t('закрытий принесли')} {money(closing.earned)}
+              {closing.ride > 0
+                ? `, ${t('а дорога домой после них забрала')} ${money(closing.ride)}.`
+                : `. ${t('Поездок домой после них в выписке нет.')}`}
+            </Text>
+          </View>
+        </Appear>
       )}
 
       {categories.length > 0 && (
@@ -189,6 +277,17 @@ const makeStyles = (palette: Palette) =>
       gap: 8,
     },
     cardTitle: { color: palette.text, fontSize: 15, fontWeight: '800' },
+    cardNote: { color: palette.text, fontSize: 13, lineHeight: 19 },
+    cardFaint: { color: palette.textSecondary, fontSize: 12 },
+    rateRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 4 },
+    rateHalf: { flex: 1, alignItems: 'center', gap: 2 },
+    rateBig: {
+      color: palette.text,
+      fontSize: 24,
+      fontWeight: '800',
+      fontVariant: ['tabular-nums'],
+    },
+    rateLabel: { color: palette.textSecondary, fontSize: 11.5, textAlign: 'center' },
     bar: { flexDirection: 'row', alignItems: 'center', gap: 9 },
     barName: { color: palette.text, fontSize: 12.5, width: 132 },
     track: { flex: 1, height: 8, borderRadius: 4, backgroundColor: palette.backgroundSelected },

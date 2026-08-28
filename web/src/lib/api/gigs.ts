@@ -36,7 +36,15 @@ export interface Gig {
   employer_count: number;
   responses: number;
   is_mine: boolean;
-  my_response: { id: number; accepted: boolean } | null;
+  my_response: {
+    id: number;
+    accepted: boolean;
+    /** quiet · direct · invited · open — see the server's GigResponse. */
+    stage: 'quiet' | 'direct' | 'invited' | 'open';
+    /** The venue's own contacts, and only once it has picked you. */
+    venue_phone: string | null;
+    venue_telegram: string | null;
+  } | null;
   /**
    * The unguessable half of the share link, and only the owner is given it.
    * The preview at /g/… has to work for people who are not signed in, so it
@@ -90,9 +98,11 @@ export interface GigReply {
   avatar_kind: string | null;
   avatar_data: string | null;
   message: string | null;
+  /** Null until the person opened them. A quiet reply has none to show. */
   phone: string | null;
   telegram: string | null;
   accepted: boolean;
+  stage: 'quiet' | 'direct' | 'invited' | 'open';
   worker_rating: number | null;
   worker_count: number;
   created_at: string;
@@ -115,11 +125,17 @@ export const gigApi = {
     api<Gig>(`${GIGS}/${id}/status`, { method: 'PUT', body: { status } }),
   mine: () => api<{ gig: Gig; replies: GigReply[] }[]>(`${GIGS}/mine`),
   myReplies: () => api<Gig[]>(`${GIGS}/replies`),
-  respond: (id: number, body: { message: string | null; phone: string | null; telegram: string | null }) =>
-    api<Gig>(`${GIGS}/${id}/respond`, { body }),
+  respond: (
+    id: number,
+    body: { message: string | null; phone: string | null; telegram: string | null; quiet?: boolean },
+  ) => api<Gig>(`${GIGS}/${id}/respond`, { body }),
+  /** The person's own yes on a quiet reply: their contacts go over now. */
+  open: (id: number, body: { phone: string | null; telegram: string | null }) =>
+    api<Gig>(`${GIGS}/${id}/respond/open`, { body: { message: null, ...body } }),
   withdraw: (id: number) => api<void>(`${GIGS}/${id}/respond`, { method: 'DELETE' }),
-  accept: (id: number, replyId: number) =>
-    api<GigReply>(`${GIGS}/${id}/replies/${replyId}/accept`, { body: {} }),
+  /** What the venue leaves behind when it picks somebody. Both may be null. */
+  accept: (id: number, replyId: number, body: { phone: string | null; telegram: string | null }) =>
+    api<GigReply>(`${GIGS}/${id}/replies/${replyId}/accept`, { body }),
 };
 
 /**

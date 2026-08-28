@@ -548,9 +548,37 @@ function GigCard({ gig, onRespond, onWithdraw }: { gig: Gig; onRespond: () => vo
         )}
         {!gig.is_mine && gig.my_response !== null && (
           <span className="ml-auto flex items-center gap-2">
-            <span className={`chip ${gig.my_response.accepted ? 'border-good/40 bg-(--good-soft) text-good' : ''}`}>
-              {gig.my_response.accepted ? t('You are in 🙌') : t('Sent, waiting')}
+            <span className={`chip ${gig.my_response.stage === 'open' ? 'border-good/40 bg-(--good-soft) text-good' : gig.my_response.stage === 'invited' ? 'border-(--accent)/40 text-(--accent)' : ''}`}>
+              {
+                {
+                  quiet: t('Asked'),
+                  direct: t('Sent, waiting'),
+                  invited: t('They want you 🙌'),
+                  open: t('You are in 🙌'),
+                }[gig.my_response.stage]
+              }
             </span>
+            {/* The venue's side of it, once it has picked you. */}
+            {gig.my_response.venue_phone !== null && (
+              <a className="text-(--accent)" href={`tel:${gig.my_response.venue_phone}`}>
+                {gig.my_response.venue_phone}
+              </a>
+            )}
+            {gig.my_response.venue_telegram !== null && (
+              <a
+                className="text-(--accent)"
+                href={`https://t.me/${gig.my_response.venue_telegram.replace(/^@/, '')}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {gig.my_response.venue_telegram}
+              </a>
+            )}
+            {gig.my_response.stage === 'invited' && (
+              <button type="button" className="btn btn-primary btn-sm" onClick={onRespond}>
+                {t('Share contacts')}
+              </button>
+            )}
             {!gig.my_response.accepted && (
               <button type="button" className="btn btn-quiet btn-sm" onClick={onWithdraw}>
                 {t('Withdraw')}
@@ -627,6 +655,21 @@ function MyListings({
 }) {
   const { t } = useI18n();
   const { format } = useMoney();
+  // Taking somebody now leaves them a way to ask what time to come. It is the
+  // venue's own contacts that go, so the button says which ones before it does.
+  const [mine, setMine] = useState<{ phone: string | null; telegram: string | null }>({
+    phone: null,
+    telegram: null,
+  });
+
+  useEffect(() => {
+    void accountApi
+      .get()
+      .then((profile) =>
+        setMine({ phone: profile.contact_phone ?? null, telegram: profile.contact_telegram ?? null }),
+      )
+      .catch(() => undefined);
+  }, []);
 
   if (rows.length === 0) {
     return <p className="field-hint">{t('Post a gig and the replies gather here, contacts included.')}</p>;
@@ -670,6 +713,14 @@ function MyListings({
                   <Stars rating={reply.worker_rating} count={reply.worker_count} small />
                   {reply.message !== null && <span className="text-muted">«{reply.message}»</span>}
                   <span className="ml-auto flex items-center gap-2 tabular">
+                    {reply.stage === 'quiet' && (
+                      <span className="chip">{t('Just asking')}</span>
+                    )}
+                    {reply.stage === 'invited' && (
+                      <span className="chip border-(--accent)/40 text-(--accent)">
+                        {t('Waiting on them')}
+                      </span>
+                    )}
                     {reply.phone !== null && <a className="text-(--accent)" href={`tel:${reply.phone}`}>{reply.phone}</a>}
                     {reply.telegram !== null && (
                       <a className="text-(--accent)" href={`https://t.me/${reply.telegram.replace(/^@/, '')}`} target="_blank" rel="noreferrer">
@@ -682,9 +733,14 @@ function MyListings({
                       <button
                         type="button"
                         className="btn btn-sm"
-                        onClick={() => void gigApi.accept(gig.id, reply.id).then(onChanged).catch((c) => onError(apiErrorMessage(c)))}
+                        title={
+                          mine.phone ?? mine.telegram
+                            ? `${t('They will get')} ${[mine.phone, mine.telegram].filter(Boolean).join(' · ')}`
+                            : t('Add a contact in your profile and they will get it too.')
+                        }
+                        onClick={() => void gigApi.accept(gig.id, reply.id, mine).then(onChanged).catch((c) => onError(apiErrorMessage(c)))}
                       >
-                        {t('Take them')}
+                        {reply.stage === 'quiet' ? t('Invite them') : t('Take them')}
                       </button>
                     )}
                   </span>
@@ -698,8 +754,16 @@ function MyListings({
   );
 }
 
-/** The consent moment: exactly what leaves your profile, shown before it does. */
+/**
+ * The consent moment: exactly what leaves your profile, shown before it does.
+ *
+ * It serves both halves of the handshake. Opened on a gig you have not
+ * answered it is the reply; opened on one where the venue has already said
+ * yes it is your yes back, and then there is nothing to choose — only the
+ * contacts you held on to.
+ */
 function RespondModal({ gig, onClose, onDone }: { gig: Gig; onClose: () => void; onDone: () => void }) {
+  const opening = gig.my_response !== null;
   const { t } = useI18n();
   const { format } = useMoney();
   const [message, setMessage] = useState('');
@@ -707,6 +771,9 @@ function RespondModal({ gig, onClose, onDone }: { gig: Gig; onClose: () => void;
   const [telegram, setTelegram] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Asking is not applying. Somebody still deciding gets to ask without
+  // leaving a phone number behind on a shift they may not take.
+  const [quiet, setQuiet] = useState(false);
 
   // Prefill from the profile so a second reply is one tap, not a form.
   useEffect(() => {
@@ -721,11 +788,19 @@ function RespondModal({ gig, onClose, onDone }: { gig: Gig; onClose: () => void;
     setError(null);
 
     try {
-      await gigApi.respond(gig.id, {
-        message: message.trim() === '' ? null : message.trim(),
+      const contacts = {
         phone: phone.trim() === '' ? null : phone.trim(),
         telegram: telegram.trim() === '' ? null : telegram.trim(),
-      });
+      };
+
+      await (opening
+        ? gigApi.open(gig.id, contacts)
+        : gigApi.respond(gig.id, {
+            message: message.trim() === '' ? null : message.trim(),
+            phone: quiet ? null : contacts.phone,
+            telegram: quiet ? null : contacts.telegram,
+            quiet,
+          }));
       onDone();
     } catch (caught) {
       setError(apiErrorMessage(caught));
@@ -735,12 +810,13 @@ function RespondModal({ gig, onClose, onDone }: { gig: Gig; onClose: () => void;
   };
 
   return (
-    <Modal open title={`${t('I am in')} — ${gig.title}`} onClose={onClose}>
+    <Modal open title={`${opening ? t('Share contacts') : t('I am in')} — ${gig.title}`} onClose={onClose}>
       <div className="flex flex-col gap-3">
         <p className="field-hint">
           {gig.venue} · {gig.date.slice(8)}.{gig.date.slice(5, 7)} · {gig.start}–{gig.end} · {payLine(format, t, gig)}
         </p>
         {error !== null && <Alert onDismiss={() => setError(null)}>{error}</Alert>}
+        {!opening && (
         <label>
           <span className="field-label">{t('A line about you')}</span>
           <textarea
@@ -751,19 +827,44 @@ function RespondModal({ gig, onClose, onDone }: { gig: Gig; onClose: () => void;
             onChange={(event) => setMessage(event.target.value)}
           />
         </label>
+        )}
+        {!opening && (
         <div className="grid grid-cols-2 gap-2">
-          <label>
-            <span className="field-label">{t('Phone')}</span>
-            <input className="field-input w-full" inputMode="tel" placeholder="+380…" value={phone} onChange={(event) => setPhone(event.target.value)} />
-          </label>
-          <label>
-            <span className="field-label">Telegram</span>
-            <input className="field-input w-full" placeholder="@nick" value={telegram} onChange={(event) => setTelegram(event.target.value)} />
-          </label>
+          <button
+            type="button"
+            className={`btn ${quiet ? '' : 'btn-primary'}`}
+            onClick={() => setQuiet(false)}
+          >
+            {t('I am in')}
+          </button>
+          <button
+            type="button"
+            className={`btn ${quiet ? 'btn-primary' : ''}`}
+            onClick={() => setQuiet(true)}
+          >
+            {t('Just asking')}
+          </button>
         </div>
-        <p className="field-hint">{t('Only what you filled in here reaches the venue — nothing else ever does.')}</p>
-        <button type="button" className="btn btn-primary w-full" disabled={busy || (phone.trim() === '' && telegram.trim() === '')} onClick={() => void send()}>
-          {t('Send and share contacts')}
+        )}
+        {(opening || !quiet) && (
+          <div className="grid grid-cols-2 gap-2">
+            <label>
+              <span className="field-label">{t('Phone')}</span>
+              <input className="field-input w-full" inputMode="tel" placeholder="+380…" value={phone} onChange={(event) => setPhone(event.target.value)} />
+            </label>
+            <label>
+              <span className="field-label">Telegram</span>
+              <input className="field-input w-full" placeholder="@nick" value={telegram} onChange={(event) => setTelegram(event.target.value)} />
+            </label>
+          </div>
+        )}
+        <p className="field-hint">
+          {quiet && !opening
+            ? t('The venue sees your card and your stars. You open your contacts yourself, once you have agreed.')
+            : t('Only what you filled in here reaches the venue — nothing else ever does.')}
+        </p>
+        <button type="button" className="btn btn-primary w-full" disabled={busy || ((opening || !quiet) && phone.trim() === '' && telegram.trim() === '')} onClick={() => void send()}>
+          {opening ? t('Share contacts') : quiet ? t('Ask about it') : t('Send and share contacts')}
         </button>
       </div>
     </Modal>

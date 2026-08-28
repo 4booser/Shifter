@@ -280,6 +280,13 @@ public class ShifterDbContext : DbContext
         modelBuilder.Entity<GigReview>()
             .HasIndex(review => review.TargetUserId);
 
+        // Stage and the two Shared* properties are worked out from the
+        // timestamps beside them; a column for either would be a second copy
+        // of the same truth, free to drift out of step with the first.
+        modelBuilder.Entity<GigResponse>().Ignore(reply => reply.Stage);
+        modelBuilder.Entity<GigResponse>().Ignore(reply => reply.SharedPhone);
+        modelBuilder.Entity<GigResponse>().Ignore(reply => reply.SharedTelegram);
+
         // One person answers one listing once.
         modelBuilder.Entity<GigResponse>()
             .HasIndex(reply => new { reply.ListingId, reply.UserId })

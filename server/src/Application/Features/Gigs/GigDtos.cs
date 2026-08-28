@@ -76,9 +76,31 @@ public record GigWorthDto(
     /// <summary>Positive means better than the caller's usual hour.</summary>
     decimal difference_percent);
 
-public record GigMyResponseDto(int id, bool accepted);
+/// <summary>
+/// The caller's own reply, as their own screen needs to draw it: which stage
+/// it has reached, and — once both sides have said yes — how to reach the
+/// venue. Being taken used to be a notification and nothing else.
+/// </summary>
+public record GigMyResponseDto(
+    int id,
+    bool accepted,
+    string stage,
+    string? venue_phone = null,
+    string? venue_telegram = null);
 
-public record GigRespondDto(string? message, string? phone, string? telegram);
+/// <summary>
+/// <paramref name="quiet"/> asks about the shift without handing anything
+/// over. Contacts stay with the person until the venue has said yes and they
+/// have said it back; the venue sees their card and their stars meanwhile.
+/// </summary>
+public record GigRespondDto(
+    string? message,
+    string? phone,
+    string? telegram,
+    bool quiet = false);
+
+/// <summary>What the venue leaves when it picks somebody. Both may be absent.</summary>
+public record GigAcceptDto(string? phone = null, string? telegram = null);
 
 /// <summary>An owner's view of one reply: the person and what they chose to share.</summary>
 public record GigResponseDto(
@@ -88,12 +110,15 @@ public record GigResponseDto(
     string? avatar_kind,
     string? avatar_data,
     string? message,
+    /// <summary>Null until the person opened them — see GigResponse.Stage.</summary>
     string? phone,
     string? telegram,
     bool accepted,
     double? worker_rating,
     int worker_count,
-    string created_at);
+    string created_at,
+    /// <summary>quiet · direct · invited · open.</summary>
+    string stage = "direct");
 
 public record GigWithResponsesDto(GigDto gig, GigResponseDto[] replies);
 

@@ -109,6 +109,15 @@ public class GigsController : ControllerBase
     public async Task<IActionResult> Respond(int id, [FromBody] GigRespondDto request, CancellationToken ct)
         => Ok(await _gigs.RespondAsync(UserId(), id, request, ct));
 
+    /// <summary>
+    /// The person's yes on a quiet reply: their contacts go to the venue now.
+    /// Rate-limited like the reply itself — it carries the same data.
+    /// </summary>
+    [HttpPost("{id:int}/respond/open")]
+    [EnableRateLimiting(HardeningExtensions.ContactPolicy)]
+    public async Task<IActionResult> Open(int id, [FromBody] GigRespondDto request, CancellationToken ct)
+        => Ok(await _gigs.OpenAsync(UserId(), id, request, ct));
+
     [HttpDelete("{id:int}/respond")]
     public async Task<IActionResult> Withdraw(int id, CancellationToken ct)
     {
@@ -118,8 +127,9 @@ public class GigsController : ControllerBase
     }
 
     [HttpPost("{id:int}/replies/{replyId:int}/accept")]
-    public async Task<IActionResult> Accept(int id, int replyId, CancellationToken ct)
-        => Ok(await _gigs.AcceptAsync(UserId(), id, replyId, ct));
+    public async Task<IActionResult> Accept(
+        int id, int replyId, [FromBody] GigAcceptDto? request, CancellationToken ct)
+        => Ok(await _gigs.AcceptAsync(UserId(), id, replyId, request, ct));
 
     private int UserId()
     {

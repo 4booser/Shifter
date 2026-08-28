@@ -304,6 +304,9 @@ function GigSheet({
   const [phone, setPhone] = useState('');
   const [telegram, setTelegram] = useState('');
   const [message, setMessage] = useState('');
+  // Which of the two answers. "Я выйду" is right for somebody who has
+  // decided; "Пока спрошу" is for the rest, who are most of them.
+  const [quiet, setQuiet] = useState(false);
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState<string | null>(null);
   const [photo, setPhoto] = useState(0);
@@ -320,6 +323,7 @@ function GigSheet({
     setPhone('');
     setTelegram('');
     setMessage('');
+    setQuiet(false);
   }, [gig]);
 
   if (gig === null) {
@@ -338,13 +342,36 @@ function GigSheet({
         method: 'POST',
         body: {
           message: message.trim() === '' ? null : message.trim(),
+          phone: quiet || phone.trim() === '' ? null : phone.trim(),
+          telegram: quiet || telegram.trim() === '' ? null : telegram.trim(),
+          quiet,
+        },
+      });
+      onChanged();
+    } catch (caught) {
+      setFailed(caught instanceof ApiError ? caught.message : t('Отклик не ушёл.'));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  /** The other half of the handshake: the contacts, now that both said yes. */
+  const open = async () => {
+    setBusy(true);
+    setFailed(null);
+
+    try {
+      await api(`/shifter/v1/gigs/${gig.id}/respond/open`, {
+        method: 'POST',
+        body: {
+          message: null,
           phone: phone.trim() === '' ? null : phone.trim(),
           telegram: telegram.trim() === '' ? null : telegram.trim(),
         },
       });
       onChanged();
     } catch (caught) {
-      setFailed(caught instanceof ApiError ? caught.message : t('Отклик не ушёл.'));
+      setFailed(caught instanceof ApiError ? caught.message : t('Не отправилось.'));
     } finally {
       setBusy(false);
     }
@@ -459,10 +486,49 @@ function GigSheet({
         ) : gig.my_response !== null ? (
           <>
             <Text style={styles.sheetNote}>
-              {gig.my_response.accepted
-                ? t('Вас взяли. Заведение получило ваши контакты.')
-                : t('Отклик отправлен. Заведение видит ваши контакты.')}
+              {
+                {
+                  quiet: t('Вы спросили про смену. Контакты пока при вас — заведение видит только вашу карточку и звёзды.'),
+                  direct: t('Отклик отправлен. Заведение видит ваши контакты.'),
+                  invited: t('Вас зовут! Осталось открыть контакты — тогда смогут позвонить.'),
+                  open: t('Вас взяли. Заведение получило ваши контакты.'),
+                }[gig.my_response.stage]
+              }
             </Text>
+
+            {gig.my_response.stage === 'invited' && (
+              <>
+                <Text style={styles.fieldLabel}>{t('Телефон')}</Text>
+                <TextInput
+                  style={styles.input}
+                  value={phone}
+                  onChangeText={setPhone}
+                  keyboardType="phone-pad"
+                  placeholder="+380…"
+                  placeholderTextColor={palette.textSecondary}
+                />
+
+                <Text style={styles.fieldLabel}>{t('Телеграм')}</Text>
+                <TextInput
+                  style={styles.input}
+                  value={telegram}
+                  onChangeText={setTelegram}
+                  autoCapitalize="none"
+                  placeholder={t("@ник")}
+                  placeholderTextColor={palette.textSecondary}
+                />
+
+                <Press
+                  style={[styles.primary, busy && { opacity: 0.6 }]}
+                  disabled={busy}
+                  onPress={() => void open()}
+                >
+                  <Text style={styles.primaryText}>
+                    {busy ? t('Отправляем…') : t('Открыть контакты')}
+                  </Text>
+                </Press>
+              </>
+            )}
 
             {gig.my_response.accepted && gig.employment === 'freelance' && (
               <Press
@@ -489,25 +555,48 @@ function GigSheet({
           </>
         ) : (
           <>
-            <Text style={styles.fieldLabel}>{t('Телефон')}</Text>
-            <TextInput
-              style={styles.input}
-              value={phone}
-              onChangeText={setPhone}
-              keyboardType="phone-pad"
-              placeholder="+380…"
-              placeholderTextColor={palette.textSecondary}
-            />
+            <View style={styles.answers}>
+              <Press
+                style={[styles.answer, !quiet && styles.answerOn]}
+                onPress={() => setQuiet(false)}
+              >
+                <Text style={[styles.answerText, !quiet && styles.answerTextOn]}>
+                  {t('Я выйду')}
+                </Text>
+              </Press>
+              <Press
+                style={[styles.answer, quiet && styles.answerOn]}
+                onPress={() => setQuiet(true)}
+              >
+                <Text style={[styles.answerText, quiet && styles.answerTextOn]}>
+                  {t('Пока спрошу')}
+                </Text>
+              </Press>
+            </View>
 
-            <Text style={styles.fieldLabel}>{t('Телеграм')}</Text>
-            <TextInput
-              style={styles.input}
-              value={telegram}
-              onChangeText={setTelegram}
-              autoCapitalize="none"
-              placeholder={t("@ник")}
-              placeholderTextColor={palette.textSecondary}
-            />
+            {!quiet && (
+              <>
+                <Text style={styles.fieldLabel}>{t('Телефон')}</Text>
+                <TextInput
+                  style={styles.input}
+                  value={phone}
+                  onChangeText={setPhone}
+                  keyboardType="phone-pad"
+                  placeholder="+380…"
+                  placeholderTextColor={palette.textSecondary}
+                />
+
+                <Text style={styles.fieldLabel}>{t('Телеграм')}</Text>
+                <TextInput
+                  style={styles.input}
+                  value={telegram}
+                  onChangeText={setTelegram}
+                  autoCapitalize="none"
+                  placeholder={t("@ник")}
+                  placeholderTextColor={palette.textSecondary}
+                />
+              </>
+            )}
 
             <Text style={styles.fieldLabel}>{t('Пара слов о себе')}</Text>
             <TextInput
@@ -526,18 +615,50 @@ function GigSheet({
               disabled={busy}
               onPress={() => void respond()}
             >
-              <Text style={styles.primaryText}>{busy ? t('Отправляем…') : t('Я выйду')}</Text>
+              <Text style={styles.primaryText}>
+                {busy ? t('Отправляем…') : quiet ? t('Спросить') : t('Я выйду')}
+              </Text>
             </Press>
 
-            <Text style={styles.privacy}>{t('Контакты уйдут только этому заведению — на доске их не видно.')}</Text>
+            <Text style={styles.privacy}>
+              {quiet
+                ? t('Заведение увидит вашу карточку и звёзды. Телефон откроете сами, когда договоритесь.')
+                : t('Контакты уйдут только этому заведению — на доске их не видно.')}
+            </Text>
           </>
         )}
 
-        {gig.my_response?.accepted === true && phone.trim() !== '' && (
-          <Press style={styles.ghost} onPress={() => void Linking.openURL(`tel:${phone.trim()}`)}>
-            <Text style={styles.ghostText}>{t('Позвонить')}</Text>
-          </Press>
-        )}
+        {/*
+          The venue's own side of the exchange. This used to dial the number
+          in the form above — your own, and only if you had just typed it.
+        */}
+        {gig.my_response?.venue_phone !== null &&
+          gig.my_response?.venue_phone !== undefined && (
+            <Press
+              style={styles.ghost}
+              onPress={() => void Linking.openURL(`tel:${gig.my_response!.venue_phone!}`)}
+            >
+              <Text style={styles.ghostText}>
+                {t('Позвонить в заведение')} · {gig.my_response.venue_phone}
+              </Text>
+            </Press>
+          )}
+
+        {gig.my_response?.venue_telegram !== null &&
+          gig.my_response?.venue_telegram !== undefined && (
+            <Press
+              style={styles.ghost}
+              onPress={() =>
+                void Linking.openURL(
+                  `https://t.me/${gig.my_response!.venue_telegram!.replace(/^@/, '')}`,
+                )
+              }
+            >
+              <Text style={styles.ghostText}>
+                {t('Написать в телеграм')} · {gig.my_response.venue_telegram}
+              </Text>
+            </Press>
+          )}
       </ScrollView>
     </Modal>
   );
@@ -551,6 +672,20 @@ const makeStyles = (palette: Palette) =>
     title: { color: palette.text, fontSize: 30, fontWeight: '800' },
     grow: { flex: 1 },
     error: { color: palette.danger, fontSize: 13 },
+    // Two answers, side by side, so the quiet one is a choice rather than a
+    // link somebody has to find under the button they were about to press.
+    answers: { flexDirection: 'row', gap: 8, marginTop: 4 },
+    answer: {
+      flex: 1,
+      borderWidth: 1,
+      borderColor: palette.border,
+      borderRadius: 14,
+      paddingVertical: 11,
+      alignItems: 'center',
+    },
+    answerOn: { borderColor: palette.accent, backgroundColor: palette.accentSoft },
+    answerText: { color: palette.textSecondary, fontSize: 14, fontWeight: '600' },
+    answerTextOn: { color: palette.accent, fontWeight: '800' },
     trades: { gap: 6, paddingRight: 14 },
     trade: {
       borderWidth: 1,

@@ -179,6 +179,30 @@ public sealed class GigService
         return ToDto(gig, userId);
     }
 
+    /// <summary>
+    /// One reply as its listing's owner may see it. Every screen that shows a
+    /// reply goes through here, because the rule it enforces — a contact is
+    /// visible only once the person opened it — is the kind that has to be
+    /// impossible to forget rather than merely written down somewhere.
+    /// </summary>
+    private static GigResponseDto Seen(
+        GigResponse reply,
+        Dictionary<int, (double Avg, int Count)> workerRatings)
+        => new GigResponseDto(
+            reply.Id,
+            reply.UserId,
+            $"{reply.User?.FirstName} {reply.User?.LastName}".Trim(),
+            reply.User?.AvatarKind,
+            reply.User?.AvatarData,
+            reply.Message,
+            reply.SharedPhone,
+            reply.SharedTelegram,
+            reply.AcceptedAt is not null,
+            workerRatings.GetValueOrDefault(reply.UserId).Count > 0 ? workerRatings[reply.UserId].Avg : null,
+            workerRatings.GetValueOrDefault(reply.UserId).Count,
+            reply.CreatedAt.ToString("O"),
+            reply.Stage);
+
     public async Task<GigWithResponsesDto[]> MineAsync(int userId, CancellationToken ct)
     {
         var rows = await _db.GigListings
@@ -198,19 +222,7 @@ public sealed class GigService
             ToDto(gig, userId),
             (gig.Responses ?? [])
                 .OrderBy(reply => reply.CreatedAt)
-                .Select(reply => new GigResponseDto(
-                    reply.Id,
-                    reply.UserId,
-                    $"{reply.User?.FirstName} {reply.User?.LastName}".Trim(),
-                    reply.User?.AvatarKind,
-                    reply.User?.AvatarData,
-                    reply.Message,
-                    reply.Phone,
-                    reply.Telegram,
-                    reply.AcceptedAt is not null,
-                    workerRatings.GetValueOrDefault(reply.UserId).Count > 0 ? workerRatings[reply.UserId].Avg : null,
-                    workerRatings.GetValueOrDefault(reply.UserId).Count,
-                    reply.CreatedAt.ToString("O")))
+                .Select(reply => Seen(reply, workerRatings))
                 .ToArray()))
             .ToArray();
     }
@@ -248,7 +260,13 @@ public sealed class GigService
         if ((gig.Responses ?? []).Any(reply => reply.UserId == userId))
             throw new ConflictException("You already answered this one.");
 
-        var (phone, telegram) = GigRules.CleanContacts(request.phone, request.telegram);
+        // A quiet answer carries no contacts at all — not empty ones. The
+        // person is asking, not applying, and the venue gets their card and
+        // their stars to judge by, which is what it judges on anyway.
+        var (phone, telegram) = request.quiet
+            ? (null, null)
+            : GigRules.CleanContacts(request.phone, request.telegram);
+
         var message = GigRules.CleanOptional(request.message, GigResponse.MessageMax, "Message");
 
         _db.GigResponses.Add(new GigResponse
@@ -258,6 +276,7 @@ public sealed class GigService
             Message = message,
             Phone = phone,
             Telegram = telegram,
+            OpenedAt = request.quiet ? null : DateTime.UtcNow,
         });
 
         // Remember what the person agreed to share, so the next reply offers
@@ -274,10 +293,13 @@ public sealed class GigService
 
         await _push.NotifyAsync(
             gig.OwnerUserId,
-            language => language switch
+            language => (language, request.quiet) switch
             {
-                "ru" => ("Отклик на подработку", $"«{gig.Title}» {gig.Date:dd.MM} — новый человек готов выйти."),
-                "uk" => ("Відгук на підробіток", $"«{gig.Title}» {gig.Date:dd.MM} — нова людина готова вийти."),
+                ("ru", true) => ("Спрашивают про смену", $"«{gig.Title}» {gig.Date:dd.MM} — человек присматривается."),
+                ("uk", true) => ("Питають про зміну", $"«{gig.Title}» {gig.Date:dd.MM} — людина придивляється."),
+                (_, true) => ("Somebody is asking", $"“{gig.Title}” {gig.Date:dd.MM} — a maybe, not a yes."),
+                ("ru", _) => ("Отклик на подработку", $"«{gig.Title}» {gig.Date:dd.MM} — новый человек готов выйти."),
+                ("uk", _) => ("Відгук на підробіток", $"«{gig.Title}» {gig.Date:dd.MM} — нова людина готова вийти."),
                 _ => ("A reply to your gig", $"“{gig.Title}” {gig.Date:dd.MM} — somebody is in."),
             },
             "/gigs",
@@ -296,7 +318,8 @@ public sealed class GigService
         await _db.SaveChangesAsync(ct);
     }
 
-    public async Task<GigResponseDto> AcceptAsync(int userId, int gigId, int replyId, CancellationToken ct)
+    public async Task<GigResponseDto> AcceptAsync(
+        int userId, int gigId, int replyId, GigAcceptDto? request, CancellationToken ct)
     {
         var gig = await _db.GigListings
             .Include(row => row.Responses)!
@@ -311,6 +334,15 @@ public sealed class GigService
         {
             reply.AcceptedAt = DateTime.UtcNow;
 
+            // The venue's half of the exchange. Optional, because a venue that
+            // leaves nothing still books somebody — the person just has one
+            // fewer way to ask what time to come.
+            var (venuePhone, venueTelegram) =
+                GigRules.CleanContacts(request?.phone, request?.telegram, required: false);
+
+            reply.VenuePhone = venuePhone;
+            reply.VenueTelegram = venueTelegram;
+
             // The board's bookkeeping, not a lock: filling the last slot flips
             // the listing so the card stops advertising.
             if ((gig.Responses ?? []).Count(row => row.AcceptedAt is not null) >= gig.Slots)
@@ -318,24 +350,82 @@ public sealed class GigService
 
             await _db.SaveChangesAsync(ct);
 
+            // A quiet reply is not booked yet — the venue has said yes and the
+            // person still has to. Telling them "вас взяли" would be a lie they
+            // only discover by turning up, so it asks instead.
+            var quiet = reply.OpenedAt is null;
+
             await _push.NotifyAsync(
                 reply.UserId,
-                language => language switch
+                language => (language, quiet) switch
                 {
-                    "ru" => ("Вас взяли 🙌", $"«{gig.Title}» — {gig.Venue}, {gig.Date:dd.MM} {gig.StartTime:HH\\:mm}."),
-                    "uk" => ("Вас взяли 🙌", $"«{gig.Title}» — {gig.Venue}, {gig.Date:dd.MM} {gig.StartTime:HH\\:mm}."),
+                    ("ru", true) => ("Вас зовут 🙌", $"«{gig.Title}» — {gig.Venue}, {gig.Date:dd.MM}. Откройте контакты, чтобы договориться."),
+                    ("uk", true) => ("Вас кличуть 🙌", $"«{gig.Title}» — {gig.Venue}, {gig.Date:dd.MM}. Відкрийте контакти, щоб домовитись."),
+                    (_, true) => ("They want you 🙌", $"“{gig.Title}” — {gig.Venue}, {gig.Date:dd.MM}. Share your contacts to sort it out."),
+                    ("ru", _) => ("Вас взяли 🙌", $"«{gig.Title}» — {gig.Venue}, {gig.Date:dd.MM} {gig.StartTime:HH\\:mm}."),
+                    ("uk", _) => ("Вас взяли 🙌", $"«{gig.Title}» — {gig.Venue}, {gig.Date:dd.MM} {gig.StartTime:HH\\:mm}."),
                     _ => ("You are in 🙌", $"“{gig.Title}” — {gig.Venue}, {gig.Date:dd.MM} {gig.StartTime:HH\\:mm}."),
                 },
                 "/gigs",
                 ct);
         }
 
-        return new GigResponseDto(
-            reply.Id, reply.UserId,
-            $"{reply.User?.FirstName} {reply.User?.LastName}".Trim(),
-            reply.User?.AvatarKind, reply.User?.AvatarData,
-            reply.Message, reply.Phone, reply.Telegram,
-            true, null, 0, reply.CreatedAt.ToString("O"));
+        return Seen(reply, []);
+    }
+
+    /// <summary>
+    /// The person's own yes: the contacts they held back now go to the venue.
+    ///
+    /// It does not insist the venue said yes first. The number belongs to the
+    /// person, and somebody who changes their mind and wants to be called
+    /// should be able to say so rather than sit in a stage waiting for
+    /// permission to share their own phone.
+    /// </summary>
+    public async Task<GigDto> OpenAsync(int userId, int gigId, GigRespondDto request, CancellationToken ct)
+    {
+        var gig = await _db.GigListings
+            .Include(row => row.Responses)
+            .FirstOrDefaultAsync(row => row.Id == gigId, ct)
+            ?? throw new NotFoundException("Gig does not exist.");
+
+        var reply = (gig.Responses ?? []).FirstOrDefault(row => row.UserId == userId)
+            ?? throw new NotFoundException("You have not answered this gig.");
+
+        var (phone, telegram) = GigRules.CleanContacts(request.phone, request.telegram);
+
+        // Opening twice is not an error — it is somebody correcting a typo in
+        // their own phone number, and the venue should see the correction.
+        var first = reply.OpenedAt is null;
+
+        reply.Phone = phone;
+        reply.Telegram = telegram;
+        reply.OpenedAt ??= DateTime.UtcNow;
+
+        var me = await _db.Users.FirstOrDefaultAsync(user => user.Id == userId, ct);
+
+        if (me is not null)
+        {
+            me.ContactPhone = phone ?? me.ContactPhone;
+            me.ContactTelegram = telegram ?? me.ContactTelegram;
+        }
+
+        await _db.SaveChangesAsync(ct);
+
+        if (first)
+        {
+            await _push.NotifyAsync(
+                gig.OwnerUserId,
+                language => language switch
+                {
+                    "ru" => ("Контакты открыты", $"«{gig.Title}» {gig.Date:dd.MM} — человек согласился, можно звонить."),
+                    "uk" => ("Контакти відкриті", $"«{gig.Title}» {gig.Date:dd.MM} — людина погодилась, можна дзвонити."),
+                    _ => ("Contacts shared", $"“{gig.Title}” {gig.Date:dd.MM} — they said yes; you can call."),
+                },
+                "/gigs",
+                ct);
+        }
+
+        return ToDto(gig, userId);
     }
 
     /// <summary>Average and count per target, one query for a whole card list.</summary>
@@ -380,9 +470,11 @@ public sealed class GigService
                 Person = group.First().User,
                 Times = group.Count(),
                 Last = group.Max(reply => reply.Listing!.Date),
-                // The freshest contacts they shared, not the oldest.
-                Phone = group.OrderByDescending(reply => reply.CreatedAt).Select(reply => reply.Phone).FirstOrDefault(value => value != null),
-                Telegram = group.OrderByDescending(reply => reply.CreatedAt).Select(reply => reply.Telegram).FirstOrDefault(value => value != null),
+                // The freshest contacts they shared, not the oldest — and
+                // only ones they did share: a person taken on a quiet reply
+                // who never opened theirs has none to remember.
+                Phone = group.OrderByDescending(reply => reply.CreatedAt).Select(reply => reply.SharedPhone).FirstOrDefault(value => value != null),
+                Telegram = group.OrderByDescending(reply => reply.CreatedAt).Select(reply => reply.SharedTelegram).FirstOrDefault(value => value != null),
             })
             .OrderByDescending(entry => entry.Last)
             .Take(24)
@@ -856,7 +948,17 @@ public sealed class GigService
             employerRatings?.GetValueOrDefault(gig.OwnerUserId).Count ?? 0,
             (gig.Responses ?? []).Count,
             gig.OwnerUserId == userId,
-            mine is null ? null : new GigMyResponseDto(mine.Id, mine.AcceptedAt is not null),
+            mine is null
+                ? null
+                : new GigMyResponseDto(
+                    mine.Id,
+                    mine.AcceptedAt is not null,
+                    mine.Stage,
+                    // Only once the venue has actually picked them. Before
+                    // that there is nothing to show, and after it the person
+                    // finally has a way to ask what time to come.
+                    mine.AcceptedAt is null ? null : mine.VenuePhone,
+                    mine.AcceptedAt is null ? null : mine.VenueTelegram),
             // Only to the owner: it is the one person who needs to hand the
             // link out, and giving it to every reader would make the board
             // countable again by another route.

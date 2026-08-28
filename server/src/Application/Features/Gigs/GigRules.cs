@@ -231,12 +231,18 @@ public static class GigRules
     /// A response must carry at least one way to reach the person — a reply
     /// the owner cannot answer is noise for both sides.
     /// </summary>
-    public static (string? Phone, string? Telegram) CleanContacts(string? phone, string? telegram)
+    /// <summary>
+    /// <paramref name="required"/> false is the venue's side of the handshake:
+    /// it may pick somebody without leaving a number, and then the person
+    /// simply has one fewer way to ask what time to come.
+    /// </summary>
+    public static (string? Phone, string? Telegram) CleanContacts(
+        string? phone, string? telegram, bool required = true)
     {
         var cleanPhone = CleanOptional(phone, GigResponse.ContactMax, "Phone");
         var cleanTelegram = CleanOptional(telegram, GigResponse.ContactMax, "Telegram");
 
-        if (cleanPhone is null && cleanTelegram is null)
+        if (required && cleanPhone is null && cleanTelegram is null)
             throw new ValidationException("Share a phone or a Telegram — the venue has to be able to reach you.");
 
         return (cleanPhone, cleanTelegram);

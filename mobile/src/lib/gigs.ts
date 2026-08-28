@@ -84,7 +84,19 @@ export interface Gig {
     /** Positive means better than their usual hour. */
     difference_percent: number;
   } | null;
-  my_response: { id: number; accepted: boolean } | null;
+  my_response: {
+    id: number;
+    accepted: boolean;
+    /**
+     * Where the answer has got to. "quiet" — asked, shared nothing; "direct"
+     * — contacts handed over with the first word; "invited" — the venue said
+     * yes and is waiting for yours; "open" — both said yes.
+     */
+    stage: 'quiet' | 'direct' | 'invited' | 'open';
+    /** The venue's own contacts, and only once it has picked you. */
+    venue_phone: string | null;
+    venue_telegram: string | null;
+  } | null;
 }
 
 /** "₴250 за час + 3% с продаж" — base, percent, or the two stacked. */

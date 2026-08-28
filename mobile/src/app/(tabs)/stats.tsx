@@ -1,7 +1,6 @@
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  Pressable,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -11,11 +10,22 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+
 import { ClockRing, MoneyFlow, MonthBars } from '@/components/charts';
+import { Appear, Press, Roll } from '@/components/motion';
 
 import { Colors, Palette } from '@/constants/theme';
 import { api } from '@/lib/api';
-import { addMonths, currentMonth, monthBounds, monthLabel } from '@/lib/calendar';
+import {
+  addMonths,
+  changeOf,
+  currentMonth,
+  monthBounds,
+  monthLabel,
+  previousRange,
+  todayKey,
+} from '@/lib/calendar';
 import { DaysResponse, money, moneyIn, plural } from '@/lib/types';
 
 /** Money and hours at one place, and what the journey does to them. */
@@ -69,6 +79,8 @@ export default function StatsScreen() {
   const [span, setSpan] = useState<Span>('month');
   const [month, setMonth] = useState(currentMonth());
   const [summary, setSummary] = useState<Summary | null>(null);
+  const [before, setBefore] = useState<Summary | null>(null);
+  const [partial, setPartial] = useState(false);
   const [months, setMonths] = useState<{ label: string; value: number; current: boolean }[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -101,17 +113,26 @@ export default function StatsScreen() {
       : { from: `${month.year}-01-01`, to: `${month.year}-12-31` };
 
   const load = useCallback(async () => {
+    const past = previousRange(span, month, todayKey());
+
     try {
       // The base is asked for here alone: this is the screen where a period
       // is meant to read as one number, and that is what a conversion is for.
-      setSummary(
-        await api<Summary>(`/shifter/v1/days?from=${bounds.from}&to=${bounds.to}&base=UAH`),
-      );
+      const [now, then] = await Promise.all([
+        api<Summary>(`/shifter/v1/days?from=${bounds.from}&to=${bounds.to}&base=UAH`),
+        api<Summary>(
+          `/shifter/v1/days?from=${past.range.from}&to=${past.range.to}&base=UAH`,
+        ).catch(() => null),
+      ]);
+
+      setSummary(now);
+      setBefore(then);
+      setPartial(past.partial);
       setError(null);
     } catch {
       setError('Не дотянулись до сервера.');
     }
-  }, [bounds.from, bounds.to]);
+  }, [bounds.from, bounds.to, span, month]);
 
   useEffect(() => {
     void load();
@@ -195,7 +216,38 @@ export default function StatsScreen() {
       ? 0
       : (summary.conversion?.total_earned ?? summary.total_earned) / summary.hours;
 
+  // The same period a year or a month back, cut to the same length where this
+  // one is still running. A comparison is the only thing on this screen that
+  // answers "is it going well", and until now nothing here answered it.
+  const earnedBefore = before === null
+    ? null
+    : (before.conversion?.total_earned ?? before.total_earned);
+  const perHourBefore =
+    before === null || before.hours <= 0
+      ? null
+      : (before.conversion?.total_earned ?? before.total_earned) / before.hours;
+
+  const step = (by: number) => {
+    setSummary(null);
+    setBefore(null);
+    setMonth((at) => (span === 'month' ? addMonths(at, by) : { ...at, year: at.year + by }));
+  };
+
+  // Sideways changes the period, the way it does on the calendar. The offset
+  // keeps a vertical scroll vertical: a list that jumps to last month because
+  // a thumb drifted is worse than no gesture at all.
+  const swipe = Gesture.Pan()
+    .activeOffsetX([-24, 24])
+    .failOffsetY([-16, 16])
+    .onEnd((event) => {
+      if (Math.abs(event.translationX) < 60) return;
+
+      step(event.translationX < 0 ? 1 : -1);
+    })
+    .runOnJS(true);
+
   return (
+    <GestureDetector gesture={swipe}>
     <ScrollView
       style={styles.screen}
       contentContainerStyle={[styles.content, { paddingTop: insets.top + 10 }]}
@@ -213,7 +265,7 @@ export default function StatsScreen() {
 
       <View style={styles.toolbar}>
         {(['month', 'year'] as Span[]).map((value) => (
-          <Pressable
+          <Press
             key={value}
             style={[styles.segment, span === value && styles.segmentOn]}
             onPress={() => setSpan(value)}
@@ -221,22 +273,23 @@ export default function StatsScreen() {
             <Text style={[styles.segmentText, span === value && styles.segmentTextOn]}>
               {value === 'month' ? 'Месяц' : 'Год'}
             </Text>
-          </Pressable>
+          </Press>
         ))}
         <View style={styles.spacer} />
-        <Pressable style={styles.navButton} onPress={() => setMonth((at) => addMonths(at, -1))}>
+        <Press style={styles.navButton} onPress={() => step(-1)}>
           <Text style={styles.navText}>‹</Text>
-        </Pressable>
+        </Press>
         <Text style={styles.period}>
           {span === 'month' ? monthLabel(month) : `${month.year}`}
         </Text>
-        <Pressable style={styles.navButton} onPress={() => setMonth((at) => addMonths(at, 1))}>
+        <Press style={styles.navButton} onPress={() => step(1)}>
           <Text style={styles.navText}>›</Text>
-        </Pressable>
+        </Press>
       </View>
 
       {error !== null && <Text style={styles.error}>{error}</Text>}
 
+      <Appear>
       <View style={styles.kpis}>
         {/* Where the range mixes currencies the plain sum is hryvnia and
             zloty added together as if they were the same money. The converted
@@ -249,6 +302,10 @@ export default function StatsScreen() {
               ? `≈ ${moneyIn(summary.conversion.base_currency, summary.conversion.total_earned)}`
               : money(summary?.total_earned ?? 0)
           }
+          change={changeOf(
+            summary?.conversion?.total_earned ?? summary?.total_earned ?? 0,
+            earnedBefore ?? 0,
+          )}
           strong
         />
         {/* Every other figure on this screen is guarded; this one stamped a
@@ -262,10 +319,30 @@ export default function StatsScreen() {
               ? moneyIn(summary?.conversion?.base_currency ?? 'UAH', perHour)
               : money(perHour)
           }
+          change={changeOf(perHour, perHourBefore ?? 0)}
         />
-        <Kpi palette={palette} label="Смен" value={`${summary?.days_worked ?? 0}`} />
-        <Kpi palette={palette} label="Часов" value={`${Math.round(summary?.hours ?? 0)}`} />
+        <Kpi
+          palette={palette}
+          label="Смен"
+          amount={summary?.days_worked ?? 0}
+          change={changeOf(summary?.days_worked ?? 0, before?.days_worked ?? 0)}
+        />
+        <Kpi
+          palette={palette}
+          label="Часов"
+          amount={Math.round(summary?.hours ?? 0)}
+          change={changeOf(summary?.hours ?? 0, before?.hours ?? 0)}
+        />
       </View>
+      </Appear>
+
+      {before !== null && earnedBefore !== null && earnedBefore > 0 && (
+        <Text style={styles.against}>
+          {partial
+            ? `Против тех же дней ${span === 'month' ? 'прошлого месяца' : 'прошлого года'}: ${amount(earnedBefore)}`
+            : `${span === 'month' ? 'Прошлый месяц' : 'Прошлый год'}: ${amount(earnedBefore)}`}
+        </Text>
+      )}
 
       {/* Which hour is worth more — the question behind holding two jobs. */}
       {(summary?.by_location ?? []).length >= 2 && (
@@ -373,6 +450,7 @@ export default function StatsScreen() {
         </View>
       )}
     </ScrollView>
+    </GestureDetector>
   );
 }
 
@@ -380,11 +458,18 @@ function Kpi({
   palette,
   label,
   value,
+  amount,
+  change,
   strong = false,
 }: {
   palette: Palette;
   label: string;
-  value: string;
+  /** A formatted figure, where the currency has to be decided by the caller. */
+  value?: string;
+  /** A plain count, which can be rolled rather than swapped. */
+  amount?: number;
+  /** Per cent against the same period before. Null where there is none. */
+  change?: number | null;
   strong?: boolean;
 }) {
   const styles = makeStyles(palette);
@@ -392,7 +477,26 @@ function Kpi({
   return (
     <View style={styles.kpi}>
       <Text style={styles.kpiLabel}>{label}</Text>
-      <Text style={[styles.kpiValue, strong && styles.kpiValueStrong]}>{value}</Text>
+
+      {amount === undefined ? (
+        <Text style={[styles.kpiValue, strong && styles.kpiValueStrong]}>{value}</Text>
+      ) : (
+        <Roll value={amount} style={[styles.kpiValue, strong && styles.kpiValueStrong]} />
+      )}
+
+      {/* Zero is worth saying — "the same as last month" is an answer. Null is
+          not: it means there was nothing to divide by. */}
+      {change !== null && change !== undefined && (
+        <Text
+          style={[
+            styles.kpiChange,
+            change > 0 && { color: palette.good },
+            change < 0 && { color: palette.danger },
+          ]}
+        >
+          {change > 0 ? '↑' : change < 0 ? '↓' : '='} {Math.abs(change)}%
+        </Text>
+      )}
     </View>
   );
 }
@@ -430,6 +534,12 @@ const makeStyles = (palette: Palette) =>
     navText: { color: palette.text, fontSize: 17, lineHeight: 20 },
     period: { color: palette.text, fontSize: 13, fontWeight: '600', textTransform: 'capitalize', minWidth: 92, textAlign: 'center' },
     error: { color: palette.danger },
+    against: {
+      color: palette.textSecondary,
+      fontSize: 12.5,
+      textAlign: 'center',
+      marginTop: -2,
+    },
     kpis: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
     kpi: {
       flexGrow: 1,
@@ -440,6 +550,13 @@ const makeStyles = (palette: Palette) =>
       borderRadius: 16,
       padding: 12,
       gap: 2,
+    },
+    kpiChange: {
+      color: palette.textSecondary,
+      fontSize: 11.5,
+      fontWeight: '800',
+      fontVariant: ['tabular-nums'],
+      marginTop: 1,
     },
     kpiLabel: { color: palette.textSecondary, fontSize: 12, fontWeight: '600' },
     kpiValue: { color: palette.text, fontSize: 20, fontWeight: '800', fontVariant: ['tabular-nums'] },

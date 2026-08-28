@@ -179,3 +179,55 @@ export const sameWeekdaysIn = (at: YearMonth, chosen: Iterable<string>): string[
     .filter((cell) => cell.inMonth && wanted.has(weekdayOf(cell.key)))
     .map((cell) => cell.key);
 };
+
+export interface Range {
+  from: string;
+  to: string;
+}
+
+/** Days in a month, so a comparison never asks for the 31st of February. */
+export const daysIn = ({ year, month }: YearMonth): number => new Date(year, month, 0).getDate();
+
+/**
+ * The range a period should be compared against.
+ *
+ * Cut to the same length where the period being shown has not finished yet.
+ * Nineteen days of August against the whole of July is not a comparison, it is
+ * a way of telling somebody their month is going badly when it is going fine —
+ * and this app is read by people deciding whether to ask for a raise.
+ */
+export const previousRange = (
+  span: 'month' | 'year',
+  at: YearMonth,
+  today: string,
+): { range: Range; partial: boolean } => {
+  if (span === 'month') {
+    const before = addMonths(at, -1);
+    const running = today.startsWith(`${at.year}-${pad(at.month)}`);
+
+    if (!running) return { range: monthBounds(before), partial: false };
+
+    const upTo = Math.min(Number(today.slice(8)), daysIn(before));
+
+    return {
+      range: { from: `${before.year}-${pad(before.month)}-01`, to: `${before.year}-${pad(before.month)}-${pad(upTo)}` },
+      partial: true,
+    };
+  }
+
+  const year = at.year - 1;
+  const running = today.startsWith(`${at.year}-`);
+
+  if (!running) return { range: { from: `${year}-01-01`, to: `${year}-12-31` }, partial: false };
+
+  // The same date a year back, and 29 February becomes 28 where there was no
+  // leap day to compare against.
+  const month = Number(today.slice(5, 7));
+  const day = Math.min(Number(today.slice(8)), daysIn({ year, month }));
+
+  return { range: { from: `${year}-01-01`, to: `${year}-${pad(month)}-${pad(day)}` }, partial: true };
+};
+
+/** How much bigger `now` is than `before`, as a percentage. Null where there is nothing to divide by. */
+export const changeOf = (now: number, before: number): number | null =>
+  before <= 0 ? null : Math.round(((now - before) / before) * 100);

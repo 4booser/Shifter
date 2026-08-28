@@ -2,13 +2,16 @@ import { describe, expect, it } from 'vitest';
 
 import {
   addMonths,
+  changeOf,
   covers,
+  daysIn,
   gridBounds,
   monthBounds,
   monthGrid,
   monthOnly,
   monthsBetween,
   nextDay,
+  previousRange,
   runsOf,
   sameWeekdaysIn,
   WEEKDAYS,
@@ -167,5 +170,71 @@ describe('spreading a stroke across the weekdays it touches', () => {
     expect(weekdayOf('2026-08-03')).toBe(0);
     expect(weekdayOf('2026-08-09')).toBe(6);
     expect(WEEKDAYS[weekdayOf('2026-08-04')]).toBe('вт');
+  });
+});
+
+describe('comparing a period with the one before it', () => {
+  it('takes the whole of the previous month for a month that has finished', () => {
+    const { range, partial } = previousRange('month', { year: 2026, month: 5 }, '2026-08-19');
+
+    expect(range).toEqual({ from: '2026-04-01', to: '2026-04-30' });
+    expect(partial).toBe(false);
+  });
+
+  it('cuts the previous month to the same day for the month in progress', () => {
+    // Nineteen days of August against the whole of July is not a comparison.
+    const { range, partial } = previousRange('month', { year: 2026, month: 8 }, '2026-08-19');
+
+    expect(range).toEqual({ from: '2026-07-01', to: '2026-07-19' });
+    expect(partial).toBe(true);
+  });
+
+  it('never asks for a day the previous month does not have', () => {
+    const { range } = previousRange('month', { year: 2026, month: 3 }, '2026-03-31');
+
+    expect(range.to).toBe('2026-02-28');
+  });
+
+  it('takes the whole of the previous year for a year that has finished', () => {
+    const { range, partial } = previousRange('year', { year: 2025, month: 6 }, '2026-08-19');
+
+    expect(range).toEqual({ from: '2024-01-01', to: '2024-12-31' });
+    expect(partial).toBe(false);
+  });
+
+  it('cuts the previous year to the same date for the year in progress', () => {
+    const { range, partial } = previousRange('year', { year: 2026, month: 8 }, '2026-08-19');
+
+    expect(range).toEqual({ from: '2025-01-01', to: '2025-08-19' });
+    expect(partial).toBe(true);
+  });
+
+  it('moves a leap day back to the 28th, where there is one to compare with', () => {
+    const { range } = previousRange('year', { year: 2028, month: 2 }, '2028-02-29');
+
+    expect(range.to).toBe('2027-02-28');
+  });
+
+  it('counts the days in a month, leap years included', () => {
+    expect(daysIn({ year: 2028, month: 2 })).toBe(29);
+    expect(daysIn({ year: 2026, month: 2 })).toBe(28);
+    expect(daysIn({ year: 2026, month: 8 })).toBe(31);
+  });
+});
+
+describe('the change between two periods', () => {
+  it('reads as a percentage in both directions', () => {
+    expect(changeOf(120, 100)).toBe(20);
+    expect(changeOf(80, 100)).toBe(-20);
+    expect(changeOf(100, 100)).toBe(0);
+  });
+
+  it('says nothing rather than infinity where there is nothing to compare with', () => {
+    expect(changeOf(500, 0)).toBeNull();
+    expect(changeOf(0, 0)).toBeNull();
+  });
+
+  it('rounds rather than printing a percentage to six places', () => {
+    expect(changeOf(1234, 1000)).toBe(23);
   });
 });

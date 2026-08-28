@@ -319,4 +319,69 @@ public class MoneyIntegrityTests
 
         Assert.Equal(0m, empty.period_earned);
     }
+
+    // ==== A meal is charged for a shift somebody went to ====
+
+    /// <summary>
+    /// A place that withholds for a staff meal charged it on presence rather
+    /// than on work, and a day holding nothing but next week's plan came out
+    /// at minus eighty: a day in the red for a meal nobody has eaten, on a
+    /// shift nobody has been to. Anybody scrolling forward through their own
+    /// rota saw it on every planned day.
+    /// </summary>
+    [Fact]
+    public async Task A_planned_day_is_not_charged_for_a_meal_nobody_has_eaten()
+    {
+        Location place = Place(1, "Бар", meal: 80m);
+        Shift template = Build.Template(1, location: place, amount: 200m);
+
+        _query.Days.Add(Build.WorkedDay("2026-03-10", template, worked: false));
+
+        DaysDto result = await Range("2026-03-10", "2026-03-10");
+
+        Assert.Equal(0m, result.total_earned);
+        Assert.Equal(0m, result.deductions);
+    }
+
+    [Fact]
+    public async Task A_worked_day_still_pays_for_its_meal()
+    {
+        Location place = Place(1, "Бар", meal: 80m);
+        Shift template = Build.Template(1, location: place, amount: 200m);
+
+        _query.Days.Add(Build.WorkedDay("2026-03-10", template));
+
+        DaysDto result = await Range("2026-03-10", "2026-03-10");
+
+        Assert.Equal(80m, result.deductions);
+        // Eight hours at 200, less the meal.
+        Assert.Equal(1520m, result.total_earned);
+    }
+
+    [Fact]
+    public async Task Only_the_place_that_was_worked_charges_for_the_meal()
+    {
+        // Two places on one day: one worked, one still a plan. Charging both
+        // is the same bug read the other way round.
+        Location bar = Place(1, "Бар", meal: 80m);
+        Location cafe = Place(2, "Кофейня", meal: 50m);
+
+        Shift barShift = Build.Template(1, location: bar, amount: 200m);
+        Shift cafeShift = Build.Template(2, location: cafe, amount: 150m);
+
+        _query.Days.Add(new Domain.Entities.Day
+        {
+            UserId = Build.UserId,
+            Date = DateOnly.Parse("2026-03-10"),
+            Shifts =
+            [
+                Domain.Entities.DayShift.From(barShift, worked: true),
+                Domain.Entities.DayShift.From(cafeShift, worked: false),
+            ],
+        });
+
+        DaysDto result = await Range("2026-03-10", "2026-03-10");
+
+        Assert.Equal(80m, result.deductions);
+    }
 }

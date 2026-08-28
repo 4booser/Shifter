@@ -917,7 +917,14 @@ public partial class DayHandler : IDayHandler
         decimal Tips,
         decimal Sales,
         decimal GrossSales,
-        decimal Fine)
+        decimal Fine,
+        /// <summary>
+        /// The places actually worked today, which is not the same as the
+        /// places on today. A day holding nothing but a plan still has to be
+        /// attributed somewhere — see SplitOf — and that fallback names the
+        /// place, which is right for the money and wrong for the meal.
+        /// </summary>
+        HashSet<int> Worked)
     {
         public double Total => Weight.Values.Sum();
 
@@ -939,10 +946,17 @@ public partial class DayHandler : IDayHandler
         /// The fine follows the hours, because a fine belongs to the day. The
         /// staff meal does not: it is a house rule of one place, charged once
         /// for the day worked there.
+        ///
+        /// "Worked there" being the point. Charged on presence alone, a
+        /// Saturday with next week's shift pencilled in read as minus eighty:
+        /// the calendar showed a day in the red for a meal nobody has eaten
+        /// yet, on a shift nobody has been to.
         /// </summary>
         public decimal Deductions(int place, Dictionary<int, Location> locations)
             => Fine * Share(place)
-                + (locations.TryGetValue(place, out Location? rules) ? rules.MealDeduction : 0m);
+                + (Worked.Contains(place) && locations.TryGetValue(place, out Location? rules)
+                    ? rules.MealDeduction
+                    : 0m);
     }
 
     private static DaySplit SplitOf(Day day)
@@ -981,7 +995,8 @@ public partial class DayHandler : IDayHandler
             day.Tips ?? 0m,
             (day.Sales ?? []).Sum(entry => entry.Earned),
             (day.Sales ?? []).Sum(entry => entry.Quantity * entry.UnitPrice),
-            day.Deductions ?? 0m);
+            day.Deductions ?? 0m,
+            worked.Select(entry => entry.Shift?.LocationId ?? 0).ToHashSet());
     }
 
     private static decimal TipOutFor(Day day, Dictionary<int, Location> locations)

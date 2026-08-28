@@ -7,6 +7,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { LockGate } from '@/components/lock-gate';
 import { registerForPush, wireNotificationTaps } from '@/lib/notifications';
+import { useMono } from '@/store/mono';
 import { useSession } from '@/store/session';
 
 SplashScreen.preventAutoHideAsync();
@@ -35,6 +36,12 @@ export default function RootLayout() {
   }, [session]);
 
   // Keychain still being read: the splash is covering everything anyway.
+  useEffect(() => {
+    if (session === null || session === undefined) return;
+
+    void useMono.getState().hydrate();
+  }, [session]);
+
   if (session === undefined) return null;
 
   return (

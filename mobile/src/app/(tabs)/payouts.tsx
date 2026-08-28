@@ -18,7 +18,9 @@ import { Loading, Press } from '@/components/motion';
 import { Colors, Palette } from '@/constants/theme';
 import { api } from '@/lib/api';
 import { addMonths, currentMonth, monthBounds, shortDate, todayKey } from '@/lib/calendar';
+import { MonoStatementItem, wageCandidates } from '@/lib/mono';
 import { money } from '@/lib/types';
+import { useMono } from '@/store/mono';
 
 type Status = 'open' | 'due' | 'overdue' | 'partial' | 'paid' | 'short' | 'over';
 
@@ -116,6 +118,8 @@ export default function PayoutsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [prefill, setPrefill] = useState<PayPeriodRow | null>(null);
+  const statement = useMono((state) => state.items);
+  const payers = useMono((state) => state.payers);
 
   // Half a year back and a month forward: enough to see what is still owed
   // without asking the server for a lifetime of history on every open.
@@ -215,7 +219,9 @@ export default function PayoutsScreen() {
                 key={`${row.location_id}-${row.period_from}-${row.stream}`}
                 row={row}
                 palette={palette}
+                bank={bankSees(row, statement, payers)}
                 onMark={() => setPrefill(row)}
+                onBank={() => router.push('/(tabs)/bank')}
               />
             ))}
           </Section>
@@ -298,14 +304,57 @@ function Section({
   );
 }
 
+/**
+ * What the bank already sees against this period.
+ *
+ * The reconciliation screen has always been able to say what a place owes.
+ * Now, where somebody has connected an account, it can say whether the money
+ * is sitting there — which is a different sentence entirely from "we think
+ * you are owed this".
+ */
+const bankSees = (
+  row: PayPeriodRow,
+  statement: MonoStatementItem[],
+  payers: Record<string, string[]>,
+): { total: number; when: string } | null => {
+  if (statement.length === 0 || row.expected <= row.paid) return null;
+
+  const [best] = wageCandidates(
+    statement,
+    {
+      locationId: row.location_id,
+      locationName: row.location_name,
+      periodFrom: row.period_from,
+      periodTo: row.period_to,
+      amount: row.expected - row.paid,
+      due: row.due_on,
+    },
+    payers[`${row.location_id}`] ?? [],
+  );
+
+  // Only worth mentioning where it is recognisably this wage. A credit half
+  // the size is a different conversation, and this line is not the place for
+  // it — the bank tab is.
+  if (best === undefined || Math.abs(best.difference) > 0.15) return null;
+
+  return {
+    total: best.total,
+    when: new Date(best.items[0].time * 1000).toISOString().slice(0, 10),
+  };
+};
+
 function PeriodCard({
   row,
   palette,
+  bank,
   onMark,
+  onBank,
 }: {
   row: PayPeriodRow;
   palette: Palette;
+  bank?: { total: number; when: string } | null;
   onMark: () => void;
+  onBank?: () => void;
 }) {
   const styles = makeStyles(palette);
   const tone =
@@ -333,6 +382,16 @@ function PeriodCard({
       <Text style={styles.cardPeriod}>
         {shortDate(row.period_from)} — {shortDate(row.period_to)} · {Math.round(row.hours)} ч
       </Text>
+
+      {bank != null && (
+        <Press style={styles.bankLine} onPress={onBank}>
+          <Ionicons name="card-outline" size={15} color={palette.good} />
+          <Text style={styles.bankText} numberOfLines={1}>
+            Банк видит {money(bank.total)} · {shortDate(bank.when)}
+          </Text>
+          <Ionicons name="chevron-forward" size={14} color={palette.good} />
+        </Press>
+      )}
 
       <View style={styles.cardFoot}>
         <View style={styles.grow}>
@@ -561,6 +620,19 @@ const makeStyles = (palette: Palette) =>
       overflow: 'hidden',
     },
     cardPeriod: { color: palette.textSecondary, fontSize: 13 },
+    bankLine: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 7,
+      borderWidth: 1,
+      borderColor: palette.good,
+      borderRadius: 12,
+      paddingHorizontal: 10,
+      paddingVertical: 8,
+      marginTop: 6,
+    },
+    bankText: { flex: 1, color: palette.good, fontSize: 12.5, fontWeight: '700' },
+
     cardFoot: { flexDirection: 'row', alignItems: 'flex-end', gap: 10 },
     cardExpected: { color: palette.text, fontSize: 20, fontWeight: '800' },
     cardDue: { color: palette.textSecondary, fontSize: 12, marginTop: 2 },

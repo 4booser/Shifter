@@ -42,6 +42,8 @@ public class ShifterDbContext : DbContext
     public DbSet<LeaveRequest> LeaveRequests => Set<LeaveRequest>();
     public DbSet<WorkExpense> Expenses => Set<WorkExpense>();
     public DbSet<WorkDocument> Documents => Set<WorkDocument>();
+    public DbSet<Handover> Handovers => Set<Handover>();
+    public DbSet<StopItem> StopItems => Set<StopItem>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -151,6 +153,17 @@ public class ShifterDbContext : DbContext
             .HasOne(entry => entry.CreatedBy).WithMany()
             .HasForeignKey(entry => entry.CreatedByUserId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        // One handover per crew per day: it is the thing you read once, not a
+        // thread. The unique key says so rather than the service.
+        modelBuilder.Entity<Handover>()
+            .HasIndex(note => new { note.TeamId, note.Date })
+            .IsUnique();
+
+        // Read as "what is the room missing right now", so the open ones have
+        // to come off an index rather than a scan of everything ever raised.
+        modelBuilder.Entity<StopItem>()
+            .HasIndex(item => new { item.TeamId, item.ClearedAt });
 
         // Always read as "what of mine runs out soonest".
         modelBuilder.Entity<WorkDocument>()

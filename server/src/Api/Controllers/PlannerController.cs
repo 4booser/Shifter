@@ -79,6 +79,41 @@ public class PlannerController : ControllerBase
         int teamId, [FromBody] AvailabilitySaveDto request, CancellationToken ct)
         => Ok(await _planner.ToggleAvailabilityAsync(teamId, UserId(), request, ct));
 
+    // ==== The handover ====
+
+    /// <summary>
+    /// What the shift going home knows and the shift coming in does not: one
+    /// note for the day, and everything the room is currently missing.
+    /// </summary>
+    [HttpGet("handover")]
+    public async Task<IActionResult> Handover(
+        int teamId, [FromQuery] DateOnly date, CancellationToken ct)
+    {
+        var (note, stops) = await _planner.HandoverAsync(teamId, UserId(), date, ct);
+
+        return Ok(new { note, stops });
+    }
+
+    /// <summary>
+    /// Anybody in the crew may write it. The person who knows the grinder is
+    /// broken is whoever was standing next to it.
+    /// </summary>
+    [HttpPost("handover")]
+    public async Task<ActionResult<HandoverDto>> WriteHandover(
+        int teamId, [FromBody] HandoverSaveDto request, CancellationToken ct)
+        => Ok(await _planner.WriteHandoverAsync(teamId, UserId(), request, ct));
+
+    [HttpPost("handover/stops")]
+    public async Task<ActionResult<StopItemDto[]>> RaiseStop(
+        int teamId, [FromBody] StopItemSaveDto request, CancellationToken ct)
+        => Ok(await _planner.RaiseStopAsync(teamId, UserId(), request, ct));
+
+    /// <summary>It came back, or it was fixed.</summary>
+    [HttpDelete("handover/stops/{id:int}")]
+    public async Task<ActionResult<StopItemDto[]>> ClearStop(
+        int teamId, int id, CancellationToken ct)
+        => Ok(await _planner.ClearStopAsync(teamId, UserId(), id, ct));
+
     // ==== Leave ====
 
     /// <summary>

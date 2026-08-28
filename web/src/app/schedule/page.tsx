@@ -29,6 +29,7 @@ import { useReveal } from '@/lib/fx';
 import { Shell } from '@/components/layout/shell';
 import { SwapsPanel } from '@/components/team/swaps';
 import { AvailabilityStrip } from '@/components/team/availability';
+import { HandoverPanel } from '@/components/team/handover';
 import { LeavePanel } from '@/components/team/leave';
 import { drawRotaCard } from '@/lib/export/rota-card';
 import { currentCardTheme } from '@/lib/export/share-card';
@@ -356,6 +357,9 @@ function Schedule() {
       {selected !== null && (
         <AvailabilityStrip teamId={selected} from={range.from} to={range.to} onChanged={refresh} />
       )}
+
+      {/* ==== The handover: read before the shift, written after it ==== */}
+      {selected !== null && <HandoverPanel teamId={selected} />}
 
       {/* ==== Time off: a stretch of days that needs an answer ==== */}
       {selected !== null && <LeavePanel teamId={selected} onChanged={refresh} />}

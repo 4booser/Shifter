@@ -227,6 +227,30 @@ export interface Leave {
   can_decide: boolean;
 }
 
+/**
+ * What the shift going home knows and the shift coming in does not. Written at
+ * the end of a shift, read at the start of the next one — one note per crew per
+ * day, because a chat scrolls and a handover has to be read once and acted on.
+ */
+export interface Handover {
+  date: string;
+  text: string;
+  by: string | null;
+  updated_at: string | null;
+}
+
+/** Something the room does not have, or something that is broken. */
+export interface StopItem {
+  id: number;
+  kind: 'stop' | 'broken';
+  name: string;
+  raised_by: string;
+  raised_on: string;
+  /** How long it has been like this. Three weeks is a different conversation. */
+  days: number;
+  cleared: boolean;
+}
+
 export interface PlannerBoard {
   members: PlannerMember[];
   assignments: Assignment[];
@@ -285,6 +309,16 @@ export const plannerApi = {
       `${TEAMS}/${teamId}/planner/fill`,
       { body: { ...body, role: body.role === '' ? null : body.role } },
     ),
+  handover: (teamId: number, date: string) =>
+    api<{ note: Handover; stops: StopItem[] }>(
+      `${TEAMS}/${teamId}/planner/handover?date=${date}`,
+    ),
+  writeHandover: (teamId: number, date: string, text: string) =>
+    api<Handover>(`${TEAMS}/${teamId}/planner/handover`, { body: { date, text } }),
+  raiseStop: (teamId: number, kind: 'stop' | 'broken', name: string) =>
+    api<StopItem[]>(`${TEAMS}/${teamId}/planner/handover/stops`, { body: { kind, name } }),
+  clearStop: (teamId: number, id: number) =>
+    api<StopItem[]>(`${TEAMS}/${teamId}/planner/handover/stops/${id}`, { method: 'DELETE' }),
   /** A planner sees the crew's requests; everybody else sees their own. */
   leave: (teamId: number) => api<Leave[]>(`${TEAMS}/${teamId}/planner/leave`),
   requestLeave: (teamId: number, from: string, to: string, reason: string | null) =>

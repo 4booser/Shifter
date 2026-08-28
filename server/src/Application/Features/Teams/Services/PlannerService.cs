@@ -161,6 +161,159 @@ public sealed class PlannerService
             .ToArray();
     }
 
+    // ==== The handover: what the shift going home knows ====
+
+    /// <summary>
+    /// One day's note plus everything the room is currently missing. Read at
+    /// the start of a shift, written at the end of one.
+    /// </summary>
+    public async Task<(HandoverDto Note, StopItemDto[] Stops)> HandoverAsync(
+        int teamId, int userId, DateOnly date, CancellationToken ct)
+    {
+        var (team, _) = await MemberAsync(teamId, userId, ct);
+
+        var note = await _db.Handovers
+            .AsNoTracking()
+            .FirstOrDefaultAsync(row => row.TeamId == teamId && row.Date == date, ct);
+
+        var stops = await _db.StopItems
+            .AsNoTracking()
+            .Where(item => item.TeamId == teamId && item.ClearedAt == null)
+            .OrderBy(item => item.RaisedAt)
+            .ToArrayAsync(ct);
+
+        return (ToDto(note, date, team), stops.Select(item => ToDto(item, team)).ToArray());
+    }
+
+    /// <summary>
+    /// Writing the note. Anybody in the crew may — the person who knows the
+    /// grinder is broken is whoever was standing next to it, not whoever has
+    /// the manager flag.
+    /// </summary>
+    public async Task<HandoverDto> WriteHandoverAsync(
+        int teamId, int userId, HandoverSaveDto request, CancellationToken ct)
+    {
+        var (team, _) = await MemberAsync(teamId, userId, ct);
+
+        if (!DateOnly.TryParseExact(request.date, "yyyy-MM-dd", out var date))
+            throw new ValidationException("date must be yyyy-MM-dd.");
+
+        string text = (request.text ?? string.Empty).Trim();
+
+        if (text.Length > Handover.TextMax)
+            text = text[..Handover.TextMax];
+
+        var note = await _db.Handovers
+            .FirstOrDefaultAsync(row => row.TeamId == teamId && row.Date == date, ct);
+
+        if (note is null)
+        {
+            note = new Handover { TeamId = teamId, Date = date };
+            _db.Handovers.Add(note);
+        }
+
+        note.Text = text;
+        note.UpdatedByUserId = userId;
+        note.UpdatedAt = DateTime.UtcNow;
+
+        await _db.SaveChangesAsync(ct);
+
+        return ToDto(note, date, team);
+    }
+
+    /// <summary>Something ran out, or something broke.</summary>
+    public async Task<StopItemDto[]> RaiseStopAsync(
+        int teamId, int userId, StopItemSaveDto request, CancellationToken ct)
+    {
+        var (team, _) = await MemberAsync(teamId, userId, ct);
+
+        string name = (request.name ?? string.Empty).Trim();
+
+        if (name.Length is 0 or > StopItem.NameMax)
+            throw new ValidationException($"A name of 1–{StopItem.NameMax} characters, please.");
+
+        string kind = request.kind == "broken" ? "broken" : "stop";
+
+        // The same thing twice is one thing. Raising it again while it is still
+        // open would put two identical lines in front of the next shift.
+        bool already = await _db.StopItems.AnyAsync(
+            item => item.TeamId == teamId
+                && item.ClearedAt == null
+                && item.Kind == kind
+                && item.Name.ToLower() == name.ToLower(),
+            ct);
+
+        if (!already)
+        {
+            _db.StopItems.Add(new StopItem
+            {
+                TeamId = teamId,
+                Kind = kind,
+                Name = name,
+                RaisedByUserId = userId,
+            });
+
+            await _db.SaveChangesAsync(ct);
+        }
+
+        return await OpenStopsAsync(teamId, team, ct);
+    }
+
+    /// <summary>It came back, or it was fixed.</summary>
+    public async Task<StopItemDto[]> ClearStopAsync(
+        int teamId, int userId, int id, CancellationToken ct)
+    {
+        var (team, _) = await MemberAsync(teamId, userId, ct);
+
+        var item = await _db.StopItems
+            .FirstOrDefaultAsync(row => row.Id == id && row.TeamId == teamId, ct)
+            ?? throw new NotFoundException("That is not on the list.");
+
+        // The row stays rather than going: how often something runs out is
+        // worth knowing, and a list that deletes its own history cannot say.
+        item.ClearedAt = DateTime.UtcNow;
+        item.ClearedByUserId = userId;
+
+        await _db.SaveChangesAsync(ct);
+
+        return await OpenStopsAsync(teamId, team, ct);
+    }
+
+    private async Task<StopItemDto[]> OpenStopsAsync(int teamId, Team team, CancellationToken ct)
+    {
+        var stops = await _db.StopItems
+            .AsNoTracking()
+            .Where(item => item.TeamId == teamId && item.ClearedAt == null)
+            .OrderBy(item => item.RaisedAt)
+            .ToArrayAsync(ct);
+
+        return stops.Select(item => ToDto(item, team)).ToArray();
+    }
+
+    private static HandoverDto ToDto(Handover? note, DateOnly date, Team team)
+    {
+        if (note is null) return new HandoverDto(date.ToString("yyyy-MM-dd"), string.Empty, null, null);
+
+        string? by = (team.Members ?? [])
+            .FirstOrDefault(member => member.UserId == note.UpdatedByUserId)?.DisplayName;
+
+        return new HandoverDto(
+            note.Date.ToString("yyyy-MM-dd"),
+            note.Text,
+            by,
+            note.UpdatedAt.ToString("O"));
+    }
+
+    private static StopItemDto ToDto(StopItem item, Team team) => new StopItemDto(
+        item.Id,
+        item.Kind,
+        item.Name,
+        (team.Members ?? []).FirstOrDefault(member => member.UserId == item.RaisedByUserId)
+            ?.DisplayName ?? string.Empty,
+        DateOnly.FromDateTime(item.RaisedAt).ToString("yyyy-MM-dd"),
+        (DateTime.UtcNow - item.RaisedAt).Days,
+        item.ClearedAt is not null);
+
     // ==== Leave: a stretch of days that needs an answer ====
 
     /// <summary>

@@ -5,7 +5,13 @@ import { Appear, Roll } from '@/components/motion';
 import { Palette } from '@/constants/theme';
 import { monthBounds, shortDate, YearMonth } from '@/lib/calendar';
 import { moneyLasted, MonoStatementItem, periodTotals, spendingByCategory } from '@/lib/mono';
-import { closingCosts, punctuality, realHourly, spendingByDayKind } from '@/lib/mono-work';
+import {
+  cashGap,
+  closingCosts,
+  punctuality,
+  realHourly,
+  spendingByDayKind,
+} from '@/lib/mono-work';
 import { CalendarDayData, money } from '@/lib/types';
 import { t } from '@/lib/i18n';
 
@@ -64,6 +70,7 @@ export function BankAnalysis({
   const split = spendingByDayKind(items, days, bounds.from, bounds.to);
   const closing = closingCosts(items, days, bounds.from, bounds.to);
   const paying = punctuality(periods);
+  const cash = cashGap(items, days, bounds.from, bounds.to);
 
   if (items.length === 0) {
     return (
@@ -181,6 +188,27 @@ export function BankAnalysis({
               {closing.ride > 0
                 ? `, ${t('а дорога домой после них забрала')} ${money(closing.ride)}.`
                 : `. ${t('Поездок домой после них в выписке нет.')}`}
+            </Text>
+          </View>
+        </Appear>
+      )}
+
+      {/*
+        What was written down against what reached the card. Not an accusation
+        in either direction: cash gets spent before it is banked, and money
+        gets banked that was never a tip. Somebody who has been rounding their
+        cash tips down out of habit will see it here first.
+      */}
+      {cash.declared + cash.bankedAfterShifts > 0 && (
+        <Appear index={5}>
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>{t('Наличные чаевые')}</Text>
+            <Text style={styles.cardNote}>
+              {t('Записано')} {money(Math.round(cash.declared))} ·{' '}
+              {t('внесено на карту после смен')} {money(Math.round(cash.bankedAfterShifts))}
+            </Text>
+            <Text style={styles.cardFaint}>
+              {t('Это не сверка: наличные тратят до того, как доносят до карты.')}
             </Text>
           </View>
         </Appear>

@@ -400,3 +400,54 @@ export const oddities = (items: MonoStatementItem[], from: string, to: string): 
 
   return found.sort((one, two) => spent(two.item) - spent(one.item));
 };
+
+export interface Cashback {
+  /** Everything that came back over the range. */
+  total: number;
+  /** By category, biggest first, so the month's choice can be judged. */
+  byCategory: { name: string; earned: number; spent: number }[];
+}
+
+/**
+ * What came back, and off what.
+ *
+ * monobank puts a cashback figure on every line and the app has been throwing
+ * it away. It is small money that adds up, and — more usefully — it is the
+ * only way to tell whether the category somebody picked this month was the
+ * right one, which is a question the bank's own app asks nobody.
+ */
+export const cashback = (
+  items: MonoStatementItem[],
+  categoryOfItem: (item: MonoStatementItem) => string,
+  from: string,
+  to: string,
+): Cashback => {
+  const rows = new Map<string, { name: string; earned: number; spent: number }>();
+  let total = 0;
+
+  for (const item of items) {
+    if (item.hold) continue;
+
+    const day = dayOf(item);
+
+    if (day < from || day > to) continue;
+
+    const back = fromMinor(item.cashbackAmount);
+    const name = categoryOfItem(item);
+    const row = rows.get(name) ?? { name, earned: 0, spent: 0 };
+
+    if (item.amount < 0) row.spent += spent(item);
+
+    row.earned += back;
+    total += back;
+
+    rows.set(name, row);
+  }
+
+  return {
+    total,
+    byCategory: [...rows.values()]
+      .filter((row) => row.earned > 0)
+      .sort((one, two) => two.earned - one.earned),
+  };
+};

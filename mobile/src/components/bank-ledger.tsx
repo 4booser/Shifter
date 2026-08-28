@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useMemo, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { Appear, Press } from '@/components/motion';
 import { Palette } from '@/constants/theme';
@@ -31,26 +31,74 @@ export function BankLedger({
 }) {
   const styles = makeStyles(palette);
   const [only, setOnly] = useState<'all' | 'in' | 'out' | 'shift'>('all');
+  const [query, setQuery] = useState('');
+  const [least, setLeast] = useState('');
 
   // A statement of four hundred lines answers nothing. These four questions
   // are the ones anybody actually opens it with.
-  const grouped = useMemo(() => {
-    const rows = byDay(
+  const needle = query.trim().toLocaleLowerCase();
+  const floor = Number(least.replace(',', '.')) || 0;
+
+  // Three months of statement is a thousand lines. Without a search that is an
+  // archive rather than data, and the answer people want is usually a sum
+  // rather than a list — so the sum is above it.
+  const matching = useMemo(
+    () =>
       items.filter((item) => {
-        if (only === 'in') return item.amount > 0;
-        if (only === 'out') return item.amount < 0;
+        if (only === 'in' && item.amount <= 0) return false;
+        if (only === 'out' && item.amount >= 0) return false;
+        if (floor > 0 && Math.abs(item.amount) / 100 < floor) return false;
+        if (needle !== '' && !item.description.toLocaleLowerCase().includes(needle)) return false;
 
         return true;
       }),
-    );
+    [items, only, needle, floor],
+  );
+
+  const found = useMemo(
+    () => ({
+      count: matching.length,
+      total: matching.reduce((sum, item) => sum + Math.abs(item.amount) / 100, 0),
+    }),
+    [matching],
+  );
+
+  const grouped = useMemo(() => {
+    const rows = byDay(matching);
 
     return (only === 'shift'
       ? rows.filter((row) => (days.get(row.day)?.shifts ?? []).some((shift) => shift.worked))
       : rows
     ).slice(0, limit);
-  }, [items, only, days, limit]);
+  }, [matching, only, days, limit]);
 
   const filters = (
+    <>
+    <View style={styles.searchRow}>
+      <Ionicons name="search" size={16} color={palette.textSecondary} />
+      <TextInput
+        style={styles.search}
+        value={query}
+        onChangeText={setQuery}
+        placeholder={t('Найти по названию')}
+        placeholderTextColor={palette.textSecondary}
+      />
+      <TextInput
+        style={styles.least}
+        value={least}
+        onChangeText={setLeast}
+        keyboardType="decimal-pad"
+        placeholder={t('от')}
+        placeholderTextColor={palette.textSecondary}
+      />
+    </View>
+
+    {(needle !== '' || floor > 0) && (
+      <Text style={styles.foundText}>
+        {t('Нашлось')} {found.count} {t('на')} {money(found.total)}
+      </Text>
+    )}
+
     <View style={styles.filters}>
       {(
         [
@@ -69,6 +117,7 @@ export function BankLedger({
         </Press>
       ))}
     </View>
+    </>
   );
 
   if (grouped.length === 0) {
@@ -155,6 +204,24 @@ export function BankLedger({
 const makeStyles = (palette: Palette) =>
   StyleSheet.create({
     list: { gap: 8 },
+    searchRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      backgroundColor: palette.backgroundElement,
+      borderRadius: 12,
+      paddingHorizontal: 12,
+      marginBottom: 8,
+    },
+    search: { flex: 1, color: palette.text, fontSize: 14, paddingVertical: 10 },
+    least: {
+      width: 68,
+      color: palette.text,
+      fontSize: 14,
+      paddingVertical: 10,
+      textAlign: 'right',
+    },
+    foundText: { color: palette.textSecondary, fontSize: 13, marginBottom: 8 },
     filters: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 2 },
     filter: {
       borderWidth: 1,

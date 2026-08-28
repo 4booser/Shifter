@@ -8,6 +8,7 @@ import { t } from '@/lib/i18n';
 import { MonoStatementItem, dayOf } from '@/lib/mono';
 import {
   Counterparty,
+  cashback,
   counterparties,
   flow,
   monthlyCost,
@@ -18,6 +19,7 @@ import {
   Budget,
   CategoryRule,
   budgetState,
+  categorise,
   ruleFrom,
   ruleHits,
   spendingByRules,
@@ -88,6 +90,12 @@ export function BankSpending({
   const totals = useMemo(() => flow(items, from, to), [items, from, to]);
   const hits = useMemo(() => ruleHits(inRange, rules), [inRange, rules]);
 
+  // The bank puts a figure on every line and the app was throwing it away.
+  const back = useMemo(
+    () => cashback(items, (item) => categorise(item, rules), from, to),
+    [items, rules, from, to],
+  );
+
   // The pace inside the month, which is the whole of what makes a limit mean
   // anything: 62% spent is comfortable on the 20th and alarming on the 8th.
   const limits = useMemo(() => {
@@ -133,6 +141,19 @@ export function BankSpending({
             <Text style={styles.flowValue}>{money(totals.left)}</Text>
           </View>
         </View>
+
+        {back.total > 0 && (
+          <Text style={styles.note}>
+            {t('Кешбэк вернул')} {money(back.total)}
+            {back.byCategory.length > 0 && (
+              <>
+                {' — '}
+                {t('больше всего с категории')} «{back.byCategory[0].name}»:{' '}
+                {money(back.byCategory[0].earned)}
+              </>
+            )}
+          </Text>
+        )}
 
         {totals.moved > 0 && (
           <Text style={styles.note}>

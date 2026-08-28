@@ -185,4 +185,43 @@ public class DayHandlerOvertimeTests
         Assert.Equal(0, result.overtime_hours);
         Assert.Equal(48, result.planned_hours);
     }
+
+    /// <summary>
+    /// A place created before the overtime rule existed got 0 in the column,
+    /// because that is what the type's zero is. The pay is
+    /// `hours × rate × (multiplier − 1)`, so 0 makes the factor −1 and every
+    /// overtime hour subtracts an hour's pay — reported, to the person it
+    /// happened to, as what the overtime brought them.
+    ///
+    /// The rows are repaired by a migration. This is the other half: the sum
+    /// itself refuses to run backwards, whatever any row holds.
+    /// </summary>
+    [Fact]
+    public async Task Overtime_never_takes_money_away_however_bad_the_row_is()
+    {
+        Location place = Build.Place(1, multiplier: 0m);
+
+        ArrangeWeek(place, Build.Template(1, location: place, amount: 100m), 6, "2026-03-02");
+
+        DaysDto result = await Range();
+
+        Assert.Equal(8, result.overtime_hours);
+        Assert.Equal(0m, result.overtime_earned);
+        // Six eight-hour days at 100. Nothing has been taken off.
+        Assert.Equal(4800m, result.total_earned);
+    }
+
+    [Fact]
+    public async Task A_multiplier_of_one_is_hours_paid_flat_not_a_penalty()
+    {
+        Location place = Build.Place(1, multiplier: 1m);
+
+        ArrangeWeek(place, Build.Template(1, location: place, amount: 100m), 6, "2026-03-02");
+
+        DaysDto result = await Range();
+
+        Assert.Equal(8, result.overtime_hours);
+        Assert.Equal(0m, result.overtime_earned);
+        Assert.Equal(4800m, result.total_earned);
+    }
 }

@@ -566,8 +566,15 @@ public partial class DayHandler : IDayHandler
                 if (from is DateOnly start && on < start) continue;
                 if (to is DateOnly end && on > end) continue;
 
+                // Never below zero. A multiplier under 1 makes the factor
+                // negative, and then an overtime hour subtracts an hour's pay
+                // and the app reports the loss as what the overtime brought.
+                // The form has always refused such a value; rows that predate
+                // the rule held one anyway, so the arithmetic refuses it too.
+                decimal premium = Math.Max(0m, multiplier - 1m);
+
                 decimal paid = entry.SalaryPeriod == SalaryPeriod.Hour
-                    ? (decimal)over * (entry.SalaryAmount ?? 0m) * (multiplier - 1m)
+                    ? (decimal)over * (entry.SalaryAmount ?? 0m) * premium
                     : 0m;
 
                 var (hoursSoFar, extraSoFar) = byPlace.GetValueOrDefault(week.Key.Location);

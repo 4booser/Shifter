@@ -34,6 +34,7 @@ const shift = (name: string) => ({
   break_minutes: null,
   earned: 1650,
   revenue: null,
+  guests: null,
   revenue_percent: null,
 });
 

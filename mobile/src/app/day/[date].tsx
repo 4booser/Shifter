@@ -124,6 +124,7 @@ export default function DayScreen() {
           break_minutes: null,
           earned: 0,
           revenue: null,
+          guests: null,
           revenue_percent: template.revenue_percent,
         },
       ],
@@ -150,6 +151,25 @@ export default function DayScreen() {
         entry.shift_id === shiftId
           // Empty is "not counted", which is not the same answer as zero.
           ? { ...entry, revenue: value.trim() === '' ? null : Number(value) || 0 }
+          : entry,
+      ),
+    });
+  };
+
+  /**
+   * How many the shift served.
+   *
+   * Empty is "nobody counted", which is a different evening from one with no
+   * guests — and only one of the two is a zero.
+   */
+  const setGuests = (shiftId: number, value: string) => {
+    if (day === null) return;
+
+    setDay({
+      ...day,
+      shifts: day.shifts.map((entry) =>
+        entry.shift_id === shiftId
+          ? { ...entry, guests: value.trim() === '' ? null : Number(value) || 0 }
           : entry,
       ),
     });
@@ -381,6 +401,28 @@ export default function DayScreen() {
                           value={entry.revenue === null ? '' : `${entry.revenue}`}
                           onChangeText={(value) => setRevenue(entry.shift_id, value)}
                         />
+
+                        {/* Takings alone do not describe an evening: twelve
+                            thousand off forty covers is a different night from
+                            twelve thousand off a hundred and twenty. */}
+                        <Text style={styles.fieldLabel}>{t('Гостей')}</Text>
+                        <TextInput
+                          style={styles.input}
+                          keyboardType="numeric"
+                          placeholder={t('никто не считал')}
+                          placeholderTextColor={palette.textSecondary}
+                          value={entry.guests === null || entry.guests === undefined ? '' : `${entry.guests}`}
+                          onChangeText={(value) => setGuests(entry.shift_id, value)}
+                        />
+
+                        {entry.revenue !== null
+                          && entry.guests !== null
+                          && entry.guests !== undefined
+                          && entry.guests > 0 && (
+                          <Text style={styles.fieldLabel}>
+                            {t('Средний чек')}: {money(Math.round((entry.revenue / entry.guests) * 100) / 100)}
+                          </Text>
+                        )}
                       </>
                     )}
                   </View>

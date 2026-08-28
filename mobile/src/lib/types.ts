@@ -76,6 +76,8 @@ export interface DayShiftEntry {
   earned: number;
   /** What the shift took, where it was recorded. Null is "not counted". */
   revenue: number | null;
+  /** How many it served. Null is "nobody counted", which is not zero. */
+  guests: number | null;
   /** The agreed share of it, already inside earned. */
   revenue_percent: number | null;
 }

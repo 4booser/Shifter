@@ -17,7 +17,9 @@ public record GigSaveDto(
     string? pay_period,
     decimal? pay_percent,
     string? city,
-    int slots);
+    int slots,
+    /// <summary>Somebody has not turned up and the shift starts today.</summary>
+    bool urgent = false);
 
 public record GigDto(
     int id,
@@ -56,7 +58,12 @@ public record GigDto(
     /// their own hours to average, or a rate quoted in a period that cannot be
     /// brought to an hour.
     /// </summary>
-    GigWorthDto? worth = null);
+    GigWorthDto? worth = null,
+    /// <summary>
+    /// Somebody has not turned up and the shift starts today. Shown as such,
+    /// and the only listing in the app that reaches anybody by notification.
+    /// </summary>
+    bool urgent = false);
 
 /// <summary>
 /// The offered rate and the caller's own, both per hour, and the gap between

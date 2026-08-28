@@ -5,6 +5,9 @@
 type Dictionary = Record<string, string>;
 
 export const RU: Dictionary = {
+  'Needed today': 'Нужен сегодня',
+  'Somebody has not turned up': 'Кто-то не вышел',
+  'Notifies people in your city who are looking for work in this trade and are free today. Nobody else, and never more than twice in an evening.': 'Уведомим тех, кто в вашем городе ищет работу по этой специальности и сегодня свободен. Больше никого и не чаще двух раз за вечер.',
   'See it as cards': 'Посмотреть карточками',
   'Save this card': 'Сохранить эту карточку',
   'on your feet, over the year': 'на ногах за год',
@@ -1868,6 +1871,9 @@ export const RU: Dictionary = {
 };
 
 export const UK: Dictionary = {
+  'Needed today': 'Потрібен сьогодні',
+  'Somebody has not turned up': 'Хтось не вийшов',
+  'Notifies people in your city who are looking for work in this trade and are free today. Nobody else, and never more than twice in an evening.': 'Сповістимо тих, хто у вашому місті шукає роботу за цією спеціальністю і сьогодні вільний. Більше нікого і не частіше двох разів за вечір.',
   'See it as cards': 'Подивитися картками',
   'Save this card': 'Зберегти цю картку',
   'on your feet, over the year': 'на ногах за рік',

@@ -183,6 +183,8 @@ function GigCard({
           )}
         </View>
 
+        {gig.urgent && <Text style={styles.urgent}>🔴 Нужен сегодня</Text>}
+
         <Text style={styles.cardPay}>{payLine(gig)}</Text>
 
         {/* What the rate is worth to this reader. A board full of numbers tells
@@ -526,6 +528,7 @@ const makeStyles = (palette: Palette) =>
     cardTitle: { color: palette.text, fontSize: 16, fontWeight: '700' },
     cardVenue: { color: palette.textSecondary, fontSize: 13, marginTop: 1 },
     cardPay: { color: palette.accent, fontSize: 17, fontWeight: '800' },
+    urgent: { color: palette.danger, fontSize: 13, fontWeight: '800' },
     cardWorth: { color: palette.textSecondary, fontSize: 12.5, fontWeight: '600' },
     better: { color: palette.good },
     worse: { color: palette.danger },

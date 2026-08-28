@@ -19,11 +19,13 @@ public sealed class GigService
 {
     private readonly ShifterDbContext _db;
     private readonly IPushNotifier _push;
+    private readonly UrgentAlerts? _alerts;
 
-    public GigService(ShifterDbContext db, IPushNotifier push)
+    public GigService(ShifterDbContext db, IPushNotifier push, UrgentAlerts? alerts = null)
     {
         _db = db;
         _push = push;
+        _alerts = alerts;
     }
 
     public async Task<GigDto[]> BoardAsync(
@@ -136,7 +138,23 @@ public sealed class GigService
         gig.City = city;
         gig.Slots = request.slots;
 
+        // Only a shift that starts today can be an emergency. Marking next
+        // Friday urgent would teach people to ignore the word, and the word is
+        // the entire mechanism.
+        gig.Urgent = request.urgent
+            && gig.Employment == GigEmployment.Freelance
+            && gig.Date == DateOnly.FromDateTime(DateTime.UtcNow);
+
         await _db.SaveChangesAsync(ct);
+
+        // Told once, after the listing exists, and never again however many
+        // times it is edited afterwards.
+        if (gig.Urgent && gig.AlertedAt is null && _alerts is not null)
+        {
+            gig.AlertedAt = DateTime.UtcNow;
+            await _db.SaveChangesAsync(ct);
+            await _alerts.RaiseAsync(gig, ct);
+        }
 
         return ToDto(gig, userId);
     }
@@ -852,6 +870,10 @@ public sealed class GigService
                     gig.PayAmount,
                     gig.PayPeriod,
                     PremiumCalculator.Span(gig.StartTime, gig.EndTime),
-                    mineByPlace));
+                    mineByPlace),
+            // Urgent only while it is still today and the shift has not
+            // started. A board full of yesterday's emergencies is a board
+            // nobody checks, and the word stops meaning anything.
+            gig.Urgent && gig.Date == DateOnly.FromDateTime(DateTime.UtcNow));
     }
 }

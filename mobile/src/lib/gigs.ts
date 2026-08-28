@@ -68,6 +68,11 @@ export interface Gig {
   responses: number;
   is_mine: boolean;
   /**
+   * Somebody has not turned up and the shift starts today. The only listing in
+   * the app that reaches anybody by notification.
+   */
+  urgent: boolean;
+  /**
    * What this shift is worth against the hours the reader already works. Null
    * where there is nothing honest to say — no rate on the listing, or not
    * enough of their own hours to average against.

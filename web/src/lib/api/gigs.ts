@@ -55,6 +55,12 @@ export interface Gig {
     /** Positive means better than their usual hour. */
     difference_percent: number;
   } | null;
+  /**
+   * Somebody has not turned up and the shift starts today. The only listing in
+   * the app that reaches anybody by notification, and only people who have
+   * published a card saying they are looking.
+   */
+  urgent: boolean;
 }
 
 export interface GigSave {
@@ -73,6 +79,8 @@ export interface GigSave {
   pay_percent: number | null;
   city: string;
   slots: number;
+  /** Somebody has not turned up and the shift starts today. */
+  urgent?: boolean;
 }
 
 export interface GigReply {

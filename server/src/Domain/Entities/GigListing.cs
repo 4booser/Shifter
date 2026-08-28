@@ -128,6 +128,25 @@ public sealed class GigListing
     /// <summary>How many people this listing needs. Accepted responses count against it.</summary>
     public int Slots { get; set; } = 1;
 
+    /// <summary>
+    /// Somebody has not turned up and the shift starts in two hours.
+    ///
+    /// The only case in this app where a notification is defensible without a
+    /// subscription: the person receiving it has published a card saying they
+    /// are looking for work, in this trade, in this city, and their own
+    /// calendar says the day is free. Every one of those has to be true.
+    ///
+    /// It expires by itself when the shift starts. A board full of yesterday's
+    /// emergencies is a board nobody checks.
+    /// </summary>
+    public bool Urgent { get; set; }
+
+    /// <summary>
+    /// Set once the push has gone out, so a listing edited three times does
+    /// not wake the same people three times.
+    /// </summary>
+    public DateTime? AlertedAt { get; set; }
+
     public GigStatus Status { get; set; } = GigStatus.Open;
 
     /// <summary>

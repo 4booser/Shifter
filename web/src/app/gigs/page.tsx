@@ -130,6 +130,7 @@ function Gigs() {
     pay_percent: null,
     city: '',
     slots: 1,
+    urgent: false,
   });
 
   return (
@@ -506,6 +507,11 @@ function GigCard({ gig, onRespond, onWithdraw }: { gig: Gig; onRespond: () => vo
         {gig.slots > 1 && <span> · {gig.slots} {t('people needed')}</span>}
         {gig.responses > 0 && <span> · {gig.responses} 🙋</span>}
       </p>
+      {gig.urgent && (
+        <p className="text-[0.82rem] font-bold text-danger">
+          🔴 {t('Needed today')}
+        </p>
+      )}
       {gig.details !== null && <p className="line-clamp-2 text-[0.85rem] text-muted">{gig.details}</p>}
 
       {/* What the rate is worth to *this* reader. A board full of numbers tells
@@ -996,6 +1002,25 @@ function EditModal({
           <span className="field-label">{t('People')}</span>
           <input type="number" min={1} max={20} className="field-input w-full" value={form.slots} onChange={(event) => set('slots', Math.max(1, Number(event.target.value) || 1))} />
         </label>
+
+        {/* Only for a shift today, because the word is the whole mechanism:
+            marking next Friday urgent teaches people to ignore it. */}
+        {form.employment === 'freelance' && form.date === todayKey() && (
+          <label className="flex items-start gap-2.5 rounded-(--radius) border border-danger/40 p-2.5">
+            <input
+              type="checkbox"
+              className="mt-0.5"
+              checked={form.urgent}
+              onChange={(event) => set('urgent', event.target.checked)}
+            />
+            <span>
+              <b className="block text-[0.9rem]">{t('Somebody has not turned up')}</b>
+              <span className="field-hint">
+                {t('Notifies people in your city who are looking for work in this trade and are free today. Nobody else, and never more than twice in an evening.')}
+              </span>
+            </span>
+          </label>
+        )}
         <button
           type="button"
           className="btn btn-primary w-full"

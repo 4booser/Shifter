@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { MonoStatementItem } from '@/lib/mono';
+import { MonoAccount, MonoRate, MonoStatementItem, convert, ratesDay, wealth } from '@/lib/mono';
 import {
   counterparties,
   flow,
@@ -306,5 +306,71 @@ describe('lines worth a second look', () => {
     ];
 
     expect(oddities(items, '2026-08-01', '2026-08-31')).toEqual([]);
+  });
+});
+
+describe('what somebody has, across accounts', () => {
+  const account = (over: Partial<MonoAccount>): MonoAccount => ({
+    id: Math.random().toString(36).slice(2),
+    sendId: '',
+    balance: 0,
+    creditLimit: 0,
+    type: 'black',
+    currencyCode: 980,
+    cashbackType: 'UAH',
+    maskedPan: [],
+    iban: '',
+    ...over,
+  });
+
+  const rates: MonoRate[] = [
+    { currencyCodeA: 840, currencyCodeB: 980, date: 1_790_000_000, rateBuy: 41, rateSell: 42 },
+    { currencyCodeA: 978, currencyCodeB: 980, date: 1_790_000_000, rateBuy: 45, rateSell: 46 },
+  ];
+
+  it('never adds the bank’s money to the person’s', () => {
+    // "12 400 on the card, 2 400 of it yours" is two numbers and two different
+    // feelings. Adding them tells somebody they are five times richer.
+    const totals = wealth([account({ balance: 1_240_000, creditLimit: 1_000_000 })], [], rates);
+
+    expect(totals.own).toBe(2_400);
+    expect(totals.credit).toBe(10_000);
+  });
+
+  it('converts at the published mid-rate', () => {
+    const totals = wealth([account({ balance: 10_000, currencyCode: 840 })], [], rates);
+
+    // A hundred dollars, between 41 and 42.
+    expect(totals.own).toBe(4_150);
+  });
+
+  it('counts a jar apart from a card', () => {
+    const jar = { id: 'j', sendId: '', title: 'Macbook', description: '', currencyCode: 980, balance: 64_200 };
+
+    const totals = wealth([account({ balance: 274_700 })], [jar], rates);
+
+    expect(totals.own).toBe(2_747);
+    expect(totals.jars).toBe(642);
+  });
+
+  it('says how many it could not convert rather than guessing', () => {
+    const totals = wealth([account({ balance: 10_000, currencyCode: 985 })], [], rates);
+
+    expect(totals.own).toBe(0);
+    expect(totals.unconverted).toBe(1);
+  });
+
+  it('goes through the hryvnia when the pair is not quoted', () => {
+    // Dollars into euro: the bank quotes both against the hryvnia and neither
+    // against the other.
+    const got = convert(100, 840, 978, rates);
+
+    expect(got).not.toBeNull();
+    expect(Math.round(got!)).toBe(91);
+  });
+
+  it('names the day the rate was published', () => {
+    expect(ratesDay(rates)).toBe(new Date(1_790_000_000 * 1000).toISOString().slice(0, 10));
+    expect(ratesDay([])).toBeNull();
   });
 });

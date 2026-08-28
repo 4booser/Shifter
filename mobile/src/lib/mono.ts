@@ -495,3 +495,140 @@ export const moneyLasted = (
 
   return null;
 };
+
+/** One published rate, as monobank writes it. */
+export interface MonoRate {
+  currencyCodeA: number;
+  currencyCodeB: number;
+  date: number;
+  rateBuy?: number;
+  rateSell?: number;
+  rateCross?: number;
+}
+
+/**
+ * One amount in another currency, at the bank's own published rate.
+ *
+ * Never an invented number. A euro balance stamped with a hryvnia sign is the
+ * confident lie about money this app does not tell, and a total across
+ * accounts is exactly where that lie would live — so every conversion carries
+ * the day the rate was published, and a pair the bank does not quote is
+ * reported as unconvertible rather than guessed at.
+ *
+ * A rate somebody could actually get: the mid-point between buy and sell,
+ * because neither of the two is the price of merely holding the money.
+ */
+const rateBetween = (rates: MonoRate[], from: number, to: number): number | null => {
+  const direct = rates.find((row) => row.currencyCodeA === from && row.currencyCodeB === to);
+
+  if (direct !== undefined) {
+    const mid = direct.rateBuy !== undefined && direct.rateSell !== undefined
+      ? (direct.rateBuy + direct.rateSell) / 2
+      : direct.rateCross;
+
+    if (mid !== undefined && mid > 0) return mid;
+  }
+
+  const reverse = rates.find((row) => row.currencyCodeA === to && row.currencyCodeB === from);
+
+  if (reverse !== undefined) {
+    const mid = reverse.rateBuy !== undefined && reverse.rateSell !== undefined
+      ? (reverse.rateBuy + reverse.rateSell) / 2
+      : reverse.rateCross;
+
+    if (mid !== undefined && mid > 0) return 1 / mid;
+  }
+
+  return null;
+};
+
+export const convert = (
+  amount: number,
+  from: number,
+  to: number,
+  rates: MonoRate[],
+): number | null => {
+  if (from === to) return amount;
+
+  const straight = rateBetween(rates, from, to);
+
+  if (straight !== null) return amount * straight;
+
+  // Through the hryvnia, which the bank quotes against everything it holds.
+  const toUah = rateBetween(rates, from, 980);
+  const fromUah = rateBetween(rates, 980, to);
+
+  if (toUah === null || fromUah === null) return null;
+
+  return amount * toUah * fromUah;
+};
+
+/** The freshest publication date among the rates, as a day. */
+export const ratesDay = (rates: MonoRate[]): string | null => {
+  if (rates.length === 0) return null;
+
+  const newest = Math.max(...rates.map((row) => row.date));
+
+  return new Date(newest * 1000).toISOString().slice(0, 10);
+};
+
+export interface Wealth {
+  /** Everything the person owns, in the currency asked for. */
+  own: number;
+  /** The bank's money on the card, kept apart from theirs. */
+  credit: number;
+  /** Set aside in jars, which is theirs but not spendable by accident. */
+  jars: number;
+  /** Accounts whose currency the bank did not quote today. */
+  unconverted: number;
+  currency: number;
+}
+
+/**
+ * What somebody has, across the accounts they chose to count.
+ *
+ * The credit limit never joins the total. "12 400 on the card, 2 400 of it
+ * yours" is two numbers and two different feelings, and an app that adds them
+ * is telling somebody they are five times richer than they are.
+ */
+export const wealth = (
+  accounts: MonoAccount[],
+  jars: MonoJar[],
+  rates: MonoRate[],
+  currency = 980,
+): Wealth => {
+  let own = 0;
+  let credit = 0;
+  let inJars = 0;
+  let unconverted = 0;
+
+  for (const account of accounts) {
+    // The balance monobank reports includes whatever credit is available.
+    const mine = fromMinor(account.balance - account.creditLimit);
+    const lent = fromMinor(account.creditLimit);
+
+    const asked = convert(mine, account.currencyCode, currency, rates);
+    const lentAsked = convert(lent, account.currencyCode, currency, rates);
+
+    if (asked === null || lentAsked === null) {
+      unconverted += 1;
+      continue;
+    }
+
+    own += asked;
+    credit += lentAsked;
+  }
+
+  for (const jar of jars) {
+    const asked = convert(fromMinor(jar.balance), jar.currencyCode, currency, rates);
+
+    if (asked === null) {
+      unconverted += 1;
+      continue;
+    }
+
+    inJars += asked;
+  }
+
+  return { own, credit, jars: inJars, unconverted, currency };
+};

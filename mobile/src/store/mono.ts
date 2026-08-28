@@ -4,8 +4,14 @@ import { create } from 'zustand';
 
 import { t } from '@/lib/i18n';
 
-import { clientInfo, MonoBusy, MonoRefused, statement, waitFor } from '@/lib/mono-api';
-import { MonoAccount, MonoClientInfo, MonoStatementItem, statementWindows } from '@/lib/mono';
+import { clientInfo, MonoBusy, MonoRefused, rates as publishedRates, statement, waitFor } from '@/lib/mono-api';
+import {
+  MonoAccount,
+  MonoClientInfo,
+  MonoRate,
+  MonoStatementItem,
+  statementWindows,
+} from '@/lib/mono';
 import { CategoryRule } from '@/lib/mono-rules';
 
 /**
@@ -25,10 +31,22 @@ const SETUP_KEY = 'shifter.mono.setup';
 interface Setup {
   /** The account the wage lands on. */
   accountId: string | null;
+  /**
+   * Accounts left out of the running total. Absent means counted — a card
+   * added at the bank after this was written should show up, not vanish.
+   */
+  hidden?: string[];
   /** Payer names confirmed for a place, so the next wage matches itself. */
   payers: Record<string, string[]>;
-  /** Unix seconds of the newest transaction already fetched. */
+  /**
+   * Unix seconds of the newest transaction already fetched, per account.
+   *
+   * Per account because switching cards used to throw the statement away and
+   * start the four-minute backfill again — which made looking at a second
+   * account something nobody did twice.
+   */
   syncedTo: number | null;
+  syncedPer?: Record<string, number>;
   /**
    * Transactions already turned into a Shifter row. Kept because a resync
    * brings the same taxi back, and offering it again is how somebody records
@@ -44,6 +62,9 @@ interface Setup {
   rules: CategoryRule[];
 }
 
+/** The statement cache, keyed by account. Older phones hold a bare array. */
+type Cache = Record<string, MonoStatementItem[]>;
+
 interface MonoState {
   /** Undefined while the keychain is still being read. */
   token: string | null | undefined;
@@ -55,6 +76,12 @@ interface MonoState {
   /** Transaction ids already recorded in Shifter, so nothing is offered twice. */
   used: string[];
   rules: CategoryRule[];
+  /** Accounts left out of the running total. */
+  hidden: string[];
+  /** Every account's statement, so switching cards is instant. */
+  cache: Cache;
+  /** Published rates, for one total across currencies. Empty until fetched. */
+  rates: MonoRate[];
   busy: boolean;
   error: string | null;
   /** Windows fetched and windows asked for, so a backfill can show a bar. */
@@ -71,6 +98,10 @@ interface MonoState {
   sync: (sinceSeconds: number) => Promise<number>;
   /** Replaces the category rules, order included. */
   setRules: (rules: CategoryRule[]) => Promise<void>;
+  /** Counts an account into the running total, or leaves it out. */
+  toggleAccount: (accountId: string, counted: boolean) => Promise<void>;
+  /** Fetches the bank's published rates. Public endpoint, no token. */
+  loadRates: () => Promise<void>;
   /** Remembers that this payer is the wage for this place. */
   rememberPayer: (locationId: number, payer: string) => Promise<void>;
   /** Marks transactions as already recorded, so they stop being offered. */
@@ -104,7 +135,10 @@ const readSetup = async (): Promise<Setup> => {
     // A setup that cannot be read is one that has to be asked for again.
   }
 
-  return { accountId: null, payers: {}, syncedTo: null, used: [], rules: [] };
+  return {
+    accountId: null, payers: {}, syncedTo: null, used: [], rules: [],
+    hidden: [], syncedPer: {},
+  };
 };
 
 export const useMono = create<MonoState>((set, get) => ({
@@ -116,6 +150,9 @@ export const useMono = create<MonoState>((set, get) => ({
   syncedTo: null,
   used: [],
   rules: [],
+  hidden: [],
+  cache: {},
+  rates: [],
   busy: false,
   error: null,
   progress: null,
@@ -131,24 +168,42 @@ export const useMono = create<MonoState>((set, get) => ({
     }
 
     const setup = await readSetup();
-    let items: MonoStatementItem[] = [];
+    let cache: Cache = {};
 
     try {
       const raw = await AsyncStorage.getItem(CACHE_KEY);
 
-      if (raw !== null) items = JSON.parse(raw) as MonoStatementItem[];
+      if (raw !== null) {
+        const stored: unknown = JSON.parse(raw);
+
+        // A phone that last ran the single-account version holds a bare array.
+        // It belongs to whichever account was selected then, and throwing it
+        // away would cost somebody a four-minute backfill for nothing.
+        cache = Array.isArray(stored)
+          ? (setup.accountId === null
+              ? {}
+              : { [setup.accountId]: stored as MonoStatementItem[] })
+          : (stored as Cache);
+      }
     } catch {
-      items = [];
+      cache = {};
     }
+
+    const account = setup.accountId;
+    const per = setup.syncedPer ?? {};
 
     set({
       token,
-      accountId: setup.accountId,
+      accountId: account,
       payers: setup.payers,
-      syncedTo: setup.syncedTo,
       used: setup.used ?? [],
       rules: setup.rules ?? [],
-      items,
+      hidden: setup.hidden ?? [],
+      cache,
+      items: account === null ? [] : cache[account] ?? [],
+      syncedTo: account === null
+        ? null
+        : per[account] ?? setup.syncedTo,
     });
 
     if (token !== null) {
@@ -157,6 +212,8 @@ export const useMono = create<MonoState>((set, get) => ({
       } catch {
         // Offline, or rate-limited a moment ago. The cache still reads.
       }
+
+      void get().loadRates();
     }
   },
 
@@ -187,9 +244,37 @@ export const useMono = create<MonoState>((set, get) => ({
     set({
       token: null, client: null, accountId: null, items: [],
       syncedTo: null, payers: {}, used: [], rules: [],
+      hidden: [], cache: {}, rates: [],
     });
     await quietly(SecureStore.deleteItemAsync(TOKEN_KEY));
     await quietly(AsyncStorage.multiRemove([CACHE_KEY, SETUP_KEY]));
+  },
+
+  toggleAccount: async (accountId, counted) => {
+    const hidden = counted
+      ? get().hidden.filter((one) => one !== accountId)
+      : [...new Set([...get().hidden, accountId])];
+
+    set({ hidden });
+
+    const setup = await readSetup();
+
+    await quietly(AsyncStorage.setItem(SETUP_KEY, JSON.stringify({ ...setup, hidden })));
+  },
+
+  /**
+   * The bank's published rates, so one total can span three currencies.
+   *
+   * Public: no token goes anywhere near this, and the limit is five minutes
+   * rather than one. Failing is fine — a total the app cannot compute honestly
+   * is a total it does not show.
+   */
+  loadRates: async () => {
+    try {
+      set({ rates: await publishedRates() });
+    } catch {
+      // Offline, or asked too soon. The balances still read one by one.
+    }
   },
 
   /**
@@ -207,14 +292,25 @@ export const useMono = create<MonoState>((set, get) => ({
     await quietly(AsyncStorage.setItem(SETUP_KEY, JSON.stringify({ ...setup, rules })));
   },
 
+  /**
+   * Points the statement at another account, keeping what was already read.
+   *
+   * It used to empty the list and reset the clock, so looking at a second card
+   * cost a four-minute backfill and looking back at the first cost another. A
+   * bank app where switching accounts is expensive is a bank app with one
+   * account.
+   */
   chooseAccount: async (accountId) => {
-    set({ accountId, items: [], syncedTo: null });
-
     const setup = await readSetup();
+    const per = setup.syncedPer ?? {};
 
-    await quietly(
-      AsyncStorage.setItem(SETUP_KEY, JSON.stringify({ ...setup, accountId, syncedTo: null })),
-    );
+    set({
+      accountId,
+      items: get().cache[accountId] ?? [],
+      syncedTo: per[accountId] ?? null,
+    });
+
+    await quietly(AsyncStorage.setItem(SETUP_KEY, JSON.stringify({ ...setup, accountId })));
   },
 
   sync: async (sinceSeconds) => {
@@ -253,14 +349,27 @@ export const useMono = create<MonoState>((set, get) => ({
         const next = [...known.values()].sort((one, two) => two.time - one.time);
 
         const stamp = now();
+        const cache = { ...get().cache, [accountId]: next };
 
-        set({ items: next, syncedTo: stamp, progress: { done: at + 1, total: windows.length } });
-        await quietly(AsyncStorage.setItem(CACHE_KEY, JSON.stringify(next)));
+        set({
+          items: next,
+          cache,
+          syncedTo: stamp,
+          progress: { done: at + 1, total: windows.length },
+        });
+        await quietly(AsyncStorage.setItem(CACHE_KEY, JSON.stringify(cache)));
 
         const setup = await readSetup();
 
         await quietly(
-          AsyncStorage.setItem(SETUP_KEY, JSON.stringify({ ...setup, syncedTo: stamp })),
+          AsyncStorage.setItem(
+            SETUP_KEY,
+            JSON.stringify({
+              ...setup,
+              syncedTo: stamp,
+              syncedPer: { ...(setup.syncedPer ?? {}), [accountId]: stamp },
+            }),
+          ),
         );
       }
 

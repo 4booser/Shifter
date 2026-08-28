@@ -25,15 +25,17 @@ import { Colors, Palette } from '@/constants/theme';
 import { api } from '@/lib/api';
 import { currentMonth, monthBounds, shortDate, todayKey } from '@/lib/calendar';
 import {
-  currencyOf,
   ExpectedWage,
-  fromMinor,
   MonoAccount,
   MonoStatementItem,
+  WageMatch,
+  currencyOf,
+  fromMinor,
   payerKey,
   payerName,
+  ratesDay,
   wageCandidates,
-  WageMatch,
+  wealth,
   workSpending,
 } from '@/lib/mono';
 import { CalendarDayData, DaysResponse, money, moneyIn } from '@/lib/types';
@@ -81,6 +83,20 @@ export default function BankScreen() {
   const router = useRouter();
 
   const mono = useMono();
+
+  // What is counted, and what the bank quoted it at. Both are the person's
+  // choices rather than the app's: an account left out stays out, and a total
+  // the rates cannot support is not shown as one.
+  const purse = useMemo(
+    () =>
+      wealth(
+        (mono.client?.accounts ?? []).filter((entry) => !mono.hidden.includes(entry.id)),
+        mono.client?.jars ?? [],
+        mono.rates,
+      ),
+    [mono.client, mono.hidden, mono.rates],
+  );
+  const ratesOn = useMemo(() => ratesDay(mono.rates), [mono.rates]);
   const account = chosenAccount(mono);
 
   const [typed, setTyped] = useState('');
@@ -353,27 +369,69 @@ export default function BankScreen() {
 
       {mono.client !== null && view === 'summary' && (
         <>
-          <Text style={styles.label}>{t('Куда приходит зарплата')}</Text>
+          {/*
+            What somebody has, across the accounts they chose to count. The
+            credit limit never joins it: "12 400 on the card, 2 400 of it
+            yours" is two numbers and two different feelings, and adding them
+            would tell somebody they are five times richer than they are.
+          */}
+          <View style={styles.wealth}>
+            <Text style={styles.wealthLabel}>{t('Всего своих')}</Text>
+            <Text style={styles.wealthValue}>{money(purse.own + purse.jars)}</Text>
+            <Text style={styles.wealthMeta}>
+              {purse.jars > 0 && `${t('из них в банках')} ${money(purse.jars)}`}
+              {purse.jars > 0 && purse.credit > 0 && ' · '}
+              {purse.credit > 0 && `${t('кредитных')} ${money(purse.credit)} ${t('сверху')}`}
+            </Text>
+            {ratesOn !== null && (
+              <Text style={styles.wealthRate}>
+                {t('по курсу монобанка на')} {ratesOn.slice(8)}.{ratesOn.slice(5, 7)}
+              </Text>
+            )}
+            {purse.unconverted > 0 && (
+              <Text style={styles.wealthRate}>
+                {purse.unconverted} {t('счёт(а) банк сегодня не котирует — не сложены')}
+              </Text>
+            )}
+          </View>
+
+          <Text style={styles.label}>{t('Счета')}</Text>
+          <Text style={styles.hint}>
+            {t('Тап — выписка этого счёта. Долгий тап — убрать из общей суммы.')}
+          </Text>
           <View style={styles.accounts}>
-            {mono.client.accounts.map((entry) => (
-              <Press
-                key={entry.id}
-                style={[styles.account, entry.id === mono.accountId && styles.accountOn]}
-                onPress={() => void mono.chooseAccount(entry.id)}
-              >
-                <Text
-                  style={[styles.accountPan, entry.id === mono.accountId && styles.accountOnText]}
+            {mono.client.accounts.map((entry) => {
+              const counted = !mono.hidden.includes(entry.id);
+
+              return (
+                <Press
+                  key={entry.id}
+                  style={[
+                    styles.account,
+                    entry.id === mono.accountId && styles.accountOn,
+                    !counted && styles.accountOut,
+                  ]}
+                  onPress={() => void mono.chooseAccount(entry.id)}
+                  onLongPress={() => void mono.toggleAccount(entry.id, !counted)}
                 >
-                  {cardOf(entry)}
-                </Text>
-                <Text style={styles.accountMeta}>
-                  {/* The account's own currency, not the app's. Stamping ₴ on a
-                      euro balance is exactly the confident lie about money this
-                      app does not tell. */}
-                  {moneyIn(currencyOf(entry.currencyCode), fromMinor(entry.balance))}
-                </Text>
-              </Press>
-            ))}
+                  <Text
+                    style={[styles.accountPan, entry.id === mono.accountId && styles.accountOnText]}
+                  >
+                    {cardOf(entry)}
+                  </Text>
+                  <Text style={styles.accountMeta}>
+                    {/* The account's own currency, not the app's. Stamping ₴ on a
+                        euro balance is exactly the confident lie about money this
+                        app does not tell. */}
+                    {moneyIn(
+                      currencyOf(entry.currencyCode),
+                      fromMinor(entry.balance - entry.creditLimit),
+                    )}
+                  </Text>
+                  {!counted && <Text style={styles.accountOutText}>{t('не в сумме')}</Text>}
+                </Press>
+              );
+            })}
           </View>
         </>
       )}
@@ -734,6 +792,18 @@ const makeStyles = (palette: Palette) =>
     primaryText: { color: '#fff', fontWeight: '800', fontSize: 15.5 },
 
     accounts: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+    wealth: {
+      backgroundColor: palette.backgroundElement,
+      borderRadius: 18,
+      padding: 16,
+      gap: 2,
+    },
+    wealthLabel: { color: palette.textSecondary, fontSize: 12.5, fontWeight: '600' },
+    wealthValue: { color: palette.text, fontSize: 32, fontWeight: '800' },
+    wealthMeta: { color: palette.textSecondary, fontSize: 12.5 },
+    wealthRate: { color: palette.textSecondary, fontSize: 11.5, marginTop: 2 },
+    accountOut: { opacity: 0.45 },
+    accountOutText: { color: palette.textSecondary, fontSize: 10.5, marginTop: 2 },
     account: {
       borderWidth: 1.5,
       borderColor: palette.border,

@@ -3,6 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { Appear, Press } from '@/components/motion';
+import { BankFlow } from '@/components/bank-flow';
 import { Palette } from '@/constants/theme';
 import { t } from '@/lib/i18n';
 import { MonoStatementItem, dayOf } from '@/lib/mono';
@@ -11,6 +12,7 @@ import {
   cashback,
   counterparties,
   flow,
+  incomeSources,
   monthlyCost,
   oddities,
   recurring,
@@ -88,6 +90,7 @@ export function BankSpending({
   const standing = useMemo(() => recurring(items, from, to), [items, from, to]);
   const odd = useMemo(() => oddities(items, from, to), [items, from, to]);
   const totals = useMemo(() => flow(items, from, to), [items, from, to]);
+  const sources = useMemo(() => incomeSources(items, from, to), [items, from, to]);
   const hits = useMemo(() => ruleHits(inRange, rules), [inRange, rules]);
 
   // The bank puts a figure on every line and the app was throwing it away.
@@ -154,6 +157,19 @@ export function BankSpending({
             )}
           </Text>
         )}
+
+        {/* The two lists as one picture. Two totals is the shape that hides
+            the answer: a third of the income can be a friend paying back and
+            nobody notices it in a sum. */}
+        <View style={styles.picture}>
+          <BankFlow
+            sources={sources}
+            categories={categories}
+            earned={totals.earned}
+            spent={totals.spent}
+            palette={palette}
+          />
+        </View>
 
         {totals.moved > 0 && (
           <Text style={styles.note}>
@@ -460,6 +476,12 @@ const makeStyles = (palette: Palette) =>
     },
     flowLabel: { color: palette.textSecondary, fontSize: 11.5, marginBottom: 3 },
     flowValue: { color: palette.text, fontSize: 17, fontWeight: '800' },
+    picture: {
+      backgroundColor: palette.backgroundElement,
+      borderRadius: 16,
+      padding: 12,
+      marginTop: 10,
+    },
     note: { color: palette.textSecondary, fontSize: 12, lineHeight: 17, marginTop: 8 },
 
     tabs: { flexDirection: 'row', gap: 6, marginTop: 4 },

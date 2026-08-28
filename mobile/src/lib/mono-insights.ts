@@ -306,6 +306,62 @@ export interface Flow {
   left: number;
 }
 
+export interface IncomeSource {
+  key: string;
+  name: string;
+  /** Money in, in major units. Positive. */
+  total: number;
+  count: number;
+}
+
+/**
+ * Where the money came from, named.
+ *
+ * "Доход 42 000" answers nothing a person did not already know. The useful
+ * shape is which part was wages, which was a transfer from a friend, and which
+ * was the cash they banked themselves — three arrivals that feel identical in
+ * a total and mean completely different things about the month.
+ *
+ * Transfers between somebody's own accounts are not income here for the same
+ * reason they are not spending: money moved from savings would otherwise show
+ * up as a good month.
+ */
+export const incomeSources = (
+  items: MonoStatementItem[],
+  from: string,
+  to: string,
+): IncomeSource[] => {
+  const found = new Map<string, IncomeSource>();
+
+  // A refunded purchase arrives as a credit and is not income — it is the
+  // shop giving back money that was already counted as spending.
+  const refunded = new Set(refunds(items).map((pair) => pair.refund.id));
+
+  for (const item of items) {
+    if (item.amount <= 0 || item.hold) continue;
+    if (isTransfer(item) || refunded.has(item.id)) continue;
+
+    const day = dayOf(item);
+
+    if (day < from || day > to) continue;
+
+    const key = merchantKey(item.description) || 'прочее';
+    const name = item.description.trim();
+    const row = found.get(key) ?? { key, name, total: 0, count: 0 };
+
+    row.total += fromMinor(item.amount);
+    row.count += 1;
+
+    // The tidiest spelling wins, as everywhere else: usually the one without
+    // a branch number attached.
+    if (name.length > 0 && name.length < row.name.length) row.name = name;
+
+    found.set(key, row);
+  }
+
+  return [...found.values()].sort((one, two) => two.total - one.total);
+};
+
 /** What the money actually did across a range: in, out, and merely moved. */
 export const flow = (items: MonoStatementItem[], from: string, to: string): Flow => {
   const paired = new Set<string>();

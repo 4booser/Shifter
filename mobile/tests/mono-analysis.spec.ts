@@ -4,6 +4,7 @@ import { MonoAccount, MonoRate, MonoStatementItem, convert, ratesDay, wealth } f
 import {
   counterparties,
   flow,
+  incomeSources,
   isTransfer,
   merchantKey,
   monthlyCost,
@@ -429,5 +430,84 @@ describe('a limit and the pace inside the month', () => {
     expect(row.spent).toBe(0);
     expect(row.over).toBe(false);
     expect(row.heading).toBe(false);
+  });
+});
+
+describe('where the money came from', () => {
+  const range = ['2026-08-01', '2026-08-31'] as const;
+
+  it('names the sources instead of summing them', () => {
+    // "Доход 42 000" answers nothing a person did not already know. Which
+    // part was wages and which was a friend paying back is the whole point.
+    const sources = incomeSources(
+      [
+        item({ day: '2026-08-05', amount: 3_000_000, description: 'ТОВ БАР' }),
+        item({ day: '2026-08-20', amount: 3_000_000, description: 'ТОВ БАР' }),
+        item({ day: '2026-08-12', amount: 40_000, description: 'Оля К.' }),
+      ],
+      ...range,
+    );
+
+    expect(sources.map((row) => [row.name, row.total, row.count])).toEqual([
+      ['ТОВ БАР', 60_000, 2],
+      ['Оля К.', 400, 1],
+    ]);
+  });
+
+  it('does not count moving your own money as earning it', () => {
+    // Money pulled out of savings would otherwise turn a thin month into a
+    // good one, and the person would be the only one who knew it had not been.
+    const sources = incomeSources(
+      [item({ day: '2026-08-05', amount: 5_000_000, description: 'З банки', mcc: 6012 })],
+      ...range,
+    );
+
+    expect(sources).toEqual([]);
+  });
+
+  it('does not count a refund as income', () => {
+    // The shop is giving back money that was already counted as spending;
+    // counting it again makes the month look like it earned from a return.
+    const bought = item({ day: '2026-08-05', amount: -120_000, description: 'ROZETKA' });
+    const back = item({ day: '2026-08-08', amount: 120_000, description: 'ROZETKA' });
+
+    expect(incomeSources([bought, back], ...range)).toEqual([]);
+  });
+
+  it('ignores what has not settled', () => {
+    expect(
+      incomeSources(
+        [item({ day: '2026-08-05', amount: 100_000, description: 'ТОВ БАР', hold: true })],
+        ...range,
+      ),
+    ).toEqual([]);
+  });
+
+  it('keeps the tidiest spelling of a repeated payer', () => {
+    const sources = incomeSources(
+      [
+        item({ day: '2026-08-05', amount: 100_000, description: 'ТОВ БАР 4' }),
+        item({ day: '2026-08-20', amount: 100_000, description: 'ТОВ БАР' }),
+      ],
+      ...range,
+    );
+
+    expect(sources).toHaveLength(1);
+    expect(sources[0].name).toBe('ТОВ БАР');
+  });
+
+  it('does not merge two payers whose names merely start alike', () => {
+    // Branch numbers fold together; extra words do not. "ТОВ БАР" and
+    // "ТОВ БАР ЛТД" could be one company or two, and guessing wrong here
+    // sums two employers into one wage.
+    const sources = incomeSources(
+      [
+        item({ day: '2026-08-05', amount: 100_000, description: 'ТОВ БАР ЛТД' }),
+        item({ day: '2026-08-20', amount: 100_000, description: 'ТОВ БАР' }),
+      ],
+      ...range,
+    );
+
+    expect(sources).toHaveLength(2);
   });
 });

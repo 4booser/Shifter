@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { Appear } from '@/components/motion';
+import { Appear, Press } from '@/components/motion';
 import { Palette } from '@/constants/theme';
 import { dayLabel } from '@/lib/calendar';
 import { byDay, categoryOf, fromMinor, MonoStatementItem, payerName } from '@/lib/mono';
@@ -28,19 +29,63 @@ export function BankLedger({
   limit?: number;
 }) {
   const styles = makeStyles(palette);
-  const grouped = byDay(items).slice(0, limit);
+  const [only, setOnly] = useState<'all' | 'in' | 'out' | 'shift'>('all');
+
+  // A statement of four hundred lines answers nothing. These four questions
+  // are the ones anybody actually opens it with.
+  const grouped = useMemo(() => {
+    const rows = byDay(
+      items.filter((item) => {
+        if (only === 'in') return item.amount > 0;
+        if (only === 'out') return item.amount < 0;
+
+        return true;
+      }),
+    );
+
+    return (only === 'shift'
+      ? rows.filter((row) => (days.get(row.day)?.shifts ?? []).some((shift) => shift.worked))
+      : rows
+    ).slice(0, limit);
+  }, [items, only, days, limit]);
+
+  const filters = (
+    <View style={styles.filters}>
+      {(
+        [
+          ['all', 'Всё'],
+          ['in', 'Приходы'],
+          ['out', 'Траты'],
+          ['shift', 'В дни смен'],
+        ] as const
+      ).map(([value, label]) => (
+        <Press
+          key={value}
+          style={[styles.filter, only === value && styles.filterOn]}
+          onPress={() => setOnly(value)}
+        >
+          <Text style={[styles.filterText, only === value && styles.filterTextOn]}>{label}</Text>
+        </Press>
+      ))}
+    </View>
+  );
 
   if (grouped.length === 0) {
     return (
-      <Text style={styles.empty}>
-        Выписка пока не загружена. Нажмите «Обновить» — банк отдаёт её окнами по месяцу, не чаще
-        раза в минуту.
-      </Text>
+      <View style={styles.list}>
+        {items.length > 0 && filters}
+        <Text style={styles.empty}>
+          {items.length === 0
+            ? 'Выписка пока не загружена. Нажмите «Обновить» — банк отдаёт её окнами по месяцу, не чаще раза в минуту.'
+            : 'Под этот отбор ничего не попало.'}
+        </Text>
+      </View>
     );
   }
 
   return (
     <View style={styles.list}>
+      {filters}
       {grouped.map((row, index) => {
         const day = days.get(row.day);
         const shifts = (day?.shifts ?? []).filter((shift) => shift.worked);
@@ -109,6 +154,19 @@ export function BankLedger({
 const makeStyles = (palette: Palette) =>
   StyleSheet.create({
     list: { gap: 8 },
+    filters: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 2 },
+    filter: {
+      borderWidth: 1,
+      borderColor: palette.border,
+      backgroundColor: palette.backgroundElement,
+      borderRadius: 999,
+      paddingHorizontal: 12,
+      paddingVertical: 7,
+    },
+    filterOn: { backgroundColor: palette.accent, borderColor: palette.accent },
+    filterText: { color: palette.text, fontSize: 12.5, fontWeight: '700' },
+    filterTextOn: { color: '#fff' },
+
     empty: { color: palette.textSecondary, fontSize: 13.5, lineHeight: 19, paddingVertical: 12 },
     day: {
       backgroundColor: palette.backgroundElement,

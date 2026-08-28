@@ -26,11 +26,14 @@ export function MoneyGrid({
   days,
   palette,
   anchor,
+  onOpen,
 }: {
   items: MonoStatementItem[];
   days: Map<string, CalendarDayData>;
   palette: Palette;
   anchor: YearMonth;
+  /** A cell is a day like any other: tapping it opens the day. */
+  onOpen: (date: string) => void;
 }) {
   const { width } = useWindowDimensions();
   const styles = makeStyles(palette);
@@ -92,9 +95,11 @@ export function MoneyGrid({
                   const net = (day?.income ?? 0) - (day?.spent ?? 0);
 
                   return (
-                    <View
+                    <Press
                       key={cell.key}
+                      haptic={false}
                       style={[styles.slot, !cell.inMonth && styles.slotOutside]}
+                      onPress={() => onOpen(cell.key)}
                     >
                       <View
                         style={[
@@ -131,7 +136,7 @@ export function MoneyGrid({
                           />
                         )}
                       </View>
-                    </View>
+                    </Press>
                   );
                 })}
               </View>

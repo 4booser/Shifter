@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -75,6 +76,7 @@ export default function BankScreen() {
   const palette = Colors[scheme === 'dark' ? 'dark' : 'light'];
   const insets = useSafeAreaInsets();
   const styles = makeStyles(palette);
+  const router = useRouter();
 
   const mono = useMono();
   const account = chosenAccount(mono);
@@ -149,6 +151,11 @@ export default function BankScreen() {
   const wages = useMemo(() => {
     if (periods === null || mono.items.length === 0) return [];
 
+    // A credit already recorded as a payout is not a candidate for another
+    // one, even if the period still reads as short — it might be short by
+    // exactly the amount somebody has yet to be paid.
+    const open = mono.items.filter((item) => !mono.used.includes(item.id));
+
     return periods
       .filter((row) => row.expected > row.paid && row.stream !== 'commission')
       .map((row) => {
@@ -165,14 +172,14 @@ export default function BankScreen() {
           row,
           expected,
           matches: wageCandidates(
-            mono.items,
+            open,
             expected,
             mono.payers[`${row.location_id}`] ?? [],
           ).slice(0, 2),
         };
       })
       .filter((entry) => entry.matches.length > 0);
-  }, [periods, mono.items, mono.payers]);
+  }, [periods, mono.items, mono.payers, mono.used]);
 
   const worked = useMemo(
     () =>
@@ -185,8 +192,13 @@ export default function BankScreen() {
   );
 
   const spending = useMemo(
-    () => workSpending(mono.items, worked).slice(0, 25),
-    [mono.items, worked],
+    () =>
+      workSpending(mono.items, worked)
+        // Already written down. A resync brings the same taxi back, and
+        // offering it twice is how a fare gets recorded twice.
+        .filter((row) => !mono.used.includes(row.item.id))
+        .slice(0, 25),
+    [mono.items, worked, mono.used],
   );
 
   /** The most recent payday the app knows about, for "how long it lasted". */
@@ -233,6 +245,8 @@ export default function BankScreen() {
       // what leaves the other half looking like a stranger next month.
       for (const key of match.payers) await mono.rememberPayer(row.location_id, key);
 
+      await mono.markUsed(match.items.map((item) => item.id));
+
       setDone((was) => [...was, tag]);
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       void loadShifter();
@@ -260,6 +274,7 @@ export default function BankScreen() {
         },
       });
 
+      await mono.markUsed([item.id]);
       setDone((was) => [...was, tag]);
       void Haptics.selectionAsync();
     } catch {
@@ -459,6 +474,7 @@ export default function BankScreen() {
           days={days}
           palette={palette}
           anchor={currentMonth()}
+          onOpen={(day) => router.push(`/day/${day}`)}
         />
       )}
 

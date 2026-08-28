@@ -26,6 +26,13 @@ interface Setup {
   payers: Record<string, string[]>;
   /** Unix seconds of the newest transaction already fetched. */
   syncedTo: number | null;
+  /**
+   * Transactions already turned into a Shifter row. Kept because a resync
+   * brings the same taxi back, and offering it again is how somebody records
+   * the same fare twice — the app would then be wrong about the one thing it
+   * exists to be right about.
+   */
+  used: string[];
 }
 
 interface MonoState {
@@ -36,6 +43,8 @@ interface MonoState {
   payers: Record<string, string[]>;
   items: MonoStatementItem[];
   syncedTo: number | null;
+  /** Transaction ids already recorded in Shifter, so nothing is offered twice. */
+  used: string[];
   busy: boolean;
   error: string | null;
   /** Windows fetched and windows asked for, so a backfill can show a bar. */
@@ -52,6 +61,8 @@ interface MonoState {
   sync: (sinceSeconds: number) => Promise<number>;
   /** Remembers that this payer is the wage for this place. */
   rememberPayer: (locationId: number, payer: string) => Promise<void>;
+  /** Marks transactions as already recorded, so they stop being offered. */
+  markUsed: (ids: string[]) => Promise<void>;
 }
 
 const now = () => Math.floor(Date.now() / 1000);
@@ -81,7 +92,7 @@ const readSetup = async (): Promise<Setup> => {
     // A setup that cannot be read is one that has to be asked for again.
   }
 
-  return { accountId: null, payers: {}, syncedTo: null };
+  return { accountId: null, payers: {}, syncedTo: null, used: [] };
 };
 
 export const useMono = create<MonoState>((set, get) => ({
@@ -91,6 +102,7 @@ export const useMono = create<MonoState>((set, get) => ({
   payers: {},
   items: [],
   syncedTo: null,
+  used: [],
   busy: false,
   error: null,
   progress: null,
@@ -121,6 +133,7 @@ export const useMono = create<MonoState>((set, get) => ({
       accountId: setup.accountId,
       payers: setup.payers,
       syncedTo: setup.syncedTo,
+      used: setup.used ?? [],
       items,
     });
 
@@ -157,7 +170,10 @@ export const useMono = create<MonoState>((set, get) => ({
   disconnect: async () => {
     // Everything the bank told us goes. What the person confirmed has already
     // become an ordinary Shifter row and stays where it is.
-    set({ token: null, client: null, accountId: null, items: [], syncedTo: null, payers: {} });
+    set({
+      token: null, client: null, accountId: null, items: [],
+      syncedTo: null, payers: {}, used: [],
+    });
     await quietly(SecureStore.deleteItemAsync(TOKEN_KEY));
     await quietly(AsyncStorage.multiRemove([CACHE_KEY, SETUP_KEY]));
   },
@@ -234,6 +250,16 @@ export const useMono = create<MonoState>((set, get) => ({
     } finally {
       set({ busy: false, waiting: 0, progress: null });
     }
+  },
+
+  markUsed: async (ids) => {
+    const used = [...new Set([...get().used, ...ids])];
+
+    set({ used });
+
+    const setup = await readSetup();
+
+    await quietly(AsyncStorage.setItem(SETUP_KEY, JSON.stringify({ ...setup, used })));
   },
 
   rememberPayer: async (locationId, payer) => {

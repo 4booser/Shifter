@@ -14,6 +14,8 @@ import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 
 import { ClockRing, MoneyFlow, MonthBars } from '@/components/charts';
 import { Appear, Press, Roll } from '@/components/motion';
+import { Pace } from '@/components/pace';
+import { running } from '@/lib/pace';
 
 import { Colors, Palette } from '@/constants/theme';
 import { api } from '@/lib/api';
@@ -336,6 +338,31 @@ export default function StatsScreen() {
         />
       </View>
       </Appear>
+
+      {/* The comparison as a shape rather than a percentage: whether the month
+          started slowly and caught up, or started well and stalled, are two
+          completely different conversations and one number cannot tell them
+          apart. */}
+      {summary !== null && span === 'month' && (
+        <Appear index={1}>
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>{t('Темп месяца')}</Text>
+            <Pace
+              now={running(summary.days, bounds.from, bounds.to)}
+              before={
+                before === null
+                  ? []
+                  : running(
+                      before.days,
+                      previousRange(span, month, todayKey()).range.from,
+                      previousRange(span, month, todayKey()).range.to,
+                    )
+              }
+              palette={palette}
+            />
+          </View>
+        </Appear>
+      )}
 
       {before !== null && earnedBefore !== null && earnedBefore > 0 && (
         <Text style={styles.against}>

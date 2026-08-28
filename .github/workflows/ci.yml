@@ -74,6 +74,11 @@ jobs:
       - run: npx tsc --noEmit
         working-directory: mobile
 
+      # The calendar's date arithmetic, which no typecheck can be wrong about
+      # quietly enough to matter and no reader can be right about reliably.
+      - run: npm test
+        working-directory: mobile
+
   migrations:
     name: Migrations on a database with rows in it
     runs-on: ubuntu-latest

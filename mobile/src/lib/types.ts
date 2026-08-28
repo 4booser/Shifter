@@ -104,11 +104,71 @@ export interface Conversion {
   unconverted: string[];
 }
 
+/**
+ * Something that takes a day without paying for it. Events mark time, shifts
+ * pay for it — which is why nothing in this shape is money.
+ */
+export type EventKind = 'ordinary' | 'vacation' | 'sick' | 'dayoff';
+
+export interface CalendarEvent {
+  id: number;
+  name: string;
+  symbol: string | null;
+  colour: string;
+  start_date: string;
+  /** Inclusive, and equal to start_date for a single day. */
+  end_date: string;
+  start_time: string | null;
+  end_time: string | null;
+  note: string | null;
+  kind: EventKind;
+  /** How many days it covers, both ends included. */
+  days: number;
+  repeat_weekdays: string | null;
+  repeat_until: string | null;
+}
+
+export interface EventSave {
+  name: string;
+  symbol: string | null;
+  colour: string;
+  start_date: string;
+  end_date: string;
+  start_time: string | null;
+  end_time: string | null;
+  note: string | null;
+  kind: EventKind;
+}
+
+/**
+ * What the pencil offers under "события". Four of them are the kinds the
+ * server treats specially — leave and sickness leave the pace alone — and the
+ * rest are the ones people actually asked for by name.
+ */
+export const EVENT_PRESETS: { kind: EventKind; name: string; symbol: string; colour: string }[] = [
+  { kind: 'dayoff', name: 'Выходной', symbol: '\u{1F634}', colour: '#38BDF8' },
+  { kind: 'vacation', name: 'Отпуск', symbol: '\u{1F334}', colour: '#22C55E' },
+  { kind: 'sick', name: 'Больничный', symbol: '\u{1F912}', colour: '#FF5C7A' },
+  { kind: 'ordinary', name: 'Учёба', symbol: '\u{1F4DA}', colour: '#A855F7' },
+  { kind: 'ordinary', name: 'Подработка', symbol: '\u{1F4BC}', colour: '#FFA53D' },
+  { kind: 'ordinary', name: 'Дела', symbol: '\u{1F4CC}', colour: '#64748B' },
+];
+
 export interface DaysResponse {
   days: CalendarDayData[];
+  /**
+   * Everything overlapping the range, once each rather than repeated on every
+   * day it covers. The phone ignored these for a year, which is why a fortnight
+   * of leave was invisible on the only screen anybody actually looks at.
+   */
+  events?: CalendarEvent[];
   total_earned: number;
+  /** Shifts in the range that are still ahead — never mixed into the total. */
+  planned_earned: number;
   hours: number;
+  planned_hours: number;
   days_worked: number;
+  days_planned: number;
   /** Present only where the range mixes currencies and one was asked for. */
   conversion?: Conversion | null;
 }
@@ -263,6 +323,44 @@ export const toSavePayload = (day: CalendarDayData | undefined): DaySave => ({
 });
 
 export const money = (value: number) => `₴${Math.round(value).toLocaleString('ru')}`;
+
+/**
+ * Money the width of a calendar cell: 1 240 becomes "1,2к".
+ *
+ * The currency sign is left off on purpose — it is already on the total above
+ * the grid, and six glyphs do not fit in a square that also has to hold a
+ * date. Empty for zero: a cell showing "0" reads as a day that paid nothing,
+ * not as a day nobody has filled in.
+ */
+export const moneyShort = (value: number): string => {
+  const rounded = Math.round(value);
+
+  if (rounded === 0) return '';
+  if (Math.abs(rounded) < 1000) return `${rounded}`;
+
+  const thousands = rounded / 1000;
+
+  return Math.abs(thousands) < 10
+    ? `${thousands.toFixed(1).replace('.', ',')}\u043a`
+    : `${Math.round(thousands)}\u043a`;
+};
+
+/**
+ * A '#RRGGBB' with an alpha on it. Anything unparseable comes back null so the
+ * caller can fall back to the palette rather than paint a cell 'NaN'.
+ */
+export const tint = (hex: string | null, alpha: number): string | null => {
+  if (hex === null) return null;
+
+  const clean = hex.replace('#', '').trim();
+  const full = clean.length === 3 ? clean.split('').map((c) => c + c).join('') : clean;
+
+  if (!/^[0-9a-fA-F]{6}$/.test(full)) return null;
+
+  const value = parseInt(full, 16);
+
+  return `rgba(${(value >> 16) & 255}, ${(value >> 8) & 255}, ${value & 255}, ${alpha})`;
+};
 
 /**
  * Russian declines after a number, so a count and its word are one call:

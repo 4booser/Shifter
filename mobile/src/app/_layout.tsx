@@ -3,6 +3,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { useColorScheme } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { LockGate } from '@/components/lock-gate';
 import { registerForPush, wireNotificationTaps } from '@/lib/notifications';
@@ -37,26 +38,30 @@ export default function RootLayout() {
   if (session === undefined) return null;
 
   return (
-    <LockGate>
-      <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Protected guard={session !== null}>
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="day/[date]" options={{ presentation: 'modal' }} />
-          <Stack.Screen name="live" options={{ presentation: 'fullScreenModal' }} />
-          <Stack.Screen name="import" options={{ presentation: 'modal' }} />
-          <Stack.Screen name="settings" options={{ presentation: 'modal' }} />
-          <Stack.Screen name="assistant" options={{ presentation: 'modal' }} />
-          <Stack.Screen name="year" options={{ presentation: 'modal' }} />
-          <Stack.Screen name="templates" options={{ presentation: 'modal' }} />
-          <Stack.Screen name="board" options={{ presentation: 'modal' }} />
-          <Stack.Screen name="crew" options={{ presentation: 'modal' }} />
-          <Stack.Screen name="costs" options={{ presentation: 'modal' }} />
-        </Stack.Protected>
-        <Stack.Protected guard={session === null}>
-          <Stack.Screen name="login" />
-        </Stack.Protected>
-      </Stack>
-    </LockGate>
+    // Gesture handler needs a root of its own, and the calendar's paint gesture
+    // is the first thing in the app to depend on it.
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <LockGate>
+        <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Protected guard={session !== null}>
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="day/[date]" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="live" options={{ presentation: 'fullScreenModal' }} />
+            <Stack.Screen name="import" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="settings" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="assistant" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="year" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="templates" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="board" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="crew" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="costs" options={{ presentation: 'modal' }} />
+          </Stack.Protected>
+          <Stack.Protected guard={session === null}>
+            <Stack.Screen name="login" />
+          </Stack.Protected>
+        </Stack>
+      </LockGate>
+    </GestureHandlerRootView>
   );
 }

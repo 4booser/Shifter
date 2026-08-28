@@ -1,0 +1,12 @@
+import path from 'node:path';
+import { defineConfig } from 'vitest/config';
+
+/**
+ * The phone had no automated check beyond a typecheck, which leaves every
+ * date bug to be found by somebody looking at a calendar and counting.
+ * Only the pure helpers run here — anything that renders needs a device.
+ */
+export default defineConfig({
+  resolve: { alias: { '@': path.resolve(import.meta.dirname, 'src') } },
+  test: { include: ['tests/**/*.spec.ts'], environment: 'node', globals: true },
+});

@@ -72,3 +72,84 @@ export const dayLabel = (key: string): string => {
 
   return `${WEEKDAYS_SHORT[date.getDay()]}, ${shortDate(key)}`;
 };
+
+export interface GridCell {
+  key: string;
+  /** False for the neighbouring month's days that fill the corners. */
+  inMonth: boolean;
+}
+
+/**
+ * Six full weeks, Monday first, with the neighbouring months' days in the
+ * gaps rather than blanks.
+ *
+ * Blanks cost twice: the corner of the month reads as broken, and the grid
+ * changes height between a five-week month and a six-week one — which on a
+ * pager means the page under your thumb grows while you swipe it.
+ */
+export const monthGrid = ({ year, month }: YearMonth): GridCell[] => {
+  const lead = (new Date(year, month - 1, 1).getDay() + 6) % 7;
+  const start = new Date(year, month - 1, 1 - lead);
+  const cells: GridCell[] = [];
+
+  for (let index = 0; index < 42; index++) {
+    const day = new Date(start.getFullYear(), start.getMonth(), start.getDate() + index);
+
+    cells.push({
+      key: `${day.getFullYear()}-${pad(day.getMonth() + 1)}-${pad(day.getDate())}`,
+      inMonth: day.getMonth() === month - 1 && day.getFullYear() === year,
+    });
+  }
+
+  return cells;
+};
+
+/** The range the grid actually shows, which overhangs the month at both ends. */
+export const gridBounds = (at: YearMonth) => {
+  const cells = monthGrid(at);
+
+  return { from: cells[0].key, to: cells[41].key };
+};
+
+export const nextDay = (key: string): string => {
+  const date = new Date(`${key}T00:00:00`);
+
+  date.setDate(date.getDate() + 1);
+
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+};
+
+/** True where the key falls inside an inclusive range. Keys sort as dates. */
+export const covers = (from: string, to: string, key: string) => key >= from && key <= to;
+
+/**
+ * Day keys collapsed into contiguous stretches.
+ *
+ * Painting a fortnight of leave should leave one event on the server, not
+ * fourteen — the calendar says "Отпуск, 14 дней" instead of repeating itself,
+ * and deleting it takes one tap rather than fourteen.
+ */
+export const runsOf = (keys: string[]): { from: string; to: string }[] => {
+  const sorted = [...keys].sort();
+  const runs: { from: string; to: string }[] = [];
+
+  for (const key of sorted) {
+    const last = runs[runs.length - 1];
+
+    if (last !== undefined && nextDay(last.to) === key) last.to = key;
+    else runs.push({ from: key, to: key });
+  }
+
+  return runs;
+};
+
+/** How many months from `a` to `b`, signed. */
+export const monthsBetween = (a: YearMonth, b: YearMonth) =>
+  (b.year * 12 + b.month) - (a.year * 12 + a.month);
+
+/** "Август" on its own, for a header that carries the year separately. */
+export const monthOnly = ({ year, month }: YearMonth): string => {
+  const raw = new Date(year, month - 1, 1).toLocaleDateString('ru', { month: 'long' });
+
+  return raw[0].toUpperCase() + raw.slice(1);
+};

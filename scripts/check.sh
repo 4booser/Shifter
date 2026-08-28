@@ -20,5 +20,6 @@ npm test --silent
 echo "── mobile"
 cd ../mobile
 npx tsc --noEmit
+npm test --silent
 
 echo "── all clear"

@@ -546,6 +546,9 @@ export const RU: Dictionary = {
   'Guests': 'Гостей',
   'nobody counted': 'никто не считал',
   'Average cheque': 'Средний чек',
+  'Tips by zone': 'Чаевые по зонам',
+  'Split by hours where a night covered two zones — the only division the data supports.':
+    'Вечер на две зоны делится по часам — единственное деление, которое данные выдерживают.',
   'This week': 'Эта неделя',
   'Earned this week': 'Заработано за неделю',
   'Still to come': 'Ещё впереди',
@@ -2854,6 +2857,9 @@ export const UK: Dictionary = {
   'Guests': 'Гостей',
   'nobody counted': 'ніхто не рахував',
   'Average cheque': 'Середній чек',
+  'Tips by zone': 'Чайові по зонах',
+  'Split by hours where a night covered two zones — the only division the data supports.':
+    'Вечір на дві зони ділиться за годинами — єдиний поділ, який дані витримують.',
   'This week': 'Цей тиждень',
   'All time': 'За весь час',
 

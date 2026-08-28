@@ -207,6 +207,24 @@ export interface DaySale {
   earned: number;
 }
 
+/**
+ * Where in the venue a shift was worked.
+ *
+ * Every waiter knows the terrace tips better than the bar and none of them can
+ * say by how much. "unset" is an answer — nobody said — and it is counted on
+ * its own rather than folded into whichever zone is commonest.
+ */
+export type ShiftZone = 'unset' | 'hall' | 'bar' | 'terrace' | 'banquet' | 'takeaway';
+
+export interface ZoneTotal {
+  zone: ShiftZone;
+  hours: number;
+  tips: number;
+  /** Tips per paid hour there — the figure the argument is about. */
+  tips_per_hour: number;
+  shifts: number;
+}
+
 export interface DayShiftEntry {
   shift_id: number;
   name: string;
@@ -223,6 +241,8 @@ export interface DayShiftEntry {
    * evening with no guests.
    */
   guests: number | null;
+  /** Where in the venue. "unset" is an answer: nobody said. */
+  zone: ShiftZone;
   /** The agreed share of it, already inside earned. */
   revenue_percent: number | null;
   /** False means planned rather than done. */
@@ -442,6 +462,8 @@ export interface DaysResponse {
   guests_counted: number;
   /** Takings over guests, across the shifts that recorded both. */
   average_cheque: number | null;
+  /** Tips and hours by zone, for every zone anybody named. */
+  by_zone: ZoneTotal[];
   /**
    * Everything overlapping the range, once each rather than repeated on every
    * day it covers. The store spreads them across the cells.
@@ -782,6 +804,8 @@ export interface DaySave {
     revenue?: number | null;
     /** How many it served. Null leaves it uncounted, not zero. */
     guests?: number | null;
+    /** Where in the venue. Absent leaves whatever was there. */
+    zone?: ShiftZone;
   }[];
   tips_cash: number | null;
   deductions: number | null;
@@ -832,6 +856,7 @@ export const EMPTY_SUMMARY: DaysResponse = {
   revenue_counted: 0,
   guests_counted: 0,
   average_cheque: null,
+  by_zone: [],
   events: [],
 };
 

@@ -1015,6 +1015,7 @@ function placeholderFor(template: ShiftTemplate, key: string): DayShiftEntry {
     end_time: template.end_time,
     revenue: null,
     guests: null,
+    zone: 'unset' as const,
     revenue_percent: template.revenue_percent,
     colour: template.effective_colour,
     hours: template.hours,

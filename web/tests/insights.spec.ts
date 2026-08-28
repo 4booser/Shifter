@@ -18,6 +18,7 @@ function day(date: string, earned: number, shifts = 1): CalendarDayData {
       earned,
       revenue: null,
   guests: null,
+  zone: 'unset' as const,
       revenue_percent: null,
       worked: true,
       needs_cover: false,

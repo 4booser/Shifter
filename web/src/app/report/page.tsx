@@ -27,6 +27,16 @@ import { Alert, CountUp, Delta, Money } from '@/components/ui/bits';
 import { Empty } from '@/components/ui/empty';
 import { Icon } from '@/components/ui/icon';
 
+/** The zone nobody named keeps its own row rather than being shared out. */
+const ZONE_NAMES: Record<string, string> = {
+  hall: 'Hall',
+  bar: 'Bar',
+  terrace: 'Terrace',
+  banquet: 'Banquet',
+  takeaway: 'Takeaway',
+  unset: 'Not said',
+};
+
 export default function ReportPage() {
   return (
     <Shell>
@@ -378,6 +388,33 @@ function Report() {
               </section>
             )}
           </div>
+
+          {/* ==== By zone ==== */}
+          {summary.by_zone.filter((row) => row.zone !== 'unset').length > 0 && (
+            <section className="card reveal p-4">
+              <h2 className="mb-1 text-[0.98rem] font-bold">{t('Tips by zone')}</h2>
+              <p className="field-hint mb-2">
+                {t('Split by hours where a night covered two zones — the only division the data supports.')}
+              </p>
+
+              <ul className="flex flex-col gap-1.5">
+                {summary.by_zone.map((row) => (
+                  <li key={row.zone} className="flex flex-wrap items-baseline gap-x-2.5 text-[0.88rem]">
+                    <strong className="min-w-20">{t(ZONE_NAMES[row.zone] ?? row.zone)}</strong>
+                    <span className="field-hint tabular">
+                      {row.hours} {t('h')} · {row.shifts} {t('sh.')}
+                    </span>
+                    <span className="ml-auto tabular">
+                      <Money value={row.tips} />
+                    </span>
+                    <span className="w-24 text-right font-semibold tabular">
+                      <Money value={row.tips_per_hour} />/{t('h')}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
 
           {/* ==== By place ==== */}
           {summary.by_location.length > 1 && (

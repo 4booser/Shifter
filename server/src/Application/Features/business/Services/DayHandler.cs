@@ -97,6 +97,46 @@ public partial class DayHandler : IDayHandler
             ? null
             : Math.Round(counted.Sum(entry => entry.Revenue!.Value) / guestsCounted, 2);
 
+        // Tips follow the hours inside a day: a night split between the bar
+        // and the terrace splits its tips the same way, because that is the
+        // only division the data supports and inventing another would be
+        // deciding on somebody's behalf which half of the evening earned it.
+        //
+        // Walked from the days rather than from the flattened placements: a
+        // placement does not reliably carry a way back to its day, and a
+        // silent zero here would read as "the terrace tips nothing".
+        Dictionary<ShiftZone, (double Hours, decimal Tips, int Shifts)> zones = [];
+
+        foreach (Day day in days)
+        {
+            DayShift[] on = (day.Shifts ?? []).Where(entry => entry.Worked).ToArray();
+            double dayHours = on.Sum(entry => entry.PaidDuration.TotalHours);
+
+            foreach (DayShift entry in on)
+            {
+                double hours = entry.PaidDuration.TotalHours;
+                decimal share = dayHours <= 0
+                    ? 0m
+                    : (day.Tips ?? 0m) * (decimal)(hours / dayHours);
+
+                var (had, tips, count) = zones.GetValueOrDefault(entry.Zone);
+
+                zones[entry.Zone] = (had + hours, tips + share, count + 1);
+            }
+        }
+
+        ZoneTotalDto[] byZone = zones
+            .Select(pair => new ZoneTotalDto(
+                ZoneName(pair.Key),
+                Math.Round(pair.Value.Hours, 2),
+                Math.Round(pair.Value.Tips, 2),
+                pair.Value.Hours <= 0
+                    ? 0m
+                    : Math.Round(pair.Value.Tips / (decimal)pair.Value.Hours, 2),
+                pair.Value.Shifts))
+            .OrderByDescending(row => row.tips_per_hour)
+            .ToArray();
+
         // Both are kept per place and summed here for the headline, so the
         // figure on the dashboard and the figure inside each place's tax are
         // the same arithmetic rather than two that happen to agree.
@@ -177,6 +217,7 @@ public partial class DayHandler : IDayHandler
             revenueCounted,
             guestsCounted,
             averageCheque,
+            byZone,
             events.Select(EventHandler.ToDto).ToArray(),
             await ConvertAsync(byLocation, currencies, baseCurrency, to, ct)
         );
@@ -480,6 +521,8 @@ public partial class DayHandler : IDayHandler
                 // are different evenings and only one of them is a zero.
                 if (entry.guests is int guests && guests >= 0)
                     placed.Guests = guests;
+
+                if (entry.zone is not null) placed.Zone = ParseZone(entry.zone);
 
                 return placed;
             })
@@ -982,6 +1025,32 @@ public partial class DayHandler : IDayHandler
                     : 0m);
     }
 
+    /// <summary>The zone as the wire writes it. "unset" is an answer, not a gap.</summary>
+    private static string ZoneName(ShiftZone zone) => zone switch
+    {
+        ShiftZone.Hall => "hall",
+        ShiftZone.Bar => "bar",
+        ShiftZone.Terrace => "terrace",
+        ShiftZone.Banquet => "banquet",
+        ShiftZone.Takeaway => "takeaway",
+        _ => "unset",
+    };
+
+    /// <summary>
+    /// Anything unrecognised reads as "not said" rather than throwing. A zone
+    /// is a label on somebody's own evening; refusing a save over one would be
+    /// losing the shift to protect a category.
+    /// </summary>
+    private static ShiftZone ParseZone(string value) => value.Trim().ToLowerInvariant() switch
+    {
+        "hall" => ShiftZone.Hall,
+        "bar" => ShiftZone.Bar,
+        "terrace" => ShiftZone.Terrace,
+        "banquet" => ShiftZone.Banquet,
+        "takeaway" => ShiftZone.Takeaway,
+        _ => ShiftZone.Unset,
+    };
+
     private static DaySplit SplitOf(Day day)
     {
         DayShift[] worked = (day.Shifts ?? []).Where(entry => entry.Worked).ToArray();
@@ -1151,6 +1220,7 @@ public partial class DayHandler : IDayHandler
                 entry.Pay,
                 entry.Revenue,
                 entry.Guests,
+                ZoneName(entry.Zone),
                 entry.RevenuePercent,
                 entry.Worked,
                 entry.NeedsCover,

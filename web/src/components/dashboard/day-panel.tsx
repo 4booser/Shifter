@@ -4,7 +4,14 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { formatDayLabel, fromKey, shiftDays, todayKey, weekBounds } from '@/lib/calendar/calendar-date';
 import { holidaysInRange } from '@/lib/calendar/holidays';
-import { CalendarEvent, DayShiftEntry, MARK_COLOURS, NOTE_MAX_LENGTH, ShiftTemplate } from '@/lib/calendar/models';
+import {
+  CalendarEvent,
+  DayShiftEntry,
+  MARK_COLOURS,
+  NOTE_MAX_LENGTH,
+  ShiftTemplate,
+  ShiftZone,
+} from '@/lib/calendar/models';
 import { api } from '@/lib/api/http';
 import { useI18n } from '@/lib/i18n';
 import { useMoney } from '@/lib/settings/money';
@@ -37,6 +44,15 @@ const REASONS: { value: DeductionReason; label: string }[] = [
 ];
 import { Money, SwatchRow } from '@/components/ui/bits';
 import { EventModal } from './modals/event-modal';
+
+/** Short on purpose: a list long enough for every venue is one nobody fills in. */
+const ZONES: { value: ShiftZone; label: string }[] = [
+  { value: 'hall', label: 'Hall' },
+  { value: 'bar', label: 'Bar' },
+  { value: 'terrace', label: 'Terrace' },
+  { value: 'banquet', label: 'Banquet' },
+  { value: 'takeaway', label: 'Takeaway' },
+];
 
 const QUANTITY_STEPS = [1, 3, 5, 10];
 const TIP_STEPS = [50, 100, 200, 500];
@@ -86,6 +102,7 @@ export function DayPanel() {
   const [tipPool, setTipPool] = useState<number | null>(null);
   const [revenue, setRevenue] = useState<Record<number, number | null>>({});
   const [guests, setGuests] = useState<Record<number, number | null>>({});
+  const [zone, setZone] = useState<Record<number, ShiftZone>>({});
   const [note, setNote] = useState('');
   const [colour, setColour] = useState<string | null>(null);
   const [eventOpen, setEventOpen] = useState(false);
@@ -219,6 +236,7 @@ export function DayPanel() {
           break_minutes: entry.break_minutes,
           revenue: entry.shift_id in revenue ? revenue[entry.shift_id] : entry.revenue,
           guests: entry.shift_id in guests ? guests[entry.shift_id] : entry.guests,
+          zone: entry.shift_id in zone ? zone[entry.shift_id] : entry.zone,
         };
       }),
       sales: Object.entries(quantities)
@@ -419,6 +437,38 @@ export function DayPanel() {
                       </p>
                     ) : null;
                   })()}
+
+                  {/* Where in the venue. Every waiter knows the terrace tips
+                      better than the bar and none of them can say by how much,
+                      because nobody has written it down against the hours. */}
+                  {isWorked && (
+                    <div className="mt-1.5">
+                      <span className="field-label">{t('Where')}</span>
+                      <div className="flex flex-wrap gap-1">
+                        {ZONES.map((option) => {
+                          const current = entry.shift_id in zone ? zone[entry.shift_id] : entry.zone;
+
+                          return (
+                            <button
+                              key={option.value}
+                              type="button"
+                              className={`btn btn-sm ${current === option.value ? 'btn-primary' : 'btn-quiet'}`}
+                              aria-pressed={current === option.value}
+                              onClick={() =>
+                                setZone((now) => ({
+                                  ...now,
+                                  [entry.shift_id]:
+                                    current === option.value ? 'unset' : option.value,
+                                }))
+                              }
+                            >
+                              {t(option.label)}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
 
                   {isWorked && (
                     <ActualClockRow

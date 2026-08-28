@@ -67,6 +67,7 @@ public class MigrationDefaultsTests
         ["Amount"] = "an amount, and nothing recorded is nothing",
         ["DayOfMonth"] = "set by the handler on every write; never left at the default",
         ["Weekday"] = "Monday, and only read when the rhythm is weekly",
+        ["Zone"] = "0 is Unset — \"nobody said\", counted apart rather than guessed",
     };
 
     /// <summary>

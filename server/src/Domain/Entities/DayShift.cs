@@ -47,6 +47,15 @@ public sealed class DayShift
     /// </summary>
     public int? Guests { get; set; }
 
+    /// <summary>
+    /// Where in the venue it was worked.
+    ///
+    /// Every waiter knows the terrace tips better than the bar; none of them
+    /// can say by how much. Unset is "nobody said", and it is counted apart
+    /// rather than folded into whichever zone is commonest.
+    /// </summary>
+    public ShiftZone Zone { get; set; } = ShiftZone.Unset;
+
     public TimeOnly StartTime { get; set; }
     public TimeOnly EndTime { get; set; }
     public int BreakMinutes { get; set; }

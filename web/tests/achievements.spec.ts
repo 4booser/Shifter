@@ -16,6 +16,7 @@ function day(date: string, hours: number, start = '10:00', worked = true): Calen
         earned: hours * 100,
         revenue: null,
   guests: null,
+  zone: 'unset' as const,
         revenue_percent: null,
         worked,
         needs_cover: false,

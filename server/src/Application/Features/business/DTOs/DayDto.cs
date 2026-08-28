@@ -27,6 +27,11 @@ public record DayShiftDto(
     decimal? revenue,
     /// <summary>How many the shift served, where anybody counted.</summary>
     int? guests,
+    /// <summary>
+    /// Where in the venue: "hall", "bar", "terrace", "banquet", "takeaway",
+    /// or "unset" where nobody said.
+    /// </summary>
+    string zone,
     /// <summary>The agreed share of it, already inside earned.</summary>
     decimal? revenue_percent,
     bool worked,
@@ -165,6 +170,13 @@ public record DaysDto(
     /// </summary>
     decimal? average_cheque,
     /// <summary>
+    /// Tips and hours by zone, for the zones anybody named. The zone nobody
+    /// named is reported as its own row rather than shared out — a terrace
+    /// average that quietly includes every unlabelled shift is not a terrace
+    /// average.
+    /// </summary>
+    ZoneTotalDto[] by_zone,
+    /// <summary>
     /// Everything overlapping the range, once each rather than repeated on
     /// every day it covers — a fortnight of leave is one entry, and the client
     /// spreads it across the cells itself.
@@ -272,8 +284,19 @@ public record DayShiftSaveDto(
     /// How many people it served. Null is "nobody counted", which is not the
     /// same as an evening with no guests.
     /// </summary>
-    int? guests = null
+    int? guests = null,
+    /// <summary>Where in the venue. Absent leaves whatever was there.</summary>
+    string? zone = null
     );
+
+/// <summary>One zone's share of the hours and the tips.</summary>
+public record ZoneTotalDto(
+    string zone,
+    double hours,
+    decimal tips,
+    /// <summary>Tips per paid hour there — the figure the argument is about.</summary>
+    decimal tips_per_hour,
+    int shifts);
 
 public record DaySaleSaveDto(
     int sales_id,

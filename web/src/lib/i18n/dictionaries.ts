@@ -5,6 +5,10 @@
 type Dictionary = Record<string, string>;
 
 export const RU: Dictionary = {
+  'Asking for more': 'Разговор о прибавке',
+  'Everything below is your own record. Nothing here is an opinion.': 'Всё ниже — ваш собственный послужной список. Здесь нет ни одного мнения.',
+  'There is a case': 'Есть с чем идти',
+  'Copy the message': 'Скопировать сообщение',
   'About your usual hour': 'Примерно ваш обычный час',
   'above your usual by': 'выше вашего обычного на',
   'below your usual by': 'ниже вашего обычного на',
@@ -1846,6 +1850,10 @@ export const RU: Dictionary = {
 };
 
 export const UK: Dictionary = {
+  'Asking for more': 'Розмова про підвищення',
+  'Everything below is your own record. Nothing here is an opinion.': 'Усе нижче — ваш власний послужний список. Тут немає жодної думки.',
+  'There is a case': 'Є з чим іти',
+  'Copy the message': 'Скопіювати повідомлення',
   'About your usual hour': 'Приблизно ваша звичайна година',
   'above your usual by': 'вище за вашу звичайну на',
   'below your usual by': 'нижче за вашу звичайну на',

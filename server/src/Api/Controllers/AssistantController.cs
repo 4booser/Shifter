@@ -1,4 +1,11 @@
 using System.Security.Claims;
+using Microsoft.EntityFrameworkCore;
+using Shifter.Infrastructure.Repositories.Interfaces;
+using Shifter.Infrastructure.Persistence.DbContexts;
+using Shifter.Domain.Entities;
+using Shifter.Application.Features.business.Services.Interfaces;
+using Shifter.Application.Features.business.DTOs;
+using Shifter.Application.Common.Time;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -23,6 +30,79 @@ public class AssistantController : ControllerBase
     private readonly AssistantService _assistant;
 
     public AssistantController(AssistantService assistant) => _assistant = assistant;
+
+    /// <summary>
+    /// The case for a raise at one place, assembled out of the person's own
+    /// record: how long the rate has stood still, how this place compares to
+    /// the others they actually work, how many shifts they covered for
+    /// somebody else.
+    ///
+    /// It answers "not yet" out loud when that is the answer. An app that
+    /// talks somebody into a conversation they will lose has done them harm.
+    /// </summary>
+    [HttpGet("raise")]
+    public async Task<ActionResult<RaiseCaseDto[]>> Raise(
+        [FromServices] IShifterQuery query,
+        [FromServices] IDayHandler days,
+        [FromServices] ShifterDbContext db,
+        [FromServices] AppClock clock,
+        CancellationToken ct)
+    {
+        DateOnly today = clock.Today;
+        int userId = UserId();
+
+        // A year back: long enough for the record to mean something, short
+        // enough that a rate from another era does not muddy the comparison.
+        DaysDto year = await days.ListAsync(userId, today.AddYears(-1), today, ct);
+        Location[] places = await query.GetLocationsAsync(userId, false, ct);
+
+        // Shifts taken at short notice for somebody else. The favour nobody
+        // writes down, which is exactly why it is worth writing down.
+        int covers = await db.CoverOffers
+            .AsNoTracking()
+            .CountAsync(offer => offer.ClaimantUserId == userId && offer.AcceptedAt != null, ct);
+
+        // The first day worked at each place, read from the days rather than
+        // the projection: the day view does not carry a place per shift.
+        Day[] raw = await query.GetDaysInRangeAsync(userId, today.AddYears(-1), today, ct);
+
+        Dictionary<int, DateOnly?> firstAt = raw
+            .SelectMany(day => (day.Shifts ?? [])
+                .Where(entry => entry.Worked)
+                .Select(entry => (Place: entry.Shift?.LocationId ?? 0, day.Date)))
+            .GroupBy(pair => pair.Place)
+            .ToDictionary(group => group.Key, group => (DateOnly?)group.Min(pair => pair.Date));
+
+        List<RaiseCaseDto> cases = [];
+
+        foreach (Location place in places)
+        {
+            LocationTotalDto? here = year.by_location
+                .FirstOrDefault(entry => entry.location_id == place.Id);
+
+            if (here is null || here.hours <= 0) continue;
+
+            // How long at *this* place, not how long using the app. Counting
+            // every day would tell somebody they had been at a cafe they
+            // started last month for a year, which is the kind of wrong that
+            // makes the rest of the page untrustworthy.
+            DateOnly? started = firstAt.GetValueOrDefault(place.Id);
+
+            int monthsHere = started is not DateOnly began
+                ? 0
+                : ((today.Year - began.Year) * 12) + today.Month - began.Month;
+
+            cases.Add(RaiseCase.Build(
+                place, here, year.by_location, year.raises, monthsHere, covers, today));
+        }
+
+        // The strongest case first: if somebody opens this once, it is the one
+        // they should read.
+        return Ok(cases
+            .OrderByDescending(entry => entry.worth_asking)
+            .ThenByDescending(entry => entry.points.Length)
+            .ToArray());
+    }
 
     [HttpGet("messages")]
     public async Task<IActionResult> Messages(CancellationToken ct)

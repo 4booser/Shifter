@@ -15,6 +15,7 @@ import {
 } from '@/lib/calendar/calendar-date';
 import { useI18n } from '@/lib/i18n';
 import { Shell } from '@/components/layout/shell';
+import { RaiseCasePanel } from '@/components/dashboard/raise-case';
 import { Alert } from '@/components/ui/bits';
 import { Icon } from '@/components/ui/icon';
 
@@ -255,6 +256,9 @@ function Assistant() {
         <GapCards gaps={gaps} onAnswered={(id) => setGaps((current) => current.filter((gap) => gap.id !== id))} />
 
         {/* ==== The written-out period ==== */}
+
+      {/* ==== The conversation about money, prepared in advance ==== */}
+      <RaiseCasePanel />
         <section className="card flex flex-col gap-3 p-4">
           <h2 className="flex items-center gap-2 text-[1rem] font-bold">
             <Icon name="note" size={15} className="text-(--accent)" />

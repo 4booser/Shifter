@@ -38,7 +38,32 @@ export interface AssistantReport {
   source: string;
 }
 
+/**
+ * The case for a raise at one place, assembled out of the person's own record.
+ *
+ * The honesty is the feature: a thin case is reported as thin, with the reason
+ * spelled out, because an app that talks somebody into a conversation they will
+ * lose has done them harm rather than a favour.
+ */
+export interface RaiseCase {
+  location_id: number;
+  location_name: string;
+  months_here: number;
+  /** Months since the rate last moved, or since they started. */
+  months_since_raise: number;
+  per_hour: number;
+  /** The facts, in the order they are worth saying. */
+  points: string[];
+  worth_asking: boolean;
+  /** Something they can send as it is. Null where there is no case yet. */
+  message: string | null;
+  /** Why the case is thin, where it is. */
+  weakness: string | null;
+}
+
 export const assistantApi = {
+  /** The case for a raise, per place, strongest first. */
+  raise: () => api<RaiseCase[]>(`${BASE}/raise`),
   messages: () => api<AssistantMessage[]>(`${BASE}/messages`),
   ask: (text: string, from: string, to: string, today: string) =>
     api<AssistantMessage>(`${BASE}/ask`, { body: { text, from, to, today } }),

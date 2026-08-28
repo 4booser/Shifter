@@ -573,6 +573,10 @@ export const RU: Dictionary = {
   'The crew’s earnings are hidden until you turn on two-factor. You see the rota; their money waits.':
     'Заработок команды скрыт, пока не включена двухфакторка. График виден, чужие деньги — нет.',
   'Only new people on': 'В смене одни новенькие',
+  'Break for': 'Перерыв на',
+  'Back in': 'Вернуться через',
+  'Break is over': 'Перерыв закончился',
+  'The clock is running again.': 'Часы снова идут.',
   'This week': 'Эта неделя',
   'Earned this week': 'Заработано за неделю',
   'Still to come': 'Ещё впереди',
@@ -2908,6 +2912,10 @@ export const UK: Dictionary = {
     'Заробіток команди прихований, доки не увімкнена двофакторка. Графік видно, чужі гроші — ні.',
   'Turn it on': 'Увімкнути',
   'Only new people on': 'У зміні самі новенькі',
+  'Break for': 'Перерва на',
+  'Back in': 'Повернутися через',
+  'Break is over': 'Перерва закінчилась',
+  'The clock is running again.': 'Годинник знову йде.',
   'This week': 'Цей тиждень',
   'All time': 'За весь час',
 

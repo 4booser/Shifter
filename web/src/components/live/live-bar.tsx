@@ -8,8 +8,10 @@ import {
   finishLiveShift,
   formatElapsed,
   liveTick,
+  breakLeft,
   pauseLiveShift,
   resumeLiveShift,
+  startTimedBreak,
   useLive,
 } from '@/lib/live/live-shift';
 import { pushToast } from '@/lib/toast';
@@ -35,6 +37,29 @@ export function LiveBar() {
 
     return () => clearInterval(handle);
   }, [live]);
+
+  const left = breakLeft(live, Date.now());
+  const breakNudged = useRef(false);
+
+  /**
+   * One nudge when a timed break runs out.
+   *
+   * The point of a timed break is the end of it, and the person taking one is
+   * in a staff room with their phone face down. A toast is what the app has;
+   * it does not ask for notification permission for this.
+   */
+  useEffect(() => {
+    if (left === null || left > 0) {
+      if (left === null) breakNudged.current = false;
+
+      return;
+    }
+
+    if (breakNudged.current) return;
+
+    breakNudged.current = true;
+    pushToast({ icon: '☕', title: t('Break is over'), text: t('The clock is running again.') });
+  }, [left, t]);
 
   const overdueNudged = useRef(false);
 
@@ -139,6 +164,40 @@ export function LiveBar() {
                 {t('Breaks')}: {formatElapsed(live.breakMs + (live.pausedAt === null ? 0 : Date.now() - live.pausedAt))}
               </p>
             )}
+            {/*
+              A break of a stated length, counted down. A break nobody started
+              on time is a break nobody takes, and one nobody ended on time is
+              one somebody gets shouted at for — and a room with a rush on has
+              nobody watching a clock.
+            */}
+            {left !== null && (
+              <p
+                className={`mt-1.5 text-[0.92rem] font-semibold tabular ${
+                  left <= 0 ? 'text-warn' : ''
+                }`}
+              >
+                {left <= 0
+                  ? t('Break is over')
+                  : `${t('Back in')} ${formatElapsed(left)}`}
+              </p>
+            )}
+
+            {live.pausedAt === null && (
+              <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                <span className="field-hint">{t('Break for')}</span>
+                {[15, 30, 45].map((minutes) => (
+                  <button
+                    key={minutes}
+                    type="button"
+                    className="btn btn-sm"
+                    onClick={() => startTimedBreak(minutes)}
+                  >
+                    {minutes} {t('min')}
+                  </button>
+                ))}
+              </div>
+            )}
+
             <div className="mt-3 flex gap-1.5">
               <button
                 type="button"

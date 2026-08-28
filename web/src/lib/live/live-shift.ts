@@ -25,6 +25,17 @@ export interface LiveShift {
   breakMs: number;
   /** Epoch of the pause running right now; null while on the clock. */
   pausedAt: number | null;
+  /**
+   * When a timed break is due to end, in epoch milliseconds.
+   *
+   * A break nobody started on time is a break nobody takes. Set alongside the
+   * pause so the screen can count down to it rather than asking somebody to
+   * watch a clock in a room where nobody is watching a clock.
+   *
+   * Null during an untimed pause: stopping for a minute is not a break with a
+   * length, and pretending it has one would end it with an alarm.
+   */
+  breakUntil?: number | null;
 }
 
 interface LiveState {
@@ -55,6 +66,7 @@ function read(): LiveShift | null {
       startedAt: parsed.startedAt,
       breakMs: parsed.breakMs ?? 0,
       pausedAt: parsed.pausedAt ?? null,
+      breakUntil: parsed.breakUntil ?? null,
     };
   } catch {
     return null;
@@ -71,7 +83,14 @@ function write(live: LiveShift | null): void {
 }
 
 export function startLiveShift(template: ShiftTemplate): void {
-  write({ shiftId: template.id, date: todayKey(), startedAt: Date.now(), breakMs: 0, pausedAt: null });
+  write({
+    shiftId: template.id,
+    date: todayKey(),
+    startedAt: Date.now(),
+    breakMs: 0,
+    pausedAt: null,
+    breakUntil: null,
+  });
 }
 
 /** The kettle break: the clock stops, the shift does not. */
@@ -80,7 +99,37 @@ export function pauseLiveShift(): void {
 
   if (live === null || live.pausedAt !== null) return;
 
-  write({ ...live, pausedAt: Date.now() });
+  write({ ...live, pausedAt: Date.now(), breakUntil: null });
+}
+
+/**
+ * A break of a stated length, counted down.
+ *
+ * A break nobody started on time is a break nobody takes, and a break nobody
+ * ended on time is a break somebody gets shouted at for. The clock is the
+ * whole feature; the pause underneath it already existed.
+ */
+export function startTimedBreak(minutes: number): void {
+  const live = useLive.getState().live;
+
+  if (live === null || minutes <= 0) return;
+
+  const now = Date.now();
+
+  write({
+    ...live,
+    // Already paused stays paused: restarting the pause would give back the
+    // minutes already taken, which is the wrong direction to be wrong in.
+    pausedAt: live.pausedAt ?? now,
+    breakUntil: now + minutes * 60_000,
+  });
+}
+
+/** Milliseconds left of a timed break; null when there is not one running. */
+export function breakLeft(live: LiveShift | null, now: number): number | null {
+  if (live?.pausedAt == null || live.breakUntil == null) return null;
+
+  return live.breakUntil - now;
 }
 
 export function resumeLiveShift(): void {
@@ -88,7 +137,12 @@ export function resumeLiveShift(): void {
 
   if (live === null || live.pausedAt === null) return;
 
-  write({ ...live, breakMs: live.breakMs + (Date.now() - live.pausedAt), pausedAt: null });
+  write({
+    ...live,
+    breakMs: live.breakMs + (Date.now() - live.pausedAt),
+    pausedAt: null,
+    breakUntil: null,
+  });
 }
 
 /** Milliseconds actually on the clock, pauses out. */

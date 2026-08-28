@@ -65,8 +65,13 @@ export function DayPanel() {
   const allEvents = useCalendar((state) => state.events);
   const events =
     key === null ? [] : allEvents.filter((event) => event.start_date <= key && event.end_date >= key);
-  // What the day's events took. Never netted off anything automatically.
-  const spent = events.reduce((total, event) => total + event.cost, 0);
+  // What the day's events took. The figure is per occurrence, so a fortnight
+  // of leave that cost something cost it once — on the day it started, not on
+  // every day it covers. Repeating events arrive already split per occurrence.
+  const spent = events.reduce(
+    (total, event) => total + (event.start_date === key ? event.cost : 0),
+    0,
+  );
   const saving = useCalendar((state) => state.saving);
 
   const [quantities, setQuantities] = useState<Record<number, number>>({});

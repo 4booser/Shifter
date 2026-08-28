@@ -18,7 +18,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Press } from '@/components/motion';
 import { Colors, Palette } from '@/constants/theme';
 import { api, ApiError } from '@/lib/api';
-import { rateLine, ShiftTemplate } from '@/lib/types';
+import { EventKind, EventTemplate, money, rateLine, ShiftTemplate } from '@/lib/types';
 import { t } from '@/lib/i18n';
 
 interface Place {
@@ -53,18 +53,22 @@ export default function TemplatesScreen() {
   const insets = useSafeAreaInsets();
 
   const [templates, setTemplates] = useState<ShiftTemplate[] | null>(null);
+  const [eventTypes, setEventTypes] = useState<EventTemplate[]>([]);
   const [places, setPlaces] = useState<Place[]>([]);
   const [editing, setEditing] = useState<ShiftTemplate | 'new' | null>(null);
+  const [editingEvent, setEditingEvent] = useState<EventTemplate | 'new' | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
-      const [shifts, locations] = await Promise.all([
+      const [shifts, locations, events] = await Promise.all([
         api<ShiftTemplate[]>('/shifter/v1/shifts'),
         api<Place[]>('/shifter/v1/locations'),
+        api<EventTemplate[]>('/shifter/v1/event-templates'),
       ]);
 
       setTemplates(shifts);
+      setEventTypes(events);
       setPlaces(locations.filter((place) => !place.archived));
       setError(null);
     } catch (caught) {
@@ -129,6 +133,38 @@ export default function TemplatesScreen() {
           <Text style={styles.addText}>{t('Новая смена')}</Text>
         </Press>
 
+        <Text style={styles.section}>{t('События')}</Text>
+        <Text style={styles.lead}>
+          {t('Всё, что не работа: английский, вождение, зал. У события есть время и трата — она считается отдельно от заработка.')}
+        </Text>
+
+        {eventTypes
+          .filter((entry) => !entry.archived)
+          .map((entry) => (
+            <Press key={entry.id} style={styles.card} onPress={() => setEditingEvent(entry)}>
+              <Text style={styles.cardEmoji}>{entry.symbol ?? '📌'}</Text>
+              <View style={styles.grow}>
+                <Text style={styles.cardName}>{entry.name}</Text>
+                <Text style={styles.cardMeta}>
+                  {[
+                    entry.start_time === null
+                      ? t('весь день')
+                      : `${entry.start_time}–${entry.end_time}`,
+                    entry.cost === null ? null : `−${money(entry.cost)}`,
+                  ]
+                    .filter((part) => part !== null)
+                    .join(' · ')}
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={palette.textSecondary} />
+            </Press>
+          ))}
+
+        <Press style={styles.addRow} onPress={() => setEditingEvent('new')}>
+          <Ionicons name="add-circle-outline" size={20} color={palette.accent} />
+          <Text style={styles.addText}>{t('Новое событие')}</Text>
+        </Press>
+
         {archived.length > 0 && (
           <>
             <Text style={styles.section}>{t('В архиве')}</Text>
@@ -150,6 +186,16 @@ export default function TemplatesScreen() {
         )}
       </ScrollView>
 
+      <EventTypeEditor
+        editing={editingEvent}
+        palette={palette}
+        onClose={() => setEditingEvent(null)}
+        onSaved={() => {
+          setEditingEvent(null);
+          void load();
+        }}
+      />
+
       <TemplateEditor
         editing={editing}
         places={places}
@@ -167,6 +213,262 @@ export default function TemplatesScreen() {
     </>
   );
 }
+
+
+/**
+ * One kind of non-working thing: «английский», «вождение», the gym.
+ *
+ * The cost field is the reason this is not just the shift editor with fewer
+ * boxes. Money here runs the other way, and the note under it says so — what
+ * a lesson takes is never subtracted from what a week earned, it sits beside
+ * it, because the figure people check each evening has to keep meaning the
+ * same thing.
+ */
+function EventTypeEditor({
+  editing,
+  palette,
+  onClose,
+  onSaved,
+}: {
+  editing: EventTemplate | 'new' | null;
+  palette: Palette;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const styles = makeStyles(palette);
+  const item = editing === 'new' || editing === null ? null : editing;
+
+  const [name, setName] = useState('');
+  const [symbol, setSymbol] = useState('');
+  const [colour, setColour] = useState(EVENT_COLOURS[0]);
+  const [kind, setKind] = useState<EventKind>('ordinary');
+  const [timed, setTimed] = useState(true);
+  const [start, setStart] = useState('19:00');
+  const [end, setEnd] = useState('20:30');
+  const [cost, setCost] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [failed, setFailed] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (editing === null) return;
+
+    setFailed(null);
+    setName(item?.name ?? '');
+    setSymbol(item?.symbol ?? '');
+    setColour(item?.colour ?? EVENT_COLOURS[0]);
+    setKind(item?.kind ?? 'ordinary');
+    setTimed(item === null ? true : item.start_time !== null);
+    setStart(item?.start_time ?? '19:00');
+    setEnd(item?.end_time ?? '20:30');
+    // An empty box is "not counted", a zero is "it was free this time". The
+    // two are different answers and the server keeps them apart.
+    setCost(item?.cost === null || item === undefined || item === null ? '' : `${item.cost}`);
+  }, [editing, item]);
+
+  const save = async () => {
+    if (name.trim() === '') {
+      setFailed(t('У события должно быть название.'));
+
+      return;
+    }
+
+    setBusy(true);
+    setFailed(null);
+
+    const body = {
+      name: name.trim(),
+      symbol: symbol.trim() === '' ? null : symbol.trim(),
+      colour,
+      kind,
+      start_time: timed ? start : null,
+      end_time: timed ? end : null,
+      cost: cost.trim() === '' ? null : Number(cost.replace(',', '.')),
+    };
+
+    try {
+      if (item === null) await api('/shifter/v1/event-templates', { method: 'POST', body });
+      else await api(`/shifter/v1/event-templates/${item.id}`, { method: 'PUT', body });
+
+      onSaved();
+    } catch (caught) {
+      setFailed(caught instanceof ApiError ? caught.message : t('Не сохранилось.'));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const remove = async () => {
+    if (item === null) return;
+
+    setBusy(true);
+
+    try {
+      await api(`/shifter/v1/event-templates/${item.id}`, { method: 'DELETE' });
+      onSaved();
+    } catch (caught) {
+      setFailed(caught instanceof ApiError ? caught.message : t('Не получилось.'));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Modal visible={editing !== null} animationType="slide" onRequestClose={onClose}>
+      <KeyboardAvoidingView
+        style={styles.screen}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <ScrollView contentContainerStyle={styles.editor}>
+          <View style={styles.head}>
+            <Text style={styles.title}>
+              {item === null ? t('Новое событие') : t('Событие')}
+            </Text>
+            <Press hitSlop={12} onPress={onClose}>
+              <Ionicons name="close" size={26} color={palette.textSecondary} />
+            </Press>
+          </View>
+
+          <View style={styles.row}>
+            <View style={styles.grow}>
+              <Text style={styles.fieldLabel}>{t('Название')}</Text>
+              <TextInput
+                style={styles.input}
+                value={name}
+                onChangeText={setName}
+                maxLength={40}
+                placeholder={t('Английский')}
+                placeholderTextColor={palette.textSecondary}
+              />
+            </View>
+            <View style={{ width: 84 }}>
+              <Text style={styles.fieldLabel}>{t('Значок')}</Text>
+              <TextInput
+                style={[styles.input, { textAlign: 'center' }]}
+                value={symbol}
+                onChangeText={setSymbol}
+                maxLength={4}
+                placeholder="📚"
+                placeholderTextColor={palette.textSecondary}
+              />
+            </View>
+          </View>
+
+          <Text style={styles.fieldLabel}>{t('Цвет')}</Text>
+          <View style={styles.swatches}>
+            {EVENT_COLOURS.map((value) => (
+              <Press
+                key={value}
+                style={[
+                  styles.swatch,
+                  { backgroundColor: value },
+                  colour === value && styles.swatchOn,
+                ]}
+                onPress={() => setColour(value)}
+              >
+                <Ionicons
+                  name="checkmark"
+                  size={16}
+                  color={colour === value ? '#fff' : 'transparent'}
+                />
+              </Press>
+            ))}
+          </View>
+
+          <Press style={styles.toggleRow} onPress={() => setTimed((was) => !was)}>
+            <Ionicons
+              name={timed ? 'checkbox' : 'square-outline'}
+              size={22}
+              color={timed ? palette.accent : palette.textSecondary}
+            />
+            <Text style={styles.toggleText}>{t('Проходит в определённое время')}</Text>
+          </Press>
+
+          {timed && (
+            <View style={styles.row}>
+              <View style={styles.grow}>
+                <Text style={styles.fieldLabel}>{t('Начало')}</Text>
+                <TextInput
+                  style={styles.input}
+                  value={start}
+                  onChangeText={setStart}
+                  placeholder="19:00"
+                  placeholderTextColor={palette.textSecondary}
+                />
+              </View>
+              <View style={styles.grow}>
+                <Text style={styles.fieldLabel}>{t('Конец')}</Text>
+                <TextInput
+                  style={styles.input}
+                  value={end}
+                  onChangeText={setEnd}
+                  placeholder="20:30"
+                  placeholderTextColor={palette.textSecondary}
+                />
+              </View>
+            </View>
+          )}
+
+          <Text style={styles.fieldLabel}>{t('Стоит за раз')}</Text>
+          <TextInput
+            style={styles.input}
+            value={cost}
+            onChangeText={setCost}
+            keyboardType="decimal-pad"
+            placeholder={t('Пусто — не считаем')}
+            placeholderTextColor={palette.textSecondary}
+          />
+          <Text style={styles.hint}>
+            {t('Считается отдельно от заработка — из него не вычитается.')}
+          </Text>
+
+          <Text style={styles.fieldLabel}>{t('Тип')}</Text>
+          <View style={styles.segmentRow}>
+            {(['ordinary', 'vacation', 'sick', 'dayoff'] as EventKind[]).map((value) => (
+              <Press
+                key={value}
+                style={[styles.segment, kind === value && styles.segmentOn]}
+                onPress={() => setKind(value)}
+              >
+                <Text style={[styles.segmentText, kind === value && styles.segmentTextOn]}>
+                  {t(KIND_LABEL[value])}
+                </Text>
+              </Press>
+            ))}
+          </View>
+          <Text style={styles.hint}>
+            {t('Отпуск и больничный не сбивают темп заработка, обычные события — считаются как есть.')}
+          </Text>
+
+          {failed !== null && <Text style={styles.error}>{failed}</Text>}
+
+          <Press
+            style={[styles.primary, busy && { opacity: 0.6 }]}
+            disabled={busy}
+            onPress={() => void save()}
+          >
+            <Text style={styles.primaryText}>{busy ? t('Сохраняем…') : t('Сохранить')}</Text>
+          </Press>
+
+          {item !== null && (
+            <Press style={styles.ghost} disabled={busy} onPress={() => void remove()}>
+              <Text style={styles.ghostText}>{t('Удалить')}</Text>
+            </Press>
+          )}
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </Modal>
+  );
+}
+
+/** The same six the web offers, so a palette made there looks the same here. */
+const EVENT_COLOURS = ['#38BDF8', '#22C55E', '#FF5C7A', '#A855F7', '#FFA53D', '#64748B'];
+
+const KIND_LABEL: Record<EventKind, string> = {
+  ordinary: 'Обычное',
+  vacation: 'Отпуск',
+  sick: 'Больничный',
+  dayoff: 'Выходной',
+};
 
 /**
  * One template. The pay constructor lives here in full — a rate, a share of
@@ -511,6 +813,19 @@ const makeStyles = (palette: Palette) =>
     },
 
     segmentRow: { flexDirection: 'row', gap: 8 },
+    swatches: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
+    swatch: {
+      width: 38,
+      height: 38,
+      borderRadius: 12,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 2,
+      borderColor: 'transparent',
+    },
+    swatchOn: { borderColor: palette.text },
+    toggleRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 4 },
+    toggleText: { color: palette.text, fontSize: 14, flex: 1 },
     segment: {
       flex: 1,
       alignItems: 'center',

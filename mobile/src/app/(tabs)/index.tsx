@@ -49,6 +49,7 @@ import {
   DaysResponse,
   DaySave,
   EventSave,
+  EventTemplate,
   money,
   ShiftTemplate,
   templateHours,
@@ -113,6 +114,7 @@ export default function CalendarScreen() {
   const [months, setMonths] = useState<Record<string, MonthData>>({});
   const asked = useRef(new Set<string>());
   const [templates, setTemplates] = useState<ShiftTemplate[]>([]);
+  const [eventTypes, setEventTypes] = useState<EventTemplate[]>([]);
   const [places, setPlaces] = useState<WorkPlace[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -206,6 +208,12 @@ export default function CalendarScreen() {
       // because a second request failed.
       api<ShiftTemplate[]>('/shifter/v1/shifts')
         .then(setTemplates)
+        .catch(() => undefined);
+
+      // The other half of the pencil's palette: English on Tuesdays, driving
+      // on Saturdays — the things a week is made of that are not shifts.
+      api<EventTemplate[]>('/shifter/v1/event-templates')
+        .then(setEventTypes)
         .catch(() => undefined);
 
       // Only for the weekly threshold, which is a property of the place. A
@@ -426,17 +434,27 @@ export default function CalendarScreen() {
     if (brush.kind === 'event') {
       // Contiguous days become one event each: a fortnight of leave reads as
       // "Отпуск, 14 дней" and comes off in one tap rather than fourteen.
-      for (const run of runsOf(keys)) {
+      //
+      // Unless it costs. Two lessons on Monday and Tuesday are two lessons at
+      // 400 apiece, not one two-day event at 400 — so a priced brush writes a
+      // row per day and the arithmetic stays what anybody means by it.
+      const runs = (brush.cost ?? 0) > 0
+        ? keys.map((key) => ({ from: key, to: key }))
+        : runsOf(keys);
+
+      for (const run of runs) {
         const body: EventSave = {
           name: brush.name,
           symbol: brush.symbol,
           colour: brush.colour,
           start_date: run.from,
           end_date: run.to,
-          start_time: null,
-          end_time: null,
+          start_time: brush.startTime ?? null,
+          end_time: brush.endTime ?? null,
           note: null,
           kind: brush.eventKind,
+          cost: brush.cost ?? 0,
+          template_id: brush.templateId ?? null,
         };
 
         writes.push({
@@ -608,11 +626,18 @@ export default function CalendarScreen() {
     const keys = [...chosen];
 
     if (brush.kind === 'event') {
+      // A lesson at 400 costs 400 each time it comes round, so the bar shows
+      // what the whole stroke will cost — and marks it as money leaving.
+      const each = brush.cost ?? 0;
+
       return {
         left: `${keys.length}`,
         leftLabel: dayWord(keys.length),
-        right: null,
-        note: t('События не считаются деньгами — они только занимают день.'),
+        right: each > 0 ? `− ${money(each * keys.length)}` : null,
+        note:
+          each > 0
+            ? t('Трата считается отдельно — из заработка не вычитается.')
+            : t('События не считаются деньгами — они только занимают день.'),
       };
     }
 
@@ -1040,8 +1065,10 @@ export default function CalendarScreen() {
       <PaintPicker
         open={picking}
         templates={templates}
+        eventTemplates={eventTypes}
         events={events}
         palette={palette}
+        money={money}
         onPick={(picked) => {
           setPicking(false);
           chosenAt.current = new Set();

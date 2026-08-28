@@ -8,6 +8,7 @@ import {
   CalendarEvent,
   EVENT_PRESETS,
   EventKind,
+  EventTemplate,
   rateLine,
   ShiftTemplate,
   tint,
@@ -24,7 +25,18 @@ import { t } from '@/lib/i18n';
  */
 export type Brush =
   | { kind: 'shift'; template: ShiftTemplate }
-  | { kind: 'event'; name: string; symbol: string | null; colour: string; eventKind: EventKind }
+  | {
+      kind: 'event';
+      name: string;
+      symbol: string | null;
+      colour: string;
+      eventKind: EventKind;
+      /** From a palette entry: the usual hours and what one costs. */
+      startTime?: string | null;
+      endTime?: string | null;
+      cost?: number;
+      templateId?: number | null;
+    }
   | { kind: 'worked' }
   | { kind: 'erase' };
 
@@ -66,17 +78,22 @@ export const brushSymbol = (brush: Brush): string | null => {
 export function PaintPicker({
   open,
   templates,
+  eventTemplates,
   events,
   palette,
+  money,
   onPick,
   onClose,
   onManage,
 }: {
   open: boolean;
   templates: ShiftTemplate[];
+  /** The palette proper: things somebody set up to happen again. */
+  eventTemplates: EventTemplate[];
   /** The ones already on the calendar, so a name gets reused rather than retyped. */
   events: CalendarEvent[];
   palette: Palette;
+  money: (amount: number) => string;
   onPick: (brush: Brush) => void;
   onClose: () => void;
   onManage: () => void;
@@ -84,6 +101,7 @@ export function PaintPicker({
   const insets = useSafeAreaInsets();
   const styles = makeStyles(palette);
   const live = templates.filter((entry) => !entry.archived);
+  const kinds = eventTemplates.filter((entry) => !entry.archived);
 
   // The events already drawn, one row per distinct name — a fortnight of leave
   // is one offer to paint more of it, not fourteen.
@@ -92,7 +110,9 @@ export function PaintPicker({
   for (const entry of events) if (!seen.has(entry.name)) seen.set(entry.name, entry);
 
   const known = [...seen.values()].filter(
-    (entry) => !EVENT_PRESETS.some((preset) => preset.name === entry.name),
+    (entry) =>
+      !EVENT_PRESETS.some((preset) => preset.name === entry.name) &&
+      !kinds.some((entry2) => entry2.name === entry.name),
   );
 
   const row = (
@@ -151,6 +171,38 @@ export function PaintPicker({
           )}
 
           <Text style={styles.heading}>{t('События')}</Text>
+
+          {/*
+            The palette first, presets under it: somebody who set up
+            «английский» wants it at the top, not below four defaults.
+          */}
+          {kinds.map((entry) =>
+            row(
+              `type-${entry.id}`,
+              entry.colour,
+              entry.symbol,
+              entry.name,
+              [
+                entry.start_time === null
+                  ? null
+                  : `${entry.start_time}–${entry.end_time}`,
+                entry.cost === null ? null : `−${money(entry.cost)}`,
+              ]
+                .filter((part) => part !== null)
+                .join(' · ') || null,
+              {
+                kind: 'event',
+                name: entry.name,
+                symbol: entry.symbol,
+                colour: entry.colour,
+                eventKind: entry.kind,
+                startTime: entry.start_time,
+                endTime: entry.end_time,
+                cost: entry.cost ?? 0,
+                templateId: entry.id,
+              },
+            ),
+          )}
 
           {EVENT_PRESETS.map((preset) =>
             row(

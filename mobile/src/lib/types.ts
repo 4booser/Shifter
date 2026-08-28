@@ -148,6 +148,28 @@ export interface CalendarEvent {
   days: number;
   repeat_weekdays: string | null;
   repeat_until: string | null;
+  /** What it cost, per occurrence. Never inside anything earned. */
+  cost: number;
+  template_id: number | null;
+}
+
+/**
+ * A repeatable thing that is not work: «английский», «вождение», the gym.
+ * The money on it points outward — what it costs, kept beside what a week
+ * earns and never folded into it.
+ */
+export interface EventTemplate {
+  id: number;
+  name: string;
+  symbol: string | null;
+  colour: string;
+  kind: EventKind;
+  start_time: string | null;
+  end_time: string | null;
+  /** Null is "not counted", which is not zero. */
+  cost: number | null;
+  archived: boolean;
+  hours: number;
 }
 
 export interface EventSave {
@@ -160,6 +182,8 @@ export interface EventSave {
   end_time: string | null;
   note: string | null;
   kind: EventKind;
+  cost?: number;
+  template_id?: number | null;
 }
 
 /**

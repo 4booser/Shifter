@@ -16,11 +16,18 @@ public record PayoutDto(
     string kind = "settlement"
     );
 
+/// <summary>
+/// The dates are nullable so that "not sent" and "sent wrong" stay different
+/// answers. As plain DateOnly they deserialised to 0001-01-01 when a client
+/// left one out, and the handler stored it: a payment recorded on a day that
+/// does not exist, invisible to every reconciliation because its period sits
+/// two thousand years before any work.
+/// </summary>
 public record PayoutCreateDto(
-    DateOnly period_from,
-    DateOnly period_to,
+    DateOnly? period_from,
+    DateOnly? period_to,
     decimal amount,
-    DateOnly received_on,
+    DateOnly? received_on,
     string? note,
     int? location_id,
     /// <summary>Absent means the payment covers everything the place owes.</summary>

@@ -30,12 +30,44 @@ public class PayoutHandler : IPayoutHandler
         return payouts.Select(ToDto).ToArray();
     }
 
+
+    /// <summary>
+    /// The three dates a payment cannot do without, and a floor under them.
+    ///
+    /// A missing one used to arrive as 0001-01-01 — the zero of the type, not
+    /// an answer — and was stored. The payment then existed and did nothing:
+    /// no period it covers contains any work, so no reconciliation ever
+    /// matched it, and the list showed 01.01.0001 as though somebody had been
+    /// paid in the first century.
+    /// </summary>
+    private static (DateOnly From, DateOnly To, DateOnly Received) Dates(PayoutCreateDto request)
+    {
+        // Nothing in this product happened before the millennium. The point is
+        // not the exact year, it is that a date nobody could have meant is
+        // refused rather than filed.
+        var floor = new DateOnly(2000, 1, 1);
+
+        var from = request.period_from
+            ?? throw new ValidationException("A payment needs the period it covers.");
+        var to = request.period_to
+            ?? throw new ValidationException("A payment needs the period it covers.");
+        var received = request.received_on
+            ?? throw new ValidationException("A payment needs the day it arrived.");
+
+        if (from < floor || to < floor || received < floor)
+            throw new ValidationException("Those dates are not real ones.");
+
+        return (from, to, received);
+    }
+
     public async Task<PayoutDto> CreateAsync(
         PayoutCreateDto request,
         int userId,
         CancellationToken ct)
     {
-        if (request.period_from > request.period_to)
+        var (periodFrom, periodTo, receivedOn) = Dates(request);
+
+        if (periodFrom > periodTo)
             throw new ValidationException("Period start must not be after its end.");
 
         if (request.amount < 0)
@@ -56,10 +88,10 @@ public class PayoutHandler : IPayoutHandler
         {
             UserId = userId,
             LocationId = request.location_id,
-            PeriodFrom = request.period_from,
-            PeriodTo = request.period_to,
+            PeriodFrom = periodFrom,
+            PeriodTo = periodTo,
             Amount = request.amount,
-            ReceivedOn = request.received_on,
+            ReceivedOn = receivedOn,
             Note = string.IsNullOrWhiteSpace(request.note) ? null : request.note.Trim(),
             Stream = ParseStream(request.stream),
             Kind = ParseKind(request.kind)

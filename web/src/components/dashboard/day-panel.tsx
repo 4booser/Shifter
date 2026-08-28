@@ -1236,54 +1236,50 @@ function DayHistory({ dayKey }: { dayKey: string }) {
 
   const shown = entries === null ? [] : all ? entries : entries.slice(0, 4);
 
+  // A day nobody has written to has no history, and a card saying so is a
+  // card in the way. Most days are that day.
+  if (entries === null || entries.length === 0) return null;
+
   return (
     <section className="card flex flex-col gap-1.5 p-4">
       <h3 className="field-label">{t('History')}</h3>
 
-      {entries === null ? (
-        <p className="field-hint">…</p>
-      ) : entries.length === 0 ? (
-        <p className="field-hint">{t('No writes recorded yet.')}</p>
-      ) : (
-        <>
-          <ul className="flex flex-col gap-1">
-            {shown.map((entry, index) => (
-              <li
-                key={index}
-                className="flex items-baseline justify-between gap-2 text-[0.76rem] text-muted tabular"
-              >
-                <span className="truncate">
-                  <span className="text-faint">
-                    {new Date(entry.at).toLocaleString(lang, {
-                      day: '2-digit',
-                      month: '2-digit',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                  </span>{' '}
-                  · {SOURCES[entry.source] ?? entry.source}
-                  {/* What actually changed, rather than only that something did. */}
-                  {entry.shift_count > 0 && <> · {entry.shift_count} {t('sh.')}</>}
-                  {entry.hours > 0 && <> · {entry.hours}h</>}
-                </span>
-                <span className="flex-none">
-                  {format(entry.earned)}
-                  {entry.tips > 0 && <span className="text-faint"> +{format(entry.tips)}</span>}
-                </span>
-              </li>
-            ))}
-          </ul>
+      <ul className="flex flex-col gap-1">
+        {shown.map((entry, index) => (
+          <li
+            key={index}
+            className="flex items-baseline justify-between gap-2 text-[0.76rem] text-muted tabular"
+          >
+            <span className="truncate">
+              <span className="text-faint">
+                {new Date(entry.at).toLocaleString(lang, {
+                  day: '2-digit',
+                  month: '2-digit',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
+              </span>{' '}
+              · {SOURCES[entry.source] ?? entry.source}
+              {/* What actually changed, rather than only that something did. */}
+              {entry.shift_count > 0 && <> · {entry.shift_count} {t('sh.')}</>}
+              {entry.hours > 0 && <> · {entry.hours}h</>}
+            </span>
+            <span className="flex-none">
+              {format(entry.earned)}
+              {entry.tips > 0 && <span className="text-faint"> +{format(entry.tips)}</span>}
+            </span>
+          </li>
+        ))}
+      </ul>
 
-          {entries.length > shown.length && (
-            <button
-              type="button"
-              className="btn btn-quiet btn-sm self-start"
-              onClick={() => setAll(true)}
-            >
-              {t('Show all')} ({entries.length})
-            </button>
-          )}
-        </>
+      {entries.length > shown.length && (
+        <button
+          type="button"
+          className="btn btn-quiet btn-sm self-start"
+          onClick={() => setAll(true)}
+        >
+          {t('Show all')} ({entries.length})
+        </button>
       )}
     </section>
   );

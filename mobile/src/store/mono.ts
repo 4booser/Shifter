@@ -62,6 +62,14 @@ interface Setup {
   rules: CategoryRule[];
   /** Monthly limits per category. Absent means no limit, which is not zero. */
   budgets?: Budget[];
+  /**
+   * The jar the tip rule saves into.
+   *
+   * The app can say what should have been put aside; the jar says what is
+   * actually in it. Putting the two side by side is the only way anybody
+   * finds out that the habit slipped in March.
+   */
+  jarId?: string | null;
 }
 
 /** The statement cache, keyed by account. Older phones hold a bare array. */
@@ -79,6 +87,8 @@ interface MonoState {
   used: string[];
   rules: CategoryRule[];
   budgets: Budget[];
+  /** The jar the tip rule saves into, where one was chosen. */
+  jarId: string | null;
   /** Accounts left out of the running total. */
   hidden: string[];
   /** Every account's statement, so switching cards is instant. */
@@ -103,6 +113,8 @@ interface MonoState {
   setRules: (rules: CategoryRule[]) => Promise<void>;
   /** Sets one category's monthly limit. Zero removes it. */
   setBudget: (category: string, limit: number) => Promise<void>;
+  /** Points the tip rule at a jar, or at none. */
+  chooseJar: (jarId: string | null) => Promise<void>;
   /** Counts an account into the running total, or leaves it out. */
   toggleAccount: (accountId: string, counted: boolean) => Promise<void>;
   /** Fetches the bank's published rates. Public endpoint, no token. */
@@ -142,7 +154,7 @@ const readSetup = async (): Promise<Setup> => {
 
   return {
     accountId: null, payers: {}, syncedTo: null, used: [], rules: [],
-    hidden: [], syncedPer: {}, budgets: [],
+    hidden: [], syncedPer: {}, budgets: [], jarId: null,
   };
 };
 
@@ -156,6 +168,7 @@ export const useMono = create<MonoState>((set, get) => ({
   used: [],
   rules: [],
   budgets: [],
+  jarId: null,
   hidden: [],
   cache: {},
   rates: [],
@@ -205,6 +218,7 @@ export const useMono = create<MonoState>((set, get) => ({
       used: setup.used ?? [],
       rules: setup.rules ?? [],
       budgets: setup.budgets ?? [],
+      jarId: setup.jarId ?? null,
       hidden: setup.hidden ?? [],
       cache,
       items: account === null ? [] : cache[account] ?? [],
@@ -251,10 +265,18 @@ export const useMono = create<MonoState>((set, get) => ({
     set({
       token: null, client: null, accountId: null, items: [],
       syncedTo: null, payers: {}, used: [], rules: [],
-      hidden: [], cache: {}, rates: [], budgets: [],
+      hidden: [], cache: {}, rates: [], budgets: [], jarId: null,
     });
     await quietly(SecureStore.deleteItemAsync(TOKEN_KEY));
     await quietly(AsyncStorage.multiRemove([CACHE_KEY, SETUP_KEY]));
+  },
+
+  chooseJar: async (jarId) => {
+    set({ jarId });
+
+    const setup = await readSetup();
+
+    await quietly(AsyncStorage.setItem(SETUP_KEY, JSON.stringify({ ...setup, jarId })));
   },
 
   setBudget: async (category, limit) => {

@@ -120,6 +120,12 @@ function Bank() {
   const [problem, setProblem] = useState<string | null>(null);
   const [periods, setPeriods] = useState<PayPeriodRow[] | null>(null);
   const [locked, setLocked] = useState(false);
+  /** What the tip rule says should be put aside by now, from the server. */
+  const [jarRule, setJarRule] = useState<{
+    percent: number;
+    saved: number;
+    goal: number;
+  } | null>(null);
   const [lockWith, setLockWith] = useState<LockKind>(null);
   const [days, setDays] = useState<Map<string, CalendarDayData>>(new Map());
   const [earned, setEarned] = useState(0);
@@ -129,6 +135,10 @@ function Bank() {
 
   useEffect(() => {
     void mono.hydrate();
+    void bankLock.enabled().then(setLocked);
+    void api<{ percent: number; saved: number; goal: number }>('/shifter/v1/auth/tip-jar')
+      .then(setJarRule)
+      .catch(() => setJarRule(null));
     void bankLock.enabled().then(setLocked);
     void lockKind().then(setLockWith);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -586,7 +596,11 @@ function Bank() {
           <Text style={styles.label}>{t('Банки')}</Text>
           <View style={styles.accounts}>
             {(mono.client?.jars ?? []).map((jar) => (
-              <View key={jar.id} style={styles.jar}>
+              <Press
+                key={jar.id}
+                style={[styles.jar, jar.id === mono.jarId && styles.jarOn]}
+                onPress={() => void mono.chooseJar(jar.id === mono.jarId ? null : jar.id)}
+              >
                 <Text style={styles.jarName} numberOfLines={1}>{jar.title}</Text>
                 <Text style={styles.accountMeta}>
                   {moneyIn(currencyOf(jar.currencyCode), fromMinor(jar.balance))}
@@ -604,11 +618,64 @@ function Bank() {
                     />
                   </View>
                 )}
-              </View>
+                {jar.id === mono.jarId && (
+                  <Text style={styles.jarTag}>{t('копилка с чаевых')}</Text>
+                )}
+              </Press>
             ))}
           </View>
         </>
       )}
+
+      {/*
+        What the rule says should be there, against what is actually in the
+        jar. The app can only ever compute the first; the bank knows the
+        second, and the gap between them is the whole point of connecting one
+        to the other.
+      */}
+      {view === 'summary' && jarRule !== null && jarRule.percent > 0 && (() => {
+        const jar = (mono.client?.jars ?? []).find((one) => one.id === mono.jarId);
+
+        if (jar === undefined) {
+          return (
+            <Text style={styles.hint}>
+              {t('Правило откладывать')} {jarRule.percent}% {t('чаевых уже считает')}{' '}
+              {money(jarRule.saved)}. {t('Выберите банку выше — и увидите, сколько в ней на самом деле.')}
+            </Text>
+          );
+        }
+
+        // A jar in another currency is not compared with a hryvnia figure.
+        // Two numbers under one sign that are not the same money is exactly
+        // the confident lie this app does not tell.
+        if (jar.currencyCode !== 980) {
+          return (
+            <Text style={styles.hint}>
+              {t('Банка в другой валюте — с гривневым счётчиком её не сравниваем.')}
+            </Text>
+          );
+        }
+
+        const inJar = fromMinor(jar.balance);
+        const gap = inJar - jarRule.saved;
+
+        return (
+          <View style={styles.runway}>
+            <Text style={styles.runwayLabel}>
+              {jar.title} · {jarRule.percent}% {t('с чаевых')}
+            </Text>
+            <Text style={styles.runwayValue}>{money(inJar)}</Text>
+            <Text style={styles.runwayMeta}>
+              {t('По правилу должно быть')} {money(jarRule.saved)}
+              {Math.abs(gap) >= 1 && (
+                gap > 0
+                  ? ` · ${t('на')} ${money(gap)} ${t('больше')}`
+                  : ` · ${t('не хватает')} ${money(-gap)}`
+              )}
+            </Text>
+          </View>
+        );
+      })()}
 
       {mono.accountId !== null && (
         <>
@@ -1026,6 +1093,8 @@ const makeStyles = (palette: Palette) =>
     runwayLabel: { color: palette.textSecondary, fontSize: 12.5, fontWeight: '600' },
     runwayValue: { color: palette.text, fontSize: 26, fontWeight: '800' },
     runwayMeta: { color: palette.textSecondary, fontSize: 12.5, lineHeight: 18 },
+    jarOn: { borderWidth: 1, borderColor: palette.accent },
+    jarTag: { color: palette.accent, fontSize: 10.5, fontWeight: '700', marginTop: 3 },
     wealth: {
       backgroundColor: palette.backgroundElement,
       borderRadius: 18,

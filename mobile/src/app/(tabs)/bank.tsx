@@ -641,10 +641,12 @@ function Bank() {
         <BankSpending
           items={mono.items}
           rules={mono.rules}
+          budgets={mono.budgets}
           from={monthBounds(currentMonth()).from}
           to={monthBounds(currentMonth()).to}
           palette={palette}
           onRules={(rules) => void mono.setRules(rules)}
+          onBudget={(category, limit) => void mono.setBudget(category, limit)}
         />
       )}
 

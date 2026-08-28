@@ -14,7 +14,14 @@ import {
   oddities,
   recurring,
 } from '@/lib/mono-insights';
-import { CategoryRule, ruleFrom, ruleHits, spendingByRules } from '@/lib/mono-rules';
+import {
+  Budget,
+  CategoryRule,
+  budgetState,
+  ruleFrom,
+  ruleHits,
+  spendingByRules,
+} from '@/lib/mono-rules';
 import { money } from '@/lib/types';
 
 type View3 = 'categories' | 'who' | 'standing';
@@ -45,17 +52,21 @@ const CATEGORY_CHOICES = [
 export function BankSpending({
   items,
   rules,
+  budgets,
   from,
   to,
   palette,
   onRules,
+  onBudget,
 }: {
   items: MonoStatementItem[];
   rules: CategoryRule[];
+  budgets: Budget[];
   from: string;
   to: string;
   palette: Palette;
   onRules: (rules: CategoryRule[]) => void;
+  onBudget: (category: string, limit: number) => void;
 }) {
   const styles = makeStyles(palette);
   const [view, setView] = useState<View3>('categories');
@@ -76,6 +87,18 @@ export function BankSpending({
   const odd = useMemo(() => oddities(items, from, to), [items, from, to]);
   const totals = useMemo(() => flow(items, from, to), [items, from, to]);
   const hits = useMemo(() => ruleHits(inRange, rules), [inRange, rules]);
+
+  // The pace inside the month, which is the whole of what makes a limit mean
+  // anything: 62% spent is comfortable on the 20th and alarming on the 8th.
+  const limits = useMemo(() => {
+    const now = new Date();
+    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+
+    return budgetState(budgets, categories, now.getDate(), daysInMonth);
+  }, [budgets, categories]);
+
+  const [editing, setEditing] = useState<string | null>(null);
+  const [limitText, setLimitText] = useState('');
 
   const needle = search.trim().toLocaleLowerCase();
   const shown = needle === ''
@@ -143,8 +166,64 @@ export function BankSpending({
 
       {view === 'categories' && (
         <Appear>
+          {limits.length > 0 && (
+            <View style={styles.rules}>
+              <Text style={styles.rulesHead}>{t('Лимиты на месяц')}</Text>
+              {limits.map((row) => (
+                <View key={row.category} style={{ gap: 4 }}>
+                  <View style={styles.rowTop}>
+                    <Text style={styles.rowName} numberOfLines={1}>{row.category}</Text>
+                    <Text
+                      style={[
+                        styles.rowValue,
+                        row.over && { color: palette.danger },
+                        row.heading && { color: palette.accent },
+                      ]}
+                    >
+                      {money(row.spent)} / {money(row.limit)}
+                    </Text>
+                  </View>
+                  {/* Two marks on one bar: what has gone, and how much of the
+                      month has. The gap between them is the warning. */}
+                  <View style={styles.track}>
+                    <View
+                      style={[
+                        styles.fill,
+                        {
+                          width: `${Math.min(100, (row.spent / row.limit) * 100)}%`,
+                          backgroundColor: row.over
+                            ? palette.danger
+                            : row.heading
+                              ? palette.accent
+                              : palette.good,
+                        },
+                      ]}
+                    />
+                    <View style={[styles.mark, { left: `${row.through * 100}%` }]} />
+                  </View>
+                  {(row.over || row.heading) && (
+                    <Text style={styles.rowMeta}>
+                      {row.over
+                        ? t('Уже за лимитом.')
+                        : `${t('Таким темпом к концу месяца выйдет')} ${money(Math.round(row.projected))}.`}
+                    </Text>
+                  )}
+                </View>
+              ))}
+            </View>
+          )}
+
           {categories.map((row) => (
-            <View key={row.name} style={styles.row}>
+            <Press
+              key={row.name}
+              style={styles.row}
+              onPress={() => {
+                setEditing(row.name);
+                setLimitText(
+                  `${budgets.find((one) => one.category === row.name)?.limit ?? ''}`,
+                );
+              }}
+            >
               <View style={styles.rowTop}>
                 <Text style={styles.rowName}>{row.name}</Text>
                 <Text style={styles.rowValue}>{money(row.total)}</Text>
@@ -159,8 +238,32 @@ export function BankSpending({
               </View>
               <Text style={styles.rowMeta}>
                 {row.count} {t('операций')}
+                {editing === row.name ? '' : ` · ${t('тап — лимит')}`}
               </Text>
-            </View>
+
+              {editing === row.name && (
+                <View style={styles.limitRow}>
+                  <TextInput
+                    style={styles.limitInput}
+                    value={limitText}
+                    onChangeText={setLimitText}
+                    keyboardType="decimal-pad"
+                    placeholder={t('Лимит на месяц')}
+                    placeholderTextColor={palette.textSecondary}
+                    autoFocus
+                  />
+                  <Press
+                    style={styles.limitSave}
+                    onPress={() => {
+                      onBudget(row.name, Number(limitText.replace(',', '.')) || 0);
+                      setEditing(null);
+                    }}
+                  >
+                    <Text style={styles.limitSaveText}>{t('Ок')}</Text>
+                  </Press>
+                </View>
+              )}
+            </Press>
           ))}
 
           {rules.length > 0 && (
@@ -363,8 +466,34 @@ const makeStyles = (palette: Palette) =>
     rowMeta: { color: palette.textSecondary, fontSize: 12 },
     fresh: { color: palette.accent, fontSize: 12, fontWeight: '700' },
 
-    track: { height: 5, borderRadius: 999, backgroundColor: palette.border, overflow: 'hidden' },
+    track: { height: 5, borderRadius: 999, backgroundColor: palette.border },
     fill: { height: '100%', borderRadius: 999 },
+    mark: {
+      position: 'absolute',
+      top: -3,
+      width: 2,
+      height: 11,
+      borderRadius: 1,
+      backgroundColor: palette.text,
+    },
+    limitRow: { flexDirection: 'row', gap: 8, marginTop: 4 },
+    limitInput: {
+      flex: 1,
+      color: palette.text,
+      fontSize: 14,
+      borderWidth: 1,
+      borderColor: palette.border,
+      borderRadius: 10,
+      paddingHorizontal: 10,
+      paddingVertical: 8,
+    },
+    limitSave: {
+      backgroundColor: palette.accent,
+      borderRadius: 10,
+      paddingHorizontal: 16,
+      justifyContent: 'center',
+    },
+    limitSaveText: { color: '#fff', fontSize: 14, fontWeight: '700' },
 
     searchBox: {
       flexDirection: 'row',

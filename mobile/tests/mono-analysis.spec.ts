@@ -16,6 +16,7 @@ import {
   categorise,
   isUsable,
   ruleFrom,
+  budgetState,
   ruleHits,
   spendingByRules,
 } from '@/lib/mono-rules';
@@ -372,5 +373,61 @@ describe('what somebody has, across accounts', () => {
   it('names the day the rate was published', () => {
     expect(ratesDay(rates)).toBe(new Date(1_790_000_000 * 1000).toISOString().slice(0, 10));
     expect(ratesDay([])).toBeNull();
+  });
+});
+
+describe('a limit and the pace inside the month', () => {
+  const spending = [{ name: 'Продукты', total: 6_200 }, { name: 'Кафе и бары', total: 900 }];
+
+  it('is comfortable on the twentieth and alarming on the eighth', () => {
+    // The same 62% of a limit, read two ways. Without the pace the number
+    // says nothing at all.
+    const late = budgetState([{ category: 'Продукты', limit: 10_000 }], spending, 20, 31)[0];
+    const early = budgetState([{ category: 'Продукты', limit: 10_000 }], spending, 8, 31)[0];
+
+    expect(late.heading).toBe(false);
+    expect(early.heading).toBe(true);
+    expect(Math.round(early.projected)).toBe(24_025);
+  });
+
+  it('says over rather than heading once it is over', () => {
+    const row = budgetState([{ category: 'Продукты', limit: 5_000 }], spending, 20, 31)[0];
+
+    expect(row.over).toBe(true);
+    expect(row.heading).toBe(false);
+  });
+
+  it('will not project from the first days of a month', () => {
+    // One coat on the 2nd projects to five times the limit and says nothing
+    // except that somebody bought a coat.
+    const row = budgetState([{ category: 'Продукты', limit: 10_000 }], spending, 2, 31)[0];
+
+    expect(row.heading).toBe(false);
+  });
+
+  it('puts the tightest budget first', () => {
+    const rows = budgetState(
+      [
+        { category: 'Кафе и бары', limit: 10_000 },
+        { category: 'Продукты', limit: 8_000 },
+      ],
+      spending,
+      15,
+      31,
+    );
+
+    expect(rows.map((row) => row.category)).toEqual(['Продукты', 'Кафе и бары']);
+  });
+
+  it('ignores a limit of nothing', () => {
+    expect(budgetState([{ category: 'Продукты', limit: 0 }], spending, 15, 31)).toEqual([]);
+  });
+
+  it('counts a category with no spending as untouched rather than missing', () => {
+    const row = budgetState([{ category: 'Одежда', limit: 3_000 }], spending, 15, 31)[0];
+
+    expect(row.spent).toBe(0);
+    expect(row.over).toBe(false);
+    expect(row.heading).toBe(false);
   });
 });

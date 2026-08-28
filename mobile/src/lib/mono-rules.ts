@@ -134,3 +134,63 @@ export const ruleFrom = (item: MonoStatementItem, category: string): CategoryRul
   contains: item.description.trim(),
   category,
 });
+
+/** A limit somebody set for a category, per month. */
+export interface Budget {
+  category: string;
+  /** Major units, per month. */
+  limit: number;
+}
+
+export interface BudgetState {
+  category: string;
+  limit: number;
+  spent: number;
+  /** How much of the month has gone, 0..1. */
+  through: number;
+  /** What the month ends at if the rest of it looks like the part so far. */
+  projected: number;
+  /** Over the limit already. */
+  over: boolean;
+  /** Not over yet, but on course to be. */
+  heading: boolean;
+}
+
+/**
+ * A limit is useless without the pace inside the month.
+ *
+ * "62% spent" means nothing on its own: it is comfortable on the 20th and
+ * alarming on the 8th. The warning has to come while there is still a month
+ * left to do something about it, which means comparing the two fractions
+ * rather than waiting for one of them to reach a hundred.
+ */
+export const budgetState = (
+  budgets: Budget[],
+  spending: { name: string; total: number }[],
+  /** Days gone, and days in the month. */
+  dayOfMonth: number,
+  daysInMonth: number,
+): BudgetState[] => {
+  const through = daysInMonth <= 0 ? 0 : Math.min(1, dayOfMonth / daysInMonth);
+
+  return budgets
+    .filter((budget) => budget.limit > 0)
+    .map((budget) => {
+      const spent = spending.find((row) => row.name === budget.category)?.total ?? 0;
+      const projected = through <= 0 ? spent : spent / through;
+
+      return {
+        category: budget.category,
+        limit: budget.limit,
+        spent,
+        through,
+        projected,
+        over: spent > budget.limit,
+        // Only once enough of the month has gone for a projection to mean
+        // anything. On the 2nd, one big shop projects to five times the limit
+        // and says nothing except that somebody bought a coat.
+        heading: spent <= budget.limit && through >= 0.25 && projected > budget.limit,
+      };
+    })
+    .sort((one, two) => two.spent / two.limit - one.spent / one.limit);
+};

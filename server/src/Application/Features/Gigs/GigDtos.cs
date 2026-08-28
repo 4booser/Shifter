@@ -63,7 +63,15 @@ public record GigDto(
     /// Somebody has not turned up and the shift starts today. Shown as such,
     /// and the only listing in the app that reaches anybody by notification.
     /// </summary>
-    bool urgent = false);
+    bool urgent = false,
+    /// <summary>
+    /// How many times the reader has worked for this employer. Their own
+    /// history beats a stranger's average, and it is the first thing they
+    /// would want to know about a card.
+    /// </summary>
+    int worked_here = 0,
+    /// <summary>What the reader last gave them, where they have rated them.</summary>
+    int? my_rating = null);
 
 /// <summary>
 /// The offered rate and the caller's own, both per hour, and the gap between

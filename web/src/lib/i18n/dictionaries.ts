@@ -559,6 +559,8 @@ export const RU: Dictionary = {
   'By this day of it': 'К этому же числу',
   'not enough years': 'мало лет',
   'with the season': 'с учётом сезона',
+  'You have worked here': 'Вы здесь работали',
+  'you gave': 'вы поставили',
   'This week': 'Эта неделя',
   'Earned this week': 'Заработано за неделю',
   'Still to come': 'Ещё впереди',
@@ -2880,6 +2882,8 @@ export const UK: Dictionary = {
   'By this day of it': 'До цього ж числа',
   'not enough years': 'мало років',
   'with the season': 'з урахуванням сезону',
+  'You have worked here': 'Ви тут працювали',
+  'you gave': 'ви поставили',
   'This week': 'Цей тиждень',
   'All time': 'За весь час',
 

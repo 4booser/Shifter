@@ -74,7 +74,12 @@ public sealed class GigService
         // board; a listing is judged against a person, not the other way round.
         LocationTotalDto[] mine = await MyHoursAsync(userId, ct);
 
-        return rows.Select(gig => ToDto(gig, userId, employerRatings, mine)).ToArray();
+        // Their own history with each venue, which beats anybody else's stars.
+        // Four evenings there already answers more than a 4.6 from strangers.
+        var history = await HistoryWithAsync(
+            userId, rows.Select(gig => gig.OwnerUserId).Distinct().ToArray(), ct);
+
+        return rows.Select(gig => ToDto(gig, userId, employerRatings, mine, history)).ToArray();
     }
 
     public async Task<GigDto> SaveAsync(int userId, int? id, GigSaveDto request, CancellationToken ct)
@@ -426,6 +431,50 @@ public sealed class GigService
         }
 
         return ToDto(gig, userId);
+    }
+
+    /// <summary>
+    /// How many times the caller has worked for each of these people, and what
+    /// they thought of them.
+    ///
+    /// Somebody else's stars are an average of strangers. "You worked here
+    /// four times and gave them a five" is the reader's own evidence, and it
+    /// settles the question before the rating is read at all.
+    /// </summary>
+    private async Task<Dictionary<int, (int Times, int? Rating)>> HistoryWithAsync(
+        int userId, int[] ownerIds, CancellationToken ct)
+    {
+        if (ownerIds.Length == 0) return [];
+
+        var worked = await _db.GigResponses
+            .AsNoTracking()
+            .Include(reply => reply.Listing)
+            .Where(reply => reply.UserId == userId
+                && reply.AcceptedAt != null
+                && reply.Listing != null
+                && ownerIds.Contains(reply.Listing.OwnerUserId))
+            .GroupBy(reply => reply.Listing!.OwnerUserId)
+            .Select(group => new { Owner = group.Key, Times = group.Count() })
+            .ToArrayAsync(ct);
+
+        var given = await _db.GigReviews
+            .AsNoTracking()
+            .Where(review => review.AuthorUserId == userId
+                && review.ByEmployer == false
+                && ownerIds.Contains(review.TargetUserId))
+            .GroupBy(review => review.TargetUserId)
+            .Select(group => new
+            {
+                Owner = group.Key,
+                Rating = group.OrderByDescending(review => review.CreatedAt).First().Rating,
+            })
+            .ToArrayAsync(ct);
+
+        var ratings = given.ToDictionary(row => row.Owner, row => row.Rating);
+
+        return worked.ToDictionary(
+            row => row.Owner,
+            row => (row.Times, ratings.TryGetValue(row.Owner, out var rating) ? rating : (int?)null));
     }
 
     /// <summary>Average and count per target, one query for a whole card list.</summary>
@@ -910,7 +959,9 @@ public sealed class GigService
         GigListing gig,
         int userId,
         Dictionary<int, (double Avg, int Count)>? employerRatings = null,
-        LocationTotalDto[]? mineByPlace = null)
+        LocationTotalDto[]? mineByPlace = null,
+        /// <summary>The reader's own history with each employer, by owner id.</summary>
+        Dictionary<int, (int Times, int? Rating)>? history = null)
     {
         var mine = (gig.Responses ?? []).FirstOrDefault(reply => reply.UserId == userId);
 
@@ -976,6 +1027,10 @@ public sealed class GigService
             // Urgent only while it is still today and the shift has not
             // started. A board full of yesterday's emergencies is a board
             // nobody checks, and the word stops meaning anything.
-            gig.Urgent && gig.Date == DateOnly.FromDateTime(DateTime.UtcNow));
+            gig.Urgent && gig.Date == DateOnly.FromDateTime(DateTime.UtcNow),
+            // Their own history with this venue. Somebody else's average is a
+            // stranger's opinion; four evenings of their own is evidence.
+            history?.GetValueOrDefault(gig.OwnerUserId).Times ?? 0,
+            history?.GetValueOrDefault(gig.OwnerUserId).Rating);
     }
 }

@@ -495,6 +495,14 @@ function GigCard({ gig, onRespond, onWithdraw }: { gig: Gig; onRespond: () => vo
             <strong className="block truncate text-[0.95rem] leading-tight">{gig.title}</strong>
             <span className="field-hint flex items-center gap-1.5 truncate">
               {gig.venue} · {gig.city} <Stars rating={gig.employer_rating} count={gig.employer_count} small />
+              {/* Your own history first. Four evenings there answers more than
+                  a 4.6 averaged over strangers. */}
+              {gig.worked_here > 0 && (
+                <span className="chip border-good/40 bg-(--good-soft) text-good">
+                  {t('You have worked here')} · {gig.worked_here}
+                  {gig.my_rating !== null && ` · ${t('you gave')} ${gig.my_rating}★`}
+                </span>
+              )}
             </span>
           </span>
         </span>

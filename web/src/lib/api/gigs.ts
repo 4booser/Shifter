@@ -36,6 +36,13 @@ export interface Gig {
   employer_count: number;
   responses: number;
   is_mine: boolean;
+  /**
+   * How many times you have worked for this employer. Your own history beats
+   * a stranger's average.
+   */
+  worked_here: number;
+  /** What you last gave them, where you have rated them. */
+  my_rating: number | null;
   my_response: {
     id: number;
     accepted: boolean;

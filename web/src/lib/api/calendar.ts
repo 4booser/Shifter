@@ -17,6 +17,7 @@ import {
   PayslipCheck,
   Reconciliation,
   WorkDocument,
+  WorkHistory,
   SalesCreate,
   SalesPosition,
   ShiftCreate,
@@ -74,6 +75,8 @@ export const calendarApi = {
   payouts: (from: string, to: string) => api<Payout[]>(`${API}/payouts?from=${from}&to=${to}`),
   createPayout: (request: PayoutCreate) => api<Payout>(`${API}/payouts`, { body: request }),
   deletePayout: (id: number) => api<void>(`${API}/payouts/${id}`, { method: 'DELETE' }),
+  /** A biography made of shifts. Money is off unless asked for. */
+  history: (money: boolean) => api<WorkHistory>(`${API}/history?money=${money}`),
   /** The papers without which somebody is not allowed on shift. */
   documents: () => api<WorkDocument[]>(`${API}/documents`),
   saveDocument: (id: number | null, body: DocumentSave) =>

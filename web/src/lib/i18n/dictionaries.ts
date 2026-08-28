@@ -5,6 +5,17 @@
 type Dictionary = Record<string, string>;
 
 export const RU: Dictionary = {
+  'Your record': 'Ваш послужной список',
+  'Everything here comes from shifts you actually recorded. That is what makes it worth showing to somebody who has no reason to believe you.': 'Всё здесь — из смен, которые вы правда записали. Именно поэтому это можно показывать тому, у кого нет причин вам верить.',
+  'Show rates': 'Показать ставки',
+  'Print or save as PDF': 'Печать или PDF',
+  'Nothing recorded yet. A month of shifts is already worth showing.': 'Пока ничего не записано. Даже месяц смен уже есть что показать.',
+  'months in the trade': 'месяцев в профессии',
+  'shifts worked': 'смен отработано',
+  'places': 'мест',
+  'Where': 'Где',
+  'What you were on': 'На чём стояли',
+  'Your own names for your own shifts — the nearest thing this app has to a job title.': 'Ваши же названия ваших смен — ближайшее, что здесь есть к должности.',
   'Handover': 'Передача смены',
   'What the shift going home knows and the one coming in does not.': 'То, что знает уходящая смена, а приходящая — нет.',
   'Which day': 'Какой день',
@@ -1823,6 +1834,17 @@ export const RU: Dictionary = {
 };
 
 export const UK: Dictionary = {
+  'Your record': 'Ваш послужний список',
+  'Everything here comes from shifts you actually recorded. That is what makes it worth showing to somebody who has no reason to believe you.': 'Усе тут — зі змін, які ви справді записали. Саме тому це можна показувати тому, у кого немає причин вам вірити.',
+  'Show rates': 'Показати ставки',
+  'Print or save as PDF': 'Друк або PDF',
+  'Nothing recorded yet. A month of shifts is already worth showing.': 'Поки нічого не записано. Навіть місяць змін — уже є що показати.',
+  'months in the trade': 'місяців у професії',
+  'shifts worked': 'змін відпрацьовано',
+  'places': 'місць',
+  'Where': 'Де',
+  'What you were on': 'На чому стояли',
+  'Your own names for your own shifts — the nearest thing this app has to a job title.': 'Ваші ж назви ваших змін — найближче, що тут є до посади.',
   'Handover': 'Передача зміни',
   'What the shift going home knows and the one coming in does not.': 'Те, що знає зміна, яка йде, а та, що приходить, — ні.',
   'Which day': 'Який день',

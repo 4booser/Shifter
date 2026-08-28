@@ -528,6 +528,35 @@ export interface DocumentSave {
   note: string | null;
 }
 
+/**
+ * A biography made of shifts. Every figure comes from days that were actually
+ * recorded, which is what makes it worth showing to somebody with no reason to
+ * believe you.
+ */
+export interface WorkHistoryPlace {
+  name: string;
+  /** yyyy-MM. */
+  from: string;
+  to: string;
+  shifts: number;
+  hours: number;
+  /** Null unless money was asked for. */
+  per_hour: number | null;
+  currency: string;
+}
+
+export interface WorkHistory {
+  shifts: number;
+  hours: number;
+  /** Months from the first recorded shift to the last, both ends counted. */
+  months: number;
+  first_month: string | null;
+  last_month: string | null;
+  places: WorkHistoryPlace[];
+  /** The shift names worked most — the nearest thing here to a job title. */
+  roles: string[];
+}
+
 export interface Payout {
   id: number;
   period_from: string;

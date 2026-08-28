@@ -28,6 +28,7 @@ const NAV: { href: string; label: string; icon: string }[] = [
   { href: '/stats', label: 'Statistics', icon: 'chart' },
   { href: '/assistant', label: 'Assistant', icon: 'note' },
   { href: '/wrapped', label: 'Your year', icon: 'trophy' },
+  { href: '/cv', label: 'Your record', icon: 'user' },
 ];
 
 /**

@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Shifter.Domain.Entities;
 using Shifter.Application.Features.business.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -206,6 +207,34 @@ public class BusinessController : ControllerBase
         await expenses.DeleteAsync(CurrentUserId(), id, ct);
 
         return NoContent();
+    }
+
+    /// <summary>
+    /// A biography made of shifts: how long, where, how many, what an hour was
+    /// worth. Nothing is invented — every figure comes from days that were
+    /// actually recorded, which is exactly what makes it worth showing to
+    /// somebody who has no reason to believe you.
+    ///
+    /// Money is off unless asked for. A CV that opens with what you were paid
+    /// is a CV that argues about the wrong thing first.
+    /// </summary>
+    [HttpGet]
+    [Route("history")]
+    public async Task<ActionResult<WorkHistoryDto>> WorkHistory(
+        [FromServices] IShifterQuery query,
+        [FromServices] Shifter.Application.Common.Time.AppClock clock,
+        [FromQuery] bool money,
+        CancellationToken ct)
+    {
+        DateOnly today = clock.Today;
+
+        Day[] days = await query.GetDaysInRangeAsync(
+            CurrentUserId(), new DateOnly(2000, 1, 1), today, ct);
+
+        Location[] places = await query.GetLocationsAsync(CurrentUserId(), true, ct);
+
+        return Ok(Application.Features.business.Services.WorkHistory.Of(
+            days, places.ToDictionary(place => place.Id), today, money));
     }
 
     /// <summary>

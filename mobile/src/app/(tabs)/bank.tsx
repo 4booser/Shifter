@@ -17,6 +17,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BankAnalysis } from '@/components/bank-analysis';
+import { BankLock } from '@/components/bank-lock';
 import { BankSpending } from '@/components/bank-spending';
 import { BankLedger } from '@/components/bank-ledger';
 import { MoneyGrid } from '@/components/money-grid';
@@ -43,6 +44,7 @@ import { untilPayday, usualDay } from '@/lib/mono-work';
 import { CalendarDayData, DaysResponse, money, moneyIn } from '@/lib/types';
 import { chosenAccount, useMono } from '@/store/mono';
 import { t } from '@/lib/i18n';
+import { LockKind, bankLock, lockKind, lockNameBy } from '@/lib/lock';
 
 /** What the reconciliation endpoint says is still owed. */
 interface PayPeriodRow {
@@ -79,6 +81,17 @@ const KIND_LABEL: Record<string, string> = {
  */
 export default function BankScreen() {
   const scheme = useColorScheme();
+  const cover = Colors[scheme === 'dark' ? 'dark' : 'light'];
+
+  return (
+    <BankLock palette={cover}>
+      <Bank />
+    </BankLock>
+  );
+}
+
+function Bank() {
+  const scheme = useColorScheme();
   const palette = Colors[scheme === 'dark' ? 'dark' : 'light'];
   const insets = useSafeAreaInsets();
   const styles = makeStyles(palette);
@@ -104,6 +117,8 @@ export default function BankScreen() {
   const [typed, setTyped] = useState('');
   const [problem, setProblem] = useState<string | null>(null);
   const [periods, setPeriods] = useState<PayPeriodRow[] | null>(null);
+  const [locked, setLocked] = useState(false);
+  const [lockWith, setLockWith] = useState<LockKind>(null);
   const [days, setDays] = useState<Map<string, CalendarDayData>>(new Map());
   const [earned, setEarned] = useState(0);
   const [view, setView] = useState<'summary' | 'spending' | 'month' | 'ledger' | 'analysis'>('summary');
@@ -112,6 +127,8 @@ export default function BankScreen() {
 
   useEffect(() => {
     void mono.hydrate();
+    void bankLock.enabled().then(setLocked);
+    void lockKind().then(setLockWith);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -755,6 +772,35 @@ export default function BankScreen() {
         <Text style={styles.empty}>{t('В загруженной выписке нечего сопоставить: ни прихода рядом с днём выплаты, ни трат в дни смен. Это нормально — банк не видит наличные, а такси вы могли не брать.')}</Text>
       )}
 
+      {/*
+        A lock of its own, separate from the app's. The calendar holds how much
+        somebody earns; this holds where they were, what they bought and how
+        much they have left — and a phone is handed over to show a photograph.
+      */}
+      {view === 'summary' && (
+        <Press
+          style={styles.lockRow}
+          haptic={false}
+          onPress={() => {
+            const next = !locked;
+
+            setLocked(next);
+            void bankLock.set(next);
+          }}
+        >
+          <Ionicons
+            name={locked ? 'lock-closed' : 'lock-open-outline'}
+            size={18}
+            color={locked ? palette.accent : palette.textSecondary}
+          />
+          <Text style={[styles.lockText, locked && { color: palette.accent }]}>
+            {locked
+              ? `${t('Вкладка закрыта — открывается по')} ${lockNameBy(lockWith)}`
+              : t('Закрыть вкладку замком')}
+          </Text>
+        </Press>
+      )}
+
       {view === 'summary' && (
       <Press style={styles.disconnect} haptic={false} onPress={() => void mono.disconnect()}>
         <Text style={styles.disconnectText}>{t('Отключить банк')}</Text>
@@ -1004,6 +1050,15 @@ const makeStyles = (palette: Palette) =>
       justifyContent: 'center',
     },
 
+    lockRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      paddingVertical: 12,
+      marginTop: 12,
+    },
+    lockText: { color: palette.textSecondary, fontSize: 14, fontWeight: '600' },
     disconnect: { alignItems: 'center', paddingVertical: 14, marginTop: 12 },
     disconnectText: { color: palette.danger, fontWeight: '600', fontSize: 14 },
   });

@@ -2,6 +2,7 @@ import * as LocalAuthentication from 'expo-local-authentication';
 import * as SecureStore from 'expo-secure-store';
 
 const KEY = 'shifter.lock';
+const BANK_KEY = 'shifter.lock.bank';
 
 /**
  * The app lock. What it protects is not a secret in the usual sense — it is
@@ -17,6 +18,25 @@ export const lockStore = {
   async set(on: boolean): Promise<void> {
     if (on) await SecureStore.setItemAsync(KEY, 'on');
     else await SecureStore.deleteItemAsync(KEY);
+  },
+};
+
+/**
+ * The bank tab's own lock, separate from the app's.
+ *
+ * What the calendar holds is how much somebody earns. What the bank tab holds
+ * is where they were, what they bought and how much they have — which is a
+ * different order of thing, and worth locking even by somebody who leaves the
+ * rest of the app open.
+ */
+export const bankLock = {
+  async enabled(): Promise<boolean> {
+    return (await SecureStore.getItemAsync(BANK_KEY)) === 'on';
+  },
+
+  async set(on: boolean): Promise<void> {
+    if (on) await SecureStore.setItemAsync(BANK_KEY, 'on');
+    else await SecureStore.deleteItemAsync(BANK_KEY);
   },
 };
 
@@ -55,9 +75,9 @@ export const lockNameBy = (kind: LockKind): string =>
   kind === 'face' ? 'Face ID' : kind === 'finger' ? 'отпечатку' : kind === 'code' ? 'коду' : 'замку';
 
 /** Asks the phone. True means the person is who the phone thinks they are. */
-export async function unlock(): Promise<boolean> {
+export async function unlock(reason = 'Откройте Shifter'): Promise<boolean> {
   const result = await LocalAuthentication.authenticateAsync({
-    promptMessage: 'Откройте Shifter',
+    promptMessage: reason,
     cancelLabel: 'Отмена',
     // The device passcode is the honest fallback: a wet thumb or a mask
     // should not lock somebody out of their own shifts.

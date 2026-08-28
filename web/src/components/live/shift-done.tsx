@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { fireConfetti } from '@/lib/fx';
+import { useDialogKeys } from '@/lib/a11y';
 import { useI18n } from '@/lib/i18n';
 import { SHIFT_DONE_EVENT, ShiftDone, formatElapsed } from '@/lib/live/live-shift';
 import { useMoney } from '@/lib/settings/money';
@@ -28,6 +29,11 @@ export function ShiftDoneOverlay() {
   const [tips, setTips] = useState('');
   const [tipsSaved, setTipsSaved] = useState(false);
   const [sharing, setSharing] = useState(false);
+
+  const root = useRef<HTMLDivElement>(null);
+  const close = useCallback(() => setDone(null), []);
+
+  useDialogKeys(done !== null, root, close);
 
   useEffect(() => {
     const onDone = (event: Event) => {
@@ -142,7 +148,7 @@ export function ShiftDoneOverlay() {
   };
 
   return (
-    <div className="done-scene" role="dialog" aria-label={t('Shift finished')}>
+    <div ref={root} className="done-scene" role="dialog" aria-modal="true" aria-label={t('Shift finished')}>
       <div className="done-card">
         <span className="text-[2.6rem] leading-none">🎉</span>
         <h2 className="mt-2 text-[1.25rem] font-bold">{t('Shift finished')}</h2>

@@ -1,10 +1,11 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { downloadBlob } from '@/lib/export/xlsx';
 import { currentCardTheme } from '@/lib/export/share-card';
 import { drawStoryCard } from '@/lib/export/story-card';
+import { useDialogKeys } from '@/lib/a11y';
 import { useI18n } from '@/lib/i18n';
 import { Icon } from '@/components/ui/icon';
 
@@ -73,6 +74,12 @@ export function Stories({
     [shown.length, onClose],
   );
 
+  const root = useRef<HTMLDivElement>(null);
+
+  // The trap and the focus restore. Escape lives with the arrow keys below,
+  // because this overlay reads them together.
+  useDialogKeys(true, root, onClose);
+
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onClose();
@@ -110,6 +117,7 @@ export function Stories({
 
   return (
     <div
+      ref={root}
       className="fixed inset-0 z-50 flex flex-col bg-(--surface-1)"
       role="dialog"
       aria-modal="true"

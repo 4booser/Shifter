@@ -1,10 +1,11 @@
 'use client';
 
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { authApi } from '@/lib/api/auth';
 import { stagger } from '@/lib/fx';
+import { useDialogKeys } from '@/lib/a11y';
 import { useI18n } from '@/lib/i18n';
 import { startLiveShift, useLive } from '@/lib/live/live-shift';
 import { THEME_PRESETS } from '@/lib/settings/settings';
@@ -69,6 +70,9 @@ export function CommandPalette() {
   const [query, setQuery] = useState('');
   const [hot, setHot] = useState(0);
   const input = useRef<HTMLInputElement>(null);
+  const root = useRef<HTMLDivElement>(null);
+
+  const close = useCallback(() => setOpen(false), []);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -100,6 +104,10 @@ export function CommandPalette() {
   useEffect(() => {
     if (open) input.current?.focus();
   }, [open]);
+
+  // Escape is handled above with the shortcut that opens it; this adds the
+  // trap and puts focus back where it was, which the global handler cannot do.
+  useDialogKeys(open, root, close);
 
   const commands = useMemo<Command[]>(() => {
     const go = (href: string) => () => {
@@ -272,7 +280,7 @@ export function CommandPalette() {
   return (
     <>
       <div className="palette-backdrop" onClick={() => setOpen(false)} />
-      <div className="palette" role="dialog" aria-label={t('Command palette')}>
+      <div ref={root} className="palette" role="dialog" aria-modal="true" aria-label={t('Command palette')}>
         <div className="flex items-center gap-2.5 border-b border-border px-4 py-3">
           <Icon name="search" size={16} className="text-muted" />
           <input

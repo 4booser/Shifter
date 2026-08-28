@@ -14,6 +14,7 @@ import {
   weekBounds,
 } from '@/lib/calendar/calendar-date';
 import { readableInk } from '@/lib/calendar/contrast';
+import { spokenDay } from '@/lib/calendar/spoken';
 import { holidaysInRange } from '@/lib/calendar/holidays';
 import { MARK_COLOURS } from '@/lib/calendar/models';
 import { useI18n } from '@/lib/i18n';
@@ -679,6 +680,22 @@ export function MonthGrid({
                 key={day.key}
                 type="button"
                 title={holiday ?? undefined}
+                // The whole day in one sentence. A screen reader used to read
+                // the painted fragments in whatever order they landed, which
+                // is a decoration of a day rather than a day.
+                aria-label={spokenDay({
+                  date: new Intl.DateTimeFormat(lang, { day: 'numeric', month: 'long' }).format(
+                    new Date(`${day.key}T12:00:00`),
+                  ),
+                  entries: list.map((entry) => entry.name),
+                  hours: hours > 0 ? `${Math.round(hours * 10) / 10} ${t('h')}` : null,
+                  earned:
+                    settings.hideAmounts || (state.days.get(day.key)?.earned ?? 0) <= 0
+                      ? null
+                      : format(state.days.get(day.key)!.earned),
+                  holiday,
+                  selected,
+                }).join(' · ')}
                 aria-pressed={selected}
                 aria-selected={picked || selected}
                 data-day={day.key}

@@ -1,7 +1,8 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { useDialogKeys } from '@/lib/a11y';
 import { useI18n } from '@/lib/i18n';
 
 /**
@@ -54,6 +55,7 @@ export function FeatureTour() {
   const [steps, setSteps] = useState<Step[]>([]);
   const [index, setIndex] = useState(0);
   const [placed, setPlaced] = useState<Placed | null>(null);
+  const root = useRef<HTMLDivElement>(null);
 
   const begin = useCallback(() => {
     const present = STEPS.filter(
@@ -126,12 +128,16 @@ export function FeatureTour() {
     };
   }, [step]);
 
-  if (step === undefined || placed === null || steps.length === 0) return null;
-
-  const finish = () => {
+  // Above the early return, because hooks cannot be conditional — and because
+  // a tour with no way out is the worst overlay to be stuck behind.
+  const finish = useCallback(() => {
     localStorage.setItem(SEEN_KEY, 'seen');
     setSteps([]);
-  };
+  }, []);
+
+  useDialogKeys(steps.length > 0, root, finish);
+
+  if (step === undefined || placed === null || steps.length === 0) return null;
 
   const { rect } = placed;
   const below = rect.bottom + 200 < innerHeight;
@@ -141,7 +147,7 @@ export function FeatureTour() {
   const cardLeft = Math.max(12, Math.min(rect.left + rect.width / 2 - 160, innerWidth - 332));
 
   return (
-    <div className="fixed inset-0 z-[97]" role="dialog" aria-label={t('Feature tour')}>
+    <div ref={root} className="fixed inset-0 z-[97]" role="dialog" aria-modal="true" aria-label={t('Feature tour')}>
       <div className="absolute inset-0" onClick={finish} />
       <div
         className="tour-ring"

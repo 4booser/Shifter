@@ -57,6 +57,19 @@
 [data-theme='ocean'],
 [data-theme='plum'],
 [data-theme='gradient'] {
+  /* The indigo in :root is a light-theme colour and it was reaching every
+     dark theme untouched, at 2.6 to 1 against the surface — below the floor
+     for anything carrying meaning by colour. It is only ever seen by somebody
+     who has not picked their own accent, which is most people, and it went
+     unnoticed because whoever chose it was looking at the light theme.
+
+     A user's own accent is written inline on the root element and still wins
+     over this. */
+  --accent: #8b8ef7;
+  --accent-hover: #a0a3f9;
+  --accent-soft: rgb(139 142 247 / 14%);
+  --ring: rgb(139 142 247 / 26%);
+
   --text: #eceef2;
   --muted: #9aa0ac;
   --faint: #676d78;
@@ -150,6 +163,13 @@
 /* System theme: the light block above is the default; dark comes from the OS. */
 @media (prefers-color-scheme: dark) {
   [data-theme='system'] {
+    /* Same correction as the named dark themes above, and this is the one most
+       people are actually on: "system" is the default nobody chooses. */
+    --accent: #8b8ef7;
+    --accent-hover: #a0a3f9;
+    --accent-soft: rgb(139 142 247 / 14%);
+    --ring: rgb(139 142 247 / 26%);
+
     --bg: #17181c;
     --bg-veil: none;
     --surface: #1f2126;

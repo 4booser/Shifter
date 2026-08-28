@@ -518,6 +518,31 @@ export const RU: Dictionary = {
   'on for': 'на смене',
   'Compact fits a whole month on a laptop screen without scrolling.':
     'Плотно — весь месяц на экране ноутбука без прокрутки.',
+  'A place is where the money comes from and when.': 'Место — это откуда деньги и когда.',
+  'Бар Дым · 10-го и 25-го': 'Бар Дым · 10-го и 25-го',
+  'overtime after 40 h, ×1.5': 'сверхурочные после 40 ч, ×1,5',
+  'night hours ×1.3': 'ночные ×1,3',
+  'meal −80': 'питание −80',
+  'Add a place': 'Добавить место',
+  'A shift is one working day in full: hours, rate, break.':
+    'Смена — это рабочий день целиком: часы, ставка, перерыв.',
+  'Вечер · 16:00–02:00 · break 30 min': 'Вечер · 16:00–02:00 · перерыв 30 мин',
+  '180 / hour × 9.5 h': '180 / час × 9,5 ч',
+  '= 1 710 ₴ for the day': '= 1 710 ₴ за день',
+  'Add a shift': 'Добавить смену',
+  'A position is something you sell and keep a share of.':
+    'Позиция — это то, что вы продаёте и с чего получаете процент.',
+  'Кальян · 350 ₴ · 5%': 'Кальян · 350 ₴ · 5%',
+  '5 sold in an evening': '5 продано за вечер',
+  '= 87.50 ₴ on top of the shift': '= 87,50 ₴ сверх смены',
+  'Add a position': 'Добавить позицию',
+  'Everything that is not work: English, driving, the gym.':
+    'Всё, что не работа: английский, вождение, зал.',
+  'Английский · Tue and Thu · 19:00–20:30': 'Английский · вт и чт · 19:00–20:30',
+  '400 ₴ each time': '400 ₴ за раз',
+  '= 3 200 ₴ a month, counted apart from earnings':
+    '= 3 200 ₴ в месяц, считается отдельно от заработка',
+  'Add an event type': 'Добавить тип события',
   'This week': 'Эта неделя',
   'Earned this week': 'Заработано за неделю',
   'Still to come': 'Ещё впереди',
@@ -2798,6 +2823,31 @@ export const UK: Dictionary = {
   'on for': 'на зміні',
   'Compact fits a whole month on a laptop screen without scrolling.':
     'Щільно — весь місяць на екрані ноутбука без прокручування.',
+  'A place is where the money comes from and when.': 'Місце — це звідки гроші й коли.',
+  'Бар Дым · 10-го и 25-го': 'Бар Дим · 10-го і 25-го',
+  'overtime after 40 h, ×1.5': 'понаднормові після 40 год, ×1,5',
+  'night hours ×1.3': 'нічні ×1,3',
+  'meal −80': 'харчування −80',
+  'Add a place': 'Додати місце',
+  'A shift is one working day in full: hours, rate, break.':
+    'Зміна — це робочий день цілком: години, ставка, перерва.',
+  'Вечер · 16:00–02:00 · break 30 min': 'Вечір · 16:00–02:00 · перерва 30 хв',
+  '180 / hour × 9.5 h': '180 / година × 9,5 год',
+  '= 1 710 ₴ for the day': '= 1 710 ₴ за день',
+  'Add a shift': 'Додати зміну',
+  'A position is something you sell and keep a share of.':
+    'Позиція — це те, що ви продаєте і з чого маєте відсоток.',
+  'Кальян · 350 ₴ · 5%': 'Кальян · 350 ₴ · 5%',
+  '5 sold in an evening': '5 продано за вечір',
+  '= 87.50 ₴ on top of the shift': '= 87,50 ₴ понад зміну',
+  'Add a position': 'Додати позицію',
+  'Everything that is not work: English, driving, the gym.':
+    'Усе, що не робота: англійська, водіння, зал.',
+  'Английский · Tue and Thu · 19:00–20:30': 'Англійська · вт і чт · 19:00–20:30',
+  '400 ₴ each time': '400 ₴ за раз',
+  '= 3 200 ₴ a month, counted apart from earnings':
+    '= 3 200 ₴ на місяць, рахується окремо від заробітку',
+  'Add an event type': 'Додати тип події',
   'This week': 'Цей тиждень',
   'All time': 'За весь час',
 

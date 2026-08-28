@@ -21,6 +21,7 @@ import {
 } from '@/lib/store/calendar';
 import { Delta, Money } from '@/components/ui/bits';
 import { Icon } from '@/components/ui/icon';
+import { Teach } from '@/components/ui/teach';
 import { ImportModal } from './modals/import-modal';
 import { PhotoImportModal } from './modals/photo-import-modal';
 import { LocationModal } from './modals/location-modal';
@@ -85,7 +86,21 @@ export function Sidebar() {
         />
 
         {locations.length === 0 ? (
-          <p className="field-hint">{t('No places yet. Add one to group shifts and set a payday.')}</p>
+          <Teach
+            title={t('A place is where the money comes from and when.')}
+            example={[
+              t('Бар Дым · 10-го и 25-го'),
+              t('overtime after 40 h, ×1.5'),
+              `${t('night hours ×1.3')} · ${t('meal −80')}`,
+            ]}
+            action={{
+              label: t('Add a place'),
+              onClick: () => {
+                setEditingLocation(null);
+                setModal('location');
+              },
+            }}
+          />
         ) : (
           <ul className="flex flex-col gap-0.5">
             {locations.map((location) => (
@@ -133,7 +148,21 @@ export function Sidebar() {
         />
 
         {templates.length === 0 ? (
-          <p className="field-hint">{t('None yet. Add one, then click or drag across days.')}</p>
+          <Teach
+            title={t('A shift is one working day in full: hours, rate, break.')}
+            example={[
+              t('Вечер · 16:00–02:00 · break 30 min'),
+              t('180 / hour × 9.5 h'),
+              t('= 1 710 ₴ for the day'),
+            ]}
+            action={{
+              label: t('Add a shift'),
+              onClick: () => {
+                setEditingShift(null);
+                setModal('shift');
+              },
+            }}
+          />
         ) : (
           <ul className="flex flex-col gap-1">
             {templates.map((template) => {
@@ -226,9 +255,21 @@ export function Sidebar() {
         />
 
         {eventTypes.length === 0 ? (
-          <p className="field-hint">
-            {t('Everything that is not work: English, driving, the gym. Add one, then put it on days.')}
-          </p>
+          <Teach
+            title={t('Everything that is not work: English, driving, the gym.')}
+            example={[
+              t('Английский · Tue and Thu · 19:00–20:30'),
+              t('400 ₴ each time'),
+              t('= 3 200 ₴ a month, counted apart from earnings'),
+            ]}
+            action={{
+              label: t('Add an event type'),
+              onClick: () => {
+                setEditingEventType(null);
+                setModal('event');
+              },
+            }}
+          />
         ) : (
           <ul className="flex flex-col gap-1">
             {eventTypes.map((item) => {
@@ -301,7 +342,21 @@ export function Sidebar() {
         />
 
         {positions.length === 0 ? (
-          <p className="field-hint">{t('Nothing to sell yet.')}</p>
+          <Teach
+            title={t('A position is something you sell and keep a share of.')}
+            example={[
+              t('Кальян · 350 ₴ · 5%'),
+              t('5 sold in an evening'),
+              t('= 87.50 ₴ on top of the shift'),
+            ]}
+            action={{
+              label: t('Add a position'),
+              onClick: () => {
+                setEditingPosition(null);
+                setModal('sales');
+              },
+            }}
+          />
         ) : (
           <ul className="flex flex-col gap-0.5">
             {positions.map((position) => (

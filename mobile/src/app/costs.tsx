@@ -2,7 +2,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -13,6 +12,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { Loading } from '@/components/motion';
 import { Colors, Palette } from '@/constants/theme';
 import { api, ApiError } from '@/lib/api';
 import { todayKey } from '@/lib/calendar';
@@ -145,7 +145,7 @@ export default function CostsScreen() {
       </View>
 
       {loading ? (
-        <ActivityIndicator color={palette.accent} style={{ marginTop: 40 }} />
+        <Loading colour={palette.backgroundElement} rows={3} height={86} />
       ) : (
         <ScrollView contentContainerStyle={styles.content}>
           {error !== null && <Text style={styles.error}>{error}</Text>}

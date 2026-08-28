@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { Press } from '@/components/motion';
 import { Palette } from '@/constants/theme';
 import { api } from '@/lib/api';
 import { ShiftTemplate } from '@/lib/types';
@@ -154,15 +155,15 @@ export function FirstShift({
 
           <View style={styles.head}>
             <Text style={styles.title}>Ваша смена</Text>
-            <Pressable onPress={onClose} hitSlop={10}>
+            <Press onPress={onClose} hitSlop={10}>
               <Ionicons name="close" size={22} color={palette.textSecondary} />
-            </Pressable>
+            </Press>
           </View>
 
           <View style={styles.body}>
             <View style={styles.shapes}>
               {SHAPES.map((shape) => (
-                <Pressable
+                <Press
                   key={shape.name}
                   style={[styles.shape, name === shape.name && styles.shapeOn]}
                   onPress={() => {
@@ -179,7 +180,7 @@ export function FirstShift({
                   <Text style={styles.shapeTime}>
                     {shape.start}–{shape.end}
                   </Text>
-                </Pressable>
+                </Press>
               ))}
             </View>
 
@@ -243,7 +244,7 @@ export function FirstShift({
               />
               <View style={styles.periods}>
                 {PERIODS.map((entry) => (
-                  <Pressable
+                  <Press
                     key={entry.id}
                     style={[styles.period, period === entry.id && styles.periodOn]}
                     onPress={() => setPeriod(entry.id)}
@@ -253,7 +254,7 @@ export function FirstShift({
                     >
                       {entry.label}
                     </Text>
-                  </Pressable>
+                  </Press>
                 ))}
               </View>
             </View>
@@ -271,7 +272,7 @@ export function FirstShift({
             {error !== null && <Text style={styles.error}>{error}</Text>}
           </View>
 
-          <Pressable style={styles.done} disabled={busy} onPress={() => void save()}>
+          <Press style={styles.done} disabled={busy} onPress={() => void save()}>
             {busy ? (
               <ActivityIndicator color="#fff" />
             ) : (
@@ -280,7 +281,7 @@ export function FirstShift({
                 <Text style={styles.doneText}>Создать и закрасить месяц</Text>
               </>
             )}
-          </Pressable>
+          </Press>
         </View>
       </KeyboardAvoidingView>
     </Modal>

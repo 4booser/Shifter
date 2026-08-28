@@ -7,7 +7,6 @@ import {
   FlatList,
   NativeScrollEvent,
   NativeSyntheticEvent,
-  Pressable,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -23,6 +22,7 @@ import { DayPeek } from '@/components/day-peek';
 import { FirstShift } from '@/components/first-shift';
 import { MonthGrid, PAGE_HEIGHT } from '@/components/month-grid';
 import { MonthJump } from '@/components/month-jump';
+import { Appear, Press } from '@/components/motion';
 import { Brush, brushColour, brushName, brushSymbol, PaintPicker } from '@/components/paint-picker';
 import { Colors, Palette } from '@/constants/theme';
 import { api } from '@/lib/api';
@@ -641,7 +641,7 @@ export default function CalendarScreen() {
         }
       >
         <View style={styles.headerRow}>
-          <Pressable
+          <Press
             style={styles.headerText}
             onPress={() => setJumping(true)}
             accessibilityLabel="Перейти к другому месяцу"
@@ -649,29 +649,29 @@ export default function CalendarScreen() {
             <Text style={styles.month}>{monthOnly(month)}</Text>
             <Text style={styles.year}>{month.year}</Text>
             <Ionicons name="chevron-down" size={15} color={palette.textSecondary} />
-          </Pressable>
+          </Press>
 
           {index !== SPAN && (
-            <Pressable style={styles.todayChip} onPress={() => goTo(SPAN)}>
+            <Press style={styles.todayChip} onPress={() => goTo(SPAN)}>
               <Ionicons
                 name={index > SPAN ? 'arrow-back' : 'arrow-forward'}
                 size={13}
                 color={palette.accent}
               />
               <Text style={styles.todayChipText}>Сегодня</Text>
-            </Pressable>
+            </Press>
           )}
 
-          <Pressable onPress={() => router.push('/import')} hitSlop={8}>
+          <Press onPress={() => router.push('/import')} hitSlop={8}>
             <Ionicons name="camera-outline" size={22} color={palette.textSecondary} />
-          </Pressable>
-          <Pressable onPress={() => router.push('/settings')} hitSlop={8}>
+          </Press>
+          <Press onPress={() => router.push('/settings')} hitSlop={8}>
             <Ionicons name="settings-outline" size={21} color={palette.textSecondary} />
-          </Pressable>
+          </Press>
         </View>
 
         {brush === null && templates.length === 0 && here !== undefined && (
-          <Pressable style={styles.begin} onPress={() => setStarting(true)}>
+          <Press style={styles.begin} onPress={() => setStarting(true)}>
             <Text style={styles.beginMark}>🍸</Text>
             <View style={styles.beginText}>
               <Text style={styles.beginTitle}>Начните со своей смены</Text>
@@ -680,10 +680,11 @@ export default function CalendarScreen() {
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={18} color={palette.accent} />
-          </Pressable>
+          </Press>
         )}
 
         {brush === null && templates.length > 0 && (
+        <Appear>
         <View style={styles.stats}>
           <Stat
             styles={styles}
@@ -699,12 +700,13 @@ export default function CalendarScreen() {
           />
           <Stat styles={styles} value={`${Math.round(here?.hours ?? 0)}`} label="часов" extra={null} />
         </View>
+        </Appear>
         )}
 
         {error !== null && <Text style={styles.error}>{error}</Text>}
 
         {held.length > 0 && (
-          <Pressable
+          <Press
             style={styles.heldBar}
             onPress={() => {
               void flushOutbox().then((sent) => {
@@ -717,16 +719,16 @@ export default function CalendarScreen() {
               {waiting.size} {dayWord(waiting.size)} {waiting.size === 1 ? 'ждёт' : 'ждут'} отправки
             </Text>
             <Text style={styles.heldAction}>Отправить</Text>
-          </Pressable>
+          </Press>
         )}
 
         {refused > 0 && (
-          <Pressable style={styles.refusedBar} onPress={clearRefused}>
+          <Press style={styles.refusedBar} onPress={clearRefused}>
             <Ionicons name="alert-circle-outline" size={17} color={palette.danger} />
             <Text style={styles.refusedText}>
               Сервер не принял {refused} {changeWord(refused)}. Проверьте эти дни вручную.
             </Text>
-          </Pressable>
+          </Press>
         )}
 
         <FlatList
@@ -779,11 +781,11 @@ export default function CalendarScreen() {
         {brush !== null && painted > 0 && (
           <View style={styles.quickRow}>
             {spread !== null && (
-              <Pressable style={styles.quick} onPress={() => chooseAll(spread.keys)}>
+              <Press style={styles.quick} onPress={() => chooseAll(spread.keys)}>
                 <Text style={styles.quickText}>{spread.label}</Text>
-              </Pressable>
+              </Press>
             )}
-            <Pressable
+            <Press
               style={styles.quick}
               onPress={() => {
                 chosenAt.current = new Set();
@@ -791,7 +793,7 @@ export default function CalendarScreen() {
               }}
             >
               <Text style={styles.quickText}>Снять всё</Text>
-            </Pressable>
+            </Press>
           </View>
         )}
 
@@ -823,18 +825,20 @@ export default function CalendarScreen() {
         )}
 
         {brush === null && live !== null && (
-          <Pressable style={styles.liveCard} onPress={() => router.push('/live')}>
+          <Appear index={1}>
+          <Press style={styles.liveCard} onPress={() => router.push('/live')}>
             <View style={styles.liveDot} />
             <Text style={styles.liveText}>
               Смена идёт: {live.symbol ?? '🕐'} {live.name} с{' '}
               {new Date(live.startedAt).toTimeString().slice(0, 5)}
             </Text>
             <Ionicons name="chevron-forward" size={16} color={palette.accent} />
-          </Pressable>
+          </Press>
+          </Appear>
         )}
 
         {brush === null && live === null && startable !== null && (
-          <Pressable
+          <Press
             style={styles.startButton}
             onPress={() => {
               const shift: LiveShift = {
@@ -856,11 +860,13 @@ export default function CalendarScreen() {
             <Text style={styles.startText}>
               Начать смену · {startable.symbol ?? ''} {startable.name}
             </Text>
-          </Pressable>
+          </Press>
         )}
 
         {brush === null && (
-          <DailyBrief palette={palette} onOpen={() => router.push('/assistant')} />
+          <Appear index={2}>
+            <DailyBrief palette={palette} onOpen={() => router.push('/assistant')} />
+          </Appear>
         )}
       </ScrollView>
 
@@ -868,10 +874,10 @@ export default function CalendarScreen() {
         <View style={[styles.bar, { bottom: insets.bottom + 14 }]}>
           <Ionicons name="checkmark-circle" size={22} color={palette.good} />
           <Text style={styles.barName} numberOfLines={1}>{undo.label}</Text>
-          <Pressable style={styles.barGhost} onPress={() => setUndo(null)} hitSlop={6}>
+          <Press style={styles.barGhost} onPress={() => setUndo(null)} hitSlop={6}>
             <Ionicons name="close" size={18} color={palette.textSecondary} />
-          </Pressable>
-          <Pressable
+          </Press>
+          <Press
             style={styles.barDone}
             disabled={undoing}
             onPress={() => void takeBack()}
@@ -879,12 +885,12 @@ export default function CalendarScreen() {
             {undoing
               ? <ActivityIndicator color="#fff" size="small" />
               : <Text style={styles.barDoneText}>Отменить</Text>}
-          </Pressable>
+          </Press>
         </View>
       )}
 
       {brush === null ? (
-        <Pressable
+        <Press
           style={[styles.pencil, { bottom: insets.bottom + (undo === null ? 22 : 84) }]}
           onPress={() => {
             void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -894,7 +900,7 @@ export default function CalendarScreen() {
           accessibilityLabel="Закрасить дни сменой или событием"
         >
           <Ionicons name="pencil" size={22} color="#fff" />
-        </Pressable>
+        </Press>
       ) : (
         <View style={[styles.bar, { bottom: insets.bottom + 14 }]}>
           <View style={[styles.barChip, { backgroundColor: brushColour(brush, palette) }]}>
@@ -908,11 +914,11 @@ export default function CalendarScreen() {
             </Text>
           </View>
 
-          <Pressable style={styles.barGhost} onPress={clearPaint} hitSlop={6}>
+          <Press style={styles.barGhost} onPress={clearPaint} hitSlop={6}>
             <Ionicons name="close" size={18} color={palette.textSecondary} />
-          </Pressable>
+          </Press>
 
-          <Pressable
+          <Press
             style={[styles.barDone, painted === 0 && styles.barDoneOff]}
             disabled={painted === 0 || applying}
             onPress={() => void apply()}
@@ -920,7 +926,7 @@ export default function CalendarScreen() {
             {applying
               ? <ActivityIndicator color="#fff" size="small" />
               : <Text style={styles.barDoneText}>Готово</Text>}
-          </Pressable>
+          </Press>
         </View>
       )}
 

@@ -2,7 +2,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
   Modal,
   Pressable,
   ScrollView,
@@ -14,6 +13,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { Loading } from '@/components/motion';
 import { Colors, Palette } from '@/constants/theme';
 import { api, ApiError } from '@/lib/api';
 import { dayLabel, pad, todayKey } from '@/lib/calendar';
@@ -264,7 +264,9 @@ export default function BoardScreen() {
         </View>
 
         {error !== null && <Text style={styles.error}>{error}</Text>}
-        {board === null && error === null && <ActivityIndicator color={palette.accent} />}
+        {board === null && error === null && (
+          <Loading colour={palette.backgroundElement} rows={4} height={72} />
+        )}
 
         {board !== null && !board.can_plan && (
           <Text style={styles.lead}>

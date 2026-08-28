@@ -4,6 +4,7 @@ import { Pressable, StyleProp, TextInput, TextStyle, ViewStyle } from 'react-nat
 import { spaced } from '@/lib/format';
 import Animated, {
   FadeInDown,
+  withRepeat,
   useAnimatedProps,
   useAnimatedStyle,
   useSharedValue,
@@ -104,6 +105,68 @@ export function Appear({
         .damping(18)}
     >
       {children}
+    </Animated.View>
+  );
+}
+
+/**
+ * The shape of what is coming, while it comes.
+ *
+ * A spinner says "wait" and nothing else, and the screen it sits on jumps
+ * when the answer lands. A block the size of the thing being fetched says
+ * what is on its way and leaves the layout where it will end up — which is
+ * the difference between an app that is loading and an app that is stuck.
+ */
+export function Skeleton({
+  width,
+  height,
+  radius = 12,
+  colour,
+  style,
+}: {
+  width: number | `${number}%`;
+  height: number;
+  radius?: number;
+  colour: string;
+  style?: StyleProp<ViewStyle>;
+}) {
+  const pulse = useSharedValue(0.4);
+
+  useEffect(() => {
+    pulse.value = withRepeat(withTiming(0.9, { duration: 850 }), -1, true);
+  }, [pulse]);
+
+  const fade = useAnimatedStyle(() => ({ opacity: pulse.value }));
+
+  return (
+    <Animated.View
+      style={[{ width, height, borderRadius: radius, backgroundColor: colour }, fade, style]}
+    />
+  );
+}
+
+/**
+ * A stack of card-shaped placeholders, for a list that is on its way.
+ *
+ * The count is small on purpose: three blocks read as "a list is coming" and
+ * ten read as a list, which is a lie the moment the real one is shorter.
+ */
+export function Loading({
+  colour,
+  rows = 3,
+  height = 92,
+  style,
+}: {
+  colour: string;
+  rows?: number;
+  height?: number;
+  style?: StyleProp<ViewStyle>;
+}) {
+  return (
+    <Animated.View style={[{ gap: 10 }, style]}>
+      {Array.from({ length: rows }, (_, index) => (
+        <Skeleton key={index} width="100%" height={height} radius={18} colour={colour} />
+      ))}
     </Animated.View>
   );
 }

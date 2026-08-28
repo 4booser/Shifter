@@ -1,7 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
   Image,
   Linking,
   Modal,
@@ -16,6 +15,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { Appear, Loading } from '@/components/motion';
 import { Colors, Palette } from '@/constants/theme';
 import { api, ApiError } from '@/lib/api';
 import { addMonths, currentMonth, dayLabel, monthBounds, todayKey } from '@/lib/calendar';
@@ -115,7 +115,7 @@ export default function GigsScreen() {
         </View>
 
         {error !== null && <Text style={styles.error}>{error}</Text>}
-        {loading && <ActivityIndicator color={palette.accent} style={{ marginTop: 20 }} />}
+        {loading && <Loading colour={palette.backgroundElement} rows={3} height={104} />}
 
         {!loading && rows.length === 0 && (
           <Text style={styles.empty}>
@@ -127,8 +127,10 @@ export default function GigsScreen() {
           </Text>
         )}
 
-        {rows.map((gig) => (
-          <GigCard key={gig.id} gig={gig} palette={palette} onOpen={() => setOpen(gig)} />
+        {rows.map((gig, index) => (
+          <Appear key={gig.id} index={index}>
+            <GigCard gig={gig} palette={palette} onOpen={() => setOpen(gig)} />
+          </Appear>
         ))}
       </ScrollView>
 

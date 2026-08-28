@@ -2,7 +2,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
   Modal,
   Pressable,
   RefreshControl,
@@ -15,6 +14,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { Loading } from '@/components/motion';
 import { Colors, Palette } from '@/constants/theme';
 import { api } from '@/lib/api';
 import { addMonths, currentMonth, monthBounds, shortDate, todayKey } from '@/lib/calendar';
@@ -176,7 +176,9 @@ export default function PayoutsScreen() {
         </View>
 
         {error !== null && <Text style={styles.error}>{error}</Text>}
-        {data === null && error === null && <ActivityIndicator color={palette.accent} />}
+        {data === null && error === null && (
+          <Loading colour={palette.backgroundElement} rows={3} height={110} />
+        )}
 
         {data !== null && (
           <View style={styles.heroRow}>

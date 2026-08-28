@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { Press } from '@/components/motion';
 import { Palette } from '@/constants/theme';
 import { currentMonth, YearMonth } from '@/lib/calendar';
 
@@ -51,7 +52,7 @@ export function MonthJump({
         <View style={styles.grabber} />
 
         <View style={styles.yearRow}>
-          <Pressable
+          <Press
             style={styles.arrow}
             hitSlop={8}
             disabled={!within({ year: at.year - 1, month: 12 })}
@@ -62,11 +63,11 @@ export function MonthJump({
               size={20}
               color={within({ year: at.year - 1, month: 12 }) ? palette.text : palette.border}
             />
-          </Pressable>
+          </Press>
 
           <Text style={styles.year}>{at.year}</Text>
 
-          <Pressable
+          <Press
             style={styles.arrow}
             hitSlop={8}
             disabled={!within({ year: at.year + 1, month: 1 })}
@@ -77,7 +78,7 @@ export function MonthJump({
               size={20}
               color={within({ year: at.year + 1, month: 1 }) ? palette.text : palette.border}
             />
-          </Pressable>
+          </Press>
         </View>
 
         <View style={styles.grid}>
@@ -88,7 +89,7 @@ export function MonthJump({
             const reachable = within(month);
 
             return (
-              <Pressable
+              <Press
                 key={name}
                 style={[styles.month, here && styles.monthHere, now && !here && styles.monthNow]}
                 disabled={!reachable}
@@ -103,15 +104,15 @@ export function MonthJump({
                 >
                   {name}
                 </Text>
-              </Pressable>
+              </Press>
             );
           })}
         </View>
 
-        <Pressable style={styles.today} onPress={() => onPick(today)}>
+        <Press style={styles.today} onPress={() => onPick(today)}>
           <Ionicons name="today-outline" size={16} color={palette.accent} />
           <Text style={styles.todayText}>Вернуться к сегодня</Text>
-        </Pressable>
+        </Press>
       </View>
     </Modal>
   );

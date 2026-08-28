@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { Press } from '@/components/motion';
 import { Palette } from '@/constants/theme';
 import {
   CalendarEvent,
@@ -101,7 +102,7 @@ export function PaintPicker({
     meta: string | null,
     brush: Brush,
   ) => (
-    <Pressable key={key} style={styles.row} onPress={() => onPick(brush)}>
+    <Press key={key} style={styles.row} onPress={() => onPick(brush)}>
       <View style={[styles.chip, { backgroundColor: tint(colour, 0.18) ?? palette.accentSoft }]}>
         <Text style={styles.chipMark}>{symbol ?? '●'}</Text>
       </View>
@@ -110,7 +111,7 @@ export function PaintPicker({
         {meta !== null && <Text style={styles.rowMeta} numberOfLines={1}>{meta}</Text>}
       </View>
       <View style={[styles.dot, { backgroundColor: tint(colour, 1) ?? palette.accent }]} />
-    </Pressable>
+    </Press>
   );
 
   return (
@@ -122,19 +123,19 @@ export function PaintPicker({
 
         <View style={styles.head}>
           <Text style={styles.title}>Чем закрасить дни</Text>
-          <Pressable onPress={onClose} hitSlop={10}>
+          <Press onPress={onClose} hitSlop={10}>
             <Ionicons name="close" size={22} color={palette.textSecondary} />
-          </Pressable>
+          </Press>
         </View>
 
         <ScrollView style={styles.list} contentContainerStyle={styles.listBody}>
           <Text style={styles.heading}>Смены</Text>
 
           {live.length === 0 ? (
-            <Pressable style={styles.empty} onPress={onManage}>
+            <Press style={styles.empty} onPress={onManage}>
               <Ionicons name="add-circle-outline" size={18} color={palette.accent} />
               <Text style={styles.emptyText}>Заведите первую смену — потом рисуйте ею месяц</Text>
-            </Pressable>
+            </Press>
           ) : (
             live.map((template) =>
               row(

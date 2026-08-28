@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { Press } from '@/components/motion';
 import { Palette } from '@/constants/theme';
 import { covers, dayLabel, todayKey } from '@/lib/calendar';
 import {
@@ -169,7 +170,7 @@ export function DayPeek({
               <View style={styles.chips}>
                 {live.length === 0 && <Text style={styles.emptyText}>Смен пока нет</Text>}
                 {live.map((template) => (
-                  <Pressable
+                  <Press
                     key={template.id}
                     style={[
                       styles.chip,
@@ -186,7 +187,7 @@ export function DayPeek({
                         <Text style={styles.chipName}>{template.name}</Text>
                       </>
                     )}
-                  </Pressable>
+                  </Press>
                 ))}
               </View>
             </>
@@ -195,7 +196,7 @@ export function DayPeek({
 
         <View style={styles.actions}>
           {planned.length > 0 && (
-            <Pressable
+            <Press
               style={styles.primary}
               disabled={busy !== null}
               onPress={() =>
@@ -213,11 +214,11 @@ export function DayPeek({
                   <Text style={styles.primaryText}>Отработана</Text>
                 </>
               )}
-            </Pressable>
+            </Press>
           )}
 
           {planned.length > 0 && (
-            <Pressable
+            <Press
               style={styles.ghost}
               disabled={busy !== null}
               onPress={() => {
@@ -238,12 +239,12 @@ export function DayPeek({
                   {planned.every((entry) => entry.needs_cover) ? 'Не ищу' : 'Ищу замену'}
                 </Text>
               )}
-            </Pressable>
+            </Press>
           )}
 
-          <Pressable style={styles.ghost} onPress={() => onOpen(date)}>
+          <Press style={styles.ghost} onPress={() => onOpen(date)}>
             <Text style={styles.ghostText}>Открыть</Text>
-          </Pressable>
+          </Press>
         </View>
       </View>
     </Modal>

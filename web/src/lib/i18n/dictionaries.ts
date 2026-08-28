@@ -575,7 +575,6 @@ export const RU: Dictionary = {
   'Only new people on': 'В смене одни новенькие',
   'Break for': 'Перерыв на',
   'Back in': 'Вернуться через',
-  'Break is over': 'Перерыв закончился',
   'The clock is running again.': 'Часы снова идут.',
   'Proven': 'Проверено',
   'Five shifts that happened and three people who came back to say it went well.':
@@ -591,6 +590,13 @@ export const RU: Dictionary = {
   'rostered by people who do not share what they earn. There is no estimate for it.':
     'у тех, кто не делится своим заработком. Оценки по ним нет.',
   'Dearest day': 'Самый дорогой день',
+  'Break': 'Перерыв',
+  'Break is over': 'Перерыв закончился',
+  'Time on break': 'Сколько идёт перерыв',
+  'Discard': 'Не считать',
+  'I am back': 'Я вернулся',
+  'The timer keeps counting until you say you are back.':
+    'Таймер продолжает считать, пока вы не отметите возвращение.',
   'This week': 'Эта неделя',
   'Earned this week': 'Заработано за неделю',
   'Still to come': 'Ещё впереди',
@@ -813,7 +819,6 @@ export const RU: Dictionary = {
   'Sunday evening: shifts, hours, money, trend.': 'В воскресенье вечером: смены, часы, деньги, тренд.',
   'Actually': 'Фактически',
   'Back to the plan': 'Вернуть по плану',
-  'Break': 'Перерыв',
   'Breaks': 'Перерывы',
   'Resume': 'Продолжить',
   'Shift over?': 'Смена закончилась?',
@@ -2725,7 +2730,6 @@ export const UK: Dictionary = {
   'Sunday evening: shifts, hours, money, trend.': 'У неділю ввечері: зміни, години, гроші, тренд.',
   'Actually': 'Фактично',
   'Back to the plan': 'Повернути за планом',
-  'Break': 'Перерва',
   'Breaks': 'Перерви',
   'Resume': 'Продовжити',
   'Shift over?': 'Зміна закінчилася?',
@@ -2944,6 +2948,12 @@ export const UK: Dictionary = {
   'rostered by people who do not share what they earn. There is no estimate for it.':
     'у тих, хто не ділиться своїм заробітком. Оцінки по них немає.',
   'Dearest day': 'Найдорожчий день',
+  'Break': 'Перерва',
+  'Time on break': 'Скільки триває перерва',
+  'Discard': 'Не рахувати',
+  'I am back': 'Я повернувся',
+  'The timer keeps counting until you say you are back.':
+    'Таймер продовжує рахувати, доки ви не відзначите повернення.',
   'This week': 'Цей тиждень',
   'All time': 'За весь час',
 

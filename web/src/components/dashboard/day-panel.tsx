@@ -14,6 +14,7 @@ import {
 } from '@/lib/calendar/models';
 import { api } from '@/lib/api/http';
 import { useI18n } from '@/lib/i18n';
+import { BreakTimer } from '@/components/dashboard/break-timer';
 import { useMoney } from '@/lib/settings/money';
 import { useSettings } from '@/lib/settings/store';
 import { startLiveShift, useLive } from '@/lib/live/live-shift';
@@ -101,6 +102,11 @@ export function DayPanel() {
   const [deductionReason, setDeductionReason] = useState<DeductionReason | null>(null);
   const [tipPool, setTipPool] = useState<number | null>(null);
   const [revenue, setRevenue] = useState<Record<number, number | null>>({});
+
+  // Minutes a break timer actually counted, added to what the placement
+  // already had. A second break on a double is a second break, not a
+  // replacement for the first.
+  const [breaks, setBreaks] = useState<Record<number, number>>({});
   const [guests, setGuests] = useState<Record<number, number | null>>({});
   const [zone, setZone] = useState<Record<number, ShiftZone>>({});
   const [note, setNote] = useState('');
@@ -219,7 +225,12 @@ export function DayPanel() {
     return total + quantity * position.price * ((position.percentage ?? 0) / 100);
   }, 0);
 
-  const save = () => {
+  // The break override exists because a break must be recorded when it ends,
+  // not when somebody later remembers to press Save. React state has not
+  // settled by then, so the finished figure is handed straight in.
+  const save = (breakOverride?: Record<number, number>) => {
+    const breaksNow = breakOverride ?? breaks;
+
     void saveDay(key, {
       shifts: shifts.map((entry) => {
         // An explicit null is "back to the plan"; undefined means untouched.
@@ -233,7 +244,8 @@ export function DayPanel() {
           needs_cover: !(worked[entry.shift_id] ?? entry.worked) && (cover[entry.shift_id] ?? false),
           actual_start: start !== null && end !== null ? start : null,
           actual_end: start !== null && end !== null ? end : null,
-          break_minutes: entry.break_minutes,
+          break_minutes:
+            entry.shift_id in breaksNow ? breaksNow[entry.shift_id] : entry.break_minutes,
           revenue: entry.shift_id in revenue ? revenue[entry.shift_id] : entry.revenue,
           guests: entry.shift_id in guests ? guests[entry.shift_id] : entry.guests,
           zone: entry.shift_id in zone ? zone[entry.shift_id] : entry.zone,
@@ -467,6 +479,33 @@ export function DayPanel() {
                           );
                         })}
                       </div>
+                    </div>
+                  )}
+
+                  {/* The break, counted while it happens — offered only on
+                      the day it is, since a countdown on a past day would be
+                      writing history. */}
+                  {isWorked && key === todayKey() && (
+                    <div className="mt-1.5 flex items-center gap-2">
+                      <BreakTimer
+                        dayKey={key}
+                        shiftId={entry.shift_id}
+                        planned={templateOf(entry.shift_id)?.break_minutes ?? 30}
+                        taken={
+                          entry.shift_id in breaks ? breaks[entry.shift_id] : entry.break_minutes
+                        }
+                        onTaken={(minutes) => {
+                          const had =
+                            entry.shift_id in breaks
+                              ? breaks[entry.shift_id]
+                              : entry.break_minutes;
+
+                          const next = { ...breaks, [entry.shift_id]: had + minutes };
+
+                          setBreaks(next);
+                          save(next);
+                        }}
+                      />
                     </div>
                   )}
 
@@ -754,7 +793,7 @@ export function DayPanel() {
         </p>
       </section>
 
-      <button type="button" className="btn btn-primary w-full" disabled={saving} onClick={save}>
+      <button type="button" className="btn btn-primary w-full" disabled={saving} onClick={() => save()}>
         <Icon name="check" size={15} />
         {saving ? t('Saving…') : t('Save day')}
       </button>

@@ -20,12 +20,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { DailyBrief } from '@/components/daily-brief';
 import { MonthGrid, PAGE_HEIGHT } from '@/components/month-grid';
+import { MonthJump } from '@/components/month-jump';
 import { Brush, brushColour, brushName, brushSymbol, PaintPicker } from '@/components/paint-picker';
 import { Colors, Palette } from '@/constants/theme';
 import { api } from '@/lib/api';
 import {
   addMonths,
   currentMonth,
+  monthsBetween,
   monthBounds,
   monthOnly,
   nextDay,
@@ -95,6 +97,7 @@ export default function CalendarScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   const [picking, setPicking] = useState(false);
+  const [jumping, setJumping] = useState(false);
   const [brush, setBrush] = useState<Brush | null>(null);
   const [chosen, setChosen] = useState<Set<string>>(new Set());
   const chosenAt = useRef(new Set<string>());
@@ -233,9 +236,13 @@ export default function CalendarScreen() {
   };
 
   const goTo = (at: number) => {
+    const far = Math.abs(at - indexAt.current) > 2;
+
     indexAt.current = at;
     setIndex(at);
-    pager.current?.scrollToIndex({ index: at, animated: true });
+    // Animating a jump of twenty months means watching twenty months go past.
+    // Near enough to be a step keeps the animation; a jump is a cut.
+    pager.current?.scrollToIndex({ index: at, animated: !far });
   };
 
 
@@ -304,6 +311,13 @@ export default function CalendarScreen() {
             // The past is not rewritten: a day already worked keeps its shift
             // and the money on it, whatever the eraser is dragged over.
             payload.shifts = payload.shifts.filter((entry) => entry.worked);
+          } else if (brush.kind === 'worked') {
+            if (!payload.shifts.some((entry) => !entry.worked)) continue;
+
+            // Only what was planned turns over. A day with nothing on it is
+            // left alone rather than invented — the pencil says a shift
+            // happened, it does not say which one.
+            payload.shifts = payload.shifts.map((entry) => ({ ...entry, worked: true }));
           } else {
             if (payload.shifts.some((entry) => entry.shift_id === brush.template.id)) continue;
 
@@ -369,17 +383,22 @@ export default function CalendarScreen() {
       };
     }
 
-    if (brush.kind === 'erase') {
-      const off = keys.filter((key) =>
+    // Both of these act on the plans a day already has, so they count the same
+    // way: how many of the painted days actually have one.
+    if (brush.kind === 'erase' || brush.kind === 'worked') {
+      const hit = keys.filter((key) =>
         (byDate.get(key)?.shifts ?? []).some((entry) => !entry.worked),
       );
-      const lost = off.reduce((sum, key) => sum + (byDate.get(key)?.planned ?? 0), 0);
+      const amount = hit.reduce((sum, key) => sum + (byDate.get(key)?.planned ?? 0), 0);
+      const erasing = brush.kind === 'erase';
 
       return {
-        left: `${off.length}`,
-        leftLabel: off.length === keys.length ? dayWord(off.length) : `из ${keys.length}`,
-        right: lost > 0 ? `−${money(lost)}` : null,
-        note: 'Отработанные дни останутся на месте.',
+        left: `${hit.length}`,
+        leftLabel: hit.length === keys.length ? dayWord(hit.length) : `из ${keys.length}`,
+        right: amount > 0 ? `${erasing ? '−' : '+'} ${money(amount)}` : null,
+        note: erasing
+          ? 'Отработанные дни и их деньги останутся на месте.'
+          : 'Плановые смены этих дней станут отработанными.',
       };
     }
 
@@ -417,10 +436,15 @@ export default function CalendarScreen() {
         }
       >
         <View style={styles.headerRow}>
-          <View style={styles.headerText}>
+          <Pressable
+            style={styles.headerText}
+            onPress={() => setJumping(true)}
+            accessibilityLabel="Перейти к другому месяцу"
+          >
             <Text style={styles.month}>{monthOnly(month)}</Text>
             <Text style={styles.year}>{month.year}</Text>
-          </View>
+            <Ionicons name="chevron-down" size={15} color={palette.textSecondary} />
+          </Pressable>
 
           {index !== SPAN && (
             <Pressable style={styles.todayChip} onPress={() => goTo(SPAN)}>
@@ -521,7 +545,9 @@ export default function CalendarScreen() {
                   <Text style={[styles.previewValue, { color: brushColour(brush!, palette) }]}>
                     {preview.right}
                   </Text>
-                  <Text style={styles.previewLabel}>по ставке</Text>
+                  <Text style={styles.previewLabel}>
+                    {brush!.kind === 'shift' ? 'по ставке' : 'в заработке'}
+                  </Text>
                 </View>
               </>
             )}
@@ -612,6 +638,18 @@ export default function CalendarScreen() {
           </Pressable>
         </View>
       )}
+
+      <MonthJump
+        open={jumping}
+        at={month}
+        palette={palette}
+        reach={{ first: addMonths(anchor, -SPAN), last: addMonths(anchor, SPAN) }}
+        onPick={(picked) => {
+          setJumping(false);
+          goTo(SPAN + monthsBetween(anchor, picked));
+        }}
+        onClose={() => setJumping(false)}
+      />
 
       <PaintPicker
         open={picking}

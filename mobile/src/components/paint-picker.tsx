@@ -12,27 +12,46 @@ import {
   tint,
 } from '@/lib/types';
 
-/** What the pencil is loaded with. */
+/**
+ * What the pencil is loaded with.
+ *
+ * Two of these draw something and two of them do something. They share a
+ * sheet because they share a motion — you say which days, once — and keeping
+ * "mark these worked" behind a modal per day is what made a week of shifts a
+ * ten-minute job.
+ */
 export type Brush =
   | { kind: 'shift'; template: ShiftTemplate }
   | { kind: 'event'; name: string; symbol: string | null; colour: string; eventKind: EventKind }
+  | { kind: 'worked' }
   | { kind: 'erase' };
 
 export const brushColour = (brush: Brush, palette: Palette): string => {
-  if (brush.kind === 'erase') return palette.danger;
-  if (brush.kind === 'event') return tint(brush.colour, 1) ?? palette.accent;
-
-  return tint(brush.template.colour, 1) ?? palette.accent;
+  switch (brush.kind) {
+    case 'erase': return palette.danger;
+    case 'worked': return palette.good;
+    case 'event': return tint(brush.colour, 1) ?? palette.accent;
+    default: return tint(brush.template.colour, 1) ?? palette.accent;
+  }
 };
 
 export const brushName = (brush: Brush): string => {
-  if (brush.kind === 'erase') return 'Стереть планы';
-
-  return brush.kind === 'event' ? brush.name : brush.template.name;
+  switch (brush.kind) {
+    case 'erase': return 'Стереть планы';
+    case 'worked': return 'Отметить отработанными';
+    case 'event': return brush.name;
+    default: return brush.template.name;
+  }
 };
 
-export const brushSymbol = (brush: Brush): string | null =>
-  brush.kind === 'erase' ? null : brush.kind === 'event' ? brush.symbol : brush.template.symbol;
+export const brushSymbol = (brush: Brush): string | null => {
+  switch (brush.kind) {
+    case 'erase': return null;
+    case 'worked': return '\u2713';
+    case 'event': return brush.symbol;
+    default: return brush.template.symbol;
+  }
+};
 
 /**
  * Picks what the pencil draws with.
@@ -167,14 +186,23 @@ export function PaintPicker({
             ),
           )}
 
-          <Text style={styles.heading}>Ластик</Text>
+          <Text style={styles.heading}>Действия</Text>
+
+          {row(
+            'worked',
+            palette.good,
+            '\u2713',
+            'Отметить отработанными',
+            'Планы этих дней станут деньгами',
+            { kind: 'worked' },
+          )}
 
           {row(
             'erase',
             palette.danger,
             '×',
             'Стереть планы',
-            'Отработанные дни не трогает',
+            'Отработанные дни и их деньги остаются',
             { kind: 'erase' },
           )}
         </ScrollView>

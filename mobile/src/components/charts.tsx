@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { Palette } from '@/constants/theme';
 import { money } from '@/lib/types';
+import { t } from '@/lib/i18n';
 
 /**
  * The month as bars. The current period glows, the tallest is bold, the rest
@@ -166,7 +167,7 @@ export function ClockRing({ hours, palette }: { hours: number[]; palette: Palett
       </Svg>
       <View style={styles.dialCentre} pointerEvents="none">
         <Text style={styles.dialHour}>{`${busiest}`.padStart(2, '0')}:00</Text>
-        <Text style={styles.dialLabel}>лучший час</Text>
+        <Text style={styles.dialLabel}>{t('лучший час')}</Text>
       </View>
     </View>
   );

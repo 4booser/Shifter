@@ -19,6 +19,7 @@ import { Colors, Palette } from '@/constants/theme';
 import { ApiError } from '@/lib/api';
 import { AssistantGap, AssistantMessage, AssistantReport, assistant } from '@/lib/assistant';
 import { currentMonth, monthBounds, monthLabel, todayKey } from '@/lib/calendar';
+import { t } from '@/lib/i18n';
 
 type Tab = 'chat' | 'gaps' | 'report';
 
@@ -92,7 +93,7 @@ export default function AssistantScreen() {
 
         setThread((current) => [...current, answer]);
       } catch (caught) {
-        setError(caught instanceof ApiError ? caught.message : 'Ответ не пришёл.');
+        setError(caught instanceof ApiError ? caught.message : t('Ответ не пришёл.'));
         setThread((current) => current.filter((message) => message.id !== mine.id));
         setDraft(question);
       } finally {
@@ -111,7 +112,7 @@ export default function AssistantScreen() {
 
       setReport(await assistant.report(bounds.from, bounds.to));
     } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : 'Разбор не собрался.');
+      setError(caught instanceof ApiError ? caught.message : t('Разбор не собрался.'));
     } finally {
       setWriting(false);
     }
@@ -123,7 +124,7 @@ export default function AssistantScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <View style={[styles.head, { paddingTop: insets.top + 12 }]}>
-        <Text style={styles.title}>Помощник</Text>
+        <Text style={styles.title}>{t('Помощник')}</Text>
         <Press hitSlop={12} onPress={() => router.back()}>
           <Ionicons name="close" size={26} color={palette.textSecondary} />
         </Press>
@@ -137,7 +138,7 @@ export default function AssistantScreen() {
             onPress={() => setTab(value)}
           >
             <Text style={[styles.tabText, tab === value && styles.tabTextOn]}>
-              {TAB_LABEL[value]}
+              {t(TAB_LABEL[value])}
               {value === 'gaps' && gaps.length > 0 ? ` · ${gaps.length}` : ''}
             </Text>
           </Press>
@@ -157,9 +158,7 @@ export default function AssistantScreen() {
         {tab === 'chat' && (
           <>
             {thread.length === 0 && (
-              <Text style={styles.lead}>
-                Всё, чем он отвечает, посчитано по вашим сменам — цифры он не выдумывает.
-              </Text>
+              <Text style={styles.lead}>{t('Всё, чем он отвечает, посчитано по вашим сменам — цифры он не выдумывает.')}</Text>
             )}
 
             {thread.map((message) => (
@@ -173,8 +172,8 @@ export default function AssistantScreen() {
                 {message.role === 'assistant' && (
                   <Text style={styles.stamp}>
                     {message.source === 'model'
-                      ? 'слова — от нейросети'
-                      : 'посчитал и написал сам Shifter'}
+                      ? t('слова — от нейросети')
+                      : t('посчитал и написал сам Shifter')}
                   </Text>
                 )}
               </View>
@@ -186,7 +185,7 @@ export default function AssistantScreen() {
               <View style={styles.openers}>
                 {OPENERS.map((opener) => (
                   <Press key={opener} style={styles.opener} onPress={() => void ask(opener)}>
-                    <Text style={styles.openerText}>{opener}</Text>
+                    <Text style={styles.openerText}>{t(opener)}</Text>
                   </Press>
                 ))}
               </View>
@@ -214,7 +213,7 @@ export default function AssistantScreen() {
               disabled={writing}
               onPress={() => void makeReport()}
             >
-              <Text style={styles.primaryText}>{writing ? 'Пишем…' : 'Разобрать месяц'}</Text>
+              <Text style={styles.primaryText}>{writing ? t('Пишем…') : t('Разобрать месяц')}</Text>
             </Press>
 
             {report !== null && (
@@ -238,8 +237,8 @@ export default function AssistantScreen() {
 
                 <Text style={styles.stamp}>
                   {report.source === 'model'
-                    ? 'слова — от нейросети'
-                    : 'посчитал и написал сам Shifter'}
+                    ? t('слова — от нейросети')
+                    : t('посчитал и написал сам Shifter')}
                 </Text>
               </View>
             )}
@@ -254,7 +253,7 @@ export default function AssistantScreen() {
             value={draft}
             onChangeText={setDraft}
             maxLength={500}
-            placeholder="Спросите про месяц, день, час…"
+            placeholder={t("Спросите про месяц, день, час…")}
             placeholderTextColor={palette.textSecondary}
             onSubmitEditing={() => void ask(draft)}
             returnKeyType="send"
@@ -290,7 +289,7 @@ function GapList({
   const [saving, setSaving] = useState<string | null>(null);
 
   if (gaps.length === 0) {
-    return <Text style={styles.lead}>Пробелов нет — всё, что было, вы уже отметили.</Text>;
+    return <Text style={styles.lead}>{t('Пробелов нет — всё, что было, вы уже отметили.')}</Text>;
   }
 
   const answer = async (gap: AssistantGap) => {
@@ -310,9 +309,7 @@ function GapList({
 
   return (
     <>
-      <Text style={styles.lead}>
-        Каждый ответ ложится прямо в тот день и делает все итоги честнее.
-      </Text>
+      <Text style={styles.lead}>{t('Каждый ответ ложится прямо в тот день и делает все итоги честнее.')}</Text>
 
       {gaps.map((gap) => (
         <View key={gap.id} style={styles.gapCard}>
@@ -331,7 +328,7 @@ function GapList({
               disabled={saving === gap.id}
               onPress={() => void answer(gap)}
             >
-              <Text style={styles.gapSaveText}>Записать</Text>
+              <Text style={styles.gapSaveText}>{t('Записать')}</Text>
             </Press>
           </View>
         </View>

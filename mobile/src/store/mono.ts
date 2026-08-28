@@ -2,6 +2,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
 import { create } from 'zustand';
 
+import { t } from '@/lib/i18n';
+
 import { clientInfo, MonoBusy, MonoRefused, statement, waitFor } from '@/lib/mono-api';
 import { MonoAccount, MonoClientInfo, MonoStatementItem, statementWindows } from '@/lib/mono';
 
@@ -240,7 +242,7 @@ export const useMono = create<MonoState>((set, get) => ({
       set({
         error:
           caught instanceof MonoBusy
-            ? `Банк просит подождать ${caught.seconds} с.`
+            ? `${t('Банк просит подождать')} ${caught.seconds} ${t('с.')}`
             : caught instanceof Error
               ? caught.message
               : 'Не дотянулись до банка.',

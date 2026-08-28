@@ -1,3 +1,5 @@
+import { t } from '@/lib/i18n';
+
 /** Date helpers shared by the mobile screens. Keys are 'YYYY-MM-DD'. */
 
 export const pad = (value: number) => `${value}`.padStart(2, '0');
@@ -43,10 +45,21 @@ export const monthCells = ({ year, month }: YearMonth): (string | null)[] => {
 };
 
 export const monthLabel = ({ year, month }: YearMonth): string => {
-  const raw = new Date(year, month - 1, 1).toLocaleDateString('ru', { month: 'long', year: 'numeric' });
-
-  return raw[0].toUpperCase() + raw.slice(1);
+  return `${t(MONTHS[month - 1])} ${year}`;
 };
+
+/**
+ * Month names by hand rather than through Intl.
+ *
+ * toLocaleDateString was pinned to 'ru', so every date in the app stayed
+ * Russian whatever language somebody chose — and unpinning it would have made
+ * the app's dates depend on which locales this particular phone happens to
+ * carry. A table is a table in both languages.
+ */
+const MONTHS = [
+  'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
+  'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь',
+];
 
 const MONTHS_SHORT = [
   'янв', 'фев', 'мар', 'апр', 'мая', 'июн',
@@ -59,7 +72,7 @@ const WEEKDAYS_SHORT = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
 export const shortDate = (key: string): string => {
   const [, month, day] = key.split('-');
 
-  return `${Number(day)} ${MONTHS_SHORT[Number(month) - 1]}`;
+  return `${Number(day)} ${t(MONTHS_SHORT[Number(month) - 1])}`;
 };
 
 /**
@@ -70,7 +83,7 @@ export const shortDate = (key: string): string => {
 export const dayLabel = (key: string): string => {
   const date = new Date(`${key}T00:00:00`);
 
-  return `${WEEKDAYS_SHORT[date.getDay()]}, ${shortDate(key)}`;
+  return `${t(WEEKDAYS_SHORT[date.getDay()])}, ${shortDate(key)}`;
 };
 
 export interface GridCell {
@@ -149,9 +162,7 @@ export const monthsBetween = (a: YearMonth, b: YearMonth) =>
 
 /** "Август" on its own, for a header that carries the year separately. */
 export const monthOnly = ({ year, month }: YearMonth): string => {
-  const raw = new Date(year, month - 1, 1).toLocaleDateString('ru', { month: 'long' });
-
-  return raw[0].toUpperCase() + raw.slice(1);
+  return t(MONTHS[month - 1]);
 };
 
 /** Monday first, the way a rota is read in this part of the world. */

@@ -17,6 +17,7 @@ import {
   tint,
   toSavePayload,
 } from '@/lib/types';
+import { t } from '@/lib/i18n';
 
 /**
  * A day, without leaving the month.
@@ -133,7 +134,7 @@ export function DayPeek({
                   entry.needs_cover && styles.stateCover,
                 ]}
               >
-                {entry.needs_cover ? 'ищу замену' : entry.worked ? 'отработана' : 'план'}
+                {entry.needs_cover ? t('ищу замену') : entry.worked ? t('отработана') : t('план')}
               </Text>
             </View>
           ))}
@@ -157,9 +158,9 @@ export function DayPeek({
 
           {(day?.tips ?? 0) > 0 || day?.deductions ? (
             <Text style={styles.extras}>
-              {(day?.tips ?? 0) > 0 ? `Чай ${money(day!.tips!)}` : ''}
+              {(day?.tips ?? 0) > 0 ? `${t('Чай')} ${money(day!.tips!)}` : ''}
               {(day?.tips ?? 0) > 0 && (day?.deductions ?? 0) > 0 ? ' · ' : ''}
-              {(day?.deductions ?? 0) > 0 ? `Удержания −${money(day!.deductions)}` : ''}
+              {(day?.deductions ?? 0) > 0 ? `${t('Удержания')} −${money(day!.deductions)}` : ''}
             </Text>
           ) : null}
 
@@ -171,7 +172,7 @@ export function DayPeek({
               twelve-hour close; the bank knows the taxi home cost ₴185. */}
           {statement.filter((entry) => dayOf(entry) === date && !entry.hold).length > 0 && (
             <>
-              <Text style={styles.emptyHead}>По счёту в этот день</Text>
+              <Text style={styles.emptyHead}>{t('По счёту в этот день')}</Text>
 
               {statement
                 .filter((entry) => dayOf(entry) === date && !entry.hold)
@@ -195,9 +196,9 @@ export function DayPeek({
               to say what it is, without the pencil and without the editor. */}
           {shifts.length === 0 && here.length === 0 && (
             <>
-              <Text style={styles.emptyHead}>Поставить смену</Text>
+              <Text style={styles.emptyHead}>{t('Поставить смену')}</Text>
               <View style={styles.chips}>
-                {live.length === 0 && <Text style={styles.emptyText}>Смен пока нет</Text>}
+                {live.length === 0 && <Text style={styles.emptyText}>{t('Смен пока нет')}</Text>}
                 {live.map((template) => (
                   <Press
                     key={template.id}
@@ -240,7 +241,7 @@ export function DayPeek({
               ) : (
                 <>
                   <Ionicons name="checkmark" size={17} color="#fff" />
-                  <Text style={styles.primaryText}>Отработана</Text>
+                  <Text style={styles.primaryText}>{t('Отработана')}</Text>
                 </>
               )}
             </Press>
@@ -265,14 +266,14 @@ export function DayPeek({
                 <ActivityIndicator size="small" color={palette.accent} />
               ) : (
                 <Text style={styles.ghostText}>
-                  {planned.every((entry) => entry.needs_cover) ? 'Не ищу' : 'Ищу замену'}
+                  {planned.every((entry) => entry.needs_cover) ? t('Не ищу') : t('Ищу замену')}
                 </Text>
               )}
             </Press>
           )}
 
           <Press style={styles.ghost} onPress={() => onOpen(date)}>
-            <Text style={styles.ghostText}>Открыть</Text>
+            <Text style={styles.ghostText}>{t('Открыть')}</Text>
           </Press>
         </View>
       </View>

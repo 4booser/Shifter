@@ -21,6 +21,7 @@ import { addMonths, currentMonth, monthBounds, shortDate, todayKey } from '@/lib
 import { MonoStatementItem, wageCandidates } from '@/lib/mono';
 import { money } from '@/lib/types';
 import { useMono } from '@/store/mono';
+import { t } from '@/lib/i18n';
 
 type Status = 'open' | 'due' | 'overdue' | 'partial' | 'paid' | 'short' | 'over';
 
@@ -142,7 +143,7 @@ export default function PayoutsScreen() {
       setHistory(payouts);
       setError(null);
     } catch {
-      setError('Не дотянулись до сервера.');
+      setError(t('Не дотянулись до сервера.'));
     }
   }, [range.from, range.to]);
 
@@ -170,12 +171,12 @@ export default function PayoutsScreen() {
         }
       >
         <View style={styles.titleRow}>
-          <Text style={styles.title}>Выплаты</Text>
+          <Text style={styles.title}>{t('Выплаты')}</Text>
           {/* What the work cost lives next to what it paid: the two are read
               in the same breath and never added together. */}
           <Press style={styles.costsButton} onPress={() => router.push('/costs')}>
             <Ionicons name="receipt-outline" size={15} color={palette.accent} />
-            <Text style={styles.costsButtonText}>Траты</Text>
+            <Text style={styles.costsButtonText}>{t('Траты')}</Text>
           </Press>
         </View>
 
@@ -187,11 +188,11 @@ export default function PayoutsScreen() {
         {data !== null && (
           <View style={styles.heroRow}>
             <View style={styles.hero}>
-              <Text style={styles.heroLabel}>Ждём</Text>
+              <Text style={styles.heroLabel}>{t('Ждём')}</Text>
               <Text style={styles.heroValue}>{money(data.awaited)}</Text>
             </View>
             <View style={styles.hero}>
-              <Text style={styles.heroLabel}>Просрочено</Text>
+              <Text style={styles.heroLabel}>{t('Просрочено')}</Text>
               <Text style={[styles.heroValue, data.overdue > 0 && { color: palette.danger }]}>
                 {money(data.overdue)}
               </Text>
@@ -201,11 +202,11 @@ export default function PayoutsScreen() {
 
         {(data?.shortfalls.length ?? 0) > 0 && (
           <View style={styles.warning}>
-            <Text style={styles.warningTitle}>Заплатили меньше, чем начислено</Text>
+            <Text style={styles.warningTitle}>{t('Заплатили меньше, чем начислено')}</Text>
             {data?.shortfalls.map((short) => (
               <Text key={`${short.location_id}-${short.stream}`} style={styles.warningLine}>
                 {short.location_name}
-                {short.stream !== 'all' ? ` · ${STREAM_LABEL[short.stream]}` : ''} — не хватает{' '}
+                {short.stream !== 'all' ? ` · ${t(STREAM_LABEL[short.stream])}` : ''} — не хватает{' '}
                 {money(short.total_short)} с {shortDate(short.since)}
               </Text>
             ))}
@@ -213,7 +214,7 @@ export default function PayoutsScreen() {
         )}
 
         {ahead.length > 0 && (
-          <Section title="Ещё не в кармане" palette={palette}>
+          <Section title={t("Ещё не в кармане")} palette={palette}>
             {ahead.map((row) => (
               <PeriodCard
                 key={`${row.location_id}-${row.period_from}-${row.stream}`}
@@ -228,7 +229,7 @@ export default function PayoutsScreen() {
         )}
 
         {settled.length > 0 && (
-          <Section title="Закрытые периоды" palette={palette}>
+          <Section title={t("Закрытые периоды")} palette={palette}>
             {settled.map((row) => (
               <PeriodCard
                 key={`${row.location_id}-${row.period_from}-${row.stream}`}
@@ -241,7 +242,7 @@ export default function PayoutsScreen() {
         )}
 
         {history.length > 0 && (
-          <Section title="Что уже пришло" palette={palette}>
+          <Section title={t("Что уже пришло")} palette={palette}>
             {history.map((payout) => (
               <View key={payout.id} style={styles.payoutRow}>
                 <View style={styles.grow}>
@@ -257,7 +258,7 @@ export default function PayoutsScreen() {
                     void api(`/shifter/v1/payouts/${payout.id}`, { method: 'DELETE' }).then(load);
                   }}
                 >
-                  <Text style={styles.remove}>Убрать</Text>
+                  <Text style={styles.remove}>{t('Убрать')}</Text>
                 </Press>
               </View>
             ))}
@@ -265,10 +266,7 @@ export default function PayoutsScreen() {
         )}
 
         {data !== null && periods.length === 0 && history.length === 0 && (
-          <Text style={styles.empty}>
-            Ещё нечего сверять. Добавьте место работы и график выплат — и здесь появится, кто
-            сколько должен.
-          </Text>
+          <Text style={styles.empty}>{t('Ещё нечего сверять. Добавьте место работы и график выплат — и здесь появится, кто сколько должен.')}</Text>
         )}
       </ScrollView>
 
@@ -372,10 +370,10 @@ function PeriodCard({
         <View style={[styles.dot, { backgroundColor: row.colour }]} />
         <Text style={styles.cardPlace} numberOfLines={1}>
           {row.location_name}
-          {row.stream !== 'all' ? ` · ${STREAM_LABEL[row.stream]}` : ''}
+          {row.stream !== 'all' ? ` · ${t(STREAM_LABEL[row.stream])}` : ''}
         </Text>
         <Text style={[styles.pill, { color: tone, borderColor: tone }]}>
-          {STATUS_LABEL[row.status]}
+          {t(STATUS_LABEL[row.status])}
         </Text>
       </View>
 
@@ -398,17 +396,17 @@ function PeriodCard({
           <Text style={styles.cardExpected}>{money(row.expected)}</Text>
           <Text style={styles.cardDue}>
             {row.status === 'overdue'
-              ? `Ждём с ${shortDate(row.due_on)} — ${row.days_late} дн.`
+              ? `${t('Ждём с')} ${shortDate(row.due_on)} — ${row.days_late} ${t('дн.')}`
               : row.status === 'partial'
-                ? `Аванс ${money(row.paid_advance)} · осталось ${money(row.expected - row.paid)}`
+                ? `${t('Аванс')} ${money(row.paid_advance)} · ${t('осталось')} ${money(row.expected - row.paid)}`
               : row.paid > 0
-                ? `Пришло ${money(row.paid)} · срок ${shortDate(row.due_on)}`
-                : `Срок ${shortDate(row.due_on)}`}
+                ? `${t('Пришло')} ${money(row.paid)} · ${t('срок')} ${shortDate(row.due_on)}`
+                : `${t('Срок')} ${shortDate(row.due_on)}`}
           </Text>
         </View>
 
         <Press style={styles.markButton} onPress={onMark}>
-          <Text style={styles.markText}>Отметить</Text>
+          <Text style={styles.markText}>{t('Отметить')}</Text>
         </Press>
       </View>
     </View>
@@ -486,13 +484,13 @@ function PayoutModal({
     <Modal visible={row !== null} animationType="slide" transparent onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose} />
       <View style={styles.sheet}>
-        <Text style={styles.sheetTitle}>Пришли деньги</Text>
+        <Text style={styles.sheetTitle}>{t('Пришли деньги')}</Text>
         <Text style={styles.sheetMeta}>
           {row?.location_name} · {row !== null ? shortDate(row.period_from) : ''} —{' '}
           {row !== null ? shortDate(row.period_to) : ''}
         </Text>
 
-        <Text style={styles.fieldLabel}>Сколько</Text>
+        <Text style={styles.fieldLabel}>{t('Сколько')}</Text>
         <TextInput
           style={styles.input}
           value={amount}
@@ -502,16 +500,16 @@ function PayoutModal({
           placeholderTextColor={palette.textSecondary}
         />
 
-        <Text style={styles.fieldLabel}>Когда</Text>
+        <Text style={styles.fieldLabel}>{t('Когда')}</Text>
         <TextInput
           style={styles.input}
           value={received}
           onChangeText={setReceived}
-          placeholder="ГГГГ-ММ-ДД"
+          placeholder={t("ГГГГ-ММ-ДД")}
           placeholderTextColor={palette.textSecondary}
         />
 
-        <Text style={styles.fieldLabel}>Что это</Text>
+        <Text style={styles.fieldLabel}>{t('Что это')}</Text>
         <View style={styles.kindRow}>
           {KINDS.map((option) => (
             <Press
@@ -520,30 +518,28 @@ function PayoutModal({
               onPress={() => setKind(option.value)}
             >
               <Text style={[styles.kindText, kind === option.value && styles.kindTextOn]}>
-                {option.label}
+                {t(option.label)}
               </Text>
             </Press>
           ))}
         </View>
 
         {kind === 'advance' && (
-          <Text style={styles.kindHint}>
-            Период останется открытым до расчёта и не будет считаться недоплаченным.
-          </Text>
+          <Text style={styles.kindHint}>{t('Период останется открытым до расчёта и не будет считаться недоплаченным.')}</Text>
         )}
 
-        {failed && <Text style={styles.error}>Не сохранили. Проверьте сумму и дату.</Text>}
+        {failed && <Text style={styles.error}>{t('Не сохранили. Проверьте сумму и дату.')}</Text>}
 
         <View style={styles.sheetButtons}>
           <Press style={[styles.sheetButton, styles.sheetGhost]} onPress={onClose}>
-            <Text style={styles.sheetGhostText}>Отмена</Text>
+            <Text style={styles.sheetGhostText}>{t('Отмена')}</Text>
           </Press>
           <Press
             style={[styles.sheetButton, styles.sheetPrimary, saving && { opacity: 0.6 }]}
             disabled={saving}
             onPress={() => void save()}
           >
-            <Text style={styles.sheetPrimaryText}>{saving ? 'Сохраняем…' : 'Записать'}</Text>
+            <Text style={styles.sheetPrimaryText}>{saving ? t('Сохраняем…') : t('Записать')}</Text>
           </Press>
         </View>
       </View>

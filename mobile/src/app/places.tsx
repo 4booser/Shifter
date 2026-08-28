@@ -27,6 +27,7 @@ import {
   WorkPlace,
 } from '@/lib/places';
 import { tint } from '@/lib/types';
+import { t } from '@/lib/i18n';
 
 const COLOURS = ['#6366F1', '#14B8A6', '#A855F7', '#FF5C7A', '#FFA53D', '#22C55E', '#38BDF8', '#64748B'];
 
@@ -57,7 +58,7 @@ export default function PlacesScreen() {
   const load = () =>
     api<WorkPlace[]>('/shifter/v1/locations')
       .then(setPlaces)
-      .catch(() => setError('Не дотянулись до сервера.'));
+      .catch(() => setError(t('Не дотянулись до сервера.')));
 
   useEffect(() => {
     void load();
@@ -86,16 +87,13 @@ export default function PlacesScreen() {
       contentContainerStyle={[styles.content, { paddingTop: insets.top + 12 }]}
     >
       <View style={styles.headerRow}>
-        <Text style={styles.title}>Места работы</Text>
+        <Text style={styles.title}>{t('Места работы')}</Text>
         <Press hitSlop={10} onPress={() => router.back()}>
           <Ionicons name="close" size={24} color={palette.textSecondary} />
         </Press>
       </View>
 
-      <Text style={styles.lede}>
-        Место решает, как считаются деньги: когда приходит зарплата, что стоит час сверх нормы,
-        сколько забирает налог.
-      </Text>
+      <Text style={styles.lede}>{t('Место решает, как считаются деньги: когда приходит зарплата, что стоит час сверх нормы, сколько забирает налог.')}</Text>
 
       {error !== null && <Text style={styles.error}>{error}</Text>}
       {places === null && error === null && (
@@ -110,8 +108,8 @@ export default function PlacesScreen() {
               <Text style={styles.cardName} numberOfLines={1}>{place.name}</Text>
               <Text style={styles.cardMeta} numberOfLines={1}>
                 {payLine(place)}
-                {place.tax_percent > 0 ? ` · налог ${place.tax_percent}%` : ''}
-                {place.night_multiplier > 1 ? ` · ночь ×${place.night_multiplier}` : ''}
+                {place.tax_percent > 0 ? ` · ${t('налог')} ${place.tax_percent}%` : ''}
+                {place.night_multiplier > 1 ? ` · ${t('ночь')} ×${place.night_multiplier}` : ''}
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={18} color={palette.textSecondary} />
@@ -120,14 +118,12 @@ export default function PlacesScreen() {
       ))}
 
       {places !== null && live.length === 0 && (
-        <Text style={styles.empty}>
-          Мест пока нет. Заведите первое — тогда приложение сможет считать выплаты и сверхурочные.
-        </Text>
+        <Text style={styles.empty}>{t('Мест пока нет. Заведите первое — тогда приложение сможет считать выплаты и сверхурочные.')}</Text>
       )}
 
       <Press style={styles.add} onPress={() => setEditing(blankPlace())}>
         <Ionicons name="add" size={18} color={palette.accent} />
-        <Text style={styles.addText}>Добавить место</Text>
+        <Text style={styles.addText}>{t('Добавить место')}</Text>
       </Press>
     </ScrollView>
   );
@@ -193,7 +189,7 @@ function PlaceForm({
 
   const save = async () => {
     if (form.name.trim() === '') {
-      setError('У места должно быть название.');
+      setError(t('У места должно быть название.'));
 
       return;
     }
@@ -209,7 +205,7 @@ function PlaceForm({
 
       onDone();
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Не сохранилось.');
+      setError(caught instanceof Error ? caught.message : t('Не сохранилось.'));
       setBusy(false);
     }
   };
@@ -221,7 +217,7 @@ function PlaceForm({
       await api(`/shifter/v1/locations/${form.id}/archived?value=true`, { method: 'POST', body: {} });
       onDone();
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Не получилось.');
+      setError(caught instanceof Error ? caught.message : t('Не получилось.'));
       setBusy(false);
     }
   };
@@ -235,7 +231,7 @@ function PlaceForm({
     >
       <ScrollView contentContainerStyle={[styles.content, { paddingTop: insets.top + 12 }]}>
         <View style={styles.headerRow}>
-          <Text style={styles.title}>{form.id === 0 ? 'Новое место' : form.name || 'Место'}</Text>
+          <Text style={styles.title}>{form.id === 0 ? t('Новое место') : form.name || t('Место')}</Text>
           <Press hitSlop={10} onPress={onCancel}>
             <Ionicons name="close" size={24} color={palette.textSecondary} />
           </Press>
@@ -243,17 +239,17 @@ function PlaceForm({
 
         {error !== null && <Text style={styles.error}>{error}</Text>}
 
-        <Text style={styles.label}>Название</Text>
+        <Text style={styles.label}>{t('Название')}</Text>
         <TextInput
           style={styles.input}
           value={form.name}
           onChangeText={(value) => set('name', value)}
           maxLength={60}
-          placeholder="Бар на углу"
+          placeholder={t("Бар на углу")}
           placeholderTextColor={palette.textSecondary}
         />
 
-        <Text style={styles.label}>Цвет</Text>
+        <Text style={styles.label}>{t('Цвет')}</Text>
         <View style={styles.swatches}>
           {COLOURS.map((colour) => (
             <Press
@@ -273,7 +269,7 @@ function PlaceForm({
           ))}
         </View>
 
-        <Text style={styles.section}>Когда платят</Text>
+        <Text style={styles.section}>{t('Когда платят')}</Text>
         <View style={styles.chips}>
           {PAY_PERIODS.map((entry) => (
             <Press
@@ -282,7 +278,7 @@ function PlaceForm({
               onPress={() => set('pay_period', entry.value as PayPeriod)}
             >
               <Text style={[styles.chipText, form.pay_period === entry.value && styles.chipTextOn]}>
-                {entry.label}
+                {t(entry.label)}
               </Text>
             </Press>
           ))}
@@ -290,7 +286,7 @@ function PlaceForm({
 
         {(form.pay_period === 'monthly' || form.pay_period === 'semimonthly') && (
           <>
-            <Text style={styles.label}>{period?.day ?? 'Число'}</Text>
+            <Text style={styles.label}>{t(period?.day ?? 'Число')}</Text>
             <TextInput
               style={styles.input}
               value={`${form.pay_day}`}
@@ -300,44 +296,44 @@ function PlaceForm({
             />
             <Text style={styles.hint}>
               {form.pay_period === 'semimonthly'
-                ? `Второй раз — через полмесяца, ${form.pay_day + 15}-го.`
-                : 'До 28-го: 29-е, 30-е и 31-е есть не в каждом месяце.'}
+                ? `${t('Второй раз — через полмесяца,')} ${form.pay_day + 15}-${t('го')}.`
+                : t('До 28-го: 29-е, 30-е и 31-е есть не в каждом месяце.')}
             </Text>
           </>
         )}
 
-        <Text style={styles.section}>Сверхурочные</Text>
+        <Text style={styles.section}>{t('Сверхурочные')}</Text>
         <View style={styles.pair}>
           <Field
             styles={styles}
             palette={palette}
-            label="Часов в неделю"
+            label={t("Часов в неделю")}
             value={`${form.overtime_weekly_hours}`}
             onChange={(value) => set('overtime_weekly_hours', numberOf(value, 40))}
           />
           <Field
             styles={styles}
             palette={palette}
-            label="Множитель"
+            label={t("Множитель")}
             value={`${form.overtime_multiplier}`}
             onChange={(value) => set('overtime_multiplier', numberOf(value, 1.5))}
           />
         </View>
-        <Text style={styles.hint}>Час сверх нормы стоит ставку × множитель. 1 — доплаты нет.</Text>
+        <Text style={styles.hint}>{t('Час сверх нормы стоит ставку × множитель. 1 — доплаты нет.')}</Text>
 
-        <Text style={styles.section}>Ночные</Text>
+        <Text style={styles.section}>{t('Ночные')}</Text>
         <View style={styles.trio}>
           <Field
             styles={styles}
             palette={palette}
-            label="Множитель"
+            label={t("Множитель")}
             value={`${form.night_multiplier}`}
             onChange={(value) => set('night_multiplier', numberOf(value, 1))}
           />
           <Field
             styles={styles}
             palette={palette}
-            label="С"
+            label={t("С")}
             value={form.night_from.slice(0, 5)}
             onChange={(value) => set('night_from', value)}
             numeric={false}
@@ -345,33 +341,33 @@ function PlaceForm({
           <Field
             styles={styles}
             palette={palette}
-            label="До"
+            label={t("До")}
             value={form.night_to.slice(0, 5)}
             onChange={(value) => set('night_to', value)}
             numeric={false}
           />
         </View>
 
-        <Text style={styles.section}>Что забирают</Text>
+        <Text style={styles.section}>{t('Что забирают')}</Text>
         <View style={styles.pair}>
           <Field
             styles={styles}
             palette={palette}
-            label="Налог, %"
+            label={t("Налог, %")}
             value={`${form.tax_percent}`}
             onChange={(value) => set('tax_percent', numberOf(value))}
           />
           <Field
             styles={styles}
             palette={palette}
-            label="Обед за смену"
+            label={t("Обед за смену")}
             value={`${form.meal_deduction}`}
             onChange={(value) => set('meal_deduction', numberOf(value))}
           />
         </View>
 
         <View style={styles.switchRow}>
-          <Text style={styles.switchLabel}>Налог и с чаевых</Text>
+          <Text style={styles.switchLabel}>{t('Налог и с чаевых')}</Text>
           <Switch
             value={form.tax_tips}
             onValueChange={(value) => set('tax_tips', value)}
@@ -383,69 +379,63 @@ function PlaceForm({
           <Field
             styles={styles}
             palette={palette}
-            label="Отдаём с чая, %"
+            label={t("Отдаём с чая, %")}
             value={`${form.tip_out_of_tips_percent}`}
             onChange={(value) => set('tip_out_of_tips_percent', numberOf(value))}
           />
           <Field
             styles={styles}
             palette={palette}
-            label="Отдаём с выручки, %"
+            label={t("Отдаём с выручки, %")}
             value={`${form.tip_out_of_sales_percent}`}
             onChange={(value) => set('tip_out_of_sales_percent', numberOf(value))}
           />
         </View>
 
-        <Text style={styles.section}>Дорога и минимум</Text>
+        <Text style={styles.section}>{t('Дорога и минимум')}</Text>
         <View style={styles.trio}>
           <Field
             styles={styles}
             palette={palette}
-            label="Мин. в пути"
+            label={t("Мин. в пути")}
             value={`${form.commute_minutes}`}
             onChange={(value) => set('commute_minutes', Math.round(numberOf(value)))}
           />
           <Field
             styles={styles}
             palette={palette}
-            label="Проезд"
+            label={t("Проезд")}
             value={`${form.commute_cost}`}
             onChange={(value) => set('commute_cost', numberOf(value))}
           />
           <Field
             styles={styles}
             palette={palette}
-            label="Ставка не ниже"
+            label={t("Ставка не ниже")}
             value={`${form.minimum_hourly}`}
             onChange={(value) => set('minimum_hourly', numberOf(value))}
           />
         </View>
-        <Text style={styles.hint}>
-          Дорога считается в одну сторону. «Ставка не ниже» — приложение отметит смену, которая
-          вышла дешевле; 0 выключает проверку.
-        </Text>
+        <Text style={styles.hint}>{t('Дорога считается в одну сторону. «Ставка не ниже» — приложение отметит смену, которая вышла дешевле; 0 выключает проверку.')}</Text>
 
         <Press style={styles.save} disabled={busy} onPress={() => void save()}>
           {busy ? (
             <ActivityIndicator color="#fff" />
           ) : (
             <Text style={styles.saveText}>
-              {form.id === 0 ? 'Создать место' : 'Сохранить'}
+              {form.id === 0 ? t('Создать место') : t('Сохранить')}
             </Text>
           )}
         </Press>
 
         {form.id !== 0 && (
           <Press style={styles.archive} haptic={false} disabled={busy} onPress={() => void archive()}>
-            <Text style={styles.archiveText}>Убрать место из списка</Text>
+            <Text style={styles.archiveText}>{t('Убрать место из списка')}</Text>
           </Press>
         )}
 
         {form.id !== 0 && (
-          <Text style={styles.hint}>
-            Смены и деньги, записанные здесь, останутся на месте — место просто перестанет
-            предлагаться для новых.
-          </Text>
+          <Text style={styles.hint}>{t('Смены и деньги, записанные здесь, останутся на месте — место просто перестанет предлагаться для новых.')}</Text>
         )}
       </ScrollView>
     </KeyboardAvoidingView>

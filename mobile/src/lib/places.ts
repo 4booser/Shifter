@@ -1,3 +1,4 @@
+import { t } from '@/lib/i18n';
 /**
  * A place of work, as the server keeps it.
  *
@@ -59,9 +60,9 @@ export const PAY_PERIODS: { value: PayPeriod; label: string; day: string }[] = [
 export const payLine = (place: WorkPlace): string => {
   const period = PAY_PERIODS.find((entry) => entry.value === place.pay_period);
 
-  if (period === undefined) return 'Выплаты не настроены';
-  if (place.pay_period === 'monthly') return `${period.label}, ${place.pay_day}-го`;
-  if (place.pay_period === 'semimonthly') return `${period.label}: ${place.pay_day} и ${place.pay_day + 15}`;
+  if (period === undefined) return t('Выплаты не настроены');
+  if (place.pay_period === 'monthly') return `${period.label}, ${place.pay_day}-${t('го')}`;
+  if (place.pay_period === 'semimonthly') return `${period.label}: ${place.pay_day} ${t('и')} ${place.pay_day + 15}`;
 
   return period.label;
 };

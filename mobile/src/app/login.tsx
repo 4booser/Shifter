@@ -15,6 +15,7 @@ import { Press } from '@/components/motion';
 import { Colors, Palette } from '@/constants/theme';
 import { ApiError } from '@/lib/api';
 import { useSession } from '@/store/session';
+import { t } from '@/lib/i18n';
 
 export default function LoginScreen() {
   const scheme = useColorScheme();
@@ -43,7 +44,7 @@ export default function LoginScreen() {
     autoTried.current = true;
     const [autoLogin, autoPassword] = auto.split(':');
 
-    void signIn(autoLogin, autoPassword).catch(() => setError('Автологин не прошёл.'));
+    void signIn(autoLogin, autoPassword).catch(() => setError(t('Автологин не прошёл.')));
   }, [signIn]);
 
   const submit = async () => {
@@ -54,12 +55,12 @@ export default function LoginScreen() {
       if (mode === 'in') {
         const result = await signIn(login.trim(), password);
 
-        if (result === 'two-factor') setError('Двухфакторный вход появится в M1 — пока зайдите без него.');
+        if (result === 'two-factor') setError(t('Двухфакторный вход появится в M1 — пока зайдите без него.'));
       } else {
-        await register(login.trim(), password, firstName.trim() || 'Я', lastName.trim() || 'Смена');
+        await register(login.trim(), password, firstName.trim() || t('Я'), lastName.trim() || t('Смена'));
       }
     } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : 'Сеть молчит. Сервер доступен?');
+      setError(caught instanceof ApiError ? caught.message : t('Сеть молчит. Сервер доступен?'));
     } finally {
       setBusy(false);
     }
@@ -80,21 +81,21 @@ export default function LoginScreen() {
           <Text style={styles.brand}>Shifter</Text>
         </View>
         <Text style={styles.lede}>
-          {mode === 'in' ? 'Смены, деньги и команда — в кармане.' : 'Минута — и календарь начнёт считать за вас.'}
+          {mode === 'in' ? t('Смены, деньги и команда — в кармане.') : t('Минута — и календарь начнёт считать за вас.')}
         </Text>
 
         {mode === 'up' && (
           <View style={styles.nameRow}>
             <TextInput
               style={[styles.input, styles.nameInput]}
-              placeholder="Имя"
+              placeholder={t("Имя")}
               placeholderTextColor={palette.textSecondary}
               value={firstName}
               onChangeText={setFirstName}
             />
             <TextInput
               style={[styles.input, styles.nameInput]}
-              placeholder="Фамилия"
+              placeholder={t("Фамилия")}
               placeholderTextColor={palette.textSecondary}
               value={lastName}
               onChangeText={setLastName}
@@ -103,7 +104,7 @@ export default function LoginScreen() {
         )}
         <TextInput
           style={styles.input}
-          placeholder="Логин"
+          placeholder={t("Логин")}
           placeholderTextColor={palette.textSecondary}
           autoCapitalize="none"
           autoCorrect={false}
@@ -112,7 +113,7 @@ export default function LoginScreen() {
         />
         <TextInput
           style={styles.input}
-          placeholder="Пароль"
+          placeholder={t("Пароль")}
           placeholderTextColor={palette.textSecondary}
           secureTextEntry
           value={password}
@@ -130,13 +131,13 @@ export default function LoginScreen() {
           {busy ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.buttonText}>{mode === 'in' ? 'Войти' : 'Создать аккаунт'}</Text>
+            <Text style={styles.buttonText}>{mode === 'in' ? t('Войти') : t('Создать аккаунт')}</Text>
           )}
         </Pressable>
 
         <Press onPress={() => setMode(mode === 'in' ? 'up' : 'in')}>
           <Text style={styles.switch}>
-            {mode === 'in' ? 'Впервые тут? Создать аккаунт' : 'Уже есть аккаунт? Войти'}
+            {mode === 'in' ? t('Впервые тут? Создать аккаунт') : t('Уже есть аккаунт? Войти')}
           </Text>
         </Press>
       </View>

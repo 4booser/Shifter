@@ -14,6 +14,7 @@ import { pad } from '@/lib/calendar';
 import { stopwatch } from '@/lib/format';
 import { CalendarDayData, DaysResponse, money, toSavePayload } from '@/lib/types';
 import { breakSeconds, onBreak, useLive } from '@/store/live';
+import { t } from '@/lib/i18n';
 
 const clock = (date: Date) => `${pad(date.getHours())}:${pad(date.getMinutes())}`;
 
@@ -67,9 +68,9 @@ export default function LiveScreen() {
   if (live === null) {
     return (
       <View style={[styles.screen, { paddingTop: insets.top + 40 }]}>
-        <Text style={styles.hint}>Смена не запущена.</Text>
+        <Text style={styles.hint}>{t('Смена не запущена.')}</Text>
         <Press style={styles.quiet} onPress={() => router.back()}>
-          <Text style={styles.quietText}>Назад</Text>
+          <Text style={styles.quietText}>{t('Назад')}</Text>
         </Press>
       </View>
     );
@@ -137,7 +138,7 @@ export default function LiveScreen() {
       clear();
       router.back();
     } catch {
-      setError('Не записалось — попробуйте ещё раз.');
+      setError(t('Не записалось — попробуйте ещё раз.'));
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       setBusy(false);
     }
@@ -174,15 +175,15 @@ export default function LiveScreen() {
               duration={900}
             />
           ) : (
-            <Text style={styles.noRate}>без почасовой ставки</Text>
+            <Text style={styles.noRate}>{t('без почасовой ставки')}</Text>
           )}
 
           <Text style={styles.left}>
             {resting
-              ? 'перерыв идёт'
+              ? t('перерыв идёт')
               : leftSeconds > 0
-                ? `осталось ${stopwatch(leftSeconds)}`
-                : `сверх плана ${stopwatch(-leftSeconds)}`}
+                ? `${t('осталось')} ${stopwatch(leftSeconds)}`
+                : `${t('сверх плана')} ${stopwatch(-leftSeconds)}`}
           </Text>
         </Ring>
       </Appear>
@@ -191,19 +192,19 @@ export default function LiveScreen() {
         <View style={styles.facts}>
           <View style={styles.fact}>
             <Text style={styles.factValue}>{stopwatch(elapsed).slice(0, 5)}</Text>
-            <Text style={styles.factLabel}>на месте</Text>
+            <Text style={styles.factLabel}>{t('на месте')}</Text>
           </View>
           <View style={styles.factRule} />
           <View style={styles.fact}>
             <Text style={[styles.factValue, paused > 0 && { color: palette.textSecondary }]}>
               {Math.round(paused / 60)}
             </Text>
-            <Text style={styles.factLabel}>мин перерыва</Text>
+            <Text style={styles.factLabel}>{t('мин перерыва')}</Text>
           </View>
           <View style={styles.factRule} />
           <View style={styles.fact}>
             <Text style={styles.factValue}>{live.hourlyRate === null ? '—' : money(live.hourlyRate)}</Text>
-            <Text style={styles.factLabel}>за час</Text>
+            <Text style={styles.factLabel}>{t('за час')}</Text>
           </View>
         </View>
       </Appear>
@@ -225,7 +226,7 @@ export default function LiveScreen() {
               color={resting ? '#fff' : palette.text}
             />
             <Text style={[styles.breakText, resting && styles.breakTextOn]}>
-              {resting ? 'Вернулся' : 'Перерыв'}
+              {resting ? t('Вернулся') : t('Перерыв')}
             </Text>
           </Press>
 
@@ -235,14 +236,14 @@ export default function LiveScreen() {
             ) : (
               <>
                 <Ionicons name="checkmark" size={18} color="#fff" />
-                <Text style={styles.finishText}>Закончил</Text>
+                <Text style={styles.finishText}>{t('Закончил')}</Text>
               </>
             )}
           </Press>
         </View>
 
         <Press style={styles.quiet} haptic={false} onPress={() => router.back()}>
-          <Text style={styles.quietText}>Свернуть — смена продолжает идти</Text>
+          <Text style={styles.quietText}>{t('Свернуть — смена продолжает идти')}</Text>
         </Press>
 
         <Press
@@ -253,7 +254,7 @@ export default function LiveScreen() {
             router.back();
           }}
         >
-          <Text style={[styles.quietText, { color: palette.danger }]}>Отменить без записи</Text>
+          <Text style={[styles.quietText, { color: palette.danger }]}>{t('Отменить без записи')}</Text>
         </Press>
       </Appear>
     </View>

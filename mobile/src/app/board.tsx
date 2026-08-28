@@ -18,6 +18,7 @@ import { Colors, Palette } from '@/constants/theme';
 import { api, ApiError } from '@/lib/api';
 import { dayLabel, pad, todayKey } from '@/lib/calendar';
 import { ShiftTemplate } from '@/lib/types';
+import { t } from '@/lib/i18n';
 
 interface Member {
   user_id: number;
@@ -71,7 +72,7 @@ const ROLES: { value: PlanRole; label: string; emoji: string }[] = [
   { value: 'manager', label: 'Менеджер', emoji: '🎩' },
 ];
 
-const WEEKDAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+const WEEKDAYS = [t('Пн'), t('Вт'), t('Ср'), t('Чт'), t('Пт'), t('Сб'), t('Вс')];
 
 /** The Monday of the week holding this day. */
 const weekOf = (key: string): string[] => {
@@ -121,7 +122,7 @@ export default function BoardScreen() {
         setTeams(list);
         setTeamId((current) => current ?? list[0]?.id ?? null);
       } catch {
-        setError('Не дотянулись до сервера.');
+        setError(t('Не дотянулись до сервера.'));
       }
     })();
   }, []);
@@ -139,7 +140,7 @@ export default function BoardScreen() {
       setTemplates(shifts.filter((item) => !item.archived));
       setError(null);
     } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : 'Не дотянулись до сервера.');
+      setError(caught instanceof ApiError ? caught.message : t('Не дотянулись до сервера.'));
     }
   }, [teamId, days]);
 
@@ -167,12 +168,12 @@ export default function BoardScreen() {
 
       setError(
         result.published === 0
-          ? 'Публиковать нечего — черновиков нет.'
-          : `Опубликовано ${result.published} — люди получат уведомление.`,
+          ? t('Публиковать нечего — черновиков нет.')
+          : `${t('Опубликовано')} ${result.published} — ${t('люди получат уведомление.')}`,
       );
       await load();
     } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : 'Не опубликовалось.');
+      setError(caught instanceof ApiError ? caught.message : t('Не опубликовалось.'));
     } finally {
       setBusy(false);
     }
@@ -196,11 +197,11 @@ export default function BoardScreen() {
         { method: 'POST', body: { ...slot, role: slot.role === '' ? null : slot.role } },
       );
 
-      setError(result.shortfall ?? `Раздали ${result.placed.length}.`);
+      setError(result.shortfall ?? `${t('Раздали')} ${result.placed.length}.`);
       setFilling(false);
       await load();
     } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : 'Не раздалось.');
+      setError(caught instanceof ApiError ? caught.message : t('Не раздалось.'));
     } finally {
       setBusy(false);
     }
@@ -213,7 +214,7 @@ export default function BoardScreen() {
       await api(`/shifter/v1/teams/${teamId}/planner/assignments/${entry.id}`, { method: 'DELETE' });
       await load();
     } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : 'Не удалилось.');
+      setError(caught instanceof ApiError ? caught.message : t('Не удалилось.'));
     }
   };
 
@@ -231,7 +232,7 @@ export default function BoardScreen() {
         contentContainerStyle={[styles.content, { paddingTop: insets.top + 12 }]}
       >
         <View style={styles.head}>
-          <Text style={styles.title}>Доска</Text>
+          <Text style={styles.title}>{t('Доска')}</Text>
           <Press hitSlop={12} onPress={() => router.back()}>
             <Ionicons name="close" size={26} color={palette.textSecondary} />
           </Press>
@@ -269,9 +270,7 @@ export default function BoardScreen() {
         )}
 
         {board !== null && !board.can_plan && (
-          <Text style={styles.lead}>
-            Доску ведёт старший команды. Свои смены и кто выходит — во вкладке «График».
-          </Text>
+          <Text style={styles.lead}>{t('Доску ведёт старший команды. Свои смены и кто выходит — во вкладке «График».')}</Text>
         )}
 
         {board !== null && board.can_plan && (
@@ -295,7 +294,7 @@ export default function BoardScreen() {
                         </Text>
                         <Text style={styles.dayCover}>
                           {cover === undefined
-                            ? 'пусто'
+                            ? t('пусто')
                             : [
                                 ...cover.roles.map(
                                   (role) =>
@@ -356,13 +355,10 @@ export default function BoardScreen() {
               </View>
             </ScrollView>
 
-            <Text style={styles.hint}>
-              Тап по клетке — поставить смену, долгий тап по смене — убрать. Заштрихованный день
-              человек отметил как «не могу».
-            </Text>
+            <Text style={styles.hint}>{t('Тап по клетке — поставить смену, долгий тап по смене — убрать. Заштрихованный день человек отметил как «не могу».')}</Text>
 
             <Press style={styles.ghost} onPress={() => setFilling(true)}>
-              <Text style={styles.ghostText}>🎲 Раздать смену</Text>
+              <Text style={styles.ghostText}>{t('🎲 Раздать смену')}</Text>
             </Press>
 
             <Press
@@ -371,7 +367,7 @@ export default function BoardScreen() {
               onPress={() => void publish()}
             >
               <Text style={styles.primaryText}>
-                {drafts === 0 ? 'Черновиков нет' : `Опубликовать неделю · ${drafts}`}
+                {drafts === 0 ? t('Черновиков нет') : `${t('Опубликовать неделю')} · ${drafts}`}
               </Text>
             </Press>
           </>
@@ -459,13 +455,10 @@ function FillSheet({
     <Modal visible={open} animationType="slide" transparent onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose} />
       <ScrollView style={styles.tallSheet} contentContainerStyle={styles.sheetInner}>
-        <Text style={styles.sheetTitle}>Раздать смену</Text>
-        <Text style={styles.lead}>
-          Достанется тем, у кого неделя легче и кто не отметил «не могу». Черновиками — потом можно
-          поправить.
-        </Text>
+        <Text style={styles.sheetTitle}>{t('Раздать смену')}</Text>
+        <Text style={styles.lead}>{t('Достанется тем, у кого неделя легче и кто не отметил «не могу». Черновиками — потом можно поправить.')}</Text>
 
-        <Text style={styles.fieldLabel}>День</Text>
+        <Text style={styles.fieldLabel}>{t('День')}</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.teamRow}>
           {days.map((day) => (
             <Press
@@ -480,28 +473,28 @@ function FillSheet({
           ))}
         </ScrollView>
 
-        <Text style={styles.fieldLabel}>Название</Text>
+        <Text style={styles.fieldLabel}>{t('Название')}</Text>
         <TextInput
           style={styles.input}
           value={title}
           onChangeText={setTitle}
           maxLength={60}
-          placeholder="Бар"
+          placeholder={t("Бар")}
           placeholderTextColor={palette.textSecondary}
         />
 
         <View style={styles.timeRow}>
           <View style={styles.grow}>
-            <Text style={styles.fieldLabel}>Начало</Text>
+            <Text style={styles.fieldLabel}>{t('Начало')}</Text>
             <TextInput style={styles.input} value={start} onChangeText={setStart} placeholderTextColor={palette.textSecondary} />
           </View>
           <View style={styles.grow}>
-            <Text style={styles.fieldLabel}>Конец</Text>
+            <Text style={styles.fieldLabel}>{t('Конец')}</Text>
             <TextInput style={styles.input} value={end} onChangeText={setEnd} placeholderTextColor={palette.textSecondary} />
           </View>
         </View>
 
-        <Text style={styles.fieldLabel}>Станция</Text>
+        <Text style={styles.fieldLabel}>{t('Станция')}</Text>
         <View style={styles.roleRow}>
           {ROLES.map((item) => (
             <Press
@@ -510,13 +503,13 @@ function FillSheet({
               onPress={() => setRole(role === item.value ? '' : item.value)}
             >
               <Text style={[styles.chipText, role === item.value && styles.chipTextOn]}>
-                {item.emoji} {item.label}
+                {item.emoji} {t(item.label)}
               </Text>
             </Press>
           ))}
         </View>
 
-        <Text style={styles.fieldLabel}>Сколько человек</Text>
+        <Text style={styles.fieldLabel}>{t('Сколько человек')}</Text>
         <TextInput
           style={styles.input}
           value={count}
@@ -539,7 +532,7 @@ function FillSheet({
             })
           }
         >
-          <Text style={styles.primaryText}>{busy ? 'Раздаём…' : 'Раздать'}</Text>
+          <Text style={styles.primaryText}>{busy ? t('Раздаём…') : t('Раздать')}</Text>
         </Press>
       </ScrollView>
     </Modal>
@@ -612,7 +605,7 @@ function CellEditor({
       });
       onSaved();
     } catch (caught) {
-      setFailed(caught instanceof ApiError ? caught.message : 'Не поставилось.');
+      setFailed(caught instanceof ApiError ? caught.message : t('Не поставилось.'));
     } finally {
       setBusy(false);
     }
@@ -622,7 +615,7 @@ function CellEditor({
     <Modal visible={editing !== null} animationType="slide" transparent onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose} />
       <View style={styles.sheet}>
-        <Text style={styles.sheetTitle}>Поставить смену</Text>
+        <Text style={styles.sheetTitle}>{t('Поставить смену')}</Text>
         <Text style={styles.lead}>{editing !== null ? dayLabel(editing.date) : ''}</Text>
 
         {templates.length > 0 && (
@@ -645,28 +638,28 @@ function CellEditor({
           </ScrollView>
         )}
 
-        <Text style={styles.fieldLabel}>Название</Text>
+        <Text style={styles.fieldLabel}>{t('Название')}</Text>
         <TextInput
           style={styles.input}
           value={title}
           onChangeText={setTitle}
           maxLength={60}
-          placeholder="Бар"
+          placeholder={t("Бар")}
           placeholderTextColor={palette.textSecondary}
         />
 
         <View style={styles.timeRow}>
           <View style={styles.grow}>
-            <Text style={styles.fieldLabel}>Начало</Text>
+            <Text style={styles.fieldLabel}>{t('Начало')}</Text>
             <TextInput style={styles.input} value={start} onChangeText={setStart} placeholder="18:00" placeholderTextColor={palette.textSecondary} />
           </View>
           <View style={styles.grow}>
-            <Text style={styles.fieldLabel}>Конец</Text>
+            <Text style={styles.fieldLabel}>{t('Конец')}</Text>
             <TextInput style={styles.input} value={end} onChangeText={setEnd} placeholder="02:00" placeholderTextColor={palette.textSecondary} />
           </View>
         </View>
 
-        <Text style={styles.fieldLabel}>Станция</Text>
+        <Text style={styles.fieldLabel}>{t('Станция')}</Text>
         <View style={styles.roleRow}>
           {ROLES.map((item) => (
             <Press
@@ -675,7 +668,7 @@ function CellEditor({
               onPress={() => setRole(role === item.value ? '' : item.value)}
             >
               <Text style={[styles.chipText, role === item.value && styles.chipTextOn]}>
-                {item.emoji} {item.label}
+                {item.emoji} {t(item.label)}
               </Text>
             </Press>
           ))}
@@ -688,7 +681,7 @@ function CellEditor({
           disabled={busy || title.trim() === ''}
           onPress={() => void save()}
         >
-          <Text style={styles.primaryText}>{busy ? 'Ставим…' : 'Поставить'}</Text>
+          <Text style={styles.primaryText}>{busy ? t('Ставим…') : t('Поставить')}</Text>
         </Press>
       </View>
     </Modal>

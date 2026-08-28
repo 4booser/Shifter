@@ -19,6 +19,7 @@ import { Colors, Palette } from '@/constants/theme';
 import { api, ApiError, upload } from '@/lib/api';
 import { currentMonth, monthBounds, monthLabel } from '@/lib/calendar';
 import { CalendarDayData, DaysResponse, ShiftTemplate, toSavePayload } from '@/lib/types';
+import { t } from '@/lib/i18n';
 
 interface ParsedRow {
   date: string;
@@ -70,7 +71,7 @@ export default function ImportScreen() {
         setTemplates(shifts.filter((item) => !item.archived));
         setExisting(new Map(days.days.map((day) => [day.date, day])));
       } catch {
-        setError('Не дотянулись до сервера.');
+        setError(t('Не дотянулись до сервера.'));
       }
     })();
     // The month is fixed for the life of this screen, so this runs once.
@@ -86,8 +87,8 @@ export default function ImportScreen() {
     if (!permission.granted) {
       setError(
         from === 'camera'
-          ? 'Без доступа к камере снять график не получится.'
-          : 'Без доступа к галерее фото не выбрать.',
+          ? t('Без доступа к камере снять график не получится.')
+          : t('Без доступа к галерее фото не выбрать.'),
       );
 
       return;
@@ -142,10 +143,10 @@ export default function ImportScreen() {
     } catch (caught) {
       setError(
         caught instanceof ApiError && caught.status === 404
-          ? 'Чтение фото на этом сервере не включено.'
+          ? t('Чтение фото на этом сервере не включено.')
           : caught instanceof ApiError
             ? caught.message
-            : 'Не смогли прочитать фото.',
+            : t('Не смогли прочитать фото.'),
       );
     } finally {
       setBusy(false);
@@ -185,7 +186,7 @@ export default function ImportScreen() {
 
       router.back();
     } catch {
-      setError('Часть дней не записалась. Попробуйте ещё раз.');
+      setError(t('Часть дней не записалась. Попробуйте ещё раз.'));
     } finally {
       setBusy(false);
     }
@@ -194,7 +195,7 @@ export default function ImportScreen() {
   return (
     <ScrollView style={styles.screen} contentContainerStyle={[styles.content, { paddingTop: insets.top + 12 }]}>
       <View style={styles.head}>
-        <Text style={styles.title}>График с фото</Text>
+        <Text style={styles.title}>{t('График с фото')}</Text>
         <Press hitSlop={12} onPress={() => router.back()}>
           <Ionicons name="close" size={26} color={palette.textSecondary} />
         </Press>
@@ -205,12 +206,12 @@ export default function ImportScreen() {
         покажем, что нашли. Ничего не запишется, пока вы не посмотрите список.
       </Text>
 
-      <Text style={styles.fieldLabel}>Как вы записаны в графике</Text>
+      <Text style={styles.fieldLabel}>{t('Как вы записаны в графике')}</Text>
       <TextInput
         style={styles.input}
         value={name}
         onChangeText={setName}
-        placeholder="Иванов, или АБ"
+        placeholder={t("Иванов, или АБ")}
         placeholderTextColor={palette.textSecondary}
         autoCapitalize="words"
       />
@@ -220,11 +221,11 @@ export default function ImportScreen() {
       <View style={styles.pickRow}>
         <Press style={styles.pickButton} onPress={() => void pick('camera')}>
           <Ionicons name="camera-outline" size={20} color={palette.accent} />
-          <Text style={styles.pickText}>Снять</Text>
+          <Text style={styles.pickText}>{t('Снять')}</Text>
         </Press>
         <Press style={styles.pickButton} onPress={() => void pick('library')}>
           <Ionicons name="images-outline" size={20} color={palette.accent} />
-          <Text style={styles.pickText}>Из галереи</Text>
+          <Text style={styles.pickText}>{t('Из галереи')}</Text>
         </Press>
       </View>
 
@@ -242,13 +243,13 @@ export default function ImportScreen() {
           {busy ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.primaryText}>Прочитать график</Text>
+            <Text style={styles.primaryText}>{t('Прочитать график')}</Text>
           )}
         </Press>
       ) : (
         <>
           <Text style={styles.sectionTitle}>
-            {drafts.length === 0 ? 'Ничего не нашли' : `Нашли смен: ${drafts.length}`}
+            {drafts.length === 0 ? t('Ничего не нашли') : `${t('Нашли смен')}: ${drafts.length}`}
           </Text>
 
           {drafts.map((row, index) => (
@@ -261,9 +262,9 @@ export default function ImportScreen() {
               </View>
 
               {row.conflict ? (
-                <Text style={styles.rowSkip}>день занят</Text>
+                <Text style={styles.rowSkip}>{t('день занят')}</Text>
               ) : row.templateId === null ? (
-                <Text style={styles.rowSkip}>нет шаблона</Text>
+                <Text style={styles.rowSkip}>{t('нет шаблона')}</Text>
               ) : (
                 <Press
                   hitSlop={8}

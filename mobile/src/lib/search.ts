@@ -1,5 +1,6 @@
 import { dayOf, fromMinor, MonoStatementItem, payerName } from './mono';
 import { CalendarDayData } from './types';
+import { t } from '@/lib/i18n';
 
 /**
  * Finding one day out of two years of them.
@@ -73,7 +74,7 @@ export const searchDays = (days: CalendarDayData[], query: string): Hit[] => {
           ? day.shifts.map((shift) => `${shift.symbol ?? ''}${shift.name}`).join(', ')
           : 'День без смены',
       // A comma, because that is how this language writes a half.
-      meta: day.note ?? (day.hours > 0 ? `${`${day.hours}`.replace('.', ',')} ч` : ''),
+      meta: day.note ?? (day.hours > 0 ? `${`${day.hours}`.replace('.', ',')} ${t('ч')}` : ''),
       amount: day.earned > 0 ? day.earned : day.planned,
     }))
     .sort((one, two) => (one.date < two.date ? 1 : -1))

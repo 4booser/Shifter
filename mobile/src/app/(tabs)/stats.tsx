@@ -27,6 +27,7 @@ import {
   todayKey,
 } from '@/lib/calendar';
 import { DaysResponse, money, moneyIn, plural } from '@/lib/types';
+import { t } from '@/lib/i18n';
 
 /** Money and hours at one place, and what the journey does to them. */
 interface PlaceTotal {
@@ -130,7 +131,7 @@ export default function StatsScreen() {
       setPartial(past.partial);
       setError(null);
     } catch {
-      setError('Не дотянулись до сервера.');
+      setError(t('Не дотянулись до сервера.'));
     }
   }, [bounds.from, bounds.to, span, month]);
 
@@ -202,11 +203,11 @@ export default function StatsScreen() {
         // The percentage comes out of the shifts figure it already sits
         // inside: hidden there it cannot be seen to be working, which is the
         // whole reason somebody agreed to it.
-        { name: 'Смены', value: summary.shifts_earned - summary.revenue_earned, colour: palette.accent },
-        { name: 'Процент', value: summary.revenue_earned, colour: '#B5449C' },
-        { name: 'Надбавки', value: summary.premium_earned + summary.overtime_earned, colour: palette.good },
-        { name: 'Продажи', value: summary.sales_earned, colour: '#D97706' },
-        { name: 'Чаевые', value: summary.tips_earned, colour: '#0891B2' },
+        { name: t('Смены'), value: summary.shifts_earned - summary.revenue_earned, colour: palette.accent },
+        { name: t('Процент'), value: summary.revenue_earned, colour: '#B5449C' },
+        { name: t('Надбавки'), value: summary.premium_earned + summary.overtime_earned, colour: palette.good },
+        { name: t('Продажи'), value: summary.sales_earned, colour: '#D97706' },
+        { name: t('Чаевые'), value: summary.tips_earned, colour: '#0891B2' },
       ].filter((part) => part.value > 0);
 
   // Converted where the range mixes currencies: adding złoty to hryvnia and
@@ -261,7 +262,7 @@ export default function StatsScreen() {
         />
       }
     >
-      <Text style={styles.title}>Статистика</Text>
+      <Text style={styles.title}>{t('Статистика')}</Text>
 
       <View style={styles.toolbar}>
         {(['month', 'year'] as Span[]).map((value) => (
@@ -271,7 +272,7 @@ export default function StatsScreen() {
             onPress={() => setSpan(value)}
           >
             <Text style={[styles.segmentText, span === value && styles.segmentTextOn]}>
-              {value === 'month' ? 'Месяц' : 'Год'}
+              {value === 'month' ? t('Месяц') : t('Год')}
             </Text>
           </Press>
         ))}
@@ -296,7 +297,7 @@ export default function StatsScreen() {
             figure is the only honest headline. */}
         <Kpi
           palette={palette}
-          label="Заработано"
+          label={t("Заработано")}
           value={
             summary?.conversion != null
               ? `≈ ${moneyIn(summary.conversion.base_currency, summary.conversion.total_earned)}`
@@ -313,7 +314,7 @@ export default function StatsScreen() {
             that exists to say the range mixes currencies. */}
         <Kpi
           palette={palette}
-          label="В час"
+          label={t("В час")}
           value={
             (summary?.currencies ?? []).length > 1
               ? moneyIn(summary?.conversion?.base_currency ?? 'UAH', perHour)
@@ -323,13 +324,13 @@ export default function StatsScreen() {
         />
         <Kpi
           palette={palette}
-          label="Смен"
+          label={t("Смен")}
           amount={summary?.days_worked ?? 0}
           change={changeOf(summary?.days_worked ?? 0, before?.days_worked ?? 0)}
         />
         <Kpi
           palette={palette}
-          label="Часов"
+          label={t("Часов")}
           amount={Math.round(summary?.hours ?? 0)}
           change={changeOf(summary?.hours ?? 0, before?.hours ?? 0)}
         />
@@ -339,15 +340,15 @@ export default function StatsScreen() {
       {before !== null && earnedBefore !== null && earnedBefore > 0 && (
         <Text style={styles.against}>
           {partial
-            ? `Против тех же дней ${span === 'month' ? 'прошлого месяца' : 'прошлого года'}: ${amount(earnedBefore)}`
-            : `${span === 'month' ? 'Прошлый месяц' : 'Прошлый год'}: ${amount(earnedBefore)}`}
+            ? `${t('Против тех же дней')} ${span === 'month' ? t('прошлого месяца') : t('прошлого года')}: ${amount(earnedBefore)}`
+            : `${span === 'month' ? t('Прошлый месяц') : t('Прошлый год')}: ${amount(earnedBefore)}`}
         </Text>
       )}
 
       {/* Which hour is worth more — the question behind holding two jobs. */}
       {(summary?.by_location ?? []).length >= 2 && (
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Места бок о бок</Text>
+          <Text style={styles.cardTitle}>{t('Места бок о бок')}</Text>
 
           {[...(summary?.by_location ?? [])]
             .sort(
@@ -360,13 +361,13 @@ export default function StatsScreen() {
                 <View style={[styles.placeDot, { backgroundColor: place.colour }]} />
                 <View style={styles.grow}>
                   <Text style={styles.placeName} numberOfLines={1}>
-                    {place.location_id === 0 ? 'Без места' : place.name}
+                    {place.location_id === 0 ? t('Без места') : place.name}
                   </Text>
                   <Text style={styles.placeMeta}>
-                    {plural(place.days_worked, 'смена', 'смены', 'смен')} ·{' '}
+                    {plural(place.days_worked, t('смена'), t('смены'), t('смен'))} ·{' '}
                     {Math.round(place.hours)} ч
                     {place.commute !== null &&
-                      ` · +${Math.round(place.commute.travel_hours)} ч в пути`}
+                      ` · +${Math.round(place.commute.travel_hours)} ${t('ч в пути')}`}
                   </Text>
                 </View>
                 <View style={styles.placeMoney}>
@@ -374,7 +375,7 @@ export default function StatsScreen() {
                       number that decides which job to keep. */}
                   <Text style={styles.placeHour}>
                     {rate(place, place.commute?.per_hour_with_travel ?? place.per_hour)}
-                    <Text style={styles.placeHourUnit}>/час</Text>
+                    <Text style={styles.placeHourUnit}>{t('/час')}</Text>
                   </Text>
                   {place.commute !== null && (
                     <Text style={styles.placeWas}>без дороги {rate(place, place.per_hour)}</Text>
@@ -387,7 +388,7 @@ export default function StatsScreen() {
 
       {summary?.conversion != null && (
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Всё в одной валюте</Text>
+          <Text style={styles.cardTitle}>{t('Всё в одной валюте')}</Text>
           <Text style={styles.convertedTotal}>
             ≈ {moneyIn(summary.conversion.base_currency, summary.conversion.total_earned)}
           </Text>
@@ -395,7 +396,7 @@ export default function StatsScreen() {
           {summary.conversion.by_location.map((place) => (
             <View key={place.location_id} style={styles.convertRow}>
               <Text style={styles.convertPlace} numberOfLines={1}>
-                {place.location_id === 0 ? 'Без места' : place.name}
+                {place.location_id === 0 ? t('Без места') : place.name}
                 <Text style={styles.convertCode}> {place.currency}</Text>
               </Text>
               <Text style={styles.convertValue}>
@@ -403,7 +404,7 @@ export default function StatsScreen() {
                 {place.currency !== summary.conversion!.base_currency && (
                   <Text style={styles.convertStrong}>
                     {place.converted === null
-                      ? '  → курса нет'
+                      ? t('  → курса нет')
                       : `  ≈ ${moneyIn(summary.conversion!.base_currency, place.converted)}`}
                   </Text>
                 )}
@@ -431,21 +432,21 @@ export default function StatsScreen() {
 
       {parts.length > 0 && (
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Откуда пришли деньги</Text>
+          <Text style={styles.cardTitle}>{t('Откуда пришли деньги')}</Text>
           <MoneyFlow parts={parts} palette={palette} format={amount} />
         </View>
       )}
 
       {dial.some((value) => value > 0) && (
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Круглые сутки</Text>
+          <Text style={styles.cardTitle}>{t('Круглые сутки')}</Text>
           <ClockRing hours={dial} palette={palette} />
         </View>
       )}
 
       {months.length > 0 && (
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Двенадцать месяцев</Text>
+          <Text style={styles.cardTitle}>{t('Двенадцать месяцев')}</Text>
           <MonthBars rows={months} palette={palette} format={amount} />
         </View>
       )}

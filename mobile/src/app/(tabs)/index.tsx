@@ -57,6 +57,7 @@ import { LiveShift, useLive } from '@/store/live';
 import { ApiError } from '@/lib/api';
 import { heldDays, Pending } from '@/lib/outbox';
 import { useOutbox } from '@/store/outbox';
+import { t } from '@/lib/i18n';
 
 /** Three years each way. Further than that and nobody is planning, they are lost. */
 const SPAN = 36;
@@ -154,7 +155,7 @@ export default function CalendarScreen() {
     } catch {
       // Let it be asked for again rather than leaving a month permanently blank.
       asked.current.delete(key);
-      setError('Не дотянулись до сервера.');
+      setError(t('Не дотянулись до сервера.'));
     }
   }, []);
 
@@ -509,9 +510,9 @@ export default function CalendarScreen() {
 
       // The bar above already counts the days; this only has to say why they
       // are not on the calendar yet.
-      if (kept > 0) setError('Сети нет — сохраним, когда она вернётся.');
+      if (kept > 0) setError(t('Сети нет — сохраним, когда она вернётся.'));
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Не сохранилось.');
+      setError(caught instanceof Error ? caught.message : t('Не сохранилось.'));
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     } finally {
       setApplying(false);
@@ -529,7 +530,7 @@ export default function CalendarScreen() {
       void refresh();
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Не отменилось.');
+      setError(caught instanceof Error ? caught.message : t('Не отменилось.'));
     } finally {
       setUndoing(false);
     }
@@ -549,7 +550,7 @@ export default function CalendarScreen() {
 
     const names = [...new Set([...chosen].map(weekdayOf))].sort().map((at) => WEEKDAYS[at]);
 
-    return { keys: rest, label: `+ все ${names.join(', ')}` };
+    return { keys: rest, label: `+ ${t('все')} ${names.join(', ')}` };
   }, [brush, chosen, month]);
 
   const chooseAll = (keys: string[]) => {
@@ -575,7 +576,7 @@ export default function CalendarScreen() {
         left: `${keys.length}`,
         leftLabel: dayWord(keys.length),
         right: null,
-        note: 'События не считаются деньгами — они только занимают день.',
+        note: t('События не считаются деньгами — они только занимают день.'),
       };
     }
 
@@ -590,11 +591,11 @@ export default function CalendarScreen() {
 
       return {
         left: `${hit.length}`,
-        leftLabel: hit.length === keys.length ? dayWord(hit.length) : `из ${keys.length}`,
+        leftLabel: hit.length === keys.length ? dayWord(hit.length) : `${t('из')} ${keys.length}`,
         right: amount > 0 ? `${erasing ? '−' : '+'} ${money(amount)}` : null,
         note: erasing
-          ? 'Отработанные дни и их деньги останутся на месте.'
-          : 'Плановые смены этих дней станут отработанными.',
+          ? t('Отработанные дни и их деньги останутся на месте.')
+          : t('Плановые смены этих дней станут отработанными.'),
       };
     }
 
@@ -610,18 +611,18 @@ export default function CalendarScreen() {
 
     return {
       left: `${adds.length}`,
-      leftLabel: adds.length === keys.length ? dayWord(adds.length) : `из ${keys.length}`,
+      leftLabel: adds.length === keys.length ? dayWord(adds.length) : `${t('из')} ${keys.length}`,
       right: hourly && brush.template.salary_amount > 0
         ? `+ ${money(hours * brush.template.salary_amount)}`
         : null,
       note:
         adds.length === 0
-          ? 'Эти дни уже с этой сменой'
+          ? t('Эти дни уже с этой сменой')
           : behind === 0
-            ? `Примерно ${Math.round(hours)} ч в план`
+            ? `${t('Примерно')} ${Math.round(hours)} ${t('ч в план')}`
             : behind === adds.length
-              ? 'Эти дни уже прошли — отметятся отработанными'
-              : `${behind} ${dayWord(behind)} отметятся отработанными, остальные — в план`,
+              ? t('Эти дни уже прошли — отметятся отработанными')
+              : `${behind} ${dayWord(behind)} ${t('отметятся отработанными, остальные — в план')}`,
     };
   }, [brush, chosen, byDate, today]);
 
@@ -645,7 +646,7 @@ export default function CalendarScreen() {
           <Press
             style={styles.headerText}
             onPress={() => setJumping(true)}
-            accessibilityLabel="Перейти к другому месяцу"
+            accessibilityLabel={t("Перейти к другому месяцу")}
           >
             <Text style={styles.month}>{monthOnly(month)}</Text>
             <Text style={styles.year}>{month.year}</Text>
@@ -659,7 +660,7 @@ export default function CalendarScreen() {
                 size={13}
                 color={palette.accent}
               />
-              <Text style={styles.todayChipText}>Сегодня</Text>
+              <Text style={styles.todayChipText}>{t('Сегодня')}</Text>
             </Press>
           )}
 
@@ -678,10 +679,8 @@ export default function CalendarScreen() {
           <Press style={styles.begin} onPress={() => setStarting(true)}>
             <Text style={styles.beginMark}>🍸</Text>
             <View style={styles.beginText}>
-              <Text style={styles.beginTitle}>Начните со своей смены</Text>
-              <Text style={styles.beginBody}>
-                Когда вы работаете и сколько платят — дальше календарь считает сам.
-              </Text>
+              <Text style={styles.beginTitle}>{t('Начните со своей смены')}</Text>
+              <Text style={styles.beginBody}>{t('Когда вы работаете и сколько платят — дальше календарь считает сам.')}</Text>
             </View>
             <Ionicons name="chevron-forward" size={18} color={palette.accent} />
           </Press>
@@ -693,16 +692,16 @@ export default function CalendarScreen() {
           <Stat
             styles={styles}
             value={money(here?.earned ?? 0)}
-            label="заработано"
-            extra={(here?.planned ?? 0) > 0 ? `+ ${money(here!.planned)} впереди` : null}
+            label={t("заработано")}
+            extra={(here?.planned ?? 0) > 0 ? `+ ${money(here!.planned)} ${t('впереди')}` : null}
           />
           <Stat
             styles={styles}
             value={`${here?.worked ?? 0}`}
-            label="смен"
-            extra={(here?.aheadDays ?? 0) > 0 ? `+ ${here!.aheadDays} в плане` : null}
+            label={t("смен")}
+            extra={(here?.aheadDays ?? 0) > 0 ? `+ ${here!.aheadDays} ${t('в плане')}` : null}
           />
-          <Stat styles={styles} value={`${Math.round(here?.hours ?? 0)}`} label="часов" extra={null} />
+          <Stat styles={styles} value={`${Math.round(here?.hours ?? 0)}`} label={t("часов")} extra={null} />
         </View>
         </Appear>
         )}
@@ -720,9 +719,9 @@ export default function CalendarScreen() {
           >
             <Ionicons name="cloud-offline-outline" size={17} color={palette.textSecondary} />
             <Text style={styles.heldText}>
-              {waiting.size} {dayWord(waiting.size)} {waiting.size === 1 ? 'ждёт' : 'ждут'} отправки
+              {waiting.size} {dayWord(waiting.size)} {waiting.size === 1 ? t('ждёт') : t('ждут')} отправки
             </Text>
-            <Text style={styles.heldAction}>Отправить</Text>
+            <Text style={styles.heldAction}>{t('Отправить')}</Text>
           </Press>
         )}
 
@@ -778,8 +777,8 @@ export default function CalendarScreen() {
 
         <Text style={styles.hint}>
           {brush === null
-            ? 'Свайпайте месяцы, тапайте день. Карандаш закрашивает сразу несколько.'
-            : 'Проведите пальцем по дням — они закрасятся. Ещё раз — снимется.'}
+            ? t('Свайпайте месяцы, тапайте день. Карандаш закрашивает сразу несколько.')
+            : t('Проведите пальцем по дням — они закрасятся. Ещё раз — снимется.')}
         </Text>
 
         {brush !== null && painted > 0 && (
@@ -796,7 +795,7 @@ export default function CalendarScreen() {
                 setChosen(new Set());
               }}
             >
-              <Text style={styles.quickText}>Снять всё</Text>
+              <Text style={styles.quickText}>{t('Снять всё')}</Text>
             </Press>
           </View>
         )}
@@ -816,7 +815,7 @@ export default function CalendarScreen() {
                     {preview.right}
                   </Text>
                   <Text style={styles.previewLabel}>
-                    {brush!.kind === 'shift' ? 'по ставке' : 'в заработке'}
+                    {brush!.kind === 'shift' ? t('по ставке') : t('в заработке')}
                   </Text>
                 </View>
               </>
@@ -888,7 +887,7 @@ export default function CalendarScreen() {
           >
             {undoing
               ? <ActivityIndicator color="#fff" size="small" />
-              : <Text style={styles.barDoneText}>Отменить</Text>}
+              : <Text style={styles.barDoneText}>{t('Отменить')}</Text>}
           </Press>
         </Floating>
       )}
@@ -901,7 +900,7 @@ export default function CalendarScreen() {
             setUndo(null);
             setPicking(true);
           }}
-          accessibilityLabel="Закрасить дни сменой или событием"
+          accessibilityLabel={t("Закрасить дни сменой или событием")}
         >
           <Ionicons name="pencil" size={22} color="#fff" />
         </Press>
@@ -914,7 +913,7 @@ export default function CalendarScreen() {
           <View style={styles.barText}>
             <Text style={styles.barName} numberOfLines={1}>{brushName(brush)}</Text>
             <Text style={styles.barMeta}>
-              {painted === 0 ? 'Выберите дни' : `${painted} ${dayWord(painted)}`}
+              {painted === 0 ? t('Выберите дни') : `${painted} ${dayWord(painted)}`}
             </Text>
           </View>
 
@@ -929,7 +928,7 @@ export default function CalendarScreen() {
           >
             {applying
               ? <ActivityIndicator color="#fff" size="small" />
-              : <Text style={styles.barDoneText}>Готово</Text>}
+              : <Text style={styles.barDoneText}>{t('Готово')}</Text>}
           </Press>
         </Floating>
       )}
@@ -1109,22 +1108,22 @@ const changeWord = (count: number) => {
   const tail = count % 10;
   const teen = count % 100;
 
-  if (teen >= 11 && teen <= 14) return 'изменений';
-  if (tail === 1) return 'изменение';
-  if (tail >= 2 && tail <= 4) return 'изменения';
+  if (teen >= 11 && teen <= 14) return t('изменений');
+  if (tail === 1) return t('изменение');
+  if (tail >= 2 && tail <= 4) return t('изменения');
 
-  return 'изменений';
+  return t('изменений');
 };
 
 const dayWord = (count: number) => {
   const tail = count % 10;
   const teen = count % 100;
 
-  if (teen >= 11 && teen <= 14) return 'дней';
-  if (tail === 1) return 'день';
-  if (tail >= 2 && tail <= 4) return 'дня';
+  if (teen >= 11 && teen <= 14) return t('дней');
+  if (tail === 1) return t('день');
+  if (tail >= 2 && tail <= 4) return t('дня');
 
-  return 'дней';
+  return t('дней');
 };
 
 const makeStyles = (palette: Palette) =>

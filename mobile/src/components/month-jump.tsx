@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Press } from '@/components/motion';
 import { Palette } from '@/constants/theme';
 import { currentMonth, YearMonth } from '@/lib/calendar';
+import { t } from '@/lib/i18n';
 
 const MONTHS = [
   'янв', 'фев', 'мар', 'апр', 'май', 'июн',
@@ -90,7 +91,7 @@ export function MonthJump({
 
             return (
               <Press
-                key={name}
+                key={t(name)}
                 style={[styles.month, here && styles.monthHere, now && !here && styles.monthNow]}
                 disabled={!reachable}
                 onPress={() => onPick(month)}
@@ -102,7 +103,7 @@ export function MonthJump({
                     !reachable && styles.monthTextOff,
                   ]}
                 >
-                  {name}
+                  {t(name)}
                 </Text>
               </Press>
             );
@@ -111,7 +112,7 @@ export function MonthJump({
 
         <Press style={styles.today} onPress={() => onPick(today)}>
           <Ionicons name="today-outline" size={16} color={palette.accent} />
-          <Text style={styles.todayText}>Вернуться к сегодня</Text>
+          <Text style={styles.todayText}>{t('Вернуться к сегодня')}</Text>
         </Press>
       </View>
     </Modal>

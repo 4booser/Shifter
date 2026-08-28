@@ -7,6 +7,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { LockGate } from '@/components/lock-gate';
 import { registerForPush, wireNotificationTaps } from '@/lib/notifications';
+import { useLang } from '@/lib/i18n';
 import { useMono } from '@/store/mono';
 import { useSession } from '@/store/session';
 
@@ -36,6 +37,8 @@ export default function RootLayout() {
   }, [session]);
 
   // Keychain still being read: the splash is covering everything anyway.
+  const lang = useLang((state) => state.lang);
+
   useEffect(() => {
     if (session === null || session === undefined) return;
 
@@ -47,7 +50,10 @@ export default function RootLayout() {
   return (
     // Gesture handler needs a root of its own, and the calendar's paint gesture
     // is the first thing in the app to depend on it.
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    // Keyed on the language: choosing another one remounts the app, which is
+    // what changing language does anyway and saves threading a hook through
+    // four hundred call sites.
+    <GestureHandlerRootView key={lang} style={{ flex: 1 }}>
       <LockGate>
         <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
         <Stack screenOptions={{ headerShown: false }}>

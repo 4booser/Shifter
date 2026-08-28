@@ -1,3 +1,4 @@
+import { t } from '@/lib/i18n';
 /**
  * The trade, named the way people in it speak. The server stores the role as
  * a slug and prices everything itself; this table is only how the phone says
@@ -91,7 +92,7 @@ export function payLine(gig: Gig): string {
   const period =
     gig.pay_period === 'hour' ? 'за час' : gig.pay_period === 'month' ? 'в месяц' : 'за смену';
   const base = gig.pay_amount > 0 ? `₴${Math.round(gig.pay_amount).toLocaleString('ru')} ${period}` : null;
-  const percent = gig.pay_percent !== null ? `${gig.pay_percent}% с продаж` : null;
+  const percent = gig.pay_percent !== null ? `${gig.pay_percent}% ${t('с продаж')}` : null;
 
   return [base, percent].filter((part) => part !== null).join(' + ');
 }
@@ -105,16 +106,16 @@ export function postedAgo(iso: string): string {
 
   if (days <= 0) return 'сегодня';
   if (days === 1) return 'вчера';
-  if (days < 7) return `${days} дн. назад`;
+  if (days < 7) return `${days} ${t('дн. назад')}`;
   if (days < 31) {
     const weeks = Math.floor(days / 7);
 
-    return weeks === 1 ? 'неделю назад' : `${weeks} нед. назад`;
+    return weeks === 1 ? 'неделю назад' : `${weeks} ${t('нед. назад')}`;
   }
 
   const months = Math.floor(days / 30);
 
-  return months === 1 ? 'месяц назад' : `${months} мес. назад`;
+  return months === 1 ? 'месяц назад' : `${months} ${t('мес. назад')}`;
 }
 
 /**

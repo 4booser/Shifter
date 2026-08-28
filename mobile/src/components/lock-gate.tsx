@@ -4,6 +4,7 @@ import { AppState, AppStateStatus, Pressable, StyleSheet, Text, View, useColorSc
 
 import { Colors } from '@/constants/theme';
 import { lockKind, LockKind, lockNameBy, lockStore, unlock } from '@/lib/lock';
+import { t } from '@/lib/i18n';
 
 /** Long enough to answer a call or copy a code, short enough to matter. */
 const GRACE_MS = 30_000;
@@ -93,12 +94,12 @@ export function LockGate({ children }: { children: React.ReactNode }) {
             size={54}
             color={palette.accent}
           />
-          <Text style={styles.title}>Shifter закрыт</Text>
+          <Text style={styles.title}>{t('Shifter закрыт')}</Text>
           <Text style={styles.lead}>
             Ваши смены и деньги видите только вы. Откройте по {lockNameBy(kind)}.
           </Text>
           <Pressable style={styles.button} onPress={() => void ask()} disabled={asking}>
-            <Text style={styles.buttonText}>{asking ? 'Ждём…' : 'Открыть'}</Text>
+            <Text style={styles.buttonText}>{asking ? t('Ждём…') : t('Открыть')}</Text>
           </Pressable>
         </View>
       )}

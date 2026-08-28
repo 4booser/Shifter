@@ -20,6 +20,7 @@ import { api, ApiError } from '@/lib/api';
 import { addMonths, currentMonth, dayLabel, monthBounds, todayKey } from '@/lib/calendar';
 import { DaysResponse, ShiftTemplate, toSavePayload } from '@/lib/types';
 import { Gig, payLine, photosOf, postedAgo, templateFromGig, tradeOf } from '@/lib/gigs';
+import { t } from '@/lib/i18n';
 
 type Tab = 'freelance' | 'permanent' | 'mine';
 
@@ -69,7 +70,7 @@ export default function GigsScreen() {
 
       setError(null);
     } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : 'Не дотянулись до сервера.');
+      setError(caught instanceof ApiError ? caught.message : t('Не дотянулись до сервера.'));
     } finally {
       setLoading(false);
     }
@@ -97,7 +98,7 @@ export default function GigsScreen() {
           />
         }
       >
-        <Text style={styles.title}>Биржа</Text>
+        <Text style={styles.title}>{t('Биржа')}</Text>
 
         <View style={styles.tabs}>
           {(Object.keys(TAB_LABEL) as Tab[]).map((value) => (
@@ -107,7 +108,7 @@ export default function GigsScreen() {
               onPress={() => setTab(value)}
             >
               <Text style={[styles.tabText, tab === value && styles.tabTextOn]}>
-                {TAB_LABEL[value]}
+                {t(TAB_LABEL[value])}
               </Text>
             </Press>
           ))}
@@ -119,10 +120,10 @@ export default function GigsScreen() {
         {!loading && rows.length === 0 && (
           <Text style={styles.empty}>
             {tab === 'mine'
-              ? 'Вы ещё никуда не откликались. Загляните в «Подработки» — там смены, которые ищут людей на вечер.'
+              ? t('Вы ещё никуда не откликались. Загляните в «Подработки» — там смены, которые ищут людей на вечер.')
               : tab === 'permanent'
-                ? 'Постоянных мест пока нет. Заглядывайте — их выкладывают заведения города.'
-                : 'На ближайшие месяцы подработок нет. Потяните вниз, чтобы обновить.'}
+                ? t('Постоянных мест пока нет. Заглядывайте — их выкладывают заведения города.')
+                : t('На ближайшие месяцы подработок нет. Потяните вниз, чтобы обновить.')}
           </Text>
         )}
 
@@ -184,7 +185,7 @@ function GigCard({
           )}
         </View>
 
-        {gig.urgent && <Text style={styles.urgent}>🔴 Нужен сегодня</Text>}
+        {gig.urgent && <Text style={styles.urgent}>{t('🔴 Нужен сегодня')}</Text>}
 
         <Text style={styles.cardPay}>{payLine(gig)}</Text>
 
@@ -201,8 +202,8 @@ function GigCard({
             ]}
           >
             {gig.worth.difference_percent === 0
-              ? 'примерно ваш обычный час'
-              : `${gig.worth.difference_percent > 0 ? 'выше' : 'ниже'} вашего обычного часа на ${Math.abs(gig.worth.difference_percent)}%`}
+              ? t('примерно ваш обычный час')
+              : `${gig.worth.difference_percent > 0 ? t('выше') : t('ниже')} ${t('вашего обычного часа на')} ${Math.abs(gig.worth.difference_percent)}%`}
           </Text>
         )}
 
@@ -211,7 +212,7 @@ function GigCard({
             ? `${dayLabel(gig.date)} · ${gig.start}–${gig.end}`
             : gig.schedule !== null && gig.schedule !== ''
               ? gig.schedule
-              : 'постоянное место'}
+              : t('постоянное место')}
           {' · '}
           {trade.label}
         </Text>
@@ -290,7 +291,7 @@ function GigSheet({
       });
       onChanged();
     } catch (caught) {
-      setFailed(caught instanceof ApiError ? caught.message : 'Отклик не ушёл.');
+      setFailed(caught instanceof ApiError ? caught.message : t('Отклик не ушёл.'));
     } finally {
       setBusy(false);
     }
@@ -339,7 +340,7 @@ function GigSheet({
 
       setAdded(true);
     } catch (caught) {
-      setFailed(caught instanceof ApiError ? caught.message : 'Не добавили в календарь.');
+      setFailed(caught instanceof ApiError ? caught.message : t('Не добавили в календарь.'));
     } finally {
       setBusy(false);
     }
@@ -352,7 +353,7 @@ function GigSheet({
       await api(`/shifter/v1/gigs/${gig.id}/respond`, { method: 'DELETE' });
       onChanged();
     } catch (caught) {
-      setFailed(caught instanceof ApiError ? caught.message : 'Не отозвали.');
+      setFailed(caught instanceof ApiError ? caught.message : t('Не отозвали.'));
     } finally {
       setBusy(false);
     }
@@ -389,10 +390,10 @@ function GigSheet({
             ? `${dayLabel(gig.date)}, ${gig.start}–${gig.end}`
             : gig.schedule !== null && gig.schedule !== ''
               ? gig.schedule
-              : 'постоянное место'}
+              : t('постоянное место')}
           {' · '}
           {trade.label}
-          {gig.slots > 1 ? ` · мест: ${gig.slots}` : ''}
+          {gig.slots > 1 ? ` · ${t('мест')}: ${gig.slots}` : ''}
         </Text>
         <Text style={styles.sheetPosted}>Опубликовано {postedAgo(gig.created_at)}</Text>
 
@@ -401,13 +402,13 @@ function GigSheet({
         )}
 
         {gig.is_mine ? (
-          <Text style={styles.sheetNote}>Это ваша вакансия. Отклики видно на сайте.</Text>
+          <Text style={styles.sheetNote}>{t('Это ваша вакансия. Отклики видно на сайте.')}</Text>
         ) : gig.my_response !== null ? (
           <>
             <Text style={styles.sheetNote}>
               {gig.my_response.accepted
-                ? 'Вас взяли. Заведение получило ваши контакты.'
-                : 'Отклик отправлен. Заведение видит ваши контакты.'}
+                ? t('Вас взяли. Заведение получило ваши контакты.')
+                : t('Отклик отправлен. Заведение видит ваши контакты.')}
             </Text>
 
             {gig.my_response.accepted && gig.employment === 'freelance' && (
@@ -418,10 +419,10 @@ function GigSheet({
               >
                 <Text style={styles.primaryText}>
                   {added
-                    ? 'Смена в календаре'
+                    ? t('Смена в календаре')
                     : busy
-                      ? 'Добавляем…'
-                      : `Добавить в календарь · ${payLine(gig)}`}
+                      ? t('Добавляем…')
+                      : `${t('Добавить в календарь')} · ${payLine(gig)}`}
                 </Text>
               </Press>
             )}
@@ -429,13 +430,13 @@ function GigSheet({
             {failed !== null && <Text style={styles.error}>{failed}</Text>}
             {!gig.my_response.accepted && (
               <Press style={styles.ghost} disabled={busy} onPress={() => void withdraw()}>
-                <Text style={styles.ghostText}>Отозвать отклик</Text>
+                <Text style={styles.ghostText}>{t('Отозвать отклик')}</Text>
               </Press>
             )}
           </>
         ) : (
           <>
-            <Text style={styles.fieldLabel}>Телефон</Text>
+            <Text style={styles.fieldLabel}>{t('Телефон')}</Text>
             <TextInput
               style={styles.input}
               value={phone}
@@ -445,23 +446,23 @@ function GigSheet({
               placeholderTextColor={palette.textSecondary}
             />
 
-            <Text style={styles.fieldLabel}>Телеграм</Text>
+            <Text style={styles.fieldLabel}>{t('Телеграм')}</Text>
             <TextInput
               style={styles.input}
               value={telegram}
               onChangeText={setTelegram}
               autoCapitalize="none"
-              placeholder="@ник"
+              placeholder={t("@ник")}
               placeholderTextColor={palette.textSecondary}
             />
 
-            <Text style={styles.fieldLabel}>Пара слов о себе</Text>
+            <Text style={styles.fieldLabel}>{t('Пара слов о себе')}</Text>
             <TextInput
               style={[styles.input, styles.inputTall]}
               value={message}
               onChangeText={setMessage}
               multiline
-              placeholder="Опыт, когда свободны"
+              placeholder={t("Опыт, когда свободны")}
               placeholderTextColor={palette.textSecondary}
             />
 
@@ -472,18 +473,16 @@ function GigSheet({
               disabled={busy}
               onPress={() => void respond()}
             >
-              <Text style={styles.primaryText}>{busy ? 'Отправляем…' : 'Я выйду'}</Text>
+              <Text style={styles.primaryText}>{busy ? t('Отправляем…') : t('Я выйду')}</Text>
             </Press>
 
-            <Text style={styles.privacy}>
-              Контакты уйдут только этому заведению — на доске их не видно.
-            </Text>
+            <Text style={styles.privacy}>{t('Контакты уйдут только этому заведению — на доске их не видно.')}</Text>
           </>
         )}
 
         {gig.my_response?.accepted === true && phone.trim() !== '' && (
           <Press style={styles.ghost} onPress={() => void Linking.openURL(`tel:${phone.trim()}`)}>
-            <Text style={styles.ghostText}>Позвонить</Text>
+            <Text style={styles.ghostText}>{t('Позвонить')}</Text>
           </Press>
         )}
       </ScrollView>

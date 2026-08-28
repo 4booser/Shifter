@@ -5,6 +5,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { Palette } from '@/constants/theme';
 import { covers, GridCell, monthGrid, WEEKDAYS, YearMonth } from '@/lib/calendar';
 import { CalendarDayData, CalendarEvent, moneyShort, tint } from '@/lib/types';
+import { t } from '@/lib/i18n';
 
 /** Six rows of a fixed height, so a page never changes size under a thumb. */
 export const CELL_HEIGHT = 62;
@@ -119,7 +120,7 @@ export function MonthGrid({
       <View style={styles.weekHead}>
         {WEEKDAYS.map((name, index) => (
           <Text key={name} style={[styles.weekDay, index > 4 && styles.weekDayRest]}>
-            {name}
+            {t(name)}
           </Text>
         ))}
       </View>

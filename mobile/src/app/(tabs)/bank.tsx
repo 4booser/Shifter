@@ -37,6 +37,7 @@ import {
 } from '@/lib/mono';
 import { CalendarDayData, DaysResponse, money, moneyIn } from '@/lib/types';
 import { chosenAccount, useMono } from '@/store/mono';
+import { t } from '@/lib/i18n';
 
 /** What the reconciliation endpoint says is still owed. */
 interface PayPeriodRow {
@@ -132,13 +133,13 @@ export default function BankScreen() {
     const answer = await mono.connect(typed);
 
     if (answer === 'refused') {
-      setProblem('Банк не принял этот токен. Проверьте, что скопировали его целиком.');
+      setProblem(t('Банк не принял этот токен. Проверьте, что скопировали его целиком.'));
 
       return;
     }
 
     if (answer === 'failed') {
-      setProblem(mono.error ?? 'Не дотянулись до банка.');
+      setProblem(mono.error ?? t('Не дотянулись до банка.'));
 
       return;
     }
@@ -251,7 +252,7 @@ export default function BankScreen() {
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       void loadShifter();
     } catch {
-      setProblem('Не записалось — попробуйте ещё раз.');
+      setProblem(t('Не записалось — попробуйте ещё раз.'));
     } finally {
       setSaving(null);
     }
@@ -278,7 +279,7 @@ export default function BankScreen() {
       setDone((was) => [...was, tag]);
       void Haptics.selectionAsync();
     } catch {
-      setProblem('Не записалось — попробуйте ещё раз.');
+      setProblem(t('Не записалось — попробуйте ещё раз.'));
     } finally {
       setSaving(null);
     }
@@ -292,18 +293,15 @@ export default function BankScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView contentContainerStyle={[styles.content, { paddingTop: insets.top + 12 }]}>
-          <Text style={styles.title}>Банк</Text>
+          <Text style={styles.title}>{t('Банк')}</Text>
 
-          <Text style={styles.lede}>
-            Приложение считает, сколько вам должны. Банк знает, сколько пришло. Пока эти две цифры
-            не встретились, «недоплатили» — это ваши слова, а не факт.
-          </Text>
+          <Text style={styles.lede}>{t('Приложение считает, сколько вам должны. Банк знает, сколько пришло. Пока эти две цифры не встретились, «недоплатили» — это ваши слова, а не факт.')}</Text>
 
           <View style={styles.promise}>
-            <Row palette={palette} icon="lock-closed" text="Токен остаётся на этом телефоне. На наш сервер он не уходит никогда." />
-            <Row palette={palette} icon="eye-outline" text="Читаем только выписку по счёту, который вы выберете." />
-            <Row palette={palette} icon="close-circle-outline" text="Платежи невозможны: персональный токен монобанка этого не умеет." />
-            <Row palette={palette} icon="cash-outline" text="Наличные банк не видит — чай наличными вносите как раньше." />
+            <Row palette={palette} icon="lock-closed" text={t("Токен остаётся на этом телефоне. На наш сервер он не уходит никогда.")} />
+            <Row palette={palette} icon="eye-outline" text={t("Читаем только выписку по счёту, который вы выберете.")} />
+            <Row palette={palette} icon="close-circle-outline" text={t("Платежи невозможны: персональный токен монобанка этого не умеет.")} />
+            <Row palette={palette} icon="cash-outline" text={t("Наличные банк не видит — чай наличными вносите как раньше.")} />
           </View>
 
           <Press
@@ -311,10 +309,10 @@ export default function BankScreen() {
             onPress={() => void Linking.openURL('https://api.monobank.ua/')}
           >
             <Ionicons name="open-outline" size={17} color={palette.accent} />
-            <Text style={styles.linkText}>Получить токен на api.monobank.ua</Text>
+            <Text style={styles.linkText}>{t('Получить токен на api.monobank.ua')}</Text>
           </Press>
 
-          <Text style={styles.label}>Токен</Text>
+          <Text style={styles.label}>{t('Токен')}</Text>
           <TextInput
             style={styles.input}
             value={typed}
@@ -336,7 +334,7 @@ export default function BankScreen() {
             {mono.busy ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <Text style={styles.primaryText}>Подключить</Text>
+              <Text style={styles.primaryText}>{t('Подключить')}</Text>
             )}
           </Press>
         </ScrollView>
@@ -350,11 +348,11 @@ export default function BankScreen() {
       style={styles.screen}
       contentContainerStyle={[styles.content, { paddingTop: insets.top + 12 }]}
     >
-      <Text style={styles.title}>Банк</Text>
+      <Text style={styles.title}>{t('Банк')}</Text>
 
       {mono.client !== null && view === 'summary' && (
         <>
-          <Text style={styles.label}>Куда приходит зарплата</Text>
+          <Text style={styles.label}>{t('Куда приходит зарплата')}</Text>
           <View style={styles.accounts}>
             {mono.client.accounts.map((entry) => (
               <Press
@@ -396,10 +394,10 @@ export default function BankScreen() {
                 <ActivityIndicator color={palette.accent} size="small" />
                 <Text style={styles.syncText}>
                   {mono.waiting > 0
-                    ? `Банк отвечает раз в минуту · ${mono.waiting} с`
+                    ? `${t('Банк отвечает раз в минуту')} · ${mono.waiting} ${t('с')}`
                     : mono.progress !== null
-                      ? `Загружено ${mono.progress.done} из ${mono.progress.total}`
-                      : 'Читаем выписку'}
+                      ? `${t('Загружено')} ${mono.progress.done} ${t('из')} ${mono.progress.total}`
+                      : t('Читаем выписку')}
                 </Text>
               </>
             ) : (
@@ -407,8 +405,8 @@ export default function BankScreen() {
                 <Ionicons name="refresh" size={17} color={palette.accent} />
                 <Text style={styles.syncText}>
                   {mono.syncedTo === null
-                    ? 'Загрузить выписку за три месяца'
-                    : `Обновить · ${mono.items.length} операций`}
+                    ? t('Загрузить выписку за три месяца')
+                    : `${t('Обновить')} · ${mono.items.length} ${t('операций')}`}
                 </Text>
               </>
             )}
@@ -436,7 +434,7 @@ export default function BankScreen() {
                 void mono.sync(Math.floor(Date.now() / 1000) - 366 * 24 * 60 * 60)
               }
             >
-              <Text style={styles.deeperText}>Загрузить год · примерно 12 минут</Text>
+              <Text style={styles.deeperText}>{t('Загрузить год · примерно 12 минут')}</Text>
             </Press>
           )}
         </>
@@ -449,10 +447,10 @@ export default function BankScreen() {
         <View style={styles.segments}>
           {(
             [
-              ['summary', 'Сводка'],
-              ['month', 'Месяц'],
-              ['ledger', 'Список'],
-              ['analysis', 'Анализ'],
+              ['summary', t('Сводка')],
+              ['month', t('Месяц')],
+              ['ledger', t('Список')],
+              ['analysis', t('Анализ')],
             ] as const
           ).map(([value, label]) => (
             <Press
@@ -498,7 +496,7 @@ export default function BankScreen() {
       )}
 
       {view === 'summary' && wages.length > 0 && (
-        <Text style={styles.section}>Похоже на зарплату</Text>
+        <Text style={styles.section}>{t('Похоже на зарплату')}</Text>
       )}
 
       {view === 'summary' && wages.map((entry, index) =>
@@ -526,16 +524,14 @@ export default function BankScreen() {
                   Начислено {money(entry.expected.amount)}
                   {Math.abs(match.difference) >= 0.005 && (
                     <Text style={match.difference < 0 ? styles.short : styles.over}>
-                      {' '}· {match.difference < 0 ? 'меньше' : 'больше'} на{' '}
+                      {' '}· {match.difference < 0 ? t('меньше') : t('больше')} на{' '}
                       {Math.abs(Math.round(match.difference * 100))}%
                     </Text>
                   )}
                 </Text>
 
                 {!match.known && match.payers.length > 1 && (
-                  <Text style={styles.hint}>
-                    Два разных плательщика. Подтвердите — и оба запомнятся для этого места.
-                  </Text>
+                  <Text style={styles.hint}>{t('Два разных плательщика. Подтвердите — и оба запомнятся для этого места.')}</Text>
                 )}
 
                 <Press
@@ -546,7 +542,7 @@ export default function BankScreen() {
                   {saving === tag ? (
                     <ActivityIndicator color="#fff" size="small" />
                   ) : (
-                    <Text style={styles.confirmText}>Это зарплата за период</Text>
+                    <Text style={styles.confirmText}>{t('Это зарплата за период')}</Text>
                   )}
                 </Press>
               </View>
@@ -556,7 +552,7 @@ export default function BankScreen() {
       )}
 
       {view === 'summary' && spending.length > 0 && (
-        <Text style={styles.section}>Похоже на траты по работе</Text>
+        <Text style={styles.section}>{t('Похоже на траты по работе')}</Text>
       )}
 
       {view === 'summary' && spending.map((row) => {
@@ -569,8 +565,8 @@ export default function BankScreen() {
             <View style={styles.spendText}>
               <Text style={styles.spendWho} numberOfLines={1}>{row.item.description}</Text>
               <Text style={styles.spendMeta}>
-                {shortDate(row.day)} · {KIND_LABEL[row.kind]}
-                {row.sure ? '' : ' · возможно'}
+                {shortDate(row.day)} · {t(KIND_LABEL[row.kind])}
+                {row.sure ? '' : t(' · возможно')}
               </Text>
             </View>
             <Text style={styles.spendSum}>{money(fromMinor(-row.item.amount))}</Text>
@@ -590,23 +586,17 @@ export default function BankScreen() {
       })}
 
       {view === 'summary' && mono.items.length > 0 && wages.length === 0 && spending.length === 0 && (
-        <Text style={styles.empty}>
-          В загруженной выписке нечего сопоставить: ни прихода рядом с днём выплаты, ни трат в
-          дни смен. Это нормально — банк не видит наличные, а такси вы могли не брать.
-        </Text>
+        <Text style={styles.empty}>{t('В загруженной выписке нечего сопоставить: ни прихода рядом с днём выплаты, ни трат в дни смен. Это нормально — банк не видит наличные, а такси вы могли не брать.')}</Text>
       )}
 
       {view === 'summary' && (
       <Press style={styles.disconnect} haptic={false} onPress={() => void mono.disconnect()}>
-        <Text style={styles.disconnectText}>Отключить банк</Text>
+        <Text style={styles.disconnectText}>{t('Отключить банк')}</Text>
       </Press>
       )}
 
       {view === 'summary' && (
-        <Text style={styles.hint}>
-          Отключение стирает токен и выписку с телефона. Отозвать сам токен можно только на
-          api.monobank.ua — приложение этого сделать не может.
-        </Text>
+        <Text style={styles.hint}>{t('Отключение стирает токен и выписку с телефона. Отозвать сам токен можно только на api.monobank.ua — приложение этого сделать не может.')}</Text>
       )}
     </ScrollView>
   );

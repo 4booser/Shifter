@@ -7,6 +7,7 @@ import { Palette } from '@/constants/theme';
 import { dayLabel } from '@/lib/calendar';
 import { byDay, categoryOf, fromMinor, MonoStatementItem, payerName } from '@/lib/mono';
 import { CalendarDayData, money, tint } from '@/lib/types';
+import { t } from '@/lib/i18n';
 
 /**
  * The statement, day by day, with the shift standing beside it.
@@ -53,10 +54,10 @@ export function BankLedger({
     <View style={styles.filters}>
       {(
         [
-          ['all', 'Всё'],
-          ['in', 'Приходы'],
-          ['out', 'Траты'],
-          ['shift', 'В дни смен'],
+          ['all', t('Всё')],
+          ['in', t('Приходы')],
+          ['out', t('Траты')],
+          ['shift', t('В дни смен')],
         ] as const
       ).map(([value, label]) => (
         <Press
@@ -76,8 +77,8 @@ export function BankLedger({
         {items.length > 0 && filters}
         <Text style={styles.empty}>
           {items.length === 0
-            ? 'Выписка пока не загружена. Нажмите «Обновить» — банк отдаёт её окнами по месяцу, не чаще раза в минуту.'
-            : 'Под этот отбор ничего не попало.'}
+            ? t('Выписка пока не загружена. Нажмите «Обновить» — банк отдаёт её окнами по месяцу, не чаще раза в минуту.')
+            : t('Под этот отбор ничего не попало.')}
         </Text>
       </View>
     );

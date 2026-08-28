@@ -25,6 +25,7 @@ import {
   plural,
   WorkDocument,
 } from '@/lib/types';
+import { t } from '@/lib/i18n';
 
 /**
  * What the work costs, and the papers that gate a shift.
@@ -71,7 +72,7 @@ export default function CostsScreen() {
       setDocuments(papers);
       setError(null);
     } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : 'Не дотянулись до сервера.');
+      setError(caught instanceof ApiError ? caught.message : t('Не дотянулись до сервера.'));
     } finally {
       setLoading(false);
     }
@@ -101,7 +102,7 @@ export default function CostsScreen() {
       setNote('');
       await load();
     } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : 'Не сохранилось.');
+      setError(caught instanceof ApiError ? caught.message : t('Не сохранилось.'));
     }
   };
 
@@ -110,7 +111,7 @@ export default function CostsScreen() {
       await api(`/shifter/v1/expenses/${id}`, { method: 'DELETE' });
       await load();
     } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : 'Не удалилось.');
+      setError(caught instanceof ApiError ? caught.message : t('Не удалилось.'));
     }
   };
 
@@ -127,7 +128,7 @@ export default function CostsScreen() {
       setAddingDoc(false);
       await load();
     } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : 'Не сохранилось.');
+      setError(caught instanceof ApiError ? caught.message : t('Не сохранилось.'));
     }
   };
 
@@ -140,7 +141,7 @@ export default function CostsScreen() {
         <Press onPress={() => router.back()} hitSlop={12}>
           <Ionicons name="chevron-down" size={22} color={palette.textSecondary} />
         </Press>
-        <Text style={styles.title}>Что стоит работа</Text>
+        <Text style={styles.title}>{t('Что стоит работа')}</Text>
       </View>
 
       {loading ? (
@@ -156,8 +157,8 @@ export default function CostsScreen() {
                 <Text key={paper.id} style={styles.alarmText}>
                   {paper.name} —{' '}
                   {paper.days_left < 0
-                    ? 'закончился'
-                    : `осталось ${plural(paper.days_left, 'день', 'дня', 'дней')}`}
+                    ? t('закончился')
+                    : `${t('осталось')} ${plural(paper.days_left, t('день'), t('дня'), t('дней'))}`}
                 </Text>
               ))}
             </View>
@@ -165,10 +166,8 @@ export default function CostsScreen() {
 
           {/* ==== What the work cost ==== */}
           <View style={styles.card}>
-            <Text style={styles.cardTitle}>Траты за месяц</Text>
-            <Text style={styles.cardHint}>
-              Из заработка не вычитается — это деньги, которые ушли уже потом.
-            </Text>
+            <Text style={styles.cardTitle}>{t('Траты за месяц')}</Text>
+            <Text style={styles.cardHint}>{t('Из заработка не вычитается — это деньги, которые ушли уже потом.')}</Text>
 
             <View style={styles.chipRow}>
               {EXPENSE_KINDS.map((option) => (
@@ -178,7 +177,7 @@ export default function CostsScreen() {
                   onPress={() => setKind(option.value)}
                 >
                   <Text style={[styles.chipText, kind === option.value && styles.chipTextOn]}>
-                    {option.label}
+                    {t(option.label)}
                   </Text>
                 </Press>
               ))}
@@ -188,7 +187,7 @@ export default function CostsScreen() {
               <TextInput
                 style={[styles.input, styles.grow]}
                 keyboardType="numeric"
-                placeholder="Сколько"
+                placeholder={t("Сколько")}
                 placeholderTextColor={palette.textSecondary}
                 value={amount}
                 onChangeText={setAmount}
@@ -196,7 +195,7 @@ export default function CostsScreen() {
               <TextInput
                 style={[styles.input, styles.grow]}
                 maxLength={200}
-                placeholder="Заметка"
+                placeholder={t("Заметка")}
                 placeholderTextColor={palette.textSecondary}
                 value={note}
                 onChangeText={setNote}
@@ -207,7 +206,7 @@ export default function CostsScreen() {
             </View>
 
             {expenses.length === 0 ? (
-              <Text style={styles.cardHint}>За этот месяц ничего не записано.</Text>
+              <Text style={styles.cardHint}>{t('За этот месяц ничего не записано.')}</Text>
             ) : (
               <>
                 <Text style={styles.total}>−{money(total)}</Text>
@@ -215,7 +214,7 @@ export default function CostsScreen() {
                   <View key={row.id} style={styles.itemRow}>
                     <Text style={styles.itemDate}>{row.date.slice(8)}</Text>
                     <Text style={styles.itemKind}>
-                      {EXPENSE_KINDS.find((k) => k.value === row.kind)?.label ?? 'Другое'}
+                      {t(EXPENSE_KINDS.find((k) => k.value === row.kind)?.label ?? 'Другое')}
                     </Text>
                     <Text style={styles.itemNote} numberOfLines={1}>
                       {row.note ?? ''}
@@ -233,14 +232,12 @@ export default function CostsScreen() {
           {/* ==== The papers that gate a shift ==== */}
           <View style={styles.card}>
             <View style={styles.cardHead}>
-              <Text style={styles.cardTitle}>Документы</Text>
+              <Text style={styles.cardTitle}>{t('Документы')}</Text>
               <Press onPress={() => setAddingDoc((was) => !was)} hitSlop={10}>
-                <Text style={styles.link}>{addingDoc ? 'Отмена' : 'Добавить'}</Text>
+                <Text style={styles.link}>{addingDoc ? t('Отмена') : t('Добавить')}</Text>
               </Press>
             </View>
-            <Text style={styles.cardHint}>
-              Храним только дату. Фотография медкнижки должна лежать в кармане, а не на сервере.
-            </Text>
+            <Text style={styles.cardHint}>{t('Храним только дату. Фотография медкнижки должна лежать в кармане, а не на сервере.')}</Text>
 
             {addingDoc && (
               <>
@@ -257,7 +254,7 @@ export default function CostsScreen() {
                       <Text
                         style={[styles.chipText, docKind === option.value && styles.chipTextOn]}
                       >
-                        {option.label}
+                        {t(option.label)}
                       </Text>
                     </Press>
                   ))}
@@ -266,14 +263,14 @@ export default function CostsScreen() {
                   <TextInput
                     style={[styles.input, styles.grow]}
                     maxLength={80}
-                    placeholder="Как называется"
+                    placeholder={t("Как называется")}
                     placeholderTextColor={palette.textSecondary}
                     value={docName}
                     onChangeText={setDocName}
                   />
                   <TextInput
                     style={[styles.input, styles.grow]}
-                    placeholder="ГГГГ-ММ-ДД"
+                    placeholder={t("ГГГГ-ММ-ДД")}
                     placeholderTextColor={palette.textSecondary}
                     value={docUntil}
                     onChangeText={setDocUntil}
@@ -286,7 +283,7 @@ export default function CostsScreen() {
             )}
 
             {documents.length === 0 ? (
-              <Text style={styles.cardHint}>Пока ничего не записано.</Text>
+              <Text style={styles.cardHint}>{t('Пока ничего не записано.')}</Text>
             ) : (
               documents.map((paper) => (
                 <View key={paper.id} style={styles.itemRow}>
@@ -302,8 +299,8 @@ export default function CostsScreen() {
                     ]}
                   >
                     {paper.days_left < 0
-                      ? 'просрочен'
-                      : plural(paper.days_left, 'день', 'дня', 'дней')}
+                      ? t('просрочен')
+                      : plural(paper.days_left, t('день'), t('дня'), t('дней'))}
                   </Text>
                 </View>
               ))

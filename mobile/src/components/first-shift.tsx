@@ -17,6 +17,7 @@ import { Press } from '@/components/motion';
 import { Palette } from '@/constants/theme';
 import { api } from '@/lib/api';
 import { ShiftTemplate } from '@/lib/types';
+import { t } from '@/lib/i18n';
 
 type Period = 'hour' | 'day' | 'month';
 
@@ -61,7 +62,7 @@ export function FirstShift({
   const styles = makeStyles(palette);
 
   const [venue, setVenue] = useState('');
-  const [name, setName] = useState('Вечер');
+  const [name, setName] = useState(t('Вечер'));
   const [symbol, setSymbol] = useState('🍸');
   const [start, setStart] = useState('17:00');
   const [end, setEnd] = useState('01:00');
@@ -72,13 +73,13 @@ export function FirstShift({
 
   const save = async () => {
     if (name.trim() === '') {
-      setError('У смены должно быть название.');
+      setError(t('У смены должно быть название.'));
 
       return;
     }
 
     if (!TIME.test(start) || !TIME.test(end)) {
-      setError('Время пишется как 18:00.');
+      setError(t('Время пишется как 18:00.'));
 
       return;
     }
@@ -140,7 +141,7 @@ export function FirstShift({
 
       onDone(template);
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Не сохранилось.');
+      setError(caught instanceof Error ? caught.message : t('Не сохранилось.'));
       setBusy(false);
     }
   };
@@ -154,7 +155,7 @@ export function FirstShift({
           <View style={styles.grabber} />
 
           <View style={styles.head}>
-            <Text style={styles.title}>Ваша смена</Text>
+            <Text style={styles.title}>{t('Ваша смена')}</Text>
             <Press onPress={onClose} hitSlop={10}>
               <Ionicons name="close" size={22} color={palette.textSecondary} />
             </Press>
@@ -164,7 +165,7 @@ export function FirstShift({
             <View style={styles.shapes}>
               {SHAPES.map((shape) => (
                 <Press
-                  key={shape.name}
+                  key={t(shape.name)}
                   style={[styles.shape, name === shape.name && styles.shapeOn]}
                   onPress={() => {
                     setName(shape.name);
@@ -175,7 +176,7 @@ export function FirstShift({
                 >
                   <Text style={styles.shapeMark}>{shape.symbol}</Text>
                   <Text style={[styles.shapeName, name === shape.name && styles.shapeNameOn]}>
-                    {shape.name}
+                    {t(shape.name)}
                   </Text>
                   <Text style={styles.shapeTime}>
                     {shape.start}–{shape.end}
@@ -186,18 +187,18 @@ export function FirstShift({
 
             <View style={styles.row}>
               <View style={styles.grow}>
-                <Text style={styles.label}>Название</Text>
+                <Text style={styles.label}>{t('Название')}</Text>
                 <TextInput
                   style={styles.input}
                   value={name}
                   onChangeText={setName}
                   maxLength={40}
-                  placeholder="Вечер"
+                  placeholder={t("Вечер")}
                   placeholderTextColor={palette.textSecondary}
                 />
               </View>
               <View style={{ width: 76 }}>
-                <Text style={styles.label}>Значок</Text>
+                <Text style={styles.label}>{t('Значок')}</Text>
                 <TextInput
                   style={[styles.input, { textAlign: 'center' }]}
                   value={symbol}
@@ -211,7 +212,7 @@ export function FirstShift({
 
             <View style={styles.row}>
               <View style={styles.grow}>
-                <Text style={styles.label}>Начало</Text>
+                <Text style={styles.label}>{t('Начало')}</Text>
                 <TextInput
                   style={styles.input}
                   value={start}
@@ -221,7 +222,7 @@ export function FirstShift({
                 />
               </View>
               <View style={styles.grow}>
-                <Text style={styles.label}>Конец</Text>
+                <Text style={styles.label}>{t('Конец')}</Text>
                 <TextInput
                   style={styles.input}
                   value={end}
@@ -232,7 +233,7 @@ export function FirstShift({
               </View>
             </View>
 
-            <Text style={styles.label}>Сколько платят</Text>
+            <Text style={styles.label}>{t('Сколько платят')}</Text>
             <View style={styles.row}>
               <TextInput
                 style={[styles.input, styles.grow]}
@@ -252,20 +253,20 @@ export function FirstShift({
                     <Text
                       style={[styles.periodText, period === entry.id && styles.periodTextOn]}
                     >
-                      {entry.label}
+                      {t(entry.label)}
                     </Text>
                   </Press>
                 ))}
               </View>
             </View>
 
-            <Text style={styles.label}>Где, если хотите считать выплаты</Text>
+            <Text style={styles.label}>{t('Где, если хотите считать выплаты')}</Text>
             <TextInput
               style={styles.input}
               value={venue}
               onChangeText={setVenue}
               maxLength={60}
-              placeholder="Бар на углу"
+              placeholder={t("Бар на углу")}
               placeholderTextColor={palette.textSecondary}
             />
 
@@ -278,7 +279,7 @@ export function FirstShift({
             ) : (
               <>
                 <Ionicons name="pencil" size={17} color="#fff" />
-                <Text style={styles.doneText}>Создать и закрасить месяц</Text>
+                <Text style={styles.doneText}>{t('Создать и закрасить месяц')}</Text>
               </>
             )}
           </Press>

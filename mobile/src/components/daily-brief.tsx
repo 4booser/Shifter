@@ -5,6 +5,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Palette } from '@/constants/theme';
 import { Brief, BriefBlock, assistant } from '@/lib/assistant';
 import { todayKey } from '@/lib/calendar';
+import { t } from '@/lib/i18n';
 
 /**
  * The day in words, under the month where the screen used to trail off. The
@@ -82,10 +83,10 @@ export function DailyBrief({ palette, onOpen }: { palette: Palette; onOpen: () =
 
       <View style={styles.foot}>
         <Text style={styles.stamp}>
-          {brief.source === 'model' ? 'слова — от нейросети' : 'посчитал и написал сам Shifter'}
+          {brief.source === 'model' ? t('слова — от нейросети') : t('посчитал и написал сам Shifter')}
         </Text>
         <View style={styles.ask}>
-          <Text style={styles.askText}>Спросить</Text>
+          <Text style={styles.askText}>{t('Спросить')}</Text>
           <Ionicons name="chevron-forward" size={13} color={palette.accent} />
         </View>
       </View>

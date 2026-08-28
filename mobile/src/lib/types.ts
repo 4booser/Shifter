@@ -1,3 +1,4 @@
+import { t } from '@/lib/i18n';
 /** Mirrors the server DTOs the calendar screens touch. */
 
 export interface ShiftTemplate {
@@ -27,16 +28,16 @@ export const rateLine = (template: {
 }): string => {
   const period =
     template.salary_period === 'hour'
-      ? 'за час'
+      ? t('за час')
       : template.salary_period === 'day'
-        ? 'за смену'
+        ? t('за смену')
         : template.salary_period === 'week'
-          ? 'в неделю'
-          : 'в месяц';
+          ? t('в неделю')
+          : t('в месяц');
   const base = template.salary_amount > 0 ? `₴${template.salary_amount} ${period}` : null;
   const percent = template.revenue_percent === null ? null : `${template.revenue_percent}%`;
 
-  return [base, percent].filter((part) => part !== null).join(' + ') || 'без ставки';
+  return [base, percent].filter((part) => part !== null).join(' + ') || t('без ставки');
 };
 
 /**

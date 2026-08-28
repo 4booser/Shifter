@@ -17,6 +17,7 @@ import { Loading, Press } from '@/components/motion';
 import { Colors, Palette } from '@/constants/theme';
 import { api } from '@/lib/api';
 import { dayLabel, todayKey } from '@/lib/calendar';
+import { t } from '@/lib/i18n';
 import { Hit, searchDays, searchStatement } from '@/lib/search';
 import { CalendarDayData, DaysResponse, money } from '@/lib/types';
 import { useMono } from '@/store/mono';
@@ -83,14 +84,14 @@ export default function SearchScreen() {
             value={query}
             onChangeText={setQuery}
             autoFocus
-            placeholder="Заметка, смена, сумма, магазин"
+            placeholder={t("Заметка, смена, сумма, магазин")}
             placeholderTextColor={palette.textSecondary}
             returnKeyType="search"
             clearButtonMode="while-editing"
           />
         </View>
         <Press hitSlop={10} haptic={false} onPress={() => router.back()}>
-          <Text style={styles.cancel}>Отмена</Text>
+          <Text style={styles.cancel}>{t('Отмена')}</Text>
         </Press>
       </View>
 
@@ -102,15 +103,12 @@ export default function SearchScreen() {
         {days === null && <Loading colour={palette.backgroundElement} rows={3} height={62} />}
 
         {query.trim().length < 2 && days !== null && (
-          <Text style={styles.hint}>
-            Ищет по заметкам, названиям смен и датам. Число ищется как сумма: «3000» найдёт день,
-            где вышло 2 995.
-          </Text>
+          <Text style={styles.hint}>{t('Ищет по заметкам, названиям смен и датам. Число ищется как сумма: «3000» найдёт день, где вышло 2 995.')}</Text>
         )}
 
-        {nothing && <Text style={styles.hint}>Ничего не нашлось.</Text>}
+        {nothing && <Text style={styles.hint}>{t('Ничего не нашлось.')}</Text>}
 
-        {found.days.length > 0 && <Text style={styles.section}>Дни</Text>}
+        {found.days.length > 0 && <Text style={styles.section}>{t('Дни')}</Text>}
         {found.days.map((hit) => (
           <Press key={`d-${hit.date}`} style={styles.row} onPress={() => open(hit)}>
             <View style={styles.rowText}>
@@ -124,7 +122,7 @@ export default function SearchScreen() {
           </Press>
         ))}
 
-        {found.money.length > 0 && <Text style={styles.section}>По счёту</Text>}
+        {found.money.length > 0 && <Text style={styles.section}>{t('По счёту')}</Text>}
         {found.money.map((hit, index) => (
           <Press key={`m-${hit.date}-${index}`} style={styles.row} onPress={() => open(hit)}>
             <View style={styles.rowText}>

@@ -7,6 +7,7 @@ import { Palette } from '@/constants/theme';
 import { addMonths, monthBounds, monthGrid, monthOnly, todayKey, WEEKDAYS, YearMonth } from '@/lib/calendar';
 import { byDay, MonoStatementItem, periodTotals } from '@/lib/mono';
 import { CalendarDayData, moneyShort, tint } from '@/lib/types';
+import { t } from '@/lib/i18n';
 
 const CELL = 60;
 const SPAN = 24;
@@ -67,7 +68,7 @@ export function MoneyGrid({
       <View style={styles.weekHead}>
         {WEEKDAYS.map((name, at) => (
           <Text key={name} style={[styles.weekDay, at > 4 && styles.weekDayRest]}>
-            {name}
+            {t(name)}
           </Text>
         ))}
       </View>

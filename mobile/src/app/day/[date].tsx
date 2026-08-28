@@ -33,6 +33,7 @@ import {
   tint,
   toSavePayload,
 } from '@/lib/types';
+import { t } from '@/lib/i18n';
 
 /**
  * One day, editable: which templates are on it, whether they were worked,
@@ -74,7 +75,7 @@ export default function DayScreen() {
         setTipPool(loaded.tip_pool === null ? '' : `${loaded.tip_pool}`);
         setNote(loaded.note ?? '');
       })
-      .catch(() => setError('День не загрузился.'));
+      .catch(() => setError(t('День не загрузился.')));
   }, [date]);
 
   const styles = makeStyles(palette);
@@ -214,7 +215,7 @@ export default function DayScreen() {
       await api(`/shifter/v1/days/${date}`, { method: 'PUT', body: payload });
       router.back();
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Не сохранилось.');
+      setError(caught instanceof Error ? caught.message : t('Не сохранилось.'));
       setBusy(false);
     }
   };
@@ -247,7 +248,7 @@ export default function DayScreen() {
                   ]}
                 />
                 <Text style={styles.worthLabel}>
-                  {day.earned > 0 ? 'заработано' : 'в плане'}
+                  {day.earned > 0 ? t('заработано') : t('в плане')}
                 </Text>
               </View>
               <View style={styles.worthRule} />
@@ -255,13 +256,13 @@ export default function DayScreen() {
                 <Text style={styles.worthValue}>
                   {day.hours > 0 ? `${day.hours}`.replace('.', ',') : '—'}
                 </Text>
-                <Text style={styles.worthLabel}>часов</Text>
+                <Text style={styles.worthLabel}>{t('часов')}</Text>
               </View>
               <View style={styles.worthRule} />
               <View style={styles.worthHalf}>
                 <Text style={styles.worthValue}>{day.shifts.length}</Text>
                 <Text style={styles.worthLabel}>
-                  {plural(day.shifts.length, 'смена', 'смены', 'смен').split(' ')[1]}
+                  {plural(day.shifts.length, t('смена'), t('смены'), t('смен')).split(' ')[1]}
                 </Text>
               </View>
             </View>
@@ -270,11 +271,11 @@ export default function DayScreen() {
 
         {day !== null && (
           <>
-            <Text style={styles.section}>Смены</Text>
+            <Text style={styles.section}>{t('Смены')}</Text>
             {templates.length === 0 && (
               <Press style={styles.makeFirst} onPress={() => router.push('/templates')}>
                 <Ionicons name="add-circle-outline" size={18} color={palette.accent} />
-                <Text style={styles.makeFirstText}>Заведите первую смену</Text>
+                <Text style={styles.makeFirstText}>{t('Заведите первую смену')}</Text>
               </Press>
             )}
             <View style={styles.templateWrap}>
@@ -313,7 +314,7 @@ export default function DayScreen() {
                         {entry.earned > 0 ? ` · ${money(entry.earned)}` : ''}
                       </Text>
                       <View style={styles.workedSwitch}>
-                        <Text style={styles.workedHint}>{entry.worked ? 'отработана' : 'план'}</Text>
+                        <Text style={styles.workedHint}>{entry.worked ? t('отработана') : t('план')}</Text>
                         <Switch
                           value={entry.worked}
                           onValueChange={(value) => setWorked(entry.shift_id, value)}
@@ -329,7 +330,7 @@ export default function DayScreen() {
                     {entry.worked && (
                       <View style={styles.actualRow}>
                         <View style={styles.actualField}>
-                          <Text style={styles.fieldLabel}>Пришёл</Text>
+                          <Text style={styles.fieldLabel}>{t('Пришёл')}</Text>
                           <TextInput
                             style={styles.input}
                             placeholder={entry.start_time.slice(0, 5)}
@@ -339,7 +340,7 @@ export default function DayScreen() {
                           />
                         </View>
                         <View style={styles.actualField}>
-                          <Text style={styles.fieldLabel}>Ушёл</Text>
+                          <Text style={styles.fieldLabel}>{t('Ушёл')}</Text>
                           <TextInput
                             style={styles.input}
                             placeholder={entry.end_time.slice(0, 5)}
@@ -362,7 +363,7 @@ export default function DayScreen() {
                           color={entry.needs_cover ? '#fff' : palette.textSecondary}
                         />
                         <Text style={[styles.coverText, entry.needs_cover && styles.coverTextOn]}>
-                          {entry.needs_cover ? 'Ищу замену' : 'Попросить о замене'}
+                          {entry.needs_cover ? t('Ищу замену') : t('Попросить о замене')}
                         </Text>
                       </Press>
                     )}
@@ -375,7 +376,7 @@ export default function DayScreen() {
                         <TextInput
                           style={styles.input}
                           keyboardType="numeric"
-                          placeholder="не считаем"
+                          placeholder={t("не считаем")}
                           placeholderTextColor={palette.textSecondary}
                           value={entry.revenue === null ? '' : `${entry.revenue}`}
                           onChangeText={(value) => setRevenue(entry.shift_id, value)}
@@ -387,10 +388,10 @@ export default function DayScreen() {
               </View>
             )}
 
-            <Text style={styles.section}>Деньги дня</Text>
+            <Text style={styles.section}>{t('Деньги дня')}</Text>
             <View style={styles.moneyRow}>
               <View style={styles.moneyField}>
-                <Text style={styles.fieldLabel}>{pooled === null ? 'Чаевые' : 'Общак за день'}</Text>
+                <Text style={styles.fieldLabel}>{pooled === null ? t('Чаевые') : t('Общак за день')}</Text>
                 <TextInput
                   style={styles.input}
                   keyboardType="numeric"
@@ -406,7 +407,7 @@ export default function DayScreen() {
                 )}
               </View>
               <View style={styles.moneyField}>
-                <Text style={styles.fieldLabel}>Штрафы и недостачи</Text>
+                <Text style={styles.fieldLabel}>{t('Штрафы и недостачи')}</Text>
                 <TextInput
                   style={styles.input}
                   keyboardType="numeric"
@@ -446,12 +447,12 @@ export default function DayScreen() {
               </View>
             )}
 
-            <Text style={styles.fieldLabel}>Заметка</Text>
+            <Text style={styles.fieldLabel}>{t('Заметка')}</Text>
             <TextInput
               style={[styles.input, styles.noteInput]}
               multiline
               maxLength={500}
-              placeholder="Что запомнить об этом дне"
+              placeholder={t("Что запомнить об этом дне")}
               placeholderTextColor={palette.textSecondary}
               value={note}
               onChangeText={setNote}
@@ -462,7 +463,7 @@ export default function DayScreen() {
               disabled={busy}
               onPress={() => void save()}
             >
-              {busy ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveText}>Сохранить день</Text>}
+              {busy ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveText}>{t('Сохранить день')}</Text>}
             </Pressable>
           </>
         )}

@@ -16,6 +16,7 @@ import { Colors, Palette } from '@/constants/theme';
 import { api, ApiError } from '@/lib/api';
 import { dayLabel, todayKey } from '@/lib/calendar';
 import { money, plural } from '@/lib/types';
+import { t } from '@/lib/i18n';
 
 /**
  * The two things a shift needs from the shift before it: what the room took,
@@ -98,7 +99,7 @@ export default function CrewScreen() {
       setStops(handover.stops);
       setError(null);
     } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : 'Не дотянулись до сервера.');
+      setError(caught instanceof ApiError ? caught.message : t('Не дотянулись до сервера.'));
     } finally {
       setLoading(false);
     }
@@ -118,7 +119,7 @@ export default function CrewScreen() {
       );
       setError(null);
     } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : 'Не сохранилось.');
+      setError(caught instanceof ApiError ? caught.message : t('Не сохранилось.'));
     }
   };
 
@@ -132,7 +133,7 @@ export default function CrewScreen() {
       );
       setError(null);
     } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : 'Не сохранилось.');
+      setError(caught instanceof ApiError ? caught.message : t('Не сохранилось.'));
     }
   };
 
@@ -149,7 +150,7 @@ export default function CrewScreen() {
       setName('');
       setAdding(null);
     } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : 'Не сохранилось.');
+      setError(caught instanceof ApiError ? caught.message : t('Не сохранилось.'));
     }
   };
 
@@ -161,7 +162,7 @@ export default function CrewScreen() {
         }),
       );
     } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : 'Не сохранилось.');
+      setError(caught instanceof ApiError ? caught.message : t('Не сохранилось.'));
     }
   };
 
@@ -182,22 +183,20 @@ export default function CrewScreen() {
 
           {/* ==== The tin, counted once ==== */}
           <View style={styles.card}>
-            <Text style={styles.cardTitle}>Общак</Text>
-            <Text style={styles.cardHint}>
-              Считает кто-то один. Доли — из ваших же смен.
-            </Text>
+            <Text style={styles.cardTitle}>{t('Общак')}</Text>
+            <Text style={styles.cardHint}>{t('Считает кто-то один. Доли — из ваших же смен.')}</Text>
 
             <View style={styles.poolRow}>
               <TextInput
                 style={[styles.input, styles.grow]}
                 keyboardType="numeric"
-                placeholder="Сколько собрал зал"
+                placeholder={t("Сколько собрал зал")}
                 placeholderTextColor={palette.textSecondary}
                 value={amount}
                 onChangeText={setAmount}
               />
               <Press style={styles.primary} onPress={() => void savePool()}>
-                <Text style={styles.primaryText}>Столько</Text>
+                <Text style={styles.primaryText}>{t('Столько')}</Text>
               </Press>
             </View>
 
@@ -212,7 +211,7 @@ export default function CrewScreen() {
               >
                 <Text style={styles.shareName} numberOfLines={1}>
                   {share.name}
-                  {share.mine ? ' · вы' : ''}
+                  {share.mine ? t(' · вы') : ''}
                 </Text>
                 <Text style={styles.sharePercent}>{share.percent}%</Text>
                 <Text style={styles.shareAmount}>{money(share.amount)}</Text>
@@ -231,47 +230,43 @@ export default function CrewScreen() {
 
           {/* ==== What the next shift needs to know ==== */}
           <View style={styles.card}>
-            <Text style={styles.cardTitle}>Передача</Text>
+            <Text style={styles.cardTitle}>{t('Передача')}</Text>
             <Text style={styles.cardHint}>
               {note?.by !== null && note?.by !== undefined
-                ? `Последним писал ${note.by}`
-                : 'За сегодня ещё ничего не оставили.'}
+                ? `${t('Последним писал')} ${note.by}`
+                : t('За сегодня ещё ничего не оставили.')}
             </Text>
 
             <TextInput
               style={[styles.input, styles.note]}
               multiline
               maxLength={1000}
-              placeholder="Кухня без буррата с восьми. Кофемолка шумит. В девять стол на двадцать."
+              placeholder={t("Кухня без буррата с восьми. Кофемолка шумит. В девять стол на двадцать.")}
               placeholderTextColor={palette.textSecondary}
               value={text}
               onChangeText={setText}
             />
             <Press style={styles.primary} onPress={() => void saveNote()}>
-              <Text style={styles.primaryText}>Оставить следующей смене</Text>
+              <Text style={styles.primaryText}>{t('Оставить следующей смене')}</Text>
             </Press>
           </View>
 
           {/* ==== The stop list, which does not reset at midnight ==== */}
           <View style={styles.card}>
-            <Text style={styles.cardTitle}>Стоп-лист и поломки</Text>
+            <Text style={styles.cardTitle}>{t('Стоп-лист и поломки')}</Text>
 
             <View style={styles.kindRow}>
               <Press
                 style={[styles.chip, adding === 'stop' && styles.chipOn]}
                 onPress={() => setAdding(adding === 'stop' ? null : 'stop')}
               >
-                <Text style={[styles.chipText, adding === 'stop' && styles.chipTextOn]}>
-                  Закончилось
-                </Text>
+                <Text style={[styles.chipText, adding === 'stop' && styles.chipTextOn]}>{t('Закончилось')}</Text>
               </Press>
               <Press
                 style={[styles.chip, adding === 'broken' && styles.chipOn]}
                 onPress={() => setAdding(adding === 'broken' ? null : 'broken')}
               >
-                <Text style={[styles.chipText, adding === 'broken' && styles.chipTextOn]}>
-                  Сломалось
-                </Text>
+                <Text style={[styles.chipText, adding === 'broken' && styles.chipTextOn]}>{t('Сломалось')}</Text>
               </Press>
             </View>
 
@@ -281,27 +276,27 @@ export default function CrewScreen() {
                   style={[styles.input, styles.grow]}
                   autoFocus
                   maxLength={80}
-                  placeholder={adding === 'stop' ? 'Мартини' : 'Кофемолка'}
+                  placeholder={adding === 'stop' ? t('Мартини') : t('Кофемолка')}
                   placeholderTextColor={palette.textSecondary}
                   value={name}
                   onChangeText={setName}
                   onSubmitEditing={() => void raise()}
                 />
                 <Press style={styles.primary} onPress={() => void raise()}>
-                  <Text style={styles.primaryText}>Внести</Text>
+                  <Text style={styles.primaryText}>{t('Внести')}</Text>
                 </Press>
               </View>
             )}
 
             {stops.length === 0 ? (
-              <Text style={styles.cardHint}>Ничего не не хватает. Пусть так и будет.</Text>
+              <Text style={styles.cardHint}>{t('Ничего не не хватает. Пусть так и будет.')}</Text>
             ) : (
               stops.map((item) => (
                 <View key={item.id} style={styles.stopRow}>
                   <Text
                     style={[styles.stopKind, item.kind === 'broken' && styles.stopBroken]}
                   >
-                    {item.kind === 'broken' ? 'сломано' : 'нет'}
+                    {item.kind === 'broken' ? t('сломано') : t('нет')}
                   </Text>
                   <Text style={styles.stopName} numberOfLines={1}>
                     {item.name}
@@ -309,7 +304,7 @@ export default function CrewScreen() {
                   {/* Three weeks broken is a different conversation from this
                       morning, and only the number says which. */}
                   <Text style={styles.stopMeta}>
-                    {item.days > 0 ? plural(item.days, 'день', 'дня', 'дней') : 'сегодня'}
+                    {item.days > 0 ? plural(item.days, t('день'), t('дня'), t('дней')) : t('сегодня')}
                   </Text>
                   <Press onPress={() => void clear(item.id)} hitSlop={10}>
                     <Ionicons name="checkmark" size={18} color={palette.good} />

@@ -20,6 +20,7 @@ import { Colors, Palette } from '@/constants/theme';
 import { api, ApiError } from '@/lib/api';
 import { dayLabel, pad, todayKey } from '@/lib/calendar';
 import { plural, rateLine, ShiftTemplate } from '@/lib/types';
+import { t } from '@/lib/i18n';
 
 interface Team {
   id: number;
@@ -186,7 +187,7 @@ export default function ScheduleScreen() {
         setTeamId((current) => current ?? list[0]?.id ?? null);
       } catch {
         setTeams([]);
-        setError('Не дотянулись до сервера.');
+        setError(t('Не дотянулись до сервера.'));
       }
     })();
   }, []);
@@ -212,7 +213,7 @@ export default function ScheduleScreen() {
       setTemplates(shifts.filter((item) => !item.archived));
       setError(null);
     } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : 'Не дотянулись до сервера.');
+      setError(caught instanceof ApiError ? caught.message : t('Не дотянулись до сервера.'));
     }
   }, [teamId, span.from, span.to]);
 
@@ -231,7 +232,7 @@ export default function ScheduleScreen() {
       setAccepting(null);
       await load();
     } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : 'Не отправилось.');
+      setError(caught instanceof ApiError ? caught.message : t('Не отправилось.'));
     }
   };
 
@@ -245,7 +246,7 @@ export default function ScheduleScreen() {
       );
       await load();
     } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : 'Не получилось.');
+      setError(caught instanceof ApiError ? caught.message : t('Не получилось.'));
     }
   };
 
@@ -259,7 +260,7 @@ export default function ScheduleScreen() {
       });
       await load();
     } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : 'Не сохранилось.');
+      setError(caught instanceof ApiError ? caught.message : t('Не сохранилось.'));
     }
   };
 
@@ -280,7 +281,7 @@ export default function ScheduleScreen() {
       );
       await load();
     } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : 'Не сохранилось.');
+      setError(caught instanceof ApiError ? caught.message : t('Не сохранилось.'));
     }
   };
 
@@ -313,20 +314,20 @@ export default function ScheduleScreen() {
         }
       >
         <View style={styles.titleRow}>
-          <Text style={styles.title}>График</Text>
+          <Text style={styles.title}>{t('График')}</Text>
           {teamId !== null && (
             <Press
               style={styles.boardButton}
               onPress={() => router.push(`/crew?teamId=${teamId}`)}
             >
               <Ionicons name="cash-outline" size={15} color={palette.accent} />
-              <Text style={styles.boardButtonText}>Смена</Text>
+              <Text style={styles.boardButtonText}>{t('Смена')}</Text>
             </Press>
           )}
           {board?.can_plan === true && (
             <Press style={styles.boardButton} onPress={() => router.push('/board')}>
               <Ionicons name="grid-outline" size={15} color={palette.accent} />
-              <Text style={styles.boardButtonText}>Доска</Text>
+              <Text style={styles.boardButtonText}>{t('Доска')}</Text>
             </Press>
           )}
         </View>
@@ -335,13 +336,10 @@ export default function ScheduleScreen() {
 
         {teams !== null && teams.length === 0 && (
           <View style={styles.card}>
-            <Text style={styles.cardTitle}>Вы пока не в команде</Text>
-            <Text style={styles.lead}>
-              Попросите у старшего код приглашения — и увидите общий график, свои смены и кто
-              выходит вместе с вами.
-            </Text>
+            <Text style={styles.cardTitle}>{t('Вы пока не в команде')}</Text>
+            <Text style={styles.lead}>{t('Попросите у старшего код приглашения — и увидите общий график, свои смены и кто выходит вместе с вами.')}</Text>
             <Press style={styles.primary} onPress={() => setJoining(true)}>
-              <Text style={styles.primaryText}>Ввести код</Text>
+              <Text style={styles.primaryText}>{t('Ввести код')}</Text>
             </Press>
           </View>
         )}
@@ -366,7 +364,7 @@ export default function ScheduleScreen() {
 
         {offered.length > 0 && (
           <View style={styles.offerBox}>
-            <Text style={styles.offerTitle}>Вам предложили смены</Text>
+            <Text style={styles.offerTitle}>{t('Вам предложили смены')}</Text>
             {offered.map((row) => (
               <View key={row.id} style={styles.offerRow}>
                 <View style={styles.grow}>
@@ -376,10 +374,10 @@ export default function ScheduleScreen() {
                   </Text>
                 </View>
                 <Press style={styles.yes} onPress={() => setAccepting(row)}>
-                  <Text style={styles.yesText}>Беру</Text>
+                  <Text style={styles.yesText}>{t('Беру')}</Text>
                 </Press>
                 <Press style={styles.no} onPress={() => void decide(row, null)}>
-                  <Text style={styles.noText}>Не могу</Text>
+                  <Text style={styles.noText}>{t('Не могу')}</Text>
                 </Press>
               </View>
             ))}
@@ -390,14 +388,14 @@ export default function ScheduleScreen() {
             and history belongs on the web where there is room for it. */}
         {leave.filter((row) => row.status === 'pending').length > 0 && (
           <View style={styles.offerBox}>
-            <Text style={styles.offerTitle}>Просят выходные</Text>
+            <Text style={styles.offerTitle}>{t('Просят выходные')}</Text>
             {leave
               .filter((row) => row.status === 'pending')
               .map((row) => (
                 <View key={row.id} style={styles.offerRow}>
                   <View style={styles.grow}>
                     <Text style={styles.offerWhen}>
-                      {row.mine ? 'Вы' : row.user_name} · {plural(row.days, 'день', 'дня', 'дней')}
+                      {row.mine ? t('Вы') : row.user_name} · {plural(row.days, t('день'), t('дня'), t('дней'))}
                     </Text>
                     <Text style={styles.offerWhat}>
                       {row.from === row.to ? dayLabel(row.from) : `${dayLabel(row.from)} — ${dayLabel(row.to)}`}
@@ -407,16 +405,16 @@ export default function ScheduleScreen() {
                   {row.can_decide && (
                     <>
                       <Press style={styles.yes} onPress={() => void decideLeave(row.id, true)}>
-                        <Text style={styles.yesText}>Можно</Text>
+                        <Text style={styles.yesText}>{t('Можно')}</Text>
                       </Press>
                       <Press style={styles.no} onPress={() => void decideLeave(row.id, false)}>
-                        <Text style={styles.noText}>Нет</Text>
+                        <Text style={styles.noText}>{t('Нет')}</Text>
                       </Press>
                     </>
                   )}
                   {row.mine && (
                     <Press style={styles.no} onPress={() => void decideLeave(row.id, null)}>
-                      <Text style={styles.noText}>Отозвать</Text>
+                      <Text style={styles.noText}>{t('Отозвать')}</Text>
                     </Press>
                   )}
                 </View>
@@ -426,15 +424,15 @@ export default function ScheduleScreen() {
 
         {swaps.filter((swap) => swap.status === 'pending').length > 0 && (
           <View style={styles.swapBox}>
-            <Text style={styles.offerTitle}>Обмены сменами</Text>
+            <Text style={styles.offerTitle}>{t('Обмены сменами')}</Text>
             {swaps
               .filter((swap) => swap.status === 'pending')
               .map((swap) => (
                 <View key={swap.id} style={styles.swapRow}>
                   <Text style={styles.swapWho}>
                     {swap.mine
-                      ? `Вы предложили ${swap.target_name}`
-                      : `${swap.proposer_name} предлагает обмен`}
+                      ? `${t('Вы предложили')} ${swap.target_name}`
+                      : `${swap.proposer_name} ${t('предлагает обмен')}`}
                   </Text>
                   <Text style={styles.swapWhat}>
                     {dayLabel(swap.proposer_date)} · {swap.proposer_shift} {swap.proposer_start}–
@@ -456,7 +454,7 @@ export default function ScheduleScreen() {
                     onPress={() => void decideSwap(swap, !swap.mine)}
                   >
                     <Text style={swap.mine ? styles.noText : styles.yesText}>
-                      {swap.mine ? 'Отозвать' : 'Согласиться'}
+                      {swap.mine ? t('Отозвать') : t('Согласиться')}
                     </Text>
                   </Press>
                 </View>
@@ -466,7 +464,7 @@ export default function ScheduleScreen() {
 
         {teamId !== null && board !== null && (
           <>
-            <Text style={styles.sectionTitle}>Кто выходит</Text>
+            <Text style={styles.sectionTitle}>{t('Кто выходит')}</Text>
 
             {dates.map((date) => {
               const rows = shiftsByDate.get(date) ?? [];
@@ -481,23 +479,23 @@ export default function ScheduleScreen() {
                     </Text>
                     <Press hitSlop={8} onPress={() => void blockDay(date)}>
                       <Text style={[styles.block, blocked && styles.blockOn]}>
-                        {blocked ? 'не могу ✓' : 'не могу'}
+                        {blocked ? t('не могу ✓') : t('не могу')}
                       </Text>
                     </Press>
                   </View>
 
                   {rows.length === 0 && outings.length === 0 ? (
-                    <Text style={styles.dayEmpty}>никого не поставили</Text>
+                    <Text style={styles.dayEmpty}>{t('никого не поставили')}</Text>
                   ) : (
                     <>
                       {rows.map((entry) => (
                         <View key={entry.day_shift_id} style={styles.personRow}>
                           <View style={[styles.dot, { backgroundColor: entry.member_colour }]} />
                           <Text style={styles.personName} numberOfLines={1}>
-                            {names.get(entry.member_id)?.display_name ?? 'кто-то'}
-                            {entry.is_mine ? ' · вы' : ''}
+                            {names.get(entry.member_id)?.display_name ?? t('кто-то')}
+                            {entry.is_mine ? t(' · вы') : ''}
                           </Text>
-                          {entry.needs_cover && <Text style={styles.cover}>ищет замену</Text>}
+                          {entry.needs_cover && <Text style={styles.cover}>{t('ищет замену')}</Text>}
                           <Text style={styles.personWhen}>
                             {entry.start_time}–{entry.end_time}
                           </Text>
@@ -511,10 +509,10 @@ export default function ScheduleScreen() {
                         <View key={`gig-${outing.member_id}-${at}`} style={styles.personRow}>
                           <View style={[styles.dot, { backgroundColor: palette.textSecondary }]} />
                           <Text style={styles.personName} numberOfLines={1}>
-                            {names.get(outing.member_id)?.display_name ?? 'кто-то'}
+                            {names.get(outing.member_id)?.display_name ?? t('кто-то')}
                           </Text>
                           <Text style={styles.outing}>
-                            {outing.employment === 'freelance' ? 'фриланс' : 'постоянка'}
+                            {outing.employment === 'freelance' ? t('фриланс') : t('постоянка')}
                           </Text>
                           <Text style={styles.personWhen}>
                             {outing.start}–{outing.end}
@@ -627,7 +625,7 @@ function TemplateModal({
       onMade();
       onPick(made.id);
     } catch (caught) {
-      setFailed(caught instanceof ApiError ? caught.message : 'Шаблон не создался.');
+      setFailed(caught instanceof ApiError ? caught.message : t('Шаблон не создался.'));
     } finally {
       setBusy(false);
     }
@@ -637,7 +635,7 @@ function TemplateModal({
     <Modal visible={assignment !== null} animationType="slide" transparent onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose} />
       <ScrollView style={styles.tallSheet} contentContainerStyle={styles.tallSheetInner}>
-        <Text style={styles.sheetTitle}>Чем считать эту смену</Text>
+        <Text style={styles.sheetTitle}>{t('Чем считать эту смену')}</Text>
         <Text style={styles.lead}>
           {assignment !== null
             ? `${assignment.title} · ${dayLabel(assignment.date)}, ${assignment.start}–${assignment.end}`
@@ -659,19 +657,19 @@ function TemplateModal({
 
             <Press style={styles.ghostRow} onPress={() => setMaking(true)}>
               <Ionicons name="add-circle-outline" size={20} color={palette.accent} />
-              <Text style={styles.ghostRowText}>Новый шаблон по этой смене</Text>
+              <Text style={styles.ghostRowText}>{t('Новый шаблон по этой смене')}</Text>
             </Press>
           </>
         )}
 
         {making && (
           <>
-            <Text style={styles.fieldLabel}>Платят</Text>
+            <Text style={styles.fieldLabel}>{t('Платят')}</Text>
             <View style={styles.segmentRow}>
               {([
-                ['hour', 'за час'],
-                ['day', 'за смену'],
-                ['month', 'в месяц'],
+                ['hour', t('за час')],
+                ['day', t('за смену')],
+                ['month', t('в месяц')],
               ] as const).map(([value, label]) => (
                 <Press
                   key={value}
@@ -690,29 +688,26 @@ function TemplateModal({
               value={amount}
               onChangeText={setAmount}
               keyboardType="numeric"
-              placeholder="Сумма, ₴"
+              placeholder={t("Сумма, ₴")}
               placeholderTextColor={palette.textSecondary}
             />
 
-            <Text style={styles.fieldLabel}>Плюс процент от выручки</Text>
+            <Text style={styles.fieldLabel}>{t('Плюс процент от выручки')}</Text>
             <TextInput
               style={styles.input}
               value={percent}
               onChangeText={setPercent}
               keyboardType="numeric"
-              placeholder="без процента"
+              placeholder={t("без процента")}
               placeholderTextColor={palette.textSecondary}
             />
-            <Text style={styles.hint}>
-              Ставку и процент можно взять вместе — тогда каждый день будет спрашивать выручку
-              смены.
-            </Text>
+            <Text style={styles.hint}>{t('Ставку и процент можно взять вместе — тогда каждый день будет спрашивать выручку смены.')}</Text>
 
-            <Text style={styles.fieldLabel}>Чаевые</Text>
+            <Text style={styles.fieldLabel}>{t('Чаевые')}</Text>
             <View style={styles.segmentRow}>
               {([
-                [false, 'свои'],
-                [true, 'доля общака'],
+                [false, t('свои')],
+                [true, t('доля общака')],
               ] as const).map(([value, label]) => (
                 <Press
                   key={label}
@@ -733,12 +728,10 @@ function TemplateModal({
                   value={poolShare}
                   onChangeText={setPoolShare}
                   keyboardType="numeric"
-                  placeholder="Ваша доля, %"
+                  placeholder={t("Ваша доля, %")}
                   placeholderTextColor={palette.textSecondary}
                 />
-                <Text style={styles.hint}>
-                  Каждый день вводите общак — вашу долю посчитаем сами.
-                </Text>
+                <Text style={styles.hint}>{t('Каждый день вводите общак — вашу долю посчитаем сами.')}</Text>
               </>
             )}
 
@@ -750,13 +743,13 @@ function TemplateModal({
               onPress={() => void create()}
             >
               <Text style={styles.primaryText}>
-                {busy ? 'Создаём…' : 'Создать и взять смену'}
+                {busy ? t('Создаём…') : t('Создать и взять смену')}
               </Text>
             </Press>
 
             {templates.length > 0 && (
               <Press style={styles.ghostRow} onPress={() => setMaking(false)}>
-                <Text style={styles.ghostRowText}>Выбрать из готовых</Text>
+                <Text style={styles.ghostRowText}>{t('Выбрать из готовых')}</Text>
               </Press>
             )}
           </>
@@ -795,7 +788,7 @@ function JoinModal({
       );
       setCode('');
     } catch (caught) {
-      setFailed(caught instanceof ApiError ? caught.message : 'Код не подошёл.');
+      setFailed(caught instanceof ApiError ? caught.message : t('Код не подошёл.'));
     } finally {
       setBusy(false);
     }
@@ -805,7 +798,7 @@ function JoinModal({
     <Modal visible={open} animationType="slide" transparent onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose} />
       <View style={styles.sheet}>
-        <Text style={styles.sheetTitle}>Код приглашения</Text>
+        <Text style={styles.sheetTitle}>{t('Код приглашения')}</Text>
         <TextInput
           style={styles.input}
           value={code}
@@ -820,7 +813,7 @@ function JoinModal({
           disabled={busy || code.trim() === ''}
           onPress={() => void join()}
         >
-          <Text style={styles.primaryText}>{busy ? 'Заходим…' : 'Войти в команду'}</Text>
+          <Text style={styles.primaryText}>{busy ? t('Заходим…') : t('Войти в команду')}</Text>
         </Press>
       </View>
     </Modal>

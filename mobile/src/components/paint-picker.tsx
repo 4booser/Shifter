@@ -12,6 +12,7 @@ import {
   ShiftTemplate,
   tint,
 } from '@/lib/types';
+import { t } from '@/lib/i18n';
 
 /**
  * What the pencil is loaded with.
@@ -38,8 +39,8 @@ export const brushColour = (brush: Brush, palette: Palette): string => {
 
 export const brushName = (brush: Brush): string => {
   switch (brush.kind) {
-    case 'erase': return 'Стереть планы';
-    case 'worked': return 'Отметить отработанными';
+    case 'erase': return t('Стереть планы');
+    case 'worked': return t('Отметить отработанными');
     case 'event': return brush.name;
     default: return brush.template.name;
   }
@@ -122,19 +123,19 @@ export function PaintPicker({
         <View style={styles.grabber} />
 
         <View style={styles.head}>
-          <Text style={styles.title}>Чем закрасить дни</Text>
+          <Text style={styles.title}>{t('Чем закрасить дни')}</Text>
           <Press onPress={onClose} hitSlop={10}>
             <Ionicons name="close" size={22} color={palette.textSecondary} />
           </Press>
         </View>
 
         <ScrollView style={styles.list} contentContainerStyle={styles.listBody}>
-          <Text style={styles.heading}>Смены</Text>
+          <Text style={styles.heading}>{t('Смены')}</Text>
 
           {live.length === 0 ? (
             <Press style={styles.empty} onPress={onManage}>
               <Ionicons name="add-circle-outline" size={18} color={palette.accent} />
-              <Text style={styles.emptyText}>Заведите первую смену — потом рисуйте ею месяц</Text>
+              <Text style={styles.emptyText}>{t('Заведите первую смену — потом рисуйте ею месяц')}</Text>
             </Press>
           ) : (
             live.map((template) =>
@@ -149,16 +150,16 @@ export function PaintPicker({
             )
           )}
 
-          <Text style={styles.heading}>События</Text>
+          <Text style={styles.heading}>{t('События')}</Text>
 
           {EVENT_PRESETS.map((preset) =>
             row(
               `preset-${preset.name}`,
               preset.colour,
               preset.symbol,
-              preset.name,
+              t(preset.name),
               preset.kind === 'vacation' || preset.kind === 'sick'
-                ? 'Не сбивает темп заработка'
+                ? t('Не сбивает темп заработка')
                 : null,
               {
                 kind: 'event',
@@ -176,7 +177,7 @@ export function PaintPicker({
               entry.colour,
               entry.symbol,
               entry.name,
-              'Уже в календаре',
+              t('Уже в календаре'),
               {
                 kind: 'event',
                 name: entry.name,
@@ -187,14 +188,14 @@ export function PaintPicker({
             ),
           )}
 
-          <Text style={styles.heading}>Действия</Text>
+          <Text style={styles.heading}>{t('Действия')}</Text>
 
           {row(
             'worked',
             palette.good,
             '\u2713',
-            'Отметить отработанными',
-            'Планы этих дней станут деньгами',
+            t('Отметить отработанными'),
+            t('Планы этих дней станут деньгами'),
             { kind: 'worked' },
           )}
 
@@ -202,8 +203,8 @@ export function PaintPicker({
             'erase',
             palette.danger,
             '×',
-            'Стереть планы',
-            'Отработанные дни и их деньги остаются',
+            t('Стереть планы'),
+            t('Отработанные дни и их деньги остаются'),
             { kind: 'erase' },
           )}
         </ScrollView>

@@ -17,6 +17,7 @@ import { Colors, Palette } from '@/constants/theme';
 import { api } from '@/lib/api';
 import { currentMonth, monthBounds } from '@/lib/calendar';
 import { DaysResponse, money, plural } from '@/lib/types';
+import { t } from '@/lib/i18n';
 
 /**
  * Hours are the honest measure of a year in hospitality: money moves with the
@@ -24,12 +25,12 @@ import { DaysResponse, money, plural } from '@/lib/types';
  * the trade's own, not a leaderboard.
  */
 const TIERS: { hours: number; name: string; emoji: string }[] = [
-  { hours: 1800, name: 'Легенда зала', emoji: '👑' },
-  { hours: 1200, name: 'Железная смена', emoji: '🔥' },
-  { hours: 800, name: 'Опора заведения', emoji: '💪' },
-  { hours: 400, name: 'Твёрдая рука', emoji: '⚓️' },
-  { hours: 150, name: 'Входите в ритм', emoji: '🎯' },
-  { hours: 0, name: 'Только начали', emoji: '🌱' },
+  { hours: 1800, name: t('Легенда зала'), emoji: '👑' },
+  { hours: 1200, name: t('Железная смена'), emoji: '🔥' },
+  { hours: 800, name: t('Опора заведения'), emoji: '💪' },
+  { hours: 400, name: t('Твёрдая рука'), emoji: '⚓️' },
+  { hours: 150, name: t('Входите в ритм'), emoji: '🎯' },
+  { hours: 0, name: t('Только начали'), emoji: '🌱' },
 ];
 
 const MONTHS_SHORT = [
@@ -37,7 +38,7 @@ const MONTHS_SHORT = [
   'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек',
 ];
 
-const WEEKDAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+const WEEKDAYS = [t('Пн'), t('Вт'), t('Ср'), t('Чт'), t('Пт'), t('Сб'), t('Вс')];
 
 interface YearSummary extends DaysResponse {
   tips_earned: number;
@@ -60,10 +61,10 @@ interface Raise {
 }
 
 const PERIOD_SUFFIX: Record<Raise['period'], string> = {
-  hour: '/час',
-  day: '/день',
-  week: '/неделю',
-  month: '/месяц',
+  hour: t('/час'),
+  day: t('/день'),
+  week: t('/неделю'),
+  month: t('/месяц'),
 };
 
 /**
@@ -98,7 +99,7 @@ export default function YearScreen() {
       setPrevious(before);
       setError(null);
     } catch {
-      setError('Не дотянулись до сервера.');
+      setError(t('Не дотянулись до сервера.'));
     } finally {
       setLoading(false);
     }
@@ -124,12 +125,12 @@ export default function YearScreen() {
           const data = await api<DaysResponse>(`/shifter/v1/days?from=${range.from}&to=${range.to}`);
 
           rows.push({
-            label: MONTHS_SHORT[month - 1],
+            label: t(MONTHS_SHORT[month - 1]),
             value: data.total_earned,
             current: year === today.year && month === today.month,
           });
         } catch {
-          rows.push({ label: MONTHS_SHORT[month - 1], value: 0, current: false });
+          rows.push({ label: t(MONTHS_SHORT[month - 1]), value: 0, current: false });
         }
       }
 
@@ -193,9 +194,9 @@ export default function YearScreen() {
 
     const change = Math.round(((now - before) / before) * 100);
 
-    if (Math.abs(change) < 3) return 'как в прошлом';
+    if (Math.abs(change) < 3) return t('как в прошлом');
 
-    return change > 0 ? `+${change}% к прошлому` : `${change}% к прошлому`;
+    return change > 0 ? `+${change}% ${t('к прошлому')}` : `${change}% ${t('к прошлому')}`;
   };
 
   return (
@@ -204,7 +205,7 @@ export default function YearScreen() {
       contentContainerStyle={[styles.content, { paddingTop: insets.top + 12 }]}
     >
       <View style={styles.head}>
-        <Text style={styles.title}>Твой год</Text>
+        <Text style={styles.title}>{t('Твой год')}</Text>
         <Press hitSlop={12} onPress={() => router.back()}>
           <Ionicons name="close" size={26} color={palette.textSecondary} />
         </Press>
@@ -237,86 +238,86 @@ export default function YearScreen() {
             <Text style={styles.tierEmoji}>{tier.emoji}</Text>
             <Text style={styles.tierName}>{tier.name}</Text>
             <Text style={styles.tierMeta}>
-              {plural(facts.shifts, 'смена', 'смены', 'смен')} · {Math.round(summary.hours)} ч · {money(summary.total_earned)}
+              {plural(facts.shifts, t('смена'), t('смены'), t('смен'))} · {Math.round(summary.hours)} ч · {money(summary.total_earned)}
             </Text>
           </View>
 
           <View style={styles.bigGrid}>
             <Big
               palette={palette}
-              label="Заработано"
+              label={t("Заработано")}
               value={money(summary.total_earned)}
               hint={previous === null ? null : delta(summary.total_earned, previous.total_earned)}
               strong
             />
             <Big
               palette={palette}
-              label="Часов"
+              label={t("Часов")}
               value={`${Math.round(summary.hours)}`}
               hint={previous === null ? null : delta(summary.hours, previous.hours)}
             />
-            <Big palette={palette} label="Смен" value={`${facts.shifts}`} hint={null} />
+            <Big palette={palette} label={t("Смен")} value={`${facts.shifts}`} hint={null} />
             <Big
               palette={palette}
-              label="В час"
+              label={t("В час")}
               value={money(summary.hours > 0 ? summary.total_earned / summary.hours : 0)}
               hint={null}
             />
           </View>
 
 
-          <Section palette={palette} title="Месяц за месяцем">
+          <Section palette={palette} title={t("Месяц за месяцем")}>
             <MonthBars rows={months} palette={palette} />
           </Section>
 
-          <Section palette={palette} title="Что запомнилось">
+          <Section palette={palette} title={t("Что запомнилось")}>
             {facts.best !== null && (
-              <Fact palette={palette} emoji="🏆" title="Лучший день">
+              <Fact palette={palette} emoji="🏆" title={t("Лучший день")}>
                 {said(facts.best.date)} · {money(facts.best.earned)}
               </Fact>
             )}
             {facts.favourite !== null && (
-              <Fact palette={palette} emoji="⭐️" title="Любимая смена">
-                {facts.favourite[0]} · {plural(facts.favourite[1], 'раз', 'раза', 'раз')}
+              <Fact palette={palette} emoji="⭐️" title={t("Любимая смена")}>
+                {facts.favourite[0]} · {plural(facts.favourite[1], t('раз'), t('раза'), t('раз'))}
               </Fact>
             )}
             {facts.busiest !== null && (
-              <Fact palette={palette} emoji="📅" title="Чаще всего выходили">
-                {WEEKDAYS[facts.busiest[0]]} · {plural(facts.busiest[1], 'раз', 'раза', 'раз')}
+              <Fact palette={palette} emoji="📅" title={t("Чаще всего выходили")}>
+                {WEEKDAYS[facts.busiest[0]]} · {plural(facts.busiest[1], t('раз'), t('раза'), t('раз'))}
               </Fact>
             )}
             {facts.place !== null && (
-              <Fact palette={palette} emoji="🏠" title="Главное место">
+              <Fact palette={palette} emoji="🏠" title={t("Главное место")}>
                 {/* Shifts with no place land in a synthetic bucket the totals
                     name in English; nothing here should read it out loud. */}
-                {facts.place.location_id === 0 ? 'Без места' : facts.place.name} ·{' '}
+                {facts.place.location_id === 0 ? t('Без места') : facts.place.name} ·{' '}
                 {money(facts.place.earned)}
               </Fact>
             )}
-            <Fact palette={palette} emoji="🌙" title="Ночей">
+            <Fact palette={palette} emoji="🌙" title={t("Ночей")}>
               {facts.shifts > 0 ? Math.round((facts.nights / facts.shifts) * 100) : 0}% смен начинались
               после 20:00
             </Fact>
-            <Fact palette={palette} emoji="🛌" title="Отдых">
-              {plural(facts.daysOff, 'день', 'дня', 'дней')} без смены
+            <Fact palette={palette} emoji="🛌" title={t("Отдых")}>
+              {plural(facts.daysOff, t('день'), t('дня'), t('дней'))} без смены
             </Fact>
             {summary.tips_earned > 0 && (
-              <Fact palette={palette} emoji="🪙" title="Чаевые">
+              <Fact palette={palette} emoji="🪙" title={t("Чаевые")}>
                 {money(summary.tips_earned)} за год
               </Fact>
             )}
             {/* The line worth having is the date itself: almost nobody can name
                 when they last got a raise, and everybody feels it. */}
             {(summary.raises ?? []).length > 0 && (
-              <Fact palette={palette} emoji="📈" title="Ставка">
+              <Fact palette={palette} emoji="📈" title={t("Ставка")}>
                 {said(summary.raises![0].on)} · {money(summary.raises![0].before)} →{' '}
                 {money(summary.raises![0].after)}
                 {PERIOD_SUFFIX[summary.raises![0].period]} ·{' '}
                 {plural(
                   Math.round(summary.raises![0].days_ago / 30),
-                  'месяц назад',
-                  'месяца назад',
-                  'месяцев назад',
+                  t('месяц назад'),
+                  t('месяца назад'),
+                  t('месяцев назад'),
                 )}
               </Fact>
             )}
@@ -330,8 +331,8 @@ export default function YearScreen() {
 /** "5 марта" — a day the way somebody would say it. */
 function said(date: string): string {
   const months = [
-    'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
-    'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря',
+    t('января'), t('февраля'), t('марта'), t('апреля'), t('мая'), t('июня'),
+    t('июля'), t('августа'), t('сентября'), t('октября'), t('ноября'), t('декабря'),
   ];
   const [, month, day] = date.split('-');
 

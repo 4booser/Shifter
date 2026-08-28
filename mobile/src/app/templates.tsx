@@ -19,6 +19,7 @@ import { Press } from '@/components/motion';
 import { Colors, Palette } from '@/constants/theme';
 import { api, ApiError } from '@/lib/api';
 import { rateLine, ShiftTemplate } from '@/lib/types';
+import { t } from '@/lib/i18n';
 
 interface Place {
   id: number;
@@ -68,7 +69,7 @@ export default function TemplatesScreen() {
       setError(null);
     } catch (caught) {
       setTemplates([]);
-      setError(caught instanceof ApiError ? caught.message : 'Не дотянулись до сервера.');
+      setError(caught instanceof ApiError ? caught.message : t('Не дотянулись до сервера.'));
     }
   }, []);
 
@@ -84,7 +85,7 @@ export default function TemplatesScreen() {
       });
       await load();
     } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : 'Не получилось.');
+      setError(caught instanceof ApiError ? caught.message : t('Не получилось.'));
     }
   };
 
@@ -98,16 +99,13 @@ export default function TemplatesScreen() {
         contentContainerStyle={[styles.content, { paddingTop: insets.top + 12 }]}
       >
         <View style={styles.head}>
-          <Text style={styles.title}>Смены</Text>
+          <Text style={styles.title}>{t('Смены')}</Text>
           <Press hitSlop={12} onPress={() => router.back()}>
             <Ionicons name="close" size={26} color={palette.textSecondary} />
           </Press>
         </View>
 
-        <Text style={styles.lead}>
-          Шаблон — это одна ваша смена целиком: часы, ставка, перерыв. Поставили на день — он
-          посчитался сам.
-        </Text>
+        <Text style={styles.lead}>{t('Шаблон — это одна ваша смена целиком: часы, ставка, перерыв. Поставили на день — он посчитался сам.')}</Text>
 
         {templates === null && <ActivityIndicator color={palette.accent} />}
         {error !== null && <Text style={styles.error}>{error}</Text>}
@@ -128,12 +126,12 @@ export default function TemplatesScreen() {
 
         <Press style={styles.addRow} onPress={() => setEditing('new')}>
           <Ionicons name="add-circle-outline" size={20} color={palette.accent} />
-          <Text style={styles.addText}>Новая смена</Text>
+          <Text style={styles.addText}>{t('Новая смена')}</Text>
         </Press>
 
         {archived.length > 0 && (
           <>
-            <Text style={styles.section}>В архиве</Text>
+            <Text style={styles.section}>{t('В архиве')}</Text>
             {archived.map((template) => (
               <View key={template.id} style={[styles.card, styles.cardDim]}>
                 <Text style={styles.cardEmoji}>{template.symbol ?? '🕐'}</Text>
@@ -144,7 +142,7 @@ export default function TemplatesScreen() {
                   </Text>
                 </View>
                 <Press hitSlop={8} onPress={() => void archive(template, false)}>
-                  <Text style={styles.restore}>Вернуть</Text>
+                  <Text style={styles.restore}>{t('Вернуть')}</Text>
                 </Press>
               </View>
             ))}
@@ -232,7 +230,7 @@ function TemplateEditor({
 
   const save = async () => {
     if (name.trim() === '') {
-      setFailed('У смены должно быть название.');
+      setFailed(t('У смены должно быть название.'));
 
       return;
     }
@@ -265,7 +263,7 @@ function TemplateEditor({
 
       onSaved();
     } catch (caught) {
-      setFailed(caught instanceof ApiError ? caught.message : 'Не сохранилось.');
+      setFailed(caught instanceof ApiError ? caught.message : t('Не сохранилось.'));
     } finally {
       setBusy(false);
     }
@@ -279,7 +277,7 @@ function TemplateEditor({
       >
         <ScrollView contentContainerStyle={styles.editor}>
           <View style={styles.head}>
-            <Text style={styles.title}>{template === null ? 'Новая смена' : 'Смена'}</Text>
+            <Text style={styles.title}>{template === null ? t('Новая смена') : t('Смена')}</Text>
             <Press hitSlop={12} onPress={onClose}>
               <Ionicons name="close" size={26} color={palette.textSecondary} />
             </Press>
@@ -287,18 +285,18 @@ function TemplateEditor({
 
           <View style={styles.row}>
             <View style={styles.grow}>
-              <Text style={styles.fieldLabel}>Название</Text>
+              <Text style={styles.fieldLabel}>{t('Название')}</Text>
               <TextInput
                 style={styles.input}
                 value={name}
                 onChangeText={setName}
                 maxLength={40}
-                placeholder="Ночь"
+                placeholder={t("Ночь")}
                 placeholderTextColor={palette.textSecondary}
               />
             </View>
             <View style={{ width: 84 }}>
-              <Text style={styles.fieldLabel}>Значок</Text>
+              <Text style={styles.fieldLabel}>{t('Значок')}</Text>
               <TextInput
                 style={[styles.input, { textAlign: 'center' }]}
                 value={symbol}
@@ -312,7 +310,7 @@ function TemplateEditor({
 
           <View style={styles.row}>
             <View style={styles.grow}>
-              <Text style={styles.fieldLabel}>Начало</Text>
+              <Text style={styles.fieldLabel}>{t('Начало')}</Text>
               <TextInput
                 style={styles.input}
                 value={start}
@@ -322,7 +320,7 @@ function TemplateEditor({
               />
             </View>
             <View style={styles.grow}>
-              <Text style={styles.fieldLabel}>Конец</Text>
+              <Text style={styles.fieldLabel}>{t('Конец')}</Text>
               <TextInput
                 style={styles.input}
                 value={end}
@@ -333,7 +331,7 @@ function TemplateEditor({
             </View>
           </View>
 
-          <Text style={styles.fieldLabel}>Платят</Text>
+          <Text style={styles.fieldLabel}>{t('Платят')}</Text>
           <View style={styles.segmentRow}>
             {(Object.keys(PERIOD_LABEL) as Period[]).map((value) => (
               <Press
@@ -342,7 +340,7 @@ function TemplateEditor({
                 onPress={() => setPeriod(value)}
               >
                 <Text style={[styles.segmentText, period === value && styles.segmentTextOn]}>
-                  {PERIOD_LABEL[value]}
+                  {t(PERIOD_LABEL[value])}
                 </Text>
               </Press>
             ))}
@@ -353,21 +351,21 @@ function TemplateEditor({
             value={amount}
             onChangeText={setAmount}
             keyboardType="numeric"
-            placeholder="Сумма, ₴"
+            placeholder={t("Сумма, ₴")}
             placeholderTextColor={palette.textSecondary}
           />
 
-          <Text style={styles.fieldLabel}>Плюс процент от выручки</Text>
+          <Text style={styles.fieldLabel}>{t('Плюс процент от выручки')}</Text>
           <TextInput
             style={styles.input}
             value={percent}
             onChangeText={setPercent}
             keyboardType="numeric"
-            placeholder="без процента"
+            placeholder={t("без процента")}
             placeholderTextColor={palette.textSecondary}
           />
 
-          <Text style={styles.fieldLabel}>Неоплачиваемый перерыв, мин</Text>
+          <Text style={styles.fieldLabel}>{t('Неоплачиваемый перерыв, мин')}</Text>
           <TextInput
             style={styles.input}
             value={breakMinutes}
@@ -377,11 +375,11 @@ function TemplateEditor({
             placeholderTextColor={palette.textSecondary}
           />
 
-          <Text style={styles.fieldLabel}>Чаевые</Text>
+          <Text style={styles.fieldLabel}>{t('Чаевые')}</Text>
           <View style={styles.segmentRow}>
             {([
-              [false, 'свои'],
-              [true, 'доля общака'],
+              [false, t('свои')],
+              [true, t('доля общака')],
             ] as const).map(([value, label]) => (
               <Press
                 key={label}
@@ -401,22 +399,20 @@ function TemplateEditor({
               value={poolShare}
               onChangeText={setPoolShare}
               keyboardType="numeric"
-              placeholder="Ваша доля, %"
+              placeholder={t("Ваша доля, %")}
               placeholderTextColor={palette.textSecondary}
             />
           )}
 
           {places.length > 0 && (
             <>
-              <Text style={styles.fieldLabel}>Место работы</Text>
+              <Text style={styles.fieldLabel}>{t('Место работы')}</Text>
               <View style={styles.placeRow}>
                 <Press
                   style={[styles.place, placeId === null && styles.placeOn]}
                   onPress={() => setPlaceId(null)}
                 >
-                  <Text style={[styles.placeText, placeId === null && styles.placeTextOn]}>
-                    без места
-                  </Text>
+                  <Text style={[styles.placeText, placeId === null && styles.placeTextOn]}>{t('без места')}</Text>
                 </Press>
                 {places.map((place) => (
                   <Press
@@ -440,17 +436,15 @@ function TemplateEditor({
             disabled={busy}
             onPress={() => void save()}
           >
-            <Text style={styles.primaryText}>{busy ? 'Сохраняем…' : 'Сохранить'}</Text>
+            <Text style={styles.primaryText}>{busy ? t('Сохраняем…') : t('Сохранить')}</Text>
           </Press>
 
           {template !== null && (
             <>
               <Press style={styles.ghost} onPress={() => onArchive(template)}>
-                <Text style={styles.ghostText}>Убрать в архив</Text>
+                <Text style={styles.ghostText}>{t('Убрать в архив')}</Text>
               </Press>
-              <Text style={styles.hint}>
-                Архив не мешает работе, но сохраняет всё заработанное этой сменой.
-              </Text>
+              <Text style={styles.hint}>{t('Архив не мешает работе, но сохраняет всё заработанное этой сменой.')}</Text>
             </>
           )}
         </ScrollView>

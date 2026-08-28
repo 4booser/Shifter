@@ -5,6 +5,7 @@ import { Palette } from '@/constants/theme';
 import { monthBounds, shortDate, YearMonth } from '@/lib/calendar';
 import { moneyLasted, MonoStatementItem, periodTotals, spendingByCategory } from '@/lib/mono';
 import { money } from '@/lib/types';
+import { t } from '@/lib/i18n';
 
 /**
  * What the work brought and what it cost, side by side with what the month
@@ -42,9 +43,7 @@ export function BankAnalysis({
 
   if (items.length === 0) {
     return (
-      <Text style={styles.empty}>
-        Пока нечего анализировать — загрузите выписку.
-      </Text>
+      <Text style={styles.empty}>{t('Пока нечего анализировать — загрузите выписку.')}</Text>
     );
   }
 
@@ -53,15 +52,15 @@ export function BankAnalysis({
       <Appear>
         <View style={styles.twin}>
           <View style={styles.half}>
-            <Text style={styles.halfLabel}>Начислено</Text>
+            <Text style={styles.halfLabel}>{t('Начислено')}</Text>
             <Roll value={earned} prefix="₴" style={styles.halfValue} />
-            <Text style={styles.halfWho}>считает Shifter</Text>
+            <Text style={styles.halfWho}>{t('считает Shifter')}</Text>
           </View>
           <View style={styles.rule} />
           <View style={styles.half}>
-            <Text style={styles.halfLabel}>Пришло на счёт</Text>
+            <Text style={styles.halfLabel}>{t('Пришло на счёт')}</Text>
             <Roll value={totals.income} prefix="₴" style={[styles.halfValue, { color: palette.good }]} />
-            <Text style={styles.halfWho}>говорит банк</Text>
+            <Text style={styles.halfWho}>{t('говорит банк')}</Text>
           </View>
         </View>
       </Appear>
@@ -72,19 +71,19 @@ export function BankAnalysis({
         <View style={styles.strip}>
           <View style={styles.cell}>
             <Roll value={totals.spent} prefix="₴" style={styles.cellValue} />
-            <Text style={styles.cellLabel}>потрачено</Text>
+            <Text style={styles.cellLabel}>{t('потрачено')}</Text>
           </View>
           <View style={styles.cellRule} />
           <View style={styles.cell}>
             <Roll value={totals.cashback} prefix="₴" style={styles.cellValue} />
-            <Text style={styles.cellLabel}>кешбэк</Text>
+            <Text style={styles.cellLabel}>{t('кешбэк')}</Text>
           </View>
           <View style={styles.cellRule} />
           <View style={styles.cell}>
             <Text style={styles.cellValue}>
               {lasted === null ? '—' : `${lasted}`}
             </Text>
-            <Text style={styles.cellLabel}>дней хватило</Text>
+            <Text style={styles.cellLabel}>{t('дней хватило')}</Text>
           </View>
         </View>
       </Appear>
@@ -98,7 +97,7 @@ export function BankAnalysis({
       {categories.length > 0 && (
         <Appear index={2}>
           <View style={styles.card}>
-            <Text style={styles.cardTitle}>Куда ушли</Text>
+            <Text style={styles.cardTitle}>{t('Куда ушли')}</Text>
 
             {categories.slice(0, 8).map((row) => (
               <View key={row.name} style={styles.bar}>

@@ -1,4 +1,5 @@
 import { MonoClientInfo, MonoStatementItem } from './mono';
+import { t } from '@/lib/i18n';
 
 /**
  * The only place in this app that holds a monobank token, and the only place
@@ -66,7 +67,7 @@ async function ask<T>(token: string, endpoint: string, path: string): Promise<T>
   if (!response.ok) {
     // Deliberately only the status. A monobank error body can echo the
     // request, and this message ends up in front of somebody.
-    throw new Error(`monobank ответил ${response.status}`);
+    throw new Error(`monobank ${t('ответил')} ${response.status}`);
   }
 
   return (await response.json()) as T;

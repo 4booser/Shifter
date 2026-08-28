@@ -18,6 +18,7 @@ import { Colors, Palette } from '@/constants/theme';
 import { api, API_BASE } from '@/lib/api';
 import { lockKind, LockKind, lockNameBy, lockStore, unlock } from '@/lib/lock';
 import { useSession } from '@/store/session';
+import { t, useLang } from '@/lib/i18n';
 
 interface Profile {
   login: string;
@@ -36,6 +37,7 @@ export default function SettingsScreen() {
   const router = useRouter();
   const scheme = useColorScheme();
   const palette = Colors[scheme === 'dark' ? 'dark' : 'light'];
+  const lang = useLang((state) => state.lang);
   const styles = makeStyles(palette);
   const insets = useSafeAreaInsets();
   const signOut = useSession((state) => state.signOut);
@@ -53,7 +55,7 @@ export default function SettingsScreen() {
       try {
         setProfile(await api<Profile>('/shifter/v1/account'));
       } catch {
-        setError('Профиль не загрузился.');
+        setError(t('Профиль не загрузился.'));
       }
     })();
   }, []);
@@ -73,7 +75,7 @@ export default function SettingsScreen() {
       contentContainerStyle={[styles.content, { paddingTop: insets.top + 12 }]}
     >
       <View style={styles.head}>
-        <Text style={styles.title}>Настройки</Text>
+        <Text style={styles.title}>{t('Настройки')}</Text>
         <Press hitSlop={12} onPress={() => router.back()}>
           <Ionicons name="close" size={26} color={palette.textSecondary} />
         </Press>
@@ -92,17 +94,35 @@ export default function SettingsScreen() {
         </View>
       )}
 
-      <Text style={styles.section}>Замок</Text>
+      <Text style={styles.section}>{t('Язык')}</Text>
+      <View style={styles.langRow}>
+        {(
+          [
+            ['ru', 'Русский'],
+            ['uk', 'Українська'],
+          ] as const
+        ).map(([code, name]) => (
+          <Press
+            key={code}
+            style={[styles.lang, lang === code && styles.langOn]}
+            onPress={() => useLang.getState().choose(code)}
+          >
+            <Text style={[styles.langText, lang === code && styles.langTextOn]}>{name}</Text>
+          </Press>
+        ))}
+      </View>
+
+      <Text style={styles.section}>{t('Замок')}</Text>
       <View style={styles.card}>
         <View style={styles.row}>
           <View style={styles.grow}>
             <Text style={styles.rowTitle}>
-              {kind === null ? 'Замок недоступен' : `Открывать по ${lockNameBy(kind)}`}
+              {kind === null ? t('Замок недоступен') : `${t('Открывать по')} ${lockNameBy(kind)}`}
             </Text>
             <Text style={styles.rowHint}>
               {kind === null
-                ? 'На этом телефоне не настроен ни Face ID, ни отпечаток, ни код.'
-                : 'Сколько вы зарабатываете — видите только вы, даже если телефон дали подержать.'}
+                ? t('На этом телефоне не настроен ни Face ID, ни отпечаток, ни код.')
+                : t('Сколько вы зарабатываете — видите только вы, даже если телефон дали подержать.')}
             </Text>
           </View>
           <Switch
@@ -114,26 +134,26 @@ export default function SettingsScreen() {
         </View>
       </View>
 
-      <Text style={styles.section}>Ваша работа</Text>
+      <Text style={styles.section}>{t('Ваша работа')}</Text>
       <Press style={styles.linkRow} onPress={() => router.push('/templates')}>
         <Ionicons name="time-outline" size={20} color={palette.textSecondary} />
-        <Text style={styles.linkText}>Шаблоны смен — часы, ставка, процент</Text>
+        <Text style={styles.linkText}>{t('Шаблоны смен — часы, ставка, процент')}</Text>
         <Ionicons name="chevron-forward" size={16} color={palette.textSecondary} />
       </Press>
 
       <Press style={styles.linkRow} onPress={() => router.push('/places')}>
         <Ionicons name="business-outline" size={20} color={palette.textSecondary} />
-        <Text style={styles.linkText}>Места работы — выплаты, налог, ночные</Text>
+        <Text style={styles.linkText}>{t('Места работы — выплаты, налог, ночные')}</Text>
         <Ionicons name="chevron-forward" size={16} color={palette.textSecondary} />
       </Press>
 
-      <Text style={styles.section}>Остальное</Text>
+      <Text style={styles.section}>{t('Остальное')}</Text>
       <Press
         style={styles.linkRow}
         onPress={() => void Linking.openURL('https://www.shifter.ink/account')}
       >
         <Ionicons name="person-circle-outline" size={20} color={palette.textSecondary} />
-        <Text style={styles.linkText}>Профиль и аватар — на сайте</Text>
+        <Text style={styles.linkText}>{t('Профиль и аватар — на сайте')}</Text>
         <Ionicons name="open-outline" size={16} color={palette.textSecondary} />
       </Press>
 
@@ -142,13 +162,13 @@ export default function SettingsScreen() {
         onPress={() => void Linking.openURL('https://www.shifter.ink/roadmap')}
       >
         <Ionicons name="map-outline" size={20} color={palette.textSecondary} />
-        <Text style={styles.linkText}>Что нового и что дальше</Text>
+        <Text style={styles.linkText}>{t('Что нового и что дальше')}</Text>
         <Ionicons name="open-outline" size={16} color={palette.textSecondary} />
       </Press>
 
       <Press style={styles.signOut} onPress={signOut}>
         <Ionicons name="log-out-outline" size={18} color={palette.danger} />
-        <Text style={styles.signOutText}>Выйти</Text>
+        <Text style={styles.signOutText}>{t('Выйти')}</Text>
       </Press>
 
       <Text style={styles.build}>{API_BASE}</Text>
@@ -175,6 +195,20 @@ const makeStyles = (palette: Palette) =>
     },
     name: { color: palette.text, fontSize: 18, fontWeight: '700' },
     meta: { color: palette.textSecondary, fontSize: 13 },
+
+    langRow: { flexDirection: 'row', gap: 8 },
+    lang: {
+      flex: 1,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: palette.border,
+      backgroundColor: palette.backgroundElement,
+      borderRadius: 16,
+      paddingVertical: 13,
+    },
+    langOn: { backgroundColor: palette.accent, borderColor: palette.accent },
+    langText: { color: palette.text, fontSize: 15, fontWeight: '700' },
+    langTextOn: { color: '#fff' },
 
     section: { color: palette.text, fontSize: 16, fontWeight: '700', marginTop: 10 },
     row: { flexDirection: 'row', alignItems: 'center', gap: 12 },

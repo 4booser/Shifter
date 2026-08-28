@@ -4,6 +4,7 @@ import { useColorScheme } from 'react-native';
 
 import { TabBar } from '@/components/tab-bar';
 import { Colors } from '@/constants/theme';
+import { t } from '@/lib/i18n';
 
 /**
  * Route to icon, in one place. The bar draws the outline for a tab you are
@@ -30,37 +31,37 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Календарь',
+          title: t('Календарь'),
         }}
       />
       <Tabs.Screen
         name="schedule"
         options={{
-          title: 'График',
+          title: t('График'),
         }}
       />
       <Tabs.Screen
         name="gigs"
         options={{
-          title: 'Подработки',
+          title: t('Подработки'),
         }}
       />
       <Tabs.Screen
         name="payouts"
         options={{
-          title: 'Выплаты',
+          title: t('Выплаты'),
         }}
       />
       <Tabs.Screen
         name="bank"
         options={{
-          title: 'Банк',
+          title: t('Банк'),
         }}
       />
       <Tabs.Screen
         name="stats"
         options={{
-          title: 'Статистика',
+          title: t('Статистика'),
         }}
       />
     </Tabs>

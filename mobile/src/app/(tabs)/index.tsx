@@ -38,6 +38,7 @@ import {
   runsOf,
   sameWeekdaysIn,
   todayKey,
+  weekOf,
   WEEKDAYS,
   weekdayOf,
   YearMonth,
@@ -53,6 +54,7 @@ import {
   templateHours,
   toSavePayload,
 } from '@/lib/types';
+import { WorkPlace } from '@/lib/places';
 import { LiveShift, useLive } from '@/store/live';
 import { ApiError } from '@/lib/api';
 import { heldDays, Pending } from '@/lib/outbox';
@@ -111,6 +113,7 @@ export default function CalendarScreen() {
   const [months, setMonths] = useState<Record<string, MonthData>>({});
   const asked = useRef(new Set<string>());
   const [templates, setTemplates] = useState<ShiftTemplate[]>([]);
+  const [places, setPlaces] = useState<WorkPlace[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -202,9 +205,14 @@ export default function CalendarScreen() {
       // the live shift's rate, and the calendar must not refuse to draw
       // because a second request failed.
       api<ShiftTemplate[]>('/shifter/v1/shifts')
-        .then((list) => {
-          setTemplates(list);
-        })
+        .then(setTemplates)
+        .catch(() => undefined);
+
+      // Only for the weekly threshold, which is a property of the place. A
+      // calendar that cannot say "you are at 38 of 40" lets somebody find out
+      // on the payslip.
+      api<WorkPlace[]>('/shifter/v1/locations')
+        .then(setPlaces)
         .catch(() => undefined);
     }, [hydrateLive, ensure, hydrateOutbox, flushOutbox]),
   );
@@ -240,6 +248,34 @@ export default function CalendarScreen() {
   }, [months, month]);
 
   const waiting = useMemo(() => heldDays(held), [held]);
+
+  /**
+   * Hours already worked this week, against the place's own threshold.
+   *
+   * The site has warned about overtime before the line for months; the phone,
+   * which is what somebody has in their hand when a manager asks them to stay
+   * on, said nothing at all.
+   */
+  const week = useMemo(() => {
+    const keys = weekOf(today);
+    const hours = keys.reduce((sum, key) => sum + (byDate.get(key)?.hours ?? 0), 0);
+
+    if (hours <= 0) return null;
+
+    // The lowest threshold among the places actually worked this week: two
+    // jobs with different rules is not a reason to warn about neither.
+    const worked = new Set(
+      keys.flatMap((key) => (byDate.get(key)?.shifts ?? []).map((shift) => shift.shift_id)),
+    );
+    const ids = new Set(
+      templates.filter((one) => worked.has(one.id)).map((one) => one.location_id),
+    );
+    const limits = places
+      .filter((place) => ids.has(place.id) && place.overtime_weekly_hours > 0)
+      .map((place) => place.overtime_weekly_hours);
+
+    return { hours, limit: limits.length > 0 ? Math.min(...limits) : null };
+  }, [byDate, today, templates, places]);
 
   const startable = useMemo(() => {
     const plan = byDate.get(today)?.shifts.find((entry) => !entry.worked);
@@ -827,6 +863,33 @@ export default function CalendarScreen() {
           <Text style={styles.previewNote}>{preview.note}</Text>
         )}
 
+        {brush === null && week !== null && week.limit !== null && (
+          <Appear index={1}>
+            <View
+              style={[
+                styles.week,
+                week.hours >= week.limit && styles.weekOver,
+                week.hours >= week.limit * 0.9 && week.hours < week.limit && styles.weekNear,
+              ]}
+            >
+              <Ionicons
+                name={week.hours >= week.limit ? 'alert-circle' : 'time-outline'}
+                size={17}
+                color={week.hours >= week.limit ? palette.danger : palette.textSecondary}
+              />
+              <Text style={styles.weekText}>
+                {t('На этой неделе')} {`${Math.round(week.hours * 10) / 10}`.replace('.', ',')} {t('из')}{' '}
+                {week.limit} {t('ч')}
+                {week.hours >= week.limit
+                  ? ` · ${t('дальше идут сверхурочные')}`
+                  : week.hours >= week.limit * 0.9
+                    ? ` · ${t('норма почти вышла')}`
+                    : ''}
+              </Text>
+            </View>
+          </Appear>
+        )}
+
         {brush === null && live !== null && (
           <Appear index={1}>
           <Press style={styles.liveCard} onPress={() => router.push('/live')}>
@@ -1266,6 +1329,20 @@ const makeStyles = (palette: Palette) =>
       lineHeight: 17,
       paddingHorizontal: 10,
     },
+
+    week: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      borderWidth: 1,
+      borderColor: palette.border,
+      borderRadius: 16,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+    },
+    weekNear: { borderColor: palette.accent },
+    weekOver: { borderColor: palette.danger, backgroundColor: `${palette.danger}12` },
+    weekText: { flex: 1, color: palette.text, fontSize: 13, fontVariant: ['tabular-nums'] },
 
     liveCard: {
       flexDirection: 'row',

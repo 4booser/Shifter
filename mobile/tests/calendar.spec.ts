@@ -16,6 +16,8 @@ import {
   sameWeekdaysIn,
   WEEKDAYS,
   weekdayOf,
+  weekOf,
+  weekStart,
 } from '@/lib/calendar';
 
 /**
@@ -236,5 +238,33 @@ describe('the change between two periods', () => {
 
   it('rounds rather than printing a percentage to six places', () => {
     expect(changeOf(1234, 1000)).toBe(23);
+  });
+});
+
+describe('the week a day belongs to', () => {
+  it('starts on Monday, whatever day is asked about', () => {
+    // 19 August 2026 is a Wednesday.
+    expect(weekStart('2026-08-19')).toBe('2026-08-17');
+    expect(weekStart('2026-08-17')).toBe('2026-08-17');
+    expect(weekStart('2026-08-23')).toBe('2026-08-17');
+  });
+
+  it('runs seven days without a gap', () => {
+    const week = weekOf('2026-08-19');
+
+    expect(week).toHaveLength(7);
+    expect(week[0]).toBe('2026-08-17');
+    expect(week[6]).toBe('2026-08-23');
+  });
+
+  it('crosses a month boundary rather than stopping at it', () => {
+    expect(weekOf('2026-09-01')).toEqual([
+      '2026-08-31', '2026-09-01', '2026-09-02', '2026-09-03',
+      '2026-09-04', '2026-09-05', '2026-09-06',
+    ]);
+  });
+
+  it('crosses a year boundary too', () => {
+    expect(weekStart('2027-01-01')).toBe('2026-12-28');
   });
 });

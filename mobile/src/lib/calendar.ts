@@ -242,3 +242,22 @@ export const previousRange = (
 /** How much bigger `now` is than `before`, as a percentage. Null where there is nothing to divide by. */
 export const changeOf = (now: number, before: number): number | null =>
   before <= 0 ? null : Math.round(((now - before) / before) * 100);
+
+/** Monday of the week a day falls in, as a key. */
+export const weekStart = (key: string): string => {
+  const date = new Date(`${key}T00:00:00`);
+
+  date.setDate(date.getDate() - weekdayOf(key));
+
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+};
+
+/** The seven keys of the week a day falls in, Monday first. */
+export const weekOf = (key: string): string[] => {
+  const start = weekStart(key);
+  const keys = [start];
+
+  for (let at = 1; at < 7; at++) keys.push(nextDay(keys[at - 1]));
+
+  return keys;
+};

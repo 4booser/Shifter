@@ -38,6 +38,8 @@ import {
   wealth,
   workSpending,
 } from '@/lib/mono';
+import { recurring } from '@/lib/mono-insights';
+import { untilPayday, usualDay } from '@/lib/mono-work';
 import { CalendarDayData, DaysResponse, money, moneyIn } from '@/lib/types';
 import { chosenAccount, useMono } from '@/store/mono';
 import { t } from '@/lib/i18n';
@@ -220,6 +222,49 @@ export default function BankScreen() {
   );
 
   /** The most recent payday the app knows about, for "how long it lasted". */
+  /**
+   * How much there is per day until the next money lands.
+   *
+   * The calendar knows when the wage is due and how much. The bank knows what
+   * is left and what still has to leave. Neither application computes this on
+   * its own, and it is the question people actually ask on the 22nd.
+   */
+  const runway = useMemo(() => {
+    const account = (mono.client?.accounts ?? []).find((entry) => entry.id === mono.accountId);
+
+    if (account === undefined || periods === null) return null;
+
+    const today = todayKey();
+    const due = periods
+      .filter((row) => row.due_on >= today && row.expected > row.paid)
+      .sort((one, two) => one.due_on.localeCompare(two.due_on))[0];
+
+    if (due === undefined) return null;
+
+    const daysToPay = Math.round(
+      (new Date(`${due.due_on}T00:00:00`).getTime() - new Date(`${today}T00:00:00`).getTime())
+      / (24 * 60 * 60 * 1000),
+    );
+
+    const month = monthBounds(currentMonth());
+    // What still has to leave before then: the standing charges the statement
+    // itself revealed, not a figure anybody typed.
+    const committed = recurring(mono.items, month.from, month.to)
+      .filter((row) => row.next <= due.due_on)
+      .reduce((sum, row) => sum + row.amount, 0);
+
+    return {
+      due,
+      state: untilPayday(
+        fromMinor(account.balance - account.creditLimit),
+        daysToPay,
+        committed,
+        usualDay(mono.items, month.from, month.to),
+      ),
+      committed,
+    };
+  }, [mono.client, mono.accountId, mono.items, periods]);
+
   const lastPaid = useMemo(() => {
     const paid = (periods ?? [])
       .filter((row) => row.paid > 0 && row.due_on <= todayKey())
@@ -558,6 +603,23 @@ export default function BankScreen() {
         </View>
       )}
 
+      {view === 'summary' && runway?.state != null && (
+        <View style={styles.runway}>
+          <Text style={styles.runwayLabel}>
+            {t('До')} {shortDate(runway.due.due_on)} — {runway.state.days} {t('дн.')}
+          </Text>
+          <Text style={styles.runwayValue}>
+            {money(Math.max(0, Math.round(runway.state.perDay)))} {t('в день')}
+          </Text>
+          <Text style={styles.runwayMeta}>
+            {money(Math.round(runway.state.left))} {t('на счету')}
+            {runway.committed > 0 && `, ${t('из них')} ${money(Math.round(runway.committed))} ${t('уже расписано')}`}
+            {runway.state.usual > 0 &&
+              ` · ${t('обычно тратите')} ${money(Math.round(runway.state.usual))} ${t('в день')}`}
+          </Text>
+        </View>
+      )}
+
       {view === 'spending' && (
         <BankSpending
           items={mono.items}
@@ -793,6 +855,15 @@ const makeStyles = (palette: Palette) =>
     primaryText: { color: '#fff', fontWeight: '800', fontSize: 15.5 },
 
     accounts: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+    runway: {
+      backgroundColor: palette.backgroundElement,
+      borderRadius: 18,
+      padding: 16,
+      gap: 2,
+    },
+    runwayLabel: { color: palette.textSecondary, fontSize: 12.5, fontWeight: '600' },
+    runwayValue: { color: palette.text, fontSize: 26, fontWeight: '800' },
+    runwayMeta: { color: palette.textSecondary, fontSize: 12.5, lineHeight: 18 },
     wealth: {
       backgroundColor: palette.backgroundElement,
       borderRadius: 18,

@@ -597,6 +597,16 @@ export const RU: Dictionary = {
   'I am back': 'Я вернулся',
   'The timer keeps counting until you say you are back.':
     'Таймер продолжает считать, пока вы не отметите возвращение.',
+  'What this pays here': 'Сколько за это платят здесь',
+  'postings': 'объявлений',
+  'venues': 'заведений',
+  'most between': 'чаще всего от',
+  'Your hourly rate': 'Ваша часовая ставка',
+  'below what this city usually posts': 'ниже того, что обычно предлагают в городе',
+  'in the usual range': 'в обычном диапазоне',
+  'above what this city usually posts': 'выше того, что обычно предлагают в городе',
+  'From posted rates on this board over the last six months, never from anybody’s records.':
+    'По опубликованным на доске ставкам за последние полгода — не по чьим-то записям.',
   'This week': 'Эта неделя',
   'Earned this week': 'Заработано за неделю',
   'Still to come': 'Ещё впереди',
@@ -2954,6 +2964,16 @@ export const UK: Dictionary = {
   'I am back': 'Я повернувся',
   'The timer keeps counting until you say you are back.':
     'Таймер продовжує рахувати, доки ви не відзначите повернення.',
+  'What this pays here': 'Скільки за це платять тут',
+  'postings': 'оголошень',
+  'venues': 'закладів',
+  'most between': 'найчастіше від',
+  'Your hourly rate': 'Ваша годинна ставка',
+  'below what this city usually posts': 'нижче за те, що зазвичай пропонують у місті',
+  'in the usual range': 'у звичайному діапазоні',
+  'above what this city usually posts': 'вище за те, що зазвичай пропонують у місті',
+  'From posted rates on this board over the last six months, never from anybody’s records.':
+    'За опублікованими на дошці ставками за останні пів року — не за чиїмись записами.',
   'This week': 'Цей тиждень',
   'All time': 'За весь час',
 

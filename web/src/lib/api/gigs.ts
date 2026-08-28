@@ -327,6 +327,32 @@ export interface KnownWorker {
   telegram: string | null;
 }
 
+/**
+ * What the board pays for a job in a city.
+ *
+ * Every figure is nullable together: below the thresholds there is no band at
+ * all, and a client cannot round a null up into a confident number the way it
+ * can round a zero.
+ */
+export interface MarketBand {
+  median: number | null;
+  low: number | null;
+  high: number | null;
+  employers: number | null;
+  listings: number | null;
+  /** The reader's own average hourly rate, where they are paid by the hour. */
+  mine: number | null;
+  /** "below" | "usual" | "above", or null with nothing to compare. */
+  standing: string | null;
+}
+
+export const marketApi = {
+  band: (city: string, category: string) =>
+    api<MarketBand>(
+      `${GIGS}/market?city=${encodeURIComponent(city.trim())}&category=${category}`,
+    ),
+};
+
 export const inviteApi = {
   known: () => api<KnownWorker[]>(`${GIGS}/known-workers`),
   invite: (listingId: number, userId: number) =>

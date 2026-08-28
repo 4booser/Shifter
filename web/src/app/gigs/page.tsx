@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { apiErrorMessage } from '@/lib/api/http';
+import { MarketBandCard } from '@/components/gigs/market-band';
 import { Gig, GigEmployment, GigReply, GigSave, GIG_CATEGORIES, GIG_GROUPS, categoryOf, gigApi, shrinkPhoto } from '@/lib/api/gigs';
 import { accountApi } from '@/lib/api/auth';
 import { fromKey, keysBetween, monthBounds, shiftDays, todayKey, weekBounds, keyOf } from '@/lib/calendar/calendar-date';
@@ -275,6 +276,13 @@ function Gigs() {
                 {option === null ? t('Any') : option === 0 ? t('At least the same') : `+${option}%`}
               </button>
             ))}
+          </div>
+
+          {/* What the trade pays here, once a city and a job are both named.
+              Silent below the thresholds — a city with three venues on it
+              gets no figure, which is the correct answer. */}
+          <div className="mb-3">
+            <MarketBandCard city={city} category={category} />
           </div>
 
           {look === 'calendar' && employment === 'freelance' ? (

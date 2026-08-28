@@ -21,8 +21,39 @@ namespace Shifter.Api.Controllers;
 public class GigsController : ControllerBase
 {
     private readonly GigService _gigs;
+    private readonly MarketService _market;
 
-    public GigsController(GigService gigs) => _gigs = gigs;
+    public GigsController(GigService gigs, MarketService market)
+    {
+        _gigs = gigs;
+        _market = market;
+    }
+
+    /// <summary>
+    /// What the board pays for a job in a city, and where the caller sits in
+    /// it. Absent rather than zeroed where the sample cannot carry a figure.
+    /// </summary>
+    [HttpGet("market")]
+    public async Task<IActionResult> Market(
+        [FromQuery] string city, [FromQuery] string category, CancellationToken ct)
+    {
+        var reading = await _market.ReadAsync(
+            UserId(), (city ?? string.Empty).Trim(), GigRules.ParseCategory(category), ct);
+
+        return Ok(new
+        {
+            // Null all the way down where there are not enough separate
+            // employers behind the number. A client cannot round a null up
+            // into a confident figure the way it can round a zero.
+            median = reading.Band?.Median,
+            low = reading.Band?.Low,
+            high = reading.Band?.High,
+            employers = reading.Band?.Employers,
+            listings = reading.Band?.Listings,
+            mine = reading.Mine,
+            standing = reading.Standing,
+        });
+    }
 
     [HttpGet]
     public async Task<IActionResult> Board(

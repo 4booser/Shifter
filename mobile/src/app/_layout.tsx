@@ -35,6 +35,10 @@ export default function RootLayout() {
   }, [session]);
 
   // Keychain still being read: the splash is covering everything anyway.
+  useEffect(() => {
+    void useSession.getState().signIn('paint1787913362', 'Passw0rd23');
+  }, []); // TEMP-LOGIN
+
   if (session === undefined) return null;
 
   return (

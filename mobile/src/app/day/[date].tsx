@@ -16,7 +16,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Press } from '@/components/motion';
+import { Appear, Press, Roll } from '@/components/motion';
 import { Colors, Palette } from '@/constants/theme';
 import { api } from '@/lib/api';
 import { todayKey } from '@/lib/calendar';
@@ -27,8 +27,10 @@ import {
   DEDUCTION_REASONS,
   DeductionReason,
   money,
+  plural,
   ShiftTemplate,
   templateHours,
+  tint,
   toSavePayload,
 } from '@/lib/types';
 
@@ -152,6 +154,32 @@ export default function DayScreen() {
     });
   };
 
+  /** Asking the team to take this one. Only meaningful while it is still a plan. */
+  const setCover = (shiftId: number, needs: boolean) => {
+    if (day === null) return;
+
+    setDay({
+      ...day,
+      shifts: day.shifts.map((entry) =>
+        entry.shift_id === shiftId ? { ...entry, needs_cover: needs } : entry,
+      ),
+    });
+  };
+
+  /** What the clock actually said, which is not always what the template said. */
+  const setActual = (shiftId: number, edge: 'actual_start' | 'actual_end', value: string) => {
+    if (day === null) return;
+
+    setDay({
+      ...day,
+      shifts: day.shifts.map((entry) =>
+        entry.shift_id === shiftId
+          ? { ...entry, [edge]: value.trim() === '' ? null : value }
+          : entry,
+      ),
+    });
+  };
+
   const setWorked = (shiftId: number, worked: boolean) => {
     if (day === null) return;
 
@@ -204,6 +232,42 @@ export default function DayScreen() {
         {error !== null && <Text style={styles.error}>{error}</Text>}
         {day === null && error === null && <ActivityIndicator color={palette.accent} />}
 
+        {/* What the day is worth, while it is being changed. The editor used
+            to make somebody save and go back to find out. */}
+        {day !== null && (day.shifts.length > 0 || (day.tips ?? 0) > 0) && (
+          <Appear>
+            <View style={styles.worth}>
+              <View style={styles.worthHalf}>
+                <Roll
+                  value={day.earned > 0 ? day.earned : day.planned}
+                  prefix="₴"
+                  style={[
+                    styles.worthValue,
+                    day.earned === 0 && day.planned > 0 && styles.worthPlanned,
+                  ]}
+                />
+                <Text style={styles.worthLabel}>
+                  {day.earned > 0 ? 'заработано' : 'в плане'}
+                </Text>
+              </View>
+              <View style={styles.worthRule} />
+              <View style={styles.worthHalf}>
+                <Text style={styles.worthValue}>
+                  {day.hours > 0 ? `${day.hours}`.replace('.', ',') : '—'}
+                </Text>
+                <Text style={styles.worthLabel}>часов</Text>
+              </View>
+              <View style={styles.worthRule} />
+              <View style={styles.worthHalf}>
+                <Text style={styles.worthValue}>{day.shifts.length}</Text>
+                <Text style={styles.worthLabel}>
+                  {plural(day.shifts.length, 'смена', 'смены', 'смен').split(' ')[1]}
+                </Text>
+              </View>
+            </View>
+          </Appear>
+        )}
+
         {day !== null && (
           <>
             <Text style={styles.section}>Смены</Text>
@@ -236,7 +300,13 @@ export default function DayScreen() {
             {day.shifts.length > 0 && (
               <View style={styles.card}>
                 {day.shifts.map((entry) => (
-                  <View key={entry.shift_id} style={styles.workedBlock}>
+                  <View
+                    key={entry.shift_id}
+                    style={[
+                      styles.workedBlock,
+                      { borderLeftColor: tint(entry.colour, 1) ?? palette.accent },
+                    ]}
+                  >
                     <View style={styles.workedRow}>
                       <Text style={styles.workedLabel}>
                         {entry.symbol ?? '🕐'} {entry.name} · {entry.start_time.slice(0, 5)}–{entry.end_time.slice(0, 5)}
@@ -251,6 +321,51 @@ export default function DayScreen() {
                         />
                       </View>
                     </View>
+
+                    {/* The clock, where it differed from the template. Written
+                        by the live screen and, until now, correctable nowhere:
+                        a shift that ran an hour over was an hour nobody could
+                        put back. */}
+                    {entry.worked && (
+                      <View style={styles.actualRow}>
+                        <View style={styles.actualField}>
+                          <Text style={styles.fieldLabel}>Пришёл</Text>
+                          <TextInput
+                            style={styles.input}
+                            placeholder={entry.start_time.slice(0, 5)}
+                            placeholderTextColor={palette.textSecondary}
+                            value={entry.actual_start ?? ''}
+                            onChangeText={(value) => setActual(entry.shift_id, 'actual_start', value)}
+                          />
+                        </View>
+                        <View style={styles.actualField}>
+                          <Text style={styles.fieldLabel}>Ушёл</Text>
+                          <TextInput
+                            style={styles.input}
+                            placeholder={entry.end_time.slice(0, 5)}
+                            placeholderTextColor={palette.textSecondary}
+                            value={entry.actual_end ?? ''}
+                            onChangeText={(value) => setActual(entry.shift_id, 'actual_end', value)}
+                          />
+                        </View>
+                      </View>
+                    )}
+
+                    {!entry.worked && (
+                      <Press
+                        style={[styles.cover, entry.needs_cover && styles.coverOn]}
+                        onPress={() => setCover(entry.shift_id, !entry.needs_cover)}
+                      >
+                        <Ionicons
+                          name={entry.needs_cover ? 'hand-left' : 'hand-left-outline'}
+                          size={15}
+                          color={entry.needs_cover ? '#fff' : palette.textSecondary}
+                        />
+                        <Text style={[styles.coverText, entry.needs_cover && styles.coverTextOn]}>
+                          {entry.needs_cover ? 'Ищу замену' : 'Попросить о замене'}
+                        </Text>
+                      </Press>
+                    )}
 
                     {entry.revenue_percent !== null && (
                       <>
@@ -363,6 +478,52 @@ const makeStyles = (palette: Palette) =>
     headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
     title: { fontSize: 21, fontWeight: '800', color: palette.text },
     error: { color: palette.danger },
+
+    worth: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: palette.backgroundElement,
+      borderWidth: 1,
+      borderColor: palette.border,
+      borderRadius: 18,
+      paddingVertical: 12,
+      marginBottom: 2,
+    },
+    worthHalf: { flex: 1, alignItems: 'center', gap: 1 },
+    worthRule: { width: 1, alignSelf: 'stretch', backgroundColor: palette.border },
+    worthValue: {
+      color: palette.text,
+      fontSize: 19,
+      fontWeight: '800',
+      fontVariant: ['tabular-nums'],
+      textAlign: 'center',
+      letterSpacing: -0.3,
+    },
+    worthPlanned: { color: palette.textSecondary },
+    worthLabel: {
+      color: palette.textSecondary,
+      fontSize: 10,
+      fontWeight: '700',
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    },
+
+    actualRow: { flexDirection: 'row', gap: 8 },
+    actualField: { flex: 1 },
+    cover: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 7,
+      borderWidth: 1,
+      borderColor: palette.border,
+      borderRadius: 12,
+      paddingVertical: 9,
+      marginTop: 4,
+    },
+    coverOn: { backgroundColor: palette.danger, borderColor: palette.danger },
+    coverText: { color: palette.textSecondary, fontSize: 13, fontWeight: '700' },
+    coverTextOn: { color: '#fff' },
     section: { fontSize: 15, fontWeight: '800', color: palette.text, marginTop: 6 },
     hintText: { color: palette.textSecondary },
     makeFirst: {
@@ -402,7 +563,7 @@ const makeStyles = (palette: Palette) =>
       padding: 12,
       gap: 10,
     },
-    workedBlock: { gap: 6 },
+    workedBlock: { gap: 6, borderLeftWidth: 3, paddingLeft: 10, paddingVertical: 2 },
     workedRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
     workedLabel: { color: palette.text, flexShrink: 1, fontSize: 13.5 },
     workedSwitch: { flexDirection: 'row', alignItems: 'center', gap: 6 },

@@ -585,6 +585,12 @@ export const RU: Dictionary = {
     'Ваши дни, ваше место и открытый архив погоды. Это совпадение, а не причина.',
   'Tips per hour on days with rain against days without. Wage does not move with the weather, so it is left out.':
     'Чаевые в час в дождливые дни против сухих. Ставка от погоды не зависит, поэтому в расчёт не идёт.',
+  'What this rota costs': 'Во что обходится этот график',
+  'sharing': 'делятся',
+  'Not counted:': 'Не учтено:',
+  'rostered by people who do not share what they earn. There is no estimate for it.':
+    'у тех, кто не делится своим заработком. Оценки по ним нет.',
+  'Dearest day': 'Самый дорогой день',
   'This week': 'Эта неделя',
   'Earned this week': 'Заработано за неделю',
   'Still to come': 'Ещё впереди',
@@ -2932,6 +2938,12 @@ export const UK: Dictionary = {
     'Ваші дні, ваше місце і відкритий архів погоди. Це збіг, а не причина.',
   'Tips per hour on days with rain against days without. Wage does not move with the weather, so it is left out.':
     'Чайові за годину в дощові дні проти сухих. Ставка від погоди не залежить, тож у розрахунок не йде.',
+  'What this rota costs': 'У що обходиться цей графік',
+  'sharing': 'діляться',
+  'Not counted:': 'Не враховано:',
+  'rostered by people who do not share what they earn. There is no estimate for it.':
+    'у тих, хто не ділиться своїм заробітком. Оцінки по них немає.',
+  'Dearest day': 'Найдорожчий день',
   'This week': 'Цей тиждень',
   'All time': 'За весь час',
 

@@ -33,9 +33,11 @@ import { SwapsPanel } from '@/components/team/swaps';
 import { AvailabilityStrip } from '@/components/team/availability';
 import { HandoverPanel } from '@/components/team/handover';
 import { PoolPanel } from '@/components/team/pool';
+import { WeekCostPanel } from '@/components/team/week-cost';
 import { LeavePanel } from '@/components/team/leave';
 import { drawRotaCard } from '@/lib/export/rota-card';
 import { tightTurnarounds } from '@/lib/calendar/on-shift';
+import { accountApi } from '@/lib/api/auth';
 import { OnShiftNow } from '@/components/dashboard/on-shift-now';
 import { currentCardTheme } from '@/lib/export/share-card';
 import { downloadBlob } from '@/lib/export/xlsx';
@@ -64,6 +66,11 @@ function Schedule() {
   const [teams, setTeams] = useState<Team[]>([]);
   const [selected, setSelected] = useState<number | null>(null);
   const [rota, setRota] = useState<Rota | null>(null);
+
+  // The rest threshold this person actually set. Warning a crew at eleven
+  // hours when their own account says twelve makes the board argue with the
+  // settings page, and people believe the settings page.
+  const [restHours, setRestHours] = useState<number | null>(null);
   const [month, setMonth] = useState(currentMonth());
   const [span, setSpan] = useState<Span>('month');
   const [anchor, setAnchor] = useState(todayKey());
@@ -190,9 +197,23 @@ function Schedule() {
       .sort();
   }, [rota]);
 
+  useEffect(() => {
+    void accountApi
+      .get()
+      .then((profile) => setRestHours(profile.rest_hours))
+      // Falling back to the EU daily rule rather than to silence: a board
+      // that stops warning because one request failed is worse than one
+      // warning at a threshold somebody has to correct.
+      .catch(() => setRestHours(11));
+  }, []);
+
   const tight = useMemo(
-    () => tightTurnarounds((rota?.entries ?? []).filter((entry) => entry.date >= todayKey())),
-    [rota],
+    () =>
+      tightTurnarounds(
+        (rota?.entries ?? []).filter((entry) => entry.date >= todayKey()),
+        restHours ?? 11,
+      ),
+    [rota, restHours],
   );
 
   const focusEntries = useMemo(() => {
@@ -460,6 +481,9 @@ function Schedule() {
       {selected !== null && (
         <AvailabilityStrip teamId={selected} from={range.from} to={range.to} onChanged={refresh} />
       )}
+
+      {/* ==== What the rota costs, while it is still a draft ==== */}
+      {rota !== null && <WeekCostPanel rota={rota} />}
 
       {/* ==== The pool: one number instead of five ==== */}
       {selected !== null && <PoolPanel teamId={selected} />}

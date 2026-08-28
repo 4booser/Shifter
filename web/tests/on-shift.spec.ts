@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { RotaEntry } from '@/lib/api/team';
-import { onShiftNow, spell } from '@/lib/calendar/on-shift';
+import { onShiftNow, spell, tightTurnarounds } from '@/lib/calendar/on-shift';
 
 const entry = (over: Partial<RotaEntry>): RotaEntry =>
   ({
@@ -105,5 +105,79 @@ describe('saying it out loud', () => {
     expect(spell(130)).toEqual({ hours: 2, minutes: 10 });
     expect(spell(40)).toEqual({ hours: 0, minutes: 40 });
     expect(spell(-90)).toEqual({ hours: 1, minutes: 30 });
+  });
+});
+
+describe('too little between two shifts', () => {
+  const entry = (over: Partial<RotaEntry>): RotaEntry =>
+    ({
+      day_shift_id: Math.floor(Math.random() * 1e6),
+      member_id: 1,
+      date: '2026-08-28',
+      shift_name: 'Вечер',
+      symbol: null,
+      colour: null,
+      member_colour: '#7C5CFF',
+      start_time: '16:00',
+      end_time: '02:00',
+      hours: 10,
+      worked: false,
+      needs_cover: false,
+      is_mine: false,
+      visibility: null,
+      pay: null,
+      offers: [],
+      ...over,
+    }) as RotaEntry;
+
+  it('finds a close followed by an open', () => {
+    const rota = [
+      entry({ date: '2026-08-28', start_time: '16:00', end_time: '02:00' }),
+      entry({ date: '2026-08-29', start_time: '09:00', end_time: '17:00' }),
+    ];
+
+    const [tight] = tightTurnarounds(rota);
+
+    expect(tight.gap).toBe(7);
+    expect(tight.memberId).toBe(1);
+  });
+
+  it('says nothing about a proper night between them', () => {
+    const rota = [
+      entry({ date: '2026-08-28', start_time: '10:00', end_time: '18:00' }),
+      entry({ date: '2026-08-29', start_time: '10:00', end_time: '18:00' }),
+    ];
+
+    expect(tightTurnarounds(rota)).toEqual([]);
+  });
+
+  it('does not compare two different people', () => {
+    const rota = [
+      entry({ member_id: 1, date: '2026-08-28', end_time: '02:00' }),
+      entry({ member_id: 2, date: '2026-08-29', start_time: '09:00', end_time: '17:00' }),
+    ];
+
+    expect(tightTurnarounds(rota)).toEqual([]);
+  });
+
+  it('takes the threshold it is given', () => {
+    const rota = [
+      entry({ date: '2026-08-28', start_time: '16:00', end_time: '00:00' }),
+      entry({ date: '2026-08-29', start_time: '09:00', end_time: '17:00' }),
+    ];
+
+    expect(tightTurnarounds(rota)).toHaveLength(1);
+    expect(tightTurnarounds(rota, 8)).toEqual([]);
+  });
+
+  it('puts the shortest gap first', () => {
+    const rota = [
+      entry({ member_id: 1, date: '2026-08-28', start_time: '16:00', end_time: '02:00' }),
+      entry({ member_id: 1, date: '2026-08-29', start_time: '09:00', end_time: '17:00' }),
+      entry({ member_id: 2, date: '2026-08-28', start_time: '16:00', end_time: '02:00' }),
+      entry({ member_id: 2, date: '2026-08-29', start_time: '06:00', end_time: '14:00' }),
+    ];
+
+    expect(tightTurnarounds(rota).map((row) => row.gap)).toEqual([4, 7]);
   });
 });

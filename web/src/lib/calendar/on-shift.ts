@@ -84,3 +84,72 @@ export const spell = (minutes: number): { hours: number; minutes: number } => ({
   hours: Math.floor(Math.abs(minutes) / 60),
   minutes: Math.abs(minutes) % 60,
 });
+
+export interface TightTurnaround {
+  memberId: number;
+  /** The shift that ends, and the one that starts too soon after it. */
+  before: RotaEntry;
+  after: RotaEntry;
+  /** Hours between clocking out and clocking back in. */
+  gap: number;
+}
+
+/**
+ * Two shifts on one person with too little between them.
+ *
+ * The daily rest rule exists, a rota can break it by accident, and the person
+ * building the rota is looking at a grid rather than at a clock. Worth saying
+ * out loud while it is still a plan — which is the only time it can be moved
+ * without a conversation.
+ *
+ * It says "looks like" and never "breaks". The app does not know somebody's
+ * contract, their country's exemptions, or what they agreed to; it knows two
+ * times and the distance between them, and that is what it reports.
+ *
+ * Nothing here touches pay. A rest rule is about hours, and reaching from it
+ * into somebody's wage would be inventing an entitlement.
+ */
+export function tightTurnarounds(
+  entries: RotaEntry[],
+  /** Hours below which it is worth mentioning. Eleven is the EU daily rule. */
+  threshold = 11,
+): TightTurnaround[] {
+  const byMember = new Map<number, RotaEntry[]>();
+
+  for (const entry of entries) {
+    byMember.set(entry.member_id, [...(byMember.get(entry.member_id) ?? []), entry]);
+  }
+
+  const found: TightTurnaround[] = [];
+
+  for (const [memberId, theirs] of byMember) {
+    const ordered = [...theirs].sort(
+      (one, two) => `${one.date}${one.start_time}`.localeCompare(`${two.date}${two.start_time}`),
+    );
+
+    for (let index = 1; index < ordered.length; index += 1) {
+      const before = ordered[index - 1];
+      const after = ordered[index];
+
+      const minutes = (time: string) =>
+        Number(time.slice(0, 2)) * 60 + Number(time.slice(3, 5));
+
+      const dayStart = Date.parse(`${before.date}T00:00:00Z`) / 60_000;
+      const nextStart = Date.parse(`${after.date}T00:00:00Z`) / 60_000;
+
+      let end = dayStart + minutes(before.end_time);
+
+      // A close ending at 02:00 ends the next morning; without the wrap the
+      // gap comes out a day too long and the warning never fires.
+      if (minutes(before.end_time) <= minutes(before.start_time)) end += 24 * 60;
+
+      const gap = (nextStart + minutes(after.start_time) - end) / 60;
+
+      if (gap >= 0 && gap < threshold) {
+        found.push({ memberId, before, after, gap: Math.round(gap * 10) / 10 });
+      }
+    }
+  }
+
+  return found.sort((one, two) => one.gap - two.gap);
+}

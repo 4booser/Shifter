@@ -33,6 +33,7 @@ import { HandoverPanel } from '@/components/team/handover';
 import { PoolPanel } from '@/components/team/pool';
 import { LeavePanel } from '@/components/team/leave';
 import { drawRotaCard } from '@/lib/export/rota-card';
+import { tightTurnarounds } from '@/lib/calendar/on-shift';
 import { OnShiftNow } from '@/components/dashboard/on-shift-now';
 import { currentCardTheme } from '@/lib/export/share-card';
 import { downloadBlob } from '@/lib/export/xlsx';
@@ -152,6 +153,16 @@ function Schedule() {
   }, [rota]);
 
   const uncovered = (rota?.days ?? []).filter((day) => day.on_shift === 0 && day.date >= todayKey());
+
+  const names = useMemo(
+    () => new Map((rota?.members ?? []).map((member) => [member.member_id, member.display_name])),
+    [rota],
+  );
+
+  const tight = useMemo(
+    () => tightTurnarounds((rota?.entries ?? []).filter((entry) => entry.date >= todayKey())),
+    [rota],
+  );
 
   const focusEntries = useMemo(() => {
     if (focusDay === null || rota === null) return [];
@@ -341,6 +352,30 @@ function Schedule() {
 
       {/* ==== The manager's board replaces the rota entirely ==== */}
       {mode === 'planner' && selected !== null && <PlannerBoardView teamId={selected} />}
+
+      {/*
+        Two shifts on one person with too little between them, while it is
+        still a plan — the only moment it can be moved without a conversation.
+
+        "Looks like" and never "breaks". The app does not know anybody's
+        contract, their country's exemptions, or what they agreed to; it knows
+        two times and the distance between them.
+      */}
+      {mode === 'rota' && tight.length > 0 && (
+        <Alert kind="info">
+          <span className="flex flex-col gap-0.5">
+            <strong>{t('Looks like a short turnaround')}</strong>
+            {tight.slice(0, 4).map((row) => (
+              <span key={`${row.before.day_shift_id}-${row.after.day_shift_id}`} className="field-hint">
+                {names.get(row.memberId) ?? '—'}: {row.before.date.slice(8)}.
+                {row.before.date.slice(5, 7)} {t('to')} {row.before.end_time} →{' '}
+                {row.after.date.slice(8)}.{row.after.date.slice(5, 7)} {t('from')}{' '}
+                {row.after.start_time} · {row.gap} {t('h')}
+              </span>
+            ))}
+          </span>
+        </Alert>
+      )}
 
       {/* ==== Who is on the floor right now ==== */}
       {mode === 'rota' && <OnShiftNow rota={rota} />}

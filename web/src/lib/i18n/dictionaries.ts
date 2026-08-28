@@ -569,6 +569,7 @@ export const RU: Dictionary = {
   'Only the': 'Только',
   'who share their rate. The rest are not estimated.':
     'кто делится ставкой. Остальных не оцениваем.',
+  'Looks like a short turnaround': 'Похоже на короткий отдых между сменами',
   'This week': 'Эта неделя',
   'Earned this week': 'Заработано за неделю',
   'Still to come': 'Ещё впереди',
@@ -2900,6 +2901,7 @@ export const UK: Dictionary = {
   'Only the': 'Тільки',
   'who share their rate. The rest are not estimated.':
     'хто ділиться ставкою. Решту не оцінюємо.',
+  'Looks like a short turnaround': 'Схоже на короткий відпочинок між змінами',
   'This week': 'Цей тиждень',
   'All time': 'За весь час',
 

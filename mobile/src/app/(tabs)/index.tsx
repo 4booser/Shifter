@@ -19,6 +19,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { DailyBrief } from '@/components/daily-brief';
+import { DayPeek } from '@/components/day-peek';
 import { MonthGrid, PAGE_HEIGHT } from '@/components/month-grid';
 import { MonthJump } from '@/components/month-jump';
 import { Brush, brushColour, brushName, brushSymbol, PaintPicker } from '@/components/paint-picker';
@@ -43,6 +44,7 @@ import {
   EventSave,
   money,
   ShiftTemplate,
+  templateHours,
   toSavePayload,
 } from '@/lib/types';
 import { LiveShift, useLive } from '@/store/live';
@@ -98,6 +100,7 @@ export default function CalendarScreen() {
 
   const [picking, setPicking] = useState(false);
   const [jumping, setJumping] = useState(false);
+  const [peeking, setPeeking] = useState<string | null>(null);
   const [brush, setBrush] = useState<Brush | null>(null);
   const [chosen, setChosen] = useState<Set<string>>(new Set());
   const chosenAt = useRef(new Set<string>());
@@ -274,6 +277,21 @@ export default function CalendarScreen() {
     setChosen(new Set(set));
   }, []);
 
+  const refresh = useCallback(() => {
+    asked.current.clear();
+
+    return ensure(indexAt.current, true);
+  }, [ensure]);
+
+  const writeDay = useCallback(
+    async (key: string, payload: DaySave) => {
+      await api(`/shifter/v1/days/${key}`, { method: 'PUT', body: payload });
+      await refresh();
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    },
+    [refresh],
+  );
+
   const apply = async () => {
     if (brush === null || chosen.size === 0) return;
 
@@ -353,8 +371,7 @@ export default function CalendarScreen() {
       }
 
       clearPaint();
-      asked.current.clear();
-      void ensure(indexAt.current, true);
+      void refresh();
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Не сохранилось.');
@@ -429,8 +446,7 @@ export default function CalendarScreen() {
             refreshing={refreshing}
             onRefresh={() => {
               setRefreshing(true);
-              asked.current.clear();
-              void ensure(indexAt.current, true).finally(() => setRefreshing(false));
+              void refresh().finally(() => setRefreshing(false));
             }}
           />
         }
@@ -519,7 +535,7 @@ export default function CalendarScreen() {
                     : { colour: brushColour(brush, palette), symbol: brushSymbol(brush) }
                 }
                 onPaint={onPaint}
-                onOpen={(key) => router.push(`/day/${key}`)}
+                onOpen={setPeeking}
               />
             </View>
           )}
@@ -639,6 +655,20 @@ export default function CalendarScreen() {
         </View>
       )}
 
+      <DayPeek
+        date={peeking}
+        day={peeking === null ? undefined : byDate.get(peeking)}
+        events={events}
+        templates={templates}
+        palette={palette}
+        onWrite={writeDay}
+        onOpen={(key) => {
+          setPeeking(null);
+          router.push(`/day/${key}`);
+        }}
+        onClose={() => setPeeking(null)}
+      />
+
       <MonthJump
         open={jumping}
         at={month}
@@ -695,21 +725,6 @@ function Stat({
     </View>
   );
 }
-
-/**
- * Paid hours a template is worth: start to end, wrapping midnight, less the
- * break. The server prices the real thing; this is only ever shown as an
- * estimate of what is about to be painted, and labelled as one.
- */
-const templateHours = (template: ShiftTemplate): number => {
-  const [fromHour, fromMinute] = template.start_time.split(':').map(Number);
-  const [toHour, toMinute] = template.end_time.split(':').map(Number);
-  let minutes = toHour * 60 + toMinute - (fromHour * 60 + fromMinute);
-
-  if (minutes <= 0) minutes += 24 * 60;
-
-  return Math.max(0, minutes - (template.break_minutes ?? 0)) / 60;
-};
 
 const dayWord = (count: number) => {
   const tail = count % 10;

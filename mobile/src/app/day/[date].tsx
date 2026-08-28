@@ -27,6 +27,7 @@ import {
   DeductionReason,
   money,
   ShiftTemplate,
+  templateHours,
   toSavePayload,
 } from '@/lib/types';
 
@@ -106,6 +107,9 @@ export default function DayScreen() {
           colour: template.colour,
           start_time: template.start_time,
           end_time: template.end_time,
+          // What it will be worth once the server prices it; shown here only
+          // so the row reads the same before and after the save.
+          hours: templateHours(template),
           // Local, not UTC: at half past midnight in Kyiv the UTC date is still
           // yesterday, so a bartender who had just closed added their shift as
           // a plan and the night's money was missing from the month.

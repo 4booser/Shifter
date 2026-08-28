@@ -39,6 +39,25 @@ export const rateLine = (template: {
   return [base, percent].filter((part) => part !== null).join(' + ') || 'без ставки';
 };
 
+/**
+ * Paid hours a template is worth: start to end, wrapping midnight, less the
+ * break. The server prices the real thing off the placement; this is only for
+ * what a client is about to add, and is always labelled as an estimate.
+ */
+export const templateHours = (template: {
+  start_time: string;
+  end_time: string;
+  break_minutes: number;
+}): number => {
+  const [fromHour, fromMinute] = template.start_time.split(':').map(Number);
+  const [toHour, toMinute] = template.end_time.split(':').map(Number);
+  let minutes = toHour * 60 + toMinute - (fromHour * 60 + fromMinute);
+
+  if (minutes <= 0) minutes += 24 * 60;
+
+  return Math.max(0, minutes - (template.break_minutes ?? 0)) / 60;
+};
+
 export interface DayShiftEntry {
   shift_id: number;
   name: string;
@@ -46,6 +65,8 @@ export interface DayShiftEntry {
   colour: string | null;
   start_time: string;
   end_time: string;
+  /** Paid hours: the span less the break. Sent all along, read only now. */
+  hours: number;
   worked: boolean;
   needs_cover: boolean;
   actual_start: string | null;

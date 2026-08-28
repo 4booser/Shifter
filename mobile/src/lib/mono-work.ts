@@ -314,3 +314,82 @@ export const usualDay = (
 
   return days.size === 0 ? 0 : total / days.size;
 };
+
+export interface Punctuality {
+  locationId: number;
+  place: string;
+  /** Periods that have actually been settled, so there is something to judge. */
+  settled: number;
+  /** Average days between the promised day and the money arriving. */
+  averageLate: number;
+  /** The worst one, because an average of 2 hides a 14. */
+  worstLate: number;
+  /** How the last three went, newest first. Negative is early. */
+  recent: { period: string; late: number }[];
+  /** Periods where less arrived than was owed. A different complaint entirely. */
+  short: number;
+}
+
+/**
+ * Whether a place pays when it says it will.
+ *
+ * The promised day is in the place's own settings. The day the money arrived
+ * is in the payouts. Between them is the whole history of somebody's
+ * relationship with an employer, and nobody keeps it — so the argument is
+ * always about the last time, which the manager remembers differently.
+ *
+ * Lateness and shortfall are counted apart. They are different complaints and
+ * different conversations, and rolling them together makes a number that
+ * supports neither.
+ */
+export const punctuality = (
+  periods: {
+    location_id: number;
+    location_name: string;
+    due_on: string;
+    period_to: string;
+    expected: number;
+    paid: number;
+    days_late: number;
+  }[],
+): Punctuality[] => {
+  const byPlace = new Map<number, Punctuality>();
+
+  for (const row of periods) {
+    // Only periods where money has actually arrived. A period still open is
+    // not a place being late, it is a place whose turn has not come.
+    if (row.paid <= 0) continue;
+
+    const found = byPlace.get(row.location_id) ?? {
+      locationId: row.location_id,
+      place: row.location_name,
+      settled: 0,
+      averageLate: 0,
+      worstLate: 0,
+      recent: [],
+      short: 0,
+    };
+
+    found.settled += 1;
+    found.worstLate = Math.max(found.worstLate, row.days_late);
+    found.recent.push({ period: row.period_to, late: row.days_late });
+    if (row.paid + 0.01 < row.expected) found.short += 1;
+
+    byPlace.set(row.location_id, found);
+  }
+
+  for (const row of byPlace.values()) {
+    const total = row.recent.reduce((sum, one) => sum + one.late, 0);
+
+    row.averageLate = row.settled === 0 ? 0 : total / row.settled;
+    row.recent = row.recent
+      .sort((one, two) => two.period.localeCompare(one.period))
+      .slice(0, 3);
+  }
+
+  // Three settled periods before it is worth saying anything. One late wage
+  // is a story about one month, not about an employer.
+  return [...byPlace.values()]
+    .filter((row) => row.settled >= 3)
+    .sort((one, two) => two.averageLate - one.averageLate);
+};

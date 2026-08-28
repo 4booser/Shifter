@@ -55,6 +55,8 @@ interface PayPeriodRow {
   due_on: string;
   expected: number;
   paid: number;
+  /** Days between the promised day and the money arriving. */
+  days_late: number;
   status: string;
   stream: 'all' | 'wage' | 'commission';
 }
@@ -668,6 +670,7 @@ function Bank() {
         <BankAnalysis
           items={mono.items}
           days={[...days.values()]}
+          periods={periods ?? []}
           month={currentMonth()}
           earned={earned}
           palette={palette}

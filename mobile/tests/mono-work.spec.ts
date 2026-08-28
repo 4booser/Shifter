@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { MonoStatementItem } from '@/lib/mono';
 import {
   closingCosts,
+  punctuality,
   realHourly,
   spendingByDayKind,
   untilPayday,
@@ -217,5 +218,93 @@ describe('how much there is per day until the next money', () => {
 
     // Two days with anything on them, six hundred between them.
     expect(usualDay(items, '2026-08-01', '2026-08-31')).toBe(300);
+  });
+});
+
+describe('whether a place pays when it says it will', () => {
+  const period = (over: Partial<Parameters<typeof punctuality>[0][number]>) => ({
+    location_id: 1,
+    location_name: 'Бар Дым',
+    due_on: '2026-08-10',
+    period_to: '2026-07-31',
+    expected: 18_000,
+    paid: 18_000,
+    days_late: 0,
+    ...over,
+  });
+
+  it('says nothing about a place with fewer than three settled periods', () => {
+    // One late wage is a story about one month, not about an employer.
+    const rows = punctuality([
+      period({ days_late: 5, period_to: '2026-06-30' }),
+      period({ days_late: 9, period_to: '2026-07-31' }),
+    ]);
+
+    expect(rows).toEqual([]);
+  });
+
+  it('averages the lateness and keeps the worst one', () => {
+    // An average of two hides a fourteen, so both are reported.
+    const rows = punctuality([
+      period({ days_late: 0, period_to: '2026-06-15' }),
+      period({ days_late: 1, period_to: '2026-06-30' }),
+      period({ days_late: 14, period_to: '2026-07-15' }),
+    ]);
+
+    expect(rows[0].settled).toBe(3);
+    expect(rows[0].averageLate).toBe(5);
+    expect(rows[0].worstLate).toBe(14);
+  });
+
+  it('counts short payments apart from late ones', () => {
+    // Different complaints and different conversations; one number supporting
+    // both would support neither.
+    const rows = punctuality([
+      period({ period_to: '2026-06-15', paid: 12_000 }),
+      period({ period_to: '2026-06-30' }),
+      period({ period_to: '2026-07-15', days_late: 4 }),
+    ]);
+
+    expect(rows[0].short).toBe(1);
+    expect(rows[0].averageLate).toBeCloseTo(1.33, 2);
+  });
+
+  it('leaves out a period nobody has paid yet', () => {
+    // Not a place being late; a place whose turn has not come.
+    const rows = punctuality([
+      period({ period_to: '2026-06-15' }),
+      period({ period_to: '2026-06-30' }),
+      period({ period_to: '2026-07-15' }),
+      period({ period_to: '2026-07-31', paid: 0, days_late: 40 }),
+    ]);
+
+    expect(rows[0].settled).toBe(3);
+    expect(rows[0].worstLate).toBe(0);
+  });
+
+  it('shows the last three, newest first', () => {
+    const rows = punctuality([
+      period({ period_to: '2026-05-31', days_late: 9 }),
+      period({ period_to: '2026-06-30', days_late: 3 }),
+      period({ period_to: '2026-07-15', days_late: 1 }),
+      period({ period_to: '2026-07-31', days_late: 0 }),
+    ]);
+
+    expect(rows[0].recent.map((one) => one.period)).toEqual([
+      '2026-07-31',
+      '2026-07-15',
+      '2026-06-30',
+    ]);
+  });
+
+  it('puts the worst payer first', () => {
+    const rows = punctuality([
+      ...[1, 2, 3].map((n) => period({ period_to: `2026-0${n + 4}-15`, days_late: 1 })),
+      ...[1, 2, 3].map((n) =>
+        period({ location_id: 2, location_name: 'Кофейня', period_to: `2026-0${n + 4}-15`, days_late: 8 }),
+      ),
+    ]);
+
+    expect(rows.map((row) => row.place)).toEqual(['Кофейня', 'Бар Дым']);
   });
 });

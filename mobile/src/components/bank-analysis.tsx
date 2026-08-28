@@ -5,7 +5,7 @@ import { Appear, Roll } from '@/components/motion';
 import { Palette } from '@/constants/theme';
 import { monthBounds, shortDate, YearMonth } from '@/lib/calendar';
 import { moneyLasted, MonoStatementItem, periodTotals, spendingByCategory } from '@/lib/mono';
-import { closingCosts, realHourly, spendingByDayKind } from '@/lib/mono-work';
+import { closingCosts, punctuality, realHourly, spendingByDayKind } from '@/lib/mono-work';
 import { CalendarDayData, money } from '@/lib/types';
 import { t } from '@/lib/i18n';
 
@@ -32,6 +32,7 @@ const KIND_NAMES: Record<string, string> = {
 export function BankAnalysis({
   items,
   days,
+  periods,
   month,
   earned,
   palette,
@@ -42,6 +43,8 @@ export function BankAnalysis({
   items: MonoStatementItem[];
   /** The rota, which is the half of this arithmetic the bank does not have. */
   days: CalendarDayData[];
+  /** Pay periods, so "does this place pay on time" has a history to read. */
+  periods: Parameters<typeof punctuality>[0];
   month: YearMonth;
   /** What Shifter says was earned this month. */
   earned: number;
@@ -60,6 +63,7 @@ export function BankAnalysis({
   const rate = realHourly(items, days, bounds.from, bounds.to);
   const split = spendingByDayKind(items, days, bounds.from, bounds.to);
   const closing = closingCosts(items, days, bounds.from, bounds.to);
+  const paying = punctuality(periods);
 
   if (items.length === 0) {
     return (
@@ -181,6 +185,35 @@ export function BankAnalysis({
           </View>
         </Appear>
       )}
+
+      {paying.map((row) => (
+        <Appear key={row.locationId} index={5}>
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>{row.place} — {t('платит')}</Text>
+            <Text style={styles.cardNote}>
+              {row.averageLate < 0.5
+                ? t('Вовремя.')
+                : `${t('В среднем на')} ${Math.round(row.averageLate * 10) / 10} ${t('дн. позже обещанного.')}`}
+              {row.worstLate > 0 && ` ${t('Худший раз —')} ${row.worstLate} ${t('дн.')}`}
+            </Text>
+            {/* Late and short are different complaints and different
+                conversations; one number supporting both supports neither. */}
+            {row.short > 0 && (
+              <Text style={styles.cardNote}>
+                {t('И')} {row.short} {t('раз пришло меньше, чем должны были — это отдельный разговор.')}
+              </Text>
+            )}
+            <Text style={styles.cardFaint}>
+              {t('Последние:')}{' '}
+              {row.recent
+                .map((one) => (one.late <= 0 ? t('вовремя') : `+${one.late}`))
+                .join(' · ')}
+              {' · '}
+              {t('всего периодов')}: {row.settled}
+            </Text>
+          </View>
+        </Appear>
+      ))}
 
       {categories.length > 0 && (
         <Appear index={2}>

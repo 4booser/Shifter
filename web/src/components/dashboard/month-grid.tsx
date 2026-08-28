@@ -683,7 +683,7 @@ export function MonthGrid({
                 aria-selected={picked || selected}
                 data-day={day.key}
                 tabIndex={selected ? 0 : -1}
-                className={`group cell-in relative flex min-h-[4.6rem] flex-col gap-0.5 overflow-hidden rounded-(--radius) border p-1 text-left transition-all sm:min-h-[5.4rem] sm:p-1.5 ${
+                className={`group cell-in relative flex min-h-[4.6rem] flex-col gap-0.5 overflow-hidden rounded-(--radius) border p-1 text-left transition-all sm:min-h-(--cell-min) sm:p-(--pad-cell) ${
                   day.inCurrentMonth ? '' : 'opacity-45'
                 } ${dragged ? 'scale-[0.97] border-(--accent) ring-2 ring-(--ring)' : picked ? 'border-(--accent) bg-(--accent-soft)' : selected ? 'ring-pulse border-(--accent)' : 'border-transparent hover:border-border-strong'} ${
                   painting ? 'cursor-crosshair' : ''

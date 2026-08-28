@@ -349,6 +349,9 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
             ]}
             onChange={(value) => update('density', value)}
           />
+          <span className="field-hint">
+            {t('Compact fits a whole month on a laptop screen without scrolling.')}
+          </span>
           <label>
             <span className="field-hint">
               {t('Corner rounding')}: {settings.roundness}px

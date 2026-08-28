@@ -516,6 +516,8 @@ export const RU: Dictionary = {
   'Nobody yet. First in': 'Пока никого. Первый через',
   'Next in': 'Следующий через',
   'on for': 'на смене',
+  'Compact fits a whole month on a laptop screen without scrolling.':
+    'Плотно — весь месяц на экране ноутбука без прокрутки.',
   'This week': 'Эта неделя',
   'Earned this week': 'Заработано за неделю',
   'Still to come': 'Ещё впереди',
@@ -2794,6 +2796,8 @@ export const UK: Dictionary = {
   'Nobody yet. First in': 'Поки нікого. Перший через',
   'Next in': 'Наступний через',
   'on for': 'на зміні',
+  'Compact fits a whole month on a laptop screen without scrolling.':
+    'Щільно — весь місяць на екрані ноутбука без прокручування.',
   'This week': 'Цей тиждень',
   'All time': 'За весь час',
 

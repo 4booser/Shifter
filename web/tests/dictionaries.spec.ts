@@ -18,8 +18,55 @@ import { RU, UK } from '../src/lib/i18n/dictionaries';
  */
 const source = readFileSync(join(__dirname, '../src/lib/i18n/dictionaries.ts'), 'utf8');
 
-/** Both quoted keys ('Record a payment') and bare ones (Overtime). */
-const KEY = /^\s*(?:'([^']+)'|([A-Za-z][A-Za-z0-9]*)):/;
+/**
+ * The keys on one line of a dictionary.
+ *
+ * Not a regular expression, because two things defeat one. Keys come both
+ * quoted ('Record a payment') and bare (Overtime); and a *value* can contain a
+ * word followed by a colon — "Аккаунт → Calendar feed:" — which a pattern
+ * scanning the whole line reads as a second key. So the line is walked once,
+ * quotes are tracked, and only a colon at the top level ends a key.
+ *
+ * It has to see every pair on a line rather than the first: the weekday
+ * abbreviations live seven to a line, and an anchored pattern read one of them
+ * and silently allowed six duplicates — which is the failure this file exists
+ * to catch.
+ */
+function keysIn(line: string): string[] {
+  const keys: string[] = [];
+
+  let token = '';
+  let quoted = false;
+  let expecting = true;
+
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+
+    if (quoted) {
+      if (c === '\\') i++;
+      else if (c === "'") quoted = false;
+      else token += c;
+
+      continue;
+    }
+
+    if (c === "'") {
+      quoted = true;
+    } else if (c === ':' && expecting) {
+      if (token.trim() !== '') keys.push(token.trim());
+
+      token = '';
+      expecting = false;
+    } else if (c === ',') {
+      token = '';
+      expecting = true;
+    } else if (expecting) {
+      token += c;
+    }
+  }
+
+  return keys;
+}
 
 function keysOf(name: 'RU' | 'UK'): string[] {
   const lines = source.split('\n');
@@ -32,9 +79,7 @@ function keysOf(name: 'RU' | 'UK'): string[] {
   for (let i = start + 1; i < lines.length; i++) {
     if (lines[i].startsWith('export const ')) break;
 
-    const match = KEY.exec(lines[i]);
-
-    if (match !== null) keys.push(match[1] ?? match[2]);
+    keys.push(...keysIn(lines[i]));
   }
 
   return keys;

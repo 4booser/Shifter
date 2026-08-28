@@ -18,6 +18,7 @@ import {
   useCalendar,
 } from '@/lib/store/calendar';
 import { Shell } from '@/components/layout/shell';
+import { FirstRun } from '@/components/dashboard/first-run';
 import { DayPanel } from '@/components/dashboard/day-panel';
 import { MonthGrid } from '@/components/dashboard/month-grid';
 import { Sidebar } from '@/components/dashboard/sidebar';
@@ -300,7 +301,7 @@ function Dashboard() {
         </Alert>
       )}
 
-      {needsSetup && <Onboarding />}
+      {needsSetup && <FirstRun />}
 
       {!needsSetup && <TileStrip />}
       {!needsSetup && <TipsTicker />}
@@ -353,53 +354,3 @@ function Dashboard() {
   );
 }
 
-/** The checklist a brand new account sees instead of an empty calendar. */
-function Onboarding() {
-  const { t } = useI18n();
-  const state = useCalendar();
-
-  const steps = [
-    {
-      done: state.locations.some((location) => !location.archived),
-      title: t('Add where you work'),
-      hint: t('Pay period, overtime, tip-out and meals live on the place.'),
-    },
-    {
-      done: state.templates.some((template) => !template.archived),
-      title: t('Create a shift'),
-      hint: t('Times and rate once; after that it is one tap per day.'),
-    },
-    {
-      done: state.days.size > 0,
-      title: t('Paint it onto the calendar'),
-      hint: t('Pick the shift, then drag across the days you work.'),
-    },
-  ];
-
-  return (
-    <section className="card rise p-4">
-      <h2 className="mb-1 text-[1.05rem] font-bold">👋 {t('Let us set this up')}</h2>
-      <p className="field-hint mb-3">{t('Three steps, and the calendar starts counting for you.')}</p>
-      <ol className="grid gap-2 sm:grid-cols-3">
-        {steps.map((step, index) => (
-          <li
-            key={index}
-            className={`flex gap-2.5 rounded-(--radius) border p-2.5 ${step.done ? 'border-good/40 bg-(--good-soft)' : 'border-border'}`}
-          >
-            <span
-              className={`grid h-6 w-6 flex-none place-items-center rounded-full text-[0.8rem] font-bold ${
-                step.done ? 'bg-good text-white' : 'bg-surface-2'
-              }`}
-            >
-              {step.done ? <Icon name="check" size={13} /> : index + 1}
-            </span>
-            <span className="min-w-0">
-              <strong className="block text-[0.88rem]">{step.title}</strong>
-              <span className="field-hint">{step.hint}</span>
-            </span>
-          </li>
-        ))}
-      </ol>
-    </section>
-  );
-}

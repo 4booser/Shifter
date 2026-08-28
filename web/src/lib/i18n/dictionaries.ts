@@ -5,6 +5,21 @@
 type Dictionary = Record<string, string>;
 
 export const RU: Dictionary = {
+  Calendar: 'Календарь',
+  Webhooks: 'Вебхуки',
+  'Sixty seconds and it starts counting': 'Шестьдесят секунд — и оно начнёт считать',
+  'Three questions. Everything else is a setting you can find later.': 'Три вопроса. Всё остальное — настройки, которые найдутся потом.',
+  'Where do you work?': 'Где вы работаете?',
+  'The bar on the corner': 'Бар за углом',
+  'What do they pay?': 'Сколько платят?',
+  'Per month': 'В месяц',
+  'Shifts start': 'Смены начинаются',
+  'and end': 'и заканчиваются',
+  'Which days, usually?': 'В какие дни обычно?',
+  'Rest of the month:': 'До конца месяца:',
+  'Put it on my calendar': 'Поставить в календарь',
+  'Setting up…': 'Настраиваем…',
+  'My shift': 'Моя смена',
   'Asking for more': 'Разговор о прибавке',
   'Everything below is your own record. Nothing here is an opinion.': 'Всё ниже — ваш собственный послужной список. Здесь нет ни одного мнения.',
   'There is a case': 'Есть с чем идти',
@@ -846,7 +861,6 @@ export const RU: Dictionary = {
   Density: 'Плотность',
   Comfortable: 'Просторно',
   Compact: 'Компактно',
-  Calendar: 'Календарь',
   'Week starts on Monday': 'Неделя начинается с понедельника',
   'Show earnings inside day cells': 'Показывать заработок в ячейках',
   'Show shift names inside day cells': 'Показывать названия смен в ячейках',
@@ -1470,7 +1484,6 @@ export const RU: Dictionary = {
   'Saved schemes': 'Сохранённые схемы',
 
   // Webhooks: endpoints other software posts to, and what arrived
-  Webhooks: 'Вебхуки',
   'New endpoint': 'Новый эндпоинт',
   'Edit endpoint': 'Изменить эндпоинт',
   'Let other software fill the calendar in': 'Пусть календарь заполняет другая программа',
@@ -1850,6 +1863,21 @@ export const RU: Dictionary = {
 };
 
 export const UK: Dictionary = {
+  Calendar: 'Календар',
+  Webhooks: 'Вебхуки',
+  'Sixty seconds and it starts counting': 'Шістдесят секунд — і воно почне рахувати',
+  'Three questions. Everything else is a setting you can find later.': 'Три питання. Усе інше — налаштування, які знайдуться потім.',
+  'Where do you work?': 'Де ви працюєте?',
+  'The bar on the corner': 'Бар за рогом',
+  'What do they pay?': 'Скільки платять?',
+  'Per month': 'На місяць',
+  'Shifts start': 'Зміни починаються',
+  'and end': 'і закінчуються',
+  'Which days, usually?': 'У які дні зазвичай?',
+  'Rest of the month:': 'До кінця місяця:',
+  'Put it on my calendar': 'Поставити в календар',
+  'Setting up…': 'Налаштовуємо…',
+  'My shift': 'Моя зміна',
   'Asking for more': 'Розмова про підвищення',
   'Everything below is your own record. Nothing here is an opinion.': 'Усе нижче — ваш власний послужний список. Тут немає жодної думки.',
   'There is a case': 'Є з чим іти',
@@ -2680,7 +2708,6 @@ export const UK: Dictionary = {
   Density: 'Щільність',
   Comfortable: 'Просторо',
   Compact: 'Компактно',
-  Calendar: 'Календар',
   'Week starts on Monday': 'Тиждень починається з понеділка',
   'Show earnings inside day cells': 'Показувати заробіток у клітинках',
   'Show shift names inside day cells': 'Показувати назви змін у клітинках',
@@ -3302,7 +3329,6 @@ export const UK: Dictionary = {
   'Saved schemes': 'Збережені схеми',
 
   // Webhooks: endpoints other software posts to, and what arrived
-  Webhooks: 'Вебхуки',
   'New endpoint': 'Новий ендпоінт',
   'Edit endpoint': 'Змінити ендпоінт',
   'Let other software fill the calendar in': 'Хай календар заповнює інша програма',

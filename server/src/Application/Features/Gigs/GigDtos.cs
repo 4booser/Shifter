@@ -71,7 +71,15 @@ public record GigDto(
     /// </summary>
     int worked_here = 0,
     /// <summary>What the reader last gave them, where they have rated them.</summary>
-    int? my_rating = null);
+    int? my_rating = null,
+    /// <summary>
+    /// The venue's own history vouches for it: shifts that happened, and
+    /// people who came back to say it went well.
+    ///
+    /// Not claimed, not applied for, and it comes off by itself — one bad
+    /// review among the recent ones takes it away without anybody deciding to.
+    /// </summary>
+    bool trusted = false);
 
 /// <summary>
 /// The offered rate and the caller's own, both per hour, and the gap between

@@ -43,6 +43,12 @@ export interface Gig {
   worked_here: number;
   /** What you last gave them, where you have rated them. */
   my_rating: number | null;
+  /**
+   * The venue's own history vouches for it: shifts that happened and people
+   * who came back to say it went well. Not claimed, not applied for, and it
+   * comes off by itself.
+   */
+  trusted: boolean;
   my_response: {
     id: number;
     accepted: boolean;

@@ -79,7 +79,14 @@ public sealed class GigService
         var history = await HistoryWithAsync(
             userId, rows.Select(gig => gig.OwnerUserId).Distinct().ToArray(), ct);
 
-        return rows.Select(gig => ToDto(gig, userId, employerRatings, mine, history)).ToArray();
+        // A badge earned by shifts that happened and people who came back to
+        // say so, rather than one claimed on a registration form.
+        var trusted = await TrustedAsync(
+            rows.Select(gig => gig.OwnerUserId).Distinct().ToArray(), ct);
+
+        return rows
+            .Select(gig => ToDto(gig, userId, employerRatings, mine, history, trusted))
+            .ToArray();
     }
 
     public async Task<GigDto> SaveAsync(int userId, int? id, GigSaveDto request, CancellationToken ct)
@@ -432,6 +439,76 @@ public sealed class GigService
 
         return ToDto(gig, userId);
     }
+
+    /// <summary>
+    /// Venues whose history vouches for them.
+    ///
+    /// Not a claim made at registration and not a thing anybody can apply for:
+    /// enough one-off shifts that actually took place, and nobody who worked
+    /// them came back and said it went badly. A badge that can be applied for
+    /// is a badge that means whatever the person applying wanted it to mean.
+    ///
+    /// It comes off by itself. One bad review inside the recent ones takes it
+    /// away without anybody deciding to, which is the only kind of automatic
+    /// removal that is fair — the same rule that gave it takes it back.
+    /// </summary>
+    private async Task<HashSet<int>> TrustedAsync(int[] ownerIds, CancellationToken ct)
+    {
+        if (ownerIds.Length == 0) return [];
+
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+        // Shifts that were taken and whose day has come and gone. A listing
+        // somebody accepted for next Friday has not yet vouched for anybody.
+        var done = await _db.GigResponses
+            .AsNoTracking()
+            .Include(reply => reply.Listing)
+            .Where(reply => reply.AcceptedAt != null
+                && reply.Listing != null
+                && reply.Listing.Date < today
+                && ownerIds.Contains(reply.Listing.OwnerUserId))
+            .GroupBy(reply => reply.Listing!.OwnerUserId)
+            .Select(group => new { Owner = group.Key, Shifts = group.Count() })
+            .ToArrayAsync(ct);
+
+        var reviews = await _db.GigReviews
+            .AsNoTracking()
+            .Where(review => review.ByEmployer == false && ownerIds.Contains(review.TargetUserId))
+            .GroupBy(review => review.TargetUserId)
+            .Select(group => new
+            {
+                Owner = group.Key,
+                Worst = group.Min(review => review.Rating),
+                Count = group.Count(),
+            })
+            .ToArrayAsync(ct);
+
+        var worst = reviews.ToDictionary(row => row.Owner, row => (row.Worst, row.Count));
+
+        return done
+            .Where(row =>
+            {
+                if (row.Shifts < TrustedShifts) return false;
+
+                // Silence is not endorsement: a venue nobody has reviewed has
+                // not been vouched for, however many shifts it has run.
+                if (!worst.TryGetValue(row.Owner, out var said) || said.Count < TrustedReviews)
+                    return false;
+
+                return said.Worst >= TrustedFloor;
+            })
+            .Select(row => row.Owner)
+            .ToHashSet();
+    }
+
+    /// <summary>
+    /// Five shifts that happened and three people who came back to rate them,
+    /// none below four. Deliberately hard: a badge two venues in the city can
+    /// hold means something, and a badge everybody holds is decoration.
+    /// </summary>
+    private const int TrustedShifts = 5;
+    private const int TrustedReviews = 3;
+    private const int TrustedFloor = 4;
 
     /// <summary>
     /// How many times the caller has worked for each of these people, and what
@@ -961,7 +1038,9 @@ public sealed class GigService
         Dictionary<int, (double Avg, int Count)>? employerRatings = null,
         LocationTotalDto[]? mineByPlace = null,
         /// <summary>The reader's own history with each employer, by owner id.</summary>
-        Dictionary<int, (int Times, int? Rating)>? history = null)
+        Dictionary<int, (int Times, int? Rating)>? history = null,
+        /// <summary>Owners whose own history vouches for them.</summary>
+        HashSet<int>? trusted = null)
     {
         var mine = (gig.Responses ?? []).FirstOrDefault(reply => reply.UserId == userId);
 
@@ -1031,6 +1110,7 @@ public sealed class GigService
             // Their own history with this venue. Somebody else's average is a
             // stranger's opinion; four evenings of their own is evidence.
             history?.GetValueOrDefault(gig.OwnerUserId).Times ?? 0,
-            history?.GetValueOrDefault(gig.OwnerUserId).Rating);
+            history?.GetValueOrDefault(gig.OwnerUserId).Rating,
+            trusted?.Contains(gig.OwnerUserId) ?? false);
     }
 }

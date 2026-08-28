@@ -577,6 +577,9 @@ export const RU: Dictionary = {
   'Back in': 'Вернуться через',
   'Break is over': 'Перерыв закончился',
   'The clock is running again.': 'Часы снова идут.',
+  'Proven': 'Проверено',
+  'Five shifts that happened and three people who came back to say it went well.':
+    'Пять состоявшихся смен и три человека, вернувшихся сказать, что всё прошло хорошо.',
   'This week': 'Эта неделя',
   'Earned this week': 'Заработано за неделю',
   'Still to come': 'Ещё впереди',
@@ -2916,6 +2919,9 @@ export const UK: Dictionary = {
   'Back in': 'Повернутися через',
   'Break is over': 'Перерва закінчилась',
   'The clock is running again.': 'Годинник знову йде.',
+  'Proven': 'Перевірено',
+  'Five shifts that happened and three people who came back to say it went well.':
+    'П’ять змін, що відбулися, і троє людей, які повернулися сказати, що все пройшло добре.',
   'This week': 'Цей тиждень',
   'All time': 'За весь час',
 

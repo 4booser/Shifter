@@ -557,6 +557,15 @@ function GigCard({ gig, onRespond, onWithdraw }: { gig: Gig; onRespond: () => vo
             <strong className="block truncate text-[0.95rem] leading-tight">{gig.title}</strong>
             <span className="field-hint flex items-center gap-1.5 truncate">
               {gig.venue} · {gig.city} <Stars rating={gig.employer_rating} count={gig.employer_count} small />
+              {/* Earned by shifts that happened, not claimed on a form. */}
+              {gig.trusted && (
+                <span
+                  className="chip border-(--accent)/40 text-(--accent)"
+                  title={t('Five shifts that happened and three people who came back to say it went well.')}
+                >
+                  ✓ {t('Proven')}
+                </span>
+              )}
               {/* Your own history first. Four evenings there answers more than
                   a 4.6 averaged over strangers. */}
               {gig.worked_here > 0 && (

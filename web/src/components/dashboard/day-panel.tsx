@@ -233,12 +233,13 @@ export function DayPanel() {
     });
   };
 
+  // A column of cards, the same shape as the sidebar opposite it. It was one
+  // tall card that stuck to the top and scrolled inside itself, which meant
+  // two scrollbars fighting over the same wheel and a panel that unpinned
+  // halfway down the page.
   return (
-    <aside
-      key={key}
-      className="card rise flex w-full flex-col gap-4 p-4 lg:sticky lg:top-[4.25rem] lg:max-h-[calc(100dvh-5.5rem)] lg:overflow-y-auto"
-    >
-      <div>
+    <aside key={key} className="flex w-full flex-col gap-4">
+      <section className="card rise p-4">
         <h2 className="flex items-center gap-2 text-[1rem] font-bold capitalize">
           <Icon name="calendar" size={16} className="text-(--accent)" />
           {formatDayLabel(key, lang)}
@@ -255,11 +256,8 @@ export function DayPanel() {
             {holiday}
           </p>
         )}
-      </div>
 
-      {/* Colour */}
-      <section>
-        <h3 className="field-label">{t('Colour')}</h3>
+        <h3 className="field-label mt-3">{t('Colour')}</h3>
         <SwatchRow
           colours={MARK_COLOURS}
           value={colour}
@@ -269,7 +267,7 @@ export function DayPanel() {
       </section>
 
       {/* Events */}
-      <section>
+      <section className="card p-4">
         <h3 className="panel-head">
           {t('Events')}
           <button
@@ -332,7 +330,7 @@ export function DayPanel() {
       </section>
 
       {/* Shifts */}
-      <section>
+      <section className="card p-4">
         <h3 className="field-label">{t('Shifts')}</h3>
 
         {shifts.length === 0 ? (
@@ -431,6 +429,12 @@ export function DayPanel() {
         )}
       </section>
 
+      {/*
+        Everything one Save writes, in one card: what sold, the tips, what the
+        day cost, the note. They were four sections and a button floating
+        under them, and nothing said which of them the button was for.
+      */}
+      <section className="card flex flex-col gap-4 p-4">
       {/* Sales */}
       {positions.length > 0 && (
         <section>
@@ -724,6 +728,7 @@ export function DayPanel() {
           )}
         </dl>
       )}
+      </section>
 
       <EventModal
         open={eventOpen}
@@ -951,7 +956,7 @@ function DayWeek({ dayKey }: { dayKey: string }) {
   const hours = week.reduce((sum, entry) => sum + entry.hours, 0);
 
   return (
-    <section className="mt-1 flex flex-col gap-1.5 border-t border-border pt-3">
+    <section className="card flex flex-col gap-1.5 p-4">
       <h3 className="panel-head">
         <span>{t('This week')}</span>
         <span className="tabular text-[0.72rem] font-normal text-faint">
@@ -1074,7 +1079,7 @@ function DayContext({ dayKey }: { dayKey: string }) {
   const ticks = [ceiling, ceiling / 2];
 
   return (
-    <section className="mt-1 flex flex-col gap-2 border-t border-border pt-3">
+    <section className="card flex flex-col gap-2 p-4">
       <h3 className="panel-head">
         <span className="flex-none">{t('Last two weeks')}</span>
         <span className="min-w-0 truncate text-right tabular text-[0.72rem] font-normal text-faint">
@@ -1232,7 +1237,7 @@ function DayHistory({ dayKey }: { dayKey: string }) {
   const shown = entries === null ? [] : all ? entries : entries.slice(0, 4);
 
   return (
-    <section className="mt-1 flex flex-col gap-1.5 border-t border-border pt-3">
+    <section className="card flex flex-col gap-1.5 p-4">
       <h3 className="field-label">{t('History')}</h3>
 
       {entries === null ? (

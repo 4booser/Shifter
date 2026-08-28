@@ -308,12 +308,12 @@ function Dashboard() {
       {!needsSetup && <InsightsPanel />}
 
       {/*
-        No items-start: the columns stretch to the row's height so the sticky
-        day panel stays pinned for the whole of it. It used to unpin where its
-        own content ran out — which is the empty bottom-right corner somebody
-        looking at this page sees before they see anything else.
+        Three columns of cards, each ending where its content does. The day
+        panel used to be one tall card pinned to the top with its own
+        scrollbar; two scroll areas on one page is a fight nobody wins with a
+        wheel, and it unpinned halfway down anyway.
       */}
-      <div className="flex flex-col gap-3 lg:flex-row">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-start">
         <Sidebar />
         <div className="order-1 flex min-w-0 flex-1 flex-col gap-3 lg:order-none">
           <MonthGrid onSearch={() => setSearchOpen(true)} onSettings={() => setSettingsOpen(true)} />

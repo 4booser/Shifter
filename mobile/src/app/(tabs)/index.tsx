@@ -19,6 +19,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { DailyBrief } from '@/components/daily-brief';
 import { DayPeek } from '@/components/day-peek';
+import { Floating } from '@/components/floating';
 import { FirstShift } from '@/components/first-shift';
 import { MonthGrid, PAGE_HEIGHT } from '@/components/month-grid';
 import { MonthJump } from '@/components/month-jump';
@@ -871,7 +872,7 @@ export default function CalendarScreen() {
       </ScrollView>
 
       {brush === null && undo !== null && (
-        <View style={[styles.bar, { bottom: insets.bottom + 14 }]}>
+        <Floating palette={palette} style={[styles.bar, { bottom: insets.bottom + 14 }]}>
           <Ionicons name="checkmark-circle" size={22} color={palette.good} />
           <Text style={styles.barName} numberOfLines={1}>{undo.label}</Text>
           <Press style={styles.barGhost} onPress={() => setUndo(null)} hitSlop={6}>
@@ -886,7 +887,7 @@ export default function CalendarScreen() {
               ? <ActivityIndicator color="#fff" size="small" />
               : <Text style={styles.barDoneText}>Отменить</Text>}
           </Press>
-        </View>
+        </Floating>
       )}
 
       {brush === null ? (
@@ -902,7 +903,7 @@ export default function CalendarScreen() {
           <Ionicons name="pencil" size={22} color="#fff" />
         </Press>
       ) : (
-        <View style={[styles.bar, { bottom: insets.bottom + 14 }]}>
+        <Floating palette={palette} style={[styles.bar, { bottom: insets.bottom + 14 }]}>
           <View style={[styles.barChip, { backgroundColor: brushColour(brush, palette) }]}>
             <Text style={styles.barChipMark}>{brushSymbol(brush) ?? '×'}</Text>
           </View>
@@ -927,7 +928,7 @@ export default function CalendarScreen() {
               ? <ActivityIndicator color="#fff" size="small" />
               : <Text style={styles.barDoneText}>Готово</Text>}
           </Press>
-        </View>
+        </Floating>
       )}
 
       <DayPeek
@@ -1310,17 +1311,8 @@ const makeStyles = (palette: Palette) =>
       flexDirection: 'row',
       alignItems: 'center',
       gap: 10,
-      backgroundColor: palette.backgroundElement,
-      borderWidth: 1,
-      borderColor: palette.border,
-      borderRadius: 20,
       paddingHorizontal: 10,
       paddingVertical: 9,
-      shadowColor: '#000',
-      shadowOpacity: 0.2,
-      shadowRadius: 12,
-      shadowOffset: { width: 0, height: 4 },
-      elevation: 8,
     },
     barChip: { width: 36, height: 36, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
     barChipMark: { fontSize: 17, color: '#fff' },

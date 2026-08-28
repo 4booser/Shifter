@@ -1,3 +1,5 @@
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -105,6 +107,7 @@ const STREAM_LABEL: Record<PayPeriodRow['stream'], string> = {
 export default function PayoutsScreen() {
   const scheme = useColorScheme();
   const palette = Colors[scheme === 'dark' ? 'dark' : 'light'];
+  const router = useRouter();
   const insets = useSafeAreaInsets();
   const styles = makeStyles(palette);
 
@@ -162,7 +165,15 @@ export default function PayoutsScreen() {
           />
         }
       >
-        <Text style={styles.title}>Выплаты</Text>
+        <View style={styles.titleRow}>
+          <Text style={styles.title}>Выплаты</Text>
+          {/* What the work cost lives next to what it paid: the two are read
+              in the same breath and never added together. */}
+          <Pressable style={styles.costsButton} onPress={() => router.push('/costs')}>
+            <Ionicons name="receipt-outline" size={15} color={palette.accent} />
+            <Text style={styles.costsButtonText}>Траты</Text>
+          </Pressable>
+        </View>
 
         {error !== null && <Text style={styles.error}>{error}</Text>}
         {data === null && error === null && <ActivityIndicator color={palette.accent} />}
@@ -483,6 +494,18 @@ const makeStyles = (palette: Palette) =>
   StyleSheet.create({
     screen: { flex: 1, backgroundColor: palette.background },
     content: { padding: 16, paddingBottom: 48, gap: 14 },
+    titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
+    costsButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      paddingHorizontal: 11,
+      paddingVertical: 6,
+      borderRadius: 999,
+      borderWidth: 1,
+      borderColor: palette.border,
+    },
+    costsButtonText: { color: palette.accent, fontSize: 13, fontWeight: '700' },
     title: { color: palette.text, fontSize: 30, fontWeight: '800' },
     error: { color: palette.danger, fontSize: 13 },
     empty: { color: palette.textSecondary, fontSize: 14, lineHeight: 20 },

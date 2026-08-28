@@ -184,6 +184,52 @@ export const blankDay = (date: string): CalendarDayData => ({
   planned: 0,
 });
 
+/** What the work cost, as opposed to what the venue took off somebody. */
+export type ExpenseKind = 'transport' | 'uniform' | 'tools' | 'food' | 'training' | 'other';
+
+export const EXPENSE_KINDS: { value: ExpenseKind; label: string }[] = [
+  { value: 'transport', label: 'Дорога' },
+  { value: 'uniform', label: 'Форма' },
+  { value: 'tools', label: 'Инструмент' },
+  { value: 'food', label: 'Еда' },
+  { value: 'training', label: 'Учёба' },
+  { value: 'other', label: 'Другое' },
+];
+
+export interface Expense {
+  id: number;
+  date: string;
+  amount: number;
+  kind: ExpenseKind;
+  note: string | null;
+  location_id: number | null;
+  location_name: string | null;
+}
+
+/** A piece of paper without which somebody is not allowed on shift. */
+export type DocumentKind = 'medical' | 'sanitary' | 'certificate' | 'licence' | 'permit' | 'other';
+
+export const DOCUMENT_KINDS: { value: DocumentKind; label: string }[] = [
+  { value: 'medical', label: 'Медкнижка' },
+  { value: 'sanitary', label: 'Санминимум' },
+  { value: 'certificate', label: 'Сертификат' },
+  { value: 'licence', label: 'Права' },
+  { value: 'permit', label: 'Разрешение' },
+  { value: 'other', label: 'Другое' },
+];
+
+export interface WorkDocument {
+  id: number;
+  kind: DocumentKind;
+  name: string;
+  expires_on: string;
+  note: string | null;
+  /** Negative once it has run out. Computed on the server, so the phone and
+   *  the site cannot disagree about whether something has expired. */
+  days_left: number;
+  state: 'expired' | 'urgent' | 'soon' | 'fine';
+}
+
 export const toSavePayload = (day: CalendarDayData | undefined): DaySave => ({
   shifts: (day?.shifts ?? []).map((entry) => ({
     shift_id: entry.shift_id,

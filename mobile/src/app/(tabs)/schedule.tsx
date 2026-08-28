@@ -313,6 +313,15 @@ export default function ScheduleScreen() {
       >
         <View style={styles.titleRow}>
           <Text style={styles.title}>График</Text>
+          {teamId !== null && (
+            <Pressable
+              style={styles.boardButton}
+              onPress={() => router.push(`/crew?teamId=${teamId}`)}
+            >
+              <Ionicons name="cash-outline" size={15} color={palette.accent} />
+              <Text style={styles.boardButtonText}>Смена</Text>
+            </Pressable>
+          )}
           {board?.can_plan === true && (
             <Pressable style={styles.boardButton} onPress={() => router.push('/board')}>
               <Ionicons name="grid-outline" size={15} color={palette.accent} />

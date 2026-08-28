@@ -5,6 +5,15 @@
 type Dictionary = Record<string, string>;
 
 export const RU: Dictionary = {
+  'The pool': 'Общак',
+  'Counted once, split by the shares you already agreed.': 'Считается один раз и делится по долям, о которых вы уже договорились.',
+  'What the room took': 'Сколько собрал зал',
+  'That is the count': 'Столько и есть',
+  'counted by': 'посчитал',
+  'Nobody has counted it yet. Whoever holds the tin, put it in.': 'Никто ещё не посчитал. У кого банка — впишите.',
+  'Nobody on this day takes a share of the pool — their shifts say the tips are personal.': 'В этот день никто не берёт долю из общака — в их сменах чаевые личные.',
+  'Not handed out:': 'Не роздано:',
+  'Either the house keeps it, or somebody’s share is not set.': 'Либо это доля заведения, либо у кого-то не проставлен процент.',
   'Your record': 'Ваш послужной список',
   'Everything here comes from shifts you actually recorded. That is what makes it worth showing to somebody who has no reason to believe you.': 'Всё здесь — из смен, которые вы правда записали. Именно поэтому это можно показывать тому, у кого нет причин вам верить.',
   'Show rates': 'Показать ставки',
@@ -1834,6 +1843,15 @@ export const RU: Dictionary = {
 };
 
 export const UK: Dictionary = {
+  'The pool': 'Спільні чайові',
+  'Counted once, split by the shares you already agreed.': 'Рахується один раз і ділиться за частками, про які ви вже домовилися.',
+  'What the room took': 'Скільки зібрала зала',
+  'That is the count': 'Стільки і є',
+  'counted by': 'порахував',
+  'Nobody has counted it yet. Whoever holds the tin, put it in.': 'Ніхто ще не порахував. У кого банка — впишіть.',
+  'Nobody on this day takes a share of the pool — their shifts say the tips are personal.': 'Цього дня ніхто не бере частку зі спільних — у їхніх змінах чайові особисті.',
+  'Not handed out:': 'Не роздано:',
+  'Either the house keeps it, or somebody’s share is not set.': 'Або це частка закладу, або в когось не проставлено відсоток.',
   'Your record': 'Ваш послужний список',
   'Everything here comes from shifts you actually recorded. That is what makes it worth showing to somebody who has no reason to believe you.': 'Усе тут — зі змін, які ви справді записали. Саме тому це можна показувати тому, у кого немає причин вам вірити.',
   'Show rates': 'Показати ставки',

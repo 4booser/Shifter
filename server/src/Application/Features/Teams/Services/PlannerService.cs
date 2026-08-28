@@ -161,6 +161,120 @@ public sealed class PlannerService
             .ToArray();
     }
 
+    // ==== The pool: one number instead of five ====
+
+    /// <summary>
+    /// The night's pool and how it divides. Read by anybody in the crew.
+    /// </summary>
+    public async Task<PoolDto> PoolAsync(int teamId, int userId, DateOnly date, CancellationToken ct)
+    {
+        var (team, _) = await MemberAsync(teamId, userId, ct);
+
+        var pool = await _db.TeamPools
+            .AsNoTracking()
+            .FirstOrDefaultAsync(row => row.TeamId == teamId && row.Date == date, ct);
+
+        return await SplitAsync(team, pool, date, userId, ct);
+    }
+
+    /// <summary>
+    /// Entering it. Anybody in the crew may — whoever counted the tin is
+    /// whoever counted it, and making this a manager's job would put the one
+    /// number back out of reach of the people it belongs to.
+    /// </summary>
+    public async Task<PoolDto> SavePoolAsync(
+        int teamId, int userId, PoolSaveDto request, CancellationToken ct)
+    {
+        var (team, _) = await MemberAsync(teamId, userId, ct);
+
+        if (!DateOnly.TryParseExact(request.date, "yyyy-MM-dd", out var date))
+            throw new ValidationException("date must be yyyy-MM-dd.");
+
+        if (request.amount < 0m)
+            throw new ValidationException("A pool cannot be negative.");
+
+        var pool = await _db.TeamPools
+            .FirstOrDefaultAsync(row => row.TeamId == teamId && row.Date == date, ct);
+
+        if (pool is null)
+        {
+            pool = new TeamPool { TeamId = teamId, Date = date, Amount = request.amount };
+            _db.TeamPools.Add(pool);
+        }
+
+        // Overwritten rather than argued with, and the name goes with it — a
+        // corrected count is normal, and it should be obvious who corrected it.
+        pool.Amount = request.amount;
+        pool.EnteredByUserId = userId;
+        pool.EnteredAt = DateTime.UtcNow;
+
+        await _db.SaveChangesAsync(ct);
+
+        return await SplitAsync(team, pool, date, userId, ct);
+    }
+
+    /// <summary>
+    /// Divides the night by the shares written on each person's own shift.
+    /// The percentages come from the templates they built themselves, which is
+    /// why nobody has to agree a split in the app: they agreed it at work.
+    /// </summary>
+    private async Task<PoolDto> SplitAsync(
+        Team team,
+        TeamPool? pool,
+        DateOnly date,
+        int userId,
+        CancellationToken ct)
+    {
+        int[] members = (team.Members ?? []).Select(member => member.UserId).ToArray();
+
+        // Only the share and who it belongs to. No rate, no earnings, nothing
+        // the rota would not already show — the pool is not somebody's wage.
+        var onShift = await _db.DayShifts
+            .AsNoTracking()
+            .Where(entry =>
+                entry.Day != null
+                && members.Contains(entry.Day.UserId)
+                && entry.Day.Date == date
+                && entry.TipSource == TipSource.Pool
+                && entry.TipPoolPercent > 0m)
+            .Select(entry => new { entry.Day!.UserId, Percent = entry.TipPoolPercent ?? 0m })
+            .ToArrayAsync(ct);
+
+        decimal amount = pool?.Amount ?? 0m;
+
+        var shares = onShift
+            .GroupBy(row => row.UserId)
+            // Somebody on a split shift has two placements and one share of the
+            // night; taking the larger is the reading that matches what people
+            // actually agree at work.
+            .Select(group => new
+            {
+                UserId = group.Key,
+                Percent = group.Max(row => row.Percent),
+            })
+            .Select(row => new PoolShareDto(
+                row.UserId,
+                (team.Members ?? []).FirstOrDefault(member => member.UserId == row.UserId)
+                    ?.DisplayName ?? string.Empty,
+                row.Percent,
+                Math.Round(amount * row.Percent / 100m, 2),
+                row.UserId == userId))
+            .OrderByDescending(share => share.amount)
+            .ThenBy(share => share.name, StringComparer.Ordinal)
+            .ToArray();
+
+        string? by = pool?.EnteredByUserId is int who
+            ? (team.Members ?? []).FirstOrDefault(member => member.UserId == who)?.DisplayName
+            : null;
+
+        return new PoolDto(
+            date.ToString("yyyy-MM-dd"),
+            amount,
+            by,
+            shares,
+            Math.Round(amount - shares.Sum(share => share.amount), 2));
+    }
+
     // ==== The handover: what the shift going home knows ====
 
     /// <summary>

@@ -44,6 +44,7 @@ public class ShifterDbContext : DbContext
     public DbSet<WorkDocument> Documents => Set<WorkDocument>();
     public DbSet<Handover> Handovers => Set<Handover>();
     public DbSet<StopItem> StopItems => Set<StopItem>();
+    public DbSet<TeamPool> TeamPools => Set<TeamPool>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -152,6 +153,17 @@ public class ShifterDbContext : DbContext
         modelBuilder.Entity<PlannedAssignment>()
             .HasOne(entry => entry.CreatedBy).WithMany()
             .HasForeignKey(entry => entry.CreatedByUserId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // One pool per crew per night. The unique key is the whole point: the
+        // reason five people had five numbers is that nothing stopped them.
+        modelBuilder.Entity<TeamPool>()
+            .HasIndex(pool => new { pool.TeamId, pool.Date })
+            .IsUnique();
+
+        modelBuilder.Entity<TeamPool>()
+            .HasOne(pool => pool.EnteredBy).WithMany()
+            .HasForeignKey(pool => pool.EnteredByUserId)
             .OnDelete(DeleteBehavior.SetNull);
 
         // The name on a note is forgotten when somebody leaves; the note is

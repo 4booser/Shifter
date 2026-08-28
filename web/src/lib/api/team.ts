@@ -251,6 +251,29 @@ export interface StopItem {
   cleared: boolean;
 }
 
+/**
+ * The night's pool and how it divides. Everybody who worked the shift sees
+ * every share — that is not a hole in the privacy rules, it is the exact
+ * transparency a pool exists for. A pool nobody can check is just a promise.
+ */
+export interface PoolShare {
+  user_id: number;
+  name: string;
+  /** The percentage written on their own shift template. */
+  percent: number;
+  amount: number;
+  mine: boolean;
+}
+
+export interface Pool {
+  date: string;
+  amount: number;
+  entered_by: string | null;
+  shares: PoolShare[];
+  /** What the percentages do not add up to. Often the house's slice. */
+  unallocated: number;
+}
+
 export interface PlannerBoard {
   members: PlannerMember[];
   assignments: Assignment[];
@@ -309,6 +332,10 @@ export const plannerApi = {
       `${TEAMS}/${teamId}/planner/fill`,
       { body: { ...body, role: body.role === '' ? null : body.role } },
     ),
+  pool: (teamId: number, date: string) =>
+    api<Pool>(`${TEAMS}/${teamId}/planner/pool?date=${date}`),
+  savePool: (teamId: number, date: string, amount: number) =>
+    api<Pool>(`${TEAMS}/${teamId}/planner/pool`, { body: { date, amount } }),
   handover: (teamId: number, date: string) =>
     api<{ note: Handover; stops: StopItem[] }>(
       `${TEAMS}/${teamId}/planner/handover?date=${date}`,

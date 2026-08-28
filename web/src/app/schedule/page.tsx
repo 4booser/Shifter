@@ -30,6 +30,7 @@ import { Shell } from '@/components/layout/shell';
 import { SwapsPanel } from '@/components/team/swaps';
 import { AvailabilityStrip } from '@/components/team/availability';
 import { HandoverPanel } from '@/components/team/handover';
+import { PoolPanel } from '@/components/team/pool';
 import { LeavePanel } from '@/components/team/leave';
 import { drawRotaCard } from '@/lib/export/rota-card';
 import { currentCardTheme } from '@/lib/export/share-card';
@@ -357,6 +358,9 @@ function Schedule() {
       {selected !== null && (
         <AvailabilityStrip teamId={selected} from={range.from} to={range.to} onChanged={refresh} />
       )}
+
+      {/* ==== The pool: one number instead of five ==== */}
+      {selected !== null && <PoolPanel teamId={selected} />}
 
       {/* ==== The handover: read before the shift, written after it ==== */}
       {selected !== null && <HandoverPanel teamId={selected} />}

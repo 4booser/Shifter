@@ -79,6 +79,27 @@ public class PlannerController : ControllerBase
         int teamId, [FromBody] AvailabilitySaveDto request, CancellationToken ct)
         => Ok(await _planner.ToggleAvailabilityAsync(teamId, UserId(), request, ct));
 
+    // ==== The pool ====
+
+    /// <summary>
+    /// The night's tip pool and how it divides. Everybody who worked the shift
+    /// sees every share — that is not a hole in the privacy rules, it is the
+    /// exact transparency a pool exists for.
+    /// </summary>
+    [HttpGet("pool")]
+    public async Task<ActionResult<PoolDto>> Pool(
+        int teamId, [FromQuery] DateOnly date, CancellationToken ct)
+        => Ok(await _planner.PoolAsync(teamId, UserId(), date, ct));
+
+    /// <summary>
+    /// Entering it. Anybody in the crew may: whoever counted the tin is
+    /// whoever counted it.
+    /// </summary>
+    [HttpPost("pool")]
+    public async Task<ActionResult<PoolDto>> SavePool(
+        int teamId, [FromBody] PoolSaveDto request, CancellationToken ct)
+        => Ok(await _planner.SavePoolAsync(teamId, UserId(), request, ct));
+
     // ==== The handover ====
 
     /// <summary>

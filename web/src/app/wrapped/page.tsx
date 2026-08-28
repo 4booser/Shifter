@@ -15,6 +15,7 @@ import { downloadBlob } from '@/lib/export/xlsx';
 import { formatMoney } from '@/lib/settings/money';
 import { useSettings } from '@/lib/settings/store';
 import { Shell } from '@/components/layout/shell';
+import { Stories, Story } from '@/components/wrapped/stories';
 import { BadgeWall } from '@/components/achievements/badges';
 import { useReveal } from '@/lib/fx';
 import { Heatmap } from '@/components/charts/charts';
@@ -54,6 +55,7 @@ function Wrapped() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [posting, setPosting] = useState(false);
+  const [storiesOpen, setStoriesOpen] = useState(false);
   const settings = useSettings((state) => state.settings);
 
   useEffect(() => {
@@ -222,8 +224,66 @@ function Wrapped() {
       .finally(() => setPosting(false));
   };
 
+  /**
+   * The year as a sequence rather than a page. One fact per card, because the
+   * thing people share is a card and the thing they scroll past is a page.
+   */
+  const stories: Story[] = [
+    {
+      label: `${year}`,
+      value: formatMoney(settings, summary.total_earned),
+      meta: `${n(totalShifts, 'shifts')} · ${n(Math.round(summary.hours), 'hours')}`,
+      money: true,
+      lines: [`${t('Per hour')}: ${formatMoney(settings, averages.perHour)}`],
+    },
+    {
+      label: t('Hours'),
+      value: `${Math.round(summary.hours)}`,
+      meta: t('on your feet, over the year'),
+      lines: [`${n(totalShifts, 'shifts')}`],
+    },
+    best !== null
+      ? {
+          label: t('Best day'),
+          value: formatMoney(settings, best.value),
+          meta: best.date,
+          money: true,
+        }
+      : null,
+    topPlace !== null
+      ? {
+          label: t('Top place'),
+          value: placeName(topPlace, t('No place set')),
+          meta: `${n(Math.round(topPlace.hours), 'hours')}`,
+        }
+      : null,
+    nightShare > 0
+      ? {
+          label: t('Nights'),
+          value: `${Math.round(nightShare)}%`,
+          meta: t('of your shifts started after eight'),
+        }
+      : null,
+    summary.tips_earned > 0
+      ? {
+          label: t('Tips'),
+          value: formatMoney(settings, summary.tips_earned),
+          meta: t('handed to you directly'),
+          money: true,
+        }
+      : null,
+  ].filter((card): card is Story => card !== null);
+
   return (
     <div ref={revealHost} className="mx-auto flex max-w-3xl flex-col gap-4">
+      {storiesOpen && (
+        <Stories
+          stories={stories}
+          rhythm={weekdayRhythm.map((day) => day.value / Math.max(1, ...weekdayRhythm.map((entry) => entry.value)))}
+          year={year}
+          onClose={() => setStoriesOpen(false)}
+        />
+      )}
       <div className="flex items-center gap-2">
         <h1 className="text-[1.3rem] font-bold tracking-tight">{t('Your year')}</h1>
         <span className="ml-auto flex items-center gap-1">
@@ -244,10 +304,17 @@ function Wrapped() {
       </div>
 
       {days.length > 0 && (
-        <button type="button" className="btn btn-quiet btn-sm self-start" disabled={posting} onClick={poster}>
-          <Icon name="download" size={13} />
-          {posting ? t('Drawing…') : t('Download the poster')}
-        </button>
+        <div className="flex flex-wrap gap-2">
+          {/* The sequence first: a card is the thing people share, and one
+              static poster asks somebody to decide before they have seen it. */}
+          <button type="button" className="btn btn-sm" onClick={() => setStoriesOpen(true)}>
+            {t('See it as cards')}
+          </button>
+          <button type="button" className="btn btn-quiet btn-sm" disabled={posting} onClick={poster}>
+            <Icon name="download" size={13} />
+            {posting ? t('Drawing…') : t('Download the poster')}
+          </button>
+        </div>
       )}
 
       {error && <Alert onDismiss={() => setError(null)}>{error}</Alert>}

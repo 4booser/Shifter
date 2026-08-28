@@ -5,6 +5,11 @@
 type Dictionary = Record<string, string>;
 
 export const RU: Dictionary = {
+  'See it as cards': 'Посмотреть карточками',
+  'Save this card': 'Сохранить эту карточку',
+  'on your feet, over the year': 'на ногах за год',
+  'of your shifts started after eight': 'смен начиналось после восьми',
+  'handed to you directly': 'вам в руки',
   Calendar: 'Календарь',
   Webhooks: 'Вебхуки',
   'Sixty seconds and it starts counting': 'Шестьдесят секунд — и оно начнёт считать',
@@ -1863,6 +1868,11 @@ export const RU: Dictionary = {
 };
 
 export const UK: Dictionary = {
+  'See it as cards': 'Подивитися картками',
+  'Save this card': 'Зберегти цю картку',
+  'on your feet, over the year': 'на ногах за рік',
+  'of your shifts started after eight': 'змін починалося після восьмої',
+  'handed to you directly': 'вам у руки',
   Calendar: 'Календар',
   Webhooks: 'Вебхуки',
   'Sixty seconds and it starts counting': 'Шістдесят секунд — і воно почне рахувати',

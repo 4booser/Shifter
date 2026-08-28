@@ -101,6 +101,17 @@ public sealed class FakeShifterQuery : IShifterQuery
         => Task.FromResult(Goals.FirstOrDefault(
             item => item.UserId == userId && item.Period == period && item.Anchor == anchor));
 
+    public List<EventTemplate> EventTemplates { get; } = [];
+
+    public Task<EventTemplate[]> GetEventTemplatesAsync(int userId, bool includeArchived, CancellationToken ct)
+        => Task.FromResult(EventTemplates
+            .Where(item => item.UserId == userId && (includeArchived || !item.Archived))
+            .OrderBy(item => item.Name)
+            .ToArray());
+
+    public Task<EventTemplate?> GetEventTemplateAsync(int userId, int id, CancellationToken ct)
+        => Task.FromResult(EventTemplates.FirstOrDefault(item => item.Id == id && item.UserId == userId));
+
     public Task<Event[]> GetEventsInRangeAsync(
         int userId,
         DateOnly from,
@@ -275,6 +286,29 @@ public sealed class FakeShifterCommand : IShifterCommand
         Goals.Remove(item);
         _query?.Goals.Remove(item);
         Deleted.Add(item);
+
+        return Task.CompletedTask;
+    }
+
+    /// <summary>The query's list when there is one — a write has to be readable.</summary>
+    public List<EventTemplate> EventTemplates => _query?.EventTemplates ?? _ownTemplates;
+
+    private readonly List<EventTemplate> _ownTemplates = [];
+
+    public Task<bool> AddEventTemplateAsync(EventTemplate item, CancellationToken ct)
+    {
+        if (item.Id == 0) item.Id = EventTemplates.Count + 1;
+
+        EventTemplates.Add(item);
+
+        return Task.FromResult(true);
+    }
+
+    public Task DeleteEventTemplateAsync(EventTemplate item, CancellationToken ct)
+    {
+        foreach (var row in Events.Where(row => row.TemplateId == item.Id)) row.TemplateId = null;
+
+        EventTemplates.Remove(item);
 
         return Task.CompletedTask;
     }

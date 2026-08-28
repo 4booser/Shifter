@@ -7,6 +7,8 @@ import {
   DaySave,
   DaysResponse,
   EventSave,
+  EventTemplate,
+  EventTemplateSave,
   DocumentSave,
   Expense,
   ExpenseKind,
@@ -114,4 +116,16 @@ export const calendarApi = {
   updateEvent: (id: number, request: EventSave) =>
     api<CalendarEvent>(`${API}/events/${id}`, { method: 'PUT', body: request }),
   deleteEvent: (id: number) => api<void>(`${API}/events/${id}`, { method: 'DELETE' }),
+
+  /** The palette for everything on the calendar that is not a shift. */
+  eventTemplates: (archived = false) =>
+    api<EventTemplate[]>(`${API}/event-templates?archived=${archived}`),
+  createEventTemplate: (request: EventTemplateSave) =>
+    api<EventTemplate>(`${API}/event-templates`, { body: request }),
+  updateEventTemplate: (id: number, request: EventTemplateSave) =>
+    api<EventTemplate>(`${API}/event-templates/${id}`, { method: 'PUT', body: request }),
+  archiveEventTemplate: (id: number, value: boolean) =>
+    api<void>(`${API}/event-templates/${id}/archived?value=${value}`, { method: 'PUT' }),
+  deleteEventTemplate: (id: number) =>
+    api<void>(`${API}/event-templates/${id}`, { method: 'DELETE' }),
 };

@@ -37,6 +37,13 @@ public interface IShifterCommand
     Task<bool> AddEventAsync(Event item, CancellationToken ct);
     Task DeleteEventAsync(Event item, CancellationToken ct);
 
+    Task<bool> AddEventTemplateAsync(EventTemplate item, CancellationToken ct);
+    /// <summary>
+    /// Detaches the events that came from it, then removes the row. The days
+    /// keep their own copy of everything, so they survive the palette entry.
+    /// </summary>
+    Task DeleteEventTemplateAsync(EventTemplate item, CancellationToken ct);
+
     Task<bool> AddGoalAsync(Goal item, CancellationToken ct);
     Task UpdateGoalAsync(Goal item, CancellationToken ct);
     Task DeleteGoalAsync(Goal item, CancellationToken ct);

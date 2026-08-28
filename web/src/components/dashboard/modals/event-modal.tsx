@@ -31,6 +31,7 @@ export function EventModal({
   const [name, setName] = useState('');
   const [symbol, setSymbol] = useState<string | null>(null);
   const [colour, setColour] = useState(MARK_COLOURS[0].value);
+  const [cost, setCost] = useState(0);
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [allDay, setAllDay] = useState(true);
@@ -65,6 +66,7 @@ export function EventModal({
       setName('');
       setSymbol(null);
       setColour(MARK_COLOURS[0].value);
+      setCost(0);
       setFrom(start);
       setTo(start);
       setAllDay(true);
@@ -81,6 +83,7 @@ export function EventModal({
     setName(editing.name);
     setSymbol(editing.symbol);
     setColour(editing.colour);
+    setCost(editing.cost);
     setFrom(editing.start_date);
     setTo(editing.end_date);
     setAllDay(editing.start_time === null);
@@ -126,6 +129,8 @@ export function EventModal({
           kind,
           repeat_weekdays: repeats ? [...repeatDays].sort((a, b) => a - b).join(',') : null,
           repeat_until: repeats && repeatUntil !== '' ? repeatUntil : null,
+          cost,
+          template_id: editing?.template_id ?? null,
         },
         editing?.id ?? null,
       );
@@ -157,6 +162,21 @@ export function EventModal({
           <span className="field-label">{t('Colour')}</span>
           <SwatchRow colours={MARK_COLOURS} value={colour} onPick={setColour} />
         </div>
+
+        <label>
+          <span className="field-label">{t('Costs')}</span>
+          <input
+            type="number"
+            min={0}
+            step="any"
+            className="field-input"
+            value={cost}
+            onChange={(event) => setCost(Number(event.target.value))}
+          />
+          <span className="field-hint">
+            {t('Counted apart from what you earn — never subtracted from it.')}
+          </span>
+        </label>
 
         <div>
           <span className="field-label">{t('Badge')}</span>

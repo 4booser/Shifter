@@ -22,6 +22,7 @@ public class BusinessController : ControllerBase
     private readonly IPayoutHandler _payoutHandler;
     private readonly ILocationHandler _locationHandler;
     private readonly IEventHandler _eventHandler;
+    private readonly IEventTemplateHandler _eventTemplateHandler;
 
     public BusinessController(
         IShiftHandler shiftHandler,
@@ -29,7 +30,8 @@ public class BusinessController : ControllerBase
         IDayHandler dayHandler,
         IPayoutHandler payoutHandler,
         ILocationHandler locationHandler,
-        IEventHandler eventHandler)
+        IEventHandler eventHandler,
+        IEventTemplateHandler eventTemplateHandler)
     {
         _shiftHandler = shiftHandler;
         _salesHandler = salesHandler;
@@ -37,6 +39,7 @@ public class BusinessController : ControllerBase
         _payoutHandler = payoutHandler;
         _locationHandler = locationHandler;
         _eventHandler = eventHandler;
+        _eventTemplateHandler = eventTemplateHandler;
     }
 
     [HttpGet]
@@ -419,6 +422,53 @@ public class BusinessController : ControllerBase
         [FromBody] DaySaveDto request,
         CancellationToken ct)
         => Ok(await _dayHandler.SaveAsync(request, CurrentUserId(), date, ct));
+
+    /// <summary>
+    /// The palette for the calendar's non-working side. Archived entries come
+    /// only when asked for, the same as shifts.
+    /// </summary>
+    [HttpGet]
+    [Route("event-templates")]
+    public async Task<ActionResult<EventTemplateDto[]>> GetEventTemplates(
+        [FromQuery] bool archived,
+        CancellationToken ct)
+        => Ok(await _eventTemplateHandler.ListAsync(CurrentUserId(), archived, ct));
+
+    [HttpPost]
+    [Route("event-templates")]
+    public async Task<ActionResult<EventTemplateDto>> CreateEventTemplate(
+        [FromBody] EventTemplateSaveDto request,
+        CancellationToken ct)
+        => Ok(await _eventTemplateHandler.CreateAsync(request, CurrentUserId(), ct));
+
+    [HttpPut]
+    [Route("event-templates/{id:int}")]
+    public async Task<ActionResult<EventTemplateDto>> UpdateEventTemplate(
+        int id,
+        [FromBody] EventTemplateSaveDto request,
+        CancellationToken ct)
+        => Ok(await _eventTemplateHandler.UpdateAsync(request, CurrentUserId(), id, ct));
+
+    [HttpPut]
+    [Route("event-templates/{id:int}/archived")]
+    public async Task<IActionResult> ArchiveEventTemplate(
+        int id,
+        [FromQuery] bool value,
+        CancellationToken ct)
+    {
+        await _eventTemplateHandler.ArchiveAsync(CurrentUserId(), id, value, ct);
+
+        return NoContent();
+    }
+
+    [HttpDelete]
+    [Route("event-templates/{id:int}")]
+    public async Task<IActionResult> DeleteEventTemplate(int id, CancellationToken ct)
+    {
+        await _eventTemplateHandler.DeleteAsync(CurrentUserId(), id, ct);
+
+        return NoContent();
+    }
 
     /// <summary>
     /// Everything overlapping the range, so a fortnight of leave that began

@@ -19,6 +19,7 @@ public class ShifterDbContext : DbContext
     public DbSet<Team> Teams => Set<Team>();
     public DbSet<TeamMember> TeamMembers => Set<TeamMember>();
     public DbSet<Event> Events => Set<Event>();
+    public DbSet<EventTemplate> EventTemplates => Set<EventTemplate>();
     public DbSet<CoverOffer> CoverOffers => Set<CoverOffer>();
     public DbSet<Goal> Goals => Set<Goal>();
     public DbSet<WebhookEndpoint> WebhookEndpoints => Set<WebhookEndpoint>();
@@ -279,6 +280,18 @@ public class ShifterDbContext : DbContext
             .IsUnique();
         modelBuilder.Entity<GigReview>()
             .HasIndex(review => review.TargetUserId);
+
+        // The palette is read whole, per person, on every calendar load.
+        modelBuilder.Entity<EventTemplate>()
+            .HasIndex(item => item.UserId);
+
+        // Losing a palette entry must not take the days with it: the events
+        // keep their own copy of everything and simply stop pointing at it.
+        modelBuilder.Entity<Event>()
+            .HasOne(item => item.Template)
+            .WithMany()
+            .HasForeignKey(item => item.TemplateId)
+            .OnDelete(DeleteBehavior.SetNull);
 
         // Stage and the two Shared* properties are worked out from the
         // timestamps beside them; a column for either would be a second copy

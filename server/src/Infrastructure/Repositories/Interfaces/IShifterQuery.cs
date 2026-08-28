@@ -33,6 +33,10 @@ public interface IShifterQuery
 
     /// <summary>Everything overlapping the range, not only what starts inside it.</summary>
     Task<Event[]> GetEventsInRangeAsync(int userId, DateOnly from, DateOnly to, CancellationToken ct);
+
+    /// <summary>The event palette: what somebody puts on days that is not work.</summary>
+    Task<EventTemplate[]> GetEventTemplatesAsync(int userId, bool includeArchived, CancellationToken ct);
+    Task<EventTemplate?> GetEventTemplateAsync(int userId, int id, CancellationToken ct);
     Task<Event?> GetEventAsync(int userId, int id, CancellationToken ct);
 
     Task<Goal[]> GetGoalsAsync(int userId, CancellationToken ct);

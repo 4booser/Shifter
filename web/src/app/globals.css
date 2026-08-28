@@ -300,6 +300,36 @@ body {
   color: var(--text);
 }
 
+/*
+ * Edit and archive on a list row. They used to be display:none until the
+ * pointer arrived, so appearing cost width and the label beside them
+ * reflowed — the row flinched under the cursor, exactly where somebody was
+ * aiming. The space is theirs the whole time now; only the ink fades in.
+ *
+ * :focus-within earns its keep too: while they were hidden they could not be
+ * reached by keyboard at all.
+ */
+.row-actions {
+  display: flex;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s ease;
+}
+
+.group:hover > .row-actions,
+.group:focus-within > .row-actions {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+@media (hover: none) {
+  /* No pointer to hover with: the buttons are simply there. */
+  .row-actions {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
 .btn-danger {
   color: var(--danger);
 }

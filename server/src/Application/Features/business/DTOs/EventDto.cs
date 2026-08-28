@@ -1,8 +1,8 @@
 namespace Shifter.Application.Features.business.DTOs;
 
 /// <summary>
-/// An event as the calendar reads it. No money anywhere in this shape, on
-/// purpose: events mark time, shifts pay for it.
+/// An event as the calendar reads it. The only money here points outward:
+/// events mark time and sometimes cost, shifts are what pays.
 /// </summary>
 public record EventDto(
     int id,
@@ -22,7 +22,11 @@ public record EventDto(
     int days,
     /// <summary>Monday-first weekday numbers, comma-joined; null = one-off.</summary>
     string? repeat_weekdays = null,
-    DateOnly? repeat_until = null
+    DateOnly? repeat_until = null,
+    /// <summary>What it cost, per occurrence. Never inside anything earned.</summary>
+    decimal cost = 0,
+    /// <summary>The palette entry it came from, for grouping a year's lessons.</summary>
+    int? template_id = null
     );
 
 /// <summary>
@@ -41,5 +45,7 @@ public record EventSaveDto(
     string? note,
     string? kind = null,
     string? repeat_weekdays = null,
-    DateOnly? repeat_until = null
+    DateOnly? repeat_until = null,
+    decimal cost = 0,
+    int? template_id = null
     );

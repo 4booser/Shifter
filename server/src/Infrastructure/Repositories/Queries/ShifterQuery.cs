@@ -122,6 +122,20 @@ public class ShifterQuery : IShifterQuery
             ct);
     }
 
+    public async Task<EventTemplate[]> GetEventTemplatesAsync(
+        int userId,
+        bool includeArchived,
+        CancellationToken ct)
+        => await _db.EventTemplates
+            .AsNoTracking()
+            .Where(item => item.UserId == userId && (includeArchived || !item.Archived))
+            .OrderBy(item => item.Name)
+            .ToArrayAsync(ct);
+
+    public async Task<EventTemplate?> GetEventTemplateAsync(int userId, int id, CancellationToken ct)
+        => await _db.EventTemplates
+            .FirstOrDefaultAsync(item => item.Id == id && item.UserId == userId, ct);
+
     public async Task<Event[]> GetEventsInRangeAsync(
         int userId,
         DateOnly from,

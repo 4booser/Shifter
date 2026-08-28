@@ -65,6 +65,8 @@ export function DayPanel() {
   const allEvents = useCalendar((state) => state.events);
   const events =
     key === null ? [] : allEvents.filter((event) => event.start_date <= key && event.end_date >= key);
+  // What the day's events took. Never netted off anything automatically.
+  const spent = events.reduce((total, event) => total + event.cost, 0);
   const saving = useCalendar((state) => state.saving);
 
   const [quantities, setQuantities] = useState<Record<number, number>>({});
@@ -299,6 +301,11 @@ export function DayPanel() {
                     <span className="ml-auto text-[0.72rem] text-faint">
                       {event.start_time}
                       {event.end_time ? `–${event.end_time}` : ''}
+                    </span>
+                  )}
+                  {event.cost > 0 && (
+                    <span className="flex-none text-[0.72rem] text-danger tabular">
+                      −<Money value={event.cost} />
                     </span>
                   )}
                   {event.days > 1 && (
@@ -685,6 +692,25 @@ export function DayPanel() {
             <dt>{t('Earned')}</dt>
             <dd className="text-good"><Money value={day.earned} /></dd>
           </div>
+          {/*
+            What the day cost, kept beside what it earned rather than inside
+            it. Netting the two would quietly change what "заработано" means,
+            and the number people check every evening is that one.
+          */}
+          {spent > 0 && (
+            <>
+              <div className="flex justify-between gap-2">
+                <dt className="text-muted">{t('Spent')}</dt>
+                <dd className="text-danger">−<Money value={spent} /></dd>
+              </div>
+              <div className="flex justify-between gap-2">
+                <dt className="text-muted">{t('Left over')}</dt>
+                <dd className={day.earned - spent < 0 ? 'text-danger' : ''}>
+                  <Money value={day.earned - spent} />
+                </dd>
+              </div>
+            </>
+          )}
           {day.planned > 0 && (
             <div className="flex justify-between gap-2">
               <dt className="text-muted">{t('Still planned')}</dt>

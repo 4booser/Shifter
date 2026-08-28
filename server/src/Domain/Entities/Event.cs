@@ -2,9 +2,14 @@ namespace Shifter.Domain.Entities;
 
 /// <summary>
 /// Something that occupies days without being work: leave, sickness, a course,
-/// a birthday. Deliberately outside the money model — no rate, no hours, no
-/// place of work — because the moment an event could pay, every total in the
+/// a birthday. Outside the earning model — no rate, no hours, no place of
+/// work — because the moment an event could pay, every total in the
 /// application would have to account for it.
+///
+/// It may cost, though, which is not the same thing. Money that leaves is
+/// kept beside money that arrives and never inside it: the day still earned
+/// what it earned, and what the driving lesson took is a second figure the
+/// reader adds up themselves if they want to.
 ///
 /// Stored as a range rather than a row per day: a fortnight off is one record,
 /// and moving it is one edit instead of fourteen.
@@ -52,6 +57,23 @@ public sealed class Event
     public TimeOnly? EndTime { get; set; }
 
     public string? Note { get; set; }
+
+    /// <summary>
+    /// What this event cost, per occurrence. A repeating lesson at 400 costs
+    /// 400 each time it comes round, which is what anybody means by it.
+    ///
+    /// Never subtracted from anything automatically. Earned is earned.
+    /// </summary>
+    public decimal Cost { get; set; }
+
+    /// <summary>
+    /// The palette entry it came from, kept for grouping — "how much did
+    /// English cost me this year" is the question this answers. The event
+    /// holds its own copy of name, colour, times and cost, so editing the
+    /// template never rewrites a day that already happened.
+    /// </summary>
+    public int? TemplateId { get; set; }
+    public EventTemplate? Template { get; set; }
 
     /// <summary>
     /// Weekday numbers the event repeats on, comma-joined, Monday = 0. Null

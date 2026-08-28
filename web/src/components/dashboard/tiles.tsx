@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { calendarApi } from '@/lib/api/calendar';
-import { monthBounds, shiftDays, todayKey } from '@/lib/calendar/calendar-date';
+import { fromKey, monthBounds, shiftDays, todayKey } from '@/lib/calendar/calendar-date';
 import { forecastFor } from '@/lib/calendar/forecast';
 import { bestDay } from '@/lib/calendar/insights';
 import { CalendarDayData, Goal, Reconciliation, ShiftTemplate } from '@/lib/calendar/models';
@@ -267,7 +267,7 @@ function Label({ icon, children }: { icon: string; children: React.ReactNode }) 
 
 /** Today's shift: idle, startable, live and ticking, or a day off. */
 function TodayTile({ window, templates }: { window: CalendarDayData[]; templates: ShiftTemplate[] }) {
-  const { t } = useI18n();
+  const { t, n } = useI18n();
   const live = useLive((state) => state.live);
   const events = useCalendar((state) => state.events);
   const today = todayKey();
@@ -343,14 +343,41 @@ function TodayTile({ window, templates }: { window: CalendarDayData[]; templates
     );
   }
 
+  if (worked !== undefined) {
+    return (
+      <>
+        <Label icon="spark">{t('Today')}</Label>
+        <span className="tile-value"><Money value={day?.earned ?? 0} /></span>
+        <span className="field-hint truncate">{worked.name}</span>
+      </>
+    );
+  }
+
+  // A day off used to be an em dash. It is the one day the tile has room to
+  // say something, and the thing anybody wants from a day off is knowing how
+  // much of it is left — so it counts down to the next shift instead.
+  const next = window
+    .filter((item) => item.date > today && item.shifts.length > 0)
+    .sort((a, b) => a.date.localeCompare(b.date))[0];
+
+  const away = next === undefined ? null : Math.round((fromKey(next.date).getTime() - fromKey(today).getTime()) / 86_400_000);
+
   return (
     <>
       <Label icon="spark">{t('Today')}</Label>
-      <span className="tile-value">
-        {worked !== undefined ? <Money value={day?.earned ?? 0} /> : (event?.symbol ?? '—')}
+      <span className="tile-value truncate">
+        {event?.symbol !== undefined && event.symbol !== null
+          ? `${event.symbol} ${event.name}`
+          : away === null
+            ? t('Nothing ahead')
+            : away === 1
+              ? t('Work tomorrow')
+              : `${t('Work in')} ${n(away, 'days')}`}
       </span>
       <span className="field-hint truncate">
-        {worked !== undefined ? worked.name : (event?.name ?? t('Day off'))}
+        {next === undefined
+          ? (event?.name ?? t('Day off'))
+          : `${event?.name ?? t('Day off')} · ${next.shifts[0].name}, ${next.shifts[0].start_time}`}
       </span>
     </>
   );

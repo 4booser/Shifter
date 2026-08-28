@@ -94,6 +94,24 @@ public class ShifterCommand : IShifterCommand
         await _db.SaveChangesAsync(ct);
     }
 
+    public async Task<bool> AddEventTemplateAsync(EventTemplate item, CancellationToken ct)
+    {
+        await _db.EventTemplates.AddAsync(item, ct);
+        return await _db.SaveChangesAsync(ct) > 0;
+    }
+
+    public async Task DeleteEventTemplateAsync(EventTemplate item, CancellationToken ct)
+    {
+        // The events that came from it keep their own name, colour, times and
+        // cost — losing the palette entry must not blank out last spring.
+        await _db.Events
+            .Where(row => row.TemplateId == item.Id)
+            .ExecuteUpdateAsync(row => row.SetProperty(entry => entry.TemplateId, (int?)null), ct);
+
+        _db.EventTemplates.Remove(item);
+        await _db.SaveChangesAsync(ct);
+    }
+
     public async Task<bool> AddExpenseAsync(WorkExpense expense, CancellationToken ct)
     {
         await _db.Expenses.AddAsync(expense, ct);

@@ -232,8 +232,9 @@ export interface DayShiftEntry {
 }
 
 /**
- * Something that occupies days without being work. Mirrors EventDto, and like
- * it has nowhere to put money: events mark time, shifts pay for it.
+ * Something that occupies days without being work. Mirrors EventDto: the only
+ * money on it points outward — events mark time and sometimes cost, shifts are
+ * what pays.
  */
 export type EventKind = 'ordinary' | 'vacation' | 'sick' | 'dayoff';
 
@@ -257,6 +258,39 @@ export interface CalendarEvent {
   /** Monday-first weekday numbers, comma-joined; null = a one-off. */
   repeat_weekdays: string | null;
   repeat_until: string | null;
+  /** What it cost, per occurrence. Never inside anything earned. */
+  cost: number;
+  /** The palette entry it came from, for grouping a year's lessons. */
+  template_id: number | null;
+}
+
+/**
+ * A palette entry for the calendar's non-working side: «английский»,
+ * «вождение», the gym. The money here points outward — it is what the thing
+ * costs, and it is never added to what a week earned.
+ */
+export interface EventTemplate {
+  id: number;
+  name: string;
+  symbol: string | null;
+  colour: string;
+  kind: EventKind;
+  start_time: string | null;
+  end_time: string | null;
+  /** Null is "not counted", which is not the same as zero. */
+  cost: number | null;
+  archived: boolean;
+  hours: number;
+}
+
+export interface EventTemplateSave {
+  name: string;
+  symbol: string | null;
+  colour: string;
+  kind: EventKind;
+  start_time: string | null;
+  end_time: string | null;
+  cost: number | null;
 }
 
 export interface EventSave {
@@ -271,6 +305,8 @@ export interface EventSave {
   repeat_weekdays?: string | null;
   repeat_until?: string | null;
   kind: EventKind;
+  cost?: number;
+  template_id?: number | null;
 }
 
 export interface CalendarDayData {

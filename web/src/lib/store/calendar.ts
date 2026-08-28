@@ -19,6 +19,8 @@ import {
 import {
   CalendarDayData,
   CalendarEvent,
+  EventTemplate,
+  EventTemplateSave,
   DaySave,
   DayShiftEntry,
   DaysResponse,
@@ -62,11 +64,14 @@ interface CalendarState {
   locations: WorkLocation[];
   days: ReadonlyMap<string, CalendarDayData>;
   events: CalendarEvent[];
+  eventTemplates: EventTemplate[];
   summary: DaysResponse;
   previousSummary: DaysResponse;
   summaryPeriod: SummaryPeriod;
   payouts: Payout[];
   brush: ShiftTemplate | null;
+  /** The palette entry being placed on days: «английский» onto Tue and Thu. */
+  eventBrush: EventTemplate | null;
   patternBrush: boolean;
   colourBrush: string | null;
   paintScope: PaintScope;
@@ -95,11 +100,13 @@ export const useCalendar = create<CalendarState>(() => ({
   locations: [],
   days: new Map(),
   events: [],
+  eventTemplates: [],
   summary: EMPTY_SUMMARY,
   previousSummary: EMPTY_SUMMARY,
   summaryPeriod: 'month',
   payouts: [],
   brush: null,
+  eventBrush: null,
   patternBrush: false,
   colourBrush: null,
   paintScope: 'day',
@@ -158,13 +165,14 @@ export function summaryRange(): { from: string; to: string } {
 
 export async function loadCatalogues(): Promise<void> {
   try {
-    const [templates, positions, locations] = await Promise.all([
+    const [templates, positions, locations, eventTemplates] = await Promise.all([
       calendarApi.shifts(),
       calendarApi.sales(),
       calendarApi.locations(),
+      calendarApi.eventTemplates(),
     ]);
 
-    set({ templates, positions, locations });
+    set({ templates, positions, locations, eventTemplates });
   } catch (error) {
     set({ error: apiErrorMessage(error) });
   }
@@ -288,17 +296,26 @@ export const calendarActions = {
     set((state) => ({
       patternBrush: false,
       colourBrush: null,
+      eventBrush: null,
       brush: state.brush?.id === template.id ? null : template,
     })),
+  toggleEventBrush: (template: EventTemplate) =>
+    set((state) => ({
+      patternBrush: false,
+      colourBrush: null,
+      brush: null,
+      eventBrush: state.eventBrush?.id === template.id ? null : template,
+    })),
   togglePatternBrush: () =>
-    set((state) => ({ brush: null, colourBrush: null, patternBrush: !state.patternBrush })),
+    set((state) => ({ brush: null, colourBrush: null, eventBrush: null, patternBrush: !state.patternBrush })),
   toggleColourBrush: (colour: string | null) =>
     set((state) => ({
       brush: null,
+      eventBrush: null,
       patternBrush: false,
       colourBrush: state.colourBrush === colour ? null : colour,
     })),
-  clearBrush: () => set({ brush: null, patternBrush: false, colourBrush: null }),
+  clearBrush: () => set({ brush: null, eventBrush: null, patternBrush: false, colourBrush: null }),
   setPaintScope: (scope: PaintScope) => set({ paintScope: scope }),
 };
 
@@ -875,6 +892,61 @@ export const catalogueActions = {
       }
 
       set({ error: apiErrorMessage(error) });
+    }
+  },
+
+  async saveEventTemplate(request: EventTemplateSave, id: number | null) {
+    const saved = id === null
+      ? await calendarApi.createEventTemplate(request)
+      : await calendarApi.updateEventTemplate(id, request);
+
+    set((state) => ({
+      eventTemplates:
+        id === null
+          ? [...state.eventTemplates, saved]
+          : state.eventTemplates.map((item) => (item.id === id ? saved : item)),
+    }));
+  },
+
+  async archiveEventTemplate(id: number, value: boolean) {
+    await calendarApi.archiveEventTemplate(id, value);
+    set((state) => ({
+      eventTemplates: state.eventTemplates.map((item) =>
+        item.id === id ? { ...item, archived: value } : item,
+      ),
+    }));
+  },
+
+  async deleteEventTemplate(id: number) {
+    await calendarApi.deleteEventTemplate(id);
+    set((state) => ({ eventTemplates: state.eventTemplates.filter((item) => item.id !== id) }));
+  },
+
+  /**
+   * Puts one palette entry on a run of days. Each day gets its own event
+   * rather than one spanning the range: «английский» on Tuesday and Thursday
+   * is two lessons and two prices, not a three-day event.
+   */
+  async paintEvent(keys: string[], template: EventTemplate) {
+    if (keys.length === 0) return;
+
+    for (const key of keys) {
+      await catalogueActions.saveEvent(
+        {
+          name: template.name,
+          symbol: template.symbol,
+          colour: template.colour,
+          kind: template.kind,
+          start_date: key,
+          end_date: key,
+          start_time: template.start_time,
+          end_time: template.end_time,
+          note: null,
+          cost: template.cost ?? 0,
+          template_id: template.id,
+        },
+        null,
+      );
     }
   },
 

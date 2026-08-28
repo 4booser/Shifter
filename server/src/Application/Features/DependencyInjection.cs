@@ -136,6 +136,7 @@ public static class DependencyInjection
         services.AddScoped<ILocationHandler, LocationHandler>();
         services.AddScoped<IReconciliationHandler, ReconciliationHandler>();
         services.AddScoped<IEventHandler, EventHandler>();
+        services.AddScoped<IEventTemplateHandler, EventTemplateHandler>();
 
         services.AddScoped<IWebhookHandler, WebhookHandler>();
         services.AddScoped<IWebhookIngestHandler, WebhookIngestHandler>();

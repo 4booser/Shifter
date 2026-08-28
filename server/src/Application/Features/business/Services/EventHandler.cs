@@ -151,6 +151,12 @@ public partial class EventHandler : IEventHandler
         item.EndTime = end;
         item.Note = string.IsNullOrWhiteSpace(request.note) ? null : request.note.Trim();
         item.Kind = ParseKind(request.kind);
+
+        if (request.cost < 0)
+            throw new ValidationException("An event cannot cost a negative amount.");
+
+        item.Cost = request.cost;
+        item.TemplateId = request.template_id;
     }
 
     /// <summary>
@@ -191,7 +197,9 @@ public partial class EventHandler : IEventHandler
         KindName(item.Kind),
         item.Days,
         item.RepeatWeekdays,
-        item.RepeatUntil);
+        item.RepeatUntil,
+        item.Cost,
+        item.TemplateId);
 
     private static EventDto ToOccurrence(Event item, DateOnly date) => new EventDto(
         item.Id,
@@ -206,7 +214,10 @@ public partial class EventHandler : IEventHandler
         KindName(item.Kind),
         1,
         item.RepeatWeekdays,
-        item.RepeatUntil);
+        item.RepeatUntil,
+        // Per occurrence: a lesson at 400 costs 400 each time it comes round.
+        item.Cost,
+        item.TemplateId);
 
     internal static string KindName(EventKind kind) => kind switch
     {

@@ -22,6 +22,7 @@ import { useSettings } from '@/lib/settings/store';
 import {
   applyToDates,
   calendarActions,
+  catalogueActions,
   clearShifts,
   moveShift,
   paintColour,
@@ -78,7 +79,8 @@ export function MonthGrid({
   const gridRef = useRef<HTMLDivElement>(null);
 
   const weekdays = settings.mondayFirst ? WEEKDAY_LABELS : WEEKDAY_LABELS_SUNDAY;
-  const painting = state.brush !== null || state.patternBrush || state.colourBrush !== null;
+  const painting =
+    state.brush !== null || state.eventBrush !== null || state.patternBrush || state.colourBrush !== null;
 
   const weeks = useMemo(
     () =>
@@ -207,19 +209,25 @@ export function MonthGrid({
   };
 
   const onPointerUp = () => {
-    const { brush, patternBrush, colourBrush } = state;
+    const { brush, eventBrush, patternBrush, colourBrush } = state;
     const keys = [...dragging];
 
     setAnchor(null);
     setDragging(new Set());
 
     if (keys.length === 0) return;
-    if (brush === null && !patternBrush && colourBrush === null) return;
+    if (brush === null && eventBrush === null && !patternBrush && colourBrush === null) return;
 
     // Opt-in guard: a stray drag over a month is easy to do by accident.
     if (keys.length > 1 && settings.confirmBulk) {
       const what =
-        colourBrush !== null ? t('this colour') : brush === null ? t('the weekly pattern') : `"${brush.name}"`;
+        colourBrush !== null
+          ? t('this colour')
+          : eventBrush !== null
+            ? `"${eventBrush.name}"`
+            : brush === null
+              ? t('the weekly pattern')
+              : `"${brush.name}"`;
 
       if (!window.confirm(`${t('Apply')} ${what} → ${keys.length} ${t('days')}?`)) return;
     }
@@ -227,6 +235,7 @@ export function MonthGrid({
     // The eraser is armed as an empty string so "no brush" and "the brush that
     // removes colour" stay different states; the store only knows null.
     if (colourBrush !== null) void paintColour(keys, colourBrush === '' ? null : colourBrush);
+    else if (eventBrush !== null) void catalogueActions.paintEvent(keys, eventBrush);
     else if (brush === null) paintPattern(keys);
     else void applyToDates(keys, brush);
   };
@@ -558,6 +567,13 @@ export function MonthGrid({
       )}
 
       {/* ==== Brush banner ==== */}
+      {state.eventBrush !== null && (
+        <p className="field-hint mt-1">
+          {t('Placing')} <strong>{state.eventBrush.name}</strong> —{' '}
+          {t('click a day, or drag across several')}
+        </p>
+      )}
+
       {(state.brush !== null || state.patternBrush) && (
         <p className="rise mb-3 flex flex-wrap items-center gap-2 rounded-(--radius) border border-(--accent)/40 bg-(--accent-soft) px-3 py-2 text-[0.85rem]">
           <Icon name="brush" size={14} />

@@ -5,11 +5,12 @@ import { useEffect, useState } from 'react';
 
 import { daysToCsv, downloadCsv } from '@/lib/calendar/csv-export';
 import { averagesFor, change } from '@/lib/calendar/insights';
-import { SalesPosition, ShiftTemplate, WorkLocation, rateLabel } from '@/lib/calendar/models';
+import { EventTemplate, SalesPosition, ShiftTemplate, WorkLocation, rateLabel } from '@/lib/calendar/models';
 import { todayKey } from '@/lib/calendar/calendar-date';
 import { buildIcs, downloadIcs } from '@/lib/export/ics';
 import { Rota, teamApi } from '@/lib/api/team';
 import { useI18n } from '@/lib/i18n';
+import { useMoney } from '@/lib/settings/money';
 import {
   SUMMARY_PERIODS,
   calendarActions,
@@ -28,21 +29,25 @@ import { PayoutModal } from './modals/payout-modal';
 import { RotationModal } from './modals/rotation-modal';
 import { SalesModal } from './modals/sales-modal';
 import { SchemeModal } from './modals/scheme-modal';
+import { EventTemplateModal } from './modals/event-template-modal';
 import { ShiftModal } from './modals/shift-modal';
 import { confirmDeleteLocation } from './modals/location-delete';
 
 export function Sidebar() {
   const { t } = useI18n();
+  const { format } = useMoney();
   const state = useCalendar();
 
   const templates = state.templates.filter((template) => !template.archived);
   const positions = state.positions.filter((position) => !position.archived);
   const locations = state.locations.filter((location) => !location.archived);
   const archivedTemplates = state.templates.filter((template) => template.archived);
+  const eventTypes = state.eventTemplates.filter((item) => !item.archived);
   const archivedPositions = state.positions.filter((position) => position.archived);
 
-  const [modal, setModal] = useState<null | 'shift' | 'sales' | 'location' | 'pattern' | 'rotation' | 'scheme' | 'payout' | 'import' | 'photo'>(null);
+  const [modal, setModal] = useState<null | 'shift' | 'event' | 'sales' | 'location' | 'pattern' | 'rotation' | 'scheme' | 'payout' | 'import' | 'photo'>(null);
   const [editingShift, setEditingShift] = useState<ShiftTemplate | null>(null);
+  const [editingEventType, setEditingEventType] = useState<EventTemplate | null>(null);
   const [editingPosition, setEditingPosition] = useState<SalesPosition | null>(null);
   const [editingLocation, setEditingLocation] = useState<WorkLocation | null>(null);
   const [showArchive, setShowArchive] = useState(false);
@@ -90,7 +95,7 @@ export function Sidebar() {
                   <span className="block truncate text-[0.86rem] font-medium">{location.name}</span>
                   <span className="field-hint">{t(location.pay_period)}</span>
                 </span>
-                <span className="hidden gap-0.5 group-hover:flex">
+                <span className="row-actions gap-0.5">
                   <button
                     type="button"
                     className="btn btn-quiet btn-sm"
@@ -161,7 +166,7 @@ export function Sidebar() {
                       </span>
                     </span>
                   </button>
-                  <span className="hidden flex-none flex-col gap-0.5 group-hover:flex">
+                  <span className="row-actions flex-none flex-col gap-0.5">
                     <button
                       type="button"
                       className="btn btn-quiet btn-sm"
@@ -210,6 +215,81 @@ export function Sidebar() {
         )}
       </section>
 
+      {/* ==== Event palette ==== */}
+      <section className="card p-3.5">
+        <SectionHead
+          title={t('Events')}
+          onAdd={() => {
+            setEditingEventType(null);
+            setModal('event');
+          }}
+        />
+
+        {eventTypes.length === 0 ? (
+          <p className="field-hint">
+            {t('Everything that is not work: English, driving, the gym. Add one, then put it on days.')}
+          </p>
+        ) : (
+          <ul className="flex flex-col gap-1">
+            {eventTypes.map((item) => {
+              const active = state.eventBrush?.id === item.id;
+
+              return (
+                <li key={item.id} className="group flex items-center gap-1">
+                  <button
+                    type="button"
+                    className={`flex min-w-0 flex-1 items-center gap-2 rounded-(--radius) border px-2 py-1.5 text-left transition-colors ${
+                      active ? 'border-(--accent) bg-(--accent-soft)' : 'border-transparent hover:bg-surface-2'
+                    }`}
+                    aria-pressed={active}
+                    onClick={() => calendarActions.toggleEventBrush(item)}
+                  >
+                    <span
+                      className="grid h-7 w-7 flex-none place-items-center rounded-lg text-[0.9rem]"
+                      style={{ background: `color-mix(in srgb, ${item.colour} 25%, transparent)` }}
+                    >
+                      {item.symbol ?? item.name.charAt(0)}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block truncate text-[0.86rem] font-medium">{item.name}</span>
+                      <span className="field-hint tabular">
+                        {item.start_time === null
+                          ? t('all day')
+                          : `${item.start_time}–${item.end_time} · ${item.hours}h`}
+                        {/* Money that leaves, marked as such so it can never be
+                            mistaken for a line of earnings. */}
+                        {item.cost !== null && <> · −{format(item.cost)}</>}
+                      </span>
+                    </span>
+                  </button>
+                  <span className="row-actions flex-none flex-col gap-0.5">
+                    <button
+                      type="button"
+                      className="btn btn-quiet btn-sm"
+                      aria-label={t('Edit')}
+                      onClick={() => {
+                        setEditingEventType(item);
+                        setModal('event');
+                      }}
+                    >
+                      <Icon name="brush" size={12} />
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-quiet btn-sm"
+                      aria-label={t('Archive')}
+                      onClick={() => void catalogueActions.archiveEventTemplate(item.id, true)}
+                    >
+                      <Icon name="close" size={12} />
+                    </button>
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
+
       {/* ==== Sales positions ==== */}
       <section className="card p-3.5">
         <SectionHead
@@ -232,7 +312,7 @@ export function Sidebar() {
                     {position.price} · {position.percentage ?? 0}%
                   </span>
                 </span>
-                <span className="hidden gap-0.5 group-hover:flex">
+                <span className="row-actions gap-0.5">
                   <button
                     type="button"
                     className="btn btn-quiet btn-sm"
@@ -443,6 +523,7 @@ export function Sidebar() {
 
       {/* ==== Modals ==== */}
       <ShiftModal open={modal === 'shift'} editing={editingShift} onClose={() => setModal(null)} />
+      <EventTemplateModal open={modal === 'event'} editing={editingEventType} onClose={() => setModal(null)} />
       <SalesModal open={modal === 'sales'} editing={editingPosition} onClose={() => setModal(null)} />
       <LocationModal open={modal === 'location'} editLocation={editingLocation} onClose={() => setModal(null)} />
       <PatternModal open={modal === 'pattern'} onClose={() => setModal(null)} />

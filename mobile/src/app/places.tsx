@@ -56,7 +56,7 @@ export default function PlacesScreen() {
 
   const load = () =>
     api<WorkPlace[]>('/shifter/v1/locations')
-      .then((rows) => { setPlaces(rows); setEditing(rows[0] ?? null); }) // TEMP
+      .then(setPlaces)
       .catch(() => setError('Не дотянулись до сервера.'));
 
   useEffect(() => {

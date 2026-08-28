@@ -2,7 +2,10 @@ import { describe, expect, it } from 'vitest';
 
 import { MonoStatementItem } from '@/lib/mono';
 import {
+  cashGap,
+  cashTipOffers,
   closingCosts,
+  looksLikeCashIn,
   punctuality,
   realHourly,
   spendingByDayKind,
@@ -308,5 +311,56 @@ describe('whether a place pays when it says it will', () => {
     ]);
 
     expect(rows.map((row) => row.place)).toEqual(['Кофейня', 'Бар Дым']);
+  });
+});
+
+describe('cash that reached the card', () => {
+  it('recognises a top-up by its code and by the words the bank uses', () => {
+    expect(looksLikeCashIn(item({ amount: 200000, mcc: 6010 }))).toBe(true);
+    expect(looksLikeCashIn(item({ amount: 200000, description: 'Поповнення через касу' }))).toBe(true);
+    // Money going the other way is not a top-up whatever it is called.
+    expect(looksLikeCashIn(item({ amount: -200000, mcc: 6010 }))).toBe(false);
+  });
+
+  it('asks about cash banked the morning after a shift', () => {
+    const days = [day('2026-08-01', { start: '16:00', end: '02:00' }), day('2026-08-02')];
+    const topUp = item({ day: '2026-08-02', hour: 11, amount: 120000, mcc: 6010 });
+
+    const offers = cashTipOffers([topUp], days, '2026-08-01', '2026-08-31');
+
+    expect(offers).toHaveLength(1);
+    expect(offers[0].after).toBe('2026-08-01');
+    expect(offers[0].amount).toBe(1_200);
+  });
+
+  it('says nothing about cash banked on a week off', () => {
+    // Later than the morning after and the link is a story rather than an
+    // observation.
+    const days = [day('2026-08-01', { start: '16:00' }), day('2026-08-06')];
+    const topUp = item({ day: '2026-08-06', amount: 120000, mcc: 6010 });
+
+    expect(cashTipOffers([topUp], days, '2026-08-01', '2026-08-31')).toEqual([]);
+  });
+
+  it('does not offer the same top-up twice', () => {
+    const days = [day('2026-08-01', { start: '16:00' })];
+    const topUp = item({ day: '2026-08-01', amount: 120000, mcc: 6010 });
+
+    expect(
+      cashTipOffers([topUp], days, '2026-08-01', '2026-08-31', new Set([topUp.id])),
+    ).toEqual([]);
+  });
+
+  it('shows what was written down against what was banked', () => {
+    const days = [
+      day('2026-08-01', { start: '16:00', tips_cash: 900 }),
+      day('2026-08-02', { start: '16:00', tips_cash: 500 }),
+    ];
+    const topUp = item({ day: '2026-08-02', amount: 200000, mcc: 6010 });
+
+    const gap = cashGap([topUp], days, '2026-08-01', '2026-08-31');
+
+    expect(gap.declared).toBe(1_400);
+    expect(gap.bankedAfterShifts).toBe(2_000);
   });
 });

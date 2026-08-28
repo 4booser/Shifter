@@ -393,3 +393,138 @@ export const punctuality = (
     .filter((row) => row.settled >= 3)
     .sort((one, two) => two.averageLate - one.averageLate);
 };
+
+/**
+ * The day before, read locally.
+ *
+ * Not via toISOString: east of Greenwich, midnight local is the previous
+ * evening in UTC, so stepping a day back through it lands two days back. The
+ * test caught it; a phone in Kyiv would have offered the cash-in against the
+ * wrong shift and nobody would have known why.
+ */
+const dayBefore = (day: string): string => {
+  const at = new Date(`${day}T12:00:00`);
+
+  at.setDate(at.getDate() - 1);
+
+  const pad = (value: number) => `${value}`.padStart(2, '0');
+
+  return `${at.getFullYear()}-${pad(at.getMonth() + 1)}-${pad(at.getDate())}`;
+};
+
+/**
+ * A credit that looks like somebody putting their own cash onto the card.
+ *
+ * Deliberately a guess, and used only to ask. monobank writes a cash-in a
+ * dozen ways depending on which machine took it, so the test is the code the
+ * terminal used plus the words the bank tends to use — and anything it gets
+ * wrong costs a question that gets answered "no" rather than a wrong row in
+ * somebody's earnings.
+ */
+const CASH_IN_MCCS = new Set([6010, 6011]);
+
+const CASH_WORDS = ['попов', 'готів', 'готов', 'cash', 'внесен'];
+
+export const looksLikeCashIn = (item: MonoStatementItem): boolean => {
+  if (item.amount <= 0 || item.hold) return false;
+  if (CASH_IN_MCCS.has(item.mcc)) return true;
+
+  const said = item.description.toLocaleLowerCase();
+
+  return CASH_WORDS.some((word) => said.includes(word));
+};
+
+export interface CashTipOffer {
+  item: MonoStatementItem;
+  /** The shift day it followed, which is why it is being asked about. */
+  after: string;
+  amount: number;
+}
+
+/**
+ * Cash going onto the card the day after a shift.
+ *
+ * Half the earnings in this trade are cash, and the bank is blind to all of
+ * it — but the cash almost always reaches a card within a day or two, and at
+ * that moment the app can ask a question nobody else is in a position to ask.
+ *
+ * It asks. It never records: this is the one kind of money the app knows less
+ * about than the person does, and it does not forget that.
+ */
+export const cashTipOffers = (
+  items: MonoStatementItem[],
+  days: CalendarDayData[],
+  from: string,
+  to: string,
+  /** Transactions already turned into a Shifter row, so nothing is offered twice. */
+  used: ReadonlySet<string> = new Set(),
+): CashTipOffer[] => {
+  const worked = workedDays(days);
+  const offers: CashTipOffer[] = [];
+
+  for (const item of items) {
+    if (!looksLikeCashIn(item) || used.has(item.id)) continue;
+
+    const day = dayOf(item);
+
+    if (day < from || day > to) continue;
+
+    // The evening itself or the morning after it. Later than that and the
+    // link is a story rather than an observation.
+    const before = dayBefore(day);
+    const after = worked.has(day) ? day : worked.has(before) ? before : null;
+
+    if (after === null) continue;
+
+    offers.push({ item, after, amount: fromMinorMajor(item.amount) });
+  }
+
+  return offers.sort((one, two) => two.item.time - one.item.time);
+};
+
+/** Minor units to major, kept local so this file does not reach for the other's. */
+const fromMinorMajor = (amount: number): number => Math.abs(amount) / 100;
+
+export interface CashGap {
+  /** Cash tips the person wrote down. */
+  declared: number;
+  /** Cash that reached the card and followed a shift. */
+  bankedAfterShifts: number;
+}
+
+/**
+ * What was written down against what reached the card.
+ *
+ * Not an accusation in either direction: cash gets spent before it is banked,
+ * and tips get banked that were never tips. The gap is shown and nobody is
+ * asked to explain it — but somebody who has been rounding their cash tips
+ * down out of habit will see it here first.
+ */
+export const cashGap = (
+  items: MonoStatementItem[],
+  days: CalendarDayData[],
+  from: string,
+  to: string,
+): CashGap => {
+  const within = days.filter((day) => day.date >= from && day.date <= to);
+  const worked = workedDays(within);
+
+  let banked = 0;
+
+  for (const item of items) {
+    if (!looksLikeCashIn(item)) continue;
+
+    const day = dayOf(item);
+
+    if (day < from || day > to) continue;
+
+    if (!worked.has(day) && !worked.has(dayBefore(day))) continue;
+
+    banked += fromMinorMajor(item.amount);
+  }
+
+  return {
+    declared: within.reduce((sum, day) => sum + (day.tips_cash ?? 0), 0),
+    bankedAfterShifts: banked,
+  };
+};

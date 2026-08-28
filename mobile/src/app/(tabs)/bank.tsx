@@ -40,7 +40,7 @@ import {
   workSpending,
 } from '@/lib/mono';
 import { recurring } from '@/lib/mono-insights';
-import { untilPayday, usualDay } from '@/lib/mono-work';
+import { cashTipOffers, untilPayday, usualDay } from '@/lib/mono-work';
 import { CalendarDayData, DaysResponse, money, moneyIn } from '@/lib/types';
 import { chosenAccount, useMono } from '@/store/mono';
 import { t } from '@/lib/i18n';
@@ -240,6 +240,27 @@ function Bank() {
     [mono.items, worked, mono.used],
   );
 
+  /**
+   * Cash going onto the card the day after a shift.
+   *
+   * Half the earnings in this trade are cash and the bank is blind to all of
+   * it — but the cash almost always reaches a card within a day, and at that
+   * moment the app can ask something nobody else is in a position to ask. It
+   * asks. It never records: this is the one kind of money the app knows less
+   * about than the person does.
+   */
+  const cashOffers = useMemo(() => {
+    const month = monthBounds(currentMonth());
+
+    return cashTipOffers(
+      mono.items,
+      [...days.values()],
+      month.from,
+      month.to,
+      new Set(mono.used),
+    ).slice(0, 8);
+  }, [mono.items, days, mono.used]);
+
   /** The most recent payday the app knows about, for "how long it lasted". */
   /**
    * How much there is per day until the next money lands.
@@ -331,6 +352,63 @@ function Bank() {
 
       setDone((was) => [...was, tag]);
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      void loadShifter();
+    } catch {
+      setProblem(t('Не записалось — попробуйте ещё раз.'));
+    } finally {
+      setSaving(null);
+    }
+  };
+
+  /**
+   * Records a cash top-up as that day's cash tips.
+   *
+   * The day is sent whole, as always: the tips figure is one field of a day
+   * and patching it alone would drop everything else on it.
+   */
+  const addCashTip = async (item: MonoStatementItem, day: string) => {
+    const tag = `cash-${item.id}`;
+
+    setSaving(tag);
+
+    try {
+      const existing = days.get(day);
+      const amount = Math.abs(item.amount) / 100;
+
+      await api(`/shifter/v1/days/${day}`, {
+        method: 'PUT',
+        body: {
+          shifts: (existing?.shifts ?? []).map((entry) => ({
+            shift_id: entry.shift_id,
+            worked: entry.worked,
+            needs_cover: entry.needs_cover,
+            actual_start: entry.actual_start,
+            actual_end: entry.actual_end,
+            break_minutes: entry.break_minutes,
+            revenue: entry.revenue,
+            guests: entry.guests,
+            zone: entry.zone,
+          })),
+          sales: (existing?.sales ?? []).map((entry) => ({
+            sales_id: entry.sales_id,
+            quantity: entry.quantity,
+          })),
+          tips: existing?.tips ?? null,
+          // Added to whatever was already written down rather than replacing
+          // it: somebody may have recorded part of the evening by hand.
+          tips_cash: (existing?.tips_cash ?? 0) + amount,
+          tip_pool: existing?.tip_pool ?? null,
+          tip_out: null,
+          deductions: existing?.deductions ?? null,
+          deduction_reason: existing?.deduction_reason ?? null,
+          note: existing?.note ?? null,
+          colour: existing?.colour ?? null,
+        },
+      });
+
+      await mono.markUsed([item.id]);
+      setDone((was) => [...was, tag]);
+      void Haptics.selectionAsync();
       void loadShifter();
     } catch {
       setProblem(t('Не записалось — попробуйте ещё раз.'));
@@ -762,6 +840,39 @@ function Bank() {
               style={styles.add}
               disabled={saving !== null}
               onPress={() => void addExpense(row.item, row.kind, row.day)}
+            >
+              {saving === tag ? (
+                <ActivityIndicator color={palette.accent} size="small" />
+              ) : (
+                <Ionicons name="add" size={19} color={palette.accent} />
+              )}
+            </Press>
+          </View>
+        );
+      })}
+
+      {view === 'summary' && cashOffers.length > 0 && (
+        <Text style={styles.section}>{t('Похоже на наличные чаевые')}</Text>
+      )}
+
+      {view === 'summary' && cashOffers.map((row) => {
+        const tag = `cash-${row.item.id}`;
+
+        if (done.includes(tag)) return null;
+
+        return (
+          <View key={row.item.id} style={styles.spendRow}>
+            <View style={styles.spendText}>
+              <Text style={styles.spendWho} numberOfLines={1}>{row.item.description}</Text>
+              <Text style={styles.spendMeta}>
+                {shortDate(row.after)} · {t('после смены')}
+              </Text>
+            </View>
+            <Text style={styles.spendSum}>{money(row.amount)}</Text>
+            <Press
+              style={styles.add}
+              disabled={saving !== null}
+              onPress={() => void addCashTip(row.item, row.after)}
             >
               {saving === tag ? (
                 <ActivityIndicator color={palette.accent} size="small" />

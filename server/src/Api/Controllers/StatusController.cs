@@ -73,6 +73,99 @@ public class StatusController : ControllerBase
     /// <summary>What a broken page is allowed to tell us about itself.</summary>
     public record ClientErrorDto(string? message, string? path, string? build);
 
+    /// <summary>
+    /// One screen was opened. Nothing about who opened it.
+    ///
+    /// The alternative was an analytics SDK: somebody else's code, watching
+    /// everything, reporting to a third party — in an application whose whole
+    /// argument is that it does not do that. This writes one integer.
+    ///
+    /// The name comes off a fixed list rather than out of the request, so a
+    /// caller cannot turn this into free-text storage or smuggle an
+    /// identifier through it. Anonymous on purpose: attaching a token would
+    /// make the counter attributable, which is the one thing it must not be.
+    /// </summary>
+    [HttpPost]
+    [Route("seen")]
+    [EnableRateLimiting(HardeningExtensions.ContactPolicy)]
+    public async Task<IActionResult> Seen([FromBody] SeenDto request, CancellationToken ct)
+    {
+        var screen = (request.screen ?? string.Empty).Trim().ToLowerInvariant();
+
+        if (!Screens.Contains(screen)) return NoContent();
+
+        var day = new Shifter.Application.Common.Time.AppClock().Today;
+
+        // An upsert rather than a row per open: a table of events is how a
+        // counter quietly becomes a log of who did what and when, even when
+        // nobody meant it to.
+        var rows = await _shifter.ScreenOpens
+            .Where(row => row.Day == day && row.Screen == screen)
+            .ExecuteUpdateAsync(set => set.SetProperty(row => row.Count, row => row.Count + 1), ct);
+
+        if (rows == 0)
+        {
+            _shifter.ScreenOpens.Add(new Shifter.Domain.Entities.ScreenOpen
+            {
+                Day = day,
+                Screen = screen,
+                Count = 1,
+            });
+
+            try
+            {
+                await _shifter.SaveChangesAsync(ct);
+            }
+            catch (DbUpdateException)
+            {
+                // Two opens in the same millisecond raced for the first row of
+                // the day. The other one won; the count is one short and
+                // nothing about that is worth an error page.
+            }
+        }
+
+        return NoContent();
+    }
+
+    /// <summary>
+    /// The counters, for whoever wants to see what this application knows
+    /// about its own use — which is exactly this and no more.
+    /// </summary>
+    [HttpGet]
+    [Route("seen")]
+    public async Task<ActionResult<object>> SeenSoFar(
+        [FromQuery] DateOnly? from,
+        [FromQuery] DateOnly? to,
+        CancellationToken ct)
+    {
+        var today = new Shifter.Application.Common.Time.AppClock().Today;
+        var start = from ?? today.AddDays(-29);
+        var end = to ?? today;
+
+        var rows = await _shifter.ScreenOpens
+            .AsNoTracking()
+            .Where(row => row.Day >= start && row.Day <= end)
+            .GroupBy(row => row.Screen)
+            .Select(group => new { screen = group.Key, opens = group.Sum(row => row.Count) })
+            .OrderByDescending(row => row.opens)
+            .ToArrayAsync(ct);
+
+        return Ok(new { from = start, to = end, screens = rows });
+    }
+
+    /// <summary>
+    /// The screens this will count. A fixed list because the alternative is
+    /// storing whatever a caller sends, and whatever a caller sends is where
+    /// an identifier ends up.
+    /// </summary>
+    private static readonly HashSet<string> Screens =
+    [
+        "calendar", "schedule", "gigs", "payouts", "stats", "report", "assistant",
+        "bank", "account", "team", "day", "templates", "year", "cv", "payslip",
+    ];
+
+    public record SeenDto(string? screen);
+
     [HttpGet]
     public async Task<IActionResult> Get(CancellationToken ct)
     {

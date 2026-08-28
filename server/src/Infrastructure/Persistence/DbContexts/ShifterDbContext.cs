@@ -21,6 +21,7 @@ public class ShifterDbContext : DbContext
     public DbSet<Event> Events => Set<Event>();
     public DbSet<EventTemplate> EventTemplates => Set<EventTemplate>();
     public DbSet<ExpenseRule> ExpenseRules => Set<ExpenseRule>();
+    public DbSet<ScreenOpen> ScreenOpens => Set<ScreenOpen>();
     public DbSet<CoverOffer> CoverOffers => Set<CoverOffer>();
     public DbSet<Goal> Goals => Set<Goal>();
     public DbSet<WebhookEndpoint> WebhookEndpoints => Set<WebhookEndpoint>();
@@ -284,6 +285,13 @@ public class ShifterDbContext : DbContext
 
         modelBuilder.Entity<ExpenseRule>()
             .HasIndex(rule => rule.UserId);
+
+        // One row per screen per day, which is what makes the increment an
+        // increment rather than a growing table of events. An events table is
+        // how a counter quietly becomes a log of who did what and when.
+        modelBuilder.Entity<ScreenOpen>()
+            .HasIndex(row => new { row.Day, row.Screen })
+            .IsUnique();
 
         // Stopping a standing cost must not remove the months of it that were
         // already paid, so the expenses it produced merely lose the link.

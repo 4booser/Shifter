@@ -47,6 +47,23 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [face, setFace] = useState<Profile | null>(null);
 
+  /**
+   * One integer, so decisions about what to build next stop being guesses.
+   *
+   * The screen's name off the path and nothing else — no identifier of any
+   * kind reaches this, by design and by test. Failing is silent: a counter
+   * that can interrupt somebody's evening has its priorities backwards.
+   */
+  useEffect(() => {
+    const screen = pathname.split('/')[1] || 'calendar';
+
+    void fetch('/shifter/v1/status/seen', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ screen }),
+    }).catch(() => undefined);
+  }, [pathname]);
+
   useEffect(() => {
     void accountApi.get().then(setFace).catch(() => undefined);
   }, []);

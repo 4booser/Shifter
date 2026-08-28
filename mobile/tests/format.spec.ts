@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { spaced, stopwatch, two } from '@/lib/format';
+import { numberOf, payLine } from '@/lib/places';
 
 /**
  * String arithmetic that runs on the animation thread, where Intl does not
@@ -56,5 +57,42 @@ describe('the stopwatch', () => {
     expect(two(0)).toBe('00');
     expect(two(9)).toBe('09');
     expect(two(10)).toBe('10');
+  });
+});
+
+describe('reading a number somebody typed on a phone', () => {
+  it('takes a comma as readily as a full stop', () => {
+    expect(numberOf('1,5')).toBe(1.5);
+    expect(numberOf('1.5')).toBe(1.5);
+  });
+
+  it('falls back rather than producing NaN, which reaches the server as null', () => {
+    expect(numberOf('')).toBe(0);
+    expect(numberOf('  ')).toBe(0);
+    expect(numberOf('abc', 40)).toBe(40);
+  });
+
+  it('keeps a plain integer intact', () => {
+    expect(numberOf('40')).toBe(40);
+    expect(numberOf(' 22 ')).toBe(22);
+  });
+});
+
+describe('how a pay cycle reads', () => {
+  const place = {
+    pay_period: 'monthly' as const,
+    pay_day: 10,
+  } as Parameters<typeof payLine>[0];
+
+  it('names the day for a monthly cycle', () => {
+    expect(payLine(place)).toBe('Раз в месяц, 10-го');
+  });
+
+  it('names both days for a twice-a-month cycle', () => {
+    expect(payLine({ ...place, pay_period: 'semimonthly' })).toBe('Два раза: 10 и 25');
+  });
+
+  it('says nothing about a day where the cycle does not have one', () => {
+    expect(payLine({ ...place, pay_period: 'weekly' })).toBe('Раз в неделю');
   });
 });

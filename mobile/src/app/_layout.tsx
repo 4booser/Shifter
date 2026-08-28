@@ -53,6 +53,7 @@ export default function RootLayout() {
             <Stack.Screen name="assistant" options={{ presentation: 'modal' }} />
             <Stack.Screen name="year" options={{ presentation: 'modal' }} />
             <Stack.Screen name="templates" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="places" options={{ presentation: 'modal' }} />
             <Stack.Screen name="board" options={{ presentation: 'modal' }} />
             <Stack.Screen name="crew" options={{ presentation: 'modal' }} />
             <Stack.Screen name="costs" options={{ presentation: 'modal' }} />

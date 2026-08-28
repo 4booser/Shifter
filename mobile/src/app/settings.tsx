@@ -114,10 +114,16 @@ export default function SettingsScreen() {
         </View>
       </View>
 
-      <Text style={styles.section}>Ваши смены</Text>
+      <Text style={styles.section}>Ваша работа</Text>
       <Press style={styles.linkRow} onPress={() => router.push('/templates')}>
         <Ionicons name="time-outline" size={20} color={palette.textSecondary} />
         <Text style={styles.linkText}>Шаблоны смен — часы, ставка, процент</Text>
+        <Ionicons name="chevron-forward" size={16} color={palette.textSecondary} />
+      </Press>
+
+      <Press style={styles.linkRow} onPress={() => router.push('/places')}>
+        <Ionicons name="business-outline" size={20} color={palette.textSecondary} />
+        <Text style={styles.linkText}>Места работы — выплаты, налог, ночные</Text>
         <Ionicons name="chevron-forward" size={16} color={palette.textSecondary} />
       </Press>
 
@@ -127,7 +133,7 @@ export default function SettingsScreen() {
         onPress={() => void Linking.openURL('https://www.shifter.ink/account')}
       >
         <Ionicons name="person-circle-outline" size={20} color={palette.textSecondary} />
-        <Text style={styles.linkText}>Профиль и места работы — на сайте</Text>
+        <Text style={styles.linkText}>Профиль и аватар — на сайте</Text>
         <Ionicons name="open-outline" size={16} color={palette.textSecondary} />
       </Press>
 

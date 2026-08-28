@@ -15,6 +15,8 @@ import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { ClockRing, MoneyFlow, MonthBars } from '@/components/charts';
 import { Appear, Press, Roll } from '@/components/motion';
 import { Pace } from '@/components/pace';
+import { Weekdays } from '@/components/weekdays';
+import { byWeekday } from '@/lib/rhythm';
 import { running } from '@/lib/pace';
 
 import { Colors, Palette } from '@/constants/theme';
@@ -370,6 +372,15 @@ export default function StatsScreen() {
             ? `${t('Против тех же дней')} ${span === 'month' ? t('прошлого месяца') : t('прошлого года')}: ${amount(earnedBefore)}`
             : `${span === 'month' ? t('Прошлый месяц') : t('Прошлый год')}: ${amount(earnedBefore)}`}
         </Text>
+      )}
+
+      {summary !== null && (
+        <Appear index={2}>
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>{t('Чем платит каждый день недели')}</Text>
+            <Weekdays rows={byWeekday(summary.days)} palette={palette} />
+          </View>
+        </Appear>
       )}
 
       {/* Which hour is worth more — the question behind holding two jobs. */}

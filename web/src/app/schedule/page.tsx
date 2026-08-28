@@ -622,9 +622,41 @@ function Schedule() {
           </section>
         )}
 
+        {/*
+          What this week costs, before it is published rather than after.
+          The decision about a shift is made in advance, and after publishing
+          it is awkward to unmake.
+
+          Counted only from the people who share their rate, and signed as
+          exactly that. Estimating a payroll from guessed rates is precisely
+          the confident lie about money this project does not tell anywhere
+          else, and a manager quoting a made-up number at a meeting is worse
+          than a manager with no number.
+        */}
         {sharers.length > 0 && (
           <section className="card reveal p-4">
-            <h2 className="mb-1 text-[0.98rem] font-bold">{t('Who shares their earnings')}</h2>
+            <h2 className="mb-1 text-[0.98rem] font-bold">{t('What this week costs')}</h2>
+            <p className="text-[1.5rem] font-extrabold tracking-tight">
+              <Money value={sharers.reduce((sum, member) => sum + (member.earned ?? 0), 0)} />
+            </p>
+            <p className="field-hint mb-3">
+              {t('Only the')} {sharers.length} {t('of')} {rota?.members.length}{' '}
+              {t('who share their rate. The rest are not estimated.')}
+              {sharers.reduce((sum, member) => sum + member.hours, 0) > 0 && (
+                <>
+                  {' · '}
+                  <Money
+                    value={
+                      sharers.reduce((sum, member) => sum + (member.earned ?? 0), 0)
+                      / sharers.reduce((sum, member) => sum + member.hours, 0)
+                    }
+                  />
+                  /{t('h')}
+                </>
+              )}
+            </p>
+
+            <h3 className="mb-1 text-[0.9rem] font-bold">{t('Who shares their earnings')}</h3>
             <p className="field-hint mb-2">
               {(rota?.members ?? []).filter((member) => member.shares_earnings).length} / {rota?.members.length}{' '}
               {t('of the crew share')}

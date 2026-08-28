@@ -565,6 +565,10 @@ export const RU: Dictionary = {
   'Any': 'Любая',
   'At least the same': 'Не ниже',
   'Post again': 'Выставить снова',
+  'What this week costs': 'Во что обходится эта неделя',
+  'Only the': 'Только',
+  'who share their rate. The rest are not estimated.':
+    'кто делится ставкой. Остальных не оцениваем.',
   'This week': 'Эта неделя',
   'Earned this week': 'Заработано за неделю',
   'Still to come': 'Ещё впереди',
@@ -2892,6 +2896,10 @@ export const UK: Dictionary = {
   'Any': 'Будь-яка',
   'At least the same': 'Не нижче',
   'Post again': 'Виставити знову',
+  'What this week costs': 'У що обходиться цей тиждень',
+  'Only the': 'Тільки',
+  'who share their rate. The rest are not estimated.':
+    'хто ділиться ставкою. Решту не оцінюємо.',
   'This week': 'Цей тиждень',
   'All time': 'За весь час',
 

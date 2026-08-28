@@ -48,7 +48,8 @@
         {
           "faceIDPermission": "Shifter спрашивает Face ID, чтобы никто, кроме вас, не открыл ваши заработки."
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true,

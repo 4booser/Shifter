@@ -35,6 +35,7 @@ export function MonthGrid({
   days,
   events,
   today,
+  held,
   palette,
   painting,
   selected,
@@ -46,6 +47,8 @@ export function MonthGrid({
   days: Map<string, CalendarDayData>;
   events: CalendarEvent[];
   today: string;
+  /** Days whose last edit has not reached the server yet. */
+  held: Set<string>;
   palette: Palette;
   painting: boolean;
   selected: Set<string>;
@@ -139,6 +142,7 @@ export function MonthGrid({
                   day={days.get(cell.key)}
                   events={events.filter((entry) => covers(entry.start_date, entry.end_date, cell.key))}
                   today={today}
+                  held={held.has(cell.key)}
                   palette={palette}
                   styles={styles}
                   chosen={selected.has(cell.key)}
@@ -158,6 +162,7 @@ function Cell({
   day,
   events,
   today,
+  held,
   palette,
   styles,
   chosen,
@@ -167,6 +172,7 @@ function Cell({
   day: CalendarDayData | undefined;
   events: CalendarEvent[];
   today: string;
+  held: boolean;
   palette: Palette;
   styles: ReturnType<typeof makeStyles>;
   chosen: boolean;
@@ -240,6 +246,8 @@ function Cell({
           <Text style={styles.tickMark}>{paint?.symbol === null ? '×' : '✓'}</Text>
         </View>
       )}
+
+      {held && !chosen && <View style={styles.held} />}
     </View>
   );
 }
@@ -305,4 +313,16 @@ const makeStyles = (palette: Palette) =>
       justifyContent: 'center',
     },
     tickMark: { color: '#fff', fontSize: 10, fontWeight: '900', lineHeight: 12 },
+    // Hollow on purpose: the day is on its way, not recorded. A filled mark
+    // would say the server has it.
+    held: {
+      position: 'absolute',
+      top: 3,
+      right: 3,
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      borderWidth: 1.5,
+      borderColor: palette.textSecondary,
+    },
   });

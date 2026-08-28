@@ -16,6 +16,18 @@ export interface LiveShift {
 
 const KEY = 'shifter.live';
 
+/**
+ * Storage that cannot throw at the caller.
+ *
+ * `void AsyncStorage.setItem(...)` looks like fire-and-forget and is actually
+ * an unhandled rejection: on a phone where the module is missing or the disk
+ * is full it surfaces as a red box over the calendar, for a write nobody was
+ * waiting on. A lost marker is recoverable by hand; a crash is not.
+ */
+const quietly = (work: Promise<unknown>) => {
+  void work.catch(() => undefined);
+};
+
 interface LiveState {
   live: LiveShift | null;
   hydrate: () => Promise<void>;
@@ -42,11 +54,11 @@ export const useLive = create<LiveState>((set) => ({
 
   start: (shift) => {
     set({ live: shift });
-    void AsyncStorage.setItem(KEY, JSON.stringify(shift));
+    quietly(AsyncStorage.setItem(KEY, JSON.stringify(shift)));
   },
 
   clear: () => {
     set({ live: null });
-    void AsyncStorage.removeItem(KEY);
+    quietly(AsyncStorage.removeItem(KEY));
   },
 }));

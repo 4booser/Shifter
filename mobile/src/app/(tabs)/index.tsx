@@ -28,6 +28,7 @@ import { api } from '@/lib/api';
 import {
   addMonths,
   currentMonth,
+  dayLabel,
   monthsBetween,
   monthBounds,
   monthOnly,
@@ -48,6 +49,9 @@ import {
   toSavePayload,
 } from '@/lib/types';
 import { LiveShift, useLive } from '@/store/live';
+import { ApiError } from '@/lib/api';
+import { heldDays, Pending } from '@/lib/outbox';
+import { useOutbox } from '@/store/outbox';
 
 /** Three years each way. Further than that and nobody is planning, they are lost. */
 const SPAN = 36;
@@ -81,6 +85,12 @@ export default function CalendarScreen() {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const live = useLive((state) => state.live);
+  const held = useOutbox((state) => state.pending);
+  const refused = useOutbox((state) => state.refused);
+  const hydrateOutbox = useOutbox((state) => state.hydrate);
+  const holdWrites = useOutbox((state) => state.hold);
+  const flushOutbox = useOutbox((state) => state.flush);
+  const clearRefused = useOutbox((state) => state.clearRefused);
   const startLive = useLive((state) => state.start);
   const hydrateLive = useLive((state) => state.hydrate);
 
@@ -171,6 +181,14 @@ export default function CalendarScreen() {
       asked.current.clear();
       void ensure(indexAt.current, true);
 
+      // Coming back to the screen is the most reliable signal the phone gets
+      // that the network might be worth trying again.
+      void hydrateOutbox().then(() =>
+        flushOutbox().then((sent) => {
+          if (sent > 0) void ensure(indexAt.current, true);
+        }),
+      );
+
       // Separately and forgivingly: the templates are the pencil's palette and
       // the live shift's rate, and the calendar must not refuse to draw
       // because a second request failed.
@@ -179,7 +197,7 @@ export default function CalendarScreen() {
           setTemplates(list);
         })
         .catch(() => undefined);
-    }, [hydrateLive, ensure]),
+    }, [hydrateLive, ensure, hydrateOutbox, flushOutbox]),
   );
 
   const here = months[monthKeyOf(month)];
@@ -211,6 +229,8 @@ export default function CalendarScreen() {
 
     return [...seen.values()];
   }, [months, month]);
+
+  const waiting = useMemo(() => heldDays(held), [held]);
 
   const startable = useMemo(() => {
     const plan = byDate.get(today)?.shifts.find((entry) => !entry.worked);
@@ -277,6 +297,44 @@ export default function CalendarScreen() {
     setChosen(new Set(set));
   }, []);
 
+  /**
+   * Sends a run of writes, and puts aside whatever the network would not take.
+   *
+   * The order matters more than the speed: stopping at the first dropped
+   * request and holding the rest keeps two edits of one day in the order they
+   * were made. A refusal from the server is a different thing and is thrown,
+   * because holding a 400 means retrying it forever.
+   */
+  const post = useCallback(
+    async (writes: Omit<Pending, 'id' | 'at'>[]) => {
+      const left: Omit<Pending, 'id' | 'at'>[] = [];
+      let dropped = false;
+
+      for (const write of writes) {
+        if (dropped) {
+          left.push(write);
+          continue;
+        }
+
+        try {
+          await api(write.path, { method: write.method, body: write.body ?? undefined });
+        } catch (caught) {
+          // The server answering "no" is a different thing from never
+          // reaching it: only the second is worth holding on to.
+          if (caught instanceof ApiError) throw caught;
+
+          dropped = true;
+          left.push(write);
+        }
+      }
+
+      if (left.length > 0) await holdWrites(left);
+
+      return left.length;
+    },
+    [holdWrites],
+  );
+
   const refresh = useCallback(() => {
     asked.current.clear();
 
@@ -285,11 +343,19 @@ export default function CalendarScreen() {
 
   const writeDay = useCallback(
     async (key: string, payload: DaySave) => {
-      await api(`/shifter/v1/days/${key}`, { method: 'PUT', body: payload });
+      await post([
+        {
+          method: 'PUT',
+          path: `/shifter/v1/days/${key}`,
+          body: payload,
+          days: [key],
+          label: dayLabel(key),
+        },
+      ]);
       await refresh();
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     },
-    [refresh],
+    [post, refresh],
   );
 
   const apply = async () => {
@@ -299,80 +365,108 @@ export default function CalendarScreen() {
     setError(null);
 
     const keys = [...chosen].sort();
+    const label = `${brushName(brush)} · ${keys.length} ${dayWord(keys.length)}`;
+    const writes: Omit<Pending, 'id' | 'at'>[] = [];
 
-    try {
-      if (brush.kind === 'event') {
-        // Contiguous days become one event each: a fortnight of leave reads as
-        // "Отпуск, 14 дней" and comes off in one tap rather than fourteen.
-        for (const run of runsOf(keys)) {
-          const body: EventSave = {
-            name: brush.name,
-            symbol: brush.symbol,
-            colour: brush.colour,
-            start_date: run.from,
-            end_date: run.to,
-            start_time: null,
-            end_time: null,
-            note: null,
-            kind: brush.eventKind,
-          };
+    if (brush.kind === 'event') {
+      // Contiguous days become one event each: a fortnight of leave reads as
+      // "Отпуск, 14 дней" and comes off in one tap rather than fourteen.
+      for (const run of runsOf(keys)) {
+        const body: EventSave = {
+          name: brush.name,
+          symbol: brush.symbol,
+          colour: brush.colour,
+          start_date: run.from,
+          end_date: run.to,
+          start_time: null,
+          end_time: null,
+          note: null,
+          kind: brush.eventKind,
+        };
 
-          await api('/shifter/v1/events', { method: 'POST', body });
-        }
-      } else {
-        for (const key of keys) {
-          const payload: DaySave = toSavePayload(byDate.get(key));
-
-          if (brush.kind === 'erase') {
-            if (!payload.shifts.some((entry) => !entry.worked)) continue;
-
-            // The past is not rewritten: a day already worked keeps its shift
-            // and the money on it, whatever the eraser is dragged over.
-            payload.shifts = payload.shifts.filter((entry) => entry.worked);
-          } else if (brush.kind === 'worked') {
-            if (!payload.shifts.some((entry) => !entry.worked)) continue;
-
-            // Only what was planned turns over. A day with nothing on it is
-            // left alone rather than invented — the pencil says a shift
-            // happened, it does not say which one.
-            payload.shifts = payload.shifts.map((entry) => ({ ...entry, worked: true }));
-          } else {
-            if (payload.shifts.some((entry) => entry.shift_id === brush.template.id)) continue;
-
-            payload.shifts.push({
-              shift_id: brush.template.id,
-              worked: false,
-              needs_cover: false,
-              actual_start: null,
-              actual_end: null,
-              break_minutes: null,
-              revenue: null,
-            });
-          }
-
-          await api(`/shifter/v1/days/${key}`, { method: 'PUT', body: payload });
-        }
+        writes.push({
+          method: 'POST',
+          path: '/shifter/v1/events',
+          body,
+          days: keys.filter((key) => key >= run.from && key <= run.to),
+          label,
+        });
+      }
+    } else {
+      for (const key of keys) {
+        const payload: DaySave = toSavePayload(byDate.get(key));
 
         if (brush.kind === 'erase') {
-          // An event only goes if the whole of it was painted over. Rubbing out
-          // one day of a fortnight cannot be a request to delete the fortnight.
-          const gone = new Set(keys);
+          if (!payload.shifts.some((entry) => !entry.worked)) continue;
 
-          for (const entry of events) {
-            let whole = true;
+          // The past is not rewritten: a day already worked keeps its shift
+          // and the money on it, whatever the eraser is dragged over.
+          payload.shifts = payload.shifts.filter((entry) => entry.worked);
+        } else if (brush.kind === 'worked') {
+          if (!payload.shifts.some((entry) => !entry.worked)) continue;
 
-            for (let at = entry.start_date; at <= entry.end_date && whole; at = nextDay(at)) {
-              whole = gone.has(at);
-            }
+          // Only what was planned turns over. A day with nothing on it is
+          // left alone rather than invented — the pencil says a shift
+          // happened, it does not say which one.
+          payload.shifts = payload.shifts.map((entry) => ({ ...entry, worked: true }));
+        } else {
+          if (payload.shifts.some((entry) => entry.shift_id === brush.template.id)) continue;
 
-            if (whole) await api(`/shifter/v1/events/${entry.id}`, { method: 'DELETE' });
+          payload.shifts.push({
+            shift_id: brush.template.id,
+            worked: false,
+            needs_cover: false,
+            actual_start: null,
+            actual_end: null,
+            break_minutes: null,
+            revenue: null,
+          });
+        }
+
+        writes.push({
+          method: 'PUT',
+          path: `/shifter/v1/days/${key}`,
+          body: payload,
+          days: [key],
+          label,
+        });
+      }
+
+      if (brush.kind === 'erase') {
+        // An event only goes if the whole of it was painted over. Rubbing out
+        // one day of a fortnight cannot be a request to delete the fortnight.
+        const gone = new Set(keys);
+
+        for (const entry of events) {
+          let whole = true;
+
+          for (let at = entry.start_date; at <= entry.end_date && whole; at = nextDay(at)) {
+            whole = gone.has(at);
+          }
+
+          if (whole) {
+            writes.push({
+              method: 'DELETE',
+              path: `/shifter/v1/events/${entry.id}`,
+              body: null,
+              days: keys,
+              label,
+            });
           }
         }
       }
+    }
+
+    try {
+      const kept = await post(writes);
 
       clearPaint();
       void refresh();
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
+      // The bar above already counts the days; this only has to say why they
+      // are not on the calendar yet.
+      if (kept > 0) setError('Сети нет — сохраним, когда она вернётся.');
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Не сохранилось.');
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
@@ -501,6 +595,32 @@ export default function CalendarScreen() {
 
         {error !== null && <Text style={styles.error}>{error}</Text>}
 
+        {held.length > 0 && (
+          <Pressable
+            style={styles.heldBar}
+            onPress={() => {
+              void flushOutbox().then((sent) => {
+                if (sent > 0) void refresh();
+              });
+            }}
+          >
+            <Ionicons name="cloud-offline-outline" size={17} color={palette.textSecondary} />
+            <Text style={styles.heldText}>
+              {waiting.size} {dayWord(waiting.size)} {waiting.size === 1 ? 'ждёт' : 'ждут'} отправки
+            </Text>
+            <Text style={styles.heldAction}>Отправить</Text>
+          </Pressable>
+        )}
+
+        {refused > 0 && (
+          <Pressable style={styles.refusedBar} onPress={clearRefused}>
+            <Ionicons name="alert-circle-outline" size={17} color={palette.danger} />
+            <Text style={styles.refusedText}>
+              Сервер не принял {refused} {changeWord(refused)}. Проверьте эти дни вручную.
+            </Text>
+          </Pressable>
+        )}
+
         <FlatList
           ref={pager}
           data={PAGES}
@@ -526,6 +646,7 @@ export default function CalendarScreen() {
                 days={byDate}
                 events={events}
                 today={today}
+                held={waiting}
                 palette={palette}
                 painting={brush !== null}
                 selected={chosen}
@@ -726,6 +847,17 @@ function Stat({
   );
 }
 
+const changeWord = (count: number) => {
+  const tail = count % 10;
+  const teen = count % 100;
+
+  if (teen >= 11 && teen <= 14) return 'изменений';
+  if (tail === 1) return 'изменение';
+  if (tail >= 2 && tail <= 4) return 'изменения';
+
+  return 'изменений';
+};
+
 const dayWord = (count: number) => {
   const tail = count % 10;
   const teen = count % 100;
@@ -784,6 +916,31 @@ const makeStyles = (palette: Palette) =>
     statExtra: { color: palette.accent, fontSize: 11, fontWeight: '600', marginTop: 1 },
 
     error: { color: palette.danger },
+
+    heldBar: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      backgroundColor: palette.backgroundElement,
+      borderWidth: 1,
+      borderColor: palette.border,
+      borderRadius: 14,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+    },
+    heldText: { flex: 1, color: palette.textSecondary, fontSize: 12.5 },
+    heldAction: { color: palette.accent, fontWeight: '700', fontSize: 12.5 },
+    refusedBar: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      borderWidth: 1,
+      borderColor: palette.danger,
+      borderRadius: 14,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+    },
+    refusedText: { flex: 1, color: palette.danger, fontSize: 12.5 },
 
     preview: {
       flexDirection: 'row',

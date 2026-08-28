@@ -34,6 +34,30 @@ public sealed class User
     /// about it, and somebody who wants a stricter line should get one.
     /// </summary>
     public double RestHours { get; set; } = RestBetweenShifts.DefaultHours;
+
+    /// <summary>
+    /// A share of tips to put aside, as a percent. Zero is off.
+    ///
+    /// Tips are the only money in this trade that arrives in cash and leaves
+    /// without a trace, and the usual advice — "save a bit" — is useless
+    /// because a bit of nothing in particular is nothing. A percent of a
+    /// figure the app already knows is a number somebody can act on.
+    ///
+    /// Nothing is moved. The app has no business touching anybody's money,
+    /// and a counter that says "you meant to have put aside 4 200 by now" is
+    /// the whole of what it can honestly offer.
+    /// </summary>
+    public decimal TipSavePercent { get; set; }
+
+    /// <summary>What the saving is for. Zero means no target, only a total.</summary>
+    public decimal TipSaveGoal { get; set; }
+
+    /// <summary>
+    /// When the rule started. Tips earned before it are not counted — a
+    /// counter that begins by declaring somebody already behind is a counter
+    /// they close.
+    /// </summary>
+    public DateOnly? TipSaveFrom { get; set; }
     public List<Sales>? Sales {get; set;}
     
     /// <summary>

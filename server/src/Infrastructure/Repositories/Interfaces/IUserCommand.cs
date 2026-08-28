@@ -18,6 +18,13 @@ public interface IUserCommand
     /// <summary>The rest between shifts this person counts as enough, in hours.</summary>
     public Task SetRestHoursAsync(int userId, double hours, CancellationToken ct);
 
+    /// <summary>
+    /// A share of tips to put aside, and what for. Starting the rule stamps
+    /// the day: tips earned before it are not counted, because a counter that
+    /// opens by declaring somebody already behind is a counter they close.
+    /// </summary>
+    public Task SetTipJarAsync(int userId, decimal percent, decimal goal, CancellationToken ct);
+
     /// <summary>Persists changes to a user the query layer handed back tracked.</summary>
     public Task SaveAsync(CancellationToken ct);
 }

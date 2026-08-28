@@ -9,6 +9,21 @@ export interface CurrentUser {
   login: string;
 }
 
+/** What the rule says should have been put aside by now. */
+export interface TipJarState {
+  /** The share, as a percent. Zero means the rule is off. */
+  percent: number;
+  goal: number;
+  /** Tips earned since the rule started. */
+  tips_since: number;
+  /** The share of them: what should be in the jar. */
+  saved: number;
+  days: number;
+  from: string | null;
+  /** When the goal is reached at this pace, where that can be said at all. */
+  reaches: string | null;
+}
+
 /** Mirrors ProfileDto. */
 export interface Profile {
   email: string | null;
@@ -150,6 +165,16 @@ export const accountApi = {
   linkGoogle: (credential: string) =>
     api<Profile>('/shifter/v1/account/google', { body: { credential } }),
   unlinkGoogle: () => api<Profile>('/shifter/v1/account/google', { method: 'DELETE' }),
+  /**
+   * A share of tips put aside on paper. Nothing is moved — the app has no
+   * business touching anybody's account.
+   */
+  tipJar: () => api<TipJarState>('/shifter/v1/auth/tip-jar'),
+  setTipJar: (percent: number, goal: number) =>
+    api<{ percent: number; goal: number }>('/shifter/v1/auth/tip-jar', {
+      method: 'PUT',
+      body: { percent, goal },
+    }),
   /** The rest between shifts to be told about. Eleven is the EU daily rule. */
   setRest: (rest_hours: number) =>
     api<{ rest_hours: number }>('/shifter/v1/auth/rest', { method: 'PUT', body: { rest_hours } }),

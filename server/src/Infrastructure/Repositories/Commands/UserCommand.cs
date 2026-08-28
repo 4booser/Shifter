@@ -104,4 +104,22 @@ public class UserCommand : IUserCommand
             .Where(user => user.Id == userId)
             .ExecuteUpdateAsync(set => set.SetProperty(user => user.RestHours, hours), ct);
     }
+
+    public async Task SetTipJarAsync(int userId, decimal percent, decimal goal, CancellationToken ct)
+    {
+        var user = await _db.Users.FirstOrDefaultAsync(row => row.Id == userId, ct);
+
+        if (user is null) return;
+
+        // The day is stamped when the rule first starts and left alone after.
+        // Changing the share should not restart the count and lose what has
+        // been put aside so far; turning it off and on again should.
+        if (percent > 0 && user.TipSavePercent <= 0) user.TipSaveFrom = DateOnly.FromDateTime(DateTime.UtcNow);
+        if (percent <= 0) user.TipSaveFrom = null;
+
+        user.TipSavePercent = percent;
+        user.TipSaveGoal = goal;
+
+        await _db.SaveChangesAsync(ct);
+    }
 }

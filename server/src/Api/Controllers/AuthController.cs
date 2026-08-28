@@ -255,6 +255,84 @@ public class AuthController : Controller
         return Ok(new { monthly_goal = request.monthly_goal });
     }
 
+    public record TipJarDto(decimal percent, decimal goal);
+
+    /// <summary>
+    /// A share of tips to put aside. Nothing is moved — the app has no
+    /// business touching anybody's account, and a counter saying what should
+    /// be in the jar by now is the whole of what it can honestly offer.
+    /// </summary>
+    [HttpPut]
+    [Route("tip-jar")]
+    public async Task<IActionResult> SetTipJar(
+        [FromBody] TipJarDto request,
+        [FromServices] Shifter.Infrastructure.Repositories.Interfaces.IUserCommand users,
+        CancellationToken ct)
+    {
+        if (request.percent is < 0 or > 100)
+            throw new Shifter.Application.Common.Exceptions.ValidationException(
+                "The share must be between 0 and 100 percent.");
+
+        if (request.goal < 0)
+            throw new Shifter.Application.Common.Exceptions.ValidationException(
+                "A goal cannot be negative.");
+
+        await users.SetTipJarAsync(CurrentUserId(), request.percent, request.goal, ct);
+
+        return Ok(new { percent = request.percent, goal = request.goal });
+    }
+
+    public record TipJarStateDto(
+        decimal percent,
+        decimal goal,
+        /// <summary>Tips earned since the rule started.</summary>
+        decimal tips_since,
+        /// <summary>The share of them: what should be in the jar by now.</summary>
+        decimal saved,
+        int days,
+        DateOnly? from,
+        /// <summary>When the goal is reached at this pace, where that can be said.</summary>
+        DateOnly? reaches);
+
+    /// <summary>
+    /// What the rule says should have been put aside by now.
+    ///
+    /// Computed from the tips already recorded rather than stored, so it can
+    /// never drift from them: correcting a Tuesday's tips corrects the jar.
+    /// </summary>
+    [HttpGet]
+    [Route("tip-jar")]
+    public async Task<ActionResult<TipJarStateDto>> GetTipJar(
+        [FromServices] Shifter.Infrastructure.Repositories.Interfaces.IUserQuery users,
+        [FromServices] Shifter.Application.Features.business.Services.Interfaces.IDayHandler days,
+        CancellationToken ct)
+    {
+        var user = await users.GetByIdAsync(CurrentUserId(), ct)
+            ?? throw new UnauthorizedException("Token is missing the required claims.");
+
+        var today = new Shifter.Application.Common.Time.AppClock().Today;
+
+        if (user.TipSavePercent <= 0 || user.TipSaveFrom is not DateOnly from)
+        {
+            return Ok(new TipJarStateDto(0m, user.TipSaveGoal, 0m, 0m, 0, null, null));
+        }
+
+        var range = await days.ListAsync(CurrentUserId(), from, today, ct);
+        var tips = range.days.Sum(day => day.tips ?? 0m);
+
+        var state = Shifter.Domain.Entities.TipJar.Since(
+            user.TipSavePercent, user.TipSaveGoal, tips, from, today);
+
+        return Ok(new TipJarStateDto(
+            state.Percent,
+            state.Goal,
+            state.TipsSince,
+            state.Saved,
+            state.Days,
+            from,
+            Shifter.Domain.Entities.TipJar.Reaches(state, today)));
+    }
+
     public record RestDto(double rest_hours);
 
     /// <summary>

@@ -62,6 +62,11 @@ public class MigrationDefaultsTests
         ["CommuteMinutes"] = "zero reads as \"nobody has said\" everywhere it is used",
         ["CommuteCost"] = "zero reads as \"nobody has said\", with the line above",
         ["Cost"] = "an event recorded before the field existed cost nothing recorded",
+        ["TipSavePercent"] = "zero is off — nobody has asked to put a share aside",
+        ["TipSaveGoal"] = "zero is no target, only a running total",
+        ["Amount"] = "an amount, and nothing recorded is nothing",
+        ["DayOfMonth"] = "set by the handler on every write; never left at the default",
+        ["Weekday"] = "Monday, and only read when the rhythm is weekly",
     };
 
     /// <summary>

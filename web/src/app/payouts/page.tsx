@@ -10,6 +10,7 @@ import { useI18n } from '@/lib/i18n';
 import { Shell } from '@/components/layout/shell';
 import { useReveal } from '@/lib/fx';
 import { ExpensesPanel } from '@/components/dashboard/expenses-panel';
+import { TipJar } from '@/components/dashboard/tip-jar';
 import { PayslipCheckModal } from '@/components/dashboard/payslip-check';
 import { PayoutModal, PayoutPrefill } from '@/components/dashboard/modals/payout-modal';
 import { Alert, Money } from '@/components/ui/bits';
@@ -345,6 +346,10 @@ function Payouts() {
 
       {/* ==== What the work cost ==== */}
       <ExpensesPanel from={range.from} to={range.to} onChanged={load} />
+
+      {/* Beside the expenses, because this is the page where money arriving
+          and money leaving are thought about in the same breath. */}
+      <TipJar />
 
       <PayoutModal
         open={payoutOpen}

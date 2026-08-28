@@ -50,6 +50,10 @@ jobs:
       - run: npm run build
         working-directory: web
 
+      # The leak check needs a running API and a database, so it lives in the
+      # end-to-end job of the deploy workflow rather than here. Said out loud
+      # because its absence from this file otherwise looks like an oversight.
+
   mobile:
     name: Mobile typecheck
     runs-on: ubuntu-latest

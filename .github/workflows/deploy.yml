@@ -98,6 +98,13 @@ jobs:
           done
           echo "server never became healthy"; exit 1
 
+      # Ask for every kind of row as somebody else. Two of the privacy holes
+      # found in review were invisible to reading — the screen looked right and
+      # the extra data was in the response — and the only way to catch that
+      # class is to ask as the wrong person and look at what comes back.
+      - name: Nobody else's rows
+        run: ./scripts/leak-check.sh http://localhost:5208
+
       - name: Run Playwright
         run: |
           npx playwright install --with-deps chromium

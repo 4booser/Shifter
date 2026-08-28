@@ -187,11 +187,17 @@ public class RotaPrivacyTests
         // hidden and private_by_default are about you and are sent to nobody
         // else; shares_earnings is about them and is what makes earned's null
         // readable — without it a closed book and an empty one look alike.
+        //
+        // trainee is about them and is sent to everybody, on purpose. Whether
+        // somebody is still learning the room is not a confidence: every
+        // person on that shift knows it by the second hour, and the rota
+        // pretending otherwise only stops it from warning that a Friday night
+        // has nobody on it who has closed before.
         Assert.Equal(
             [
                 "colour", "cover_requests", "days", "display_name", "earned",
                 "hidden", "hours", "is_you", "member_id", "private_by_default",
-                "shares_earnings",
+                "shares_earnings", "trainee",
             ],
             Fields(typeof(RotaMemberDto)));
     }

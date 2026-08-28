@@ -312,6 +312,26 @@ public class UpdateMembershipHandler : IRequestHandler<UpdateMembershipDto, Memb
         if (request.private_by_default is not null)
             member.PrivateByDefault = request.private_by_default.Value;
 
+        if (request.trainee is not null)
+        {
+            member.Trainee = request.trainee.Value;
+
+            // Coming off a trial takes the date with it: a date left behind
+            // would count down to something that already happened.
+            if (!member.Trainee) member.TrialEndsOn = null;
+        }
+
+        if (request.trial_ends_on is DateOnly ends)
+        {
+            if (ends < DateOnly.FromDateTime(DateTime.UtcNow).AddYears(-1)
+                || ends > DateOnly.FromDateTime(DateTime.UtcNow).AddYears(2))
+            {
+                throw new ValidationException("A trial ends within a year or two, not outside them.");
+            }
+
+            member.TrialEndsOn = ends;
+        }
+
         await _teams.SaveAsync(ct);
 
         return new MembershipDto(
@@ -319,7 +339,9 @@ public class UpdateMembershipHandler : IRequestHandler<UpdateMembershipDto, Memb
             member.DisplayName,
             member.Colour,
             member.ShareEarnings,
-            member.PrivateByDefault);
+            member.PrivateByDefault,
+            member.Trainee,
+            member.TrialEndsOn);
     }
 }
 
@@ -486,6 +508,7 @@ public class GetRotaHandler : IRequestHandler<GetRotaDto, RotaDto>
                     theirs.Select(entry => entry.date).Distinct().Count(),
                     theirs.Count(entry => entry.needs_cover),
                     member.ShareEarnings,
+                    member.Trainee,
                     // Null and zero are different answers: null is "not shared",
                     // zero is "shared, and it was a quiet month".
                     theirs.Any(entry => entry.pay is not null)

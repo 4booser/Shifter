@@ -64,6 +64,8 @@ export interface RotaMember {
   earned: number | null;
   hidden: number | null;
   private_by_default: boolean | null;
+  /** Still learning the room. Everybody on a shift already knows who is new. */
+  trainee: boolean;
 }
 
 export interface Membership {
@@ -72,6 +74,9 @@ export interface Membership {
   colour: string;
   share_earnings: boolean;
   private_by_default: boolean;
+  trainee: boolean;
+  /** When the trial ends, where one was agreed. */
+  trial_ends_on: string | null;
 }
 
 /**

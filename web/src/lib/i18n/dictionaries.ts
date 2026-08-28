@@ -572,6 +572,7 @@ export const RU: Dictionary = {
   'Looks like a short turnaround': 'Похоже на короткий отдых между сменами',
   'The crew’s earnings are hidden until you turn on two-factor. You see the rota; their money waits.':
     'Заработок команды скрыт, пока не включена двухфакторка. График виден, чужие деньги — нет.',
+  'Only new people on': 'В смене одни новенькие',
   'This week': 'Эта неделя',
   'Earned this week': 'Заработано за неделю',
   'Still to come': 'Ещё впереди',
@@ -2906,6 +2907,7 @@ export const UK: Dictionary = {
   'The crew’s earnings are hidden until you turn on two-factor. You see the rota; their money waits.':
     'Заробіток команди прихований, доки не увімкнена двофакторка. Графік видно, чужі гроші — ні.',
   'Turn it on': 'Увімкнути',
+  'Only new people on': 'У зміні самі новенькі',
   'This week': 'Цей тиждень',
   'All time': 'За весь час',
 

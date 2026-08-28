@@ -161,6 +161,35 @@ function Schedule() {
     [rota],
   );
 
+  /**
+   * Days where everybody rostered is still learning.
+   *
+   * Only where somebody is actually on: a day nobody is working is not a day
+   * short of experience.
+   */
+  const greenDays = useMemo(() => {
+    if (rota === null) return [];
+
+    const trainees = new Set(
+      rota.members.filter((member) => member.trainee).map((member) => member.member_id),
+    );
+
+    if (trainees.size === 0) return [];
+
+    const byDay = new Map<string, number[]>();
+
+    for (const entry of rota.entries) {
+      if (entry.date < todayKey()) continue;
+
+      byDay.set(entry.date, [...(byDay.get(entry.date) ?? []), entry.member_id]);
+    }
+
+    return [...byDay.entries()]
+      .filter(([, ids]) => ids.length > 0 && ids.every((id) => trainees.has(id)))
+      .map(([date]) => date)
+      .sort();
+  }, [rota]);
+
   const tight = useMemo(
     () => tightTurnarounds((rota?.entries ?? []).filter((entry) => entry.date >= todayKey())),
     [rota],
@@ -354,6 +383,22 @@ function Schedule() {
 
       {/* ==== The manager's board replaces the rota entirely ==== */}
       {mode === 'planner' && selected !== null && <PlannerBoardView teamId={selected} />}
+
+      {/*
+        A Friday night with two new people on it and nobody who has closed
+        before is a thing the crew finds out at eleven o'clock. The rota knows
+        in advance and has never said.
+      */}
+      {mode === 'rota' && greenDays.length > 0 && (
+        <Alert kind="info">
+          <span className="flex flex-col gap-0.5">
+            <strong>{t('Only new people on')}</strong>
+            <span className="field-hint">
+              {greenDays.slice(0, 5).map((date) => `${date.slice(8)}.${date.slice(5, 7)}`).join(' · ')}
+            </span>
+          </span>
+        </Alert>
+      )}
 
       {/*
         Said rather than shown as an empty column. Somebody whose colleagues'

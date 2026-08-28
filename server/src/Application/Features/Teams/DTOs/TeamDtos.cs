@@ -71,6 +71,11 @@ public record RotaMemberDto(
     int cover_requests,
     /// <summary>Whether this person lets the crew see what they earn.</summary>
     bool shares_earnings,
+    /// <summary>
+    /// Still learning the room. Not private: everybody on a shift already
+    /// knows who is new, and the rota pretending otherwise helps nobody.
+    /// </summary>
+    bool trainee,
     /// <summary>Null unless they do.</summary>
     decimal? earned,
     /// <summary>Shifts of theirs the crew cannot see. Only ever set for you.</summary>
@@ -169,7 +174,9 @@ public record UpdateMembershipDto(
     string? display_name,
     string? colour,
     bool? share_earnings,
-    bool? private_by_default) : IRequest<MembershipDto>;
+    bool? private_by_default,
+    bool? trainee = null,
+    DateOnly? trial_ends_on = null) : IRequest<MembershipDto>;
 
 /// <summary>Your own membership, which is the only one you may read in full.</summary>
 public record MembershipDto(
@@ -177,7 +184,11 @@ public record MembershipDto(
     string display_name,
     string colour,
     bool share_earnings,
-    bool private_by_default);
+    bool private_by_default,
+    /// <summary>Still learning the room. Set by the person, never by an owner.</summary>
+    bool trainee = false,
+    /// <summary>When the trial ends, where one was agreed.</summary>
+    DateOnly? trial_ends_on = null);
 
 /// <summary>
 /// Marking one shift shown or hidden on the rota. Null means "no opinion" and
@@ -195,7 +206,10 @@ public record MembershipBody(
     string? display_name,
     string? colour,
     bool? share_earnings,
-    bool? private_by_default);
+    bool? private_by_default,
+    bool? trainee = null,
+    /// <summary>Absent leaves it; a trial that is over is cleared by sending null with trainee false.</summary>
+    DateOnly? trial_ends_on = null);
 
 public record VisibilityBody(bool? visible);
 

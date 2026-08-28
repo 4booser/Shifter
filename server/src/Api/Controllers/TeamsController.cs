@@ -84,7 +84,9 @@ public class TeamsController : Controller
                 request.display_name,
                 request.colour,
                 request.share_earnings,
-                request.private_by_default),
+                request.private_by_default,
+                request.trainee,
+                request.trial_ends_on),
             ct));
 
     /// <summary>

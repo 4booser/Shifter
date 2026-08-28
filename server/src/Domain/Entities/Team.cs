@@ -71,5 +71,27 @@ public sealed class TeamMember
     /// </summary>
     public bool PrivateByDefault { get; set; }
 
+    /// <summary>
+    /// Still learning the room.
+    ///
+    /// The rota does not otherwise know that a Friday night has two new
+    /// people on it and nobody who has closed before, which is a thing the
+    /// crew finds out at eleven o'clock.
+    ///
+    /// Set by the person themselves, not by an owner. Whether somebody counts
+    /// as new is a fact about their own employment, and a flag an employer can
+    /// put on somebody is a flag that outlives the reason for it.
+    /// </summary>
+    public bool Trainee { get; set; }
+
+    /// <summary>
+    /// When the trial ends, where one was agreed. Null means nobody said.
+    ///
+    /// It exists to be counted down to: a trial that ends usually means a rate
+    /// that moves, and the date is the thing everybody forgets until a month
+    /// after it passed.
+    /// </summary>
+    public DateOnly? TrialEndsOn { get; set; }
+
     public DateTime JoinedAt { get; set; } = DateTime.UtcNow;
 }

@@ -14,6 +14,7 @@ const ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
   schedule: 'people',
   gigs: 'sparkles',
   payouts: 'wallet',
+  bank: 'card',
   stats: 'stats-chart',
 };
 
@@ -48,6 +49,12 @@ export default function TabsLayout() {
         name="payouts"
         options={{
           title: 'Выплаты',
+        }}
+      />
+      <Tabs.Screen
+        name="bank"
+        options={{
+          title: 'Банк',
         }}
       />
       <Tabs.Screen

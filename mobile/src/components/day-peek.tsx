@@ -5,6 +5,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Press } from '@/components/motion';
 import { Palette } from '@/constants/theme';
+import { categoryOf, dayOf, fromMinor, payerName } from '@/lib/mono';
+import { useMono } from '@/store/mono';
 import { covers, dayLabel, todayKey } from '@/lib/calendar';
 import {
   CalendarDayData,
@@ -48,6 +50,9 @@ export function DayPeek({
   const insets = useSafeAreaInsets();
   const styles = makeStyles(palette);
   const [busy, setBusy] = useState<string | null>(null);
+  // What the account did on this day. Empty, and the section is not there at
+  // all — a bank nobody connected must not leave a hole on the screen.
+  const statement = useMono((state) => state.items);
 
   if (date === null) return null;
 
@@ -160,6 +165,30 @@ export function DayPeek({
 
           {day?.note != null && day.note.trim() !== '' && (
             <Text style={styles.note}>{day.note}</Text>
+          )}
+
+          {/* The two halves of the app, on one day. Shifter knows this was a
+              twelve-hour close; the bank knows the taxi home cost ₴185. */}
+          {statement.filter((entry) => dayOf(entry) === date && !entry.hold).length > 0 && (
+            <>
+              <Text style={styles.emptyHead}>По счёту в этот день</Text>
+
+              {statement
+                .filter((entry) => dayOf(entry) === date && !entry.hold)
+                .sort((one, two) => two.time - one.time)
+                .map((entry) => (
+                  <View key={entry.id} style={styles.bankRow}>
+                    <Text style={styles.bankWho} numberOfLines={1}>
+                      {entry.amount > 0 ? payerName(entry) : entry.description}
+                    </Text>
+                    <Text style={styles.bankWhat} numberOfLines={1}>{categoryOf(entry.mcc)}</Text>
+                    <Text style={[styles.bankSum, entry.amount > 0 && styles.bankIn]}>
+                      {entry.amount > 0 ? '+' : '−'}
+                      {money(fromMinor(Math.abs(entry.amount)))}
+                    </Text>
+                  </View>
+                ))}
+            </>
           )}
 
           {/* Nothing on the day: the templates themselves are the fastest way
@@ -342,6 +371,19 @@ const makeStyles = (palette: Palette) =>
     },
     chipMark: { fontSize: 16 },
     chipName: { color: palette.text, fontSize: 14, fontWeight: '700' },
+
+    bankRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 3 },
+    bankWho: { flex: 1, color: palette.text, fontSize: 13.5 },
+    bankWhat: { color: palette.textSecondary, fontSize: 11, maxWidth: 110 },
+    bankSum: {
+      color: palette.text,
+      fontSize: 13.5,
+      fontWeight: '700',
+      fontVariant: ['tabular-nums'],
+      minWidth: 70,
+      textAlign: 'right',
+    },
+    bankIn: { color: palette.good },
 
     actions: { flexDirection: 'row', gap: 8 },
     primary: {

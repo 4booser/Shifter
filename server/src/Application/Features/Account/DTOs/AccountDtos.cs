@@ -31,7 +31,9 @@ public record ProfileDto(
     /// by trying to switch it on and reading the failure — a probe with side
     /// effects is a poor way to ask a yes-or-no question.
     /// </summary>
-    bool two_factor = false);
+    bool two_factor = false,
+    /// <summary>Whether they asked for the month's letter. Off unless they did.</summary>
+    bool monthly_letter = false);
 
 public record GetProfileDto(int UserId) : IRequest<ProfileDto>;
 

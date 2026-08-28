@@ -101,6 +101,32 @@ public sealed class User
     /// </summary>
     public string? Email { get; set; }
 
+    /// <summary>
+    /// Whether they asked for the month's letter. Off until somebody switches
+    /// it on: an address given to recover a password is not permission to
+    /// write to somebody, and treating it as one is how a product loses the
+    /// address it actually needed.
+    /// </summary>
+    public bool MonthlyLetter { get; set; }
+
+    /// <summary>
+    /// The last month a letter went out for, as "2026-08".
+    ///
+    /// Stamped rather than counted from a schedule, so a process restarted
+    /// four times on the first of the month sends one letter and not four.
+    /// </summary>
+    public string? MonthlyLetterSent { get; set; }
+
+    /// <summary>
+    /// The half of the unsubscribe link that cannot be guessed.
+    ///
+    /// Unsubscribing must work from the letter, in one click, with nobody
+    /// signed in — that is the whole difference between a letter people
+    /// tolerate and one they mark as spam. Which means the link carries proof,
+    /// and the proof has to be unguessable rather than an account id.
+    /// </summary>
+    public string? LetterKey { get; set; }
+
     // ==== Reachability, shared only through an explicit gig response ====
 
     public string? ContactPhone { get; set; }

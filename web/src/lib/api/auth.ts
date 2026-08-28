@@ -43,6 +43,8 @@ export interface Profile {
   rest_hours: number;
   /** Whether a second factor is on. */
   two_factor: boolean;
+  /** Whether they asked for the month's letter. Off unless they did. */
+  monthly_letter: boolean;
 }
 
 /**
@@ -154,6 +156,8 @@ export const accountApi = {
   setCard: (body: { on: boolean; show_places: boolean; show_money: boolean }) =>
     api<CardSettings>('/shifter/v1/account/card', { method: 'PUT', body }),
   referral: () => api<{ code: string; invited: number }>('/shifter/v1/account/referral'),
+  setLetter: (on: boolean) =>
+    api<{ on: boolean }>('/shifter/v1/account/avatar/letter', { method: 'PUT', body: { on } }),
   setEmail: (email: string | null) =>
     api<{ email: string | null }>('/shifter/v1/account/avatar/email', { method: 'PUT', body: { email } }),
   get: () => api<Profile>('/shifter/v1/account'),

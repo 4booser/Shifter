@@ -126,6 +126,7 @@ public static class DependencyInjection
         services.AddScoped<Shifter.Application.Features.Mail.MailSender>();
         services.AddScoped<Shifter.Application.Features.Auth.Services.PasswordResetService>();
         services.AddHostedService<PushScheduler>();
+        services.AddHostedService<Shifter.Application.Features.Mail.MonthlyLetterService>();
         services.AddSingleton<IHasher, Hasher>();
         services.AddScoped<IAuthTokenIssuer, AuthTokenIssuer>();
 

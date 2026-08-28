@@ -103,9 +103,45 @@ public class AvatarController : ControllerBase
             user.Email = address;
         }
 
+        // Removing the address switches the letter off with it. Keeping the
+        // subscription alive against an address that no longer exists is how
+        // a product ends up writing to somebody's old work account for years.
+        if (user.Email is null) user.MonthlyLetter = false;
+
         await _db.SaveChangesAsync(ct);
 
         return Ok(new { email = user.Email });
+    }
+
+    /// <summary>
+    /// The month's letter, on or off.
+    ///
+    /// Off until somebody switches it on. An address given to recover a
+    /// password is not permission to write to them, and treating it as one is
+    /// how a product loses the address it actually needed.
+    /// </summary>
+    [HttpPut("letter")]
+    public async Task<IActionResult> Letter([FromBody] LetterDto request, CancellationToken ct)
+    {
+        var user = await _db.Users.FirstOrDefaultAsync(row => row.Id == UserId(), ct)
+            ?? throw new NotFoundException("No such account.");
+
+        if (request.on && user.Email is null)
+            throw new ValidationException("Add an address first — there is nowhere to send it.");
+
+        user.MonthlyLetter = request.on;
+        user.LetterKey ??= Application.Features.Mail.MonthlyLetterService.NewKey();
+
+        // Switching on mid-month must not post last month's letter an hour
+        // later: the first one comes at the start of the next month, which is
+        // what somebody who just ticked a box expects.
+        if (request.on && user.MonthlyLetterSent is null)
+            user.MonthlyLetterSent = Application.Features.Mail.MonthlyLetterService
+                .MonthFor(DateTime.UtcNow);
+
+        await _db.SaveChangesAsync(ct);
+
+        return Ok(new { on = user.MonthlyLetter });
     }
 
     /// <summary>
@@ -178,3 +214,5 @@ public class AvatarController : ControllerBase
 public record AvatarDto(string? kind, string? data);
 public record ContactsDto(string? phone, string? telegram);
 public record EmailDto(string? email);
+
+public record LetterDto(bool on);

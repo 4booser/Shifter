@@ -659,6 +659,12 @@ export const RU: Dictionary = {
   'What it is called': 'Как называется',
   'not stated': 'не указано',
   'ФОП 2 група': 'ФОП 2 група',
+  'The month in a letter': 'Итог месяца письмом',
+  'Once a month, after the month has ended, when its figures are final. Nothing in it you cannot see in the app.':
+    'Раз в месяц, после его окончания, когда цифры уже окончательные. Ничего такого, чего нет в приложении.',
+  'Add an address above and this can be switched on.': 'Впишите адрес выше — и это можно будет включить.',
+  'Send it to': 'Присылать на',
+  'Every letter has one link that stops them.': 'В каждом письме одна ссылка, которая их прекращает.',
   'This week': 'Эта неделя',
   'Earned this week': 'Заработано за неделю',
   'Still to come': 'Ещё впереди',
@@ -3078,6 +3084,12 @@ export const UK: Dictionary = {
   'What it is called': 'Як називається',
   'not stated': 'не вказано',
   'ФОП 2 група': 'ФОП 2 група',
+  'The month in a letter': 'Підсумок місяця листом',
+  'Once a month, after the month has ended, when its figures are final. Nothing in it you cannot see in the app.':
+    'Раз на місяць, після його завершення, коли цифри вже остаточні. Нічого такого, чого немає в застосунку.',
+  'Add an address above and this can be switched on.': 'Впишіть адресу вище — і це можна буде увімкнути.',
+  'Send it to': 'Надсилати на',
+  'Every letter has one link that stops them.': 'У кожному листі одне посилання, яке їх припиняє.',
   'This week': 'Цей тиждень',
   'All time': 'За весь час',
 

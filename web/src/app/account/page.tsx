@@ -254,6 +254,8 @@ function Account() {
             onChanged={() => void accountApi.get().then(setProfile).catch(() => undefined)}
           />
 
+          <LetterSection email={profile.email} on={profile.monthly_letter} />
+
           <ReferralSection />
 
           <FeedSection />
@@ -442,6 +444,61 @@ function ExportSection() {
         <Icon name="download" size={14} />
         {busy ? '…' : t('Download everything')}
       </button>
+    </section>
+  );
+}
+
+/**
+ * The month's letter.
+ *
+ * Once a month is the only frequency at which post from an app is not an
+ * irritation. It is off until somebody switches it on: an address given to
+ * recover a password is not permission to write to them, and treating it as
+ * one is how a product loses the address it actually needed.
+ */
+function LetterSection({ email, on }: { email: string | null; on: boolean }) {
+  const { t } = useI18n();
+
+  const [wanted, setWanted] = useState(on);
+  const [error, setError] = useState<string | null>(null);
+
+  return (
+    <section className="card reveal p-4">
+      <h2 className="mb-1 text-[0.98rem] font-bold">{t('The month in a letter')}</h2>
+      <p className="field-hint mb-3">
+        {t('Once a month, after the month has ended, when its figures are final. Nothing in it you cannot see in the app.')}
+      </p>
+
+      {email === null ? (
+        <p className="field-hint">{t('Add an address above and this can be switched on.')}</p>
+      ) : (
+        <label className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={wanted}
+            onChange={(event) => {
+              const next = event.target.checked;
+
+              setWanted(next);
+              setError(null);
+
+              void accountApi.setLetter(next).catch((caught) => {
+                setWanted(!next);
+                setError(apiErrorMessage(caught));
+              });
+            }}
+          />
+          <span className="text-[0.9rem]">
+            {t('Send it to')} {email}
+          </span>
+        </label>
+      )}
+
+      {error !== null && <Alert kind="error">{error}</Alert>}
+
+      {/* Said before somebody subscribes, not after: every letter carries one
+          link that stops them, with no sign-in. */}
+      <p className="field-hint mt-2">{t('Every letter has one link that stops them.')}</p>
     </section>
   );
 }

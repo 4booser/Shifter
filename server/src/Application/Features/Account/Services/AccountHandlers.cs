@@ -33,7 +33,8 @@ public static class AccountRules
         user.ContactTelegram,
         user.Email,
         user.RestHours,
-        user.TotpEnabledAt is not null);
+        user.TotpEnabledAt is not null,
+        user.MonthlyLetter);
 
     public static string RequireName(string? value, string field)
     {

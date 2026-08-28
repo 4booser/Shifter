@@ -27,6 +27,8 @@ import {
   spendingByRules,
 } from '@/lib/mono-rules';
 import { money } from '@/lib/types';
+import { statementCsv } from '@/lib/mono-export';
+import { shareStatement } from '@/lib/mono-share';
 
 type View3 = 'categories' | 'who' | 'standing';
 
@@ -109,6 +111,7 @@ export function BankSpending({
   }, [budgets, categories]);
 
   const [editing, setEditing] = useState<string | null>(null);
+  const [sharing, setSharing] = useState(false);
   const [limitText, setLimitText] = useState('');
 
   const needle = search.trim().toLocaleLowerCase();
@@ -182,6 +185,27 @@ export function BankSpending({
           </Text>
         )}
       </Appear>
+
+      {/* What cannot be exported does not belong to the person holding it.
+          It takes the window and the rules that are on the screen, so the
+          file cannot disagree with the page it came from. */}
+      <Press
+        style={styles.export}
+        onPress={() => {
+          if (sharing) return;
+
+          setSharing(true);
+
+          void shareStatement(
+            statementCsv(items, (item) => categorise(item, rules), from, to),
+            from,
+            to,
+          ).finally(() => setSharing(false));
+        }}
+      >
+        <Ionicons name="share-outline" size={14} color={palette.textSecondary} />
+        <Text style={styles.exportText}>{t('Выгрузить выписку')}</Text>
+      </Press>
 
       <View style={styles.tabs}>
         {(
@@ -483,6 +507,19 @@ const makeStyles = (palette: Palette) =>
       marginTop: 10,
     },
     note: { color: palette.textSecondary, fontSize: 12, lineHeight: 17, marginTop: 8 },
+
+    export: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6,
+      marginTop: 10,
+      paddingVertical: 9,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: palette.border,
+    },
+    exportText: { color: palette.textSecondary, fontSize: 12.5, fontWeight: '600' },
 
     tabs: { flexDirection: 'row', gap: 6, marginTop: 4 },
     tab: {

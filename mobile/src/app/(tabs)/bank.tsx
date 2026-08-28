@@ -17,6 +17,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BankAnalysis } from '@/components/bank-analysis';
 import { BankLedger } from '@/components/bank-ledger';
+import { MoneyGrid } from '@/components/money-grid';
 import { Appear, Loading, Press } from '@/components/motion';
 import { Colors, Palette } from '@/constants/theme';
 import { api } from '@/lib/api';
@@ -83,7 +84,7 @@ export default function BankScreen() {
   const [periods, setPeriods] = useState<PayPeriodRow[] | null>(null);
   const [days, setDays] = useState<Map<string, CalendarDayData>>(new Map());
   const [earned, setEarned] = useState(0);
-  const [view, setView] = useState<'summary' | 'ledger' | 'analysis'>('summary');
+  const [view, setView] = useState<'summary' | 'month' | 'ledger' | 'analysis'>('summary');
   const [saving, setSaving] = useState<string | null>(null);
   const [done, setDone] = useState<string[]>([]);
 
@@ -434,7 +435,8 @@ export default function BankScreen() {
           {(
             [
               ['summary', 'Сводка'],
-              ['ledger', 'Операции'],
+              ['month', 'Месяц'],
+              ['ledger', 'Список'],
               ['analysis', 'Анализ'],
             ] as const
           ).map(([value, label]) => (
@@ -449,6 +451,15 @@ export default function BankScreen() {
             </Press>
           ))}
         </View>
+      )}
+
+      {view === 'month' && (
+        <MoneyGrid
+          items={mono.items}
+          days={days}
+          palette={palette}
+          anchor={currentMonth()}
+        />
       )}
 
       {view === 'ledger' && (
@@ -721,7 +732,7 @@ const makeStyles = (palette: Palette) =>
       paddingVertical: 9,
     },
     segmentOn: { backgroundColor: palette.accent, borderColor: palette.accent },
-    segmentText: { color: palette.text, fontSize: 13.5, fontWeight: '700' },
+    segmentText: { color: palette.text, fontSize: 12.5, fontWeight: '700' },
     segmentTextOn: { color: '#fff' },
 
     section: {

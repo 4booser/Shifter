@@ -307,7 +307,13 @@ function Dashboard() {
       {!needsSetup && <TipsTicker />}
       {!needsSetup && <InsightsPanel />}
 
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-start">
+      {/*
+        No items-start: the columns stretch to the row's height so the sticky
+        day panel stays pinned for the whole of it. It used to unpin where its
+        own content ran out — which is the empty bottom-right corner somebody
+        looking at this page sees before they see anything else.
+      */}
+      <div className="flex flex-col gap-3 lg:flex-row">
         <Sidebar />
         <div className="order-1 flex min-w-0 flex-1 flex-col gap-3 lg:order-none">
           <MonthGrid onSearch={() => setSearchOpen(true)} onSettings={() => setSettingsOpen(true)} />

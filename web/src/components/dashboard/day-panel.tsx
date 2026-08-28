@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
-import { formatDayLabel, shiftDays, todayKey } from '@/lib/calendar/calendar-date';
+import { formatDayLabel, fromKey, shiftDays, todayKey, weekBounds } from '@/lib/calendar/calendar-date';
 import { holidaysInRange } from '@/lib/calendar/holidays';
 import { CalendarEvent, DayShiftEntry, MARK_COLOURS, NOTE_MAX_LENGTH, ShiftTemplate } from '@/lib/calendar/models';
 import { api } from '@/lib/api/http';
@@ -270,7 +270,7 @@ export function DayPanel() {
 
       {/* Events */}
       <section>
-        <h3 className="field-label flex items-center justify-between">
+        <h3 className="panel-head">
           {t('Events')}
           <button
             type="button"
@@ -731,6 +731,8 @@ export function DayPanel() {
         date={key}
         onClose={() => setEventOpen(false)}
       />
+      <DayWeek dayKey={key} />
+      <DayContext dayKey={key} />
       <DayHistory dayKey={key} />
     </aside>
   );
@@ -910,6 +912,277 @@ function ActualClockRow({
   );
 }
 
+
+
+/**
+ * The week this day sits in, day by day.
+ *
+ * "How is this day" and "how is this week" are asked in the same breath and
+ * the panel could only answer the first. Every row is a link, so the week is
+ * also how you move around it — which is what the column at the far right of
+ * a calendar should have been all along.
+ */
+function DayWeek({ dayKey }: { dayKey: string }) {
+  const { t } = useI18n();
+  const { format } = useMoney();
+  const allDays = useCalendar((state) => state.days);
+  const allEvents = useCalendar((state) => state.events);
+
+  const week = useMemo(() => {
+    const { from } = weekBounds(dayKey);
+
+    return Array.from({ length: 7 }, (_, index) => {
+      const key = shiftDays(from, index);
+      const day = allDays.get(key);
+
+      return {
+        key,
+        earned: day?.earned ?? 0,
+        planned: day?.planned ?? 0,
+        hours: day?.shifts.reduce((sum, entry) => sum + entry.hours, 0) ?? 0,
+        names: (day?.shifts ?? []).map((entry) => entry.name),
+        events: allEvents.filter((event) => event.start_date <= key && event.end_date >= key),
+      };
+    });
+  }, [dayKey, allDays, allEvents]);
+
+  const earned = week.reduce((sum, entry) => sum + entry.earned, 0);
+  const planned = week.reduce((sum, entry) => sum + entry.planned, 0);
+  const hours = week.reduce((sum, entry) => sum + entry.hours, 0);
+
+  return (
+    <section className="mt-1 flex flex-col gap-1.5 border-t border-border pt-3">
+      <h3 className="panel-head">
+        <span>{t('This week')}</span>
+        <span className="tabular text-[0.72rem] font-normal text-faint">
+          {Math.round(hours * 10) / 10}h
+        </span>
+      </h3>
+
+      <ul className="flex flex-col">
+        {week.map((entry) => {
+          const here = entry.key === dayKey;
+          const empty = entry.names.length === 0 && entry.events.length === 0;
+
+          return (
+            <li key={entry.key}>
+              <button
+                type="button"
+                className={`flex w-full items-baseline gap-2 rounded-(--radius) px-1.5 py-1 text-left text-[0.8rem] transition-colors ${
+                  here ? 'bg-(--accent-soft) text-(--accent)' : 'hover:bg-surface-2'
+                }`}
+                onClick={() => calendarActions.select(entry.key)}
+              >
+                <span className={`w-7 flex-none text-[0.72rem] ${here ? '' : 'text-faint'}`}>
+                  {WEEK_LETTERS[(fromKey(entry.key).getDay() + 6) % 7]}
+                </span>
+                <span className={`min-w-0 flex-1 truncate ${empty ? 'text-faint' : ''}`}>
+                  {entry.names.length > 0
+                    ? entry.names.join(', ')
+                    : entry.events.length > 0
+                      ? entry.events.map((event) => event.name).join(', ')
+                      : '·'}
+                </span>
+                <span className="flex-none tabular">
+                  {entry.earned > 0 ? (
+                    format(entry.earned)
+                  ) : entry.planned > 0 ? (
+                    <span className="text-muted">{format(entry.planned)}</span>
+                  ) : (
+                    <span className="text-faint">—</span>
+                  )}
+                </span>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+
+      <dl className="flex flex-col gap-1 border-t border-border pt-1.5 text-[0.8rem]">
+        <div className="flex justify-between gap-2">
+          <dt className="text-muted">{t('Earned this week')}</dt>
+          <dd className="tabular font-semibold text-good"><Money value={earned} /></dd>
+        </div>
+        {planned > 0 && (
+          <div className="flex justify-between gap-2">
+            <dt className="text-muted">{t('Still to come')}</dt>
+            <dd className="tabular"><Money value={planned} /></dd>
+          </div>
+        )}
+      </dl>
+    </section>
+  );
+}
+
+/** Single letters: the column is narrow and the day is obvious from position. */
+const WEEK_LETTERS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+
+/** Monday-first, the shape the rest of the calendar speaks. */
+const weekdayOf = (key: string): number => (fromKey(key).getDay() + 6) % 7;
+
+/**
+ * The day, put next to the days around it.
+ *
+ * The panel used to end at the earnings line and leave the column short of
+ * the calendar beside it — an open corner, and worse, a dead end: the figure
+ * for one day means nothing without the fortnight it sits in. This is that
+ * fortnight, the same weekday's average, and the day's own paper trail, in
+ * the space that was empty.
+ *
+ * Everything here is read from days already in the store. No request, so it
+ * is there the moment the panel opens, and it cannot fail on its own.
+ */
+function DayContext({ dayKey }: { dayKey: string }) {
+  const { t, lang } = useI18n();
+  const { format, compact } = useMoney();
+  const allDays = useCalendar((state) => state.days);
+  const [hover, setHover] = useState<string | null>(null);
+
+  // The fortnight ending on this day, whatever the calendar happens to be
+  // showing: a day picked at the start of a month is still read in context.
+  const window = useMemo(() => {
+    const keys: string[] = [];
+
+    for (let back = 13; back >= 0; back -= 1) keys.push(shiftDays(dayKey, -back));
+
+    return keys.map((key) => ({
+      key,
+      earned: allDays.get(key)?.earned ?? 0,
+      hours: allDays.get(key)?.shifts.reduce((sum, entry) => sum + entry.hours, 0) ?? 0,
+    }));
+  }, [dayKey, allDays]);
+
+  const worked = window.filter((entry) => entry.earned > 0);
+  const peak = Math.max(1, ...window.map((entry) => entry.earned));
+  const average = worked.length === 0 ? 0 : worked.reduce((sum, e) => sum + e.earned, 0) / worked.length;
+  const here = window.at(-1)!;
+
+  // The same weekday across everything loaded — "your Tuesdays" is the
+  // comparison people actually make, and it is the one a month total hides.
+  const sameWeekday = [...allDays.values()].filter(
+    (entry) => weekdayOf(entry.date) === weekdayOf(dayKey) && entry.earned > 0,
+  );
+  const weekdayAverage =
+    sameWeekday.length === 0
+      ? null
+      : sameWeekday.reduce((sum, entry) => sum + entry.earned, 0) / sameWeekday.length;
+
+  const shown = hover === null ? here : window.find((entry) => entry.key === hover) ?? here;
+
+  // A scale, so the bars are a measurement rather than a shape.
+  const ceiling = Math.ceil(peak / 500) * 500 || 500;
+  const ticks = [ceiling, ceiling / 2];
+
+  return (
+    <section className="mt-1 flex flex-col gap-2 border-t border-border pt-3">
+      <h3 className="panel-head">
+        <span className="flex-none">{t('Last two weeks')}</span>
+        <span className="min-w-0 truncate text-right tabular text-[0.72rem] font-normal text-faint">
+          {shown.earned > 0 ? format(shown.earned) : t('nothing')}
+          {' · '}
+          {formatDayLabel(shown.key, lang)}
+        </span>
+      </h3>
+
+      {/*
+        pt-2 is the top tick's room. Without it the ceiling label sits half
+        above the plot and lands on the heading.
+      */}
+      <div className="flex h-24 gap-1.5 pt-2">
+        {/* The scale gets its own gutter rather than sitting over the bars. */}
+        <div className="relative w-9 flex-none">
+          {ticks.map((value) => (
+            <span
+              key={value}
+              className="absolute right-0 -translate-y-1/2 whitespace-nowrap text-[0.58rem] text-faint tabular"
+              style={{ bottom: `${(value / ceiling) * 100}%` }}
+            >
+              {compact(value)}
+            </span>
+          ))}
+        </div>
+
+        <div
+          className="relative flex flex-1 items-end gap-[2px]"
+          onPointerLeave={() => setHover(null)}
+        >
+          {ticks.map((value) => (
+            <div
+              key={value}
+              className="pointer-events-none absolute inset-x-0 border-t border-dashed border-border/60"
+              style={{ bottom: `${(value / ceiling) * 100}%` }}
+            />
+          ))}
+
+          {average > 0 && (
+            <div
+              className="pointer-events-none absolute inset-x-0 border-t border-(--accent)/40"
+              style={{ bottom: `${(average / ceiling) * 100}%` }}
+            />
+          )}
+
+          {window.map((entry) => {
+            const today = entry.key === dayKey;
+            const height = entry.earned === 0 ? 2 : Math.max(3, (entry.earned / ceiling) * 100);
+
+            return (
+              <button
+                key={entry.key}
+                type="button"
+                className="relative flex-1 rounded-t-[4px] transition-opacity"
+                style={{
+                  height: `${height}%`,
+                  background: today
+                    ? 'var(--accent)'
+                    : entry.earned === 0
+                      ? 'var(--border)'
+                      : 'color-mix(in srgb, var(--accent) 38%, var(--surface-2))',
+                  opacity: hover === null || hover === entry.key ? 1 : 0.55,
+                }}
+                aria-label={`${formatDayLabel(entry.key, lang)}: ${format(entry.earned)}`}
+                onPointerEnter={() => setHover(entry.key)}
+                onFocus={() => setHover(entry.key)}
+                onClick={() => calendarActions.select(entry.key)}
+              />
+            );
+          })}
+        </div>
+      </div>
+
+      <dl className="flex flex-col gap-1 text-[0.8rem]">
+        <div className="flex justify-between gap-2">
+          <dt className="text-muted">{t('Worked days here')}</dt>
+          <dd className="tabular">{worked.length} / 14</dd>
+        </div>
+        {average > 0 && (
+          <div className="flex justify-between gap-2">
+            <dt className="text-muted">{t('Average working day')}</dt>
+            <dd className="tabular"><Money value={Math.round(average)} /></dd>
+          </div>
+        )}
+        {weekdayAverage !== null && (
+          <div className="flex justify-between gap-2">
+            <dt className="text-muted">
+              {t('Same weekday, on average')}
+            </dt>
+            <dd className="tabular">
+              <Money value={Math.round(weekdayAverage)} />
+              {here.earned > 0 && (
+                <span
+                  className={`ml-1.5 text-[0.72rem] ${here.earned >= weekdayAverage ? 'text-good' : 'text-danger'}`}
+                >
+                  {here.earned >= weekdayAverage ? '+' : '−'}
+                  {Math.round(Math.abs((here.earned / weekdayAverage - 1) * 100))}%
+                </span>
+              )}
+            </dd>
+          </div>
+        )}
+      </dl>
+    </section>
+  );
+}
+
 interface HistoryEntry {
   at: string;
   source: string;
@@ -922,28 +1195,33 @@ interface HistoryEntry {
 }
 
 /**
- * The day's paper trail, folded away until asked. Each line is a snapshot
- * after a write — the answer to "where did my tips go" is reading these
- * top to bottom.
+ * The day's paper trail.
+ *
+ * It used to be a collapsed <details> at the very bottom — a line of grey
+ * text that answered "where did my tips go" only for somebody who already
+ * suspected the answer was there. It is open now, because the panel has the
+ * room and because the question it answers is one people ask in a hurry.
  */
 function DayHistory({ dayKey }: { dayKey: string }) {
   const { t, lang } = useI18n();
   const { format } = useMoney();
   const [entries, setEntries] = useState<HistoryEntry[] | null>(null);
-  const [open, setOpen] = useState(false);
+  const [all, setAll] = useState(false);
 
   useEffect(() => {
     setEntries(null);
-    setOpen(false);
-  }, [dayKey]);
+    setAll(false);
 
-  const load = () => {
-    if (entries !== null) return;
+    let live = true;
 
     void api<{ entries: HistoryEntry[] }>(`/shifter/v1/days/${dayKey}/history`)
-      .then((response) => setEntries(response.entries))
-      .catch(() => setEntries([]));
-  };
+      .then((response) => live && setEntries(response.entries))
+      .catch(() => live && setEntries([]));
+
+    return () => {
+      live = false;
+    };
+  }, [dayKey]);
 
   const SOURCES: Record<string, string> = {
     app: t('you'),
@@ -951,36 +1229,57 @@ function DayHistory({ dayKey }: { dayKey: string }) {
     assignment: t('the rota board'),
   };
 
+  const shown = entries === null ? [] : all ? entries : entries.slice(0, 4);
+
   return (
-    <details
-      className="border-t border-border pt-2"
-      open={open}
-      onToggle={(event) => {
-        setOpen((event.target as HTMLDetailsElement).open);
-        if ((event.target as HTMLDetailsElement).open) load();
-      }}
-    >
-      <summary className="cursor-pointer text-[0.78rem] font-semibold text-muted hover:text-ink">
-        {t('History')}
-      </summary>
+    <section className="mt-1 flex flex-col gap-1.5 border-t border-border pt-3">
+      <h3 className="field-label">{t('History')}</h3>
+
       {entries === null ? (
-        <p className="field-hint mt-1.5">…</p>
+        <p className="field-hint">…</p>
       ) : entries.length === 0 ? (
-        <p className="field-hint mt-1.5">{t('No writes recorded yet.')}</p>
+        <p className="field-hint">{t('No writes recorded yet.')}</p>
       ) : (
-        <ul className="mt-1.5 flex flex-col gap-1">
-          {entries.map((entry, index) => (
-            <li key={index} className="text-[0.75rem] text-muted tabular">
-              <span className="text-faint">
-                {new Date(entry.at).toLocaleString(lang, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
-              </span>{' '}
-              · {SOURCES[entry.source] ?? entry.source} · {entry.shift_count} {t('sh.')} ·{' '}
-              {format(entry.earned)}
-              {entry.tips > 0 && <> · {t('tips')} {format(entry.tips)}</>}
-            </li>
-          ))}
-        </ul>
+        <>
+          <ul className="flex flex-col gap-1">
+            {shown.map((entry, index) => (
+              <li
+                key={index}
+                className="flex items-baseline justify-between gap-2 text-[0.76rem] text-muted tabular"
+              >
+                <span className="truncate">
+                  <span className="text-faint">
+                    {new Date(entry.at).toLocaleString(lang, {
+                      day: '2-digit',
+                      month: '2-digit',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </span>{' '}
+                  · {SOURCES[entry.source] ?? entry.source}
+                  {/* What actually changed, rather than only that something did. */}
+                  {entry.shift_count > 0 && <> · {entry.shift_count} {t('sh.')}</>}
+                  {entry.hours > 0 && <> · {entry.hours}h</>}
+                </span>
+                <span className="flex-none">
+                  {format(entry.earned)}
+                  {entry.tips > 0 && <span className="text-faint"> +{format(entry.tips)}</span>}
+                </span>
+              </li>
+            ))}
+          </ul>
+
+          {entries.length > shown.length && (
+            <button
+              type="button"
+              className="btn btn-quiet btn-sm self-start"
+              onClick={() => setAll(true)}
+            >
+              {t('Show all')} ({entries.length})
+            </button>
+          )}
+        </>
       )}
-    </details>
+    </section>
   );
 }

@@ -169,7 +169,9 @@ export async function loadCatalogues(): Promise<void> {
       calendarApi.shifts(),
       calendarApi.sales(),
       calendarApi.locations(),
-      calendarApi.eventTemplates(),
+      // Forgivingly: the newest of the four, and the sidebar must not go
+      // blank because one palette failed to load.
+      calendarApi.eventTemplates().catch(() => []),
     ]);
 
     set({ templates, positions, locations, eventTemplates });

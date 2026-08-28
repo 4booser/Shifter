@@ -288,6 +288,27 @@ body {
   border-color: var(--accent-hover);
 }
 
+/*
+ * A section heading with something on the far side of it: a count, an Add
+ * button, the figure the section is about.
+ *
+ * It exists because this file is unlayered and Tailwind's utilities are not,
+ * so `field-label` beat every `flex` it was paired with however the classes
+ * were ordered — those headings rendered with the second half glued to the
+ * text instead of pushed to the other end.
+ */
+.panel-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--muted);
+  margin-bottom: 0.3rem;
+}
+
 .btn-quiet {
   background: transparent;
   border-color: transparent;

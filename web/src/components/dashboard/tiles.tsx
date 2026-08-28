@@ -362,22 +362,19 @@ function TodayTile({ window, templates }: { window: CalendarDayData[]; templates
 
   const away = next === undefined ? null : Math.round((fromKey(next.date).getTime() - fromKey(today).getTime()) / 86_400_000);
 
+  // The big word says what today is, which is what the tile is for. What
+  // comes next goes under it — that is the thing a day off leaves you
+  // wondering, and it used to be an em dash.
   return (
     <>
       <Label icon="spark">{t('Today')}</Label>
       <span className="tile-value truncate">
-        {event?.symbol !== undefined && event.symbol !== null
-          ? `${event.symbol} ${event.name}`
-          : away === null
-            ? t('Nothing ahead')
-            : away === 1
-              ? t('Work tomorrow')
-              : `${t('Work in')} ${n(away, 'days')}`}
+        {event === undefined ? t('Day off') : `${event.symbol ?? ''} ${event.name}`.trim()}
       </span>
       <span className="field-hint truncate">
-        {next === undefined
-          ? (event?.name ?? t('Day off'))
-          : `${event?.name ?? t('Day off')} · ${next.shifts[0].name}, ${next.shifts[0].start_time}`}
+        {next === undefined || away === null
+          ? t('Nothing ahead')
+          : `${away === 1 ? t('Tomorrow') : `${t('In')} ${n(away, 'days')}`}: ${next.shifts[0].name}, ${next.shifts[0].start_time}`}
       </span>
     </>
   );

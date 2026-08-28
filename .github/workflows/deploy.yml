@@ -181,9 +181,13 @@ jobs:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
-          # The stack definition travels with the release; .env stays on the
-          # server and is never overwritten from here.
-          source: "compose.prod.yaml,docker/Caddyfile,docker/init-databases.sh,docker/backup.sh,docker/restore-drill.sh"
+          # The whole docker/ directory rather than a list of files. The list
+          # was written by hand, so adding a crontab line for a script without
+          # adding the script to the list failed the deploy on chmod — a list
+          # you have to remember is a list somebody forgets.
+          #
+          # .env stays on the server and is never overwritten from here.
+          source: "compose.prod.yaml,docker/"
           target: /opt/shifter
 
       - name: Pull and restart

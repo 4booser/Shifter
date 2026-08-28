@@ -6,6 +6,7 @@ import { t } from '@/lib/i18n';
 
 import { clientInfo, MonoBusy, MonoRefused, statement, waitFor } from '@/lib/mono-api';
 import { MonoAccount, MonoClientInfo, MonoStatementItem, statementWindows } from '@/lib/mono';
+import { CategoryRule } from '@/lib/mono-rules';
 
 /**
  * The bank connection, on this phone and nowhere else.
@@ -35,6 +36,12 @@ interface Setup {
    * exists to be right about.
    */
   used: string[];
+  /**
+   * Categories the person assigned, in the order they wrote them. Kept here
+   * rather than derived, because they are the corrections that make the
+   * breakdown theirs rather than the terminal's.
+   */
+  rules: CategoryRule[];
 }
 
 interface MonoState {
@@ -47,6 +54,7 @@ interface MonoState {
   syncedTo: number | null;
   /** Transaction ids already recorded in Shifter, so nothing is offered twice. */
   used: string[];
+  rules: CategoryRule[];
   busy: boolean;
   error: string | null;
   /** Windows fetched and windows asked for, so a backfill can show a bar. */
@@ -61,6 +69,8 @@ interface MonoState {
   chooseAccount: (accountId: string) => Promise<void>;
   /** Fetches what is missing, one window at a time. Returns how many arrived. */
   sync: (sinceSeconds: number) => Promise<number>;
+  /** Replaces the category rules, order included. */
+  setRules: (rules: CategoryRule[]) => Promise<void>;
   /** Remembers that this payer is the wage for this place. */
   rememberPayer: (locationId: number, payer: string) => Promise<void>;
   /** Marks transactions as already recorded, so they stop being offered. */
@@ -94,7 +104,7 @@ const readSetup = async (): Promise<Setup> => {
     // A setup that cannot be read is one that has to be asked for again.
   }
 
-  return { accountId: null, payers: {}, syncedTo: null, used: [] };
+  return { accountId: null, payers: {}, syncedTo: null, used: [], rules: [] };
 };
 
 export const useMono = create<MonoState>((set, get) => ({
@@ -105,6 +115,7 @@ export const useMono = create<MonoState>((set, get) => ({
   items: [],
   syncedTo: null,
   used: [],
+  rules: [],
   busy: false,
   error: null,
   progress: null,
@@ -136,6 +147,7 @@ export const useMono = create<MonoState>((set, get) => ({
       payers: setup.payers,
       syncedTo: setup.syncedTo,
       used: setup.used ?? [],
+      rules: setup.rules ?? [],
       items,
     });
 
@@ -174,10 +186,25 @@ export const useMono = create<MonoState>((set, get) => ({
     // become an ordinary Shifter row and stays where it is.
     set({
       token: null, client: null, accountId: null, items: [],
-      syncedTo: null, payers: {}, used: [],
+      syncedTo: null, payers: {}, used: [], rules: [],
     });
     await quietly(SecureStore.deleteItemAsync(TOKEN_KEY));
     await quietly(AsyncStorage.multiRemove([CACHE_KEY, SETUP_KEY]));
+  },
+
+  /**
+   * Replaces the whole list rather than editing one rule.
+   *
+   * Order is part of what a rule means — first match wins — so moving one is
+   * as much of an edit as changing its text, and a per-rule API would need
+   * three verbs to say what one assignment says.
+   */
+  setRules: async (rules) => {
+    set({ rules });
+
+    const setup = await readSetup();
+
+    await quietly(AsyncStorage.setItem(SETUP_KEY, JSON.stringify({ ...setup, rules })));
   },
 
   chooseAccount: async (accountId) => {

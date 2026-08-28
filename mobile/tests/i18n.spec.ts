@@ -115,7 +115,7 @@ describe('the Ukrainian dictionary', () => {
       // The same word in both languages, or a bare suffix with nothing to
       // translate in it.
       '/день', '/місяць', '/тиждень', 'Ввести код', 'Ночей', 'без ставки', 'фриланс',
-      'Тип', 'весь день',
+      'Тип', 'весь день', 'Кому',
       // Abbreviations and endings that carry no word to translate.
       'го', 'дн.', 'с', 'с.', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'Банки',
     ]);

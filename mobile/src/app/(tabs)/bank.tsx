@@ -17,6 +17,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BankAnalysis } from '@/components/bank-analysis';
+import { BankSpending } from '@/components/bank-spending';
 import { BankLedger } from '@/components/bank-ledger';
 import { MoneyGrid } from '@/components/money-grid';
 import { Appear, Loading, Press } from '@/components/motion';
@@ -87,7 +88,7 @@ export default function BankScreen() {
   const [periods, setPeriods] = useState<PayPeriodRow[] | null>(null);
   const [days, setDays] = useState<Map<string, CalendarDayData>>(new Map());
   const [earned, setEarned] = useState(0);
-  const [view, setView] = useState<'summary' | 'month' | 'ledger' | 'analysis'>('summary');
+  const [view, setView] = useState<'summary' | 'spending' | 'month' | 'ledger' | 'analysis'>('summary');
   const [saving, setSaving] = useState<string | null>(null);
   const [done, setDone] = useState<string[]>([]);
 
@@ -480,9 +481,10 @@ export default function BankScreen() {
           {(
             [
               ['summary', t('Сводка')],
+              ['spending', t('Траты')],
               ['month', t('Месяц')],
               ['ledger', t('Список')],
-              ['analysis', t('Анализ')],
+              ['analysis', t('Работа')],
             ] as const
           ).map(([value, label]) => (
             <Press
@@ -496,6 +498,17 @@ export default function BankScreen() {
             </Press>
           ))}
         </View>
+      )}
+
+      {view === 'spending' && (
+        <BankSpending
+          items={mono.items}
+          rules={mono.rules}
+          from={monthBounds(currentMonth()).from}
+          to={monthBounds(currentMonth()).to}
+          palette={palette}
+          onRules={(rules) => void mono.setRules(rules)}
+        />
       )}
 
       {view === 'month' && (

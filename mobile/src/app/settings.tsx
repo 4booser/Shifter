@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Linking,
-  Pressable,
   ScrollView,
   StyleSheet,
   Switch,
@@ -14,6 +13,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { Press } from '@/components/motion';
 import { Colors, Palette } from '@/constants/theme';
 import { api, API_BASE } from '@/lib/api';
 import { lockKind, LockKind, lockNameBy, lockStore, unlock } from '@/lib/lock';
@@ -74,9 +74,9 @@ export default function SettingsScreen() {
     >
       <View style={styles.head}>
         <Text style={styles.title}>Настройки</Text>
-        <Pressable hitSlop={12} onPress={() => router.back()}>
+        <Press hitSlop={12} onPress={() => router.back()}>
           <Ionicons name="close" size={26} color={palette.textSecondary} />
-        </Pressable>
+        </Press>
       </View>
 
       {profile === null && error === null && <ActivityIndicator color={palette.accent} />}
@@ -115,35 +115,35 @@ export default function SettingsScreen() {
       </View>
 
       <Text style={styles.section}>Ваши смены</Text>
-      <Pressable style={styles.linkRow} onPress={() => router.push('/templates')}>
+      <Press style={styles.linkRow} onPress={() => router.push('/templates')}>
         <Ionicons name="time-outline" size={20} color={palette.textSecondary} />
         <Text style={styles.linkText}>Шаблоны смен — часы, ставка, процент</Text>
         <Ionicons name="chevron-forward" size={16} color={palette.textSecondary} />
-      </Pressable>
+      </Press>
 
       <Text style={styles.section}>Остальное</Text>
-      <Pressable
+      <Press
         style={styles.linkRow}
         onPress={() => void Linking.openURL('https://www.shifter.ink/account')}
       >
         <Ionicons name="person-circle-outline" size={20} color={palette.textSecondary} />
         <Text style={styles.linkText}>Профиль и места работы — на сайте</Text>
         <Ionicons name="open-outline" size={16} color={palette.textSecondary} />
-      </Pressable>
+      </Press>
 
-      <Pressable
+      <Press
         style={styles.linkRow}
         onPress={() => void Linking.openURL('https://www.shifter.ink/roadmap')}
       >
         <Ionicons name="map-outline" size={20} color={palette.textSecondary} />
         <Text style={styles.linkText}>Что нового и что дальше</Text>
         <Ionicons name="open-outline" size={16} color={palette.textSecondary} />
-      </Pressable>
+      </Press>
 
-      <Pressable style={styles.signOut} onPress={signOut}>
+      <Press style={styles.signOut} onPress={signOut}>
         <Ionicons name="log-out-outline" size={18} color={palette.danger} />
         <Text style={styles.signOutText}>Выйти</Text>
-      </Pressable>
+      </Press>
 
       <Text style={styles.build}>{API_BASE}</Text>
     </ScrollView>

@@ -6,7 +6,6 @@ import {
   KeyboardAvoidingView,
   Modal,
   Platform,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -16,6 +15,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { Press } from '@/components/motion';
 import { Colors, Palette } from '@/constants/theme';
 import { api, ApiError } from '@/lib/api';
 import { rateLine, ShiftTemplate } from '@/lib/types';
@@ -99,9 +99,9 @@ export default function TemplatesScreen() {
       >
         <View style={styles.head}>
           <Text style={styles.title}>Смены</Text>
-          <Pressable hitSlop={12} onPress={() => router.back()}>
+          <Press hitSlop={12} onPress={() => router.back()}>
             <Ionicons name="close" size={26} color={palette.textSecondary} />
-          </Pressable>
+          </Press>
         </View>
 
         <Text style={styles.lead}>
@@ -113,7 +113,7 @@ export default function TemplatesScreen() {
         {error !== null && <Text style={styles.error}>{error}</Text>}
 
         {live.map((template) => (
-          <Pressable key={template.id} style={styles.card} onPress={() => setEditing(template)}>
+          <Press key={template.id} style={styles.card} onPress={() => setEditing(template)}>
             <Text style={styles.cardEmoji}>{template.symbol ?? '🕐'}</Text>
             <View style={styles.grow}>
               <Text style={styles.cardName}>{template.name}</Text>
@@ -123,13 +123,13 @@ export default function TemplatesScreen() {
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={18} color={palette.textSecondary} />
-          </Pressable>
+          </Press>
         ))}
 
-        <Pressable style={styles.addRow} onPress={() => setEditing('new')}>
+        <Press style={styles.addRow} onPress={() => setEditing('new')}>
           <Ionicons name="add-circle-outline" size={20} color={palette.accent} />
           <Text style={styles.addText}>Новая смена</Text>
-        </Pressable>
+        </Press>
 
         {archived.length > 0 && (
           <>
@@ -143,9 +143,9 @@ export default function TemplatesScreen() {
                     {template.start_time.slice(0, 5)}–{template.end_time.slice(0, 5)}
                   </Text>
                 </View>
-                <Pressable hitSlop={8} onPress={() => void archive(template, false)}>
+                <Press hitSlop={8} onPress={() => void archive(template, false)}>
                   <Text style={styles.restore}>Вернуть</Text>
-                </Pressable>
+                </Press>
               </View>
             ))}
           </>
@@ -280,9 +280,9 @@ function TemplateEditor({
         <ScrollView contentContainerStyle={styles.editor}>
           <View style={styles.head}>
             <Text style={styles.title}>{template === null ? 'Новая смена' : 'Смена'}</Text>
-            <Pressable hitSlop={12} onPress={onClose}>
+            <Press hitSlop={12} onPress={onClose}>
               <Ionicons name="close" size={26} color={palette.textSecondary} />
-            </Pressable>
+            </Press>
           </View>
 
           <View style={styles.row}>
@@ -336,7 +336,7 @@ function TemplateEditor({
           <Text style={styles.fieldLabel}>Платят</Text>
           <View style={styles.segmentRow}>
             {(Object.keys(PERIOD_LABEL) as Period[]).map((value) => (
-              <Pressable
+              <Press
                 key={value}
                 style={[styles.segment, period === value && styles.segmentOn]}
                 onPress={() => setPeriod(value)}
@@ -344,7 +344,7 @@ function TemplateEditor({
                 <Text style={[styles.segmentText, period === value && styles.segmentTextOn]}>
                   {PERIOD_LABEL[value]}
                 </Text>
-              </Pressable>
+              </Press>
             ))}
           </View>
 
@@ -383,7 +383,7 @@ function TemplateEditor({
               [false, 'свои'],
               [true, 'доля общака'],
             ] as const).map(([value, label]) => (
-              <Pressable
+              <Press
                 key={label}
                 style={[styles.segment, pooled === value && styles.segmentOn]}
                 onPress={() => setPooled(value)}
@@ -391,7 +391,7 @@ function TemplateEditor({
                 <Text style={[styles.segmentText, pooled === value && styles.segmentTextOn]}>
                   {label}
                 </Text>
-              </Pressable>
+              </Press>
             ))}
           </View>
 
@@ -410,16 +410,16 @@ function TemplateEditor({
             <>
               <Text style={styles.fieldLabel}>Место работы</Text>
               <View style={styles.placeRow}>
-                <Pressable
+                <Press
                   style={[styles.place, placeId === null && styles.placeOn]}
                   onPress={() => setPlaceId(null)}
                 >
                   <Text style={[styles.placeText, placeId === null && styles.placeTextOn]}>
                     без места
                   </Text>
-                </Pressable>
+                </Press>
                 {places.map((place) => (
-                  <Pressable
+                  <Press
                     key={place.id}
                     style={[styles.place, placeId === place.id && styles.placeOn]}
                     onPress={() => setPlaceId(place.id)}
@@ -427,7 +427,7 @@ function TemplateEditor({
                     <Text style={[styles.placeText, placeId === place.id && styles.placeTextOn]}>
                       {place.name}
                     </Text>
-                  </Pressable>
+                  </Press>
                 ))}
               </View>
             </>
@@ -435,19 +435,19 @@ function TemplateEditor({
 
           {failed !== null && <Text style={styles.error}>{failed}</Text>}
 
-          <Pressable
+          <Press
             style={[styles.primary, busy && { opacity: 0.6 }]}
             disabled={busy}
             onPress={() => void save()}
           >
             <Text style={styles.primaryText}>{busy ? 'Сохраняем…' : 'Сохранить'}</Text>
-          </Pressable>
+          </Press>
 
           {template !== null && (
             <>
-              <Pressable style={styles.ghost} onPress={() => onArchive(template)}>
+              <Press style={styles.ghost} onPress={() => onArchive(template)}>
                 <Text style={styles.ghostText}>Убрать в архив</Text>
-              </Pressable>
+              </Press>
               <Text style={styles.hint}>
                 Архив не мешает работе, но сохраняет всё заработанное этой сменой.
               </Text>

@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { Press } from '@/components/motion';
 import { Colors, Palette } from '@/constants/theme';
 import { api } from '@/lib/api';
 import { todayKey } from '@/lib/calendar';
@@ -195,9 +196,9 @@ export default function DayScreen() {
       <ScrollView contentContainerStyle={[styles.content, { paddingTop: insets.top + 12 }]}>
         <View style={styles.headerRow}>
           <Text style={styles.title}>{title}</Text>
-          <Pressable onPress={() => router.back()} hitSlop={10}>
+          <Press onPress={() => router.back()} hitSlop={10}>
             <Ionicons name="close" size={24} color={palette.textSecondary} />
-          </Pressable>
+          </Press>
         </View>
 
         {error !== null && <Text style={styles.error}>{error}</Text>}
@@ -207,14 +208,14 @@ export default function DayScreen() {
           <>
             <Text style={styles.section}>Смены</Text>
             {templates.length === 0 && (
-              <Pressable style={styles.makeFirst} onPress={() => router.push('/templates')}>
+              <Press style={styles.makeFirst} onPress={() => router.push('/templates')}>
                 <Ionicons name="add-circle-outline" size={18} color={palette.accent} />
                 <Text style={styles.makeFirstText}>Заведите первую смену</Text>
-              </Pressable>
+              </Press>
             )}
             <View style={styles.templateWrap}>
               {templates.map((template) => (
-                <Pressable
+                <Press
                   key={template.id}
                   style={[styles.template, onDay.has(template.id) && styles.templateOn]}
                   onPress={() => toggleTemplate(template)}
@@ -228,7 +229,7 @@ export default function DayScreen() {
                       {template.start_time.slice(0, 5)}–{template.end_time.slice(0, 5)}
                     </Text>
                   </View>
-                </Pressable>
+                </Press>
               ))}
             </View>
 
@@ -305,7 +306,7 @@ export default function DayScreen() {
             {(Number(deductions) || 0) > 0 && (
               <View style={styles.reasonRow}>
                 {DEDUCTION_REASONS.map((option) => (
-                  <Pressable
+                  <Press
                     key={option.value}
                     style={[
                       styles.reasonChip,
@@ -325,7 +326,7 @@ export default function DayScreen() {
                     >
                       {option.label}
                     </Text>
-                  </Pressable>
+                  </Press>
                 ))}
               </View>
             )}

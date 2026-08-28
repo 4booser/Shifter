@@ -2,7 +2,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -12,7 +11,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Loading } from '@/components/motion';
+import { Loading, Press } from '@/components/motion';
 import { Colors, Palette } from '@/constants/theme';
 import { api, ApiError } from '@/lib/api';
 import { todayKey } from '@/lib/calendar';
@@ -138,9 +137,9 @@ export default function CostsScreen() {
   return (
     <View style={[styles.screen, { paddingTop: insets.top }]}>
       <View style={styles.head}>
-        <Pressable onPress={() => router.back()} hitSlop={12}>
+        <Press onPress={() => router.back()} hitSlop={12}>
           <Ionicons name="chevron-down" size={22} color={palette.textSecondary} />
-        </Pressable>
+        </Press>
         <Text style={styles.title}>Что стоит работа</Text>
       </View>
 
@@ -173,7 +172,7 @@ export default function CostsScreen() {
 
             <View style={styles.chipRow}>
               {EXPENSE_KINDS.map((option) => (
-                <Pressable
+                <Press
                   key={option.value}
                   style={[styles.chip, kind === option.value && styles.chipOn]}
                   onPress={() => setKind(option.value)}
@@ -181,7 +180,7 @@ export default function CostsScreen() {
                   <Text style={[styles.chipText, kind === option.value && styles.chipTextOn]}>
                     {option.label}
                   </Text>
-                </Pressable>
+                </Press>
               ))}
             </View>
 
@@ -202,9 +201,9 @@ export default function CostsScreen() {
                 value={note}
                 onChangeText={setNote}
               />
-              <Pressable style={styles.primary} onPress={() => void addExpense()}>
+              <Press style={styles.primary} onPress={() => void addExpense()}>
                 <Text style={styles.primaryText}>+</Text>
-              </Pressable>
+              </Press>
             </View>
 
             {expenses.length === 0 ? (
@@ -222,9 +221,9 @@ export default function CostsScreen() {
                       {row.note ?? ''}
                     </Text>
                     <Text style={styles.itemAmount}>{money(row.amount)}</Text>
-                    <Pressable onPress={() => void removeExpense(row.id)} hitSlop={10}>
+                    <Press onPress={() => void removeExpense(row.id)} hitSlop={10}>
                       <Ionicons name="close" size={16} color={palette.textSecondary} />
-                    </Pressable>
+                    </Press>
                   </View>
                 ))}
               </>
@@ -235,9 +234,9 @@ export default function CostsScreen() {
           <View style={styles.card}>
             <View style={styles.cardHead}>
               <Text style={styles.cardTitle}>Документы</Text>
-              <Pressable onPress={() => setAddingDoc((was) => !was)} hitSlop={10}>
+              <Press onPress={() => setAddingDoc((was) => !was)} hitSlop={10}>
                 <Text style={styles.link}>{addingDoc ? 'Отмена' : 'Добавить'}</Text>
-              </Pressable>
+              </Press>
             </View>
             <Text style={styles.cardHint}>
               Храним только дату. Фотография медкнижки должна лежать в кармане, а не на сервере.
@@ -247,7 +246,7 @@ export default function CostsScreen() {
               <>
                 <View style={styles.chipRow}>
                   {DOCUMENT_KINDS.map((option) => (
-                    <Pressable
+                    <Press
                       key={option.value}
                       style={[styles.chip, docKind === option.value && styles.chipOn]}
                       onPress={() => {
@@ -260,7 +259,7 @@ export default function CostsScreen() {
                       >
                         {option.label}
                       </Text>
-                    </Pressable>
+                    </Press>
                   ))}
                 </View>
                 <View style={styles.row}>
@@ -279,9 +278,9 @@ export default function CostsScreen() {
                     value={docUntil}
                     onChangeText={setDocUntil}
                   />
-                  <Pressable style={styles.primary} onPress={() => void addDocument()}>
+                  <Press style={styles.primary} onPress={() => void addDocument()}>
                     <Text style={styles.primaryText}>+</Text>
-                  </Pressable>
+                  </Press>
                 </View>
               </>
             )}

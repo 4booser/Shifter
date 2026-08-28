@@ -5,7 +5,6 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -15,6 +14,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { Press } from '@/components/motion';
 import { Colors, Palette } from '@/constants/theme';
 import { ApiError } from '@/lib/api';
 import { AssistantGap, AssistantMessage, AssistantReport, assistant } from '@/lib/assistant';
@@ -124,14 +124,14 @@ export default function AssistantScreen() {
     >
       <View style={[styles.head, { paddingTop: insets.top + 12 }]}>
         <Text style={styles.title}>Помощник</Text>
-        <Pressable hitSlop={12} onPress={() => router.back()}>
+        <Press hitSlop={12} onPress={() => router.back()}>
           <Ionicons name="close" size={26} color={palette.textSecondary} />
-        </Pressable>
+        </Press>
       </View>
 
       <View style={styles.tabs}>
         {(Object.keys(TAB_LABEL) as Tab[]).map((value) => (
-          <Pressable
+          <Press
             key={value}
             style={[styles.tab, tab === value && styles.tabOn]}
             onPress={() => setTab(value)}
@@ -140,7 +140,7 @@ export default function AssistantScreen() {
               {TAB_LABEL[value]}
               {value === 'gaps' && gaps.length > 0 ? ` · ${gaps.length}` : ''}
             </Text>
-          </Pressable>
+          </Press>
         ))}
       </View>
 
@@ -185,9 +185,9 @@ export default function AssistantScreen() {
             {thread.length === 0 && (
               <View style={styles.openers}>
                 {OPENERS.map((opener) => (
-                  <Pressable key={opener} style={styles.opener} onPress={() => void ask(opener)}>
+                  <Press key={opener} style={styles.opener} onPress={() => void ask(opener)}>
                     <Text style={styles.openerText}>{opener}</Text>
-                  </Pressable>
+                  </Press>
                 ))}
               </View>
             )}
@@ -209,13 +209,13 @@ export default function AssistantScreen() {
               лучший день, как этот месяц сидит против прошлого.
             </Text>
 
-            <Pressable
+            <Press
               style={[styles.primary, writing && { opacity: 0.6 }]}
               disabled={writing}
               onPress={() => void makeReport()}
             >
               <Text style={styles.primaryText}>{writing ? 'Пишем…' : 'Разобрать месяц'}</Text>
-            </Pressable>
+            </Press>
 
             {report !== null && (
               <View style={styles.reportCard}>
@@ -259,13 +259,13 @@ export default function AssistantScreen() {
             onSubmitEditing={() => void ask(draft)}
             returnKeyType="send"
           />
-          <Pressable
+          <Press
             style={[styles.send, (busy || draft.trim() === '') && { opacity: 0.4 }]}
             disabled={busy || draft.trim() === ''}
             onPress={() => void ask(draft)}
           >
             <Ionicons name="arrow-up" size={20} color="#fff" />
-          </Pressable>
+          </Press>
         </View>
       )}
     </KeyboardAvoidingView>
@@ -326,13 +326,13 @@ function GapList({
               value={values[gap.id] ?? ''}
               onChangeText={(value) => setValues((current) => ({ ...current, [gap.id]: value }))}
             />
-            <Pressable
+            <Press
               style={[styles.gapSave, saving === gap.id && { opacity: 0.6 }]}
               disabled={saving === gap.id}
               onPress={() => void answer(gap)}
             >
               <Text style={styles.gapSaveText}>Записать</Text>
-            </Pressable>
+            </Press>
           </View>
         </View>
       ))}

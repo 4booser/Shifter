@@ -11,6 +11,7 @@ import {
   View,
 } from 'react-native';
 
+import { Press } from '@/components/motion';
 import { Colors, Palette } from '@/constants/theme';
 import { ApiError } from '@/lib/api';
 import { useSession } from '@/store/session';
@@ -133,11 +134,11 @@ export default function LoginScreen() {
           )}
         </Pressable>
 
-        <Pressable onPress={() => setMode(mode === 'in' ? 'up' : 'in')}>
+        <Press onPress={() => setMode(mode === 'in' ? 'up' : 'in')}>
           <Text style={styles.switch}>
             {mode === 'in' ? 'Впервые тут? Создать аккаунт' : 'Уже есть аккаунт? Войти'}
           </Text>
-        </Pressable>
+        </Press>
       </View>
     </KeyboardAvoidingView>
   );

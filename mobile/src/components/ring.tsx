@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import Animated, { useAnimatedProps, useSharedValue, withTiming } from 'react-native-reanimated';
 import Svg, { Circle } from 'react-native-svg';
 
@@ -32,7 +33,13 @@ export function Ring({
   const circumference = 2 * Math.PI * radius;
   const at = useSharedValue(progress);
 
-  at.value = withTiming(progress, { duration: 900 });
+  // In an effect, not in the render body. Writing to a shared value while
+  // React is rendering is a rule this app breaks at its peril: the React
+  // Compiler is on, and a render it decides to throw away would still have
+  // moved the ring.
+  useEffect(() => {
+    at.value = withTiming(progress, { duration: 900 });
+  }, [progress, at]);
 
   const sweep = useAnimatedProps(() => ({
     strokeDashoffset: circumference * (1 - Math.max(0, Math.min(1, at.value))),

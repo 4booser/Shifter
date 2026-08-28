@@ -2,7 +2,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -12,7 +11,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Loading } from '@/components/motion';
+import { Loading, Press } from '@/components/motion';
 import { Colors, Palette } from '@/constants/theme';
 import { api, ApiError } from '@/lib/api';
 import { dayLabel, todayKey } from '@/lib/calendar';
@@ -169,9 +168,9 @@ export default function CrewScreen() {
   return (
     <View style={[styles.screen, { paddingTop: insets.top }]}>
       <View style={styles.head}>
-        <Pressable onPress={() => router.back()} hitSlop={12}>
+        <Press onPress={() => router.back()} hitSlop={12}>
           <Ionicons name="chevron-down" size={22} color={palette.textSecondary} />
-        </Pressable>
+        </Press>
         <Text style={styles.title}>Смена · {dayLabel(date)}</Text>
       </View>
 
@@ -197,9 +196,9 @@ export default function CrewScreen() {
                 value={amount}
                 onChangeText={setAmount}
               />
-              <Pressable style={styles.primary} onPress={() => void savePool()}>
+              <Press style={styles.primary} onPress={() => void savePool()}>
                 <Text style={styles.primaryText}>Столько</Text>
-              </Pressable>
+              </Press>
             </View>
 
             {pool !== null && pool.entered_by !== null && (
@@ -248,9 +247,9 @@ export default function CrewScreen() {
               value={text}
               onChangeText={setText}
             />
-            <Pressable style={styles.primary} onPress={() => void saveNote()}>
+            <Press style={styles.primary} onPress={() => void saveNote()}>
               <Text style={styles.primaryText}>Оставить следующей смене</Text>
-            </Pressable>
+            </Press>
           </View>
 
           {/* ==== The stop list, which does not reset at midnight ==== */}
@@ -258,22 +257,22 @@ export default function CrewScreen() {
             <Text style={styles.cardTitle}>Стоп-лист и поломки</Text>
 
             <View style={styles.kindRow}>
-              <Pressable
+              <Press
                 style={[styles.chip, adding === 'stop' && styles.chipOn]}
                 onPress={() => setAdding(adding === 'stop' ? null : 'stop')}
               >
                 <Text style={[styles.chipText, adding === 'stop' && styles.chipTextOn]}>
                   Закончилось
                 </Text>
-              </Pressable>
-              <Pressable
+              </Press>
+              <Press
                 style={[styles.chip, adding === 'broken' && styles.chipOn]}
                 onPress={() => setAdding(adding === 'broken' ? null : 'broken')}
               >
                 <Text style={[styles.chipText, adding === 'broken' && styles.chipTextOn]}>
                   Сломалось
                 </Text>
-              </Pressable>
+              </Press>
             </View>
 
             {adding !== null && (
@@ -288,9 +287,9 @@ export default function CrewScreen() {
                   onChangeText={setName}
                   onSubmitEditing={() => void raise()}
                 />
-                <Pressable style={styles.primary} onPress={() => void raise()}>
+                <Press style={styles.primary} onPress={() => void raise()}>
                   <Text style={styles.primaryText}>Внести</Text>
-                </Pressable>
+                </Press>
               </View>
             )}
 
@@ -312,9 +311,9 @@ export default function CrewScreen() {
                   <Text style={styles.stopMeta}>
                     {item.days > 0 ? plural(item.days, 'день', 'дня', 'дней') : 'сегодня'}
                   </Text>
-                  <Pressable onPress={() => void clear(item.id)} hitSlop={10}>
+                  <Press onPress={() => void clear(item.id)} hitSlop={10}>
                     <Ionicons name="checkmark" size={18} color={palette.good} />
-                  </Pressable>
+                  </Press>
                 </View>
               ))
             )}

@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { Press } from '@/components/motion';
 import { Colors, Palette } from '@/constants/theme';
 import { api, ApiError } from '@/lib/api';
 import { dayLabel, pad, todayKey } from '@/lib/calendar';
@@ -314,19 +315,19 @@ export default function ScheduleScreen() {
         <View style={styles.titleRow}>
           <Text style={styles.title}>График</Text>
           {teamId !== null && (
-            <Pressable
+            <Press
               style={styles.boardButton}
               onPress={() => router.push(`/crew?teamId=${teamId}`)}
             >
               <Ionicons name="cash-outline" size={15} color={palette.accent} />
               <Text style={styles.boardButtonText}>Смена</Text>
-            </Pressable>
+            </Press>
           )}
           {board?.can_plan === true && (
-            <Pressable style={styles.boardButton} onPress={() => router.push('/board')}>
+            <Press style={styles.boardButton} onPress={() => router.push('/board')}>
               <Ionicons name="grid-outline" size={15} color={palette.accent} />
               <Text style={styles.boardButtonText}>Доска</Text>
-            </Pressable>
+            </Press>
           )}
         </View>
 
@@ -339,16 +340,16 @@ export default function ScheduleScreen() {
               Попросите у старшего код приглашения — и увидите общий график, свои смены и кто
               выходит вместе с вами.
             </Text>
-            <Pressable style={styles.primary} onPress={() => setJoining(true)}>
+            <Press style={styles.primary} onPress={() => setJoining(true)}>
               <Text style={styles.primaryText}>Ввести код</Text>
-            </Pressable>
+            </Press>
           </View>
         )}
 
         {teams !== null && teams.length > 1 && (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.teamRow}>
             {teams.map((team) => (
-              <Pressable
+              <Press
                 key={team.id}
                 style={[styles.teamChip, team.id === teamId && styles.teamChipOn]}
                 onPress={() => setTeamId(team.id)}
@@ -356,7 +357,7 @@ export default function ScheduleScreen() {
                 <Text style={[styles.teamChipText, team.id === teamId && styles.teamChipTextOn]}>
                   {team.name}
                 </Text>
-              </Pressable>
+              </Press>
             ))}
           </ScrollView>
         )}
@@ -374,12 +375,12 @@ export default function ScheduleScreen() {
                     {row.title} · {row.start}–{row.end}
                   </Text>
                 </View>
-                <Pressable style={styles.yes} onPress={() => setAccepting(row)}>
+                <Press style={styles.yes} onPress={() => setAccepting(row)}>
                   <Text style={styles.yesText}>Беру</Text>
-                </Pressable>
-                <Pressable style={styles.no} onPress={() => void decide(row, null)}>
+                </Press>
+                <Press style={styles.no} onPress={() => void decide(row, null)}>
                   <Text style={styles.noText}>Не могу</Text>
-                </Pressable>
+                </Press>
               </View>
             ))}
           </View>
@@ -405,18 +406,18 @@ export default function ScheduleScreen() {
                   </View>
                   {row.can_decide && (
                     <>
-                      <Pressable style={styles.yes} onPress={() => void decideLeave(row.id, true)}>
+                      <Press style={styles.yes} onPress={() => void decideLeave(row.id, true)}>
                         <Text style={styles.yesText}>Можно</Text>
-                      </Pressable>
-                      <Pressable style={styles.no} onPress={() => void decideLeave(row.id, false)}>
+                      </Press>
+                      <Press style={styles.no} onPress={() => void decideLeave(row.id, false)}>
                         <Text style={styles.noText}>Нет</Text>
-                      </Pressable>
+                      </Press>
                     </>
                   )}
                   {row.mine && (
-                    <Pressable style={styles.no} onPress={() => void decideLeave(row.id, null)}>
+                    <Press style={styles.no} onPress={() => void decideLeave(row.id, null)}>
                       <Text style={styles.noText}>Отозвать</Text>
-                    </Pressable>
+                    </Press>
                   )}
                 </View>
               ))}
@@ -450,14 +451,14 @@ export default function ScheduleScreen() {
 
                   {/* Only the other side can agree; the proposer can only take
                       it back, which is why these are not the same button. */}
-                  <Pressable
+                  <Press
                     style={[swap.mine ? styles.no : styles.yes, styles.swapButton]}
                     onPress={() => void decideSwap(swap, !swap.mine)}
                   >
                     <Text style={swap.mine ? styles.noText : styles.yesText}>
                       {swap.mine ? 'Отозвать' : 'Согласиться'}
                     </Text>
-                  </Pressable>
+                  </Press>
                 </View>
               ))}
           </View>
@@ -478,11 +479,11 @@ export default function ScheduleScreen() {
                     <Text style={[styles.dayName, date === todayKey() && styles.dayNameToday]}>
                       {dayLabel(date)}
                     </Text>
-                    <Pressable hitSlop={8} onPress={() => void blockDay(date)}>
+                    <Press hitSlop={8} onPress={() => void blockDay(date)}>
                       <Text style={[styles.block, blocked && styles.blockOn]}>
                         {blocked ? 'не могу ✓' : 'не могу'}
                       </Text>
-                    </Pressable>
+                    </Press>
                   </View>
 
                   {rows.length === 0 && outings.length === 0 ? (
@@ -646,20 +647,20 @@ function TemplateModal({
         {!making && (
           <>
             {templates.map((template) => (
-              <Pressable key={template.id} style={styles.templateRow} onPress={() => onPick(template.id)}>
+              <Press key={template.id} style={styles.templateRow} onPress={() => onPick(template.id)}>
                 <View style={styles.grow}>
                   <Text style={styles.templateName}>{template.name}</Text>
                   <Text style={styles.templateTime}>
                     {template.start_time}–{template.end_time} · {rateLine(template)}
                   </Text>
                 </View>
-              </Pressable>
+              </Press>
             ))}
 
-            <Pressable style={styles.ghostRow} onPress={() => setMaking(true)}>
+            <Press style={styles.ghostRow} onPress={() => setMaking(true)}>
               <Ionicons name="add-circle-outline" size={20} color={palette.accent} />
               <Text style={styles.ghostRowText}>Новый шаблон по этой смене</Text>
-            </Pressable>
+            </Press>
           </>
         )}
 
@@ -672,7 +673,7 @@ function TemplateModal({
                 ['day', 'за смену'],
                 ['month', 'в месяц'],
               ] as const).map(([value, label]) => (
-                <Pressable
+                <Press
                   key={value}
                   style={[styles.segment, period === value && styles.segmentOn]}
                   onPress={() => setPeriod(value)}
@@ -680,7 +681,7 @@ function TemplateModal({
                   <Text style={[styles.segmentText, period === value && styles.segmentTextOn]}>
                     {label}
                   </Text>
-                </Pressable>
+                </Press>
               ))}
             </View>
 
@@ -713,7 +714,7 @@ function TemplateModal({
                 [false, 'свои'],
                 [true, 'доля общака'],
               ] as const).map(([value, label]) => (
-                <Pressable
+                <Press
                   key={label}
                   style={[styles.segment, pooled === value && styles.segmentOn]}
                   onPress={() => setPooled(value)}
@@ -721,7 +722,7 @@ function TemplateModal({
                   <Text style={[styles.segmentText, pooled === value && styles.segmentTextOn]}>
                     {label}
                   </Text>
-                </Pressable>
+                </Press>
               ))}
             </View>
 
@@ -743,7 +744,7 @@ function TemplateModal({
 
             {failed !== null && <Text style={styles.error}>{failed}</Text>}
 
-            <Pressable
+            <Press
               style={[styles.primary, busy && { opacity: 0.6 }]}
               disabled={busy}
               onPress={() => void create()}
@@ -751,12 +752,12 @@ function TemplateModal({
               <Text style={styles.primaryText}>
                 {busy ? 'Создаём…' : 'Создать и взять смену'}
               </Text>
-            </Pressable>
+            </Press>
 
             {templates.length > 0 && (
-              <Pressable style={styles.ghostRow} onPress={() => setMaking(false)}>
+              <Press style={styles.ghostRow} onPress={() => setMaking(false)}>
                 <Text style={styles.ghostRowText}>Выбрать из готовых</Text>
-              </Pressable>
+              </Press>
             )}
           </>
         )}
@@ -814,13 +815,13 @@ function JoinModal({
           placeholderTextColor={palette.textSecondary}
         />
         {failed !== null && <Text style={styles.error}>{failed}</Text>}
-        <Pressable
+        <Press
           style={[styles.primary, (busy || code.trim() === '') && { opacity: 0.5 }]}
           disabled={busy || code.trim() === ''}
           onPress={() => void join()}
         >
           <Text style={styles.primaryText}>{busy ? 'Заходим…' : 'Войти в команду'}</Text>
-        </Pressable>
+        </Press>
       </View>
     </Modal>
   );

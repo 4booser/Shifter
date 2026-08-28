@@ -5,7 +5,6 @@ import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -15,6 +14,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { Press } from '@/components/motion';
 import { Colors, Palette } from '@/constants/theme';
 import { api, ApiError, upload } from '@/lib/api';
 import { currentMonth, monthBounds, monthLabel } from '@/lib/calendar';
@@ -195,9 +195,9 @@ export default function ImportScreen() {
     <ScrollView style={styles.screen} contentContainerStyle={[styles.content, { paddingTop: insets.top + 12 }]}>
       <View style={styles.head}>
         <Text style={styles.title}>График с фото</Text>
-        <Pressable hitSlop={12} onPress={() => router.back()}>
+        <Press hitSlop={12} onPress={() => router.back()}>
           <Ionicons name="close" size={26} color={palette.textSecondary} />
-        </Pressable>
+        </Press>
       </View>
 
       <Text style={styles.lead}>
@@ -218,20 +218,20 @@ export default function ImportScreen() {
       {photo !== null && <Image source={{ uri: photo.uri }} style={styles.preview} />}
 
       <View style={styles.pickRow}>
-        <Pressable style={styles.pickButton} onPress={() => void pick('camera')}>
+        <Press style={styles.pickButton} onPress={() => void pick('camera')}>
           <Ionicons name="camera-outline" size={20} color={palette.accent} />
           <Text style={styles.pickText}>Снять</Text>
-        </Pressable>
-        <Pressable style={styles.pickButton} onPress={() => void pick('library')}>
+        </Press>
+        <Press style={styles.pickButton} onPress={() => void pick('library')}>
           <Ionicons name="images-outline" size={20} color={palette.accent} />
           <Text style={styles.pickText}>Из галереи</Text>
-        </Pressable>
+        </Press>
       </View>
 
       {error !== null && <Text style={styles.error}>{error}</Text>}
 
       {drafts === null ? (
-        <Pressable
+        <Press
           style={[
             styles.primary,
             (photo === null || busy || name.trim() === '') && styles.primaryOff,
@@ -244,7 +244,7 @@ export default function ImportScreen() {
           ) : (
             <Text style={styles.primaryText}>Прочитать график</Text>
           )}
-        </Pressable>
+        </Press>
       ) : (
         <>
           <Text style={styles.sectionTitle}>
@@ -265,7 +265,7 @@ export default function ImportScreen() {
               ) : row.templateId === null ? (
                 <Text style={styles.rowSkip}>нет шаблона</Text>
               ) : (
-                <Pressable
+                <Press
                   hitSlop={8}
                   onPress={() =>
                     setDrafts((rows) =>
@@ -278,12 +278,12 @@ export default function ImportScreen() {
                   }
                 >
                   <Ionicons name="checkmark-circle" size={26} color={palette.accent} />
-                </Pressable>
+                </Press>
               )}
             </View>
           ))}
 
-          <Pressable
+          <Press
             style={[styles.primary, (chosen.length === 0 || busy) && styles.primaryOff]}
             disabled={chosen.length === 0 || busy}
             onPress={() => void apply()}
@@ -293,7 +293,7 @@ export default function ImportScreen() {
             ) : (
               <Text style={styles.primaryText}>Записать {chosen.length} в календарь</Text>
             )}
-          </Pressable>
+          </Press>
         </>
       )}
     </ScrollView>

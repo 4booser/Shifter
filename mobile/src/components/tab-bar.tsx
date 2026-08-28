@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 // copies with incompatible types.
 import type { BottomTabBarProps } from 'expo-router/build/react-navigation/bottom-tabs';
 import * as Haptics from 'expo-haptics';
+import { useEffect } from 'react';
 import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -41,7 +42,9 @@ export function TabBar({
   const pillWidth = Math.min(slot - 18, 62);
   const at = useSharedValue(state.index);
 
-  at.value = withSpring(state.index, { damping: 18, stiffness: 210, mass: 0.6 });
+  useEffect(() => {
+    at.value = withSpring(state.index, { damping: 18, stiffness: 210, mass: 0.6 });
+  }, [state.index, at]);
 
   const pill = useAnimatedStyle(() => ({
     transform: [{ translateX: at.value * slot + (slot - pillWidth) / 2 }],

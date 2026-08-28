@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Loading } from '@/components/motion';
+import { Loading, Press } from '@/components/motion';
 import { Colors, Palette } from '@/constants/theme';
 import { api, ApiError } from '@/lib/api';
 import { dayLabel, pad, todayKey } from '@/lib/calendar';
@@ -232,35 +232,35 @@ export default function BoardScreen() {
       >
         <View style={styles.head}>
           <Text style={styles.title}>Доска</Text>
-          <Pressable hitSlop={12} onPress={() => router.back()}>
+          <Press hitSlop={12} onPress={() => router.back()}>
             <Ionicons name="close" size={26} color={palette.textSecondary} />
-          </Pressable>
+          </Press>
         </View>
 
         {teams.length > 1 && (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.teamRow}>
             {teams.map((team) => (
-              <Pressable
+              <Press
                 key={team.id}
                 style={[styles.chip, team.id === teamId && styles.chipOn]}
                 onPress={() => setTeamId(team.id)}
               >
                 <Text style={[styles.chipText, team.id === teamId && styles.chipTextOn]}>{team.name}</Text>
-              </Pressable>
+              </Press>
             ))}
           </ScrollView>
         )}
 
         <View style={styles.weekNav}>
-          <Pressable style={styles.navButton} onPress={() => shift(-1)}>
+          <Press style={styles.navButton} onPress={() => shift(-1)}>
             <Ionicons name="chevron-back" size={18} color={palette.text} />
-          </Pressable>
+          </Press>
           <Text style={styles.weekLabel}>
             {days[0].slice(8)}.{days[0].slice(5, 7)} — {days[6].slice(8)}.{days[6].slice(5, 7)}
           </Text>
-          <Pressable style={styles.navButton} onPress={() => shift(1)}>
+          <Press style={styles.navButton} onPress={() => shift(1)}>
             <Ionicons name="chevron-forward" size={18} color={palette.text} />
-          </Pressable>
+          </Press>
         </View>
 
         {error !== null && <Text style={styles.error}>{error}</Text>}
@@ -319,7 +319,7 @@ export default function BoardScreen() {
                     </View>
 
                     {days.map((day) => (
-                      <Pressable
+                      <Press
                         key={day}
                         style={[
                           styles.cell,
@@ -328,7 +328,7 @@ export default function BoardScreen() {
                         onPress={() => setEditing({ userId: member.user_id, date: day, id: null })}
                       >
                         {cells(member.user_id, day).map((entry) => (
-                          <Pressable
+                          <Press
                             key={entry.id}
                             style={[
                               styles.chipCell,
@@ -347,9 +347,9 @@ export default function BoardScreen() {
                             <Text style={styles.chipCellTime}>
                               {entry.start}–{entry.end}
                             </Text>
-                          </Pressable>
+                          </Press>
                         ))}
-                      </Pressable>
+                      </Press>
                     ))}
                   </View>
                 ))}
@@ -361,11 +361,11 @@ export default function BoardScreen() {
               человек отметил как «не могу».
             </Text>
 
-            <Pressable style={styles.ghost} onPress={() => setFilling(true)}>
+            <Press style={styles.ghost} onPress={() => setFilling(true)}>
               <Text style={styles.ghostText}>🎲 Раздать смену</Text>
-            </Pressable>
+            </Press>
 
-            <Pressable
+            <Press
               style={[styles.primary, (busy || drafts === 0) && { opacity: 0.5 }]}
               disabled={busy || drafts === 0}
               onPress={() => void publish()}
@@ -373,7 +373,7 @@ export default function BoardScreen() {
               <Text style={styles.primaryText}>
                 {drafts === 0 ? 'Черновиков нет' : `Опубликовать неделю · ${drafts}`}
               </Text>
-            </Pressable>
+            </Press>
           </>
         )}
       </ScrollView>
@@ -468,7 +468,7 @@ function FillSheet({
         <Text style={styles.fieldLabel}>День</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.teamRow}>
           {days.map((day) => (
-            <Pressable
+            <Press
               key={day}
               style={[styles.chip, day === date && styles.chipOn]}
               onPress={() => setDate(day)}
@@ -476,7 +476,7 @@ function FillSheet({
               <Text style={[styles.chipText, day === date && styles.chipTextOn]}>
                 {WEEKDAYS[(new Date(`${day}T00:00:00`).getDay() + 6) % 7]} {Number(day.slice(8))}
               </Text>
-            </Pressable>
+            </Press>
           ))}
         </ScrollView>
 
@@ -504,7 +504,7 @@ function FillSheet({
         <Text style={styles.fieldLabel}>Станция</Text>
         <View style={styles.roleRow}>
           {ROLES.map((item) => (
-            <Pressable
+            <Press
               key={item.value}
               style={[styles.chip, role === item.value && styles.chipOn]}
               onPress={() => setRole(role === item.value ? '' : item.value)}
@@ -512,7 +512,7 @@ function FillSheet({
               <Text style={[styles.chipText, role === item.value && styles.chipTextOn]}>
                 {item.emoji} {item.label}
               </Text>
-            </Pressable>
+            </Press>
           ))}
         </View>
 
@@ -525,7 +525,7 @@ function FillSheet({
           placeholderTextColor={palette.textSecondary}
         />
 
-        <Pressable
+        <Press
           style={[styles.primary, (busy || title.trim() === '') && { opacity: 0.5 }]}
           disabled={busy || title.trim() === ''}
           onPress={() =>
@@ -540,7 +540,7 @@ function FillSheet({
           }
         >
           <Text style={styles.primaryText}>{busy ? 'Раздаём…' : 'Раздать'}</Text>
-        </Pressable>
+        </Press>
       </ScrollView>
     </Modal>
   );
@@ -628,7 +628,7 @@ function CellEditor({
         {templates.length > 0 && (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.teamRow}>
             {templates.slice(0, 6).map((template) => (
-              <Pressable
+              <Press
                 key={template.id}
                 style={styles.chip}
                 onPress={() => {
@@ -640,7 +640,7 @@ function CellEditor({
                 <Text style={styles.chipText}>
                   {template.symbol ?? '•'} {template.name}
                 </Text>
-              </Pressable>
+              </Press>
             ))}
           </ScrollView>
         )}
@@ -669,7 +669,7 @@ function CellEditor({
         <Text style={styles.fieldLabel}>Станция</Text>
         <View style={styles.roleRow}>
           {ROLES.map((item) => (
-            <Pressable
+            <Press
               key={item.value}
               style={[styles.chip, role === item.value && styles.chipOn]}
               onPress={() => setRole(role === item.value ? '' : item.value)}
@@ -677,19 +677,19 @@ function CellEditor({
               <Text style={[styles.chipText, role === item.value && styles.chipTextOn]}>
                 {item.emoji} {item.label}
               </Text>
-            </Pressable>
+            </Press>
           ))}
         </View>
 
         {failed !== null && <Text style={styles.error}>{failed}</Text>}
 
-        <Pressable
+        <Press
           style={[styles.primary, (busy || title.trim() === '') && { opacity: 0.5 }]}
           disabled={busy || title.trim() === ''}
           onPress={() => void save()}
         >
           <Text style={styles.primaryText}>{busy ? 'Ставим…' : 'Поставить'}</Text>
-        </Pressable>
+        </Press>
       </View>
     </Modal>
   );

@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Loading } from '@/components/motion';
+import { Loading, Press } from '@/components/motion';
 import { Colors, Palette } from '@/constants/theme';
 import { api } from '@/lib/api';
 import { addMonths, currentMonth, monthBounds, shortDate, todayKey } from '@/lib/calendar';
@@ -169,10 +169,10 @@ export default function PayoutsScreen() {
           <Text style={styles.title}>Выплаты</Text>
           {/* What the work cost lives next to what it paid: the two are read
               in the same breath and never added together. */}
-          <Pressable style={styles.costsButton} onPress={() => router.push('/costs')}>
+          <Press style={styles.costsButton} onPress={() => router.push('/costs')}>
             <Ionicons name="receipt-outline" size={15} color={palette.accent} />
             <Text style={styles.costsButtonText}>Траты</Text>
-          </Pressable>
+          </Press>
         </View>
 
         {error !== null && <Text style={styles.error}>{error}</Text>}
@@ -245,14 +245,14 @@ export default function PayoutsScreen() {
                     {payout.location_name !== null ? ` · ${payout.location_name}` : ''}
                   </Text>
                 </View>
-                <Pressable
+                <Press
                   hitSlop={10}
                   onPress={() => {
                     void api(`/shifter/v1/payouts/${payout.id}`, { method: 'DELETE' }).then(load);
                   }}
                 >
                   <Text style={styles.remove}>Убрать</Text>
-                </Pressable>
+                </Press>
               </View>
             ))}
           </Section>
@@ -348,9 +348,9 @@ function PeriodCard({
           </Text>
         </View>
 
-        <Pressable style={styles.markButton} onPress={onMark}>
+        <Press style={styles.markButton} onPress={onMark}>
           <Text style={styles.markText}>Отметить</Text>
-        </Pressable>
+        </Press>
       </View>
     </View>
   );
@@ -455,7 +455,7 @@ function PayoutModal({
         <Text style={styles.fieldLabel}>Что это</Text>
         <View style={styles.kindRow}>
           {KINDS.map((option) => (
-            <Pressable
+            <Press
               key={option.value}
               style={[styles.kindChip, kind === option.value && styles.kindChipOn]}
               onPress={() => setKind(option.value)}
@@ -463,7 +463,7 @@ function PayoutModal({
               <Text style={[styles.kindText, kind === option.value && styles.kindTextOn]}>
                 {option.label}
               </Text>
-            </Pressable>
+            </Press>
           ))}
         </View>
 
@@ -476,16 +476,16 @@ function PayoutModal({
         {failed && <Text style={styles.error}>Не сохранили. Проверьте сумму и дату.</Text>}
 
         <View style={styles.sheetButtons}>
-          <Pressable style={[styles.sheetButton, styles.sheetGhost]} onPress={onClose}>
+          <Press style={[styles.sheetButton, styles.sheetGhost]} onPress={onClose}>
             <Text style={styles.sheetGhostText}>Отмена</Text>
-          </Pressable>
-          <Pressable
+          </Press>
+          <Press
             style={[styles.sheetButton, styles.sheetPrimary, saving && { opacity: 0.6 }]}
             disabled={saving}
             onPress={() => void save()}
           >
             <Text style={styles.sheetPrimaryText}>{saving ? 'Сохраняем…' : 'Записать'}</Text>
-          </Pressable>
+          </Press>
         </View>
       </View>
     </Modal>

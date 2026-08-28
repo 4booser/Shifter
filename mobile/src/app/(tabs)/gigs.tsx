@@ -4,7 +4,6 @@ import {
   Image,
   Linking,
   Modal,
-  Pressable,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -15,7 +14,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Appear, Loading } from '@/components/motion';
+import { Appear, Loading, Press } from '@/components/motion';
 import { Colors, Palette } from '@/constants/theme';
 import { api, ApiError } from '@/lib/api';
 import { addMonths, currentMonth, dayLabel, monthBounds, todayKey } from '@/lib/calendar';
@@ -102,7 +101,7 @@ export default function GigsScreen() {
 
         <View style={styles.tabs}>
           {(Object.keys(TAB_LABEL) as Tab[]).map((value) => (
-            <Pressable
+            <Press
               key={value}
               style={[styles.tab, tab === value && styles.tabOn]}
               onPress={() => setTab(value)}
@@ -110,7 +109,7 @@ export default function GigsScreen() {
               <Text style={[styles.tabText, tab === value && styles.tabTextOn]}>
                 {TAB_LABEL[value]}
               </Text>
-            </Pressable>
+            </Press>
           ))}
         </View>
 
@@ -162,7 +161,7 @@ function GigCard({
   const photos = photosOf(gig);
 
   return (
-    <Pressable style={[styles.card, (past || gig.status !== 'open') && styles.cardDim]} onPress={onOpen}>
+    <Press style={[styles.card, (past || gig.status !== 'open') && styles.cardDim]} onPress={onOpen}>
       {photos.length > 0 && <Image source={{ uri: photos[0] }} style={styles.cardPhoto} />}
 
       <View style={styles.cardBody}>
@@ -227,7 +226,7 @@ function GigCard({
           {gig.responses > 0 && <Text style={styles.cardAge}>откликов: {gig.responses}</Text>}
         </View>
       </View>
-    </Pressable>
+    </Press>
   );
 }
 
@@ -364,20 +363,20 @@ function GigSheet({
       <ScrollView style={styles.screen} contentContainerStyle={styles.sheetContent}>
         <View style={styles.head}>
           <Text style={styles.sheetTitle}>{gig.title}</Text>
-          <Pressable hitSlop={12} onPress={onClose}>
+          <Press hitSlop={12} onPress={onClose}>
             <Ionicons name="close" size={26} color={palette.textSecondary} />
-          </Pressable>
+          </Press>
         </View>
 
         {photos.length > 0 && (
-          <Pressable onPress={() => setPhoto((at) => (at + 1) % photos.length)}>
+          <Press onPress={() => setPhoto((at) => (at + 1) % photos.length)}>
             <Image source={{ uri: photos[photo] }} style={styles.sheetPhoto} />
             {photos.length > 1 && (
               <Text style={styles.photoCount}>
                 {photo + 1} / {photos.length} · тапните, чтобы листать
               </Text>
             )}
-          </Pressable>
+          </Press>
         )}
 
         <Text style={styles.sheetVenue}>
@@ -412,7 +411,7 @@ function GigSheet({
             </Text>
 
             {gig.my_response.accepted && gig.employment === 'freelance' && (
-              <Pressable
+              <Press
                 style={[styles.primary, (busy || added) && { opacity: 0.6 }]}
                 disabled={busy || added}
                 onPress={() => void addToCalendar()}
@@ -424,14 +423,14 @@ function GigSheet({
                       ? 'Добавляем…'
                       : `Добавить в календарь · ${payLine(gig)}`}
                 </Text>
-              </Pressable>
+              </Press>
             )}
 
             {failed !== null && <Text style={styles.error}>{failed}</Text>}
             {!gig.my_response.accepted && (
-              <Pressable style={styles.ghost} disabled={busy} onPress={() => void withdraw()}>
+              <Press style={styles.ghost} disabled={busy} onPress={() => void withdraw()}>
                 <Text style={styles.ghostText}>Отозвать отклик</Text>
-              </Pressable>
+              </Press>
             )}
           </>
         ) : (
@@ -468,13 +467,13 @@ function GigSheet({
 
             {failed !== null && <Text style={styles.error}>{failed}</Text>}
 
-            <Pressable
+            <Press
               style={[styles.primary, busy && { opacity: 0.6 }]}
               disabled={busy}
               onPress={() => void respond()}
             >
               <Text style={styles.primaryText}>{busy ? 'Отправляем…' : 'Я выйду'}</Text>
-            </Pressable>
+            </Press>
 
             <Text style={styles.privacy}>
               Контакты уйдут только этому заведению — на доске их не видно.
@@ -483,9 +482,9 @@ function GigSheet({
         )}
 
         {gig.my_response?.accepted === true && phone.trim() !== '' && (
-          <Pressable style={styles.ghost} onPress={() => void Linking.openURL(`tel:${phone.trim()}`)}>
+          <Press style={styles.ghost} onPress={() => void Linking.openURL(`tel:${phone.trim()}`)}>
             <Text style={styles.ghostText}>Позвонить</Text>
-          </Pressable>
+          </Press>
         )}
       </ScrollView>
     </Modal>

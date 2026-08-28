@@ -3,7 +3,6 @@ import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -13,6 +12,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { MonthBars } from '@/components/charts';
+import { Press } from '@/components/motion';
 import { Colors, Palette } from '@/constants/theme';
 import { api } from '@/lib/api';
 import { currentMonth, monthBounds } from '@/lib/calendar';
@@ -205,23 +205,23 @@ export default function YearScreen() {
     >
       <View style={styles.head}>
         <Text style={styles.title}>Твой год</Text>
-        <Pressable hitSlop={12} onPress={() => router.back()}>
+        <Press hitSlop={12} onPress={() => router.back()}>
           <Ionicons name="close" size={26} color={palette.textSecondary} />
-        </Pressable>
+        </Press>
       </View>
 
       <View style={styles.yearNav}>
-        <Pressable style={styles.navButton} onPress={() => setYear((value) => value - 1)}>
+        <Press style={styles.navButton} onPress={() => setYear((value) => value - 1)}>
           <Ionicons name="chevron-back" size={18} color={palette.text} />
-        </Pressable>
+        </Press>
         <Text style={styles.yearLabel}>{year}</Text>
-        <Pressable
+        <Press
           style={[styles.navButton, year >= currentMonth().year && { opacity: 0.35 }]}
           disabled={year >= currentMonth().year}
           onPress={() => setYear((value) => value + 1)}
         >
           <Ionicons name="chevron-forward" size={18} color={palette.text} />
-        </Pressable>
+        </Press>
       </View>
 
       {loading && <ActivityIndicator color={palette.accent} style={{ marginTop: 30 }} />}

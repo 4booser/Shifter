@@ -8,16 +8,13 @@
     "scheme": "shifter",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon",
       "bundleIdentifier": "ink.shifter.app",
       "supportsTablet": false
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "backgroundColor": "#1E3A5F"
       },
       "predictiveBackGestureEnabled": false,
       "package": "ink.shifter.app"
@@ -31,9 +28,14 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
+          "backgroundColor": "#F6F1E7",
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 76
+          "imageWidth": 128,
+          "resizeMode": "contain",
+          "dark": {
+            "backgroundColor": "#16140F",
+            "image": "./assets/images/splash-icon.png"
+          }
         }
       ],
       [
@@ -49,7 +51,14 @@
           "faceIDPermission": "Shifter спрашивает Face ID, чтобы никто, кроме вас, не открыл ваши заработки."
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/android-icon-foreground.png",
+          "color": "#4F46E5"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

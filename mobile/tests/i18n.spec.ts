@@ -116,7 +116,7 @@ describe('the Ukrainian dictionary', () => {
       // translate in it.
       '/день', '/місяць', '/тиждень', 'Ввести код', 'Ночей', 'без ставки', 'фриланс',
       // Abbreviations and endings that carry no word to translate.
-      'го', 'дн.', 'с', 'с.', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб',
+      'го', 'дн.', 'с', 'с.', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'Банки',
     ]);
 
     const untranslated = Object.entries(UK)

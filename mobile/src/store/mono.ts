@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
 import { create } from 'zustand';
 
-import { clientInfo, MonoRefused, statement } from '@/lib/mono-api';
+import { clientInfo, MonoBusy, MonoRefused, statement, waitFor } from '@/lib/mono-api';
 import { MonoAccount, MonoClientInfo, MonoStatementItem, statementWindows } from '@/lib/mono';
 
 /**
@@ -38,6 +38,10 @@ interface MonoState {
   syncedTo: number | null;
   busy: boolean;
   error: string | null;
+  /** Windows fetched and windows asked for, so a backfill can show a bar. */
+  progress: { done: number; total: number } | null;
+  /** Seconds until the bank will answer again, when it has told us to wait. */
+  waiting: number;
 
   hydrate: () => Promise<void>;
   /** Checks the token against the bank before keeping it. */
@@ -49,6 +53,16 @@ interface MonoState {
   /** Remembers that this payer is the wage for this place. */
   rememberPayer: (locationId: number, payer: string) => Promise<void>;
 }
+
+const now = () => Math.floor(Date.now() / 1000);
+
+/** Counts a wait down out loud, so the screen can say how long is left. */
+const countdown = async (seconds: number, tick: (left: number) => void) => {
+  for (let left = seconds; left > 0; left--) {
+    tick(left);
+    await new Promise((resume) => setTimeout(resume, 1000));
+  }
+};
 
 const quietly = async (work: Promise<unknown>) => {
   try {
@@ -79,6 +93,8 @@ export const useMono = create<MonoState>((set, get) => ({
   syncedTo: null,
   busy: false,
   error: null,
+  progress: null,
+  waiting: 0,
 
   hydrate: async () => {
     let token: string | null = null;
@@ -161,16 +177,25 @@ export const useMono = create<MonoState>((set, get) => ({
 
     if (token === null || token === undefined || accountId === null || busy) return 0;
 
-    set({ busy: true, error: null });
+    const windows = statementWindows(sinceSeconds, now());
+
+    set({ busy: true, error: null, waiting: 0, progress: { done: 0, total: windows.length } });
 
     const known = new Map(items.map((item) => [item.id, item]));
-    const now = Math.floor(Date.now() / 1000);
     let added = 0;
 
     try {
       // Newest window first, so the wage that just landed shows up before a
-      // year of history has finished loading.
-      for (const window of statementWindows(sinceSeconds, now)) {
+      // year of history has finished loading. Each one after the first waits
+      // out the bank's minute rather than being refused — a backfill of a year
+      // is twelve minutes and a progress bar, not twelve errors.
+      for (const [at, window] of windows.entries()) {
+        const pause = waitFor('statement');
+
+        if (pause > 0) await countdown(pause, (left) => set({ waiting: left }));
+
+        set({ waiting: 0, progress: { done: at, total: windows.length } });
+
         const page = await statement(token, accountId, window.from, window.to);
 
         for (const item of page) {
@@ -182,21 +207,32 @@ export const useMono = create<MonoState>((set, get) => ({
         // backfill that resumes rather than one that starts again.
         const next = [...known.values()].sort((one, two) => two.time - one.time);
 
-        set({ items: next, syncedTo: now });
+        const stamp = now();
+
+        set({ items: next, syncedTo: stamp, progress: { done: at + 1, total: windows.length } });
         await quietly(AsyncStorage.setItem(CACHE_KEY, JSON.stringify(next)));
 
         const setup = await readSetup();
 
-        await quietly(AsyncStorage.setItem(SETUP_KEY, JSON.stringify({ ...setup, syncedTo: now })));
+        await quietly(
+          AsyncStorage.setItem(SETUP_KEY, JSON.stringify({ ...setup, syncedTo: stamp })),
+        );
       }
 
       return added;
     } catch (caught) {
-      set({ error: caught instanceof Error ? caught.message : 'Не дотянулись до банка.' });
+      set({
+        error:
+          caught instanceof MonoBusy
+            ? `Банк просит подождать ${caught.seconds} с.`
+            : caught instanceof Error
+              ? caught.message
+              : 'Не дотянулись до банка.',
+      });
 
       return added;
     } finally {
-      set({ busy: false });
+      set({ busy: false, waiting: 0, progress: null });
     }
   },
 

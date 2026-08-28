@@ -364,29 +364,66 @@ export default function BankScreen() {
       )}
 
       {mono.accountId !== null && (
-        <Press
-          style={styles.sync}
-          disabled={mono.busy}
-          onPress={() => {
-            const since =
-              mono.syncedTo ?? Math.floor(Date.now() / 1000) - 92 * 24 * 60 * 60;
+        <>
+          <Press
+            style={styles.sync}
+            disabled={mono.busy}
+            onPress={() => {
+              const since =
+                mono.syncedTo ?? Math.floor(Date.now() / 1000) - 92 * 24 * 60 * 60;
 
-            void mono.sync(since);
-          }}
-        >
-          {mono.busy ? (
-            <ActivityIndicator color={palette.accent} />
-          ) : (
-            <>
-              <Ionicons name="refresh" size={17} color={palette.accent} />
-              <Text style={styles.syncText}>
-                {mono.syncedTo === null
-                  ? 'Загрузить выписку за три месяца'
-                  : `Обновить · ${mono.items.length} операций`}
-              </Text>
-            </>
+              void mono.sync(since);
+            }}
+          >
+            {mono.busy ? (
+              <>
+                <ActivityIndicator color={palette.accent} size="small" />
+                <Text style={styles.syncText}>
+                  {mono.waiting > 0
+                    ? `Банк отвечает раз в минуту · ${mono.waiting} с`
+                    : mono.progress !== null
+                      ? `Загружено ${mono.progress.done} из ${mono.progress.total}`
+                      : 'Читаем выписку'}
+                </Text>
+              </>
+            ) : (
+              <>
+                <Ionicons name="refresh" size={17} color={palette.accent} />
+                <Text style={styles.syncText}>
+                  {mono.syncedTo === null
+                    ? 'Загрузить выписку за три месяца'
+                    : `Обновить · ${mono.items.length} операций`}
+                </Text>
+              </>
+            )}
+          </Press>
+
+          {mono.progress !== null && mono.progress.total > 1 && (
+            <View style={styles.track}>
+              <View
+                style={[
+                  styles.fill,
+                  { width: `${(mono.progress.done / mono.progress.total) * 100}%` },
+                ]}
+              />
+            </View>
           )}
-        </Press>
+
+          {/* Going further back is a minute a month, so it is a decision
+              somebody makes rather than something the app does on their
+              behalf while they wonder why it is slow. */}
+          {!mono.busy && mono.syncedTo !== null && (
+            <Press
+              style={styles.deeper}
+              haptic={false}
+              onPress={() =>
+                void mono.sync(Math.floor(Date.now() / 1000) - 366 * 24 * 60 * 60)
+              }
+            >
+              <Text style={styles.deeperText}>Загрузить год · примерно 12 минут</Text>
+            </Press>
+          )}
+        </>
       )}
 
       {mono.error !== null && <Text style={styles.error}>{mono.error}</Text>}
@@ -661,6 +698,17 @@ const makeStyles = (palette: Palette) =>
       marginTop: 10,
     },
     syncText: { color: palette.accent, fontWeight: '700', fontSize: 14.5 },
+
+    track: {
+      height: 6,
+      borderRadius: 3,
+      backgroundColor: palette.backgroundSelected,
+      overflow: 'hidden',
+      marginTop: 6,
+    },
+    fill: { height: 6, borderRadius: 3, backgroundColor: palette.accent },
+    deeper: { alignItems: 'center', paddingVertical: 9 },
+    deeperText: { color: palette.textSecondary, fontSize: 12.5, fontWeight: '600' },
 
     segments: { flexDirection: 'row', gap: 6, marginTop: 6, marginBottom: 2 },
     segment: {

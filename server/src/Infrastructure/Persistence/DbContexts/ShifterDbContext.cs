@@ -154,6 +154,24 @@ public class ShifterDbContext : DbContext
             .HasForeignKey(entry => entry.CreatedByUserId)
             .OnDelete(DeleteBehavior.SetNull);
 
+        // The name on a note is forgotten when somebody leaves; the note is
+        // not. Losing what the crew was told because its author closed their
+        // account would be the wrong way round.
+        modelBuilder.Entity<Handover>()
+            .HasOne(note => note.UpdatedBy).WithMany()
+            .HasForeignKey(note => note.UpdatedByUserId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<StopItem>()
+            .HasOne(item => item.RaisedBy).WithMany()
+            .HasForeignKey(item => item.RaisedByUserId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<StopItem>()
+            .HasOne(item => item.ClearedBy).WithMany()
+            .HasForeignKey(item => item.ClearedByUserId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         // One handover per crew per day: it is the thing you read once, not a
         // thread. The unique key says so rather than the service.
         modelBuilder.Entity<Handover>()

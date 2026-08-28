@@ -23,8 +23,13 @@ public sealed class Handover
 
     public string Text { get; set; } = string.Empty;
 
-    /// <summary>Who wrote it last. A handover with no name on it is a rumour.</summary>
-    public int UpdatedByUserId { get; set; }
+    /// <summary>
+    /// Who wrote it last. A handover with no name on it is a rumour — but a
+    /// person leaving must not delete what they told the crew, so the name is
+    /// forgotten rather than the note.
+    /// </summary>
+    public int? UpdatedByUserId { get; set; }
+    public User? UpdatedBy { get; set; }
 
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }
@@ -52,10 +57,18 @@ public sealed class StopItem
 
     public required string Name { get; set; }
 
-    public int RaisedByUserId { get; set; }
+    /// <summary>
+    /// Who raised it. Nullable for the same reason the handover's author is:
+    /// somebody leaving should not take the fact that the grinder is broken
+    /// with them.
+    /// </summary>
+    public int? RaisedByUserId { get; set; }
+    public User? RaisedBy { get; set; }
+
     public DateTime RaisedAt { get; set; } = DateTime.UtcNow;
 
     /// <summary>Set when it comes back. The row stays: how often it runs out is worth knowing.</summary>
     public DateTime? ClearedAt { get; set; }
     public int? ClearedByUserId { get; set; }
+    public User? ClearedBy { get; set; }
 }

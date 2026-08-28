@@ -507,6 +507,29 @@ function GigCard({ gig, onRespond, onWithdraw }: { gig: Gig; onRespond: () => vo
         {gig.responses > 0 && <span> · {gig.responses} 🙋</span>}
       </p>
       {gig.details !== null && <p className="line-clamp-2 text-[0.85rem] text-muted">{gig.details}</p>}
+
+      {/* What the rate is worth to *this* reader. A board full of numbers tells
+          nobody anything: 250 an hour is generous in one city and a pay cut in
+          another, and the app already knows which. Not shown on your own
+          listings — comparing a shift you are offering against your own wage
+          would be answering a question nobody asked. */}
+      {!gig.is_mine && gig.worth !== null && (
+        <p
+          className={`text-[0.82rem] ${
+            gig.worth.difference_percent > 0
+              ? 'text-good'
+              : gig.worth.difference_percent < 0
+                ? 'text-danger'
+                : 'text-muted'
+          }`}
+        >
+          {gig.worth.difference_percent === 0
+            ? t('About your usual hour')
+            : `${format(gig.worth.offered_per_hour)}${t('/hour')} — ${t(
+                gig.worth.difference_percent > 0 ? 'above your usual by' : 'below your usual by',
+              )} ${Math.abs(gig.worth.difference_percent)}%`}
+        </p>
+      )}
       <footer className="mt-auto flex items-center gap-2 pt-1 text-[0.78rem]">
         <TimeAgo iso={gig.created_at} />
         <ShareGig gig={gig} />

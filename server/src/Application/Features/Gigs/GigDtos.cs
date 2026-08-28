@@ -49,7 +49,25 @@ public record GigDto(
     /// what makes a pasted link work for people who are not signed in without
     /// making the whole board countable.
     /// </summary>
-    string? share_slug = null);
+    string? share_slug = null,
+    /// <summary>
+    /// What this shift is worth against the hours the caller already works.
+    /// Null where there is nothing honest to say — no rate, not enough of
+    /// their own hours to average, or a rate quoted in a period that cannot be
+    /// brought to an hour.
+    /// </summary>
+    GigWorthDto? worth = null);
+
+/// <summary>
+/// The offered rate and the caller's own, both per hour, and the gap between
+/// them as a percentage. A board full of rates tells nobody anything on its
+/// own: 250 an hour is generous in one city and a pay cut in another.
+/// </summary>
+public record GigWorthDto(
+    decimal offered_per_hour,
+    decimal your_per_hour,
+    /// <summary>Positive means better than the caller's usual hour.</summary>
+    decimal difference_percent);
 
 public record GigMyResponseDto(int id, bool accepted);
 

@@ -5,6 +5,9 @@
 type Dictionary = Record<string, string>;
 
 export const RU: Dictionary = {
+  'About your usual hour': 'Примерно ваш обычный час',
+  'above your usual by': 'выше вашего обычного на',
+  'below your usual by': 'ниже вашего обычного на',
   'The pool': 'Общак',
   'Counted once, split by the shares you already agreed.': 'Считается один раз и делится по долям, о которых вы уже договорились.',
   'What the room took': 'Сколько собрал зал',
@@ -1843,6 +1846,9 @@ export const RU: Dictionary = {
 };
 
 export const UK: Dictionary = {
+  'About your usual hour': 'Приблизно ваша звичайна година',
+  'above your usual by': 'вище за вашу звичайну на',
+  'below your usual by': 'нижче за вашу звичайну на',
   'The pool': 'Спільні чайові',
   'Counted once, split by the shares you already agreed.': 'Рахується один раз і ділиться за частками, про які ви вже домовилися.',
   'What the room took': 'Скільки зібрала зала',

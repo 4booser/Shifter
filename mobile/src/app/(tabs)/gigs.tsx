@@ -185,6 +185,24 @@ function GigCard({
 
         <Text style={styles.cardPay}>{payLine(gig)}</Text>
 
+        {/* What the rate is worth to this reader. A board full of numbers tells
+            nobody anything on its own: 250 an hour is generous in one city and
+            a pay cut in another, and the app already knows which. Not on your
+            own listings — that would answer a question nobody asked. */}
+        {!gig.is_mine && gig.worth !== null && (
+          <Text
+            style={[
+              styles.cardWorth,
+              gig.worth.difference_percent > 0 && styles.better,
+              gig.worth.difference_percent < 0 && styles.worse,
+            ]}
+          >
+            {gig.worth.difference_percent === 0
+              ? 'примерно ваш обычный час'
+              : `${gig.worth.difference_percent > 0 ? 'выше' : 'ниже'} вашего обычного часа на ${Math.abs(gig.worth.difference_percent)}%`}
+          </Text>
+        )}
+
         <Text style={styles.cardMeta}>
           {gig.employment === 'freelance'
             ? `${dayLabel(gig.date)} · ${gig.start}–${gig.end}`
@@ -508,6 +526,9 @@ const makeStyles = (palette: Palette) =>
     cardTitle: { color: palette.text, fontSize: 16, fontWeight: '700' },
     cardVenue: { color: palette.textSecondary, fontSize: 13, marginTop: 1 },
     cardPay: { color: palette.accent, fontSize: 17, fontWeight: '800' },
+    cardWorth: { color: palette.textSecondary, fontSize: 12.5, fontWeight: '600' },
+    better: { color: palette.good },
+    worse: { color: palette.danger },
     cardMeta: { color: palette.text, fontSize: 13 },
     cardFoot: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 2 },
     cardAge: { color: palette.textSecondary, fontSize: 12 },

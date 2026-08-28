@@ -44,6 +44,17 @@ export interface Gig {
    * whole board.
    */
   share_slug: string | null;
+  /**
+   * What this shift is worth against the hours the reader already works. Null
+   * where there is nothing honest to say — no rate on the listing, or not
+   * enough of their own hours to average.
+   */
+  worth: {
+    offered_per_hour: number;
+    your_per_hour: number;
+    /** Positive means better than their usual hour. */
+    difference_percent: number;
+  } | null;
 }
 
 export interface GigSave {

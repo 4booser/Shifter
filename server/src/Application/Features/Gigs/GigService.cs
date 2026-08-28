@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Shifter.Application.Features.business.Services;
+using Shifter.Application.Features.business.DTOs;
 
 using Shifter.Application.Common.Exceptions;
 using Shifter.Application.Features.Push;
@@ -65,7 +67,12 @@ public sealed class GigService
         var employerRatings = await RatingsAsync(
             rows.Select(gig => gig.OwnerUserId).Distinct().ToArray(), byEmployer: false, ct);
 
-        return rows.Select(gig => ToDto(gig, userId, employerRatings)).ToArray();
+        // The reader's own last three months, so every card can say what it is
+        // worth to them rather than only what it pays. Read once for the whole
+        // board; a listing is judged against a person, not the other way round.
+        LocationTotalDto[] mine = await MyHoursAsync(userId, ct);
+
+        return rows.Select(gig => ToDto(gig, userId, employerRatings, mine)).ToArray();
     }
 
     public async Task<GigDto> SaveAsync(int userId, int? id, GigSaveDto request, CancellationToken ct)
@@ -763,7 +770,37 @@ public sealed class GigService
         ratings?.GetValueOrDefault(seeker.UserId).Count ?? 0,
         seeker.UpdatedAt.ToString("O"));
 
-    private static GigDto ToDto(GigListing gig, int userId, Dictionary<int, (double Avg, int Count)>? employerRatings = null)
+    /// <summary>
+    /// What the caller's own hours have been worth lately. Three months rather
+    /// than everything: a rate from two years ago is not what they would be
+    /// giving up tonight.
+    /// </summary>
+    private async Task<LocationTotalDto[]> MyHoursAsync(int userId, CancellationToken ct)
+    {
+        DateOnly today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+        Day[] days = await _db.Days
+            .AsNoTracking()
+            .Include(day => day.Shifts!).ThenInclude(entry => entry.Shift)
+            .Include(day => day.Sales!).ThenInclude(sale => sale.Sales)
+            .Where(day => day.UserId == userId
+                && day.Date >= today.AddMonths(-3)
+                && day.Date <= today)
+            .ToArrayAsync(ct);
+
+        Location[] places = await _db.Locations
+            .AsNoTracking()
+            .Where(place => place.UserId == userId)
+            .ToArrayAsync(ct);
+
+        return DayHandler.ByLocation(days, places.ToDictionary(place => place.Id));
+    }
+
+    private static GigDto ToDto(
+        GigListing gig,
+        int userId,
+        Dictionary<int, (double Avg, int Count)>? employerRatings = null,
+        LocationTotalDto[]? mineByPlace = null)
     {
         var mine = (gig.Responses ?? []).FirstOrDefault(reply => reply.UserId == userId);
 
@@ -805,6 +842,16 @@ public sealed class GigService
             // Only to the owner: it is the one person who needs to hand the
             // link out, and giving it to every reader would make the board
             // countable again by another route.
-            gig.OwnerUserId == userId ? gig.ShareSlug : null);
+            gig.OwnerUserId == userId ? gig.ShareSlug : null,
+            // What this shift is worth against the hours they already work.
+            // 250 an hour is generous in one city and a pay cut in another,
+            // and which of those it is depends entirely on the reader.
+            mineByPlace is null
+                ? null
+                : GigWorth.Judge(
+                    gig.PayAmount,
+                    gig.PayPeriod,
+                    PremiumCalculator.Span(gig.StartTime, gig.EndTime),
+                    mineByPlace));
     }
 }

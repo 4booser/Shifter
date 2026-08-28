@@ -20,6 +20,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { DailyBrief } from '@/components/daily-brief';
 import { DayPeek } from '@/components/day-peek';
+import { FirstShift } from '@/components/first-shift';
 import { MonthGrid, PAGE_HEIGHT } from '@/components/month-grid';
 import { MonthJump } from '@/components/month-jump';
 import { Brush, brushColour, brushName, brushSymbol, PaintPicker } from '@/components/paint-picker';
@@ -112,6 +113,7 @@ export default function CalendarScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   const [picking, setPicking] = useState(false);
+  const [starting, setStarting] = useState(false);
   const [jumping, setJumping] = useState(false);
   const [peeking, setPeeking] = useState<string | null>(null);
   const [brush, setBrush] = useState<Brush | null>(null);
@@ -668,7 +670,20 @@ export default function CalendarScreen() {
           </Pressable>
         </View>
 
-        {brush === null && (
+        {brush === null && templates.length === 0 && here !== undefined && (
+          <Pressable style={styles.begin} onPress={() => setStarting(true)}>
+            <Text style={styles.beginMark}>🍸</Text>
+            <View style={styles.beginText}>
+              <Text style={styles.beginTitle}>Начните со своей смены</Text>
+              <Text style={styles.beginBody}>
+                Когда вы работаете и сколько платят — дальше календарь считает сам.
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={palette.accent} />
+          </Pressable>
+        )}
+
+        {brush === null && templates.length > 0 && (
         <View style={styles.stats}>
           <Stat
             styles={styles}
@@ -934,6 +949,21 @@ export default function CalendarScreen() {
         onClose={() => setJumping(false)}
       />
 
+      <FirstShift
+        open={starting}
+        palette={palette}
+        onDone={(template) => {
+          setStarting(false);
+          setTemplates([template]);
+          // Straight into the pencil with it. The point of the question was
+          // never the template — it was the month somebody wants filled in.
+          setBrush({ kind: 'shift', template });
+          sheet.current?.scrollTo({ y: 0, animated: true });
+          void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        }}
+        onClose={() => setStarting(false)}
+      />
+
       <PaintPicker
         open={picking}
         templates={templates}
@@ -950,7 +980,7 @@ export default function CalendarScreen() {
         onClose={() => setPicking(false)}
         onManage={() => {
           setPicking(false);
-          router.push('/templates');
+          setStarting(true);
         }}
       />
     </View>
@@ -1106,6 +1136,22 @@ const makeStyles = (palette: Palette) =>
       paddingVertical: 5,
     },
     todayChipText: { color: palette.accent, fontWeight: '700', fontSize: 12.5 },
+
+    begin: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      backgroundColor: palette.accentSoft,
+      borderWidth: 1.5,
+      borderColor: palette.accent,
+      borderRadius: 18,
+      paddingHorizontal: 14,
+      paddingVertical: 14,
+    },
+    beginMark: { fontSize: 26 },
+    beginText: { flex: 1, gap: 3 },
+    beginTitle: { color: palette.text, fontSize: 16, fontWeight: '800', letterSpacing: -0.3 },
+    beginBody: { color: palette.textSecondary, fontSize: 13, lineHeight: 18 },
 
     stats: {
       flexDirection: 'row',

@@ -82,4 +82,41 @@ public class BriefWriterTests
         Assert.Contains("Чаевые", tip);
         Assert.Contains("25%", tip);
     }
+
+    /// <summary>
+    /// The first thing a new account is told. It used to be an accounting of
+    /// nothing — "0 смен, 0 ч и 0 ₴" — followed by advice to check whether the
+    /// week's shifts were marked, of which there were none.
+    /// </summary>
+    [Fact]
+    public void An_empty_month_is_not_reported_as_three_zeros()
+    {
+        var (_, body, _, _) = BriefWriter.Compose(
+            Facts(shift: null, earned: 0, shifts: 0, hours: 0));
+
+        Assert.DoesNotContain("0 смен", body);
+        Assert.Contains("ни одной", body);
+    }
+
+    [Fact]
+    public void An_account_with_nothing_in_it_is_told_where_to_start()
+    {
+        var (_, _, tip, _) = BriefWriter.Compose(
+            new BriefFacts(
+                "2026-08-28", "Friday", null, null, null,
+                0, 0, 0, null, null, 0, 0, 0, null, 0, null, null, []));
+
+        Assert.Contains("Отметьте свои смены", tip);
+    }
+
+    [Fact]
+    public void A_quiet_month_with_history_behind_it_still_gets_ordinary_advice()
+    {
+        // Nothing this month, but the app has seen work before: the "where to
+        // start" line would be wrong, and patronising.
+        var (_, _, tip, _) = BriefWriter.Compose(
+            Facts(shift: null, earned: 0, shifts: 0, hours: 0));
+
+        Assert.DoesNotContain("Отметьте свои смены", tip);
+    }
 }

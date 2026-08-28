@@ -20,9 +20,13 @@ public static class BriefWriter
             ? "Сегодня выходной"
             : $"Сегодня {facts.ShiftName} · {facts.ShiftFrom}–{facts.ShiftTo}";
 
+        // Three zeros is not a summary of a month, it is a summary of an empty
+        // app — and it was the first sentence anybody read after signing up.
         var body = new List<string>
         {
-            $"В этом месяце {facts.MonthShifts} смен, {Math.Round(facts.MonthHours)} ч и {money(facts.MonthEarned)} ₴.",
+            facts.MonthShifts == 0
+                ? "В этом месяце пока ни одной отмеченной смены."
+                : $"В этом месяце {facts.MonthShifts} смен, {Math.Round(facts.MonthHours)} ч и {money(facts.MonthEarned)} ₴.",
         };
 
         if (facts.GoalProgress is double progress && facts.Goal is decimal goal)
@@ -55,6 +59,12 @@ public static class BriefWriter
 
     private static string Tip(BriefFacts facts, Func<decimal, string> money)
     {
+        // Nothing recorded anywhere is a different situation from a quiet day,
+        // and the advice for it is the only advice that applies: there is
+        // nothing to check, so say where to start instead.
+        if (facts.MonthShifts == 0 && facts.BestDayAmount == 0 && facts.MonthEarned == 0)
+            return "Отметьте свои смены на календаре — дальше приложение посчитает само.";
+
         // Today first: advice about the day in hand beats a fact about the
         // month, however interesting the fact is.
         if (facts.Highlights.Length > 0) return facts.Highlights[0];

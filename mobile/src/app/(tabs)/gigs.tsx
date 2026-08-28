@@ -45,6 +45,8 @@ export default function GigsScreen() {
   const [board, setBoard] = useState<Gig[]>([]);
   const [replies, setReplies] = useState<Gig[]>([]);
   const [loading, setLoading] = useState(true);
+  /** Null is "every trade", which is what somebody opening the board wants. */
+  const [trade, setTrade] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState<Gig | null>(null);
@@ -55,6 +57,23 @@ export default function GigsScreen() {
 
     return { from: todayKey(), to: monthBounds(addMonths(now, 2)).to };
   }, []);
+
+  /**
+   * The trades actually on the board, not the whole trade.
+   *
+   * A filter listing thirty-six jobs when four are hiring is a filter that
+   * mostly answers "nothing here" — so the row is built from the listings
+   * themselves, and disappears entirely when there is only one kind of work.
+   */
+  const trades = useMemo(() => {
+    const counted = new Map<string, number>();
+
+    for (const gig of board) counted.set(gig.category, (counted.get(gig.category) ?? 0) + 1);
+
+    return [...counted.entries()]
+      .sort((one, two) => two[1] - one[1])
+      .map(([id, count]) => ({ id, count, ...tradeOf(id) }));
+  }, [board]);
 
   const load = useCallback(async () => {
     try {
@@ -81,7 +100,12 @@ export default function GigsScreen() {
     void load();
   }, [load]);
 
-  const rows = tab === 'mine' ? replies : board;
+  const rows =
+    tab === 'mine'
+      ? replies
+      : trade === null
+        ? board
+        : board.filter((gig) => gig.category === trade);
 
   return (
     <>
@@ -113,6 +137,35 @@ export default function GigsScreen() {
             </Press>
           ))}
         </View>
+
+        {tab !== 'mine' && trades.length > 1 && (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.trades}
+          >
+            <Press
+              style={[styles.trade, trade === null && styles.tradeOn]}
+              onPress={() => setTrade(null)}
+            >
+              <Text style={[styles.tradeText, trade === null && styles.tradeTextOn]}>
+                {t('Все')} · {board.length}
+              </Text>
+            </Press>
+
+            {trades.map((one) => (
+              <Press
+                key={one.id}
+                style={[styles.trade, trade === one.id && styles.tradeOn]}
+                onPress={() => setTrade(trade === one.id ? null : one.id)}
+              >
+                <Text style={[styles.tradeText, trade === one.id && styles.tradeTextOn]}>
+                  {one.emoji} {t(one.label)} · {one.count}
+                </Text>
+              </Press>
+            ))}
+          </ScrollView>
+        )}
 
         {error !== null && <Text style={styles.error}>{error}</Text>}
         {loading && <Loading colour={palette.backgroundElement} rows={3} height={104} />}
@@ -498,6 +551,18 @@ const makeStyles = (palette: Palette) =>
     title: { color: palette.text, fontSize: 30, fontWeight: '800' },
     grow: { flex: 1 },
     error: { color: palette.danger, fontSize: 13 },
+    trades: { gap: 6, paddingRight: 14 },
+    trade: {
+      borderWidth: 1,
+      borderColor: palette.border,
+      backgroundColor: palette.backgroundElement,
+      borderRadius: 999,
+      paddingHorizontal: 12,
+      paddingVertical: 7,
+    },
+    tradeOn: { backgroundColor: palette.accent, borderColor: palette.accent },
+    tradeText: { color: palette.text, fontSize: 12.5, fontWeight: '700' },
+    tradeTextOn: { color: '#fff' },
     empty: { color: palette.textSecondary, fontSize: 14, lineHeight: 20, marginTop: 12 },
 
     tabs: { flexDirection: 'row', gap: 8 },

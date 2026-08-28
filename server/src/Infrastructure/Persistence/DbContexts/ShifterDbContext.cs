@@ -23,6 +23,7 @@ public class ShifterDbContext : DbContext
     public DbSet<ExpenseRule> ExpenseRules => Set<ExpenseRule>();
     public DbSet<ScreenOpen> ScreenOpens => Set<ScreenOpen>();
     public DbSet<DayWeather> DayWeather => Set<DayWeather>();
+    public DbSet<TaxProfile> TaxProfiles => Set<TaxProfile>();
     public DbSet<CoverOffer> CoverOffers => Set<CoverOffer>();
     public DbSet<Goal> Goals => Set<Goal>();
     public DbSet<WebhookEndpoint> WebhookEndpoints => Set<WebhookEndpoint>();
@@ -286,6 +287,12 @@ public class ShifterDbContext : DbContext
 
         modelBuilder.Entity<ExpenseRule>()
             .HasIndex(rule => rule.UserId);
+
+        // One arrangement per person per year, because rates change by year
+        // and a profile that spanned two of them would be right for neither.
+        modelBuilder.Entity<TaxProfile>()
+            .HasIndex(profile => new { profile.UserId, profile.Year })
+            .IsUnique();
 
         // Weather is written once per place per day and never rewritten: the
         // fourteenth of March had the weather it had. The unique index is the

@@ -20,7 +20,8 @@ file sealed class SilentPush : Shifter.Application.Features.Push.IPushNotifier
         int userId,
         Func<string, (string Title, string Body)> text,
         string url,
-        CancellationToken ct) => Task.CompletedTask;
+        CancellationToken ct,
+        string? category = null) => Task.CompletedTask;
 }
 
 public class CoverHandlerTests

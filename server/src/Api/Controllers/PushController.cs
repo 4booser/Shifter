@@ -39,6 +39,26 @@ public class PushController : ControllerBase
     /// A phone registering its push address. Idempotent by token, so a reopen
     /// refreshes the row rather than growing the table.
     /// </summary>
+    /// <summary>A zone the server actually has, or Kyiv. Never what was sent, unchecked.</summary>
+    private static string Zone(string? name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return "Europe/Kyiv";
+
+        try
+        {
+            return TimeZoneInfo.FindSystemTimeZoneById(name).Id;
+        }
+        catch (Exception exception)
+            when (exception is TimeZoneNotFoundException or InvalidTimeZoneException)
+        {
+            return "Europe/Kyiv";
+        }
+    }
+
+    /// <summary>"HH:mm", or the evening. A malformed time would silence the phone.</summary>
+    private static string At(string? value)
+        => TimeOnly.TryParse(value, out var parsed) ? parsed.ToString("HH:mm") : "19:00";
+
     [HttpPost("device")]
     public async Task<IActionResult> Device([FromBody] DeviceTokenDto request, CancellationToken ct)
     {
@@ -64,6 +84,8 @@ public class PushController : ControllerBase
                 Token = request.token,
                 Platform = request.platform ?? "unknown",
                 Language = request.language ?? "ru",
+                TimeZone = Zone(request.time_zone),
+                NotifyAt = At(request.notify_at),
             });
         }
         else
@@ -87,6 +109,8 @@ public class PushController : ControllerBase
             existing.UserId = CurrentUserId();
             existing.Platform = request.platform ?? existing.Platform;
             existing.Language = request.language ?? existing.Language;
+            existing.TimeZone = request.time_zone is null ? existing.TimeZone : Zone(request.time_zone);
+            existing.NotifyAt = request.notify_at is null ? existing.NotifyAt : At(request.notify_at);
             existing.LastSeenAt = DateTime.UtcNow;
         }
 
@@ -211,4 +235,14 @@ public class PushController : ControllerBase
     }
 }
 
-public record DeviceTokenDto(string? token, string? platform, string? language);
+public record DeviceTokenDto(
+    string? token,
+    string? platform,
+    string? language,
+    /// <summary>
+    /// Where the phone is, so an evening nudge arrives in the evening. Absent
+    /// keeps whatever the row already had.
+    /// </summary>
+    string? time_zone = null,
+    /// <summary>"HH:mm" the evening nudge is wanted at, on that clock.</summary>
+    string? notify_at = null);

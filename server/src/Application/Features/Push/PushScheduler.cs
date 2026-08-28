@@ -39,7 +39,9 @@ public sealed class PushScheduler : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken ct)
     {
-        if (!_sender.Enabled) return;
+        // The browser channel can be switched off and the phones still work:
+        // they are separate channels that fail separately, which is the whole
+        // reason the tokens live in their own table.
 
         using var timer = new PeriodicTimer(Period);
 
@@ -47,7 +49,9 @@ public sealed class PushScheduler : BackgroundService
         {
             try
             {
-                await PassAsync(ct);
+                if (_sender.Enabled) await PassAsync(ct);
+
+                await PhonesAsync(ct);
             }
             catch (Exception exception) when (exception is not OperationCanceledException)
             {
@@ -150,6 +154,146 @@ public sealed class PushScheduler : BackgroundService
         }
 
         await db.SaveChangesAsync(ct);
+    }
+
+    /// <summary>
+    /// The same pass, for phones.
+    ///
+    /// It exists separately because the two channels carry different things: a
+    /// browser subscription belongs to a profile and knows six kinds of nudge,
+    /// a device token belongs to a person's pocket and wants the two that are
+    /// worth unlocking a phone for. And because until this, a person with only
+    /// the app — which is most of them — got neither of those two at all: the
+    /// whole scheduler was keyed on browser subscriptions, so a phone with no
+    /// browser beside it was never told about tomorrow's shift or today's
+    /// wage.
+    /// </summary>
+    private async Task PhonesAsync(CancellationToken ct)
+    {
+        using var scope = _scopes.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ShifterDbContext>();
+        var phones = scope.ServiceProvider.GetRequiredService<ExpoPushSender>();
+
+        var devices = await db.DeviceTokens
+            .Where(device => device.NotifyTomorrow || device.NotifyPayday)
+            .ToListAsync(ct);
+
+        foreach (var device in devices)
+        {
+            TimeZoneInfo zone;
+
+            try
+            {
+                zone = TimeZoneInfo.FindSystemTimeZoneById(device.TimeZone);
+            }
+            catch (TimeZoneNotFoundException)
+            {
+                continue;
+            }
+
+            var localNow = TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, zone);
+            var today = DateOnly.FromDateTime(localNow.Date);
+
+            if (!TimeOnly.TryParse(device.NotifyAt, out var at)) continue;
+
+            var sinceChosen = localNow.TimeOfDay - at.ToTimeSpan();
+            var chosenOpen = sinceChosen >= TimeSpan.Zero && sinceChosen <= Window;
+
+            var sinceMorning = localNow.TimeOfDay - PaydayAt.ToTimeSpan();
+            var morningOpen = sinceMorning >= TimeSpan.Zero && sinceMorning <= Window;
+
+            var dead = false;
+
+            if (chosenOpen && device.NotifyTomorrow && device.TomorrowSentOn != today)
+            {
+                device.TomorrowSentOn = today;
+                dead = !await PhoneTomorrowAsync(db, phones, device, today.AddDays(1), ct);
+            }
+
+            if (!dead && morningOpen && device.NotifyPayday && device.PaydaySentOn != today)
+            {
+                device.PaydaySentOn = today;
+                dead = !await PhonePaydayAsync(scope.ServiceProvider, phones, device, today, ct);
+            }
+
+            if (dead) db.DeviceTokens.Remove(device);
+        }
+
+        await db.SaveChangesAsync(ct);
+    }
+
+    /// <summary>True while the token is alive; a quiet day also counts.</summary>
+    private async Task<bool> PhoneTomorrowAsync(
+        ShifterDbContext db,
+        ExpoPushSender phones,
+        DeviceToken device,
+        DateOnly tomorrow,
+        CancellationToken ct)
+    {
+        var shifts = await db.DayShifts
+            .Where(entry => entry.Day!.UserId == device.UserId && entry.Day.Date == tomorrow && !entry.Worked)
+            .Include(entry => entry.Shift)
+            .OrderBy(entry => entry.StartTime)
+            .ToListAsync(ct);
+
+        if (shifts.Count == 0) return true;
+
+        var first = shifts[0];
+        var name = first.Shift?.Name ?? "";
+        var times = $"{first.StartTime:HH\\:mm}–{first.EndTime:HH\\:mm}";
+
+        var (title, body) = device.Language switch
+        {
+            "ru" => ("Завтра смена", $"{name} · {times}"),
+            "uk" => ("Завтра зміна", $"{name} · {times}"),
+            _ => ("You work tomorrow", $"{name} · {times}"),
+        };
+
+        if (shifts.Count > 1)
+        {
+            body += device.Language switch
+            {
+                "ru" => $" и ещё {shifts.Count - 1}",
+                "uk" => $" і ще {shifts.Count - 1}",
+                _ => $" and {shifts.Count - 1} more",
+            };
+        }
+
+        // The category is what puts "start the shift" on the lock screen. A
+        // phone that never registered it simply gets the notification without
+        // buttons, which is exactly what it got before.
+        return await phones.SendAsync(device.Token, title, body, "/", ct, "shift");
+    }
+
+    /// <summary>Money landing today, for a phone.</summary>
+    private async Task<bool> PhonePaydayAsync(
+        IServiceProvider services,
+        ExpoPushSender phones,
+        DeviceToken device,
+        DateOnly today,
+        CancellationToken ct)
+    {
+        var reconciliation = services.GetRequiredService<IReconciliationHandler>();
+        var schedule = await reconciliation.BuildAsync(
+            device.UserId, today.AddDays(-31), today.AddDays(1), ct);
+
+        var due = schedule.periods
+            .Where(row => row.due_on == today && row.paid == 0 && row.expected > 0)
+            .ToArray();
+
+        if (due.Length == 0) return true;
+
+        var amount = Math.Round(due.Sum(row => row.expected));
+        var names = string.Join(", ", due.Select(row => row.location_name).Distinct());
+
+        var (title, body) = device.Language switch
+        {
+            "ru" => ("Сегодня зарплата", $"{names}: ~{amount:N0}. Придут деньги — запишите выплату."),
+            "uk" => ("Сьогодні зарплата", $"{names}: ~{amount:N0}. Прийдуть гроші — запишіть виплату."),
+            _ => ("Payday", $"{names}: ~{amount:N0}. When it lands, record the payout."),
+        };
+
+        return await phones.SendAsync(device.Token, title, body, "/payouts", ct, "payday");
     }
 
     /// <summary>True while the subscription is alive; a quiet day also counts.</summary>

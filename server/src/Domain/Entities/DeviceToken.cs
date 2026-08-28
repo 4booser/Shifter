@@ -22,6 +22,29 @@ public sealed class DeviceToken
     /// <summary>Which language the phone wants its notifications in.</summary>
     public string Language { get; set; } = "ru";
 
+    /// <summary>
+    /// Where the phone is, so an evening nudge arrives in the evening. Sent by
+    /// the app; Kyiv until it says otherwise, because that is who this is for.
+    /// </summary>
+    public string TimeZone { get; set; } = "Europe/Kyiv";
+
+    /// <summary>"HH:mm" the evening nudge is wanted at, in that zone.</summary>
+    public string NotifyAt { get; set; } = "19:00";
+
+    /// <summary>Tomorrow's shift, the evening before.</summary>
+    public bool NotifyTomorrow { get; set; } = true;
+
+    /// <summary>Money due today, mid-morning.</summary>
+    public bool NotifyPayday { get; set; } = true;
+
+    /// <summary>
+    /// The local date each nudge last went out. Stamped rather than counted,
+    /// so however often the loop runs — or however long the process was down —
+    /// a phone hears about a given day exactly once.
+    /// </summary>
+    public DateOnly? TomorrowSentOn { get; set; }
+    public DateOnly? PaydaySentOn { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime LastSeenAt { get; set; } = DateTime.UtcNow;
 }

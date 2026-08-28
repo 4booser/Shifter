@@ -18,7 +18,19 @@ public sealed class ExpoPushSender
     public ExpoPushSender(IHttpClientFactory http) => _http = http;
 
     /// <summary>True while the token is worth keeping; false once Expo disowns it.</summary>
-    public async Task<bool> SendAsync(string token, string title, string body, string path, CancellationToken ct)
+    /// <param name="category">
+    /// Names a set of buttons the phone has registered — "shift" carries
+    /// "start the shift", "payday" carries "record the payment". Null sends a
+    /// notification with no buttons, which is what every one of these was
+    /// until now.
+    /// </param>
+    public async Task<bool> SendAsync(
+        string token,
+        string title,
+        string body,
+        string path,
+        CancellationToken ct,
+        string? category = null)
     {
         try
         {
@@ -36,6 +48,7 @@ public sealed class ExpoPushSender
                     sound = "default",
                     // The phone opens this screen when the notification is tapped.
                     data = new { path },
+                    categoryId = category,
                 },
             };
 

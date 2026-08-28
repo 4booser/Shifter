@@ -14,7 +14,8 @@ public interface IPushNotifier
         int userId,
         Func<string, (string Title, string Body)> text,
         string url,
-        CancellationToken ct);
+        CancellationToken ct,
+        string? category = null);
 }
 
 /// <summary>
@@ -41,11 +42,18 @@ public sealed class PushNotifier : IPushNotifier
     }
 
     /// <summary>Sends to every device the user has; text is built per language.</summary>
+    /// <param name="category">
+    /// Names the buttons the phone should draw on this notification. Only the
+    /// phones get it: a browser notification has no equivalent, and pretending
+    /// otherwise would mean two code paths that disagree about what a category
+    /// means.
+    /// </param>
     public async Task NotifyAsync(
         int userId,
         Func<string, (string Title, string Body)> text,
         string url,
-        CancellationToken ct)
+        CancellationToken ct,
+        string? category = null)
     {
         try
         {
@@ -73,7 +81,7 @@ public sealed class PushNotifier : IPushNotifier
             {
                 var (title, body) = text(device.Language);
 
-                if (!await _phones.SendAsync(device.Token, title, body, url, ct))
+                if (!await _phones.SendAsync(device.Token, title, body, url, ct, category))
                     _db.DeviceTokens.Remove(device);
             }
 

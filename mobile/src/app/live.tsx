@@ -1,38 +1,60 @@
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
+import { useKeepAwake } from 'expo-keep-awake';
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, StyleSheet, Text, useColorScheme, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { Appear, Press, Roll } from '@/components/motion';
+import { Ring } from '@/components/ring';
 import { Colors, Palette } from '@/constants/theme';
 import { api } from '@/lib/api';
 import { pad } from '@/lib/calendar';
+import { stopwatch } from '@/lib/format';
 import { CalendarDayData, DaysResponse, money, toSavePayload } from '@/lib/types';
-import { useLive } from '@/store/live';
+import { breakSeconds, onBreak, useLive } from '@/store/live';
 
 const clock = (date: Date) => `${pad(date.getHours())}:${pad(date.getMinutes())}`;
 
+/** Minutes from midnight, so a shift ending after it still measures forwards. */
+const minutesOf = (time: string) => {
+  const [hours, minutes] = time.slice(0, 5).split(':').map(Number);
+
+  return hours * 60 + minutes;
+};
+
 /**
- * The shift, live: elapsed time and money growing while the person works.
- * Finishing writes the actual clock onto the day through the same PUT the
- * web uses, so the calendar and the audit trail see one truth.
+ * The shift, live.
+ *
+ * This is the one screen where the app is doing something rather than
+ * recording something, and it used to look like a stopwatch demo: a big
+ * monospace number and three links. What somebody wants at the fourth hour is
+ * not how long has passed but how much is left and what it has come to, so
+ * the ring answers the first and the money answers the second, and both move.
+ *
+ * Breaks are here because they are the number that decides paid hours, and
+ * nobody remembers them at the end of a shift. The phone does.
  */
 export default function LiveScreen() {
   const scheme = useColorScheme();
   const palette = Colors[scheme === 'dark' ? 'dark' : 'light'];
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const live = useLive((state) => state.live);
   const clear = useLive((state) => state.clear);
+  const toggleBreak = useLive((state) => state.toggleBreak);
+
+  // A shift is hours long and the phone is on a bar. Letting it sleep is fine
+  // for the count — the clock is the wall clock — but this screen is also how
+  // people watch the money, and a screen that keeps going dark is one nobody
+  // leaves open.
+  useKeepAwake();
 
   const [now, setNow] = useState(Date.now());
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const hoursMarked = useRef(0);
 
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 1000);
@@ -44,21 +66,41 @@ export default function LiveScreen() {
 
   if (live === null) {
     return (
-      <View style={styles.screen}>
+      <View style={[styles.screen, { paddingTop: insets.top + 40 }]}>
         <Text style={styles.hint}>Смена не запущена.</Text>
-        <Pressable style={styles.quiet} onPress={() => router.back()}>
+        <Press style={styles.quiet} onPress={() => router.back()}>
           <Text style={styles.quietText}>Назад</Text>
-        </Pressable>
+        </Press>
       </View>
     );
   }
 
   const started = new Date(live.startedAt);
-  const seconds = Math.max(0, Math.floor((now - started.getTime()) / 1000));
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const ticker = `${pad(hours)}:${pad(minutes)}:${pad(seconds % 60)}`;
-  const earnedNow = live.hourlyRate !== null ? (seconds / 3600) * live.hourlyRate : null;
+  const elapsed = Math.max(0, Math.floor((now - started.getTime()) / 1000));
+  const resting = onBreak(live);
+  const paused = breakSeconds(live, now);
+  const paid = Math.max(0, elapsed - paused);
+  const earnedNow = live.hourlyRate !== null ? (paid / 3600) * live.hourlyRate : null;
+
+  // The planned length, wrapping midnight, so a 17:00–01:00 shift is eight
+  // hours rather than minus sixteen. Measured from when it was meant to
+  // start, not from when it did: turning up twenty minutes late shortens what
+  // is left, it does not lengthen the shift.
+  const planStart = minutesOf(
+    live.plannedStart ?? `${pad(started.getHours())}:${pad(started.getMinutes())}`,
+  );
+  const planEnd = minutesOf(live.plannedEnd);
+  const planMinutes = (planEnd - planStart + 24 * 60) % (24 * 60) || 24 * 60;
+  const leftSeconds = planMinutes * 60 - paid;
+
+  // A tap on the hour. It is the only thing this screen says out loud, and it
+  // is worth saying: an hour is the unit these people are paid in.
+  const wholeHours = Math.floor(paid / 3600);
+
+  if (wholeHours > hoursMarked.current) {
+    hoursMarked.current = wholeHours;
+    if (wholeHours > 0) void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  }
 
   const finish = async () => {
     setBusy(true);
@@ -66,71 +108,154 @@ export default function LiveScreen() {
 
     try {
       const summary = await api<DaysResponse>(`/shifter/v1/days?from=${live.date}&to=${live.date}`);
-      const day: CalendarDayData = summary.days[0];
+      const day: CalendarDayData | undefined = summary.days[0];
       const payload = toSavePayload(day);
       const entry = payload.shifts.find((row) => row.shift_id === live.shiftId);
-      const stamp = { actual_start: clock(started), actual_end: clock(new Date()), worked: true };
+      const stamp = {
+        actual_start: clock(started),
+        actual_end: clock(new Date()),
+        worked: true,
+        // Minutes, because that is what the server prices in — and null
+        // rather than zero where nobody took one, so the template's own
+        // unpaid minutes are kept rather than overwritten with "none".
+        break_minutes: paused > 30 ? Math.round(paused / 60) : null,
+      };
 
-      if (entry === undefined) payload.shifts.push({
+      if (entry === undefined) {
+        payload.shifts.push({
           shift_id: live.shiftId,
           needs_cover: false,
-          break_minutes: null,
           revenue: null,
           ...stamp,
         });
-      else Object.assign(entry, stamp);
+      } else {
+        Object.assign(entry, stamp);
+      }
 
       await api(`/shifter/v1/days/${live.date}`, { method: 'PUT', body: payload });
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       clear();
       router.back();
     } catch {
       setError('Не записалось — попробуйте ещё раз.');
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       setBusy(false);
     }
   };
 
-  return (
-    <View style={styles.screen}>
-      <Text style={styles.title}>
-        {live.symbol ?? '🕐'} {live.name}
-      </Text>
-      <Text style={styles.since}>
-        с {clock(started)} · план до {live.plannedEnd.slice(0, 5)}
-      </Text>
+  const ringColour = resting ? palette.textSecondary : leftSeconds <= 0 ? palette.good : palette.accent;
 
-      <Text style={styles.ticker}>{ticker}</Text>
-      {earnedNow !== null && <Text style={styles.earned}>{money(earnedNow)} уже ваши</Text>}
+  return (
+    <View style={[styles.screen, { paddingTop: insets.top + 18, paddingBottom: insets.bottom + 18 }]}>
+      <Appear>
+        <View style={styles.head}>
+          <Text style={styles.title}>
+            {live.symbol ?? '🕐'} {live.name}
+          </Text>
+          <Text style={styles.since}>
+            с {clock(started)} · план до {live.plannedEnd.slice(0, 5)}
+          </Text>
+        </View>
+      </Appear>
+
+      <Appear index={1}>
+        <Ring
+          progress={paid / (planMinutes * 60)}
+          colour={ringColour}
+          track={palette.backgroundSelected}
+        >
+          <Text style={[styles.ticker, resting && styles.tickerResting]}>{stopwatch(paid)}</Text>
+
+          {earnedNow !== null ? (
+            <Roll
+              value={earnedNow}
+              prefix="₴"
+              style={[styles.earned, { color: resting ? palette.textSecondary : palette.good }]}
+              duration={900}
+            />
+          ) : (
+            <Text style={styles.noRate}>без почасовой ставки</Text>
+          )}
+
+          <Text style={styles.left}>
+            {resting
+              ? 'перерыв идёт'
+              : leftSeconds > 0
+                ? `осталось ${stopwatch(leftSeconds)}`
+                : `сверх плана ${stopwatch(-leftSeconds)}`}
+          </Text>
+        </Ring>
+      </Appear>
+
+      <Appear index={2}>
+        <View style={styles.facts}>
+          <View style={styles.fact}>
+            <Text style={styles.factValue}>{stopwatch(elapsed).slice(0, 5)}</Text>
+            <Text style={styles.factLabel}>на месте</Text>
+          </View>
+          <View style={styles.factRule} />
+          <View style={styles.fact}>
+            <Text style={[styles.factValue, paused > 0 && { color: palette.textSecondary }]}>
+              {Math.round(paused / 60)}
+            </Text>
+            <Text style={styles.factLabel}>мин перерыва</Text>
+          </View>
+          <View style={styles.factRule} />
+          <View style={styles.fact}>
+            <Text style={styles.factValue}>{live.hourlyRate === null ? '—' : money(live.hourlyRate)}</Text>
+            <Text style={styles.factLabel}>за час</Text>
+          </View>
+        </View>
+      </Appear>
 
       {error !== null && <Text style={styles.error}>{error}</Text>}
 
-      <Pressable
-        style={({ pressed }) => [styles.finish, pressed && { opacity: 0.85 }]}
-        disabled={busy}
-        onPress={() => void finish()}
-      >
-        {busy ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <>
-            <Ionicons name="checkmark" size={18} color="#fff" />
-            <Text style={styles.finishText}>Закончил смену</Text>
-          </>
-        )}
-      </Pressable>
+      <Appear index={3} style={styles.actions}>
+        <View style={styles.row}>
+          <Press
+            style={[styles.break, resting && styles.breakOn]}
+            onPress={() => {
+              toggleBreak();
+              void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            }}
+          >
+            <Ionicons
+              name={resting ? 'play' : 'pause'}
+              size={17}
+              color={resting ? '#fff' : palette.text}
+            />
+            <Text style={[styles.breakText, resting && styles.breakTextOn]}>
+              {resting ? 'Вернулся' : 'Перерыв'}
+            </Text>
+          </Press>
 
-      <Pressable style={styles.quiet} onPress={() => router.back()}>
-        <Text style={styles.quietText}>Свернуть — смена продолжает идти</Text>
-      </Pressable>
+          <Press style={styles.finish} disabled={busy} onPress={() => void finish()}>
+            {busy ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <>
+                <Ionicons name="checkmark" size={18} color="#fff" />
+                <Text style={styles.finishText}>Закончил</Text>
+              </>
+            )}
+          </Press>
+        </View>
 
-      <Pressable
-        style={styles.quiet}
-        onPress={() => {
-          clear();
-          router.back();
-        }}
-      >
-        <Text style={[styles.quietText, { color: palette.danger }]}>Отменить без записи</Text>
-      </Pressable>
+        <Press style={styles.quiet} haptic={false} onPress={() => router.back()}>
+          <Text style={styles.quietText}>Свернуть — смена продолжает идти</Text>
+        </Press>
+
+        <Press
+          style={styles.quiet}
+          haptic={false}
+          onPress={() => {
+            clear();
+            router.back();
+          }}
+        >
+          <Text style={[styles.quietText, { color: palette.danger }]}>Отменить без записи</Text>
+        </Press>
+      </Appear>
     </View>
   );
 }
@@ -141,34 +266,88 @@ const makeStyles = (palette: Palette) =>
       flex: 1,
       backgroundColor: palette.background,
       alignItems: 'center',
-      justifyContent: 'center',
-      padding: 24,
-      gap: 10,
+      justifyContent: 'space-between',
+      paddingHorizontal: 22,
     },
-    title: { fontSize: 22, fontWeight: '800', color: palette.text },
+    head: { alignItems: 'center', gap: 3 },
+    title: { fontSize: 22, fontWeight: '800', color: palette.text, letterSpacing: -0.4 },
+    since: { color: palette.textSecondary, fontVariant: ['tabular-nums'], fontSize: 13.5 },
     hint: { color: palette.textSecondary, fontSize: 15 },
-    since: { color: palette.textSecondary, fontVariant: ['tabular-nums'] },
+
     ticker: {
-      fontSize: 64,
+      fontSize: 46,
       fontWeight: '800',
       color: palette.text,
       fontVariant: ['tabular-nums'],
-      letterSpacing: -2,
-      marginVertical: 8,
+      letterSpacing: -1.6,
     },
-    earned: { fontSize: 20, fontWeight: '700', color: palette.good, fontVariant: ['tabular-nums'] },
-    error: { color: palette.danger },
-    finish: {
+    tickerResting: { color: palette.textSecondary },
+    earned: {
+      fontSize: 27,
+      fontWeight: '800',
+      fontVariant: ['tabular-nums'],
+      textAlign: 'center',
+      letterSpacing: -0.6,
+      marginTop: 2,
+    },
+    noRate: { color: palette.textSecondary, fontSize: 13, marginTop: 4 },
+    left: { color: palette.textSecondary, fontSize: 13, marginTop: 6, fontVariant: ['tabular-nums'] },
+
+    facts: {
       flexDirection: 'row',
       alignItems: 'center',
+      backgroundColor: palette.backgroundElement,
+      borderWidth: 1,
+      borderColor: palette.border,
+      borderRadius: 18,
+      paddingVertical: 12,
+      paddingHorizontal: 6,
+    },
+    fact: { alignItems: 'center', gap: 1, minWidth: 92 },
+    factRule: { width: 1, alignSelf: 'stretch', backgroundColor: palette.border },
+    factValue: {
+      color: palette.text,
+      fontSize: 17,
+      fontWeight: '800',
+      fontVariant: ['tabular-nums'],
+    },
+    factLabel: {
+      color: palette.textSecondary,
+      fontSize: 10,
+      fontWeight: '700',
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    },
+
+    error: { color: palette.danger },
+    actions: { alignSelf: 'stretch', alignItems: 'center', gap: 2 },
+    row: { flexDirection: 'row', gap: 10, alignSelf: 'stretch', marginBottom: 4 },
+    break: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      backgroundColor: palette.backgroundElement,
+      borderWidth: 1,
+      borderColor: palette.border,
+      borderRadius: 18,
+      paddingVertical: 16,
+    },
+    breakOn: { backgroundColor: palette.textSecondary, borderColor: palette.textSecondary },
+    breakText: { color: palette.text, fontWeight: '700', fontSize: 15.5 },
+    breakTextOn: { color: '#fff' },
+    finish: {
+      flex: 1.2,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
       gap: 8,
       backgroundColor: palette.accent,
-      borderRadius: 16,
-      paddingHorizontal: 26,
-      paddingVertical: 15,
-      marginTop: 14,
+      borderRadius: 18,
+      paddingVertical: 16,
     },
-    finishText: { color: '#fff', fontWeight: '700', fontSize: 16 },
-    quiet: { paddingVertical: 8 },
-    quietText: { color: palette.textSecondary, fontWeight: '600' },
+    finishText: { color: '#fff', fontWeight: '800', fontSize: 15.5 },
+    quiet: { paddingVertical: 9 },
+    quietText: { color: palette.textSecondary, fontWeight: '600', fontSize: 13.5 },
   });

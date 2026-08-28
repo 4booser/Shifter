@@ -12,7 +12,36 @@ export interface LiveShift {
   /** Hourly rate when the template pays by the hour; null otherwise. */
   hourlyRate: number | null;
   plannedEnd: string;
+  /**
+   * When the shift was meant to start, which is not when it did. The planned
+   * length is a property of the shift — 17:00 to 01:00 is eight hours whoever
+   * turns up when — and measuring it from the actual clock-in made a late
+   * start lengthen the plan instead of eating into it.
+   *
+   * Optional: a shift already running when this shipped has none, and falls
+   * back to its start.
+   */
+  plannedStart?: string;
+  /**
+   * Unpaid stretches inside the shift, as ISO instants. An open one has no
+   * end yet. Optional because a shift started by an older build has none, and
+   * a missing field must not read as a break of unknown length.
+   */
+  breaks?: { from: string; to: string | null }[];
 }
+
+/** Seconds spent on break, counting an open one up to `now`. */
+export const breakSeconds = (shift: LiveShift, now: number): number =>
+  (shift.breaks ?? []).reduce((sum, entry) => {
+    const from = new Date(entry.from).getTime();
+    const to = entry.to === null ? now : new Date(entry.to).getTime();
+
+    return sum + Math.max(0, to - from);
+  }, 0) / 1000;
+
+/** True while a break is running. */
+export const onBreak = (shift: LiveShift): boolean =>
+  (shift.breaks ?? []).some((entry) => entry.to === null);
 
 const KEY = 'shifter.live';
 
@@ -32,6 +61,8 @@ interface LiveState {
   live: LiveShift | null;
   hydrate: () => Promise<void>;
   start: (shift: LiveShift) => void;
+  /** Opens a break, or closes the open one. Written through immediately. */
+  toggleBreak: () => void;
   clear: () => void;
 }
 
@@ -39,7 +70,7 @@ interface LiveState {
  * Survives app restarts on purpose: a shift is hours long and phones
  * reboot. The clock is the wall clock, not a timer, so nothing drifts.
  */
-export const useLive = create<LiveState>((set) => ({
+export const useLive = create<LiveState>((set, get) => ({
   live: null,
 
   hydrate: async () => {
@@ -53,8 +84,31 @@ export const useLive = create<LiveState>((set) => ({
   },
 
   start: (shift) => {
-    set({ live: shift });
-    quietly(AsyncStorage.setItem(KEY, JSON.stringify(shift)));
+    const fresh = { ...shift, breaks: shift.breaks ?? [] };
+
+    set({ live: fresh });
+    quietly(AsyncStorage.setItem(KEY, JSON.stringify(fresh)));
+  },
+
+  toggleBreak: () => {
+    const shift = get().live;
+
+    if (shift === null) return;
+
+    const breaks = [...(shift.breaks ?? [])];
+    const open = breaks.findIndex((entry) => entry.to === null);
+    const now = new Date().toISOString();
+
+    // Written down the moment it happens rather than on finish: a break is
+    // remembered by the phone, not by the person, and the phone is the one
+    // that survives being put in an apron pocket for twenty minutes.
+    if (open >= 0) breaks[open] = { ...breaks[open], to: now };
+    else breaks.push({ from: now, to: null });
+
+    const next = { ...shift, breaks };
+
+    set({ live: next });
+    quietly(AsyncStorage.setItem(KEY, JSON.stringify(next)));
   },
 
   clear: () => {

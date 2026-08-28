@@ -844,6 +844,7 @@ export default function CalendarScreen() {
                 symbol: startable.symbol,
                 startedAt: new Date().toISOString(),
                 hourlyRate: startable.rate,
+                plannedStart: startable.start_time,
                 plannedEnd: startable.end_time,
               };
 

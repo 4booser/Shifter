@@ -24,6 +24,7 @@ import { Icon } from '@/components/ui/icon';
 import { Teach } from '@/components/ui/teach';
 import { ImportModal } from './modals/import-modal';
 import { PhotoImportModal } from './modals/photo-import-modal';
+import { ForeignImportModal } from './modals/foreign-import-modal';
 import { LocationModal } from './modals/location-modal';
 import { PatternModal } from './modals/pattern-modal';
 import { PayoutModal } from './modals/payout-modal';
@@ -46,7 +47,7 @@ export function Sidebar() {
   const eventTypes = state.eventTemplates.filter((item) => !item.archived);
   const archivedPositions = state.positions.filter((position) => position.archived);
 
-  const [modal, setModal] = useState<null | 'shift' | 'event' | 'sales' | 'location' | 'pattern' | 'rotation' | 'scheme' | 'payout' | 'import' | 'photo'>(null);
+  const [modal, setModal] = useState<null | 'shift' | 'event' | 'sales' | 'location' | 'pattern' | 'rotation' | 'scheme' | 'payout' | 'import' | 'photo' | 'foreign'>(null);
   const [editingShift, setEditingShift] = useState<ShiftTemplate | null>(null);
   const [editingEventType, setEditingEventType] = useState<EventTemplate | null>(null);
   const [editingPosition, setEditingPosition] = useState<SalesPosition | null>(null);
@@ -566,6 +567,10 @@ export function Sidebar() {
         <button type="button" className="btn w-full" onClick={() => setModal('photo')}>
           📸 {t('Import from a photo')}
         </button>
+        <button type="button" className="btn w-full" onClick={() => setModal('foreign')}>
+          <Icon name="download" size={14} />
+          {t('Bring in another app’s records')}
+        </button>
         <button type="button" className="btn btn-quiet w-full" onClick={exportCsv}>
           <Icon name="download" size={14} />
           {t('Export CSV')}
@@ -587,6 +592,7 @@ export function Sidebar() {
       <PayoutModal open={modal === 'payout'} onClose={() => setModal(null)} />
       <ImportModal open={modal === 'import'} onClose={() => setModal(null)} />
       <PhotoImportModal open={modal === 'photo'} onClose={() => setModal(null)} />
+      <ForeignImportModal open={modal === 'foreign'} onClose={() => setModal(null)} />
     </aside>
   );
 }

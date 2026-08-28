@@ -109,6 +109,7 @@ public static class DependencyInjection
         services.AddScoped<Shifter.Application.Features.Assistant.AssistantService>();
         services.AddScoped<Shifter.Application.Features.Money.NbuRateClient>();
         services.AddScoped<Shifter.Application.Features.Gigs.MarketService>();
+        services.AddScoped<Shifter.Application.Features.Import.CsvImportService>();
         services.AddScoped<Shifter.Application.Features.Weather.OpenMeteoClient>();
         services.AddScoped<Shifter.Application.Features.Weather.WeatherService>();
         services.AddScoped<Shifter.Application.Features.Money.RateService>();

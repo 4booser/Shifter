@@ -41,6 +41,25 @@ public sealed class User
     /// <summary>Who brought them in; null for everyone who arrived on their own.</summary>
     public int? InvitedByUserId { get; set; }
 
+    // ==== The record, if they choose to show it ====
+
+    /// <summary>
+    /// The unguessable half of a link to somebody's own work history: how long
+    /// in the trade, where, how many shifts. Null until they ask for one, and
+    /// null again the moment they turn it off — a link that stops working is
+    /// the only revocation anybody believes.
+    ///
+    /// Off by default, and it stays off. A work history is not a thing to
+    /// publish on somebody's behalf, however useful it would be to them.
+    /// </summary>
+    public string? CardSlug { get; set; }
+
+    /// <summary>Whether the card names the places. Off unless asked for.</summary>
+    public bool CardShowsPlaces { get; set; }
+
+    /// <summary>Whether the card shows rates. Off unless asked for.</summary>
+    public bool CardShowsMoney { get; set; }
+
     /// <summary>
     /// The address a lost password is recovered through. Optional and
     /// private: it is never shown to anyone else and never travels with a

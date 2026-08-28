@@ -1,4 +1,7 @@
 using System.Security.Claims;
+using Shifter.Infrastructure.Persistence.DbContexts;
+using Shifter.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -77,3 +80,6 @@ public class AccountController : Controller
         return id;
     }
 }
+
+/// <summary>What somebody chooses to show on their public card.</summary>
+public record CardSettingsDto(bool on, bool show_places, bool show_money);

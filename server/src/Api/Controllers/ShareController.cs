@@ -140,4 +140,75 @@ public class ShareController : ControllerBase
     }
 
     private static string Escape(string value) => WebUtility.HtmlEncode(value);
+
+    /// <summary>
+    /// Somebody's work history, at a link they chose to hand out.
+    ///
+    /// Anonymous by necessity: it exists to be sent to a manager who does not
+    /// have an account and is not going to make one. Keyed on an unguessable
+    /// slug rather than a user id, so it reaches only the people it was given
+    /// to — and it shows exactly what its owner switched on, which by default
+    /// is months, shifts and hours, with no venue names and no money.
+    /// </summary>
+    [HttpGet("~/c/{slug:length(12)}")]
+    public async Task<IActionResult> Card(
+        [FromServices] Shifter.Infrastructure.Repositories.Interfaces.IShifterQuery query,
+        [FromServices] Shifter.Application.Common.Time.AppClock clock,
+        string slug,
+        CancellationToken ct)
+    {
+        var user = await _db.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(row => row.CardSlug == slug, ct);
+
+        if (user is null) return Redirect("/");
+
+        DateOnly today = clock.Today;
+
+        var days = await query.GetDaysInRangeAsync(user.Id, new DateOnly(2000, 1, 1), today, ct);
+        var places = await query.GetLocationsAsync(user.Id, true, ct);
+
+        var history = Shifter.Application.Features.business.Services.WorkHistory.Of(
+            days, places.ToDictionary(place => place.Id), today, user.CardShowsMoney);
+
+        string name = $"{user.FirstName} {user.LastName}".Trim();
+        string headline = history.shifts == 0
+            ? "Пока без записей"
+            : $"{history.months} мес · {history.shifts} смен · {Math.Round(history.hours)} ч";
+
+        var rows = history.places
+            .Select(place => user.CardShowsPlaces
+                ? $"{Escape(place.name)} · {place.from} — {place.to} · {place.shifts} смен"
+                : $"{place.from} — {place.to} · {place.shifts} смен")
+            .ToArray();
+
+        string body = string.Join("", rows.Select(row => $"<li>{row}</li>"));
+        string roles = string.Join(", ", history.roles.Select(Escape));
+
+        return Content(
+            $$"""
+            <!doctype html><html lang="ru"><head><meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>{{Escape(name)}} — Shifter</title>
+            <meta name="robots" content="noindex">
+            <style>
+              body{margin:0;background:#f4f2ed;color:#1c1b18;font:16px/1.55 system-ui,sans-serif;padding:2rem 1.25rem}
+              main{max-width:34rem;margin:0 auto}
+              h1{font-size:1.6rem;margin:0 0 .25rem;letter-spacing:-.02em}
+              .big{font-size:1.15rem;font-weight:700;margin:0 0 1.25rem}
+              ul{list-style:none;padding:0;margin:0 0 1.25rem}
+              li{padding:.5rem 0;border-bottom:1px solid #e3ded2}
+              .roles{color:#6f6a5e}
+              footer{margin-top:2rem;color:#8c8578;font-size:.85rem}
+              a{color:#4a44c8}
+            </style></head><body><main>
+            <h1>{{Escape(name)}}</h1>
+            <p class="big">{{headline}}</p>
+            <ul>{{body}}</ul>
+            {{(roles.Length > 0 ? $"<p class=\"roles\">{roles}</p>" : "")}}
+            <footer>Посчитано по записанным сменам в <a href="/">Shifter</a>.</footer>
+            </main></body></html>
+            """,
+            "text/html; charset=utf-8");
+    }
 }

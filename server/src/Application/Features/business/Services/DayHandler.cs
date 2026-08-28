@@ -23,6 +23,7 @@ public partial class DayHandler : IDayHandler
     private readonly DayAuditWriter? _audit;
     private readonly GoalCelebrator? _goals;
     private readonly Money.RateService? _rates;
+    private readonly Money.MonoRateClient? _market;
     private readonly AppClock _clock;
 
     // The audit hand is optional so the unit tests, which build this by
@@ -33,13 +34,18 @@ public partial class DayHandler : IDayHandler
         DayAuditWriter? audit = null,
         GoalCelebrator? goals = null,
         Money.RateService? rates = null,
-        AppClock? clock = null)
+        AppClock? clock = null,
+        // Optional like the rest: the tests that hand around fakes have no
+        // business reaching a bank over the internet, and a second opinion
+        // that is absent simply is not shown.
+        Money.MonoRateClient? market = null)
     {
         _shifterCommand = shifterCommand;
         _shifterQuery = shifterQuery;
         _audit = audit;
         _goals = goals;
         _rates = rates;
+        _market = market;
         _clock = clock ?? new AppClock();
     }
 
@@ -358,6 +364,14 @@ public partial class DayHandler : IDayHandler
 
         var rates = await _rates.OnAsync([.. codes, wanted], on, ct);
 
+        // The second opinion, asked for only where the base is hryvnia: a
+        // Ukrainian bank's buy rate says nothing useful about converting
+        // zlotys into euros, and printing it there would be a number beside
+        // the wrong question.
+        var market = wanted == "UAH" && _market is not null
+            ? await _market.QuotesAsync(ct)
+            : null;
+
         List<ConvertedPlaceDto> places = [];
         List<string> unconverted = [];
         decimal total = 0m;
@@ -393,7 +407,13 @@ public partial class DayHandler : IDayHandler
                 .Select(rate => new RateUsedDto(
                     rate.Key,
                     Money.NbuRateClient.Format(rate.Value.Rate),
-                    rate.Value.On.ToString("yyyy-MM-dd")))
+                    rate.Value.On.ToString("yyyy-MM-dd"),
+                    market is not null && market.TryGetValue(rate.Key, out var quote)
+                        ? Money.NbuRateClient.Format(quote.Buy)
+                        : null,
+                    market is not null && market.TryGetValue(rate.Key, out var quoted)
+                        ? quoted.On.ToString("yyyy-MM-dd")
+                        : null))
                 .ToArray(),
             [.. unconverted],
             PaidAt(payouts, wanted));

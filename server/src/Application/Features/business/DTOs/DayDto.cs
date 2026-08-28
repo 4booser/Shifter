@@ -250,7 +250,26 @@ public record ExpenseKindDto(string kind, decimal amount, int count);
 public record DeductionReasonDto(string reason, decimal amount, int days);
 
 /// <summary>One rate, and the day it was actually published on.</summary>
-public record RateUsedDto(string code, string rate, string on);
+public record RateUsedDto(
+    string code,
+    /// <summary>The national bank's published rate — the basis of every figure above.</summary>
+    string rate,
+    string on,
+    /// <summary>
+    /// What a commercial bank will actually buy this currency for today, and
+    /// the day it said so.
+    ///
+    /// The state's rate is the right basis for a report. It is not the number
+    /// a person is handed when they walk in with euros, and on a month's wages
+    /// earned abroad the gap is real money.
+    ///
+    /// It sits beside the official rate and never replaces it: nothing above
+    /// is computed from this, and a figure that changed source without saying
+    /// so would be worse than one that is merely approximate. Null where the
+    /// bank was unreachable or does not quote this currency.
+    /// </summary>
+    string? market = null,
+    string? market_on = null);
 
 /// <summary>
 /// What the client sends when saving a day. It carries the whole contents, not

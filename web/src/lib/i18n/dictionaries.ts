@@ -625,6 +625,8 @@ export const RU: Dictionary = {
   'new places': 'новых мест',
   'not in the file': 'нет в файле',
   'without a readable date': 'без читаемой даты',
+  'official': 'официальный',
+  'a bank buys at': 'банк купит по',
   'This week': 'Эта неделя',
   'Earned this week': 'Заработано за неделю',
   'Still to come': 'Ещё впереди',
@@ -3010,6 +3012,8 @@ export const UK: Dictionary = {
   'new places': 'нових місць',
   'not in the file': 'немає у файлі',
   'without a readable date': 'без читабельної дати',
+  'official': 'офіційний',
+  'a bank buys at': 'банк купить по',
   'This week': 'Цей тиждень',
   'All time': 'За весь час',
 

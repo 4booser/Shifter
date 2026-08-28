@@ -108,6 +108,10 @@ public static class DependencyInjection
         services.AddScoped<Shifter.Application.Features.Assistant.GeminiAssistantClient>();
         services.AddScoped<Shifter.Application.Features.Assistant.AssistantService>();
         services.AddScoped<Shifter.Application.Features.Money.NbuRateClient>();
+        // A singleton because the bank allows one call every five minutes and
+        // the answer is the same for everybody: a scoped client would ask once
+        // per request and be refused for its trouble.
+        services.AddSingleton<Shifter.Application.Features.Money.MonoRateClient>();
         services.AddScoped<Shifter.Application.Features.Gigs.MarketService>();
         services.AddScoped<Shifter.Application.Features.Import.CsvImportService>();
         services.AddScoped<Shifter.Application.Features.Weather.OpenMeteoClient>();

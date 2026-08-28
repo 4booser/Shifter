@@ -364,8 +364,16 @@ export interface CalendarDayData {
 /** One rate, and the day the bank actually published it. */
 export interface RateUsed {
   code: string;
+  /** The national bank's published rate — what every figure above is built on. */
   rate: string;
   on: string;
+  /**
+   * What a commercial bank will actually buy this currency for. Beside the
+   * official rate, never instead of it: nothing on the page is computed from
+   * this. Null where the bank was unreachable or does not quote it.
+   */
+  market: string | null;
+  market_on: string | null;
 }
 
 export interface ConvertedPlace {

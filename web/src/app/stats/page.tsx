@@ -898,13 +898,23 @@ function Stats() {
               ))}
             </ul>
 
-            <p className="field-hint mt-2.5 tabular">
+            <ul className="field-hint mt-2.5 flex flex-col gap-0.5 tabular">
               {summary.conversion.rates.map((rate) => (
-                <span key={rate.code} className="mr-2.5">
-                  1 {rate.code} = {rate.rate} UAH · {rate.on}
-                </span>
+                <li key={rate.code}>
+                  1 {rate.code} = {rate.rate} UAH · {t('official')} {rate.on}
+                  {/* The rate somebody is actually handed, named as such. The
+                      totals above are the official ones and stay that way —
+                      a figure that changed source without saying so would be
+                      worse than one that is merely approximate. */}
+                  {rate.market !== null && (
+                    <span className="ml-2 text-muted">
+                      · {t('a bank buys at')} {rate.market}
+                      {rate.market_on !== null && ` · ${rate.market_on}`}
+                    </span>
+                  )}
+                </li>
               ))}
-            </p>
+            </ul>
 
             {summary.conversion.unconverted.length > 0 && (
               <p className="mt-1 text-[0.82rem] text-warn">

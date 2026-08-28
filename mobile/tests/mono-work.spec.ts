@@ -54,6 +54,8 @@ const day = (
       hours: hours ?? 9.5,
       earned: 1_710,
       revenue: null,
+      guests: null,
+      zone: 'unset' as const,
       revenue_percent: null,
       worked: true,
       needs_cover: false,

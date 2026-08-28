@@ -21,19 +21,29 @@ import { Colors, Palette } from '@/constants/theme';
 import { api } from '@/lib/api';
 import { todayKey } from '@/lib/calendar';
 import {
-  blankDay,
   CalendarDayData,
-  DaysResponse,
   DEDUCTION_REASONS,
+  DaysResponse,
   DeductionReason,
+  ShiftTemplate,
+  ShiftZone,
+  blankDay,
   money,
   plural,
-  ShiftTemplate,
   templateHours,
   tint,
   toSavePayload,
 } from '@/lib/types';
 import { t } from '@/lib/i18n';
+
+/** Short on purpose: a list long enough for every venue is one nobody fills in. */
+const ZONES: { value: ShiftZone; label: string }[] = [
+  { value: 'hall', label: 'Зал' },
+  { value: 'bar', label: 'Бар' },
+  { value: 'terrace', label: 'Терраса' },
+  { value: 'banquet', label: 'Банкет' },
+  { value: 'takeaway', label: 'На вынос' },
+];
 
 /**
  * One day, editable: which templates are on it, whether they were worked,
@@ -125,6 +135,7 @@ export default function DayScreen() {
           earned: 0,
           revenue: null,
           guests: null,
+          zone: 'unset' as const,
           revenue_percent: template.revenue_percent,
         },
       ],
@@ -170,6 +181,23 @@ export default function DayScreen() {
       shifts: day.shifts.map((entry) =>
         entry.shift_id === shiftId
           ? { ...entry, guests: value.trim() === '' ? null : Number(value) || 0 }
+          : entry,
+      ),
+    });
+  };
+
+  /**
+   * Where in the venue. Tapping the one already chosen clears it back to
+   * "nobody said", which is a real answer and not the same as the hall.
+   */
+  const setZone = (shiftId: number, zone: ShiftZone) => {
+    if (day === null) return;
+
+    setDay({
+      ...day,
+      shifts: day.shifts.map((entry) =>
+        entry.shift_id === shiftId
+          ? { ...entry, zone: entry.zone === zone ? 'unset' : zone }
           : entry,
       ),
     });
@@ -388,6 +416,30 @@ export default function DayScreen() {
                       </Press>
                     )}
 
+                    {entry.worked && (
+                      <>
+                        <Text style={styles.fieldLabel}>{t('Где работали')}</Text>
+                        <View style={styles.zones}>
+                          {ZONES.map((zone) => (
+                            <Press
+                              key={zone.value}
+                              style={[styles.zone, entry.zone === zone.value && styles.zoneOn]}
+                              onPress={() => setZone(entry.shift_id, zone.value)}
+                            >
+                              <Text
+                                style={[
+                                  styles.zoneText,
+                                  entry.zone === zone.value && styles.zoneTextOn,
+                                ]}
+                              >
+                                {t(zone.label)}
+                              </Text>
+                            </Press>
+                          ))}
+                        </View>
+                      </>
+                    )}
+
                     {entry.revenue_percent !== null && (
                       <>
                         <Text style={styles.fieldLabel}>
@@ -516,6 +568,17 @@ export default function DayScreen() {
 
 const makeStyles = (palette: Palette) =>
   StyleSheet.create({
+    zones: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 4 },
+    zone: {
+      borderWidth: 1,
+      borderColor: palette.border,
+      borderRadius: 999,
+      paddingHorizontal: 12,
+      paddingVertical: 7,
+    },
+    zoneOn: { borderColor: palette.accent, backgroundColor: palette.accentSoft },
+    zoneText: { color: palette.textSecondary, fontSize: 13 },
+    zoneTextOn: { color: palette.accent, fontWeight: '700' },
     screen: { flex: 1, backgroundColor: palette.background },
     content: { padding: 18, gap: 10 },
     headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },

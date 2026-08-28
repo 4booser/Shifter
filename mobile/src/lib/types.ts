@@ -59,6 +59,12 @@ export const templateHours = (template: {
   return Math.max(0, minutes - (template.break_minutes ?? 0)) / 60;
 };
 
+/**
+ * Where in the venue a shift was worked. Every waiter knows the terrace tips
+ * better than the bar and none of them can say by how much.
+ */
+export type ShiftZone = 'unset' | 'hall' | 'bar' | 'terrace' | 'banquet' | 'takeaway';
+
 export interface DayShiftEntry {
   shift_id: number;
   name: string;
@@ -78,6 +84,8 @@ export interface DayShiftEntry {
   revenue: number | null;
   /** How many it served. Null is "nobody counted", which is not zero. */
   guests: number | null;
+  /** Where in the venue. "unset" is an answer: nobody said. */
+  zone: ShiftZone;
   /** The agreed share of it, already inside earned. */
   revenue_percent: number | null;
 }

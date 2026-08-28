@@ -182,6 +182,51 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Before anything is copied anywhere. The old cleanup ran on the success
+      # path of the release script — after the pull, after the health loop —
+      # which made freeing disk space conditional on having enough disk space
+      # to get there. Once the box filled, every deploy failed at the very
+      # first step, the cleanup was never reached, and it stayed full: 182
+      # images, 52 GB, and a database that aborted mid-checkpoint with the site
+      # behind it. Making room is a precondition for a deploy, not a reward.
+      - name: Make room
+        uses: appleboy/ssh-action@v1.2.5
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            set -euo pipefail
+
+            used() { df --output=pcent / | tail -1 | tr -dc '0-9'; }
+
+            echo "disk before: $(used)%"
+
+            # Images in use are referenced and survive whatever the window
+            # says, so the running release is never at risk. 48h keeps the
+            # previous one too, which is what a rollback needs.
+            docker image prune -af --filter "until=48h" >/dev/null 2>&1 || true
+
+            # Still tight: the window was too generous for how often this
+            # deploys. Keep only what is running plus the last few hours.
+            if [ "$(used)" -ge 80 ]; then
+              echo "still $(used)% — pruning harder"
+              docker image prune -af --filter "until=6h" >/dev/null 2>&1 || true
+              docker builder prune -af >/dev/null 2>&1 || true
+            fi
+
+            echo "disk after: $(used)%"
+
+            # Refusing here is the point. A deploy that starts without room
+            # does not fail cleanly — it half-copies files, aborts a pull, and
+            # takes the database down with it.
+            if [ "$(used)" -ge 90 ]; then
+              echo "less than 10% free after pruning; refusing to deploy"
+              df -h /
+              du -xh --max-depth=2 / 2>/dev/null | sort -rh | head -10
+              exit 1
+            fi
+
       - name: Ship the compose files
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -273,11 +318,11 @@ jobs:
               if docker compose -f compose.prod.yaml ps --format '{{.Service}} {{.Status}}' \
                  | grep -E '^shifter .*\(healthy\)' >/dev/null; then
                 echo "healthy"
-                # -a matters: every image here is tagged with its commit, so
-                # the plain prune never matched anything and the disk filled
-                # with 1.8 GB migrate images until the box hit 94%. Referenced
-                # images survive; the 48h window keeps a rollback pair around.
+                # Again, now that the replaced image is unreferenced. The step
+                # that actually guarantees room is "Make room" at the top of
+                # the job; this one only tidies the release that just ended.
                 docker image prune -af --filter "until=48h"
+                echo "disk: $(df --output=pcent / | tail -1 | tr -dc '0-9')%"
                 exit 0
               fi
               sleep 5

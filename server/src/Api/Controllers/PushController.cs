@@ -60,7 +60,9 @@ public class PushController : ControllerBase
         => TimeOnly.TryParse(value, out var parsed) ? parsed.ToString("HH:mm") : "19:00";
 
     [HttpPost("device")]
-    public async Task<IActionResult> Device([FromBody] DeviceTokenDto request, CancellationToken ct)
+    public async Task<ActionResult<DeviceSettingsDto>> Device(
+        [FromBody] DeviceTokenDto request,
+        CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(request.token) || !request.token.StartsWith("ExponentPushToken["))
             throw new ValidationException("That is not an Expo push token.");
@@ -86,6 +88,8 @@ public class PushController : ControllerBase
                 Language = request.language ?? "ru",
                 TimeZone = Zone(request.time_zone),
                 NotifyAt = At(request.notify_at),
+                NotifyTomorrow = request.notify_tomorrow ?? true,
+                NotifyPayday = request.notify_payday ?? true,
             });
         }
         else
@@ -111,12 +115,20 @@ public class PushController : ControllerBase
             existing.Language = request.language ?? existing.Language;
             existing.TimeZone = request.time_zone is null ? existing.TimeZone : Zone(request.time_zone);
             existing.NotifyAt = request.notify_at is null ? existing.NotifyAt : At(request.notify_at);
+            existing.NotifyTomorrow = request.notify_tomorrow ?? existing.NotifyTomorrow;
+            existing.NotifyPayday = request.notify_payday ?? existing.NotifyPayday;
             existing.LastSeenAt = DateTime.UtcNow;
         }
 
         await _db.SaveChangesAsync(ct);
 
-        return NoContent();
+        // The settings come back rather than a bare 204, so the screen that
+        // draws them has something to draw without a second round trip — and
+        // so a phone registering for the first time learns the defaults from
+        // the server rather than guessing at them.
+        var row = await _db.DeviceTokens.FirstAsync(device => device.Token == request.token, ct);
+
+        return Ok(new DeviceSettingsDto(row.TimeZone, row.NotifyAt, row.NotifyTomorrow, row.NotifyPayday));
     }
 
     [HttpDelete("device/{token}")]
@@ -245,4 +257,14 @@ public record DeviceTokenDto(
     /// </summary>
     string? time_zone = null,
     /// <summary>"HH:mm" the evening nudge is wanted at, on that clock.</summary>
-    string? notify_at = null);
+    string? notify_at = null,
+    /// <summary>Null leaves the setting alone; the app sends only what changed.</summary>
+    bool? notify_tomorrow = null,
+    bool? notify_payday = null);
+
+/// <summary>What the phone is currently set to, so a screen can draw it.</summary>
+public record DeviceSettingsDto(
+    string time_zone,
+    string notify_at,
+    bool notify_tomorrow,
+    bool notify_payday);

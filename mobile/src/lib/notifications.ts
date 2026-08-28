@@ -15,6 +15,45 @@ import { useLive } from '../store/live';
  * permission is simply a phone that will not be notified, which is a choice
  * the person is allowed to make.
  */
+/**
+ * The token this phone registered with, for the screen that lets somebody
+ * change what it is notified about. Null on a simulator, which has no push
+ * service to register with — so the screen hides rather than offering
+ * switches that would do nothing.
+ */
+let registered: string | null = null;
+
+export const deviceToken = (): string | null => registered;
+
+/** What a phone is set to be notified about. */
+export interface DeviceSettings {
+  time_zone: string;
+  notify_at: string;
+  notify_tomorrow: boolean;
+  notify_payday: boolean;
+}
+
+/**
+ * Changes what this phone is notified about, and reads back what it is now.
+ *
+ * Everything is optional and null means "leave it alone", so a screen sends
+ * only the switch that was touched — and the same call with nothing in it is
+ * how that screen learns the current state without a second endpoint.
+ */
+export async function deviceSettings(
+  token: string,
+  change: Partial<Omit<DeviceSettings, 'time_zone'>> = {},
+): Promise<DeviceSettings | null> {
+  try {
+    return await api<DeviceSettings>('/shifter/v1/push/device', {
+      method: 'POST',
+      body: { token, ...change },
+    });
+  } catch {
+    return null;
+  }
+}
+
 export async function registerForPush(language: string): Promise<string | null> {
   // A simulator has no push service to register with; on iOS it cannot even
   // ask, so trying only produces a confusing error in the log.
@@ -35,6 +74,8 @@ export async function registerForPush(language: string): Promise<string | null> 
 
   try {
     const token = (await Notifications.getExpoPushTokenAsync()).data;
+
+    registered = token;
 
     await api('/shifter/v1/push/device', {
       method: 'POST',

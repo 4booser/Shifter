@@ -19,6 +19,7 @@ import { api, API_BASE } from '@/lib/api';
 import { lockKind, LockKind, lockNameBy, lockStore, unlock } from '@/lib/lock';
 import { useSession } from '@/store/session';
 import { t, useLang } from '@/lib/i18n';
+import { DeviceSettings, deviceSettings, deviceToken } from '@/lib/notifications';
 
 interface Profile {
   login: string;
@@ -38,6 +39,16 @@ export default function SettingsScreen() {
   const scheme = useColorScheme();
   const palette = Colors[scheme === 'dark' ? 'dark' : 'light'];
   const lang = useLang((state) => state.lang);
+  const [nudges, setNudges] = useState<DeviceSettings | null>(null);
+  const token = deviceToken();
+
+  // Asked for once, with nothing to change: the same call that sets a switch
+  // is the one that reads them, so there is no second endpoint to keep in step.
+  useEffect(() => {
+    if (token === null) return;
+
+    void deviceSettings(token).then(setNudges);
+  }, [token]);
   const styles = makeStyles(palette);
   const insets = useSafeAreaInsets();
   const signOut = useSession((state) => state.signOut);
@@ -111,6 +122,53 @@ export default function SettingsScreen() {
           </Press>
         ))}
       </View>
+
+      {/* Only where the phone actually registered. A simulator has no push
+          service, and switches that would do nothing are worse than none. */}
+      {token !== null && nudges !== null && (
+        <>
+          <Text style={styles.section}>{t('Уведомления')}</Text>
+          <View style={styles.card}>
+            <View style={styles.row}>
+              <View style={styles.grow}>
+                <Text style={styles.rowTitle}>{t('Завтра смена')}</Text>
+                <Text style={styles.rowHint}>
+                  {t('Вечером накануне, в')} {nudges.notify_at}
+                </Text>
+              </View>
+              <Switch
+                value={nudges.notify_tomorrow}
+                onValueChange={(value) => {
+                  setNudges({ ...nudges, notify_tomorrow: value });
+                  void deviceSettings(token, { notify_tomorrow: value }).then(
+                    (fresh) => fresh !== null && setNudges(fresh),
+                  );
+                }}
+                trackColor={{ true: palette.accent, false: palette.border }}
+              />
+            </View>
+
+            <View style={styles.row}>
+              <View style={styles.grow}>
+                <Text style={styles.rowTitle}>{t('Сегодня зарплата')}</Text>
+                <Text style={styles.rowHint}>
+                  {t('Утром того дня, когда деньги должны прийти.')}
+                </Text>
+              </View>
+              <Switch
+                value={nudges.notify_payday}
+                onValueChange={(value) => {
+                  setNudges({ ...nudges, notify_payday: value });
+                  void deviceSettings(token, { notify_payday: value }).then(
+                    (fresh) => fresh !== null && setNudges(fresh),
+                  );
+                }}
+                trackColor={{ true: palette.accent, false: palette.border }}
+              />
+            </View>
+          </View>
+        </>
+      )}
 
       <Text style={styles.section}>{t('Замок')}</Text>
       <View style={styles.card}>

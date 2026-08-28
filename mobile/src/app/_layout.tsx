@@ -31,7 +31,7 @@ export default function RootLayout() {
   useEffect(() => {
     if (session === null || session === undefined) return;
 
-    void registerForPush('ru');
+    void registerForPush(useLang.getState().lang);
 
     return wireNotificationTaps();
   }, [session]);

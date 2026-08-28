@@ -1,5 +1,7 @@
 'use client';
 
+import Link from 'next/link';
+
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { calendarApi } from '@/lib/api/calendar';
@@ -345,6 +347,14 @@ function Payouts() {
       />
 
       {/* ==== What the work cost ==== */}
+      {/* The one page somebody can hand to a person who does not have the
+          app — which is where every argument about a wage eventually goes. */}
+      <p className="field-hint">
+        <Link className="text-(--accent)" href="/payslip">
+          {t('Payslip for a period')} ›
+        </Link>
+      </p>
+
       <ExpensesPanel from={range.from} to={range.to} onChanged={load} />
 
       {/* Beside the expenses, because this is the page where money arriving

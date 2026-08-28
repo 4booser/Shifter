@@ -119,6 +119,8 @@ export default function CalendarScreen() {
   const chosenAt = useRef(new Set<string>());
   const stroke = useRef<'add' | 'remove'>('add');
   const [applying, setApplying] = useState(false);
+  const [undo, setUndo] = useState<Undo | null>(null);
+  const [undoing, setUndoing] = useState(false);
 
   const month = addMonths(anchor, index - SPAN);
   const today = todayKey();
@@ -257,6 +259,7 @@ export default function CalendarScreen() {
 
     if (at === indexAt.current || at < 0 || at > SPAN * 2) return;
 
+    setUndo(null);
     indexAt.current = at;
     setIndex(at);
   };
@@ -264,6 +267,7 @@ export default function CalendarScreen() {
   const goTo = (at: number) => {
     const far = Math.abs(at - indexAt.current) > 2;
 
+    setUndo(null);
     indexAt.current = at;
     setIndex(at);
     // Animating a jump of twenty months means watching twenty months go past.
@@ -311,6 +315,7 @@ export default function CalendarScreen() {
   const post = useCallback(
     async (writes: Omit<Pending, 'id' | 'at'>[]) => {
       const left: Omit<Pending, 'id' | 'at'>[] = [];
+      const answers: unknown[] = [];
       let dropped = false;
 
       for (const write of writes) {
@@ -320,7 +325,9 @@ export default function CalendarScreen() {
         }
 
         try {
-          await api(write.path, { method: write.method, body: write.body ?? undefined });
+          answers.push(
+            await api(write.path, { method: write.method, body: write.body ?? undefined }),
+          );
         } catch (caught) {
           // The server answering "no" is a different thing from never
           // reaching it: only the second is worth holding on to.
@@ -333,7 +340,7 @@ export default function CalendarScreen() {
 
       if (left.length > 0) await holdWrites(left);
 
-      return left.length;
+      return { kept: left.length, answers };
     },
     [holdWrites],
   );
@@ -370,6 +377,11 @@ export default function CalendarScreen() {
     const keys = [...chosen].sort();
     const label = `${brushName(brush)} · ${keys.length} ${dayWord(keys.length)}`;
     const writes: Omit<Pending, 'id' | 'at'>[] = [];
+    // What these days looked like before the stroke, captured before anything
+    // is mutated. It is the whole of the undo for the brushes that change a
+    // day rather than add to it.
+    const before: { key: string; payload: DaySave }[] = [];
+    const wiped: EventSave[] = [];
 
     if (brush.kind === 'event') {
       // Contiguous days become one event each: a fortnight of leave reads as
@@ -411,14 +423,22 @@ export default function CalendarScreen() {
       for (const key of keys) {
         const payload: DaySave = toSavePayload(byDate.get(key));
 
+        before.push({ key, payload: toSavePayload(byDate.get(key)) });
+
         if (brush.kind === 'erase') {
-          if (!payload.shifts.some((entry) => !entry.worked)) continue;
+          if (!payload.shifts.some((entry) => !entry.worked)) {
+            before.pop();
+            continue;
+          }
 
           // The past is not rewritten: a day already worked keeps its shift
           // and the money on it, whatever the eraser is dragged over.
           payload.shifts = payload.shifts.filter((entry) => entry.worked);
         } else if (brush.kind === 'worked') {
-          if (!payload.shifts.some((entry) => !entry.worked)) continue;
+          if (!payload.shifts.some((entry) => !entry.worked)) {
+            before.pop();
+            continue;
+          }
 
           // Only what was planned turns over. A day with nothing on it is
           // left alone rather than invented — the pencil says a shift
@@ -448,6 +468,17 @@ export default function CalendarScreen() {
           }
 
           if (whole) {
+            wiped.push({
+              name: entry.name,
+              symbol: entry.symbol,
+              colour: entry.colour,
+              start_date: entry.start_date,
+              end_date: entry.end_date,
+              start_time: entry.start_time,
+              end_time: entry.end_time,
+              note: entry.note,
+              kind: entry.kind,
+            });
             writes.push({
               method: 'DELETE',
               path: `/shifter/v1/events/${entry.id}`,
@@ -461,11 +492,17 @@ export default function CalendarScreen() {
     }
 
     try {
-      const kept = await post(writes);
+      const { kept, answers } = await post(writes);
 
       clearPaint();
       void refresh();
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
+      // Offered only when the whole stroke went. Undoing something still
+      // sitting in the queue would mean unpicking the queue, and a button
+      // that sometimes means one thing and sometimes another is worse than
+      // no button.
+      setUndo(kept > 0 ? null : undoFor(brush, keys, before, wiped, answers, label));
 
       // The bar above already counts the days; this only has to say why they
       // are not on the calendar yet.
@@ -475,6 +512,23 @@ export default function CalendarScreen() {
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     } finally {
       setApplying(false);
+    }
+  };
+
+  const takeBack = async () => {
+    if (undo === null) return;
+
+    setUndoing(true);
+
+    try {
+      await post(writesToUndo(undo));
+      setUndo(null);
+      void refresh();
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : 'Не отменилось.');
+    } finally {
+      setUndoing(false);
     }
   };
 
@@ -794,11 +848,31 @@ export default function CalendarScreen() {
         )}
       </ScrollView>
 
+      {brush === null && undo !== null && (
+        <View style={[styles.bar, { bottom: insets.bottom + 14 }]}>
+          <Ionicons name="checkmark-circle" size={22} color={palette.good} />
+          <Text style={styles.barName} numberOfLines={1}>{undo.label}</Text>
+          <Pressable style={styles.barGhost} onPress={() => setUndo(null)} hitSlop={6}>
+            <Ionicons name="close" size={18} color={palette.textSecondary} />
+          </Pressable>
+          <Pressable
+            style={styles.barDone}
+            disabled={undoing}
+            onPress={() => void takeBack()}
+          >
+            {undoing
+              ? <ActivityIndicator color="#fff" size="small" />
+              : <Text style={styles.barDoneText}>Отменить</Text>}
+          </Pressable>
+        </View>
+      )}
+
       {brush === null ? (
         <Pressable
-          style={[styles.pencil, { bottom: insets.bottom + 22 }]}
+          style={[styles.pencil, { bottom: insets.bottom + (undo === null ? 22 : 84) }]}
           onPress={() => {
             void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            setUndo(null);
             setPicking(true);
           }}
           accessibilityLabel="Закрасить дни сменой или событием"
@@ -904,6 +978,91 @@ function Stat({
     </View>
   );
 }
+
+/**
+ * What one stroke did, in the form that puts it back.
+ *
+ * A stroke across twenty days with the wrong template used to cost twenty
+ * passes with the eraser. Adding is exactly reversible through the same bulk
+ * call; the brushes that change a day instead carry the day as it was.
+ */
+type Undo =
+  | { kind: 'shift'; templateId: number; dates: string[]; label: string }
+  | { kind: 'event'; ids: number[]; label: string }
+  | {
+      kind: 'days';
+      before: { key: string; payload: DaySave }[];
+      /**
+       * Events the eraser took off. Put back as new ones rather than restored:
+       * the id is gone, and nobody has ever looked at one.
+       */
+      events: EventSave[];
+      label: string;
+    };
+
+const undoFor = (
+  brush: Brush,
+  keys: string[],
+  before: { key: string; payload: DaySave }[],
+  wiped: EventSave[],
+  answers: unknown[],
+  label: string,
+): Undo | null => {
+  if (brush.kind === 'shift') {
+    return { kind: 'shift', templateId: brush.template.id, dates: keys, label };
+  }
+
+  if (brush.kind === 'event') {
+    const ids = answers
+      .map((answer) => (answer as { id?: number } | null)?.id)
+      .filter((id): id is number => typeof id === 'number');
+
+    return ids.length === 0 ? null : { kind: 'event', ids, label };
+  }
+
+  return before.length === 0 && wiped.length === 0
+    ? null
+    : { kind: 'days', before, events: wiped, label };
+};
+
+const writesToUndo = (undo: Undo): Omit<Pending, 'id' | 'at'>[] => {
+  if (undo.kind === 'shift') {
+    return [{
+      method: 'POST',
+      path: '/shifter/v1/days/bulk',
+      body: { dates: undo.dates, shift_id: undo.templateId, mode: 'remove' },
+      days: undo.dates,
+      label: undo.label,
+    }];
+  }
+
+  if (undo.kind === 'event') {
+    return undo.ids.map((id) => ({
+      method: 'DELETE' as const,
+      path: `/shifter/v1/events/${id}`,
+      body: null,
+      days: [],
+      label: undo.label,
+    }));
+  }
+
+  return [
+    ...undo.before.map((entry) => ({
+      method: 'PUT' as const,
+      path: `/shifter/v1/days/${entry.key}`,
+      body: entry.payload,
+      days: [entry.key],
+      label: undo.label,
+    })),
+    ...undo.events.map((event) => ({
+      method: 'POST' as const,
+      path: '/shifter/v1/events',
+      body: event,
+      days: [],
+      label: undo.label,
+    })),
+  ];
+};
 
 const changeWord = (count: number) => {
   const tail = count % 10;
@@ -1113,7 +1272,7 @@ const makeStyles = (palette: Palette) =>
     barChip: { width: 36, height: 36, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
     barChipMark: { fontSize: 17, color: '#fff' },
     barText: { flex: 1, gap: 1 },
-    barName: { color: palette.text, fontSize: 14.5, fontWeight: '700' },
+    barName: { flex: 1, color: palette.text, fontSize: 14.5, fontWeight: '700' },
     barMeta: { color: palette.textSecondary, fontSize: 12 },
     barGhost: { padding: 6 },
     barDone: {

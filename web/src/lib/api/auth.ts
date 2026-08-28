@@ -122,7 +122,18 @@ export const passwordApi = {
     api<void>('/shifter/v1/auth/password/reset', { body: { token, password } }),
 };
 
+/** What the public card shows. `slug` is read-only: the server mints it. */
+export interface CardSettings {
+  on: boolean;
+  show_places: boolean;
+  show_money: boolean;
+  slug: string | null;
+}
+
 export const accountApi = {
+  card: () => api<CardSettings>('/shifter/v1/account/card'),
+  setCard: (body: { on: boolean; show_places: boolean; show_money: boolean }) =>
+    api<CardSettings>('/shifter/v1/account/card', { method: 'PUT', body }),
   referral: () => api<{ code: string; invited: number }>('/shifter/v1/account/referral'),
   setEmail: (email: string | null) =>
     api<{ email: string | null }>('/shifter/v1/account/avatar/email', { method: 'PUT', body: { email } }),

@@ -22,9 +22,13 @@ namespace Shifter.Api.Controllers;
 public class AccountController : Controller
 {
     private readonly IMediator _mediator;
+    private readonly ShifterDbContext _db;
 
-    public AccountController(IMediator mediator)
-        => _mediator = mediator;
+    public AccountController(IMediator mediator, ShifterDbContext db)
+    {
+        _mediator = mediator;
+        _db = db;
+    }
 
     [HttpGet]
     public async Task<ActionResult<ProfileDto>> Get(CancellationToken ct)
@@ -61,6 +65,50 @@ public class AccountController : Controller
     public async Task<ActionResult<ProfileDto>> UnlinkGoogle(CancellationToken ct)
         => Ok(await _mediator.Send(new UnlinkGoogleDto(UserId()), ct));
 
+    /// <summary>
+    /// What the public card shows, and whether there is one at all.
+    /// </summary>
+    [HttpGet]
+    [Route("card")]
+    public async Task<ActionResult<CardSettingsDto>> GetCard(CancellationToken ct)
+    {
+        User user = await Me(ct);
+
+        return Ok(new CardSettingsDto(
+            user.CardSlug is not null, user.CardShowsPlaces, user.CardShowsMoney, user.CardSlug));
+    }
+
+    /// <summary>
+    /// Switches the card on or off and decides what it shows.
+    ///
+    /// Turning it off drops the slug rather than hiding the page, so the link
+    /// somebody already sent stops resolving — a link that still works is not
+    /// a revocation anybody believes. Turning it back on mints a new one,
+    /// because whoever switched it off decided the people holding the old link
+    /// should not have it.
+    /// </summary>
+    [HttpPut]
+    [Route("card")]
+    public async Task<ActionResult<CardSettingsDto>> SetCard(
+        [FromBody] CardSettingsDto request,
+        CancellationToken ct)
+    {
+        User user = await Me(ct);
+
+        if (!request.on) user.CardSlug = null;
+        else user.CardSlug ??= GigListing.NewSlug();
+
+        // Both stay off while the card is off, so switching it back on never
+        // republishes an answer somebody gave months ago and forgot about.
+        user.CardShowsPlaces = request.on && request.show_places;
+        user.CardShowsMoney = request.on && request.show_money;
+
+        await _db.SaveChangesAsync(ct);
+
+        return Ok(new CardSettingsDto(
+            user.CardSlug is not null, user.CardShowsPlaces, user.CardShowsMoney, user.CardSlug));
+    }
+
     [HttpDelete]
     public async Task<IActionResult> Delete(
         [FromBody] DeleteAccountBody request,
@@ -72,6 +120,10 @@ public class AccountController : Controller
         return NoContent();
     }
 
+    private async Task<User> Me(CancellationToken ct)
+        => await _db.Users.FirstOrDefaultAsync(row => row.Id == UserId(), ct)
+           ?? throw new NotFoundException("Account does not exist.");
+
     private int UserId()
     {
         if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int id))
@@ -81,5 +133,9 @@ public class AccountController : Controller
     }
 }
 
-/// <summary>What somebody chooses to show on their public card.</summary>
-public record CardSettingsDto(bool on, bool show_places, bool show_money);
+/// <summary>
+/// What somebody chooses to show on their public card. The slug comes back on
+/// a read so the screen can print the link; it is never accepted on a write —
+/// choosing your own would let somebody claim a link they were told about.
+/// </summary>
+public record CardSettingsDto(bool on, bool show_places, bool show_money, string? slug = null);

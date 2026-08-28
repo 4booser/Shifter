@@ -5,6 +5,14 @@
 type Dictionary = Record<string, string>;
 
 export const RU: Dictionary = {
+  'A link to your record': 'Ссылка на вашу историю',
+  'A page anybody can open without an account — for a manager who is not going to make one.': 'Страница, которая открывается без входа — для управляющего, который аккаунт заводить не будет.',
+  'Publish the link': 'Опубликовать ссылку',
+  'It shows months, shifts and hours. These two add more:': 'На ней месяцы, смены и часы. Эти два переключателя добавляют остальное:',
+  'Name the places': 'Называть заведения',
+  'Show the money': 'Показывать деньги',
+  'Switching it off does not hide the page — it destroys the link. Anybody you sent it to loses it, and switching back on makes a new one.': 'Выключение не прячет страницу, а уничтожает ссылку. У всех, кому вы её отправили, она перестанет открываться, а включение выдаст новую.',
+  Open: 'Открыть',
   'Needed today': 'Нужен сегодня',
   'Somebody has not turned up': 'Кто-то не вышел',
   'Notifies people in your city who are looking for work in this trade and are free today. Nobody else, and never more than twice in an evening.': 'Уведомим тех, кто в вашем городе ищет работу по этой специальности и сегодня свободен. Больше никого и не чаще двух раз за вечер.',
@@ -1871,6 +1879,14 @@ export const RU: Dictionary = {
 };
 
 export const UK: Dictionary = {
+  'A link to your record': 'Посилання на вашу історію',
+  'A page anybody can open without an account — for a manager who is not going to make one.': 'Сторінка, яка відкривається без входу — для керівника, який акаунт заводити не буде.',
+  'Publish the link': 'Опублікувати посилання',
+  'It shows months, shifts and hours. These two add more:': 'На ній місяці, зміни й години. Ці два перемикачі додають решту:',
+  'Name the places': 'Називати заклади',
+  'Show the money': 'Показувати гроші',
+  'Switching it off does not hide the page — it destroys the link. Anybody you sent it to loses it, and switching back on makes a new one.': 'Вимкнення не ховає сторінку, а знищує посилання. У всіх, кому ви його надіслали, воно перестане відкриватися, а вмикання видасть нове.',
+  Open: 'Відкрити',
   'Needed today': 'Потрібен сьогодні',
   'Somebody has not turned up': 'Хтось не вийшов',
   'Notifies people in your city who are looking for work in this trade and are free today. Nobody else, and never more than twice in an evening.': 'Сповістимо тих, хто у вашому місті шукає роботу за цією спеціальністю і сьогодні вільний. Більше нікого і не частіше двох разів за вечір.',

@@ -10,6 +10,7 @@ import { useReveal } from '@/lib/fx';
 import { Shell } from '@/components/layout/shell';
 import { DocumentsPanel } from '@/components/dashboard/documents-panel';
 import { AvatarSection } from '@/components/account/avatar-section';
+import { CardSection } from '@/components/account/card-section';
 import { ReferralSection } from '@/components/account/referral-section';
 import { GoogleButton } from '@/components/auth/google-button';
 import { Alert } from '@/components/ui/bits';
@@ -122,6 +123,9 @@ function Account() {
 
           {/* ==== The papers that gate a shift ==== */}
           <DocumentsPanel />
+
+          {/* ==== The link to your own record ==== */}
+          <CardSection />
 
           {/* ==== Password ==== */}
           <section className="card reveal p-4">

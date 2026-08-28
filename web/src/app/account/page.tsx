@@ -258,7 +258,7 @@ function Account() {
 
           <FeedSection />
 
-          <TwoFactorSection hasPassword={profile.has_password} />
+          <TwoFactorSection hasPassword={profile.has_password} on={profile.two_factor} />
 
           <SessionsSection />
 
@@ -451,19 +451,21 @@ function ExportSection() {
  * asks for one code as proof; enabling mints eight one-time backup codes for
  * the day the phone is gone. Money history deserves at least this much.
  */
-function TwoFactorSection({ hasPassword }: { hasPassword: boolean }) {
+function TwoFactorSection({ hasPassword, on }: { hasPassword: boolean; on: boolean }) {
   const { t } = useI18n();
   const [stage, setStage] = useState<'idle' | 'setup' | 'backup'>('idle');
   const [qr, setQr] = useState<string | null>(null);
   const [secret, setSecret] = useState('');
   const [code, setCode] = useState('');
   const [backups, setBackups] = useState<string[]>([]);
-  const [enabled, setEnabled] = useState<boolean | null>(null);
+  const [enabled, setEnabled] = useState<boolean | null>(on);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  // The profile does not say whether 2FA is on; probing setup does — a 409
-  // means it already is.
+  // The profile says whether it is on, so nothing here has to find out by
+  // trying to switch it on and reading the failure. A 409 from setup still
+  // means "already enabled" and is still handled — two tabs, one of them
+  // stale, is an ordinary Tuesday.
   const begin = async () => {
     setBusy(true);
     setError(null);

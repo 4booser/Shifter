@@ -25,7 +25,13 @@ public record ProfileDto(
     /// The rest between shifts this person counts as enough, in hours.
     /// Eleven is the EU daily rule and the default nobody has to choose.
     /// </summary>
-    double rest_hours);
+    double rest_hours,
+    /// <summary>
+    /// Whether a second factor is on. Said plainly so nothing has to find out
+    /// by trying to switch it on and reading the failure — a probe with side
+    /// effects is a poor way to ask a yes-or-no question.
+    /// </summary>
+    bool two_factor = false);
 
 public record GetProfileDto(int UserId) : IRequest<ProfileDto>;
 

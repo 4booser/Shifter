@@ -41,6 +41,8 @@ export interface Profile {
   monthly_goal: number | null;
   /** Rest between shifts this person counts as enough, in hours. */
   rest_hours: number;
+  /** Whether a second factor is on. */
+  two_factor: boolean;
 }
 
 /**

@@ -627,6 +627,8 @@ export const RU: Dictionary = {
   'without a readable date': 'без читаемой даты',
   'official': 'официальный',
   'a bank buys at': 'банк купит по',
+  'You run a rota, so you will see what other people earn. That is behind two-factor.':
+    'Вы ведёте график, а значит увидите чужой заработок. Это доступно только со второй проверкой входа.',
   'This week': 'Эта неделя',
   'Earned this week': 'Заработано за неделю',
   'Still to come': 'Ещё впереди',
@@ -3014,6 +3016,8 @@ export const UK: Dictionary = {
   'without a readable date': 'без читабельної дати',
   'official': 'офіційний',
   'a bank buys at': 'банк купить по',
+  'You run a rota, so you will see what other people earn. That is behind two-factor.':
+    'Ви ведете графік, а отже побачите чужий заробіток. Це доступно лише з другою перевіркою входу.',
   'This week': 'Цей тиждень',
   'All time': 'За весь час',
 

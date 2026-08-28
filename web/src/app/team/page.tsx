@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
+import { accountApi } from '@/lib/api/auth';
 import { apiErrorMessage } from '@/lib/api/http';
 import { Team, teamApi } from '@/lib/api/team';
 import { useI18n } from '@/lib/i18n';
@@ -31,6 +32,10 @@ function TeamAdmin() {
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+
+  // Null while unknown, so the prompt never flashes at somebody who already
+  // has it on.
+  const [twoFactor, setTwoFactor] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [newName, setNewName] = useState('');
   const [joinCode, setJoinCode] = useState('');
@@ -45,6 +50,15 @@ function TeamAdmin() {
       .finally(() => setLoading(false));
 
   useEffect(load, []);
+
+  useEffect(() => {
+    void accountApi
+      .get()
+      .then((profile) => setTwoFactor(profile.two_factor))
+      // Silence rather than a nag on a failed request: an unanswered question
+      // is not a "no".
+      .catch(() => setTwoFactor(true));
+  }, []);
 
   const run = async (call: Promise<unknown>, after?: () => void) => {
     setBusy(true);
@@ -184,6 +198,27 @@ function TeamAdmin() {
         </div>
         <p className="field-hint mt-1.5">{t('Ask whoever runs the rota for the six-letter code.')}</p>
       </section>
+
+      {/* ==== The second factor, offered where it becomes relevant ====
+
+          A team owner sees other people's hours and rates — the most sensitive
+          thing this app holds about anybody but its owner. Two-factor is
+          optional for an ordinary account and should not be for that.
+
+          Offered here rather than enforced: the rota still works without it,
+          and only other people's money waits. Shutting somebody out of a team
+          they own to make a point about security makes the point at the wrong
+          person. */}
+      {twoFactor === false && teams.some((team) => team.is_owner) && (
+        <Alert kind="info">
+          <span className="flex flex-wrap items-center gap-2">
+            {t('You run a rota, so you will see what other people earn. That is behind two-factor.')}
+            <Link className="btn btn-sm" href="/account">
+              {t('Turn it on')}
+            </Link>
+          </span>
+        </Alert>
+      )}
 
       {/* ==== Create ==== */}
       <section className="card reveal p-4">

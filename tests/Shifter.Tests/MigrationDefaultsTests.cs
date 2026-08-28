@@ -42,6 +42,7 @@ public class MigrationDefaultsTests
         ["MealDeduction"] = "nothing withheld for food is the ordinary case",
         ["MinimumHourly"] = "zero is off — nobody has named a floor",
         ["EarnedAtWriting"] = "an amount, and nothing recorded is nothing",
+        ["ContactSeenCount"] = "a tally of looks, and nobody has looked yet",
 
         // Enums whose zero is the value the entity itself defaults to. Each
         // was read before being listed here; the note says which one it is.

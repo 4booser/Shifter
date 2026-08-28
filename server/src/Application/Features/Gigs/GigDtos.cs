@@ -79,7 +79,20 @@ public record GigDto(
     /// Not claimed, not applied for, and it comes off by itself — one bad
     /// review among the recent ones takes it away without anybody deciding to.
     /// </summary>
-    bool trusted = false);
+    bool trusted = false,
+    /// <summary>
+    /// Where this person's contacts went, shown to the person whose contacts
+    /// they are. The board asks for a phone number; the least it can do is
+    /// say when somebody opened it.
+    ///
+    /// Zero and null mean nobody has looked — different from "we did not
+    /// count", which is why these are only ever filled on the reader's own
+    /// replies and left alone everywhere else.
+    /// </summary>
+    string? contact_seen_at = null,
+    string? contact_seen_last = null,
+    /// <summary>Separate occasions, not page loads.</summary>
+    int contact_seen_count = 0);
 
 /// <summary>
 /// The offered rate and the caller's own, both per hour, and the gap between

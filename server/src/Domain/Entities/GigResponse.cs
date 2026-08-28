@@ -70,6 +70,55 @@ public sealed class GigResponse
         _ => "open",
     };
 
+    /// <summary>
+    /// When somebody first looked at the contacts this person handed over.
+    ///
+    /// Transparency for transparency. The board asks people for a phone number
+    /// and then goes quiet about where it went; the least it can do is say who
+    /// opened it and when. Nobody has to ask for this — it is shown to the
+    /// person whose number it is, next to the number.
+    ///
+    /// Only the listing's owner can ever see contacts, so one row of counters
+    /// describes the whole audience. A table of viewers would be a table with
+    /// one name in it.
+    /// </summary>
+    public DateTime? ContactSeenAt { get; set; }
+
+    public DateTime? ContactSeenLastAt { get; set; }
+
+    /// <summary>
+    /// Separate occasions, not page loads. A venue with the tab open all
+    /// evening has looked once, and counting refreshes would turn an honest
+    /// log into an accusation.
+    /// </summary>
+    public int ContactSeenCount { get; set; }
+
+    /// <summary>
+    /// How far apart two looks have to be to count as two.
+    ///
+    /// Fifteen minutes: long enough that a page left open does not tick, short
+    /// enough that coming back after a shift to check a number is its own
+    /// visit, which is the thing worth knowing.
+    /// </summary>
+    public const int SeenApartMinutes = 15;
+
+    /// <summary>
+    /// Whether reading this reply right now is a new look at somebody's
+    /// contacts.
+    ///
+    /// False where nothing was ever shared: a "0 views" line about a number
+    /// nobody gave is noise dressed as a privacy feature. False again inside
+    /// the window, so a tab left open all evening stays one visit.
+    /// </summary>
+    public bool IsNewLook(DateTime now)
+    {
+        if (OpenedAt is null) return false;
+        if (Phone is null && Telegram is null) return false;
+
+        return ContactSeenLastAt is null
+            || ContactSeenLastAt < now.AddMinutes(-SeenApartMinutes);
+    }
+
     /// <summary>What the owner may see. Never the field, always this.</summary>
     public string? SharedPhone => OpenedAt is null ? null : Phone;
     public string? SharedTelegram => OpenedAt is null ? null : Telegram;

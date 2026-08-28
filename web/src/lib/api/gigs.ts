@@ -49,6 +49,14 @@ export interface Gig {
    * comes off by itself.
    */
   trusted: boolean;
+  /**
+   * Where the contacts on this reply went. Filled only on the reader's own
+   * replies — it is an answer to "who saw my number", asked on their behalf.
+   */
+  contact_seen_at: string | null;
+  contact_seen_last: string | null;
+  /** Separate occasions, not page loads. */
+  contact_seen_count: number;
   my_response: {
     id: number;
     accepted: boolean;

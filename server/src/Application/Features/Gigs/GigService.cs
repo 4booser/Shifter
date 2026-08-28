@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+
+using Serilog;
 using Shifter.Application.Features.business.Services;
 using Shifter.Application.Features.business.DTOs;
 
@@ -230,6 +232,12 @@ public sealed class GigService
             rows.SelectMany(gig => gig.Responses ?? []).Select(reply => reply.UserId).Distinct().ToArray(),
             byEmployer: true, ct);
 
+        // Reading somebody's phone number is an event, and the person it
+        // belongs to is told about it. Recorded here rather than on a separate
+        // "reveal" click, because this is the request that actually carries
+        // the number out of the database.
+        await NoteContactsSeenAsync(rows.SelectMany(gig => gig.Responses ?? []), ct);
+
         return rows.Select(gig => new GigWithResponsesDto(
             ToDto(gig, userId),
             (gig.Responses ?? [])
@@ -237,6 +245,47 @@ public sealed class GigService
                 .Select(reply => Seen(reply, workerRatings))
                 .ToArray()))
             .ToArray();
+    }
+
+    /// <summary>
+    /// Marks the replies whose contacts have just gone out to an owner.
+    ///
+    /// Counted as occasions rather than page loads: a venue with the tab open
+    /// all evening looked once. Counting refreshes would turn an honest log
+    /// into an accusation, and the person reading it cannot tell the two
+    /// apart.
+    ///
+    /// A failure here is swallowed. The log is a courtesy and the reply is the
+    /// product; losing one view record is much better than a board that will
+    /// not load.
+    /// </summary>
+    private async Task NoteContactsSeenAsync(
+        IEnumerable<GigResponse> replies, CancellationToken ct)
+    {
+        var now = DateTime.UtcNow;
+
+        var ids = replies
+            .Where(reply => reply.IsNewLook(now))
+            .Select(reply => reply.Id)
+            .ToArray();
+
+        if (ids.Length == 0) return;
+
+        try
+        {
+            await _db.GigResponses
+                .Where(reply => ids.Contains(reply.Id))
+                .ExecuteUpdateAsync(
+                    row => row
+                        .SetProperty(reply => reply.ContactSeenAt, reply => reply.ContactSeenAt ?? now)
+                        .SetProperty(reply => reply.ContactSeenLastAt, now)
+                        .SetProperty(reply => reply.ContactSeenCount, reply => reply.ContactSeenCount + 1),
+                    ct);
+        }
+        catch (Exception exception)
+        {
+            Log.Warning(exception, "Could not record who opened {Count} contacts", ids.Length);
+        }
     }
 
     public async Task<GigDto[]> MyRepliesAsync(int userId, CancellationToken ct)
@@ -252,7 +301,14 @@ public sealed class GigService
 
         return rows
             .Where(reply => reply.Listing is not null)
-            .Select(reply => ToDto(reply.Listing!, userId))
+            .Select(reply => ToDto(reply.Listing!, userId) with
+            {
+                // Where their contacts went, attached to their own reply and
+                // nowhere else. Nobody has to go looking for this.
+                contact_seen_at = reply.ContactSeenAt?.ToString("O"),
+                contact_seen_last = reply.ContactSeenLastAt?.ToString("O"),
+                contact_seen_count = reply.ContactSeenCount,
+            })
             .ToArray();
     }
 

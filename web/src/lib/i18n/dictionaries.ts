@@ -607,6 +607,11 @@ export const RU: Dictionary = {
   'above what this city usually posts': 'выше того, что обычно предлагают в городе',
   'From posted rates on this board over the last six months, never from anybody’s records.':
     'По опубликованным на доске ставкам за последние полгода — не по чьим-то записям.',
+  'Nobody has opened your contacts yet.': 'Ваши контакты пока никто не открывал.',
+  'The venue opened your contacts': 'Заведение открывало ваши контакты',
+  'once': 'раз',
+  'occasions': 'раза',
+  'last': 'последний раз',
   'This week': 'Эта неделя',
   'Earned this week': 'Заработано за неделю',
   'Still to come': 'Ещё впереди',
@@ -2974,6 +2979,11 @@ export const UK: Dictionary = {
   'above what this city usually posts': 'вище за те, що зазвичай пропонують у місті',
   'From posted rates on this board over the last six months, never from anybody’s records.':
     'За опублікованими на дошці ставками за останні пів року — не за чиїмись записами.',
+  'Nobody has opened your contacts yet.': 'Ваші контакти поки ніхто не відкривав.',
+  'The venue opened your contacts': 'Заклад відкривав ваші контакти',
+  'once': 'раз',
+  'occasions': 'рази',
+  'last': 'востаннє',
   'This week': 'Цей тиждень',
   'All time': 'За весь час',
 

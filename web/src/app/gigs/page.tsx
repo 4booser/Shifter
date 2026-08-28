@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { apiErrorMessage } from '@/lib/api/http';
 import { MarketBandCard } from '@/components/gigs/market-band';
+import { ContactAudit } from '@/components/gigs/contact-audit';
 import { Gig, GigEmployment, GigReply, GigSave, GIG_CATEGORIES, GIG_GROUPS, categoryOf, gigApi, shrinkPhoto } from '@/lib/api/gigs';
 import { accountApi } from '@/lib/api/auth';
 import { fromKey, keysBetween, monthBounds, shiftDays, todayKey, weekBounds, keyOf } from '@/lib/calendar/calendar-date';
@@ -366,9 +367,12 @@ function Gigs() {
             <p className="field-hint col-span-full">{t('Answer a gig on the board and it lands here.')}</p>
           )}
           {replies.map((gig) => (
-            <GigCard key={gig.id} gig={gig} onRespond={() => setResponding(gig)} onWithdraw={() => {
-              void gigApi.withdraw(gig.id).then(refresh).catch((caught) => setError(apiErrorMessage(caught)));
-            }} />
+            <div key={gig.id} className="flex flex-col gap-1">
+              <GigCard gig={gig} onRespond={() => setResponding(gig)} onWithdraw={() => {
+                void gigApi.withdraw(gig.id).then(refresh).catch((caught) => setError(apiErrorMessage(caught)));
+              }} />
+              <ContactAudit gig={gig} />
+            </div>
           ))}
         </div>
       )}

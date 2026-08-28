@@ -13,10 +13,21 @@ public class PayoutHandler : IPayoutHandler
     private readonly IShifterCommand _shifterCommand;
     private readonly IShifterQuery _shifterQuery;
 
-    public PayoutHandler(IShifterCommand shifterCommand, IShifterQuery shifterQuery)
+    /// <summary>
+    /// Optional: without it a payment is still recorded, it simply carries no
+    /// rate. A payment that cannot be written down because a rate service is
+    /// unavailable would be the worst of both worlds.
+    /// </summary>
+    private readonly Money.RateService? _rates;
+
+    public PayoutHandler(
+        IShifterCommand shifterCommand,
+        IShifterQuery shifterQuery,
+        Money.RateService? rates = null)
     {
         _shifterCommand = shifterCommand;
         _shifterQuery = shifterQuery;
+        _rates = rates;
     }
 
     public async Task<PayoutDto[]> ListAsync(
@@ -84,6 +95,29 @@ public class PayoutHandler : IPayoutHandler
                 ?? throw new NotFoundException("Place of work does not exist.");
         }
 
+        // The place's currency at the time, and what it was worth on the day
+        // the money arrived. Both stored, so that last August's wage stops
+        // changing every morning with the exchange rate.
+        var place = request.location_id is int id
+            ? await _shifterQuery.GetLocationAsync(userId, id, ct)
+            : null;
+
+        var currency = place?.Currency ?? string.Empty;
+        decimal? rate = null;
+        DateOnly? rateOn = null;
+
+        if (_rates is not null && currency.Length == 3
+            && !string.Equals(currency, "UAH", StringComparison.OrdinalIgnoreCase))
+        {
+            var found = await _rates.OnAsync([currency], receivedOn, ct);
+
+            if (found.TryGetValue(Money.NbuRateClient.Normalise(currency), out var pair))
+            {
+                rate = pair.Rate;
+                rateOn = pair.On;
+            }
+        }
+
         Payout payout = new Payout()
         {
             UserId = userId,
@@ -94,7 +128,10 @@ public class PayoutHandler : IPayoutHandler
             ReceivedOn = receivedOn,
             Note = string.IsNullOrWhiteSpace(request.note) ? null : request.note.Trim(),
             Stream = ParseStream(request.stream),
-            Kind = ParseKind(request.kind)
+            Kind = ParseKind(request.kind),
+            Currency = currency,
+            RateToBase = rate,
+            RateOn = rateOn,
         };
 
         if (! await _shifterCommand.AddPayoutAsync(payout, ct))
@@ -125,7 +162,10 @@ public class PayoutHandler : IPayoutHandler
         payout.LocationId,
         payout.Location?.Name,
         payout.Stream,
-        payout.Kind
+        payout.Kind,
+        payout.Currency,
+        payout.RateToBase,
+        payout.RateOn
     );
 
     /// <summary>

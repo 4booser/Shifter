@@ -219,7 +219,7 @@ public partial class DayHandler : IDayHandler
             averageCheque,
             byZone,
             events.Select(EventHandler.ToDto).ToArray(),
-            await ConvertAsync(byLocation, currencies, baseCurrency, to, ct)
+            await ConvertAsync(byLocation, currencies, baseCurrency, to, payouts, ct)
         );
     }
 
@@ -333,6 +333,13 @@ public partial class DayHandler : IDayHandler
         string[] currencies,
         string? baseCurrency,
         DateOnly on,
+        /// <summary>
+        /// What arrived, each carrying the rate of the day it arrived. Earnings
+        /// are restated at one stated rate — a per-day reconstruction of a
+        /// month's shifts is not something anybody can check — but a payment
+        /// happened on a day, and that day's rate is written beside it.
+        /// </summary>
+        Payout[] payouts,
         CancellationToken ct)
     {
         if (_rates is null || baseCurrency is null) return null;
@@ -388,7 +395,43 @@ public partial class DayHandler : IDayHandler
                     Money.NbuRateClient.Format(rate.Value.Rate),
                     rate.Value.On.ToString("yyyy-MM-dd")))
                 .ToArray(),
-            [.. unconverted]);
+            [.. unconverted],
+            PaidAt(payouts, wanted));
+    }
+
+    /// <summary>
+    /// What arrived, at the rate of the day each payment landed.
+    ///
+    /// Null unless something in the range carries a stored rate: a payment
+    /// recorded before rates began being kept has none, and converting it at
+    /// today's would be the very thing this exists to stop.
+    /// </summary>
+    private static decimal? PaidAt(Payout[] payouts, string wanted)
+    {
+        var any = false;
+        decimal total = 0m;
+
+        foreach (var payout in payouts)
+        {
+            var code = payout.Currency.Length == 3
+                ? Money.NbuRateClient.Normalise(payout.Currency)
+                : wanted;
+
+            if (code == wanted)
+            {
+                total += payout.Amount;
+                continue;
+            }
+
+            // Only via the hryvnia, which is the only thing the stored rate
+            // is against. Anything else would need a rate nobody wrote down.
+            if (payout.RateToBase is not decimal rate || wanted != "UAH") return null;
+
+            total += payout.Amount * rate;
+            any = true;
+        }
+
+        return any ? Math.Round(total, 2) : null;
     }
 
     /// <summary>

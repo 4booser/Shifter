@@ -385,6 +385,12 @@ export interface Conversion {
   rates: RateUsed[];
   /** Currencies the bank had no rate for, named rather than counted as one-to-one. */
   unconverted: string[];
+  /**
+   * What actually arrived, converted at the rate of the day each payment
+   * landed rather than at today's. Null where no payment in the range carried
+   * a stored rate.
+   */
+  paid: number | null;
 }
 
 export interface DaysResponse {
@@ -684,6 +690,16 @@ export interface Payout {
   location_name: string | null;
   /** What kind of payment it is; see PayoutKind. */
   kind: PayoutKind;
+  /** The currency it arrived in. Empty is the app's own. */
+  currency: string;
+  /**
+   * Hryvnia per unit on the day it arrived, fixed when it was recorded — so
+   * last August's wage stops changing every morning with the rate. Null in
+   * the app's own currency, and null where nothing was published.
+   */
+  rate_to_base: number | null;
+  /** The day that rate was published for. Weekends look back. */
+  rate_on: string | null;
 }
 
 /**

@@ -13,7 +13,17 @@ public record PayoutDto(
     /// <summary>Which of the place's payments this settles: all, wage or commission.</summary>
     string stream = "all",
     /// <summary>settlement, advance, bonus or cash.</summary>
-    string kind = "settlement"
+    string kind = "settlement",
+    /// <summary>The currency it arrived in. Empty is the app's own.</summary>
+    string currency = "",
+    /// <summary>
+    /// Hryvnia per unit on the day it arrived, fixed when it was recorded.
+    /// Null in the app's own currency, and null where nothing was published —
+    /// which is said rather than filled in.
+    /// </summary>
+    decimal? rate_to_base = null,
+    /// <summary>The day that rate was published for. Weekends look back.</summary>
+    DateOnly? rate_on = null
     );
 
 /// <summary>

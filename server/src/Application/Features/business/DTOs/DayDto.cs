@@ -205,7 +205,17 @@ public record ConversionDto(
     /// Currencies the bank had no rate for. Their money is deliberately
     /// absent from the totals above rather than counted one-to-one.
     /// </summary>
-    string[] unconverted);
+    string[] unconverted,
+    /// <summary>
+    /// What actually arrived, converted at the rate of the day each payment
+    /// landed rather than at today's.
+    ///
+    /// A payment is a fact and so is what it was worth when it happened; a
+    /// range restated at this morning's rate moves last August's wage every
+    /// morning. Null where no payment in the range carried a stored rate —
+    /// which is every payment recorded before the rate started being kept.
+    /// </summary>
+    decimal? paid = null);
 
 public record ConvertedPlaceDto(
     int location_id,

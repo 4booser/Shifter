@@ -377,6 +377,38 @@ export default function BankScreen() {
         </>
       )}
 
+      {/* Jars are not accounts and are never added to one: monobank keeps them
+          apart and so does this. They are here because a jar is where tips get
+          put aside, which is the only saving most of this trade ever does. */}
+      {(mono.client?.jars ?? []).length > 0 && view === 'summary' && (
+        <>
+          <Text style={styles.label}>{t('Банки')}</Text>
+          <View style={styles.accounts}>
+            {(mono.client?.jars ?? []).map((jar) => (
+              <View key={jar.id} style={styles.jar}>
+                <Text style={styles.jarName} numberOfLines={1}>{jar.title}</Text>
+                <Text style={styles.accountMeta}>
+                  {moneyIn(currencyOf(jar.currencyCode), fromMinor(jar.balance))}
+                  {jar.goal !== undefined && jar.goal > 0
+                    ? ` ${t('из')} ${moneyIn(currencyOf(jar.currencyCode), fromMinor(jar.goal))}`
+                    : ''}
+                </Text>
+                {jar.goal !== undefined && jar.goal > 0 && (
+                  <View style={styles.jarTrack}>
+                    <View
+                      style={[
+                        styles.jarFill,
+                        { width: `${Math.min(100, (jar.balance / jar.goal) * 100)}%` },
+                      ]}
+                    />
+                  </View>
+                )}
+              </View>
+            ))}
+          </View>
+        </>
+      )}
+
       {mono.accountId !== null && (
         <>
           <Press
@@ -702,6 +734,26 @@ const makeStyles = (palette: Palette) =>
     accountPan: { color: palette.text, fontWeight: '700', fontSize: 14.5, fontVariant: ['tabular-nums'] },
     accountOnText: { color: palette.accent },
     accountMeta: { color: palette.textSecondary, fontSize: 11.5, fontVariant: ['tabular-nums'] },
+
+    jar: {
+      borderWidth: 1,
+      borderColor: palette.border,
+      backgroundColor: palette.backgroundElement,
+      borderRadius: 16,
+      paddingHorizontal: 13,
+      paddingVertical: 10,
+      gap: 3,
+      minWidth: 140,
+    },
+    jarName: { color: palette.text, fontWeight: '700', fontSize: 14 },
+    jarTrack: {
+      height: 5,
+      borderRadius: 3,
+      backgroundColor: palette.backgroundSelected,
+      overflow: 'hidden',
+      marginTop: 2,
+    },
+    jarFill: { height: 5, borderRadius: 3, backgroundColor: palette.good },
 
     sync: {
       flexDirection: 'row',

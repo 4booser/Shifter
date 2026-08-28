@@ -120,6 +120,7 @@ export default function PayoutsScreen() {
   const [error, setError] = useState<string | null>(null);
   const [prefill, setPrefill] = useState<PayPeriodRow | null>(null);
   const statement = useMono((state) => state.items);
+  const bankToken = useMono((state) => state.token);
   const payers = useMono((state) => state.payers);
 
   // Half a year back and a month forward: enough to see what is still owed
@@ -198,6 +199,19 @@ export default function PayoutsScreen() {
               </Text>
             </View>
           </View>
+        )}
+
+        {/* Where an account is not connected, the shortfall above is still only
+            the app's own arithmetic. Offered here rather than anywhere else
+            because this is the screen somebody is on when they doubt it. */}
+        {data !== null && bankToken == null && (data?.shortfalls.length ?? 0) > 0 && (
+          <Press style={styles.connect} onPress={() => router.push('/(tabs)/bank')}>
+            <Ionicons name="card-outline" size={18} color={palette.accent} />
+            <Text style={styles.connectText}>
+              {t('Подключите банк — и «недоплатили» станет проверяемым фактом')}
+            </Text>
+            <Ionicons name="chevron-forward" size={15} color={palette.accent} />
+          </Press>
         )}
 
         {(data?.shortfalls.length ?? 0) > 0 && (
@@ -616,6 +630,17 @@ const makeStyles = (palette: Palette) =>
       overflow: 'hidden',
     },
     cardPeriod: { color: palette.textSecondary, fontSize: 13 },
+    connect: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 9,
+      backgroundColor: palette.accentSoft,
+      borderRadius: 16,
+      paddingHorizontal: 12,
+      paddingVertical: 12,
+    },
+    connectText: { flex: 1, color: palette.accent, fontSize: 13, fontWeight: '700', lineHeight: 18 },
+
     bankLine: {
       flexDirection: 'row',
       alignItems: 'center',

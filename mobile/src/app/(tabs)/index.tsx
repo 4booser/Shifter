@@ -663,6 +663,9 @@ export default function CalendarScreen() {
             </Press>
           )}
 
+          <Press onPress={() => router.push('/search')} hitSlop={8}>
+            <Ionicons name="search" size={21} color={palette.textSecondary} />
+          </Press>
           <Press onPress={() => router.push('/import')} hitSlop={8}>
             <Ionicons name="camera-outline" size={22} color={palette.textSecondary} />
           </Press>

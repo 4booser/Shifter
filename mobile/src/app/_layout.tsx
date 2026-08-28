@@ -35,10 +35,6 @@ export default function RootLayout() {
   }, [session]);
 
   // Keychain still being read: the splash is covering everything anyway.
-  useEffect(() => {
-    void useSession.getState().signIn('paint1787913362', 'Passw0rd23');
-  }, []); // TEMP-LOGIN
-
   if (session === undefined) return null;
 
   return (
@@ -58,6 +54,7 @@ export default function RootLayout() {
             <Stack.Screen name="year" options={{ presentation: 'modal' }} />
             <Stack.Screen name="templates" options={{ presentation: 'modal' }} />
             <Stack.Screen name="places" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="search" options={{ presentation: 'modal' }} />
             <Stack.Screen name="board" options={{ presentation: 'modal' }} />
             <Stack.Screen name="crew" options={{ presentation: 'modal' }} />
             <Stack.Screen name="costs" options={{ presentation: 'modal' }} />

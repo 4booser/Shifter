@@ -15,6 +15,7 @@ function day(date: string, hours: number, start = '10:00', worked = true): Calen
         hours,
         earned: hours * 100,
         revenue: null,
+  guests: null,
         revenue_percent: null,
         worked,
         needs_cover: false,

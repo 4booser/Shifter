@@ -25,6 +25,8 @@ public record DayShiftDto(
     decimal earned,
     /// <summary>What the shift took, where it was recorded.</summary>
     decimal? revenue,
+    /// <summary>How many the shift served, where anybody counted.</summary>
+    int? guests,
     /// <summary>The agreed share of it, already inside earned.</summary>
     decimal? revenue_percent,
     bool worked,
@@ -150,6 +152,19 @@ public record DaysDto(
     /// <summary>What those shifts took, where it was recorded.</summary>
     decimal revenue_counted,
     /// <summary>
+    /// How many people were served across the range, where anybody counted.
+    /// </summary>
+    int guests_counted,
+    /// <summary>
+    /// Takings over guests, across the shifts that recorded both.
+    ///
+    /// Null where either is missing. Takings alone do not describe an evening
+    /// — twelve thousand off forty covers is a different night from twelve
+    /// thousand off a hundred and twenty — and an average cheque computed from
+    /// half the data would describe neither.
+    /// </summary>
+    decimal? average_cheque,
+    /// <summary>
     /// Everything overlapping the range, once each rather than repeated on
     /// every day it covers — a fortnight of leave is one entry, and the client
     /// spreads it across the cells itself.
@@ -252,7 +267,12 @@ public record DayShiftSaveDto(
     /// <summary>Overrides the template's unpaid minutes; null keeps them.</summary>
     int? break_minutes = null,
     /// <summary>What this shift took. Null leaves it uncounted, not zero.</summary>
-    decimal? revenue = null
+    decimal? revenue = null,
+    /// <summary>
+    /// How many people it served. Null is "nobody counted", which is not the
+    /// same as an evening with no guests.
+    /// </summary>
+    int? guests = null
     );
 
 public record DaySaleSaveDto(

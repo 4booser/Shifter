@@ -88,6 +88,15 @@ public partial class DayHandler : IDayHandler
         decimal revenueEarned = worked.Sum(entry => entry.RevenuePay);
         decimal revenueCounted = worked.Sum(entry => entry.Revenue ?? 0m);
 
+        // Only the shifts that recorded both. An average cheque computed from
+        // the takings of one evening and the covers of another describes
+        // neither, and it is the kind of figure a manager quotes back.
+        var counted = worked.Where(entry => entry.Guests is > 0 && entry.Revenue is not null).ToArray();
+        int guestsCounted = counted.Sum(entry => entry.Guests!.Value);
+        decimal? averageCheque = guestsCounted <= 0
+            ? null
+            : Math.Round(counted.Sum(entry => entry.Revenue!.Value) / guestsCounted, 2);
+
         // Both are kept per place and summed here for the headline, so the
         // figure on the dashboard and the figure inside each place's tax are
         // the same arithmetic rather than two that happen to agree.
@@ -166,6 +175,8 @@ public partial class DayHandler : IDayHandler
             premiumExtra,
             revenueEarned,
             revenueCounted,
+            guestsCounted,
+            averageCheque,
             events.Select(EventHandler.ToDto).ToArray(),
             await ConvertAsync(byLocation, currencies, baseCurrency, to, ct)
         );
@@ -464,6 +475,11 @@ public partial class DayHandler : IDayHandler
                 // different answers and only one of them is a zero.
                 if (entry.revenue is decimal revenue && revenue >= 0m)
                     placed.Revenue = revenue;
+
+                // Same rule for the covers: "nobody counted" and "nobody came"
+                // are different evenings and only one of them is a zero.
+                if (entry.guests is int guests && guests >= 0)
+                    placed.Guests = guests;
 
                 return placed;
             })
@@ -1134,6 +1150,7 @@ public partial class DayHandler : IDayHandler
                 Math.Round(entry.PaidDuration.TotalHours, 2),
                 entry.Pay,
                 entry.Revenue,
+                entry.Guests,
                 entry.RevenuePercent,
                 entry.Worked,
                 entry.NeedsCover,

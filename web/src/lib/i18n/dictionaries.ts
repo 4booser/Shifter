@@ -543,6 +543,9 @@ export const RU: Dictionary = {
   '= 3 200 ₴ a month, counted apart from earnings':
     '= 3 200 ₴ в месяц, считается отдельно от заработка',
   'Add an event type': 'Добавить тип события',
+  'Guests': 'Гостей',
+  'nobody counted': 'никто не считал',
+  'Average cheque': 'Средний чек',
   'This week': 'Эта неделя',
   'Earned this week': 'Заработано за неделю',
   'Still to come': 'Ещё впереди',
@@ -2848,6 +2851,9 @@ export const UK: Dictionary = {
   '= 3 200 ₴ a month, counted apart from earnings':
     '= 3 200 ₴ на місяць, рахується окремо від заробітку',
   'Add an event type': 'Додати тип події',
+  'Guests': 'Гостей',
+  'nobody counted': 'ніхто не рахував',
+  'Average cheque': 'Середній чек',
   'This week': 'Цей тиждень',
   'All time': 'За весь час',
 

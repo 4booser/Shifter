@@ -15,6 +15,7 @@ function day(date: string, earned: number): CalendarDayData {
         hours: 8,
         earned,
         revenue: null,
+  guests: null,
         revenue_percent: null,
         worked: true,
         needs_cover: false,

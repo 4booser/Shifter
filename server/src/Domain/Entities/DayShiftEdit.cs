@@ -24,7 +24,11 @@ public static class DayShiftEdit
     /// <summary>
     /// What a saved day is allowed to change about a placement already on it.
     /// Whether it was worked, whether it needs covering, the clock somebody
-    /// actually kept, the break, and what the shift took.
+    /// actually kept, the break, what the shift took and how many it served.
+    ///
+    /// The last two belong together and belong here: both are recorded after
+    /// the evening, by the person who was there, and neither is a term of the
+    /// deal that a re-saved day has any business rewriting.
     /// </summary>
     private static readonly string[] Owned =
     [
@@ -34,6 +38,7 @@ public static class DayShiftEdit
         nameof(DayShift.ActualEnd),
         nameof(DayShift.BreakMinutes),
         nameof(DayShift.Revenue),
+        nameof(DayShift.Guests),
     ];
 
     private static readonly PropertyInfo[] Fields = typeof(DayShift)

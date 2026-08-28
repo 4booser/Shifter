@@ -85,6 +85,7 @@ export function DayPanel() {
   const [deductionReason, setDeductionReason] = useState<DeductionReason | null>(null);
   const [tipPool, setTipPool] = useState<number | null>(null);
   const [revenue, setRevenue] = useState<Record<number, number | null>>({});
+  const [guests, setGuests] = useState<Record<number, number | null>>({});
   const [note, setNote] = useState('');
   const [colour, setColour] = useState<string | null>(null);
   const [eventOpen, setEventOpen] = useState(false);
@@ -217,6 +218,7 @@ export function DayPanel() {
           actual_end: start !== null && end !== null ? end : null,
           break_minutes: entry.break_minutes,
           revenue: entry.shift_id in revenue ? revenue[entry.shift_id] : entry.revenue,
+          guests: entry.shift_id in guests ? guests[entry.shift_id] : entry.guests,
         };
       }),
       sales: Object.entries(quantities)
@@ -365,25 +367,58 @@ export function DayPanel() {
                       took: everybody else would be typing a number nothing
                       reads. */}
                   {entry.revenue_percent !== null && (
-                    <label className="mt-1.5 block">
-                      <span className="field-label">
-                        {t('Takings this shift')} · {entry.revenue_percent}%
-                      </span>
-                      <input
-                        type="number"
-                        min={0}
-                        className="field-input"
-                        placeholder={t('not counted')}
-                        value={(entry.shift_id in revenue ? revenue[entry.shift_id] : entry.revenue) ?? ''}
-                        onChange={(event) =>
-                          setRevenue((current) => ({
-                            ...current,
-                            [entry.shift_id]: event.target.value === '' ? null : Number(event.target.value),
-                          }))
-                        }
-                      />
-                    </label>
+                    <div className="mt-1.5 grid grid-cols-2 gap-2">
+                      <label className="block">
+                        <span className="field-label">
+                          {t('Takings this shift')} · {entry.revenue_percent}%
+                        </span>
+                        <input
+                          type="number"
+                          min={0}
+                          className="field-input"
+                          placeholder={t('not counted')}
+                          value={(entry.shift_id in revenue ? revenue[entry.shift_id] : entry.revenue) ?? ''}
+                          onChange={(event) =>
+                            setRevenue((current) => ({
+                              ...current,
+                              [entry.shift_id]: event.target.value === '' ? null : Number(event.target.value),
+                            }))
+                          }
+                        />
+                      </label>
+
+                      {/* Takings alone do not describe an evening. Twelve
+                          thousand off forty covers is a different night from
+                          twelve thousand off a hundred and twenty. */}
+                      <label className="block">
+                        <span className="field-label">{t('Guests')}</span>
+                        <input
+                          type="number"
+                          min={0}
+                          className="field-input"
+                          placeholder={t('nobody counted')}
+                          value={(entry.shift_id in guests ? guests[entry.shift_id] : entry.guests) ?? ''}
+                          onChange={(event) =>
+                            setGuests((current) => ({
+                              ...current,
+                              [entry.shift_id]: event.target.value === '' ? null : Number(event.target.value),
+                            }))
+                          }
+                        />
+                      </label>
+                    </div>
                   )}
+
+                  {(() => {
+                    const took = entry.shift_id in revenue ? revenue[entry.shift_id] : entry.revenue;
+                    const came = entry.shift_id in guests ? guests[entry.shift_id] : entry.guests;
+
+                    return took !== null && came !== null && came > 0 ? (
+                      <p className="field-hint mt-1 tabular">
+                        {t('Average cheque')}: <Money value={Math.round((took / came) * 100) / 100} />
+                      </p>
+                    ) : null;
+                  })()}
 
                   {isWorked && (
                     <ActualClockRow

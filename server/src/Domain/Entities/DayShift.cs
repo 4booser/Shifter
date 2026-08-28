@@ -32,6 +32,21 @@ public sealed class DayShift
     /// takings recorded pays its base and nothing more.
     /// </summary>
     public decimal? Revenue { get; set; }
+
+    /// <summary>
+    /// How many people the shift served.
+    ///
+    /// Takings on their own do not describe an evening. Twelve thousand off
+    /// forty covers is a different night from twelve thousand off a hundred
+    /// and twenty, and it is the average cheque — not the total — that a
+    /// manager and a bartender actually argue about.
+    ///
+    /// Null is "nobody counted", which is different from zero: an evening
+    /// with no guests is a real and dreadful thing, and it is not the same as
+    /// an evening nobody kept a tally on.
+    /// </summary>
+    public int? Guests { get; set; }
+
     public TimeOnly StartTime { get; set; }
     public TimeOnly EndTime { get; set; }
     public int BreakMinutes { get; set; }

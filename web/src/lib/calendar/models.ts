@@ -218,6 +218,11 @@ export interface DayShiftEntry {
   earned: number;
   /** What the shift took, where it was recorded. Null is "not counted". */
   revenue: number | null;
+  /**
+   * How many it served. Null is "nobody counted", which is not the same as an
+   * evening with no guests.
+   */
+  guests: number | null;
   /** The agreed share of it, already inside earned. */
   revenue_percent: number | null;
   /** False means planned rather than done. */
@@ -433,6 +438,10 @@ export interface DaysResponse {
   revenue_earned: number;
   /** What those shifts took, where it was recorded. */
   revenue_counted: number;
+  /** How many people were served, across the shifts that counted. */
+  guests_counted: number;
+  /** Takings over guests, across the shifts that recorded both. */
+  average_cheque: number | null;
   /**
    * Everything overlapping the range, once each rather than repeated on every
    * day it covers. The store spreads them across the cells.
@@ -771,6 +780,8 @@ export interface DaySave {
     break_minutes?: number | null;
     /** What this shift took. Null leaves it uncounted, not zero. */
     revenue?: number | null;
+    /** How many it served. Null leaves it uncounted, not zero. */
+    guests?: number | null;
   }[];
   tips_cash: number | null;
   deductions: number | null;
@@ -819,6 +830,8 @@ export const EMPTY_SUMMARY: DaysResponse = {
   overtime_earned: 0,
   revenue_earned: 0,
   revenue_counted: 0,
+  guests_counted: 0,
+  average_cheque: null,
   events: [],
 };
 

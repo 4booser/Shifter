@@ -28,7 +28,7 @@ public class AssistantTests
         decimal? revenue = null,
         decimal? percent = null,
         string name = "Бар") =>
-        new(1, name, null, null, "18:00", "02:00", 8, 1_600m, revenue, percent, worked, false, null, null, 0);
+        new(1, name, null, null, "18:00", "02:00", 8, 1_600m, revenue, null, percent, worked, false, null, null, 0);
 
     private static DayDto Day(
         string date,

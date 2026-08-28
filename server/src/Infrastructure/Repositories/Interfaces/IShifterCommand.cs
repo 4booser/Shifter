@@ -83,11 +83,17 @@ public interface IShifterCommand
     /// Adds or removes one template across many dates, creating the missing
     /// days, in a single save. Returns the affected days.
     /// </summary>
+    /// <param name="today">
+    /// Where the line between "worked" and "planned" falls. Passed in rather
+    /// than read here: what day it is is a question about the people using the
+    /// app, and this layer has no business answering it in UTC.
+    /// </param>
     Task<Day[]> ApplyShiftAsync(
         int userId,
         DateOnly[] dates,
         Shift shift,
         bool add,
+        DateOnly today,
         CancellationToken ct);
 }
 

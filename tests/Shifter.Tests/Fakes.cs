@@ -173,6 +173,7 @@ public sealed class FakeShifterCommand : IShifterCommand
         DateOnly[] dates,
         Shift shift,
         bool add,
+        DateOnly today,
         CancellationToken ct)
     {
         Day[] touched = dates
@@ -180,7 +181,9 @@ public sealed class FakeShifterCommand : IShifterCommand
             {
                 UserId = userId,
                 Date = date,
-                Shifts = add ? [DayShift.From(shift, false)] : [],
+                // The same rule the real one follows: behind us is worked,
+                // ahead of us is a plan.
+                Shifts = add ? [DayShift.From(shift, date <= today)] : [],
             })
             .ToArray();
 

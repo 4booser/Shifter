@@ -262,7 +262,7 @@ public partial class DayHandler : IDayHandler
             throw new NotFoundException("Shift does not exist.");
 
         Day[] touched = await _shifterCommand.ApplyShiftAsync(
-            userId, request.dates, shifts[0], add, ct);
+            userId, request.dates, shifts[0], add, _clock.Today, ct);
 
         Location[] places = await _shifterQuery.GetLocationsAsync(userId, true, ct);
         Dictionary<int, Location> byId = places.ToDictionary(place => place.Id);

@@ -4,7 +4,7 @@ import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, View
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Palette } from '@/constants/theme';
-import { covers, dayLabel } from '@/lib/calendar';
+import { covers, dayLabel, todayKey } from '@/lib/calendar';
 import {
   CalendarDayData,
   CalendarEvent,
@@ -63,6 +63,9 @@ export function DayPeek({
       .finally(() => setBusy(null));
   };
 
+  // The same line the server draws for a painted stroke: a day behind us is
+  // worked, one ahead is a plan. Two ways of putting a shift on a day that
+  // disagreed about which was which is how a month ends up half wrong.
   const addShift = (template: ShiftTemplate) =>
     write(`add-${template.id}`, (payload) => ({
       ...payload,
@@ -70,7 +73,7 @@ export function DayPeek({
         ...payload.shifts,
         {
           shift_id: template.id,
-          worked: false,
+          worked: date <= todayKey(),
           needs_cover: false,
           actual_start: null,
           actual_end: null,

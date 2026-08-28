@@ -395,6 +395,18 @@ export default function CalendarScreen() {
           label,
         });
       }
+    } else if (brush.kind === 'shift') {
+      // The server has taken a whole stroke in one request since the site
+      // learned to drag, and it draws the line between worked and planned
+      // itself — behind us is worked, ahead of us is a plan. Twenty separate
+      // saves also meant twenty chances for the signal to go.
+      writes.push({
+        method: 'POST',
+        path: '/shifter/v1/days/bulk',
+        body: { dates: keys, shift_id: brush.template.id, mode: 'add' },
+        days: keys,
+        label,
+      });
     } else {
       for (const key of keys) {
         const payload: DaySave = toSavePayload(byDate.get(key));
@@ -412,18 +424,6 @@ export default function CalendarScreen() {
           // left alone rather than invented — the pencil says a shift
           // happened, it does not say which one.
           payload.shifts = payload.shifts.map((entry) => ({ ...entry, worked: true }));
-        } else {
-          if (payload.shifts.some((entry) => entry.shift_id === brush.template.id)) continue;
-
-          payload.shifts.push({
-            shift_id: brush.template.id,
-            worked: false,
-            needs_cover: false,
-            actual_start: null,
-            actual_end: null,
-            break_minutes: null,
-            revenue: null,
-          });
         }
 
         writes.push({
@@ -546,6 +546,10 @@ export default function CalendarScreen() {
     );
     const hours = templateHours(brush.template) * adds.length;
     const hourly = brush.template.salary_period === 'hour';
+    // The server files a day behind us as worked and one ahead as a plan.
+    // Saying so before the stroke lands is the difference between a surprise
+    // and a decision.
+    const behind = adds.filter((key) => key <= today).length;
 
     return {
       left: `${adds.length}`,
@@ -553,9 +557,16 @@ export default function CalendarScreen() {
       right: hourly && brush.template.salary_amount > 0
         ? `+ ${money(hours * brush.template.salary_amount)}`
         : null,
-      note: hours > 0 ? `Примерно ${Math.round(hours)} ч в план` : 'Выберите дни на календаре',
+      note:
+        adds.length === 0
+          ? 'Эти дни уже с этой сменой'
+          : behind === 0
+            ? `Примерно ${Math.round(hours)} ч в план`
+            : behind === adds.length
+              ? 'Эти дни уже прошли — отметятся отработанными'
+              : `${behind} ${dayWord(behind)} отметятся отработанными, остальные — в план`,
     };
-  }, [brush, chosen, byDate]);
+  }, [brush, chosen, byDate, today]);
 
   return (
     <View style={styles.screen}>

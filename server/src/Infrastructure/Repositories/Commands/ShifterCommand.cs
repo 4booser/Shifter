@@ -206,6 +206,7 @@ public class ShifterCommand : IShifterCommand
         DateOnly[] dates,
         Shift shift,
         bool add,
+        DateOnly today,
         CancellationToken ct)
     {
         Day[] existing = await _db.Days
@@ -215,7 +216,6 @@ public class ShifterCommand : IShifterCommand
             .ToArrayAsync(ct);
 
         Dictionary<DateOnly, Day> byDate = existing.ToDictionary(day => day.Date);
-        DateOnly today = DateOnly.FromDateTime(DateTime.UtcNow);
         List<Day> touched = [];
 
         foreach (DateOnly date in dates.Distinct())

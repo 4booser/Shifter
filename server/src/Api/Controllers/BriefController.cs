@@ -25,12 +25,15 @@ public class BriefController : ControllerBase
     public BriefController(BriefService briefs) => _briefs = briefs;
 
     [HttpGet("today")]
-    public async Task<IActionResult> Today([FromQuery] DateOnly? date, CancellationToken ct)
+    public async Task<IActionResult> Today(
+        [FromQuery] DateOnly? date,
+        [FromQuery] string? lang,
+        CancellationToken ct)
     {
         // The client sends its own local date: a brief about "today" written
         // in UTC is about yesterday for half the planet.
         var today = date ?? DateOnly.FromDateTime(DateTime.UtcNow);
-        var brief = await _briefs.ForTodayAsync(UserId(), today, ct);
+        var brief = await _briefs.ForTodayAsync(UserId(), today, ct, lang);
 
         return Ok(new
         {
@@ -49,8 +52,12 @@ public class BriefController : ControllerBase
     /// rather than empty — a page that pads itself teaches people to skim it.
     /// </summary>
     [HttpGet("blocks")]
-    public async Task<IActionResult> Blocks([FromQuery] DateOnly? date, CancellationToken ct)
-        => Ok(await _briefs.BlocksAsync(UserId(), date ?? DateOnly.FromDateTime(DateTime.UtcNow), ct));
+    public async Task<IActionResult> Blocks(
+        [FromQuery] DateOnly? date,
+        [FromQuery] string? lang,
+        CancellationToken ct)
+        => Ok(await _briefs.BlocksAsync(
+            UserId(), date ?? DateOnly.FromDateTime(DateTime.UtcNow), ct, lang));
 
     /// <summary>The facts the brief was written from — the "show your work" button.</summary>
     [HttpGet("facts")]

@@ -1,5 +1,7 @@
 using System.Globalization;
 
+using Shifter.Application.Common.Text;
+
 using Shifter.Application.Features.business.DTOs;
 
 namespace Shifter.Application.Features.Brief;
@@ -30,25 +32,39 @@ public static class BriefBlocks
     private static string Money(decimal value) =>
         $"{Math.Round(value).ToString("N0", Ru).Replace(',', ' ')} ₴";
 
-    private static string Hours(double value) =>
-        $"{Math.Round(value, value < 10 ? 1 : 0).ToString(Ru)} ч";
+    private static string Hours(double value, Say say) =>
+        $"{Math.Round(value, value < 10 ? 1 : 0).ToString(Ru)} {say.Of("ч", "год")}";
 
-    private static readonly string[] Months =
+    private static readonly string[] MonthsRu =
     [
         "января", "февраля", "марта", "апреля", "мая", "июня",
         "июля", "августа", "сентября", "октября", "ноября", "декабря",
     ];
 
-    private static string Said(DateOnly date) => $"{date.Day} {Months[date.Month - 1]}";
+    private static readonly string[] MonthsUk =
+    [
+        "січня", "лютого", "березня", "квітня", "травня", "червня",
+        "липня", "серпня", "вересня", "жовтня", "листопада", "грудня",
+    ];
 
-    /// <summary>"1 раз", "2 раза", "5 раз" — Russian declines after a number.</summary>
-    private static string Times(int count) =>
-        $"{count} {Telegram.TelegramCommands.Plural(count, "раз", "раза", "раз")}";
+    private static string Said(DateOnly date, Say say) =>
+        $"{date.Day} {(say.IsUk ? MonthsUk : MonthsRu)[date.Month - 1]}";
 
-    private static readonly string[] Weekdays =
+    /// <summary>"1 раз", "2 раза", "5 раз" — both languages decline after a number.</summary>
+    private static string Times(int count, Say say) =>
+        $"{count} {Telegram.TelegramCommands.Plural(count, say.Of("раз", "раз"), say.Of("раза", "рази"), say.Of("раз", "разів"))}";
+
+    /// <summary>In the accusative, because every use reads "on Friday".</summary>
+    private static readonly string[] WeekdaysRu =
     [
         "воскресенье", "понедельник", "вторник", "среду",
         "четверг", "пятницу", "субботу",
+    ];
+
+    private static readonly string[] WeekdaysUk =
+    [
+        "неділю", "понеділок", "вівторок", "середу",
+        "четвер", "п’ятницю", "суботу",
     ];
 
     public static BriefBlockDto[] Build(
@@ -56,14 +72,17 @@ public static class BriefBlocks
         DaysDto previous,
         DateOnly today,
         BriefFacts facts,
-        AheadFacts ahead)
+        AheadFacts ahead,
+        string? lang = null)
     {
+        var say = Say.In(lang);
+
         List<BriefBlockDto> blocks =
         [
-            Today(month, today, facts),
-            Month(month, previous, today, facts),
-            Observations(month, previous, today),
-            Ahead(month, today, ahead),
+            Today(month, today, facts, say),
+            Month(month, previous, today, facts, say),
+            Observations(month, previous, today, say),
+            Ahead(month, today, ahead, say),
         ];
 
         return blocks.Where(block => block.lines.Length > 0).ToArray();
@@ -71,7 +90,7 @@ public static class BriefBlocks
 
     // ==== Today ====
 
-    private static BriefBlockDto Today(DaysDto month, DateOnly today, BriefFacts facts)
+    private static BriefBlockDto Today(DaysDto month, DateOnly today, BriefFacts facts, Say say)
     {
         List<BriefLineDto> lines = [];
         var day = month.days.FirstOrDefault(row => row.date == today);
@@ -79,7 +98,7 @@ public static class BriefBlocks
 
         if (shifts.Length == 0)
         {
-            lines.Add(new BriefLineDto("Смен на сегодня не поставлено."));
+            lines.Add(new BriefLineDto(say.Of("Смен на сегодня не поставлено.", "Змін на сьогодні не поставлено.")));
 
             // How long the rest has been, counted backwards from today. A
             // fourth day off in a row is worth knowing about; so is a first.
@@ -101,15 +120,15 @@ public static class BriefBlocks
             if (last is not null)
                 lines.Add(new BriefLineDto(
                     rest > 1
-                        ? $"Без смены {rest} дн. — последняя была {Said(last.date)}"
-                        : $"Последняя смена была вчера, {Said(last.date)}",
+                        ? say.Of($"Без смены {rest} дн. — последняя была {Said(last.date, say)}", $"Без зміни {rest} дн. — остання була {Said(last.date, say)}")
+                        : say.Of($"Последняя смена была вчера, {Said(last.date, say)}", $"Остання зміна була вчора, {Said(last.date, say)}"),
                     Money(last.earned)));
 
             var off = month.days.Count(row => row.date <= today && !row.shifts.Any(shift => shift.worked))
                 + Enumerable.Range(1, today.Day).Count(day =>
                     !month.days.Any(row => row.date.Day == day));
 
-            if (off > 1) lines.Add(new BriefLineDto($"Выходных с начала месяца: {off}"));
+            if (off > 1) lines.Add(new BriefLineDto(say.Of($"Выходных с начала месяца: {off}", $"Вихідних від початку місяця: {off}")));
         }
         else
         {
@@ -120,42 +139,47 @@ public static class BriefBlocks
                     shift.worked ? "good" : null));
 
             if (shifts.Any(shift => !shift.worked))
-                lines.Add(new BriefLineDto("Смена ещё не отмечена как отработанная."));
+                lines.Add(new BriefLineDto(say.Of("Смена ещё не отмечена как отработанная.", "Зміну ще не позначено як відпрацьовану.")));
         }
 
         if (facts.StreakDays > 1)
-            lines.Add(new BriefLineDto($"Подряд без выходного: {facts.StreakDays} дн.", null,
+            lines.Add(new BriefLineDto(say.Of($"Подряд без выходного: {facts.StreakDays} дн.", $"Поспіль без вихідного: {facts.StreakDays} дн."), null,
                 facts.StreakDays >= 6 ? "warn" : null));
 
-        return new BriefBlockDto("today", "🌤️", "Сегодня", [.. lines]);
+        return new BriefBlockDto("today", "🌤️", say.Of("Сегодня", "Сьогодні"), [.. lines]);
     }
 
     // ==== The month so far ====
 
-    private static BriefBlockDto Month(DaysDto month, DaysDto previous, DateOnly today, BriefFacts facts)
+    private static BriefBlockDto Month(
+        DaysDto month,
+        DaysDto previous,
+        DateOnly today,
+        BriefFacts facts,
+        Say say)
     {
         List<BriefLineDto> lines =
         [
             new BriefLineDto(
-                $"{month.days_worked} смен, {Hours(month.hours)}",
+                say.Of($"{month.days_worked} смен, {Hours(month.hours, say)}", $"{month.days_worked} змін, {Hours(month.hours, say)}"),
                 Money(month.total_earned),
                 "good"),
         ];
 
         if (month.hours > 0)
-            lines.Add(new BriefLineDto("Ваш час стоит", Money(month.total_earned / (decimal)month.hours)));
+            lines.Add(new BriefLineDto(say.Of("Ваш час стоит", "Ваша година коштує"), Money(month.total_earned / (decimal)month.hours)));
 
         if (facts.Goal is decimal goal && goal > 0)
         {
             var left = Math.Max(0m, goal - month.total_earned);
 
             lines.Add(left <= 0
-                ? new BriefLineDto($"Цель {Money(goal)} взята — дальше всё сверху.", null, "good")
-                : new BriefLineDto($"До цели {Money(goal)} осталось", Money(left)));
+                ? new BriefLineDto(say.Of($"Цель {Money(goal)} взята — дальше всё сверху.", $"Ціль {Money(goal)} взята — далі все зверху."), null, "good")
+                : new BriefLineDto(say.Of($"До цели {Money(goal)} осталось", $"До цілі {Money(goal)} лишилося"), Money(left)));
         }
         else if (facts.ProjectedMonth > month.total_earned)
         {
-            lines.Add(new BriefLineDto("Такими темпами к концу месяца", Money(facts.ProjectedMonth)));
+            lines.Add(new BriefLineDto(say.Of("Такими темпами к концу месяца", "Такими темпами до кінця місяця"), Money(facts.ProjectedMonth)));
         }
 
         // Only the same number of days back, or a full month always beats a
@@ -170,14 +194,14 @@ public static class BriefBlocks
             var change = (double)((month.total_earned - sameSpan) / sameSpan) * 100;
 
             // Past a couple of hundred percent the number stops being read as
-            // a number: "в 14 раз больше" is what a person would actually say.
+            // a number: say.Of("в 14 раз больше", "у 14 разів більше") is what a person would actually say.
             var wording = Math.Abs(change) < 3
-                ? "Ровно столько же, сколько к этому дню прошлого месяца."
+                ? say.Of("Ровно столько же, сколько к этому дню прошлого месяца.", "Рівно стільки ж, скільки до цього дня минулого місяця.")
                 : change > 200
-                    ? $"В {Math.Round(month.total_earned / sameSpan, 1).ToString(Ru)} раза больше, чем к этому дню прошлого месяца"
+                    ? say.Of($"В {Math.Round(month.total_earned / sameSpan, 1).ToString(Ru)} раза больше, чем к этому дню прошлого месяца", $"У {Math.Round(month.total_earned / sameSpan, 1).ToString(Ru)} рази більше, ніж до цього дня минулого місяця")
                     : change > 0
-                        ? $"На {Math.Round(change)}% больше, чем к этому дню прошлого месяца"
-                        : $"На {Math.Round(-change)}% меньше, чем к этому дню прошлого месяца";
+                        ? say.Of($"На {Math.Round(change)}% больше, чем к этому дню прошлого месяца", $"На {Math.Round(change)}% більше, ніж до цього дня минулого місяця")
+                        : say.Of($"На {Math.Round(-change)}% меньше, чем к этому дню прошлого месяца", $"На {Math.Round(-change)}% менше, ніж до цього дня минулого місяця");
 
             lines.Add(Math.Abs(change) < 3
                 ? new BriefLineDto(wording)
@@ -185,19 +209,19 @@ public static class BriefBlocks
         }
 
         if (month.planned_earned > 0)
-            lines.Add(new BriefLineDto("Ещё в плане до конца месяца", Money(month.planned_earned)));
+            lines.Add(new BriefLineDto(say.Of("Ещё в плане до конца месяца", "Ще в плані до кінця місяця"), Money(month.planned_earned)));
 
-        return new BriefBlockDto("month", "📈", "Как идёт месяц", [.. lines]);
+        return new BriefBlockDto("month", "📈", say.Of("Как идёт месяц", "Як іде місяць"), [.. lines]);
     }
 
     // ==== What the data noticed ====
 
-    private static BriefBlockDto Observations(DaysDto month, DaysDto previous, DateOnly today)
+    private static BriefBlockDto Observations(DaysDto month, DaysDto previous, DateOnly today, Say say)
     {
         List<BriefLineDto> lines = [];
 
         // Up to today only. A future day carrying a worked flag is a data
-        // oddity, and "лучший день — 29 августа" said on the 27th reads as a
+        // oddity, and say.Of("лучший день — 29 августа", "найкращий день — 29 серпня") said on the 27th reads as a
         // bug whatever put it there.
         var worked = month.days
             .Where(day => day.date <= today && day.shifts.Any(shift => shift.worked))
@@ -206,7 +230,7 @@ public static class BriefBlocks
         var best = worked.OrderByDescending(day => day.earned).FirstOrDefault();
 
         if (best is not null && best.earned > 0)
-            lines.Add(new BriefLineDto($"Лучший день — {Said(best.date)}", Money(best.earned), "good"));
+            lines.Add(new BriefLineDto(say.Of($"Лучший день — {Said(best.date, say)}", $"Найкращий день — {Said(best.date, say)}"), Money(best.earned), "good"));
 
         // Which weekday tips, averaged over the days worked rather than summed.
         var tipDays = worked
@@ -218,22 +242,22 @@ public static class BriefBlocks
 
         if (tipDays is not null && tipDays.Average > 0)
             lines.Add(new BriefLineDto(
-                $"Лучше всего на чай платят в {Weekdays[(int)tipDays.Key]}",
+                say.Of($"Лучше всего на чай платят в {(say.IsUk ? WeekdaysUk : WeekdaysRu)[(int)tipDays.Key]}", $"Найкраще на чай платять у {(say.IsUk ? WeekdaysUk : WeekdaysRu)[(int)tipDays.Key]}"),
                 Money(tipDays.Average)));
 
         if (month.revenue_earned > 0)
             lines.Add(new BriefLineDto(
-                $"Процент принёс {Money(month.revenue_earned)} с выручки {Money(month.revenue_counted)}",
+                say.Of($"Процент принёс {Money(month.revenue_earned)} с выручки {Money(month.revenue_counted)}", $"Відсоток приніс {Money(month.revenue_earned)} з виторгу {Money(month.revenue_counted)}"),
                 null,
                 "good"));
 
         if (month.premium_earned > 0)
             lines.Add(new BriefLineDto(
-                $"Надбавки за ночные и праздники", Money(month.premium_earned), "good"));
+                say.Of("Надбавки за ночные и праздники", "Надбавки за нічні та свята"), Money(month.premium_earned), "good"));
 
         if (month.overtime_hours > 0)
             lines.Add(new BriefLineDto(
-                $"Переработки: {Hours(month.overtime_hours)}", Money(month.overtime_earned), "warn"));
+                say.Of($"Переработки: {Hours(month.overtime_hours, say)}", $"Понаднормові: {Hours(month.overtime_hours, say)}"), Money(month.overtime_earned), "warn"));
 
         // Blanks: a worked day with no tips figure at all is a hole in the
         // record, and the totals quietly understate because of it.
@@ -241,13 +265,13 @@ public static class BriefBlocks
 
         if (blank > 0)
             lines.Add(new BriefLineDto(
-                $"Смен без записанных чаевых: {blank}. Итоги из-за этого занижены.", null, "warn"));
+                say.Of($"Смен без записанных чаевых: {blank}. Итоги из-за этого занижены.", $"Змін без записаних чайових: {blank}. Підсумки через це занижені."), null, "warn"));
 
         var underpaid = worked.Count(day => day.below_floor);
 
         if (underpaid > 0)
             lines.Add(new BriefLineDto(
-                $"Дней ниже вашей планки за час: {underpaid}", null, "warn"));
+                say.Of($"Дней ниже вашей планки за час: {underpaid}", $"Днів нижче вашої планки за годину: {underpaid}"), null, "warn"));
 
         // Close-then-open: the industry's own name for the thing that eats
         // people, and it only reads as a problem when it is counted.
@@ -255,7 +279,7 @@ public static class BriefBlocks
 
         if (clopenings > 0)
             lines.Add(new BriefLineDto(
-                $"Закрытие и открытие подряд: {Times(clopenings)} — между сменами меньше 11 ч",
+                say.Of($"Закрытие и открытие подряд: {Times(clopenings, say)} — между сменами меньше 11 ч", $"Закриття і відкриття поспіль: {Times(clopenings, say)} — між змінами менше ніж 11 год"),
                 null,
                 "warn"));
 
@@ -264,14 +288,14 @@ public static class BriefBlocks
 
         if (placed.Length > 1)
             lines.Add(new BriefLineDto(
-                $"Средняя смена — {Hours(placed.Average(shift => shift.hours))}",
+                say.Of($"Средняя смена — {Hours(placed.Average(shift => shift.hours), say)}", $"Середня зміна — {Hours(placed.Average(shift => shift.hours), say)}"),
                 Money(placed.Average(shift => shift.earned))));
 
         var longest = placed.OrderByDescending(shift => shift.hours).FirstOrDefault();
 
         if (longest is not null && longest.hours >= 10)
             lines.Add(new BriefLineDto(
-                $"Самая длинная смена — {Hours(longest.hours)}", null, longest.hours >= 12 ? "warn" : null));
+                say.Of($"Самая длинная смена — {Hours(longest.hours, say)}", $"Найдовша зміна — {Hours(longest.hours, say)}"), null, longest.hours >= 12 ? "warn" : null));
 
         var favourite = placed
             .GroupBy(shift => shift.name)
@@ -279,11 +303,11 @@ public static class BriefBlocks
             .FirstOrDefault();
 
         if (favourite is not null && favourite.Count() > 1 && placed.Select(s => s.name).Distinct().Count() > 1)
-            lines.Add(new BriefLineDto($"Чаще всего выходили на «{favourite.Key}» — {Times(favourite.Count())}"));
+            lines.Add(new BriefLineDto(say.Of($"Чаще всего выходили на «{favourite.Key}» — {Times(favourite.Count(), say)}", $"Найчастіше виходили на «{favourite.Key}» — {Times(favourite.Count(), say)}")));
 
         if (month.night_hours > 0 && month.hours > 0)
             lines.Add(new BriefLineDto(
-                $"Ночных часов {Hours(month.night_hours)} — {Math.Round(month.night_hours / month.hours * 100)}% всех"));
+                say.Of($"Ночных часов {Hours(month.night_hours, say)} — {Math.Round(month.night_hours / month.hours * 100)}% всех", $"Нічних годин {Hours(month.night_hours, say)} — {Math.Round(month.night_hours / month.hours * 100)}% усіх")));
 
         // Weekend against weekday, per shift rather than in total: two Saturdays
         // and twelve Tuesdays would otherwise say the wrong thing.
@@ -298,13 +322,13 @@ public static class BriefBlocks
             if (weekdayAverage > 0m && Math.Abs(weekendAverage - weekdayAverage) / weekdayAverage > 0.15m)
                 lines.Add(new BriefLineDto(
                     weekendAverage > weekdayAverage
-                        ? $"Выходная смена приносит на {Math.Round((weekendAverage / weekdayAverage - 1m) * 100m)}% больше будней"
-                        : $"Выходная смена приносит на {Math.Round((1m - weekendAverage / weekdayAverage) * 100m)}% меньше будней",
+                        ? say.Of($"Выходная смена приносит на {Math.Round((weekendAverage / weekdayAverage - 1m) * 100m)}% больше будней", $"Вихідна зміна приносить на {Math.Round((weekendAverage / weekdayAverage - 1m) * 100m)}% більше за будні")
+                        : say.Of($"Выходная смена приносит на {Math.Round((1m - weekendAverage / weekdayAverage) * 100m)}% меньше будней", $"Вихідна зміна приносить на {Math.Round((1m - weekendAverage / weekdayAverage) * 100m)}% менше за будні"),
                     Money(weekendAverage)));
         }
 
         if (month.sales_earned > 0)
-            lines.Add(new BriefLineDto("Продажи принесли", Money(month.sales_earned), "good"));
+            lines.Add(new BriefLineDto(say.Of("Продажи принесли", "Продажі принесли"), Money(month.sales_earned), "good"));
 
         // Shifts placed in the past and never marked: the totals are waiting
         // on them, and nothing else will point it out.
@@ -315,13 +339,13 @@ public static class BriefBlocks
 
         if (unmarked > 0)
             lines.Add(new BriefLineDto(
-                $"Прошедших смен без отметки «отработана»: {unmarked}", null, "warn"));
+                say.Of($"Прошедших смен без отметки «отработана»: {unmarked}", $"Минулих змін без позначки «відпрацьована»: {unmarked}"), null, "warn"));
 
         if (month.tip_out > 0)
-            lines.Add(new BriefLineDto("Отдано персоналу из чаевых", Money(month.tip_out)));
+            lines.Add(new BriefLineDto(say.Of("Отдано персоналу из чаевых", "Віддано персоналу з чайових"), Money(month.tip_out)));
 
         if (month.tax > 0)
-            lines.Add(new BriefLineDto($"Налог {Money(month.tax)} — на руки", Money(month.net_earned)));
+            lines.Add(new BriefLineDto(say.Of($"Налог {Money(month.tax)} — на руки", $"Податок {Money(month.tax)} — на руки"), Money(month.net_earned)));
 
         if (month.by_location.Length > 1)
         {
@@ -332,7 +356,7 @@ public static class BriefBlocks
                 Money(top.earned)));
         }
 
-        return new BriefBlockDto("observations", "🔍", "Что видно по цифрам", [.. lines]);
+        return new BriefBlockDto("observations", "🔍", say.Of("Что видно по цифрам", "Що видно з цифр"), [.. lines]);
     }
 
     /// <summary>Whether the day this shift sits on is a Saturday or Sunday.</summary>
@@ -382,20 +406,20 @@ public static class BriefBlocks
 
     // ==== What is coming ====
 
-    private static BriefBlockDto Ahead(DaysDto month, DateOnly today, AheadFacts ahead)
+    private static BriefBlockDto Ahead(DaysDto month, DateOnly today, AheadFacts ahead, Say say)
     {
         List<BriefLineDto> lines = [];
 
         if (ahead.NextShiftOn is DateOnly next)
             lines.Add(new BriefLineDto(
-                $"Следующая смена — {Said(next)}, {ahead.NextShiftName}",
+                say.Of($"Следующая смена — {Said(next, say)}, {ahead.NextShiftName}", $"Наступна зміна — {Said(next, say)}, {ahead.NextShiftName}"),
                 ahead.NextShiftFrom));
         else
-            lines.Add(new BriefLineDto("Впереди пока ни одной поставленной смены.", null, "warn"));
+            lines.Add(new BriefLineDto(say.Of("Впереди пока ни одной поставленной смены.", "Попереду поки жодної поставленої зміни."), null, "warn"));
 
         if (ahead.DaysToPayday is int days)
             lines.Add(new BriefLineDto(
-                days == 0 ? "Деньги должны прийти сегодня" : $"Ближайшие деньги через {days} дн.",
+                days == 0 ? say.Of("Деньги должны прийти сегодня", "Гроші мають прийти сьогодні") : say.Of($"Ближайшие деньги через {days} дн.", $"Найближчі гроші через {days} дн."),
                 ahead.PaydayAmount is decimal amount ? Money(amount) : null,
                 "good"));
 
@@ -406,9 +430,9 @@ public static class BriefBlocks
         var left = DateTime.DaysInMonth(today.Year, today.Month) - today.Day;
 
         if (left > 0 && restAhead == left)
-            lines.Add(new BriefLineDto("До конца месяца ничего не запланировано."));
+            lines.Add(new BriefLineDto(say.Of("До конца месяца ничего не запланировано.", "До кінця місяця нічого не заплановано.")));
 
-        return new BriefBlockDto("ahead", "📅", "Что впереди", [.. lines]);
+        return new BriefBlockDto("ahead", "📅", say.Of("Что впереди", "Що попереду"), [.. lines]);
     }
 }
 

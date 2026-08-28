@@ -5,6 +5,8 @@ using Shifter.Application.Features.business.Services.Interfaces;
 using Shifter.Domain.Entities;
 using Shifter.Infrastructure.Persistence.DbContexts;
 
+using Shifter.Application.Common.Text;
+
 namespace Shifter.Application.Features.Brief;
 
 /// <summary>
@@ -32,11 +34,19 @@ public sealed class BriefService
         _reconciliation = reconciliation;
     }
 
-    public async Task<DailyBrief> ForTodayAsync(int userId, DateOnly today, CancellationToken ct)
+    public async Task<DailyBrief> ForTodayAsync(
+        int userId,
+        DateOnly today,
+        CancellationToken ct,
+        string? lang = null)
     {
+        var language = Say.Known(lang);
+
         var existing = await _db.DailyBriefs
             .AsNoTracking()
-            .FirstOrDefaultAsync(brief => brief.UserId == userId && brief.Date == today, ct);
+            .FirstOrDefaultAsync(
+                brief => brief.UserId == userId && brief.Date == today && brief.Language == language,
+                ct);
 
         var facts = await GatherAsync(userId, today, ct);
 
@@ -52,8 +62,8 @@ public sealed class BriefService
                 .Where(brief => brief.Id == existing.Id)
                 .ExecuteDeleteAsync(ct);
         }
-        var written = await _model.WriteAsync(facts, ct);
-        var (headline, body, tip, mood) = written ?? BriefWriter.Compose(facts);
+        var written = await _model.WriteAsync(facts, ct, language);
+        var (headline, body, tip, mood) = written ?? BriefWriter.Compose(facts, language);
 
         var brief = new DailyBrief
         {
@@ -64,6 +74,7 @@ public sealed class BriefService
             Tip = string.IsNullOrWhiteSpace(tip) ? null : tip,
             Mood = mood,
             Source = written is null ? "local" : "model",
+            Language = language,
             EarnedAtWriting = facts.MonthEarned,
         };
 
@@ -92,7 +103,11 @@ public sealed class BriefService
     /// one line below it is — those are arithmetic against the same days the
     /// calendar draws.
     /// </summary>
-    public async Task<BriefBlockDto[]> BlocksAsync(int userId, DateOnly today, CancellationToken ct)
+    public async Task<BriefBlockDto[]> BlocksAsync(
+        int userId,
+        DateOnly today,
+        CancellationToken ct,
+        string? lang = null)
     {
         var monthFrom = new DateOnly(today.Year, today.Month, 1);
         var monthTo = monthFrom.AddMonths(1).AddDays(-1);
@@ -130,7 +145,7 @@ public sealed class BriefService
             due is null ? facts.DaysToPayday : due.due_on.DayNumber - today.DayNumber,
             due?.expected);
 
-        return BriefBlocks.Build(month, previous, today, facts, ahead);
+        return BriefBlocks.Build(month, previous, today, facts, ahead, lang);
     }
 
     /// <summary>Only finished numbers, straight from the handlers the screens read.</summary>

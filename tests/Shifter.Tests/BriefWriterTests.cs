@@ -119,4 +119,56 @@ public class BriefWriterTests
 
         Assert.DoesNotContain("Отметьте свои смены", tip);
     }
+
+    /// <summary>
+    /// The interface has been bilingual since the phone learned Ukrainian.
+    /// The brief is the most-read prose in the app and stayed Russian, which
+    /// is a worse state than not translating at all: the numbers were in one
+    /// language and the sentence about them in another.
+    /// </summary>
+    [Fact]
+    public void The_brief_is_written_in_the_language_it_was_asked_for()
+    {
+        var (headline, body, tip, _) = BriefWriter.Compose(Facts(shift: null), "uk");
+
+        Assert.Equal("Сьогодні вихідний", headline);
+        Assert.Contains("Цього місяця", body);
+        Assert.Contains("Вихідний", tip);
+    }
+
+    [Fact]
+    public void A_working_day_names_the_shift_in_Ukrainian_too()
+    {
+        var (headline, _, _, _) = BriefWriter.Compose(Facts(), "uk");
+
+        Assert.StartsWith("Сьогодні Бар", headline);
+    }
+
+    [Fact]
+    public void An_unknown_language_reads_as_Russian_rather_than_as_nothing()
+    {
+        var (headline, _, _, _) = BriefWriter.Compose(Facts(shift: null), "fr");
+
+        Assert.Equal("Сегодня выходной", headline);
+    }
+
+    [Fact]
+    public void No_language_is_the_language_the_app_was_written_in()
+    {
+        Assert.Equal(
+            BriefWriter.Compose(Facts(shift: null)).Headline,
+            BriefWriter.Compose(Facts(shift: null), "ru").Headline);
+    }
+
+    [Fact]
+    public void The_two_languages_do_not_quietly_produce_the_same_paragraph()
+    {
+        // A phrase somebody forgot to translate falls through as Russian and
+        // is invisible in a screenshot; this catches the whole body at once.
+        var ru = BriefWriter.Compose(Facts(goal: 20000, progress: 0.6));
+        var uk = BriefWriter.Compose(Facts(goal: 20000, progress: 0.6), "uk");
+
+        Assert.NotEqual(ru.Body, uk.Body);
+        Assert.NotEqual(ru.Tip, uk.Tip);
+    }
 }

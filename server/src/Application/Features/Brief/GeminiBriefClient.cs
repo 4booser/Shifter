@@ -5,6 +5,8 @@ using Microsoft.Extensions.Options;
 
 using Serilog;
 
+using Shifter.Application.Common.Text;
+
 namespace Shifter.Application.Features.Brief;
 
 /// <summary>
@@ -28,8 +30,11 @@ public sealed class GeminiBriefClient
 
     public async Task<(string Headline, string Body, string Tip, string Mood)?> WriteAsync(
         BriefFacts facts,
-        CancellationToken ct)
+        CancellationToken ct,
+        string? lang = null)
     {
+        var say = Say.In(lang);
+
         if (!Enabled) return null;
 
         var prompt = $"""
@@ -42,7 +47,7 @@ public sealed class GeminiBriefClient
             tip — один конкретный совет или пожелание на смену (до 120 знаков).
             mood — один эмодзи.
 
-            Пиши по-русски, на «вы», без восклицаний и без пафоса.
+            {say.Of("Пиши по-русски", "Пиши українською")}, на «вы», без восклицаний и без пафоса.
 
             ФАКТЫ:
             {JsonSerializer.Serialize(facts, new JsonSerializerOptions { WriteIndented = true })}

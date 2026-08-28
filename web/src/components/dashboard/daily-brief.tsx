@@ -39,22 +39,24 @@ interface Brief {
  * wrote it, because a reader deserves to know whose voice they are hearing.
  */
 export function DailyBrief() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const [brief, setBrief] = useState<Brief | null>(null);
   const [blocks, setBlocks] = useState<BriefBlock[]>([]);
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
-    void api<Brief>(`/shifter/v1/brief/today?date=${todayKey()}`)
+    void api<Brief>(`/shifter/v1/brief/today?date=${todayKey()}&lang=${lang}`)
       .then(setBrief)
       .catch(() => setFailed(true));
 
     // The blocks are ours in full; the paragraph above them may be the
     // model's. They load apart so one being slow never hides the other.
-    void api<BriefBlock[]>(`/shifter/v1/brief/blocks?date=${todayKey()}`)
+    void api<BriefBlock[]>(`/shifter/v1/brief/blocks?date=${todayKey()}&lang=${lang}`)
       .then(setBlocks)
       .catch(() => undefined);
-  }, []);
+    // The sentences are written on the server, so unlike the rest of the page
+    // a language switch has to fetch them again rather than re-render them.
+  }, [lang]);
 
   if (failed) return null;
 

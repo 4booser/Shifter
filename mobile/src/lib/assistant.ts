@@ -1,4 +1,5 @@
 import { api } from '@/lib/api';
+import { useLang } from '@/lib/i18n';
 
 const BASE = '/shifter/v1/assistant';
 
@@ -64,6 +65,11 @@ export const assistant = {
   gaps: (today: string) => api<AssistantGap[]>(`${BASE}/gaps?today=${today}`),
   answerGap: (kind: string, date: string, shiftId: number | null, value: number) =>
     api<void>(`${BASE}/gaps`, { method: 'POST', body: { kind, date, shift_id: shiftId, value } }),
-  brief: (today: string) => api<Brief>(`/shifter/v1/brief/today?date=${today}`),
-  blocks: (today: string) => api<BriefBlock[]>(`/shifter/v1/brief/blocks?date=${today}`),
+  // The language goes with the request rather than being remembered on the
+  // account: the brief is cached per day and per language, and the phone is
+  // the only thing that knows which one its owner is reading right now.
+  brief: (today: string) =>
+    api<Brief>(`/shifter/v1/brief/today?date=${today}&lang=${useLang.getState().lang}`),
+  blocks: (today: string) =>
+    api<BriefBlock[]>(`/shifter/v1/brief/blocks?date=${today}&lang=${useLang.getState().lang}`),
 };

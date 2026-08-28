@@ -129,7 +129,7 @@ function Bank() {
   const [lockWith, setLockWith] = useState<LockKind>(null);
   const [days, setDays] = useState<Map<string, CalendarDayData>>(new Map());
   const [earned, setEarned] = useState(0);
-  const [view, setView] = useState<'summary' | 'spending' | 'month' | 'ledger' | 'analysis'>('summary');
+  const [view, setView] = useState<'summary' | 'todo' | 'spending' | 'month' | 'ledger' | 'analysis'>('summary');
   const [saving, setSaving] = useState<string | null>(null);
   const [done, setDone] = useState<string[]>([]);
 
@@ -314,6 +314,14 @@ function Bank() {
       committed,
     };
   }, [mono.client, mono.accountId, mono.items, periods]);
+
+  /**
+   * How many things the bank has found that nobody has answered yet.
+   *
+   * On the segment, because a tab that hides a question behind a scroll is a
+   * tab where the question never gets answered.
+   */
+  const waiting = wages.length + spending.length + cashOffers.length;
 
   const lastPaid = useMemo(() => {
     const paid = (periods ?? [])
@@ -748,6 +756,7 @@ function Bank() {
           {(
             [
               ['summary', t('Сводка')],
+              ['todo', waiting > 0 ? `${t('К записи')} · ${waiting}` : t('К записи')],
               ['spending', t('Траты')],
               ['month', t('Месяц')],
               ['ledger', t('Список')],
@@ -828,11 +837,11 @@ function Bank() {
         <Loading colour={palette.backgroundElement} rows={2} height={96} />
       )}
 
-      {view === 'summary' && wages.length > 0 && (
+      {view === 'todo' && wages.length > 0 && (
         <Text style={styles.section}>{t('Похоже на зарплату')}</Text>
       )}
 
-      {view === 'summary' && wages.map((entry, index) =>
+      {view === 'todo' && wages.map((entry, index) =>
         entry.matches.map((match) => {
           const tag = `wage-${match.items.map((item) => item.id).join('-')}`;
 
@@ -884,11 +893,11 @@ function Bank() {
         }),
       )}
 
-      {view === 'summary' && spending.length > 0 && (
+      {view === 'todo' && spending.length > 0 && (
         <Text style={styles.section}>{t('Похоже на траты по работе')}</Text>
       )}
 
-      {view === 'summary' && spending.map((row) => {
+      {view === 'todo' && spending.map((row) => {
         const tag = `spend-${row.item.id}`;
 
         if (done.includes(tag)) return null;
@@ -918,11 +927,11 @@ function Bank() {
         );
       })}
 
-      {view === 'summary' && cashOffers.length > 0 && (
+      {view === 'todo' && cashOffers.length > 0 && (
         <Text style={styles.section}>{t('Похоже на наличные чаевые')}</Text>
       )}
 
-      {view === 'summary' && cashOffers.map((row) => {
+      {view === 'todo' && cashOffers.map((row) => {
         const tag = `cash-${row.item.id}`;
 
         if (done.includes(tag)) return null;
@@ -951,7 +960,7 @@ function Bank() {
         );
       })}
 
-      {view === 'summary' && mono.items.length > 0 && wages.length === 0 && spending.length === 0 && (
+      {view === 'todo' && mono.items.length > 0 && wages.length === 0 && spending.length === 0 && cashOffers.length === 0 && (
         <Text style={styles.empty}>{t('В загруженной выписке нечего сопоставить: ни прихода рядом с днём выплаты, ни трат в дни смен. Это нормально — банк не видит наличные, а такси вы могли не брать.')}</Text>
       )}
 

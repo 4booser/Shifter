@@ -10,6 +10,9 @@ import {
   monthsBetween,
   nextDay,
   runsOf,
+  sameWeekdaysIn,
+  WEEKDAYS,
+  weekdayOf,
 } from '@/lib/calendar';
 
 /**
@@ -129,5 +132,40 @@ describe('what a stretch covers', () => {
     expect(covers('2026-08-04', '2026-08-06', '2026-08-06')).toBe(true);
     expect(covers('2026-08-04', '2026-08-06', '2026-08-03')).toBe(false);
     expect(covers('2026-08-04', '2026-08-06', '2026-08-07')).toBe(false);
+  });
+});
+
+describe('spreading a stroke across the weekdays it touches', () => {
+  it('finds every matching weekday in the month', () => {
+    // 4 August 2026 is a Tuesday.
+    const spread = sameWeekdaysIn({ year: 2026, month: 8 }, ['2026-08-04']);
+
+    expect(spread).toEqual(['2026-08-04', '2026-08-11', '2026-08-18', '2026-08-25']);
+  });
+
+  it('takes every weekday already chosen, not just the first', () => {
+    // Tuesday and Thursday — the commonest rota there is.
+    const spread = sameWeekdaysIn({ year: 2026, month: 8 }, ['2026-08-04', '2026-08-06']);
+
+    // Four Tuesdays and four Thursdays.
+    expect(spread).toHaveLength(8);
+    expect(spread).toContain('2026-08-27');
+    expect(spread).not.toContain('2026-08-05');
+  });
+
+  it('stays inside the month it was asked about', () => {
+    const spread = sameWeekdaysIn({ year: 2026, month: 8 }, ['2026-08-04']);
+
+    expect(spread.every((key) => key.startsWith('2026-08'))).toBe(true);
+  });
+
+  it('has nothing to spread from nothing', () => {
+    expect(sameWeekdaysIn({ year: 2026, month: 8 }, [])).toEqual([]);
+  });
+
+  it('numbers the weekdays from Monday, the way the grid does', () => {
+    expect(weekdayOf('2026-08-03')).toBe(0);
+    expect(weekdayOf('2026-08-09')).toBe(6);
+    expect(WEEKDAYS[weekdayOf('2026-08-04')]).toBe('вт');
   });
 });

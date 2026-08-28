@@ -34,7 +34,10 @@ import {
   monthOnly,
   nextDay,
   runsOf,
+  sameWeekdaysIn,
   todayKey,
+  WEEKDAYS,
+  weekdayOf,
   YearMonth,
 } from '@/lib/calendar';
 import {
@@ -477,6 +480,31 @@ export default function CalendarScreen() {
 
   const painted = chosen.size;
 
+  // "Каждый вторник и четверг" is the commonest shape a rota takes, and it is
+  // the one the pencil is worst at: eight separate touches spread across the
+  // month. One chip does the whole of it.
+  const spread = useMemo(() => {
+    if (brush === null || chosen.size === 0) return null;
+
+    const rest = sameWeekdaysIn(month, chosen).filter((key) => !chosen.has(key));
+
+    if (rest.length === 0) return null;
+
+    const names = [...new Set([...chosen].map(weekdayOf))].sort().map((at) => WEEKDAYS[at]);
+
+    return { keys: rest, label: `+ все ${names.join(', ')}` };
+  }, [brush, chosen, month]);
+
+  const chooseAll = (keys: string[]) => {
+    const next = new Set(chosen);
+
+    for (const key of keys) next.add(key);
+
+    chosenAt.current = next;
+    setChosen(next);
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  };
+
   // What this stroke is about to do, before it does it. Painting a fortnight
   // of evenings is a decision about money, and the number that makes it one
   // was previously only visible after the fact.
@@ -667,6 +695,25 @@ export default function CalendarScreen() {
             ? 'Свайпайте месяцы, тапайте день. Карандаш закрашивает сразу несколько.'
             : 'Проведите пальцем по дням — они закрасятся. Ещё раз — снимется.'}
         </Text>
+
+        {brush !== null && painted > 0 && (
+          <View style={styles.quickRow}>
+            {spread !== null && (
+              <Pressable style={styles.quick} onPress={() => chooseAll(spread.keys)}>
+                <Text style={styles.quickText}>{spread.label}</Text>
+              </Pressable>
+            )}
+            <Pressable
+              style={styles.quick}
+              onPress={() => {
+                chosenAt.current = new Set();
+                setChosen(new Set());
+              }}
+            >
+              <Text style={styles.quickText}>Снять всё</Text>
+            </Pressable>
+          </View>
+        )}
 
         {preview !== null && painted > 0 && (
           <View style={styles.preview}>
@@ -941,6 +988,15 @@ const makeStyles = (palette: Palette) =>
       paddingVertical: 10,
     },
     refusedText: { flex: 1, color: palette.danger, fontSize: 12.5 },
+
+    quickRow: { flexDirection: 'row', justifyContent: 'center', gap: 8, flexWrap: 'wrap' },
+    quick: {
+      backgroundColor: palette.accentSoft,
+      borderRadius: 999,
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+    },
+    quickText: { color: palette.accent, fontWeight: '700', fontSize: 13 },
 
     preview: {
       flexDirection: 'row',

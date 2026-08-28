@@ -3,7 +3,7 @@ import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { Palette } from '@/constants/theme';
-import { covers, GridCell, monthGrid, YearMonth } from '@/lib/calendar';
+import { covers, GridCell, monthGrid, WEEKDAYS, YearMonth } from '@/lib/calendar';
 import { CalendarDayData, CalendarEvent, moneyShort, tint } from '@/lib/types';
 
 /** Six rows of a fixed height, so a page never changes size under a thumb. */
@@ -12,8 +12,6 @@ export const GRID_HEIGHT = CELL_HEIGHT * 6;
 const HEAD_HEIGHT = 22;
 /** What one page of the pager measures, head included. */
 export const PAGE_HEIGHT = GRID_HEIGHT + HEAD_HEIGHT;
-
-const WEEKDAYS = ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс'];
 
 export interface PaintTarget {
   colour: string;

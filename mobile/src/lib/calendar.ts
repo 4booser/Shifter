@@ -153,3 +153,29 @@ export const monthOnly = ({ year, month }: YearMonth): string => {
 
   return raw[0].toUpperCase() + raw.slice(1);
 };
+
+/** Monday first, the way a rota is read in this part of the world. */
+export const WEEKDAYS = ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс'];
+
+/** Which of them a day falls on, 0 = Monday. */
+export const weekdayOf = (key: string): number =>
+  (new Date(`${key}T00:00:00`).getDay() + 6) % 7;
+
+/**
+ * Every day of the month that shares a weekday with one already chosen.
+ *
+ * "Каждый вторник и четверг" is the commonest shape a rota takes here, and
+ * painting it by hand is eight separate touches spread across a month — the
+ * kind of work people put off until the month is half over.
+ */
+export const sameWeekdaysIn = (at: YearMonth, chosen: Iterable<string>): string[] => {
+  const wanted = new Set<number>();
+
+  for (const key of chosen) wanted.add(weekdayOf(key));
+
+  if (wanted.size === 0) return [];
+
+  return monthGrid(at)
+    .filter((cell) => cell.inMonth && wanted.has(weekdayOf(cell.key)))
+    .map((cell) => cell.key);
+};

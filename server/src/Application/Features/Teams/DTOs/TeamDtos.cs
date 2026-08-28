@@ -106,7 +106,22 @@ public record RotaDto(
     /// <summary>Day by day: coverage, spare hands and open cover requests.</summary>
     RotaDayDto[] days,
     /// <summary>Accepted gig-board outings inside the range, one chip each.</summary>
-    RotaGigDto[] gig_outings);
+    RotaGigDto[] gig_outings,
+    /// <summary>
+    /// True where the reader's account has no second factor and the crew's
+    /// shared totals are consequently being withheld.
+    ///
+    /// Named for the account rather than for what is missing, because a rota
+    /// privacy test forbids this envelope from mentioning money at all — and
+    /// it is right to: the envelope has no owner who agreed to anything, so a
+    /// field named after somebody's earnings has no business on it even as a
+    /// flag.
+    ///
+    /// Said out loud rather than shown as an empty column: somebody whose
+    /// colleagues' figures have quietly gone missing will conclude the app is
+    /// broken, and they would be reasonable to.
+    /// </summary>
+    bool needs_second_factor = false);
 
 /// <summary>Offering to take somebody else's shift.</summary>
 public record OfferCoverDto(int UserId, int TeamId, int DayShiftId) : IRequest<RotaOfferDto>;

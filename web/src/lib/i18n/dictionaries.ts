@@ -570,6 +570,8 @@ export const RU: Dictionary = {
   'who share their rate. The rest are not estimated.':
     'кто делится ставкой. Остальных не оцениваем.',
   'Looks like a short turnaround': 'Похоже на короткий отдых между сменами',
+  'The crew’s earnings are hidden until you turn on two-factor. You see the rota; their money waits.':
+    'Заработок команды скрыт, пока не включена двухфакторка. График виден, чужие деньги — нет.',
   'This week': 'Эта неделя',
   'Earned this week': 'Заработано за неделю',
   'Still to come': 'Ещё впереди',
@@ -2620,7 +2622,6 @@ export const UK: Dictionary = {
   'Confirm': 'Підтвердити',
   'Two-factor sign-in': 'Двофакторний вхід',
   'A rotating code from your phone on top of the password. Backup codes cover a lost phone.': 'Змінюваний код із телефона поверх пароля. Резервні коди виручать у разі втрати телефона.',
-  'Turn it on': 'Увімкнути',
   'On': 'Увімкнено',
   'code': 'код',
   'Scan with any authenticator, or paste the secret:': 'Відскануйте будь-яким автентифікатором або вставте секрет:',
@@ -2902,6 +2903,9 @@ export const UK: Dictionary = {
   'who share their rate. The rest are not estimated.':
     'хто ділиться ставкою. Решту не оцінюємо.',
   'Looks like a short turnaround': 'Схоже на короткий відпочинок між змінами',
+  'The crew’s earnings are hidden until you turn on two-factor. You see the rota; their money waits.':
+    'Заробіток команди прихований, доки не увімкнена двофакторка. Графік видно, чужі гроші — ні.',
+  'Turn it on': 'Увімкнути',
   'This week': 'Цей тиждень',
   'All time': 'За весь час',
 

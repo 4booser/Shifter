@@ -354,14 +354,18 @@ public class GetRotaHandler : IRequestHandler<GetRotaDto, RotaDto>
     private readonly ITeamRepository _teams;
     private readonly Shifter.Infrastructure.Persistence.DbContexts.ShifterDbContext? _db;
 
+    private readonly IUserQuery? _users;
+
     // The context is optional the same way the audit writer is: unit tests
     // build this handler on a fake repository and simply get no outings.
     public GetRotaHandler(
         ITeamRepository teams,
-        Shifter.Infrastructure.Persistence.DbContexts.ShifterDbContext? db = null)
+        Shifter.Infrastructure.Persistence.DbContexts.ShifterDbContext? db = null,
+        IUserQuery? users = null)
     {
         _teams = teams;
         _db = db;
+        _users = users;
     }
 
     public async Task<RotaDto> Handle(GetRotaDto request, CancellationToken ct)
@@ -379,6 +383,21 @@ public class GetRotaHandler : IRequestHandler<GetRotaDto, RotaDto>
 
         TeamMember[] members = (team.Members ?? []).OrderBy(m => m.DisplayName).ToArray();
 
+        // A crew's rates are the most sensitive thing this application holds
+        // about anybody other than the person holding the phone, and a team
+        // owner sees all of them. TOTP is optional for an ordinary account and
+        // ought not to be for that.
+        //
+        // A soft block rather than a lock-out: the rota, the hours and the
+        // cover requests are all still there, and only other people's money is
+        // withheld. Shutting somebody out of a team they own to make a point
+        // about security would be making the point at the wrong person.
+        // Without a user query — a unit test on fakes — nothing is withheld:
+        // the guard is about a real account's real second factor, and a test
+        // about rota arithmetic should not have to set one up.
+        bool guarded = _users is null
+            || (await _users.GetByIdAsync(request.UserId, ct))?.TotpEnabledAt is not null;
+
         RotaRow[] rows = await _teams.GetRotaAsync(
             members.Select(member => member.UserId).ToArray(),
             request.UserId,
@@ -386,7 +405,8 @@ public class GetRotaHandler : IRequestHandler<GetRotaDto, RotaDto>
             // own money, and a rota that hid your totals from you would be a
             // strange thing to open.
             members
-                .Where(member => member.ShareEarnings || member.UserId == request.UserId)
+                .Where(member => member.UserId == request.UserId
+                    || (member.ShareEarnings && guarded))
                 .Select(member => member.UserId)
                 .ToArray(),
             members
@@ -508,7 +528,16 @@ public class GetRotaHandler : IRequestHandler<GetRotaDto, RotaDto>
                 outing.EndTime.ToString("HH:mm")))
             .ToArray();
 
-        return new RotaDto(team.Id, team.Name, summary, entries, Days(request, summary, entries), gigOutings);
+        return new RotaDto(
+            team.Id,
+            team.Name,
+            summary,
+            entries,
+            Days(request, summary, entries),
+            gigOutings,
+            // Only worth saying where there is somebody else's money to
+            // withhold: a crew of one has nothing hidden from them.
+            !guarded && members.Any(member => member.ShareEarnings && member.UserId != request.UserId));
     }
 
     /// <summary>

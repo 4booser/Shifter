@@ -1,5 +1,7 @@
 'use client';
 
+import Link from 'next/link';
+
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
@@ -352,6 +354,22 @@ function Schedule() {
 
       {/* ==== The manager's board replaces the rota entirely ==== */}
       {mode === 'planner' && selected !== null && <PlannerBoardView teamId={selected} />}
+
+      {/*
+        Said rather than shown as an empty column. Somebody whose colleagues'
+        figures have quietly gone missing will conclude the app is broken, and
+        they would be reasonable to.
+      */}
+      {mode === 'rota' && rota?.needs_second_factor === true && (
+        <Alert kind="info">
+          <span className="flex flex-wrap items-center gap-2">
+            {t('The crew’s earnings are hidden until you turn on two-factor. You see the rota; their money waits.')}
+            <Link className="btn btn-sm" href="/account">
+              {t('Turn it on')}
+            </Link>
+          </span>
+        </Alert>
+      )}
 
       {/*
         Two shifts on one person with too little between them, while it is

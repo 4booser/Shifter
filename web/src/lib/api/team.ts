@@ -113,6 +113,12 @@ export interface Rota {
   days: RotaDay[];
   /** Crew members out on the gig board that day — the fact, never the money. */
   gig_outings: RotaGig[];
+  /**
+   * This account has no second factor, so the crew's shared totals are
+   * withheld. Said out loud: figures that quietly went missing read as a
+   * broken app.
+   */
+  needs_second_factor: boolean;
 }
 
 const TEAMS = '/shifter/v1/teams';

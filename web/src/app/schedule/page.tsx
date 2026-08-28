@@ -33,6 +33,7 @@ import { HandoverPanel } from '@/components/team/handover';
 import { PoolPanel } from '@/components/team/pool';
 import { LeavePanel } from '@/components/team/leave';
 import { drawRotaCard } from '@/lib/export/rota-card';
+import { OnShiftNow } from '@/components/dashboard/on-shift-now';
 import { currentCardTheme } from '@/lib/export/share-card';
 import { downloadBlob } from '@/lib/export/xlsx';
 import { Alert, Money, Segmented } from '@/components/ui/bits';
@@ -340,6 +341,9 @@ function Schedule() {
 
       {/* ==== The manager's board replaces the rota entirely ==== */}
       {mode === 'planner' && selected !== null && <PlannerBoardView teamId={selected} />}
+
+      {/* ==== Who is on the floor right now ==== */}
+      {mode === 'rota' && <OnShiftNow rota={rota} />}
 
       {/* ==== Assignments waiting for the caller's answer ==== */}
       {mode === 'rota' && selected !== null && <MyAssignments teamId={selected} onAnswered={refresh} />}

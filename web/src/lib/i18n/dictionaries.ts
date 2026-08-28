@@ -511,6 +511,11 @@ export const RU: Dictionary = {
   'Counted by the app from days that were recorded in it. Not a payroll document.':
     'Посчитано приложением по дням, которые в него внесли. Это не бухгалтерский документ.',
   'mixes': 'смешивает',
+  'On the floor now': 'Сейчас на смене',
+  'Nobody is on, and nobody is due today.': 'Никого нет, и сегодня никто не выходит.',
+  'Nobody yet. First in': 'Пока никого. Первый через',
+  'Next in': 'Следующий через',
+  'on for': 'на смене',
   'This week': 'Эта неделя',
   'Earned this week': 'Заработано за неделю',
   'Still to come': 'Ещё впереди',
@@ -2784,6 +2789,11 @@ export const UK: Dictionary = {
   'Counted by the app from days that were recorded in it. Not a payroll document.':
     'Порахував застосунок за днями, які до нього внесли. Це не бухгалтерський документ.',
   'mixes': 'змішує',
+  'On the floor now': 'Зараз на зміні',
+  'Nobody is on, and nobody is due today.': 'Нікого немає, і сьогодні ніхто не виходить.',
+  'Nobody yet. First in': 'Поки нікого. Перший через',
+  'Next in': 'Наступний через',
+  'on for': 'на зміні',
   'This week': 'Цей тиждень',
   'All time': 'За весь час',
 

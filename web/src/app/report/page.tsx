@@ -23,6 +23,7 @@ import { Donut } from '@/components/charts/report-charts';
 import { MoneyFlow, WeekBandsChart } from '@/components/charts/glass-charts';
 import { Sheet, buildXlsx, downloadBlob } from '@/lib/export/xlsx';
 import { Seasonality } from '@/components/dashboard/seasonality';
+import { WeatherEffectCard } from '@/components/dashboard/weather-effect';
 import { Shell } from '@/components/layout/shell';
 import { Alert, CountUp, Delta, Money } from '@/components/ui/bits';
 import { Empty } from '@/components/ui/empty';
@@ -392,6 +393,9 @@ function Report() {
 
           {/* ==== The shape of the year ==== */}
           <Seasonality />
+
+          {/* ==== Rain ==== */}
+          <WeatherEffectCard />
 
           {/* ==== By zone ==== */}
           {summary.by_zone.filter((row) => row.zone !== 'unset').length > 0 && (

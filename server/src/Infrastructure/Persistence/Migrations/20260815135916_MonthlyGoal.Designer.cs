@@ -9,7 +9,7 @@ using Shifter.Infrastructure.Persistence.DbContexts;
 
 #nullable disable
 
-namespace Shifter.src.Infrastructure.Persistence.Migrations
+namespace Shifter.Migrations.ShifterDb
 {
     [DbContext(typeof(ShifterDbContext))]
     [Migration("20260815135916_MonthlyGoal")]

@@ -580,6 +580,11 @@ export const RU: Dictionary = {
   'Proven': 'Проверено',
   'Five shifts that happened and three people who came back to say it went well.':
     'Пять состоявшихся смен и три человека, вернувшихся сказать, что всё прошло хорошо.',
+  'Rain, in your own record': 'Дождь — в вашей собственной статистике',
+  'Your days, your place, and a public weather archive. A coincidence, not a cause.':
+    'Ваши дни, ваше место и открытый архив погоды. Это совпадение, а не причина.',
+  'Tips per hour on days with rain against days without. Wage does not move with the weather, so it is left out.':
+    'Чаевые в час в дождливые дни против сухих. Ставка от погоды не зависит, поэтому в расчёт не идёт.',
   'This week': 'Эта неделя',
   'Earned this week': 'Заработано за неделю',
   'Still to come': 'Ещё впереди',
@@ -2922,6 +2927,11 @@ export const UK: Dictionary = {
   'Proven': 'Перевірено',
   'Five shifts that happened and three people who came back to say it went well.':
     'П’ять змін, що відбулися, і троє людей, які повернулися сказати, що все пройшло добре.',
+  'Rain, in your own record': 'Дощ — у вашій власній статистиці',
+  'Your days, your place, and a public weather archive. A coincidence, not a cause.':
+    'Ваші дні, ваше місце і відкритий архів погоди. Це збіг, а не причина.',
+  'Tips per hour on days with rain against days without. Wage does not move with the weather, so it is left out.':
+    'Чайові за годину в дощові дні проти сухих. Ставка від погоди не залежить, тож у розрахунок не йде.',
   'This week': 'Цей тиждень',
   'All time': 'За весь час',
 

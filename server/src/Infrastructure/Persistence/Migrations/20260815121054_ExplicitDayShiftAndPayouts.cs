@@ -4,7 +4,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace Shifter.src.Infrastructure.Persistence.Migrations
+namespace Shifter.Migrations.ShifterDb
 {
     /// <inheritdoc />
     public partial class ExplicitDayShiftAndPayouts : Migration

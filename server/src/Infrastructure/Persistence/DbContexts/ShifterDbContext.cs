@@ -22,6 +22,7 @@ public class ShifterDbContext : DbContext
     public DbSet<EventTemplate> EventTemplates => Set<EventTemplate>();
     public DbSet<ExpenseRule> ExpenseRules => Set<ExpenseRule>();
     public DbSet<ScreenOpen> ScreenOpens => Set<ScreenOpen>();
+    public DbSet<DayWeather> DayWeather => Set<DayWeather>();
     public DbSet<CoverOffer> CoverOffers => Set<CoverOffer>();
     public DbSet<Goal> Goals => Set<Goal>();
     public DbSet<WebhookEndpoint> WebhookEndpoints => Set<WebhookEndpoint>();
@@ -285,6 +286,13 @@ public class ShifterDbContext : DbContext
 
         modelBuilder.Entity<ExpenseRule>()
             .HasIndex(rule => rule.UserId);
+
+        // Weather is written once per place per day and never rewritten: the
+        // fourteenth of March had the weather it had. The unique index is the
+        // thing that makes a second fetch harmless rather than a duplicate.
+        modelBuilder.Entity<DayWeather>()
+            .HasIndex(row => new { row.LocationId, row.Date })
+            .IsUnique();
 
         // One row per screen per day, which is what makes the increment an
         // increment rather than a growing table of events. An events table is

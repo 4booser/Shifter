@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Shifter.src.Infrastructure.Persistence.Migrations
+namespace Shifter.Migrations.ShifterDb
 {
     /// <inheritdoc />
     public partial class LocationsAndPayPeriods : Migration

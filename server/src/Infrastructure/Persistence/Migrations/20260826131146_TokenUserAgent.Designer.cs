@@ -9,7 +9,7 @@ using Shifter.Infrastructure.Persistence.DbContexts;
 
 #nullable disable
 
-namespace Shifter.src.Infrastructure.Persistence.Migrations
+namespace Shifter.Migrations.ShifterDb
 {
     [DbContext(typeof(TokensDbContext))]
     [Migration("20260826131146_TokenUserAgent")]

@@ -15,6 +15,9 @@ public interface IUserCommand
 
     public Task SetMonthlyGoalAsync(int userId, decimal? goal, CancellationToken ct);
 
+    /// <summary>The rest between shifts this person counts as enough, in hours.</summary>
+    public Task SetRestHoursAsync(int userId, double hours, CancellationToken ct);
+
     /// <summary>Persists changes to a user the query layer handed back tracked.</summary>
     public Task SaveAsync(CancellationToken ct);
 }

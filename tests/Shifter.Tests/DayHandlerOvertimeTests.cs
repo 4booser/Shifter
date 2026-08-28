@@ -224,4 +224,41 @@ public class DayHandlerOvertimeTests
         Assert.Equal(0m, result.overtime_earned);
         Assert.Equal(4800m, result.total_earned);
     }
+
+    /// <summary>
+    /// The other half of the same defect. The weekly threshold arrived on
+    /// existing rows as 0, and `place?.OvertimeWeeklyHours ?? 40` only catches
+    /// a place that is absent, not one holding a zero — so the first hour of
+    /// the week was overtime and so was every hour after it. Together with the
+    /// zero multiplier it cancelled the month's pay outright.
+    /// </summary>
+    [Fact]
+    public async Task A_place_with_no_threshold_uses_the_ordinary_week()
+    {
+        Location place = Build.Place(1, overtimeAfter: 0);
+
+        ArrangeWeek(place, Build.Template(1, location: place, amount: 100m), 5, "2026-03-02");
+
+        DaysDto result = await Range();
+
+        // Forty hours is a week, not forty hours of overtime.
+        Assert.Equal(0, result.overtime_hours);
+        Assert.Equal(0m, result.overtime_earned);
+        Assert.Equal(4000m, result.total_earned);
+    }
+
+    [Fact]
+    public async Task Both_halves_broken_at_once_still_pays_the_week()
+    {
+        // Exactly what a place created before either rule existed held.
+        Location place = Build.Place(1, overtimeAfter: 0, multiplier: 0m);
+
+        ArrangeWeek(place, Build.Template(1, location: place, amount: 100m), 6, "2026-03-02");
+
+        DaysDto result = await Range();
+
+        Assert.Equal(8, result.overtime_hours);
+        Assert.Equal(0m, result.overtime_earned);
+        Assert.Equal(4800m, result.total_earned);
+    }
 }

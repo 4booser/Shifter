@@ -471,6 +471,11 @@ export const RU: Dictionary = {
   'all day': 'весь день',
   'New event type': 'Новый тип события',
   'Edit event type': 'Тип события',
+  'Rest between shifts': 'Отдых между сменами',
+  'Closing at two and opening at eight. The brief counts them and says how short the shortest was.':
+    'Закрыл в два, открыл в восемь. Брифинг считает такие разрывы и называет самый короткий.',
+  'Eleven hours is the EU daily rest rule.': 'Одиннадцать часов — норма ЕС на суточный отдых.',
+  'Your own line, not the law’s.': 'Ваша граница, не законная.',
   'This week': 'Эта неделя',
   'Earned this week': 'Заработано за неделю',
   'Still to come': 'Ещё впереди',
@@ -2704,6 +2709,11 @@ export const UK: Dictionary = {
   Difference: 'Розбіжність',
   'This month': 'Цей місяць',
   'Last month': 'Минулий місяць',
+  'Rest between shifts': 'Відпочинок між змінами',
+  'Closing at two and opening at eight. The brief counts them and says how short the shortest was.':
+    'Закрив о другій, відкрив о восьмій. Брифінг рахує такі розриви й називає найкоротший.',
+  'Eleven hours is the EU daily rest rule.': 'Одинадцять годин — норма ЄС на добовий відпочинок.',
+  'Your own line, not the law’s.': 'Ваша межа, не законна.',
   'This week': 'Цей тиждень',
   'All time': 'За весь час',
 

@@ -255,6 +255,32 @@ public class AuthController : Controller
         return Ok(new { monthly_goal = request.monthly_goal });
     }
 
+    public record RestDto(double rest_hours);
+
+    /// <summary>
+    /// How much rest between shifts this person counts as enough.
+    ///
+    /// Somebody who works split doubles by arrangement should be able to stop
+    /// being told about them, and somebody who wants a stricter line than the
+    /// EU's eleven hours should get one. The bounds are only there to keep the
+    /// figure a figure: nothing under an hour and nothing over a day.
+    /// </summary>
+    [HttpPut]
+    [Route("rest")]
+    public async Task<IActionResult> SetRest(
+        [FromBody] RestDto request,
+        [FromServices] Shifter.Infrastructure.Repositories.Interfaces.IUserCommand users,
+        CancellationToken ct)
+    {
+        if (request.rest_hours is < 1 or > 24)
+            throw new Shifter.Application.Common.Exceptions.ValidationException(
+                "Rest must be between 1 and 24 hours.");
+
+        await users.SetRestHoursAsync(CurrentUserId(), request.rest_hours, ct);
+
+        return Ok(new { rest_hours = request.rest_hours });
+    }
+
     /// <summary>
     /// The caller's id, straight from the token. Never taken from the body:
     /// that would let anyone edit anyone else's data by changing a number.

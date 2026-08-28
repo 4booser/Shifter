@@ -31,7 +31,8 @@ public static class AccountRules
         user.AvatarData,
         user.ContactPhone,
         user.ContactTelegram,
-        user.Email);
+        user.Email,
+        user.RestHours);
 
     public static string RequireName(string? value, string field)
     {

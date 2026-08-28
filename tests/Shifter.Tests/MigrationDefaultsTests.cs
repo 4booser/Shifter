@@ -51,6 +51,17 @@ public class MigrationDefaultsTests
         ["Kind"] = "0 is Ordinary",
         ["TipSource"] = "0 is Personal",
         ["Role"] = "0 is Unset — \"not said\", counted apart rather than guessed",
+
+        // Amounts and rates where nothing is the ordinary answer.
+        ["TipOutOfTipsPercent"] = "most places take no cut of tips",
+        ["TipOutOfSalesPercent"] = "most places take no cut of sales",
+        ["TaxPercent"] = "nothing withheld at source is the ordinary case here",
+        ["HolidayPercent"] = "nothing accrued unless the place says so",
+        ["AutoBreakAfterHours"] = "zero is off — no break applies itself",
+        ["AutoBreakMinutes"] = "zero is off, with the line above",
+        ["CommuteMinutes"] = "zero reads as \"nobody has said\" everywhere it is used",
+        ["CommuteCost"] = "zero reads as \"nobody has said\", with the line above",
+        ["Cost"] = "an event recorded before the field existed cost nothing recorded",
     };
 
     /// <summary>
@@ -67,6 +78,7 @@ public class MigrationDefaultsTests
         ["20260822150428_TeamVisibility.cs: Colour"] = "RepairLegacyPlaces",
         ["20260827093132_NightAndHolidayPremiums.cs: NightMultiplier"] = "RepairLegacyPlaces",
         ["20260827093132_NightAndHolidayPremiums.cs: PublicHolidayMultiplier"] = "RepairLegacyPlaces",
+        ["20260815123849_Overtime.cs: OvertimeWeeklyHours"] = "RepairLegacyPlaces — zero made every hour overtime",
     };
 
     private static string MigrationsDirectory()
@@ -109,12 +121,12 @@ public class MigrationDefaultsTests
                     || value.Contains("new DateOnly(1, 1, 1)")
                     || value.Contains("new DateTime(1, 1, 1");
 
-                // A zero amount is honest — nothing was recorded, and nothing
-                // is what it was. A zero identifier, date or label is not.
-                var counts = name.EndsWith("Cost") || name.EndsWith("Amount") || name.EndsWith("Percent")
-                    || name.EndsWith("Count") || name.EndsWith("Minutes") || name.EndsWith("Hours");
-
-                if (!zero || counts) continue;
+                // No suffix rule. "…Hours" was allowed as a quantity, where
+                // zero is honest — and then RestHours arrived, which is a
+                // threshold, where zero is not an answer anybody gave. A name
+                // cannot tell those apart; only somebody who read the column
+                // can, and writing it down below is how they say so.
+                if (!zero) continue;
 
                 var where = $"{Path.GetFileName(file)}: {name}";
 

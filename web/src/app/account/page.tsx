@@ -121,6 +121,9 @@ function Account() {
             </div>
           </section>
 
+          {/* ==== How much rest counts as rest ==== */}
+          <RestSection hours={profile.rest_hours} />
+
           {/* ==== The papers that gate a shift ==== */}
           <DocumentsPanel />
 
@@ -753,3 +756,72 @@ function SessionsSection() {
     </section>
   );
 }
+
+/**
+ * How long between shifts counts as enough.
+ *
+ * Eleven is the EU daily rest rule and the default nobody has to choose. It
+ * is a setting because rest belongs to the person: somebody who works split
+ * doubles by arrangement should be able to stop being told about them, and
+ * somebody who wants a stricter line than the law's should get one.
+ *
+ * The app says how many and how short. It does not say what that means for
+ * anybody's health — that is theirs, and a calendar that starts diagnosing
+ * has stopped being a calendar.
+ */
+function RestSection({ hours }: { hours: number }) {
+  const { t } = useI18n();
+  const [value, setValue] = useState(hours);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
+
+  const save = async (next: number) => {
+    setBusy(true);
+    setError(null);
+
+    try {
+      await accountApi.setRest(next);
+      setValue(next);
+      setSaved(true);
+    } catch (caught) {
+      setError(apiErrorMessage(caught));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <section className="card reveal p-4">
+      <h2 className="mb-1 text-[0.98rem] font-bold">{t('Rest between shifts')}</h2>
+      <p className="field-hint mb-3">
+        {t('Closing at two and opening at eight. The brief counts them and says how short the shortest was.')}
+      </p>
+
+      {error && <Alert onDismiss={() => setError(null)}>{error}</Alert>}
+
+      <div className="flex flex-wrap items-center gap-1.5">
+        {[8, 10, 11, 12, 14].map((option) => (
+          <button
+            key={option}
+            type="button"
+            className={`btn btn-sm ${value === option ? 'btn-primary' : ''}`}
+            disabled={busy}
+            aria-pressed={value === option}
+            onClick={() => void save(option)}
+          >
+            {option} {t('h')}
+          </button>
+        ))}
+        {saved && <span className="field-hint text-good">{t('Saved')}</span>}
+      </div>
+
+      <p className="field-hint mt-2">
+        {value === 11
+          ? t('Eleven hours is the EU daily rest rule.')
+          : t('Your own line, not the law’s.')}
+      </p>
+    </section>
+  );
+}
+

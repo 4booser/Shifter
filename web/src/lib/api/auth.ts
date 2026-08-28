@@ -24,6 +24,8 @@ export interface Profile {
   google_linked: boolean;
   created_at: string;
   monthly_goal: number | null;
+  /** Rest between shifts this person counts as enough, in hours. */
+  rest_hours: number;
 }
 
 /**
@@ -148,6 +150,9 @@ export const accountApi = {
   linkGoogle: (credential: string) =>
     api<Profile>('/shifter/v1/account/google', { body: { credential } }),
   unlinkGoogle: () => api<Profile>('/shifter/v1/account/google', { method: 'DELETE' }),
+  /** The rest between shifts to be told about. Eleven is the EU daily rule. */
+  setRest: (rest_hours: number) =>
+    api<{ rest_hours: number }>('/shifter/v1/auth/rest', { method: 'PUT', body: { rest_hours } }),
   remove: (password: string | null, confirm_login: string) =>
     api<void>('/shifter/v1/account', { method: 'DELETE', body: { password, confirm_login } }),
 };

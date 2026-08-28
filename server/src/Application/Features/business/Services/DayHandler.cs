@@ -543,7 +543,14 @@ public partial class DayHandler : IDayHandler
         {
             locations.TryGetValue(week.Key.Location, out Location? place);
 
-            double threshold = place?.OvertimeWeeklyHours ?? DefaultOvertimeHours;
+            // The ?? only catches a place that is absent, not one holding a
+            // zero — and places that predate the rule hold exactly that. A
+            // threshold of zero makes the first hour of the week overtime and
+            // every hour after it, which with the old zero multiplier
+            // cancelled the month's pay outright.
+            double threshold = place?.OvertimeWeeklyHours is double stated and > 0
+                ? stated
+                : DefaultOvertimeHours;
             decimal multiplier = place?.OvertimeMultiplier ?? DefaultOvertimeMultiplier;
 
             double running = 0;

@@ -145,7 +145,15 @@ public sealed class BriefService
             due is null ? facts.DaysToPayday : due.due_on.DayNumber - today.DayNumber,
             due?.expected);
 
-        return BriefBlocks.Build(month, previous, today, facts, ahead, lang);
+        // The rest somebody counts as enough is theirs, so it is read from
+        // their account rather than assumed. Eleven is the EU daily rule and
+        // what an account holds until anybody says otherwise.
+        var restHours = await _db.Users
+            .Where(user => user.Id == userId)
+            .Select(user => (double?)user.RestHours)
+            .FirstOrDefaultAsync(ct) ?? RestBetweenShifts.DefaultHours;
+
+        return BriefBlocks.Build(month, previous, today, facts, ahead, lang, restHours);
     }
 
     /// <summary>Only finished numbers, straight from the handlers the screens read.</summary>

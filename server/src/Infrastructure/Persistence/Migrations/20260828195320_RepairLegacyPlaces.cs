@@ -86,6 +86,12 @@ namespace Shifter.Migrations.ShifterDb
             migrationBuilder.Sql(
                 """
                 UPDATE "Locations" SET "OvertimeMultiplier" = 1.5 WHERE "OvertimeMultiplier" < 1;
+
+                -- The other half of the same sum. A weekly threshold of 0 makes
+                -- the first hour of the week overtime and every hour after it,
+                -- so with the multiplier above it cancelled the month outright.
+                -- 40 is the entity's default and the ordinary full week.
+                UPDATE "Locations" SET "OvertimeWeeklyHours" = 40 WHERE "OvertimeWeeklyHours" <= 0;
                 UPDATE "Locations" SET "NightMultiplier" = 1 WHERE "NightMultiplier" < 1;
                 UPDATE "Locations" SET "PublicHolidayMultiplier" = 1 WHERE "PublicHolidayMultiplier" < 1;
                 """);

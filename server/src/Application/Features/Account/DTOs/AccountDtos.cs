@@ -20,7 +20,12 @@ public record ProfileDto(
     string? avatar_data,
     string? contact_phone,
     string? contact_telegram,
-    string? email);
+    string? email,
+    /// <summary>
+    /// The rest between shifts this person counts as enough, in hours.
+    /// Eleven is the EU daily rule and the default nobody has to choose.
+    /// </summary>
+    double rest_hours);
 
 public record GetProfileDto(int UserId) : IRequest<ProfileDto>;
 

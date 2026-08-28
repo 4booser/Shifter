@@ -97,4 +97,11 @@ public class UserCommand : IUserCommand
             .Where(user => user.Id == userId)
             .ExecuteUpdateAsync(set => set.SetProperty(user => user.MonthlyGoal, goal), ct);
     }
+
+    public async Task SetRestHoursAsync(int userId, double hours, CancellationToken ct)
+    {
+        await _db.Users
+            .Where(user => user.Id == userId)
+            .ExecuteUpdateAsync(set => set.SetProperty(user => user.RestHours, hours), ct);
+    }
 }

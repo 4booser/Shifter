@@ -624,16 +624,36 @@ gh run list -w Deploy -L 5         # последние пять
 
 ### Откатиться на предыдущую версию
 
-Образы тегируются коммитом, так что откат — это подстановка старого тега:
+Образы тегируются коммитом, так что откат — это подстановка старого тега.
+
+Сначала посмотрите, на что вообще есть чем откатиться. Деплой держит **четыре
+последних** образа по счёту, а не по возрасту: раньше чистилось «старше 48
+часов», и после недели без выкатов откатываться было не на что вовсе, а после
+шести выкатов за день — на девять версий назад.
 
 ```bash
 ssh -i ~/.ssh/shifter_deploy deploy@СЕРВЕР
 cd /opt/shifter
 
 docker compose -f compose.prod.yaml ps --format '{{.Service}} {{.Image}}'   # что сейчас
-echo "TAG=<нужный sha>" >> .env.release        # или поправить существующую строку
-docker compose -f compose.prod.yaml --env-file .env --env-file .env.release up -d
+docker image ls ghcr.io/4booser/shifter --format '{{.Tag}}  {{.CreatedAt}}'  # что есть
 ```
+
+Если нужного тега на сервере уже нет — его надо забрать из реестра, а пакеты
+приватные, так что сначала вход. Токен — personal access token с правом
+`read:packages`; он нужен только на время отката:
+
+```bash
+echo "<TOKEN>" | docker login ghcr.io -u <ваш-github-логин> --password-stdin
+
+echo "TAG=<нужный sha>" >> .env.release        # или поправить существующую строку
+docker compose -f compose.prod.yaml --env-file .env --env-file .env.release pull
+docker compose -f compose.prod.yaml --env-file .env --env-file .env.release up -d
+
+docker logout ghcr.io
+```
+
+Если образ на сервере есть, `pull` и вход не нужны — хватит `up -d`.
 
 Осторожно с миграциями: откат кода не откатывает схему. Если между версиями была
 миграция, старое приложение встретит новую таблицу — обычно это переживается,

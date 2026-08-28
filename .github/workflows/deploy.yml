@@ -191,10 +191,13 @@ jobs:
       # behind it. Making room is a precondition for a deploy, not a reward.
       - name: Make room
         uses: appleboy/ssh-action@v1.2.5
+        env:
+          IMAGE_NAME: ${{ env.IMAGE }}
         with:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
+          envs: IMAGE_NAME
           script: |
             set -euo pipefail
 
@@ -202,16 +205,46 @@ jobs:
 
             echo "disk before: $(used)%"
 
-            # Images in use are referenced and survive whatever the window
-            # says, so the running release is never at risk. 48h keeps the
-            # previous one too, which is what a rollback needs.
-            docker image prune -af --filter "until=48h" >/dev/null 2>&1 || true
+            # By count, not by age. An age window answers "how old is too
+            # old", which is not the question — the question is "can I still
+            # go back", and the answer has to be yes on a quiet Tuesday and
+            # after six deploys in an afternoon alike. 48h gave neither: a
+            # busy day left nine images and a fortnight of silence left none
+            # to roll back to.
+            #
+            # Newest first by the timestamp, deduplicated — one image usually
+            # carries both its commit tag and :latest, and counting it twice
+            # would keep half as many releases as it says.
+            keep_last() {
+              repo="$1"
+              keep="$2"
 
-            # Still tight: the window was too generous for how often this
-            # deploys. Keep only what is running plus the last few hours.
+              # A space rather than a tab: the timestamp itself contains
+              # spaces, so the id is simply the last field, and nothing here
+              # depends on how docker handles an escape in a format string.
+              docker image ls "$repo" --format '{{.CreatedAt}} {{.ID}}' \
+                | sort -r \
+                | awk '{ print $NF }' \
+                | awk '!seen[$0]++' \
+                | awk -v keep="$keep" 'NR > keep' \
+                | while read -r id; do
+                    # Never the running one: it is referenced, so this fails
+                    # and the image stays. Losing it would be losing the site.
+                    docker image rm "$id" >/dev/null 2>&1 || true
+                  done
+            }
+
+            keep_last "ghcr.io/${IMAGE_NAME}" 4
+            keep_last "ghcr.io/${IMAGE_NAME}-migrate" 4
+
+            # Dangling layers belong to nothing and are always safe.
+            docker image prune -f >/dev/null 2>&1 || true
+
+            # Still tight: keep the running release and one to go back to.
             if [ "$(used)" -ge 80 ]; then
-              echo "still $(used)% — pruning harder"
-              docker image prune -af --filter "until=6h" >/dev/null 2>&1 || true
+              echo "still $(used)% — keeping fewer"
+              keep_last "ghcr.io/${IMAGE_NAME}" 2
+              keep_last "ghcr.io/${IMAGE_NAME}-migrate" 2
               docker builder prune -af >/dev/null 2>&1 || true
             fi
 
@@ -318,10 +351,11 @@ jobs:
               if docker compose -f compose.prod.yaml ps --format '{{.Service}} {{.Status}}' \
                  | grep -E '^shifter .*\(healthy\)' >/dev/null; then
                 echo "healthy"
-                # Again, now that the replaced image is unreferenced. The step
-                # that actually guarantees room is "Make room" at the top of
-                # the job; this one only tidies the release that just ended.
-                docker image prune -af --filter "until=48h"
+                # Only what belongs to nothing. Trimming by count happens in
+                # "Make room" at the top of the job, where it can refuse to
+                # deploy; here the release has just succeeded and taking an
+                # image away would only be taking a rollback away.
+                docker image prune -f >/dev/null 2>&1 || true
                 echo "disk: $(df --output=pcent / | tail -1 | tr -dc '0-9')%"
                 exit 0
               fi

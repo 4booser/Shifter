@@ -14,16 +14,18 @@ import {
   todayKey,
   fromKey,
 } from '@/lib/calendar/calendar-date';
+import { seasonalIndex, yearShape } from '@/lib/calendar/seasonality';
 import { forecastFor, paceToGoal, projectionSeries } from '@/lib/calendar/forecast';
 import { averagesFor } from '@/lib/calendar/insights';
 import {
+  CalendarDayData,
   DaysResponse,
   DeductionSplit,
   EMPTY_SUMMARY,
   ExpenseSplit,
   Goal,
-  placeName,
   Raise,
+  placeName,
 } from '@/lib/calendar/models';
 import { activeGoalFor, delta, earningsBuckets, median, weekdayTotals } from '@/lib/calendar/stats-math';
 import { buildColumns, buildTicks, niceCeiling } from '@/lib/charts/math';
@@ -118,6 +120,8 @@ function Stats() {
   const [customFrom, setCustomFrom] = useState(monthBounds(todayKey()).from);
   const [customTo, setCustomTo] = useState(monthBounds(todayKey()).to);
   const [summary, setSummary] = useState<DaysResponse>(EMPTY_SUMMARY);
+  /** Three years back, for the shape of the year. Loaded once, read cheaply. */
+  const [history, setHistory] = useState<CalendarDayData[]>([]);
   const [previous, setPrevious] = useState<DaysResponse>(EMPTY_SUMMARY);
   const [trendRaw, setTrendRaw] = useState<{ label: string; earned: number; planned: number; hours: number }[]>([]);
   const [trendParts, setTrendParts] = useState<{ label: string; shifts: number; sales: number; tips: number }[]>([]);
@@ -156,6 +160,15 @@ function Stats() {
   const loadGoals = () => void calendarApi.goals().then(setGoals).catch(() => setGoals([]));
 
   useEffect(loadGoals, []);
+
+  useEffect(() => {
+    const from = `${Number(todayKey().slice(0, 4)) - 3}-01-01`;
+
+    void calendarApi
+      .days(from, todayKey())
+      .then((range) => setHistory(range.days))
+      .catch(() => setHistory([]));
+  }, []);
 
   useEffect(() => {
     const { from, to } = range;
@@ -255,7 +268,16 @@ function Stats() {
     return away;
   }, [summary.events]);
 
-  const forecast = forecastFor(summary.days, range.from, range.to, awayDays);
+  // The month's own history, where there is enough of it. Two years of a
+  // December is the difference between a forecast and a flat line, and it is
+  // the one thing a second year of records is actually for.
+  const season = useMemo(() => {
+    if (!range.from.startsWith(range.to.slice(0, 4))) return null;
+
+    return seasonalIndex(yearShape(history, todayKey()), Number(range.from.slice(5, 7)));
+  }, [history, range]);
+
+  const forecast = forecastFor(summary.days, range.from, range.to, awayDays, season);
   const waterfallSteps = useMemo(() => waterfall(summary), [summary]);
   const bands = useMemo(() => weekBands(summary.days), [summary.days]);
   const tipWeek = useMemo(() => tipsByWeekday(summary.days), [summary.days]);
@@ -667,7 +689,15 @@ function Stats() {
       <div className="grid gap-3 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <Card
           title={t('Earned over the period')}
-          hint={forecast.live ? `${t('Projected by period end')}: ${formatMoney(settings, forecast.projected)}` : undefined}
+          hint={
+            forecast.live
+              ? forecast.seasonal === null
+                ? `${t('Projected by period end')}: ${formatMoney(settings, forecast.projected)}`
+                // Both, because they disagree for a reason worth reading.
+                : `${t('Projected by period end')}: ${formatMoney(settings, forecast.projected)}`
+                  + ` · ${t('with the season')}: ${formatMoney(settings, forecast.seasonal)}`
+              : undefined
+          }
         >
           <AreaChart points={cumulative} projection={projection} comparison={cumulativePrevious} goal={active?.target ?? null} />
           <p className="field-hint mt-1 flex flex-wrap gap-3">

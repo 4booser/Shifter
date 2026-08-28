@@ -22,6 +22,7 @@ import { useMoney } from '@/lib/settings/money';
 import { Donut } from '@/components/charts/report-charts';
 import { MoneyFlow, WeekBandsChart } from '@/components/charts/glass-charts';
 import { Sheet, buildXlsx, downloadBlob } from '@/lib/export/xlsx';
+import { Seasonality } from '@/components/dashboard/seasonality';
 import { Shell } from '@/components/layout/shell';
 import { Alert, CountUp, Delta, Money } from '@/components/ui/bits';
 import { Empty } from '@/components/ui/empty';
@@ -388,6 +389,9 @@ function Report() {
               </section>
             )}
           </div>
+
+          {/* ==== The shape of the year ==== */}
+          <Seasonality />
 
           {/* ==== By zone ==== */}
           {summary.by_zone.filter((row) => row.zone !== 'unset').length > 0 && (

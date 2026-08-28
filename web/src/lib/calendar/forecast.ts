@@ -19,6 +19,15 @@ export interface Forecast {
   perDay: number;
   /** Whether the period is still running; a finished one has no forecast. */
   live: boolean;
+  /**
+   * The projection with the month's own history applied, and null where there
+   * is not enough of it.
+   *
+   * Null rather than a copy of `projected`: a caller has to decide what to
+   * show without a season and cannot accidentally present a flat number as a
+   * seasonal one.
+   */
+  seasonal: number | null;
 }
 
 /**
@@ -32,6 +41,11 @@ export function forecastFor(
   to: string,
   /** Days covered by leave or sickness — outside the pace in both directions. */
   awayDays: ReadonlySet<string> = new Set(),
+  /**
+   * How this month usually compares with a typical one, from the person's own
+   * years. Null where there are not two of them — see seasonality.ts.
+   */
+  season: number | null = null,
 ): Forecast {
   const today = todayKey();
   const everything = keysBetween(from, to);
@@ -83,6 +97,13 @@ export function forecastFor(
     runRate: perDay * all.length,
     withPlanned: earnedSoFar + plannedAhead,
     projected: earnedSoFar + plannedAhead + perDay * emptyAhead,
+    // The correction lands only on the days with nothing on them. What is
+    // already earned happened, and what is already booked is booked at a
+    // stated rate — a season cannot argue with either.
+    seasonal:
+      season === null
+        ? null
+        : earnedSoFar + plannedAhead + perDay * emptyAhead * season,
     perDay,
     // A period with work booked on its last day is still live: there is
     // something left to happen, even if no whole day remains after it.

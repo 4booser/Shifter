@@ -549,6 +549,16 @@ export const RU: Dictionary = {
   'Tips by zone': 'Чаевые по зонам',
   'Split by hours where a night covered two zones — the only division the data supports.':
     'Вечер на две зоны делится по часам — единственное деление, которое данные выдерживают.',
+  'Your year has a shape': 'У вашего года есть форма',
+  'Your own months, not the trade’s. Only the ones with two years behind them.':
+    'Ваши месяцы, не средние по отрасли. Только те, за которыми есть два года.',
+  'This month is usually': 'Этот месяц обычно',
+  'on a typical one.': 'к обычному.',
+  'This month is usually an ordinary one.': 'Этот месяц обычно ничем не выделяется.',
+  'The same month a year ago': 'Тот же месяц год назад',
+  'By this day of it': 'К этому же числу',
+  'not enough years': 'мало лет',
+  'with the season': 'с учётом сезона',
   'This week': 'Эта неделя',
   'Earned this week': 'Заработано за неделю',
   'Still to come': 'Ещё впереди',
@@ -2860,6 +2870,16 @@ export const UK: Dictionary = {
   'Tips by zone': 'Чайові по зонах',
   'Split by hours where a night covered two zones — the only division the data supports.':
     'Вечір на дві зони ділиться за годинами — єдиний поділ, який дані витримують.',
+  'Your year has a shape': 'У вашого року є форма',
+  'Your own months, not the trade’s. Only the ones with two years behind them.':
+    'Ваші місяці, не середні по галузі. Лише ті, за якими є два роки.',
+  'This month is usually': 'Цей місяць зазвичай',
+  'on a typical one.': 'до звичайного.',
+  'This month is usually an ordinary one.': 'Цей місяць зазвичай нічим не вирізняється.',
+  'The same month a year ago': 'Той самий місяць рік тому',
+  'By this day of it': 'До цього ж числа',
+  'not enough years': 'мало років',
+  'with the season': 'з урахуванням сезону',
   'This week': 'Цей тиждень',
   'All time': 'За весь час',
 

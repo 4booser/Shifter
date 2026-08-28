@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { apiErrorMessage } from '@/lib/api/http';
 import { Gig, GigEmployment, GigReply, GigSave, GIG_CATEGORIES, GIG_GROUPS, categoryOf, gigApi, shrinkPhoto } from '@/lib/api/gigs';
 import { accountApi } from '@/lib/api/auth';
-import { fromKey, keysBetween, monthBounds, todayKey, weekBounds, keyOf } from '@/lib/calendar/calendar-date';
+import { fromKey, keysBetween, monthBounds, shiftDays, todayKey, weekBounds, keyOf } from '@/lib/calendar/calendar-date';
 import { useI18n } from '@/lib/i18n';
 import { useMoney } from '@/lib/settings/money';
 import { pushToast } from '@/lib/toast';
@@ -100,10 +100,32 @@ function Gigs() {
         : `${range.from.slice(8)}–${range.to.slice(8)} ${new Intl.DateTimeFormat(lang, { month: 'short' }).format(new Date(`${range.from}T00:00:00`))}`;
 
   // The board groups by date so a busy Friday reads as one block.
+  /**
+   * "Worth at least as much as my usual hour."
+   *
+   * A board full of rates tells nobody anything: 250 an hour is generous in
+   * one city and a pay cut in another, and the only rate that settles it is
+   * the reader's own. The server already prices every card against their
+   * hours; this is the filter that makes the comparison usable.
+   *
+   * A card with no comparison — no rate, not enough of their own hours — is
+   * never filtered out. Hiding it would be treating "we do not know" as "it
+   * pays badly".
+   */
+  const [least, setLeast] = useState<number | null>(null);
+
   const byDate = useMemo(() => {
     const map = new Map<string, Gig[]>();
 
     for (const gig of board) {
+      if (
+        least !== null
+        && gig.worth !== null
+        && gig.worth.difference_percent < least
+      ) {
+        continue;
+      }
+
       const list = map.get(gig.date) ?? [];
 
       list.push(gig);
@@ -111,7 +133,7 @@ function Gigs() {
     }
 
     return [...map.entries()];
-  }, [board]);
+  }, [board, least]);
 
   const blank = (): GigSave & { id: number | null } => ({
     id: null,
@@ -240,6 +262,21 @@ function Gigs() {
             ))}
           </div>
 
+          <div className="mb-2 flex flex-wrap items-center gap-1.5">
+            <span className="field-hint">{t('Pay, against your usual hour')}</span>
+            {[null, 0, 10, 25].map((option) => (
+              <button
+                key={option ?? 'any'}
+                type="button"
+                className={`btn btn-sm ${least === option ? 'btn-primary' : ''}`}
+                aria-pressed={least === option}
+                onClick={() => setLeast(option)}
+              >
+                {option === null ? t('Any') : option === 0 ? t('At least the same') : `+${option}%`}
+              </button>
+            ))}
+          </div>
+
           {look === 'calendar' && employment === 'freelance' ? (
             <GigCalendar
               from={range.from}
@@ -284,6 +321,31 @@ function Gigs() {
         <MyListings
           rows={mine}
           onCallBack={setCallingBack}
+          onRepost={(gig) =>
+            setEditing({
+              // No id: this is a new listing that happens to look like an old
+              // one. Carrying the id would edit the shift somebody already
+              // answered.
+              id: null,
+              venue: gig.venue,
+              category: gig.category,
+              employment: gig.employment,
+              photos: gig.photos,
+              schedule: gig.schedule,
+              title: gig.title,
+              details: gig.details,
+              // Tomorrow rather than the old date: a repost is for a shift
+              // that has not happened yet, and the past one is over.
+              date: shiftDays(todayKey(), 1),
+              start: gig.start,
+              end: gig.end,
+              pay_amount: gig.pay_amount,
+              pay_period: gig.pay_period,
+              pay_percent: gig.pay_percent,
+              city: gig.city,
+              slots: gig.slots,
+            })
+          }
           onEdit={(gig) => setEditing({ id: gig.id, venue: gig.venue, category: gig.category, employment: gig.employment, photos: gig.photos, schedule: gig.schedule, title: gig.title, details: gig.details, date: gig.date, start: gig.start, end: gig.end, pay_amount: gig.pay_amount, pay_period: gig.pay_period, pay_percent: gig.pay_percent, city: gig.city, slots: gig.slots })}
           onChanged={refresh}
           onError={setError}
@@ -651,12 +713,14 @@ function ShareGig({ gig }: { gig: Gig }) {
 function MyListings({
   rows,
   onEdit,
+  onRepost,
   onCallBack,
   onChanged,
   onError,
 }: {
   rows: { gig: Gig; replies: GigReply[] }[];
   onEdit: (gig: Gig) => void;
+  onRepost: (gig: Gig) => void;
   onCallBack: (gig: Gig) => void;
   onChanged: () => void;
   onError: (message: string) => void;
@@ -702,6 +766,16 @@ function MyListings({
                 </button>
               )}
               <button type="button" className="btn btn-quiet btn-sm" onClick={() => onEdit(gig)}>{t('Edit')}</button>
+              {/* A venue posts the same shift ten times a month. Everything
+                  but the date is already right; the date is the only thing
+                  that ever changes. */}
+              <button
+                type="button"
+                className="btn btn-quiet btn-sm"
+                onClick={() => onRepost(gig)}
+              >
+                {t('Post again')}
+              </button>
               {gig.status !== 'closed' ? (
                 <button type="button" className="btn btn-quiet btn-sm text-danger" onClick={() => void gigApi.setStatus(gig.id, 'closed').then(onChanged).catch((c) => onError(apiErrorMessage(c)))}>
                   {t('Close')}

@@ -24,6 +24,16 @@ public sealed class User
 
     /// <summary>Income the user aims for in a month; null means no goal set.</summary>
     public decimal? MonthlyGoal { get; set; }
+
+    /// <summary>
+    /// The rest between shifts this person counts as enough, in hours.
+    ///
+    /// Eleven is the EU daily rule and the default nobody has to choose. It is
+    /// theirs to set because rest is theirs, not the employer's: somebody who
+    /// works split doubles by arrangement should be able to stop being told
+    /// about it, and somebody who wants a stricter line should get one.
+    /// </summary>
+    public double RestHours { get; set; } = RestBetweenShifts.DefaultHours;
     public List<Sales>? Sales {get; set;}
     
     /// <summary>

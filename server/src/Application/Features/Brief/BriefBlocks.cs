@@ -3,6 +3,7 @@ using System.Globalization;
 using Shifter.Application.Common.Text;
 
 using Shifter.Application.Features.business.DTOs;
+using Shifter.Domain.Entities;
 
 namespace Shifter.Application.Features.Brief;
 
@@ -73,7 +74,13 @@ public static class BriefBlocks
         DateOnly today,
         BriefFacts facts,
         AheadFacts ahead,
-        string? lang = null)
+        string? lang = null,
+        /// <summary>
+        /// The rest somebody counts as enough. Eleven is the EU daily rule
+        /// and the default nobody has to choose; a person who works split
+        /// doubles by arrangement can set their own and stop being told.
+        /// </summary>
+        double restHours = RestBetweenShifts.DefaultHours)
     {
         var say = Say.In(lang);
 
@@ -81,7 +88,7 @@ public static class BriefBlocks
         [
             Today(month, today, facts, say),
             Month(month, previous, today, facts, say),
-            Observations(month, previous, today, say),
+            Observations(month, previous, today, say, restHours),
             Ahead(month, today, ahead, say),
         ];
 
@@ -216,7 +223,8 @@ public static class BriefBlocks
 
     // ==== What the data noticed ====
 
-    private static BriefBlockDto Observations(DaysDto month, DaysDto previous, DateOnly today, Say say)
+    private static BriefBlockDto Observations(
+        DaysDto month, DaysDto previous, DateOnly today, Say say, double restHours)
     {
         List<BriefLineDto> lines = [];
 
@@ -274,14 +282,29 @@ public static class BriefBlocks
                 say.Of($"Дней ниже вашей планки за час: {underpaid}", $"Днів нижче вашої планки за годину: {underpaid}"), null, "warn"));
 
         // Close-then-open: the industry's own name for the thing that eats
-        // people, and it only reads as a problem when it is counted.
-        var clopenings = Clopenings(month);
+        // people. Counting it was the old line, and counting is the part that
+        // stops working — by the third one in a fortnight it stops feeling
+        // unusual. The shortest gap is the number somebody repeats out loud.
+        var rests = RestBetweenShifts.Find(Spans(month), restHours);
 
-        if (clopenings > 0)
+        if (rests.Count > 0)
+        {
+            var shortest = RestBetweenShifts.Shortest(rests) ?? restHours;
+
             lines.Add(new BriefLineDto(
-                say.Of($"Закрытие и открытие подряд: {Times(clopenings, say)} — между сменами меньше 11 ч", $"Закриття і відкриття поспіль: {Times(clopenings, say)} — між змінами менше ніж 11 год"),
+                say.Of(
+                    $"Закрытие и открытие подряд: {Times(rests.Count, say)} — меньше {Hours(restHours, say)} между сменами",
+                    $"Закриття і відкриття поспіль: {Times(rests.Count, say)} — менше ніж {Hours(restHours, say)} між змінами"),
                 null,
                 "warn"));
+
+            lines.Add(new BriefLineDto(
+                say.Of(
+                    $"Короче всего было {Hours(shortest, say)} — с ухода до выхода",
+                    $"Найкоротше було {Hours(shortest, say)} — від виходу до виходу"),
+                null,
+                shortest <= restHours / 2 ? "warn" : null));
+        }
 
         // The average shift: the figure people compare a new job against.
         var placed = worked.SelectMany(day => day.shifts.Where(shift => shift.worked)).ToArray();
@@ -369,11 +392,11 @@ public static class BriefBlocks
     }
 
     /// <summary>
-    /// Shifts that end and start again inside eleven hours. Counted across the
-    /// whole month on a single minute line so a night shift ending at 04:00
-    /// and a morning starting at 09:00 is seen for what it is.
+    /// Every worked shift as an interval on one continuous clock, so a night
+    /// ending at 04:00 and a morning starting at 09:00 is five hours apart
+    /// rather than nineteen.
     /// </summary>
-    private static int Clopenings(DaysDto month)
+    private static List<(DateTime Start, DateTime End)> Spans(DaysDto month)
     {
         List<(DateTime Start, DateTime End)> spans = [];
 
@@ -381,8 +404,10 @@ public static class BriefBlocks
         {
             foreach (var shift in day.shifts.Where(entry => entry.worked))
             {
-                if (!TimeOnly.TryParse(shift.start_time, out var from)) continue;
-                if (!TimeOnly.TryParse(shift.end_time, out var to)) continue;
+                // What was actually worked where that was recorded: a shift
+                // that ran two hours over ate two hours of the rest after it.
+                if (!TimeOnly.TryParse(shift.actual_start ?? shift.start_time, out var from)) continue;
+                if (!TimeOnly.TryParse(shift.actual_end ?? shift.end_time, out var to)) continue;
 
                 var start = day.date.ToDateTime(from);
                 var end = day.date.ToDateTime(to);
@@ -393,15 +418,7 @@ public static class BriefBlocks
             }
         }
 
-        spans.Sort((left, right) => left.Start.CompareTo(right.Start));
-
-        var count = 0;
-
-        for (var index = 1; index < spans.Count; index++)
-            if ((spans[index].Start - spans[index - 1].End).TotalHours is > 0 and < 11)
-                count++;
-
-        return count;
+        return spans;
     }
 
     // ==== What is coming ====

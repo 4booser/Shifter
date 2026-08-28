@@ -45,6 +45,24 @@ export const waitFor = (endpoint: string): number => {
   return Math.max(0, Math.ceil((LIMIT_MS - (Date.now() - last)) / 1000));
 };
 
+/**
+ * The bank's own explanation, when it gave one worth repeating.
+ *
+ * Kept to one short field and capped: the message goes on somebody's screen,
+ * and a bank error body is not a place to be trusting about length or shape.
+ */
+async function because(response: Response): Promise<string> {
+  try {
+    const body = (await response.json()) as { errorDescription?: unknown };
+    const said = typeof body.errorDescription === 'string' ? body.errorDescription.trim() : '';
+
+    return said === '' ? '' : ` — ${said.slice(0, 120)}`;
+  } catch {
+    // No body, or not JSON. The status still says something.
+    return '';
+  }
+}
+
 async function ask<T>(token: string, endpoint: string, path: string): Promise<T> {
   const wait = waitFor(endpoint);
 
@@ -65,9 +83,12 @@ async function ask<T>(token: string, endpoint: string, path: string): Promise<T>
   if (response.status === 401 || response.status === 403) throw new MonoRefused();
 
   if (!response.ok) {
-    // Deliberately only the status. A monobank error body can echo the
-    // request, and this message ends up in front of somebody.
-    throw new Error(`monobank ${t('ответил')} ${response.status}`);
+    // The status alone was all this used to say, and "monobank ответил 400"
+    // is not something anybody can act on. The bank's own errorDescription is
+    // one short sentence and it names the cause — so that field, and only
+    // that field, is passed on: never the body, which can echo the request
+    // back including the path, and never anything else it might carry.
+    throw new Error(`monobank ${t('ответил')} ${response.status}${await because(response)}`);
   }
 
   return (await response.json()) as T;

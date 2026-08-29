@@ -145,6 +145,7 @@ export function CommandPalette() {
           setTimeout(() => dispatchEvent(new CustomEvent('shifter:tour')), 400);
         },
       },
+      { id: 'nav-contract', icon: 'note', label: t('Questions to ask before you sign'), run: go('/contract') },
       { id: 'nav-account', icon: 'user', label: t('Account'), run: go('/account') },
       { id: 'nav-webhooks', icon: 'swap', label: t('Webhooks'), run: go('/webhooks') },
       { id: 'today', icon: 'spark', label: t('Go to today'), run: emit('today') },

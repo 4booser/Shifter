@@ -350,6 +350,9 @@ function Payouts() {
       {/* The one page somebody can hand to a person who does not have the
           app — which is where every argument about a wage eventually goes. */}
       <p className="field-hint">
+        <Link className="text-(--accent) mr-3" href="/contract">
+          {t('Questions to ask before you sign')}
+        </Link>
         <Link className="text-(--accent)" href="/payslip">
           {t('Payslip for a period')} ›
         </Link>

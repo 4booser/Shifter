@@ -665,6 +665,43 @@ export const RU: Dictionary = {
   'Add an address above and this can be switched on.': 'Впишите адрес выше — и это можно будет включить.',
   'Send it to': 'Присылать на',
   'Every letter has one link that stops them.': 'В каждом письме одна ссылка, которая их прекращает.',
+  'Questions to ask before you sign': 'Что спросить до подписания',
+  'Paste the contract. This looks for the handful of things a hospitality contract should say, and asks about the ones it does not. It does not judge any term, and it does not keep the text.':
+    'Вставьте договор. Здесь ищут те несколько вещей, о которых договор в этой сфере обычно говорит, и спрашивают про те, о которых он молчит. Никаких оценок условий, и текст нигде не сохраняется.',
+  'The text of the contract': 'Текст договора',
+  'What should I ask?': 'О чём спросить?',
+  'That is too short to read as a contract. Paste the whole thing — a heading tells it nothing.':
+    'Слишком коротко для договора. Вставьте целиком — по заголовку ничего не понять.',
+  'It mentions all of them. That is not the same as them being fair — read the clauses.':
+    'Обо всём этом там сказано. Это не то же самое, что «условия справедливые» — пункты всё равно надо прочитать.',
+  'Not mentioned anywhere in it': 'В договоре об этом ничего',
+  'Worth asking anyway': 'Стоит спросить в любом случае',
+  'These are questions, not findings. Nothing here says a term is unusual or unlawful — that is not something this app can know.':
+    'Это вопросы, а не выводы. Здесь нигде не сказано, что условие странное или незаконное, — приложение этого знать не может.',
+  'The rate is not written down. Ask what it is per hour or per shift, and where in the contract it says so.':
+    'Ставка не написана. Спросите, сколько за час или за смену и в каком пункте договора это сказано.',
+  'No payment date. Ask which day of the month the money comes, and what happens when it falls on a weekend.':
+    'Нет даты выплаты. Спросите, какого числа приходят деньги и что происходит, если это выходной.',
+  'No working hours. Ask how many a week are expected and who decides the rota.':
+    'Нет рабочих часов. Спросите, сколько их в неделю и кто составляет график.',
+  'Nothing about hours beyond the norm. Ask how they are counted and what they are paid at.':
+    'Ничего про часы сверх нормы. Спросите, как они считаются и по какой ставке оплачиваются.',
+  'Tips are not mentioned. Ask whose they are, whether they are pooled, and who decides the split.':
+    'Про чаевые ничего. Спросите, чьи они, идут ли в общий котёл и кто решает, как делить.',
+  'Nothing about money being taken off. Ask what can be deducted, by whom, and with what proof.':
+    'Ничего про удержания. Спросите, что могут удержать, кто это решает и на каком основании.',
+  'No break. Ask how long it is and whether it is paid.':
+    'Нет перерыва. Спросите, сколько он длится и оплачивается ли.',
+  'No trial period. Ask whether there is one, how long, and whether the rate differs during it.':
+    'Нет испытательного срока. Спросите, есть ли он, сколько длится и отличается ли ставка.',
+  'Nothing about leaving. Ask how much notice each side gives.':
+    'Ничего про увольнение. Спросите, за сколько предупреждает каждая сторона.',
+  'No holiday. Ask how many days a year and how they are booked.':
+    'Нет отпуска. Спросите, сколько дней в году и как их берут.',
+  'It does mention deductions. Ask for an example: what exactly counts as a shortfall, and who decides it happened.':
+    'Про удержания сказано. Попросите пример: что именно считается недостачей и кто решает, что она была.',
+  'It does mention tips. Ask what the split is in numbers, and who can change it.':
+    'Про чаевые сказано. Спросите, каков раздел в цифрах и кто может его поменять.',
   'This week': 'Эта неделя',
   'Earned this week': 'Заработано за неделю',
   'Still to come': 'Ещё впереди',
@@ -3090,6 +3127,43 @@ export const UK: Dictionary = {
   'Add an address above and this can be switched on.': 'Впишіть адресу вище — і це можна буде увімкнути.',
   'Send it to': 'Надсилати на',
   'Every letter has one link that stops them.': 'У кожному листі одне посилання, яке їх припиняє.',
+  'Questions to ask before you sign': 'Що запитати до підписання',
+  'Paste the contract. This looks for the handful of things a hospitality contract should say, and asks about the ones it does not. It does not judge any term, and it does not keep the text.':
+    'Вставте договір. Тут шукають ті кілька речей, про які договір у цій сфері зазвичай говорить, і питають про ті, про які він мовчить. Жодних оцінок умов, і текст ніде не зберігається.',
+  'The text of the contract': 'Текст договору',
+  'What should I ask?': 'Про що запитати?',
+  'That is too short to read as a contract. Paste the whole thing — a heading tells it nothing.':
+    'Занадто коротко для договору. Вставте цілком — із заголовка нічого не зрозуміти.',
+  'It mentions all of them. That is not the same as them being fair — read the clauses.':
+    'Про все це там сказано. Це не те саме, що «умови справедливі» — пункти все одно треба прочитати.',
+  'Not mentioned anywhere in it': 'У договорі про це нічого',
+  'Worth asking anyway': 'Варто запитати в будь-якому разі',
+  'These are questions, not findings. Nothing here says a term is unusual or unlawful — that is not something this app can know.':
+    'Це запитання, а не висновки. Тут ніде не сказано, що умова дивна чи незаконна, — застосунок цього знати не може.',
+  'The rate is not written down. Ask what it is per hour or per shift, and where in the contract it says so.':
+    'Ставку не написано. Запитайте, скільки за годину чи за зміну і в якому пункті договору це сказано.',
+  'No payment date. Ask which day of the month the money comes, and what happens when it falls on a weekend.':
+    'Немає дати виплати. Запитайте, якого числа приходять гроші і що буде, якщо це вихідний.',
+  'No working hours. Ask how many a week are expected and who decides the rota.':
+    'Немає робочих годин. Запитайте, скільки їх на тиждень і хто складає графік.',
+  'Nothing about hours beyond the norm. Ask how they are counted and what they are paid at.':
+    'Нічого про години понад норму. Запитайте, як вони рахуються і за якою ставкою оплачуються.',
+  'Tips are not mentioned. Ask whose they are, whether they are pooled, and who decides the split.':
+    'Про чайові нічого. Запитайте, чиї вони, чи йдуть у спільний котел і хто вирішує, як ділити.',
+  'Nothing about money being taken off. Ask what can be deducted, by whom, and with what proof.':
+    'Нічого про утримання. Запитайте, що можуть утримати, хто це вирішує і на якій підставі.',
+  'No break. Ask how long it is and whether it is paid.':
+    'Немає перерви. Запитайте, скільки вона триває і чи оплачується.',
+  'No trial period. Ask whether there is one, how long, and whether the rate differs during it.':
+    'Немає випробувального терміну. Запитайте, чи є він, скільки триває і чи відрізняється ставка.',
+  'Nothing about leaving. Ask how much notice each side gives.':
+    'Нічого про звільнення. Запитайте, за скільки попереджає кожна сторона.',
+  'No holiday. Ask how many days a year and how they are booked.':
+    'Немає відпустки. Запитайте, скільки днів на рік і як їх беруть.',
+  'It does mention deductions. Ask for an example: what exactly counts as a shortfall, and who decides it happened.':
+    'Про утримання сказано. Попросіть приклад: що саме вважається нестачею і хто вирішує, що вона була.',
+  'It does mention tips. Ask what the split is in numbers, and who can change it.':
+    'Про чайові сказано. Запитайте, який поділ у цифрах і хто може його змінити.',
   'This week': 'Цей тиждень',
   'All time': 'За весь час',
 

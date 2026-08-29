@@ -702,6 +702,11 @@ export const RU: Dictionary = {
     'Про удержания сказано. Попросите пример: что именно считается недостачей и кто решает, что она была.',
   'It does mention tips. Ask what the split is in numbers, and who can change it.':
     'Про чаевые сказано. Спросите, каков раздел в цифрах и кто может его поменять.',
+  'Paste the advert and fill this in': 'Вставить объявление и заполнить',
+  'Бармен, зміни 10:00–22:00, 250 грн/годину, 5% з бару': 'Бармен, смены 10:00–22:00, 250 грн/час, 5% с бара',
+  'Read the advert': 'Прочитать объявление',
+  'It fills in only what the advert actually says, and everything it fills in is yours to correct.':
+    'Заполняется только то, что в объявлении действительно написано, и всё заполненное можно поправить.',
   'This week': 'Эта неделя',
   'Earned this week': 'Заработано за неделю',
   'Still to come': 'Ещё впереди',
@@ -3164,6 +3169,11 @@ export const UK: Dictionary = {
     'Про утримання сказано. Попросіть приклад: що саме вважається нестачею і хто вирішує, що вона була.',
   'It does mention tips. Ask what the split is in numbers, and who can change it.':
     'Про чайові сказано. Запитайте, який поділ у цифрах і хто може його змінити.',
+  'Paste the advert and fill this in': 'Вставити оголошення і заповнити',
+  'Бармен, зміни 10:00–22:00, 250 грн/годину, 5% з бару': 'Бармен, зміни 10:00–22:00, 250 грн/годину, 5% з бару',
+  'Read the advert': 'Прочитати оголошення',
+  'It fills in only what the advert actually says, and everything it fills in is yours to correct.':
+    'Заповнюється лише те, що в оголошенні справді написано, і все заповнене можна виправити.',
   'This week': 'Цей тиждень',
   'All time': 'За весь час',
 

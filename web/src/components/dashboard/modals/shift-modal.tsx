@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
-import { apiErrorMessage } from '@/lib/api/http';
+import { api, apiErrorMessage } from '@/lib/api/http';
 import {
   EMOJI_GROUPS,
   MARK_COLOURS,
@@ -50,6 +50,12 @@ export function ShiftModal({
   const [poolShare, setPoolShare] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // The advert somebody is copying the terms out of. Only offered on a new
+  // shift: pasting one over an existing template would overwrite terms that
+  // have already been agreed with figures a regex read off a listing.
+  const [advert, setAdvert] = useState('');
+  const [reading, setReading] = useState(false);
+
   // Refills whenever the dialog opens, so a cancelled edit leaves nothing
   // behind for the next one.
   useEffect(() => {
@@ -68,6 +74,7 @@ export function ShiftModal({
     setPercent(editing?.revenue_percent ?? null);
     setTipSource(editing?.tip_source ?? 'personal');
     setPoolShare(editing?.tip_pool_percent ?? null);
+    setAdvert('');
   }, [open, editing]);
 
   /** What the calendar will actually draw, given the place currently chosen. */
@@ -104,6 +111,59 @@ export function ShiftModal({
     <Modal open={open} title={t(editing === null ? 'New shift' : 'Edit shift')} onClose={onClose}>
       <div className="flex flex-col gap-3.5">
         {error && <Alert>{error}</Alert>}
+
+        {/* The terms are already written down in the advert. Copying them into
+            this form by hand is work half of people skip, and then the shift
+            is recorded at a rate nobody checked. */}
+        {editing === null && (
+          <details className="rounded-(--radius) border border-border p-2.5">
+            <summary className="cursor-pointer text-[0.86rem] font-semibold">
+              {t('Paste the advert and fill this in')}
+            </summary>
+            <textarea
+              className="field-input mt-2 min-h-[5rem] text-[0.82rem]"
+              placeholder={t('Бармен, зміни 10:00–22:00, 250 грн/годину, 5% з бару')}
+              value={advert}
+              onChange={(event) => setAdvert(event.target.value)}
+            />
+            <button
+              type="button"
+              className="btn btn-sm mt-2 w-full"
+              disabled={reading || advert.trim() === ''}
+              onClick={() => {
+                setReading(true);
+
+                void api<{
+                  pay_amount: number | null;
+                  pay_period: string | null;
+                  percent: number | null;
+                  start: string | null;
+                  end: string | null;
+                  break_minutes: number | null;
+                }>('/shifter/v1/advert/read', { body: { text: advert } })
+                  .then((read) => {
+                    // Only what the advert actually said. Anything it was
+                    // silent about keeps whatever is in the form, because a
+                    // blank left blank is a question and a blank filled in
+                    // with a guess is an answer.
+                    if (read.pay_amount !== null) setAmount(read.pay_amount);
+                    if (read.pay_period !== null) setPeriod(read.pay_period as SalaryPeriod);
+                    if (read.percent !== null) setPercent(read.percent);
+                    if (read.start !== null) setStart(read.start);
+                    if (read.end !== null) setEnd(read.end);
+                    if (read.break_minutes !== null) setBreakMinutes(read.break_minutes);
+                  })
+                  .catch(() => undefined)
+                  .finally(() => setReading(false));
+              }}
+            >
+              {t('Read the advert')}
+            </button>
+            <p className="field-hint mt-1.5">
+              {t('It fills in only what the advert actually says, and everything it fills in is yours to correct.')}
+            </p>
+          </details>
+        )}
 
         <div className="grid grid-cols-[1fr_5.5rem] gap-3">
           <label>

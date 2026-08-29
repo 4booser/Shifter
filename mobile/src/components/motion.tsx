@@ -1,6 +1,7 @@
 import * as Haptics from 'expo-haptics';
 import { ReactNode, useEffect } from 'react';
 import { Pressable, StyleProp, TextInput, TextStyle, ViewStyle } from 'react-native';
+import { eyeShut } from '@/lib/eye';
 import { spaced } from '@/lib/format';
 import Animated, {
   FadeInDown,
@@ -194,12 +195,16 @@ export function Roll({
 }) {
   const at = useSharedValue(value);
 
+  // Captured per render: the root remounts when the eye flips, so a stale
+  // closure over it cannot outlive the toggle.
+  const shuttered = eyeShut();
+
   useEffect(() => {
     at.value = withTiming(value, { duration });
   }, [value, duration, at]);
 
   const props = useAnimatedProps(() => {
-    const text = `${prefix}${spaced(at.value)}${suffix}`;
+    const text = shuttered ? `${prefix}•••${suffix}` : `${prefix}${spaced(at.value)}${suffix}`;
 
     return { text, defaultValue: text };
   });
@@ -213,7 +218,7 @@ export function Roll({
       underlineColorAndroid="transparent"
       style={[{ padding: 0 }, style]}
       animatedProps={props}
-      value={`${prefix}${spaced(value)}${suffix}`}
+      value={shuttered ? `${prefix}•••${suffix}` : `${prefix}${spaced(value)}${suffix}`}
     />
   );
 }

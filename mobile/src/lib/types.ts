@@ -1,3 +1,5 @@
+import { eyeShut } from './eye';
+
 import { t } from '@/lib/i18n';
 /** Mirrors the server DTOs the calendar screens touch. */
 
@@ -34,7 +36,13 @@ export const rateLine = (template: {
         : template.salary_period === 'week'
           ? t('в неделю')
           : t('в месяц');
-  const base = template.salary_amount > 0 ? `₴${template.salary_amount} ${period}` : null;
+  // Not money(): rates can be fractional and rounding ₴85,5 to ₴86 would
+  // misquote the contract. The shutter still applies — a wage on a picker
+  // is exactly what a shoulder reads first.
+  const base =
+    template.salary_amount > 0
+      ? `${eyeShut() ? '₴•••' : `₴${template.salary_amount}`} ${period}`
+      : null;
   const percent = template.revenue_percent === null ? null : `${template.revenue_percent}%`;
 
   return [base, percent].filter((part) => part !== null).join(' + ') || t('без ставки');
@@ -238,7 +246,7 @@ export interface DaysResponse {
 
 /** An amount labelled with its ISO code, for money that sits beside other money. */
 export const moneyIn = (code: string, value: number) =>
-  `${Math.round(value).toLocaleString('ru')} ${code}`;
+  eyeShut() ? `••• ${code}` : `${Math.round(value).toLocaleString('ru')} ${code}`;
 
 export interface DaySave {
   shifts: {
@@ -391,7 +399,8 @@ export const toSavePayload = (day: CalendarDayData | undefined): DaySave => ({
   version: day?.version ?? 0,
 });
 
-export const money = (value: number) => `₴${Math.round(value).toLocaleString('ru')}`;
+export const money = (value: number) =>
+  eyeShut() ? '₴•••' : `₴${Math.round(value).toLocaleString('ru')}`;
 
 /**
  * Money the width of a calendar cell: 1 240 becomes "1,2к".
@@ -402,6 +411,10 @@ export const money = (value: number) => `₴${Math.round(value).toLocaleString('
  * not as a day nobody has filled in.
  */
 export const moneyShort = (value: number): string => {
+  // A shut eye empties the cell rather than filling the grid with dots:
+  // thirty-one •• say less than nothing and shout that something is hidden.
+  if (eyeShut()) return '';
+
   const rounded = Math.round(value);
 
   if (rounded === 0) return '';

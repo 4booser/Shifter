@@ -1,3 +1,4 @@
+import { eyeShut } from '@/lib/eye';
 import * as BackgroundTask from 'expo-background-task';
 import * as Notifications from 'expo-notifications';
 import * as SecureStore from 'expo-secure-store';
@@ -68,7 +69,9 @@ TaskManager.defineTask(WAGE_TASK, async () => {
     const words = wakingWords(
       waking,
       watching.expected.locationName,
-      (value) => `${Math.round(value).toLocaleString('ru-RU').replace(/ /g, ' ')} ₴`,
+      // The lock screen is the one place the eye matters most: with it shut
+      // the push still says the wage arrived, just not how big it is.
+      (value) => (eyeShut() ? '₴•••' : `${Math.round(value).toLocaleString('ru-RU').replace(/ /g, ' ')} ₴`),
     );
 
     await Notifications.scheduleNotificationAsync({

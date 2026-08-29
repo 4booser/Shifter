@@ -19,6 +19,7 @@ import { Colors, Palette } from '@/constants/theme';
 import { api, API_BASE } from '@/lib/api';
 import { lockKind, LockKind, lockNameBy, lockStore, unlock } from '@/lib/lock';
 import { useSession } from '@/store/session';
+import { useEye } from '@/lib/eye';
 import { t, useLang } from '@/lib/i18n';
 import { DeviceSettings, deviceSettings, deviceToken } from '@/lib/notifications';
 import { paperRanges, shareAccountantCsv, shareIncomePdf, shareTakeout, PaperRange } from '@/lib/papers-share';
@@ -62,6 +63,7 @@ export default function SettingsScreen() {
   const scheme = useColorScheme();
   const palette = Colors[scheme === 'dark' ? 'dark' : 'light'];
   const lang = useLang((state) => state.lang);
+  const eyeIsShut = useEye((state) => state.shut);
   const [nudges, setNudges] = useState<DeviceSettings | null>(null);
   const token = deviceToken();
 
@@ -151,6 +153,17 @@ export default function SettingsScreen() {
             <Text style={[styles.langText, lang === code && styles.langTextOn]}>{name}</Text>
           </Press>
         ))}
+      </View>
+
+      <Text style={styles.section}>{t('Приватность')}</Text>
+      <View style={styles.card}>
+        <View style={styles.row}>
+          <View style={styles.grow}>
+            <Text style={styles.rowTitle}>{t('Скрыть суммы')}</Text>
+            <Text style={styles.rowHint}>{t('Цифры станут ₴••• на всех экранах')}</Text>
+          </View>
+          <Switch value={eyeIsShut} onValueChange={(value) => useEye.getState().set(value)} />
+        </View>
       </View>
 
       {/* Only where the phone actually registered. A simulator has no push

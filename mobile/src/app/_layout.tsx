@@ -11,6 +11,7 @@ import { registerForPush, wireNotificationTaps } from '@/lib/notifications';
 // before the system ever calls it, and it is defined nowhere else.
 import '@/lib/wage-watch';
 import { watchLiveShift } from '@/lib/live-activity';
+import { useEye } from '@/lib/eye';
 import { useLang } from '@/lib/i18n';
 import { useMono } from '@/store/mono';
 import { useSession } from '@/store/session';
@@ -50,6 +51,7 @@ export default function RootLayout() {
 
   // Keychain still being read: the splash is covering everything anyway.
   const lang = useLang((state) => state.lang);
+  const eyeIsShut = useEye((state) => state.shut);
 
   useEffect(() => {
     if (session === null || session === undefined) return;
@@ -65,7 +67,7 @@ export default function RootLayout() {
     // Keyed on the language: choosing another one remounts the app, which is
     // what changing language does anyway and saves threading a hook through
     // four hundred call sites.
-    <GestureHandlerRootView key={lang} style={{ flex: 1 }}>
+    <GestureHandlerRootView key={`${lang}:${eyeIsShut ? 'shut' : 'open'}`} style={{ flex: 1 }}>
       <LockGate>
         <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
         <Stack screenOptions={{ headerShown: false }}>

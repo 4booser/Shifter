@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
-import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Press } from '@/components/motion';
@@ -18,6 +18,7 @@ import {
   toSavePayload,
 } from '@/lib/types';
 import { t } from '@/lib/i18n';
+import { Phrase, readPhrase } from '@/lib/phrase';
 
 /**
  * A day, without leaving the month.
@@ -28,6 +29,53 @@ import { t } from '@/lib/i18n';
  * and the two or three things anybody actually does next. The editor is still
  * one tap away for everything else.
  */
+/** What each kind is called on the button that confirms it. */
+const KIND_WORDS: Record<Phrase['kind'], string> = {
+  tips: 'Чаевые',
+  revenue: 'Выручка',
+  deduction: 'Удержание',
+  expense: 'Расход',
+  hours: 'Часы',
+};
+
+/**
+ * One understood sentence, folded into the day.
+ *
+ * Only the field it named. A sentence about tips must not clear the fine
+ * somebody recorded an hour ago, and the day is always sent whole, so
+ * everything else is carried through untouched.
+ *
+ * Hours and expenses are deliberately absent: hours belong to a placement and
+ * an expense is its own record, and writing either from here would put a
+ * number somewhere the person did not look.
+ */
+function applyPhrase(payload: DaySave, read: Phrase): DaySave {
+  if (read.amount === null) return payload;
+
+  if (read.kind === 'tips') return { ...payload, tips: read.amount };
+  if (read.kind === 'revenue') {
+    return {
+      ...payload,
+      shifts: payload.shifts.map((entry, index) =>
+        // The day's takings belong to the shift that was worked. With one
+        // shift there is no ambiguity; with two, the first is the honest
+        // guess and the person can move it.
+        index === 0 ? { ...entry, revenue: read.amount } : entry,
+      ),
+    };
+  }
+
+  if (read.kind === 'deduction') {
+    return {
+      ...payload,
+      deductions: read.amount,
+      note: read.rest === '' ? payload.note : read.rest,
+    };
+  }
+
+  return payload;
+}
+
 export function DayPeek({
   date,
   day,
@@ -51,6 +99,10 @@ export function DayPeek({
   const insets = useSafeAreaInsets();
   const styles = makeStyles(palette);
   const [busy, setBusy] = useState<string | null>(null);
+
+  // One line instead of four taps. Typed here, and the same parser is what a
+  // spoken sentence would land in.
+  const [said, setSaid] = useState('');
   // What the account did on this day. Empty, and the section is not there at
   // all — a bank nobody connected must not leave a hole on the screen.
   const statement = useMono((state) => state.items);
@@ -167,6 +219,44 @@ export function DayPeek({
           {day?.note != null && day.note.trim() !== '' && (
             <Text style={styles.note}>{day.note}</Text>
           )}
+
+          {/* Одной строкой: «чаевые 1200», «штраф 200 за бокал». Разобранное
+              показывается до сохранения — парсер, который записал 1 200
+              вместо 12 000, хуже, чем никакого. */}
+          <View style={styles.quick}>
+            <TextInput
+              style={styles.quickInput}
+              value={said}
+              onChangeText={setSaid}
+              placeholder={t('чаевые 1200')}
+              placeholderTextColor={palette.textSecondary}
+              returnKeyType="done"
+            />
+            {(() => {
+              const read = readPhrase(said);
+
+              if (read === null || read.amount === null) {
+                return said.trim() === '' ? null : (
+                  <Text style={styles.quickHint}>{t('Не понял — напишите иначе')}</Text>
+                );
+              }
+
+              return (
+                <Press
+                  style={styles.quickGo}
+                  onPress={() => {
+                    setSaid('');
+
+                    write('said', (payload) => applyPhrase(payload, read));
+                  }}
+                >
+                  <Text style={styles.quickGoText}>
+                    {t(KIND_WORDS[read.kind])} {money(read.amount)}
+                  </Text>
+                </Press>
+              );
+            })()}
+          </View>
 
           {/* The two halves of the app, on one day. Shifter knows this was a
               twelve-hour close; the bank knows the taxi home cost ₴185. */}
@@ -341,6 +431,27 @@ const makeStyles = (palette: Palette) =>
     stateCover: { color: palette.danger },
 
     extras: { color: palette.textSecondary, fontSize: 13.5, paddingHorizontal: 2 },
+    quick: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    quickInput: {
+      flex: 1,
+      color: palette.text,
+      fontSize: 14,
+      paddingVertical: 9,
+      paddingHorizontal: 12,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: palette.border,
+      backgroundColor: palette.backgroundElement,
+    },
+    quickHint: { color: palette.textSecondary, fontSize: 12 },
+    quickGo: {
+      paddingVertical: 9,
+      paddingHorizontal: 12,
+      borderRadius: 12,
+      backgroundColor: palette.accent,
+    },
+    quickGoText: { color: '#ffffff', fontSize: 13, fontWeight: '700' },
+
     note: {
       color: palette.text,
       fontSize: 13.5,

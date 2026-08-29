@@ -288,6 +288,12 @@ export default function SettingsScreen() {
         <Ionicons name="chevron-forward" size={16} color={palette.textSecondary} />
       </Press>
 
+      <Press style={styles.linkRow} onPress={() => router.push('/import-ics')}>
+        <Ionicons name="calendar-outline" size={20} color={palette.textSecondary} />
+        <Text style={styles.linkText}>{t('Импорт из календаря (.ics)')}</Text>
+        <Ionicons name="chevron-forward" size={16} color={palette.textSecondary} />
+      </Press>
+
       <Press style={styles.linkRow} onPress={() => router.push('/record')}>
         <Ionicons name="ribbon-outline" size={20} color={palette.textSecondary} />
         <Text style={styles.linkText}>{t('Послужной список и хроника')}</Text>

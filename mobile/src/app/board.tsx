@@ -220,6 +220,23 @@ export default function BoardScreen() {
 
   const blocked = new Set((board?.blocked ?? []).map((row) => `${row.user_id}|${row.date}`));
   const coverage = new Map((board?.coverage ?? []).map((day) => [day.date, day]));
+
+  interface WhoRow { user_id: number; name: string; colour: string; detail: string | null }
+  const [who, setWho] = useState<{ date: string; free: WhoRow[]; busy: WhoRow[]; away: WhoRow[] } | null>(null);
+
+  const askWho = (date: string) => {
+    if (who?.date === date) {
+      setWho(null);
+
+      return;
+    }
+
+    void api<{ free: WhoRow[]; busy: WhoRow[]; away: WhoRow[] }>(
+      `/shifter/v1/teams/${teamId}/planner/who?date=${date}`,
+    )
+      .then((read) => setWho({ date, ...read }))
+      .catch(() => setWho(null));
+  };
   const drafts = (board?.assignments ?? []).filter((row) => row.status === 'draft').length;
 
   const cells = (userId: number, date: string) =>
@@ -285,7 +302,7 @@ export default function BoardScreen() {
                     const cover = coverage.get(day);
 
                     return (
-                      <View key={day} style={styles.dayHead}>
+                      <Press key={day} style={styles.dayHead} onPress={() => askWho(day)}>
                         <Text style={[styles.dayName, day === todayKey() && styles.today]}>
                           {WEEKDAYS[(new Date(`${day}T00:00:00`).getDay() + 6) % 7]}
                         </Text>
@@ -303,10 +320,41 @@ export default function BoardScreen() {
                                 ...(cover.unset > 0 ? [`·${cover.unset}`] : []),
                               ].join(' ')}
                         </Text>
-                      </View>
+                      </Press>
                     );
                   })}
                 </View>
+
+                {/* The day's cast: who can be asked, who stands, who said no. */}
+                {who !== null && (
+                  <View style={styles.whoPanel}>
+                    <Text style={styles.whoTitle}>
+                      {t('Кто может')} {who.date.slice(8)}.{who.date.slice(5, 7)}
+                    </Text>
+                    {([
+                      [t('свободны'), who.free],
+                      [t('стоят'), who.busy],
+                      [t('сказали нет'), who.away],
+                    ] as const).map(([label, rows]) => (
+                      rows.length === 0 ? null : (
+                        <View key={label} style={styles.whoRow}>
+                          <Text style={styles.whoLabel}>{label}</Text>
+                          <View style={styles.whoChips}>
+                            {rows.map((row) => (
+                              <View key={row.user_id} style={styles.whoChip}>
+                                <View style={[styles.dot, { backgroundColor: row.colour }]} />
+                                <Text style={styles.whoName} numberOfLines={1}>
+                                  {row.name}
+                                  {row.detail !== null ? ` · ${row.detail}` : ''}
+                                </Text>
+                              </View>
+                            ))}
+                          </View>
+                        </View>
+                      )
+                    ))}
+                  </View>
+                )}
 
                 {board.members.map((member) => (
                   <View key={member.user_id} style={styles.row}>
@@ -729,6 +777,13 @@ const makeStyles = (palette: Palette) =>
     dot: { width: 8, height: 8, borderRadius: 4 },
     nameText: { color: palette.text, fontSize: 13, flex: 1 },
 
+    whoPanel: { backgroundColor: palette.backgroundElement, borderRadius: 12, padding: 10, gap: 6, marginTop: 6 },
+    whoTitle: { color: palette.text, fontSize: 13, fontWeight: '700' },
+    whoRow: { flexDirection: 'row', gap: 8, alignItems: 'flex-start' },
+    whoLabel: { color: palette.textSecondary, fontSize: 11, width: 74, textTransform: 'uppercase', marginTop: 3 },
+    whoChips: { flex: 1, flexDirection: 'row', flexWrap: 'wrap', gap: 5 },
+    whoChip: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: palette.background, borderRadius: 999, paddingHorizontal: 9, paddingVertical: 4, maxWidth: 220 },
+    whoName: { color: palette.text, fontSize: 12 },
     dayHead: { width: CELL, alignItems: 'center', paddingBottom: 4 },
     dayName: { color: palette.textSecondary, fontSize: 11, textTransform: 'uppercase' },
     dayNumber: { color: palette.text, fontSize: 15, fontWeight: '800' },

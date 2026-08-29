@@ -309,6 +309,10 @@ export interface AssignmentSave {
 export const plannerApi = {
   board: (teamId: number, from: string, to: string) =>
     api<PlannerBoard>(`${TEAMS}/${teamId}/planner?from=${from}&to=${to}`),
+
+  /** The day's cast in three piles: free to ask, standing, said no. */
+  who: (teamId: number, date: string) =>
+    api<WhoRead>(`${TEAMS}/${teamId}/planner/who?date=${date}`),
   copyWeek: (teamId: number, weekStart: string) =>
     api<{ copied: number }>(`${TEAMS}/${teamId}/planner/copy-week?week_start=${weekStart}`, {
       method: 'POST',
@@ -400,3 +404,16 @@ export const swapApi = {
   withdraw: (teamId: number, id: number) =>
     api<Swap>(`${TEAMS}/${teamId}/swaps/${id}/withdraw`, { method: 'POST', body: {} }),
 };
+
+export interface WhoRow {
+  user_id: number;
+  name: string;
+  colour: string;
+  detail: string | null;
+}
+
+export interface WhoRead {
+  free: WhoRow[];
+  busy: WhoRow[];
+  away: WhoRow[];
+}

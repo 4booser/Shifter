@@ -28,6 +28,25 @@ public class PlannerController : ControllerBase
         CancellationToken ct)
         => Ok(await _planner.BoardAsync(teamId, UserId(), from, to, ct));
 
+    /// <summary>The day's cast: who can be asked, who stands, who said no.</summary>
+    [HttpGet("who")]
+    public async Task<IActionResult> Who(
+        int teamId, [FromQuery] DateOnly date, CancellationToken ct)
+    {
+        var read = await _planner.WhoAsync(teamId, UserId(), date, ct);
+
+        object Rows(IEnumerable<Application.Features.Teams.Services.PlannerService.WhoRow> rows)
+            => rows.Select(row => new
+            {
+                user_id = row.UserId,
+                name = row.Name,
+                colour = row.Colour,
+                detail = row.Detail,
+            });
+
+        return Ok(new { free = Rows(read.Free), busy = Rows(read.Busy), away = Rows(read.Away) });
+    }
+
     [HttpPost("assignments")]
     public async Task<ActionResult<AssignmentDto>> Create(
         int teamId, [FromBody] AssignmentSaveDto request, CancellationToken ct)

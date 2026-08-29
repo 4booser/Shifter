@@ -11,6 +11,7 @@ import {
   plannerApi,
 } from '@/lib/api/team';
 import { apiErrorMessage } from '@/lib/api/http';
+import { WhoRead, plannerApi as whoApi } from '@/lib/api/team';
 import { keysBetween, shiftDays, todayKey, weekBounds } from '@/lib/calendar/calendar-date';
 import { stagger } from '@/lib/fx';
 import { useI18n } from '@/lib/i18n';
@@ -35,6 +36,7 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
   const days = useMemo(() => keysBetween(range.from, range.to), [range]);
 
   const [board, setBoard] = useState<PlannerBoard | null>(null);
+  const [who, setWho] = useState<{ date: string; read: WhoRead } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -57,6 +59,19 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
     end: string;
     role: PlanRole;
   } | null>(null);
+
+  const askWho = (date: string) => {
+    if (who?.date === date) {
+      setWho(null);
+
+      return;
+    }
+
+    void whoApi
+      .who(teamId, date)
+      .then((read) => setWho({ date, read }))
+      .catch((caught) => setError(apiErrorMessage(caught)));
+  };
 
   const refresh = useCallback(() => {
     void plannerApi
@@ -391,6 +406,12 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
 
                 return (
                   <th key={day} className="p-1.5 text-center">
+                    <button
+                      type="button"
+                      className="w-full rounded-md hover:bg-surface-2"
+                      title={t('Who can, that day')}
+                      onClick={() => askWho(day)}
+                    >
                     <span className={`block text-[0.72rem] font-semibold uppercase ${isToday ? 'text-(--accent)' : 'text-faint'}`}>
                       {new Date(`${day}T00:00:00`).toLocaleDateString(lang, { weekday: 'short' })}
                     </span>
@@ -398,6 +419,7 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
                     <span className={`block text-[0.64rem] tabular ${covered === 0 ? 'text-danger' : 'text-faint'}`}>
                       {covered === 0 ? t('empty') : `×${covered}`}
                     </span>
+                    </button>
 
                     {/* Stations, in the order the enum declares them, so a
                         Friday and a Saturday read down the same columns. */}
@@ -541,6 +563,51 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
             ))}
           </tbody>
         </table>
+
+        {/* The day's cast: who can be asked, who stands, who said no — so
+            the board stops guessing about people who already answered. */}
+        {who !== null && (
+          <div className="mt-2 rounded-lg border border-border bg-surface-2/60 p-3">
+            <p className="mb-1.5 text-[0.8rem] font-bold">
+              {t('Who can')} {who.date.slice(8)}.{who.date.slice(5, 7)}
+            </p>
+            <div className="flex flex-col gap-1 text-[0.85rem]">
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="w-20 text-[0.72rem] uppercase tracking-wide text-good">{t('free')}</span>
+                {who.read.free.length === 0 && <span className="text-muted">{t('nobody left')}</span>}
+                {who.read.free.map((row) => (
+                  <span key={row.user_id} className="chip !py-1">
+                    <i className="h-2 w-2 rounded-full" style={{ background: row.colour }} />
+                    {row.name}
+                  </span>
+                ))}
+              </div>
+              {who.read.busy.length > 0 && (
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="w-20 text-[0.72rem] uppercase tracking-wide text-faint">{t('standing')}</span>
+                  {who.read.busy.map((row) => (
+                    <span key={row.user_id} className="chip !py-1 opacity-75" title={row.detail ?? ''}>
+                      <i className="h-2 w-2 rounded-full" style={{ background: row.colour }} />
+                      {row.name} <span className="text-faint">{row.detail}</span>
+                    </span>
+                  ))}
+                </div>
+              )}
+              {who.read.away.length > 0 && (
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="w-20 text-[0.72rem] uppercase tracking-wide text-warn">{t('said no')}</span>
+                  {who.read.away.map((row) => (
+                    <span key={row.user_id} className="chip !py-1 opacity-75">
+                      <i className="h-2 w-2 rounded-full" style={{ background: row.colour }} />
+                      {row.name}
+                      {row.detail !== null && <span className="text-faint">«{row.detail}»</span>}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       <p className="field-hint">

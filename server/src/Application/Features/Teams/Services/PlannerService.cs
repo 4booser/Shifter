@@ -739,6 +739,36 @@ public sealed class PlannerService
         if ((team.Members ?? []).All(member => member.UserId != request.user_id))
             throw new ValidationException("That person is not in the team.");
 
+        // One person cannot stand on two overlapping shifts. Said with both
+        // titles, so the manager sees the collision instead of hunting it —
+        // and decided by the manager, never merged silently.
+        var clash = await _db.PlannedAssignments.AsNoTracking()
+            .Where(row => row.TeamId == teamId
+                && row.UserId == request.user_id
+                && row.Date == date
+                && row.Id != (id ?? 0))
+            .ToArrayAsync(ct);
+
+        foreach (var other in clash)
+        {
+            // Minutes from midnight, because TimeOnly wraps at 24h and an
+            // overnight end «02:00» must read as 26:00 to be after 23:00.
+            static (int From, int To) Span(TimeOnly begins, TimeOnly ends)
+            {
+                var from = begins.Hour * 60 + begins.Minute;
+                var to = ends.Hour * 60 + ends.Minute;
+
+                return (from, to <= from ? to + 1440 : to);
+            }
+
+            var (mineFrom, mineTo) = Span(start, end);
+            var (theirFrom, theirTo) = Span(other.StartTime, other.EndTime);
+
+            if (mineFrom < theirTo && theirFrom < mineTo)
+                throw new ConflictException(
+                    $"Пересечение: «{title}» {start:HH\\:mm}–{end:HH\\:mm} наезжает на «{other.Title}» {other.StartTime:HH\\:mm}–{other.EndTime:HH\\:mm}.");
+        }
+
         PlannedAssignment entry;
 
         if (id is int existingId)
@@ -1060,6 +1090,53 @@ public sealed class PlannerService
         member.IsManager = isManager;
         await _db.SaveChangesAsync(ct);
     }
+
+    public sealed record WhoRow(int UserId, string Name, string Colour, string? Detail);
+
+    public sealed record WhoRead(WhoRow[] Free, WhoRow[] Busy, WhoRow[] Away);
+
+    /// <summary>
+    /// The day's cast, three ways: who can be asked, who already stands, who
+    /// said they cannot. Free is everyone minus the other two — the board
+    /// stops guessing about people who already answered.
+    /// </summary>
+    public async Task<WhoRead> WhoAsync(int teamId, int userId, DateOnly date, CancellationToken ct)
+    {
+        var (team, _) = await ManagerAsync(teamId, userId, ct);
+
+        var members = team.Members ?? [];
+
+        var standing = await _db.PlannedAssignments.AsNoTracking()
+            .Where(row => row.TeamId == teamId && row.Date == date)
+            .ToArrayAsync(ct);
+
+        var away = await _db.Availabilities.AsNoTracking()
+            .Where(row => row.TeamId == teamId && row.Date == date)
+            .ToArrayAsync(ct);
+
+        var busyIds = standing.Select(row => row.UserId).ToHashSet();
+        var awayIds = away.Select(row => row.UserId).ToHashSet();
+
+        WhoRow Row(TeamMember member, string? detail) =>
+            new(member.UserId, member.DisplayName, member.Colour, detail);
+
+        return new WhoRead(
+            [.. members
+                .Where(member => !busyIds.Contains(member.UserId) && !awayIds.Contains(member.UserId))
+                .Select(member => Row(member, null))],
+            [.. members
+                .Where(member => busyIds.Contains(member.UserId))
+                .Select(member => Row(
+                    member,
+                    string.Join(", ", standing
+                        .Where(row => row.UserId == member.UserId)
+                        .Select(row => $"{row.Title} {row.StartTime:HH\\:mm}–{row.EndTime:HH\\:mm}"))))],
+            [.. members
+                .Where(member => awayIds.Contains(member.UserId))
+                .Select(member => Row(
+                    member,
+                    away.First(row => row.UserId == member.UserId).Reason))]);
+    }
 }
 
 /// <summary>The board's pure rules, kept out of the service for the tests.</summary>
@@ -1135,4 +1212,5 @@ public static class PlannerRules
 
         return cleaned;
     }
+
 }

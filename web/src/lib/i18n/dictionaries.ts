@@ -1031,6 +1031,12 @@ export const RU: Dictionary = {
   'The operations themselves': 'Сами операции',
   'Worth filling in': 'Дозаполнить',
   'The shelf': 'Полка',
+  'Who can': 'Кто может',
+  'Who can, that day': 'Кто может в этот день',
+  'standing': 'стоят',
+  'said no': 'сказали нет',
+  'nobody left': 'никого не осталось',
+
   'in a row': 'подряд',
   'Crossed goals, kept as they stood — raising the bar later does not move a trophy already won.':
     'Закрытые цели, как они стояли: поднять планку потом — не значит передвинуть уже выигранный кубок.',
@@ -3085,6 +3091,12 @@ export const UK: Dictionary = {
   'The operations themselves': 'Самі операції',
   'Worth filling in': 'Дозаповнити',
   'The shelf': 'Полиця',
+  'Who can': 'Хто може',
+  'Who can, that day': 'Хто може в цей день',
+  'standing': 'стоять',
+  'said no': 'сказали ні',
+  'nobody left': 'нікого не лишилося',
+
   'in a row': 'поспіль',
   'Crossed goals, kept as they stood — raising the bar later does not move a trophy already won.':
     'Закриті цілі, як вони стояли: підняти планку потім — не означає пересунути вже виграний кубок.',

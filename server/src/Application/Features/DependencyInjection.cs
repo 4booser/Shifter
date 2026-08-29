@@ -120,6 +120,7 @@ public static class DependencyInjection
         services.AddScoped<Shifter.Application.Features.Papers.TakeoutService>();
         services.AddScoped<Shifter.Application.Features.Papers.ChronicleService>();
         services.AddScoped<Shifter.Application.Features.Rhythm.RhythmService>();
+        services.AddScoped<Shifter.Application.Features.Gigs.CityCompareService>();
         services.AddScoped<Shifter.Application.Features.Weather.OpenMeteoClient>();
         services.AddScoped<Shifter.Application.Features.Weather.WeatherService>();
         services.AddScoped<Shifter.Application.Features.Money.RateService>();

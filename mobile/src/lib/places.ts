@@ -11,6 +11,8 @@ export interface WorkPlace {
   id: number;
   name: string;
   address: string | null;
+  /** The city, as its owner names it. Empty means unsaid. */
+  city?: string;
   colour: string;
   pay_period: PayPeriod;
   pay_day: number;
@@ -74,6 +76,9 @@ export const payLine = (place: WorkPlace): string => {
 export const toPlacePayload = (place: WorkPlace) => ({
   name: place.name,
   address: place.address,
+  // Always sent: absent would mean «never heard of cities» and the server
+  // would keep a stale one; the empty string is the explicit «unsaid».
+  city: place.city ?? '',
   colour: place.colour,
   pay_period: place.pay_period,
   pay_day: place.pay_day,

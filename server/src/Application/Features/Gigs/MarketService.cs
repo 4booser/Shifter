@@ -76,7 +76,9 @@ public sealed class MarketService
     /// a guess about the shift — but a listing with no hours in it is dropped
     /// rather than divided by zero into something enormous.
     /// </summary>
-    private static decimal PerHour(
+    // Shared with the city comparison, which must normalise a listing the
+    // same way this page does or the two would disagree about one posting.
+    internal static decimal PerHour(
         decimal amount, string period, TimeOnly start, TimeOnly end)
     {
         if (period == "hour") return amount;

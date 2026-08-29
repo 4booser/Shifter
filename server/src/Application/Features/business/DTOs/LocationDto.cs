@@ -47,7 +47,9 @@ public record LocationDto(
     /// <summary>The journey here, one way, in minutes. Zero means nobody said.</summary>
     int commute_minutes = 0,
     /// <summary>What one trip costs, one way.</summary>
-    decimal commute_cost = 0m
+    decimal commute_cost = 0m,
+    /// <summary>The city, as its owner names it. Empty means unsaid.</summary>
+    string city = ""
     );
 
 public record LocationCreateDto(
@@ -86,7 +88,9 @@ public record LocationCreateDto(
     int auto_break_minutes = 0,
     decimal minimum_hourly = 0m,
     int commute_minutes = 0,
-    decimal commute_cost = 0m
+    decimal commute_cost = 0m,
+    /// <summary>Null or empty leaves the city unsaid.</summary>
+    string? city = null
     );
 
 /// <summary>Money and hours attributed to one location inside a range.</summary>

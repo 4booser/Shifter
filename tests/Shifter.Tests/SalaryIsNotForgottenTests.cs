@@ -61,6 +61,11 @@ public class SalaryIsNotForgottenTests
         // per-placement sum deliberately zeroes period-salary entries so the
         // wage arrives exactly once.
         ["ChronicleService.cs"] = "adds PeriodSalaryByPlace per chapter",
+        // «Где мой час дороже» compares hourly rates and nothing else: the
+        // query filters SalaryPeriod == Hour before the sum, so a weekly or
+        // monthly wage is out of scope by design, not forgotten — a salary
+        // has no per-hour market band to sit next to.
+        ["CityCompareService.cs"] = "hourly-only by an explicit filter before the sum",
     };
 
     [Fact]

@@ -22,17 +22,38 @@ public class GigsController : ControllerBase
 {
     private readonly GigService _gigs;
     private readonly MarketService _market;
+    private readonly CityCompareService _cities;
 
-    public GigsController(GigService gigs, MarketService market)
+    public GigsController(GigService gigs, MarketService market, CityCompareService cities)
     {
         _gigs = gigs;
         _market = market;
+        _cities = cities;
     }
 
     /// <summary>
     /// What the board pays for a job in a city, and where the caller sits in
     /// it. Absent rather than zeroed where the sample cannot carry a figure.
     /// </summary>
+    /// <summary>«Где мой час дороже»: own history city by city, market alongside.</summary>
+    [HttpGet("cities")]
+    public async Task<IActionResult> Cities(CancellationToken ct)
+        => Ok((await _cities.ReadAsync(UserId(), ct)).Select(row => new
+        {
+            city = row.City,
+            hours = row.Hours,
+            days = row.Days,
+            per_hour = row.PerHour,
+            market = row.Market is null ? null : new
+            {
+                median = row.Market.Median,
+                low = row.Market.Low,
+                high = row.Market.High,
+                employers = row.Market.Employers,
+                listings = row.Market.Listings,
+            },
+        }));
+
     [HttpGet("market")]
     public async Task<IActionResult> Market(
         [FromQuery] string city, [FromQuery] string category, CancellationToken ct)

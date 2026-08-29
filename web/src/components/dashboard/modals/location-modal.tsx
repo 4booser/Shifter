@@ -36,6 +36,7 @@ export function LocationModal({
   const [editing, setEditing] = useState<WorkLocation | null>(null);
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
+  const [city, setCity] = useState('');
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [locating, setLocating] = useState(false);
   const [colour, setColour] = useState('#1F3A5F');
@@ -96,6 +97,7 @@ export function LocationModal({
     setEditing(location);
     setName(location.name);
     setAddress(location.address ?? '');
+    setCity(location.city ?? '');
     setCoords(
       location.latitude !== null && location.longitude !== null
         ? { lat: location.latitude, lng: location.longitude }
@@ -153,6 +155,7 @@ export function LocationModal({
         {
           name,
           address: address.trim() === '' ? null : address,
+          city: city.trim(),
           latitude: coords?.lat ?? null,
           longitude: coords?.lng ?? null,
           colour,
@@ -236,6 +239,16 @@ export function LocationModal({
         <label>
           <span className="field-label">{t('Name')}</span>
           <input className="field-input" value={name} placeholder="Bar" onChange={(event) => setName(event.target.value)} />
+        </label>
+
+        <label>
+          <span className="field-label">{t('City')}</span>
+          <input
+            className="field-input"
+            value={city}
+            placeholder={t('For comparing your seasons — optional')}
+            onChange={(event) => setCity(event.target.value)}
+          />
         </label>
 
         <label>

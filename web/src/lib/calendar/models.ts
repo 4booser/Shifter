@@ -121,6 +121,8 @@ export interface WorkLocation {
   commute_minutes: number;
   /** What one trip costs, one way. */
   commute_cost: number;
+  /** The city, as its owner names it. Empty/absent means unsaid. */
+  city?: string;
 }
 
 export interface WorkLocationCreate {
@@ -156,6 +158,8 @@ export interface WorkLocationCreate {
   minimum_hourly?: number;
   commute_minutes?: number;
   commute_cost?: number;
+  /** The city, as its owner names it. Empty/absent means unsaid. */
+  city?: string;
 }
 
 export interface LocationTotal {

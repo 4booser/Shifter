@@ -1013,6 +1013,16 @@ export const RU: Dictionary = {
   'The PDF says on it that it is self-reported. That is not a weakness — a paper that pretends otherwise is worth less.':
     'В PDF написано, что данные — со слов владельца. Это не слабость: бумага, которая делает вид, что это не так, стоит меньше.',
   'Your chronicle': 'Ваша хроника',
+  'Your cities': 'Ваши города',
+  'Your own hourly rate, season against season. Set a city on a place to include it.':
+    'Ваша собственная ставка в час, сезон против сезона. Укажите город у места — и оно попадёт сюда.',
+  'Board in': 'Биржа в',
+  'median': 'медиана',
+  'employers': 'работодателей',
+  'Shown only where enough different venues posted — a thin sample identifies somebody.':
+    'Показывается только там, где постили достаточно разных заведений: тонкая выборка кого-то выдаёт.',
+  'For comparing your seasons — optional': 'Для сравнения сезонов — необязательно',
+
   'Only for you: this section never prints and never reaches the shared card. The place to write down what actually happened.':
     'Только для вас: этот раздел не печатается и не попадает в общую карточку. Место записать, как оно было на самом деле.',
   'now': 'сейчас',
@@ -2985,6 +2995,16 @@ export const UK: Dictionary = {
   'The PDF says on it that it is self-reported. That is not a weakness — a paper that pretends otherwise is worth less.':
     'У PDF написано, що дані — зі слів власника. Це не слабкість: папір, який вдає інше, вартий менше.',
   'Your chronicle': 'Ваша хроніка',
+  'Your cities': 'Ваші міста',
+  'Your own hourly rate, season against season. Set a city on a place to include it.':
+    'Ваша власна ставка на годину, сезон проти сезону. Вкажіть місто в місця — і воно потрапить сюди.',
+  'Board in': 'Біржа в',
+  'median': 'медіана',
+  'employers': 'роботодавців',
+  'Shown only where enough different venues posted — a thin sample identifies somebody.':
+    'Показується лише там, де постили достатньо різних закладів: тонка вибірка когось видає.',
+  'For comparing your seasons — optional': 'Для порівняння сезонів — необов’язково',
+
   'Only for you: this section never prints and never reaches the shared card. The place to write down what actually happened.':
     'Лише для вас: цей розділ не друкується і не потрапляє в спільну картку. Місце записати, як воно було насправді.',
   'now': 'зараз',

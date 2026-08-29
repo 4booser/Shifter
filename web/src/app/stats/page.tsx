@@ -40,6 +40,7 @@ import { useReveal } from '@/lib/fx';
 import { GoalsModal } from '@/components/dashboard/modals/goals-modal';
 import { WhatIfCard } from '@/components/stats/what-if';
 import { RhythmCard } from '@/components/stats/rhythm';
+import { CitiesCard } from '@/components/stats/cities';
 import { hourDial, rateTrend, tipsByWeekday, waterfall, weekBands } from '@/lib/charts/report-math';
 import { ClockRing, DaysAtGlance, MoneyFlow, MonthBars, TipWeek, TrendLine, WeekBandsChart } from '@/components/charts/glass-charts';
 import { AreaChart, ColumnChart, Plot, ProgressRing } from '@/components/charts/charts';
@@ -763,6 +764,8 @@ function Stats() {
       <WhatIfCard suggestedTarget={active?.target ?? null} />
 
       <RhythmCard />
+
+      <CitiesCard />
 
       {/* ==== Earnings + twelve months ==== */}
       <div className="grid gap-3 lg:grid-cols-2">

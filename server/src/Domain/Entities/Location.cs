@@ -30,6 +30,13 @@ public sealed class Location
     public double? Longitude { get; set; }
 
     /// <summary>
+    /// The city, in the person's own words — «Львів», «Wrocław». Free text
+    /// like everything else about a place; it exists so a seasonal worker's
+    /// own history can be compared city against city. Null means unsaid.
+    /// </summary>
+    public string? City { get; set; }
+
+    /// <summary>
     /// Why this place was left, in the person's own words — and only for the
     /// person. Never in the CV, never on a card, never in a gig reply: it is
     /// the memory that makes the next rate negotiation honest, and memories

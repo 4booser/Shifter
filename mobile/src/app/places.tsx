@@ -133,6 +133,7 @@ const blankPlace = (): WorkPlace => ({
   id: 0,
   name: '',
   address: null,
+  city: '',
   colour: COLOURS[0],
   pay_period: 'monthly',
   pay_day: 10,
@@ -246,6 +247,16 @@ function PlaceForm({
           onChangeText={(value) => set('name', value)}
           maxLength={60}
           placeholder={t("Бар на углу")}
+          placeholderTextColor={palette.textSecondary}
+        />
+
+        <Text style={styles.label}>{t('Город')}</Text>
+        <TextInput
+          style={styles.input}
+          value={form.city ?? ''}
+          onChangeText={(value) => set('city', value)}
+          maxLength={40}
+          placeholder={t('Для сравнения сезонов — необязательно')}
           placeholderTextColor={palette.textSecondary}
         />
 

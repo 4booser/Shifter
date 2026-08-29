@@ -130,6 +130,12 @@ public partial class LocationHandler : ILocationHandler
 
         location.Name = request.name.Trim();
         location.Address = string.IsNullOrWhiteSpace(request.address) ? null : request.address.Trim();
+        // Null means the client never heard of cities and must not clear one
+        // set on another screen; the empty string is the explicit «unsay it».
+        if (request.city is not null)
+            location.City = string.IsNullOrWhiteSpace(request.city)
+                ? null
+                : request.city.Trim()[..Math.Min(40, request.city.Trim().Length)];
 
         // Both or neither, and on the planet: a half-set coordinate would put
         // the nudge in the Gulf of Guinea.
@@ -308,7 +314,8 @@ public partial class LocationHandler : ILocationHandler
             location.AutoBreakMinutes,
             location.MinimumHourly,
             location.CommuteMinutes,
-            location.CommuteCost
+            location.CommuteCost,
+            location.City ?? string.Empty
         );
     }
 

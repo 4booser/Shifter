@@ -30,6 +30,7 @@ import {
   ReserveCard,
   SpendPaceCard,
 } from '@/components/bank/charts';
+import { StatementCard } from '@/components/bank/statement';
 import { BankWork } from '@/components/bank/work';
 
 /**
@@ -251,6 +252,9 @@ export default function BankPage() {
               <SpendStanding items={mono.items} from={bounds.from} to={bounds.to} />
               <SpendOddities items={mono.items} from={bounds.from} to={bounds.to} />
             </div>
+
+            {/* ==== The rows everything above is made of ==== */}
+            <StatementCard items={mono.items} from={bounds.from} to={bounds.to} />
 
             {/* ==== Row: the work crossover beside the month's shape ==== */}
             <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">

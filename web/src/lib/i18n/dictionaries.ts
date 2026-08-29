@@ -1028,6 +1028,14 @@ export const RU: Dictionary = {
   'A category keeps its colour and its slot — what changes is how much of the column it takes.':
     'Категория держит свой цвет и место — меняется лишь её доля в столбике.',
   'The pace': 'Темп',
+  'The operations themselves': 'Сами операции',
+  'all of it': 'всё',
+  'spendings': 'траты',
+  'arrivals': 'поступления',
+  'Find by name…': 'Найти по названию…',
+  'Nothing matches.': 'Ничего не совпало.',
+  'Show more': 'Показать ещё',
+
   'Running total against last month, day for day. Faster is visible by the third day, not the thirtieth.':
     'Нарастающий итог против прошлого месяца, день в день. Быстрее — видно на третий день, а не на тридцатый.',
   'last month': 'прошлый месяц',
@@ -3052,6 +3060,13 @@ export const UK: Dictionary = {
   'A category keeps its colour and its slot — what changes is how much of the column it takes.':
     'Категорія тримає свій колір і місце — змінюється лише її частка у стовпчику.',
   'The pace': 'Темп',
+  'The operations themselves': 'Самі операції',
+  'all of it': 'усе',
+  'spendings': 'витрати',
+  'arrivals': 'надходження',
+  'Find by name…': 'Знайти за назвою…',
+  'Nothing matches.': 'Нічого не збіглося.',
+  'Show more': 'Показати ще',
   'Running total against last month, day for day. Faster is visible by the third day, not the thirtieth.':
     'Наростаючий підсумок проти минулого місяця, день у день. Швидше — видно на третій день, а не на тридцятий.',
   'last month': 'минулий місяць',

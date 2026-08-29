@@ -15,6 +15,7 @@ import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { ClockRing, MoneyFlow, MonthBars } from '@/components/charts';
 import { Appear, Press, Roll } from '@/components/motion';
 import { Pace } from '@/components/pace';
+import { RhythmCard } from '@/components/rhythm-card';
 import { Weekdays } from '@/components/weekdays';
 import { byWeekday } from '@/lib/rhythm';
 import { running } from '@/lib/pace';
@@ -493,6 +494,8 @@ export default function StatsScreen() {
           <MonthBars rows={months} palette={palette} format={amount} />
         </View>
       )}
+
+      <RhythmCard palette={palette} />
     </ScrollView>
     </GestureDetector>
   );

@@ -976,6 +976,22 @@ export const RU: Dictionary = {
   'One archive with everything: every day as JSON, the ledger as CSV. Yours to keep, any day.': 'Один архив со всем: каждый день в JSON, гроссбух в CSV. Ваше — забирайте в любой день.',
   'Download everything': 'Скачать всё',
   'Income papers': 'Бумаги о доходе',
+  'Nights between shifts': 'Ночи между сменами',
+  'From clocking out to clocking back in — measured on your own record, said without advice.':
+    'От ухода до выхода — по вашей же записи, без советов.',
+  'Nights shorter than': 'Ночей короче',
+  'No nights shorter than': 'Ночей короче',
+  'over the last month; the shortest was': 'за месяц; самая короткая —',
+  'this month.': 'в этом месяце не было.',
+  'Long runs show in the tips:': 'Длинные серии видно в чае:',
+  'days one-two of a run pay': 'день один-два серии приносят',
+  'in tips; by day six —': 'чая в час; к шестому —',
+  'Counted over': 'Посчитано по',
+  'days of runs. A coincidence, not a cause — but it is the one argument for a day off that speaks money.':
+    'дням серий. Совпадение, не причина — но это единственный аргумент за выходной на языке денег.',
+  'Your rest threshold lives in the account settings; the app only measures against it.':
+    'Порог отдыха настраивается в аккаунте; приложение только меряет по нему.',
+
   'A statement of what these months came to, built from your own records — and saying so on the first line.':
     'Справка о том, что вышло за эти месяцы, — по вашим же записям, о чём сказано первой строкой.',
   'Preparing…': 'Готовим…',
@@ -2919,6 +2935,22 @@ export const UK: Dictionary = {
   'One archive with everything: every day as JSON, the ledger as CSV. Yours to keep, any day.': 'Один архів з усім: кожен день у JSON, гросбух у CSV. Ваше — забирайте будь-якого дня.',
   'Download everything': 'Завантажити все',
   'Income papers': 'Папери про дохід',
+  'Nights between shifts': 'Ночі між змінами',
+  'From clocking out to clocking back in — measured on your own record, said without advice.':
+    'Від виходу до виходу — за вашим же записом, без порад.',
+  'Nights shorter than': 'Ночей коротших за',
+  'No nights shorter than': 'Ночей коротших за',
+  'over the last month; the shortest was': 'за місяць; найкоротша —',
+  'this month.': 'цього місяця не було.',
+  'Long runs show in the tips:': 'Довгі серії видно в чаї:',
+  'days one-two of a run pay': 'день один-два серії приносять',
+  'in tips; by day six —': 'чаю на годину; до шостого —',
+  'Counted over': 'Пораховано за',
+  'days of runs. A coincidence, not a cause — but it is the one argument for a day off that speaks money.':
+    'днями серій. Збіг, не причина — але це єдиний аргумент за вихідний мовою грошей.',
+  'Your rest threshold lives in the account settings; the app only measures against it.':
+    'Поріг відпочинку налаштовується в акаунті; застосунок лише міряє за ним.',
+
   'A statement of what these months came to, built from your own records — and saying so on the first line.':
     'Довідка про те, що вийшло за ці місяці, — за вашими ж записами, про що сказано першим рядком.',
   'Preparing…': 'Готуємо…',

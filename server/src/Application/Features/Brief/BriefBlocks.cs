@@ -306,6 +306,34 @@ public static class BriefBlocks
                 shortest <= restHours / 2 ? "warn" : null));
         }
 
+        // The run happening right now, said as a number and its history —
+        // never as advice. Twelve days in a row is a fact a person notices
+        // on the tenth; the app can see it on the third, and its whole job
+        // here is to say it out loud. Both months' days feed the count, so
+        // a streak straddling the 1st is not cut in half by the calendar.
+        var streakDays = month.days.Concat(previous.days)
+            .Where(day => day.shifts.Any(shift => shift.worked))
+            .Select(day => day.date)
+            .ToArray();
+
+        var streak = Domain.Entities.WorkStreaks.Current(streakDays, today);
+
+        if (streak >= 5)
+        {
+            var record = Domain.Entities.WorkStreaks.Longest(streakDays);
+
+            lines.Add(new BriefLineDto(
+                streak >= record
+                    ? say.Of(
+                        $"{Nth(streak, false)} день подряд — длиннее серии у вас не было",
+                        $"{Nth(streak, true)} день поспіль — довшої серії у вас не було")
+                    : say.Of(
+                        $"{Nth(streak, false)} день подряд; самая длинная серия была {record} дней",
+                        $"{Nth(streak, true)} день поспіль; найдовша серія була {record} днів"),
+                null,
+                streak >= 7 ? "warn" : null));
+        }
+
         // The average shift: the figure people compare a new job against.
         var placed = worked.SelectMany(day => day.shifts.Where(shift => shift.worked)).ToArray();
 
@@ -396,6 +424,17 @@ public static class BriefBlocks
     /// ending at 04:00 and a morning starting at 09:00 is five hours apart
     /// rather than nineteen.
     /// </summary>
+    /// <summary>«Седьмой» / «Сьомий»: the streak said the way a person says it.</summary>
+    private static string Nth(int day, bool uk)
+    {
+        string[] ru = ["Пятый", "Шестой", "Седьмой", "Восьмой", "Девятый", "Десятый", "Одиннадцатый", "Двенадцатый", "Тринадцатый", "Четырнадцатый"];
+        string[] ua = ["П'ятий", "Шостий", "Сьомий", "Восьмий", "Дев'ятий", "Десятий", "Одинадцятий", "Дванадцятий", "Тринадцятий", "Чотирнадцятий"];
+        var words = uk ? ua : ru;
+
+        // Past the words, the number itself reads better than a made-up word.
+        return day - 5 < words.Length ? words[day - 5] : $"{day}-й";
+    }
+
     private static List<(DateTime Start, DateTime End)> Spans(DaysDto month)
     {
         List<(DateTime Start, DateTime End)> spans = [];

@@ -19,6 +19,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BankAnalysis } from '@/components/bank-analysis';
 import { BankLock } from '@/components/bank-lock';
 import { BankSpending } from '@/components/bank-spending';
+import { BankStatement } from '@/components/bank-statement';
+import {
+  CategoryMonthsChart,
+  MonthlyFlowsChart,
+  PaceChart,
+  ReserveTile,
+} from '@/components/bank-charts';
 import { BankLedger } from '@/components/bank-ledger';
 import { MoneyGrid } from '@/components/money-grid';
 import { Appear, Loading, Press } from '@/components/motion';
@@ -842,6 +849,38 @@ function Bank() {
           onRules={(rules) => void mono.setRules(rules)}
           onBudget={(category, limit) => void mono.setBudget(category, limit)}
         />
+      )}
+
+      {/* ==== The web's chart shelf, answering the finger ==== */}
+      {view === 'spending' && (
+        <>
+          <PaceChart
+            items={mono.items}
+            from={monthBounds(currentMonth()).from}
+            to={monthBounds(currentMonth()).to}
+            palette={palette}
+          />
+          <MonthlyFlowsChart items={mono.items} palette={palette} />
+          <CategoryMonthsChart items={mono.items} rules={mono.rules} palette={palette} />
+          <ReserveTile
+            balance={(() => {
+              const account = (mono.client?.accounts ?? []).find((entry) => entry.id === mono.accountId);
+
+              return account !== undefined ? fromMinor(account.balance - account.creditLimit) : null;
+            })()}
+            items={mono.items}
+            from={monthBounds(currentMonth()).from}
+            to={monthBounds(currentMonth()).to}
+            palette={palette}
+          />
+          <BankStatement
+            items={mono.items}
+            rules={mono.rules}
+            from={monthBounds(currentMonth()).from}
+            to={monthBounds(currentMonth()).to}
+            palette={palette}
+          />
+        </>
       )}
 
       {view === 'month' && (

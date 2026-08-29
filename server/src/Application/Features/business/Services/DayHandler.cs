@@ -1200,7 +1200,10 @@ public partial class DayHandler : IDayHandler
     /// holiday accrual and — worst of all — from what the reconciliation says
     /// it is owed.
     /// </summary>
-    private static Dictionary<int, decimal> PeriodSalaryByPlace(
+    // Public for the same reason PeriodSalary is: the chronicle needs each
+    // place's share of the period wages, and reimplementing the split there
+    // would fork the one formula this guard-tested file owns.
+    public static Dictionary<int, decimal> PeriodSalaryByPlace(
         Day[] days,
         bool workedOnly,
         Day[]? around = null)

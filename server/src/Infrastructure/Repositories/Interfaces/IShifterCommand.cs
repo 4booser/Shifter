@@ -26,6 +26,12 @@ public interface IShifterCommand
 
     Task<bool> AddPayoutAsync(Payout payout, CancellationToken ct);
     Task DeletePayoutAsync(Payout payout, CancellationToken ct);
+
+    /// <summary>
+    /// Deletes every payment and period settlement the account has. Returns
+    /// how many payments went, so the caller can say what happened out loud.
+    /// </summary>
+    Task<int> WipePayoutsAsync(int userId, CancellationToken ct);
     Task<bool> AddExpenseAsync(WorkExpense expense, CancellationToken ct);
     Task DeleteExpenseAsync(WorkExpense expense, CancellationToken ct);
 

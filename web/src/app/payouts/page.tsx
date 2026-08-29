@@ -7,14 +7,16 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { calendarApi } from '@/lib/api/calendar';
 import { apiErrorMessage } from '@/lib/api/http';
 import { addMonths, currentMonth, keysBetween, todayKey } from '@/lib/calendar/calendar-date';
-import { PayPeriodRow, Reconciliation } from '@/lib/calendar/models';
+import { Payout, PayPeriodRow, Reconciliation } from '@/lib/calendar/models';
 import { useI18n } from '@/lib/i18n';
 import { Shell } from '@/components/layout/shell';
 import { useReveal } from '@/lib/fx';
 import { ExpensesPanel } from '@/components/dashboard/expenses-panel';
+import { PapersPanel } from '@/components/dashboard/papers-panel';
 import { TipJar } from '@/components/dashboard/tip-jar';
 import { PayslipCheckModal } from '@/components/dashboard/payslip-check';
 import { PayoutModal, PayoutPrefill } from '@/components/dashboard/modals/payout-modal';
+import { PayoutLedger } from '@/components/dashboard/payout-ledger';
 import { Alert, Money } from '@/components/ui/bits';
 import { Empty } from '@/components/ui/empty';
 import { Icon } from '@/components/ui/icon';
@@ -54,6 +56,8 @@ function Payouts() {
   const [monthsBack, setMonthsBack] = useState(MONTHS_BACK);
   const [payoutOpen, setPayoutOpen] = useState(false);
   const [prefill, setPrefill] = useState<PayoutPrefill | null>(null);
+  const [editing, setEditing] = useState<Payout | null>(null);
+  const [ledger, setLedger] = useState<Payout[]>([]);
   const [checking, setChecking] = useState<{ locationId: number; on: string } | null>(null);
 
   /**
@@ -84,11 +88,19 @@ function Payouts() {
 
     setLoading(true);
 
+    const from = `${start.year}-${`${start.month}`.padStart(2, '0')}-01`;
+
     void calendarApi
-      .schedule(`${start.year}-${`${start.month}`.padStart(2, '0')}-01`, to)
+      .schedule(from, to)
       .then(setData)
       .catch((caught) => setError(apiErrorMessage(caught)))
       .finally(() => setLoading(false));
+
+    // The raw rows behind the reconciliation, for the ledger section.
+    void calendarApi
+      .payouts(from, to)
+      .then(setLedger)
+      .catch(() => setLedger([]));
   }, [monthsBack]);
 
   useEffect(load, [load]);
@@ -182,6 +194,7 @@ function Payouts() {
 
   const record = (row: PayPeriodRow) => {
     setPrefill({ locationId: row.location_id, from: row.period_from, to: row.period_to, expected: row.expected, stream: row.stream });
+    setEditing(null);
     setPayoutOpen(true);
   };
 
@@ -194,6 +207,7 @@ function Payouts() {
           className="btn btn-primary btn-sm ml-auto"
           onClick={() => {
             setPrefill(null);
+            setEditing(null);
             setPayoutOpen(true);
           }}
         >
@@ -364,10 +378,28 @@ function Payouts() {
           and money leaving are thought about in the same breath. */}
       <TipJar />
 
+      {/* The papers desk lives with the money pages: a statement is a payout
+          question, not a settings question. */}
+      <PayoutLedger
+        payouts={ledger}
+        onEdit={(payout) => {
+          setEditing(payout);
+          setPrefill(null);
+          setPayoutOpen(true);
+        }}
+        onChanged={load}
+      />
+
+      <PapersPanel />
+
       <PayoutModal
         open={payoutOpen}
         prefill={prefill}
-        onClose={() => setPayoutOpen(false)}
+        editing={editing}
+        onClose={() => {
+          setPayoutOpen(false);
+          setEditing(null);
+        }}
         onSaved={load}
       />
     </div>

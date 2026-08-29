@@ -53,6 +53,14 @@ public class SalaryIsNotForgottenTests
         // bug this guard exists to catch. Hourly and daily ghosts carry
         // their price in Pay, and overtime is added separately.
         ["DraftPricer.cs"] = "extra days on a fixed wage genuinely add nothing",
+        // The months table runs the same PeriodSalary rule as the tax figure,
+        // with the same surrounding days in view; the per-shift sum next to
+        // it is the hourly half of the same total.
+        ["PapersService.cs"] = "adds PeriodSalary per month, same rule as tax",
+        // Each chapter adds its place's share from PeriodSalaryByPlace; the
+        // per-placement sum deliberately zeroes period-salary entries so the
+        // wage arrives exactly once.
+        ["ChronicleService.cs"] = "adds PeriodSalaryByPlace per chapter",
     };
 
     [Fact]

@@ -154,6 +154,20 @@ public class ShifterCommand : IShifterCommand
         await _db.SaveChangesAsync(ct);
     }
 
+    public async Task<int> WipePayoutsAsync(int userId, CancellationToken ct)
+    {
+        // Settlements go with the payments: a period marked «paid, споримся
+        // закончили» over a payment that no longer exists would be a ghost
+        // verdict — the clean slate has to be actually clean.
+        await _db.Set<PeriodSettlement>()
+            .Where(settlement => settlement.UserId == userId)
+            .ExecuteDeleteAsync(ct);
+
+        return await _db.Payouts
+            .Where(payout => payout.UserId == userId)
+            .ExecuteDeleteAsync(ct);
+    }
+
     public async Task SettlePeriodAsync(
         int userId, int locationId, DateOnly periodFrom, string stream,
         string? kind, string? note, CancellationToken ct)

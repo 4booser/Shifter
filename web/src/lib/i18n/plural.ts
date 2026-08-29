@@ -18,6 +18,7 @@ const FORMS: Record<string, Record<Language, string[]>> = {
   declines: { en: ['decline', 'declines'], ru: ['отказ', 'отказа', 'отказов'], uk: ['відмова', 'відмови', 'відмов'] },
   months: { en: ['month', 'months'], ru: ['месяц', 'месяца', 'месяцев'], uk: ['місяць', 'місяці', 'місяців'] },
   minutes: { en: ['minute', 'minutes'], ru: ['минуту', 'минуты', 'минут'], uk: ['хвилину', 'хвилини', 'хвилин'] },
+  entries: { en: ['entry', 'entries'], ru: ['запись', 'записи', 'записей'], uk: ['запис', 'записи', 'записів'] },
 };
 
 export function pluralWord(lang: Language, key: string, count: number): string {

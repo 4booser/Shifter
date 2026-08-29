@@ -142,6 +142,74 @@ public class PayoutHandler : IPayoutHandler
         return ToDto(await _shifterQuery.GetPayoutAsync(userId, payout.Id, ct) ?? payout);
     }
 
+    /// <summary>
+    /// Fixing a payment in place instead of delete-and-retype. The same
+    /// checks as recording it the first time — an edit is not a licence to
+    /// store what a create would refuse — and the currency and rate are
+    /// resolved again, because both belong to the place and the day, and the
+    /// edit may have moved either.
+    /// </summary>
+    public async Task<PayoutDto> UpdateAsync(
+        PayoutCreateDto request,
+        int userId,
+        int id,
+        CancellationToken ct)
+    {
+        var (periodFrom, periodTo, receivedOn) = Dates(request);
+
+        if (periodFrom > periodTo)
+            throw new ValidationException("Period start must not be after its end.");
+
+        if (request.amount < 0)
+            throw new ValidationException("Amount cannot be negative.");
+
+        if (request.note?.Length > NoteMaxLength)
+            throw new ValidationException($"Note must be at most {NoteMaxLength} characters.");
+
+        Payout payout = await _shifterQuery.GetPayoutAsync(userId, id, ct)
+            ?? throw new NotFoundException("Payout does not exist.");
+
+        var place = request.location_id is int placeId
+            ? await _shifterQuery.GetLocationAsync(userId, placeId, ct)
+                ?? throw new NotFoundException("Place of work does not exist.")
+            : null;
+
+        var currency = place?.Currency ?? string.Empty;
+        decimal? rate = null;
+        DateOnly? rateOn = null;
+
+        if (_rates is not null && currency.Length == 3
+            && !string.Equals(currency, "UAH", StringComparison.OrdinalIgnoreCase))
+        {
+            var found = await _rates.OnAsync([currency], receivedOn, ct);
+
+            if (found.TryGetValue(Money.NbuRateClient.Normalise(currency), out var pair))
+            {
+                rate = pair.Rate;
+                rateOn = pair.On;
+            }
+        }
+
+        payout.LocationId = request.location_id;
+        payout.PeriodFrom = periodFrom;
+        payout.PeriodTo = periodTo;
+        payout.Amount = request.amount;
+        payout.ReceivedOn = receivedOn;
+        payout.Note = string.IsNullOrWhiteSpace(request.note) ? null : request.note.Trim();
+        payout.Stream = ParseStream(request.stream);
+        payout.Kind = ParseKind(request.kind);
+        payout.Currency = currency;
+        payout.RateToBase = rate;
+        payout.RateOn = rateOn;
+
+        await _shifterCommand.SaveAsync(ct);
+
+        return ToDto(await _shifterQuery.GetPayoutAsync(userId, id, ct) ?? payout);
+    }
+
+    public Task<int> WipeAsync(int userId, CancellationToken ct)
+        => _shifterCommand.WipePayoutsAsync(userId, ct);
+
     public async Task DeleteAsync(int userId, int id, CancellationToken ct)
     {
         Payout payout = await _shifterQuery.GetPayoutAsync(userId, id, ct)

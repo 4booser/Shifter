@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 
 import { apiErrorMessage } from '@/lib/api/http';
 import { todayKey } from '@/lib/calendar/calendar-date';
+import { Payout } from '@/lib/calendar/models';
 import { useI18n } from '@/lib/i18n';
 import { catalogueActions, summaryRange, useCalendar } from '@/lib/store/calendar';
 import { Alert, Money } from '@/components/ui/bits';
@@ -35,11 +36,14 @@ export interface PayoutPrefill {
 export function PayoutModal({
   open,
   prefill,
+  editing,
   onClose,
   onSaved,
 }: {
   open: boolean;
   prefill?: PayoutPrefill | null;
+  /** An existing payment to fix in place, instead of recording a new one. */
+  editing?: Payout | null;
   onClose: () => void;
   onSaved?: () => void;
 }) {
@@ -67,6 +71,19 @@ export function PayoutModal({
     setReceived(today);
     setNote('');
 
+    // Opened on an existing payment: everything it already says, editable.
+    if (editing != null) {
+      setFrom(editing.period_from);
+      setTo(editing.period_to);
+      setAmount(editing.amount);
+      setReceived(editing.received_on);
+      setNote(editing.note ?? '');
+      setLocationId(editing.location_id);
+      setKind(editing.kind);
+
+      return;
+    }
+
     // Opened against a specific period: the amount is filled in with what was
     // calculated — confirming a figure is a glance, retyping it invites a typo.
     if (prefill != null) {
@@ -89,7 +106,7 @@ export function PayoutModal({
     setLocationId(locations.length === 1 ? locations[0].id : null);
     setKind(range.to > today ? 'advance' : 'settlement');
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, prefill]);
+  }, [open, prefill, editing]);
 
   const difference = amount === null ? null : amount - summary.total_earned;
 
@@ -97,16 +114,19 @@ export function PayoutModal({
     if (amount === null || from === '' || to === '') return;
 
     try {
-      await catalogueActions.createPayout({
+      const body = {
         period_from: from,
         period_to: to,
         amount,
         received_on: received,
         note: note.trim() === '' ? null : note,
         location_id: locationId,
-        stream: prefill?.stream ?? 'all',
+        stream: editing?.stream ?? prefill?.stream ?? 'all',
         kind,
-      });
+      };
+
+      if (editing != null) await catalogueActions.updatePayout(editing.id, body);
+      else await catalogueActions.createPayout(body);
       onSaved?.();
       onClose();
     } catch (caught) {
@@ -115,7 +135,7 @@ export function PayoutModal({
   };
 
   return (
-    <Modal open={open} title={t('Record a payment')} onClose={onClose}>
+    <Modal open={open} title={editing != null ? t('Fix a payment') : t('Record a payment')} onClose={onClose}>
       <div className="flex flex-col gap-3.5">
         {error && <Alert>{error}</Alert>}
 
@@ -242,7 +262,7 @@ export function PayoutModal({
             {t('Cancel')}
           </button>
           <button type="button" className="btn btn-primary" disabled={amount === null} onClick={() => void submit()}>
-            {t('Record payment')}
+            {editing != null ? t('Fix') : t('Record payment')}
           </button>
         </div>
       </div>

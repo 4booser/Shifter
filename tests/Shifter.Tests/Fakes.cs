@@ -241,6 +241,16 @@ public sealed class FakeShifterCommand : IShifterCommand
         return Task.CompletedTask;
     }
 
+    /// <summary>Who asked for the clean slate; the real sweep is covered over HTTP.</summary>
+    public int? WipedFor { get; private set; }
+
+    public Task<int> WipePayoutsAsync(int userId, CancellationToken ct)
+    {
+        WipedFor = userId;
+
+        return Task.FromResult(0);
+    }
+
     public Task DeletePayoutAsync(Payout payout, CancellationToken ct)
     {
         Deleted.Add(payout);

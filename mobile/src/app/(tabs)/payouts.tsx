@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  Alert,
   Modal,
   Pressable,
   RefreshControl,
@@ -83,6 +84,8 @@ interface Payout {
   location_id: number | null;
   location_name: string | null;
   kind: PayoutKind;
+  /** Which of the place's payments this settles: everything, wage or commission. */
+  stream: 'all' | 'wage' | 'commission';
 }
 
 const STATUS_LABEL: Record<Status, string> = {
@@ -119,6 +122,7 @@ export default function PayoutsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [prefill, setPrefill] = useState<PayPeriodRow | null>(null);
+  const [editing, setEditing] = useState<Payout | null>(null);
   const statement = useMono((state) => state.items);
   const bankToken = useMono((state) => state.token);
   const payers = useMono((state) => state.payers);
@@ -259,13 +263,15 @@ export default function PayoutsScreen() {
           <Section title={t("Что уже пришло")} palette={palette}>
             {history.map((payout) => (
               <View key={payout.id} style={styles.payoutRow}>
-                <View style={styles.grow}>
+                {/* The row itself opens the editor: a mistyped sum should be
+                    one tap from being right, not delete-and-retype. */}
+                <Press style={styles.grow} onPress={() => setEditing(payout)}>
                   <Text style={styles.payoutAmount}>{money(payout.amount)}</Text>
                   <Text style={styles.payoutMeta}>
                     {shortDate(payout.received_on)}
                     {payout.location_name !== null ? ` · ${payout.location_name}` : ''}
                   </Text>
-                </View>
+                </Press>
                 <Press
                   hitSlop={10}
                   onPress={() => {
@@ -276,6 +282,31 @@ export default function PayoutsScreen() {
                 </Press>
               </View>
             ))}
+
+            {/* The clean slate, asked for out loud. Everything, everywhere —
+                not just the half-year on screen — because a ledger that went
+                wrong early is easier to retype than to argue with. */}
+            <Press
+              style={styles.wipeAll}
+              onPress={() => {
+                Alert.alert(
+                  t('Стереть все выплаты?'),
+                  t('Уйдут все записанные выплаты и вердикты по периодам — за всё время, без отмены. Смены и заработанное останутся.'),
+                  [
+                    { text: t('Оставить'), style: 'cancel' },
+                    {
+                      text: t('Стереть всё'),
+                      style: 'destructive',
+                      onPress: () => {
+                        void api('/shifter/v1/payouts', { method: 'DELETE' }).then(load);
+                      },
+                    },
+                  ],
+                );
+              }}
+            >
+              <Text style={styles.wipeAllText}>{t('Стереть все выплаты и заполнить заново')}</Text>
+            </Press>
           </Section>
         )}
 
@@ -286,10 +317,15 @@ export default function PayoutsScreen() {
 
       <PayoutModal
         row={prefill}
+        editing={editing}
         palette={palette}
-        onClose={() => setPrefill(null)}
+        onClose={() => {
+          setPrefill(null);
+          setEditing(null);
+        }}
         onSaved={() => {
           setPrefill(null);
+          setEditing(null);
           void load();
         }}
       />
@@ -443,11 +479,14 @@ function PeriodCard({
  */
 function PayoutModal({
   row,
+  editing,
   palette,
   onClose,
   onSaved,
 }: {
   row: PayPeriodRow | null;
+  /** An already-recorded payment to fix in place, instead of a new one. */
+  editing: Payout | null;
   palette: Palette;
   onClose: () => void;
   onSaved: () => void;
@@ -460,6 +499,16 @@ function PayoutModal({
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
+    // Fixing an existing payment: everything it already says, editable.
+    if (editing !== null) {
+      setAmount(`${editing.amount}`);
+      setReceived(editing.received_on);
+      setKind(editing.kind);
+      setFailed(false);
+
+      return;
+    }
+
     if (row === null) return;
 
     // What is still missing, not the whole period: a second instalment must
@@ -471,30 +520,46 @@ function PayoutModal({
     // definition — nobody settles a month they are still working.
     setKind(row.period_to > todayKey() ? 'advance' : 'settlement');
     setFailed(false);
-  }, [row]);
+  }, [row, editing]);
 
   const save = async () => {
-    if (row === null) return;
+    if (row === null && editing === null) return;
 
     setSaving(true);
 
     try {
-      await api('/shifter/v1/payouts', {
-        method: 'POST',
-        body: {
-          period_from: row.period_from,
-          period_to: row.period_to,
-          amount: Number(amount.replace(',', '.')) || 0,
-          received_on: received,
-          location_id: row.location_id,
-          note: null,
-          kind,
-          // The row knows which payment it is and showed it on screen; not
-          // sending it booked a commission against the wage, so the commission
-          // stayed overdue and the wage flipped to overpaid.
-          stream: row.stream,
-        },
-      });
+      if (editing !== null) {
+        await api(`/shifter/v1/payouts/${editing.id}`, {
+          method: 'PUT',
+          body: {
+            period_from: editing.period_from,
+            period_to: editing.period_to,
+            amount: Number(amount.replace(',', '.')) || 0,
+            received_on: received,
+            location_id: editing.location_id,
+            note: editing.note,
+            kind,
+            stream: editing.stream,
+          },
+        });
+      } else if (row !== null) {
+        await api('/shifter/v1/payouts', {
+          method: 'POST',
+          body: {
+            period_from: row.period_from,
+            period_to: row.period_to,
+            amount: Number(amount.replace(',', '.')) || 0,
+            received_on: received,
+            location_id: row.location_id,
+            note: null,
+            kind,
+            // The row knows which payment it is and showed it on screen; not
+            // sending it booked a commission against the wage, so the commission
+            // stayed overdue and the wage flipped to overpaid.
+            stream: row.stream,
+          },
+        });
+      }
       onSaved();
     } catch {
       setFailed(true);
@@ -504,13 +569,14 @@ function PayoutModal({
   };
 
   return (
-    <Modal visible={row !== null} animationType="slide" transparent onRequestClose={onClose}>
+    <Modal visible={row !== null || editing !== null} animationType="slide" transparent onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose} />
       <View style={styles.sheet}>
-        <Text style={styles.sheetTitle}>{t('Пришли деньги')}</Text>
+        <Text style={styles.sheetTitle}>{editing !== null ? t('Поправить выплату') : t('Пришли деньги')}</Text>
         <Text style={styles.sheetMeta}>
-          {row?.location_name} · {row !== null ? shortDate(row.period_from) : ''} —{' '}
-          {row !== null ? shortDate(row.period_to) : ''}
+          {editing !== null
+            ? `${editing.location_name ?? t('Без места')} · ${shortDate(editing.period_from)} — ${shortDate(editing.period_to)}`
+            : `${row?.location_name ?? ''} · ${row !== null ? shortDate(row.period_from) : ''} — ${row !== null ? shortDate(row.period_to) : ''}`}
         </Text>
 
         <Text style={styles.fieldLabel}>{t('Сколько')}</Text>
@@ -562,7 +628,7 @@ function PayoutModal({
             disabled={saving}
             onPress={() => void save()}
           >
-            <Text style={styles.sheetPrimaryText}>{saving ? t('Сохраняем…') : t('Записать')}</Text>
+            <Text style={styles.sheetPrimaryText}>{saving ? t('Сохраняем…') : editing !== null ? t('Поправить') : t('Записать')}</Text>
           </Press>
         </View>
       </View>
@@ -692,6 +758,8 @@ const makeStyles = (palette: Palette) =>
     payoutAmount: { color: palette.text, fontSize: 16, fontWeight: '700' },
     payoutMeta: { color: palette.textSecondary, fontSize: 12, marginTop: 2 },
     remove: { color: palette.danger, fontSize: 13 },
+    wipeAll: { marginTop: 10, paddingVertical: 6 },
+    wipeAllText: { color: palette.danger, fontSize: 13, opacity: 0.8 },
 
     backdrop: {
       position: 'absolute',

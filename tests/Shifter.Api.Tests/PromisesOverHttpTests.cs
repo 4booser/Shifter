@@ -381,5 +381,111 @@ public sealed class PromisesOverHttpTests(Api api)
         Assert.Equal(4, range.GetProperty("days_worked").GetInt32());
         Assert.Equal(0m, range.GetProperty("planned_earned").GetDecimal());
     }
+
+    [Fact]
+    public async Task A_payout_can_be_corrected_in_place_and_the_reconciliation_follows()
+    {
+        var (client, _) = await api.SignInAsync("payedit");
+        var place = await PlaceAsync(client, "Бар");
+        var shift = await ShiftAsync(client, "Смена", place, 100m, "10:00", "18:00");
+
+        (await WorkAsync(client, Day(6), shift)).EnsureSuccessStatusCode();
+
+        var created = await Read(await client.PostAsJsonAsync("/shifter/v1/payouts", new
+        {
+            location_id = place,
+            period_from = Day(1),
+            period_to = Day(30),
+            amount = 600m,
+            received_on = Day(30),
+            note = "спутал сумму",
+        }));
+
+        var id = created.GetProperty("id").GetInt32();
+
+        // The typo fixed in place: 600 was really 800, and the month settles.
+        var updated = await Read(await client.PutAsJsonAsync($"/shifter/v1/payouts/{id}", new
+        {
+            location_id = place,
+            period_from = Day(1),
+            period_to = Day(30),
+            amount = 800m,
+            received_on = Day(30),
+            note = (string?)null,
+        }));
+
+        Assert.Equal(800m, updated.GetProperty("amount").GetDecimal());
+        Assert.True(updated.GetProperty("note").ValueKind == JsonValueKind.Null);
+
+        var range = await RangeAsync(client, Day(1), Day(30));
+
+        Assert.Equal(0m, range.GetProperty("difference").GetDecimal());
+
+        // And what a create refuses, an edit refuses too.
+        var refused = await client.PutAsJsonAsync($"/shifter/v1/payouts/{id}", new
+        {
+            location_id = place,
+            period_from = Day(30),
+            period_to = Day(1),
+            amount = 800m,
+            received_on = Day(30),
+            note = (string?)null,
+        });
+
+        Assert.Equal(HttpStatusCode.BadRequest, refused.StatusCode);
+    }
+
+    [Fact]
+    public async Task The_clean_slate_takes_every_payout_and_every_verdict_with_it()
+    {
+        var (client, _) = await api.SignInAsync("paywipe");
+        var place = await PlaceAsync(client, "Бар");
+        var shift = await ShiftAsync(client, "Смена", place, 100m, "10:00", "18:00");
+
+        (await WorkAsync(client, Day(6), shift)).EnsureSuccessStatusCode();
+
+        foreach (var amount in new[] { 300m, 200m })
+        {
+            (await client.PostAsJsonAsync("/shifter/v1/payouts", new
+            {
+                location_id = place,
+                period_from = Day(1),
+                period_to = Day(30),
+                amount,
+                received_on = Day(30),
+                note = (string?)null,
+            })).EnsureSuccessStatusCode();
+        }
+
+        // A verdict on the shortfall — the kind of thing that must not
+        // survive the wipe as a ghost «paid» over money that no longer
+        // exists.
+        (await client.PostAsJsonAsync("/shifter/v1/payouts/settle", new
+        {
+            location_id = place,
+            period_from = Day(1),
+            stream = "all",
+            kind = "paid",
+            note = (string?)null,
+        })).EnsureSuccessStatusCode();
+
+        var wiped = await Read(await client.DeleteAsync("/shifter/v1/payouts"));
+
+        Assert.Equal(2, wiped.GetProperty("deleted").GetInt32());
+
+        var list = JsonDocument.Parse(await client.GetStringAsync(
+            $"/shifter/v1/payouts?from={Day(1)}&to={Day(30)}")).RootElement;
+
+        Assert.Empty(list.EnumerateArray());
+
+        // The slate is genuinely clean — and clean means back to «nothing
+        // said», not «short by everything»: with no payouts recorded the
+        // range reports a difference of zero by design, because an empty
+        // ledger is not an accusation.
+        var range = await RangeAsync(client, Day(1), Day(30));
+
+        Assert.Equal(0m, range.GetProperty("paid").GetDecimal());
+        Assert.Equal(0m, range.GetProperty("difference").GetDecimal());
+    }
 }
 

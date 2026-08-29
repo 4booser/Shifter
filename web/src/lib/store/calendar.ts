@@ -925,14 +925,36 @@ export const catalogueActions = {
   },
 
   /**
-   * Puts one palette entry on a run of days. Each day gets its own event
-   * rather than one spanning the range: «английский» on Tuesday and Thursday
-   * is two lessons and two prices, not a three-day event.
+   * Puts one palette entry on a run of days — or lifts it off again. Each day
+   * gets its own event rather than one spanning the range: «английский» on
+   * Tuesday and Thursday is two lessons and two prices, not a three-day event.
+   *
+   * A day that already carries this same entry is toggled off instead of
+   * doubled: the second tap with the same brush is how a person says «убери»,
+   * and answering it with a duplicate lesson was the app hearing the tap and
+   * ignoring the meaning.
    */
   async paintEvent(keys: string[], template: EventTemplate) {
     if (keys.length === 0) return;
 
+    const { events } = get();
+
     for (const key of keys) {
+      // Same template on this exact day — matched by template first, and by
+      // name for events placed before templates carried ids.
+      const already = events.find(
+        (item) =>
+          item.start_date === key &&
+          item.end_date === key &&
+          (item.template_id === template.id || (item.template_id == null && item.name === template.name)),
+      );
+
+      if (already !== undefined) {
+        await catalogueActions.deleteEvent(already.id);
+
+        continue;
+      }
+
       await catalogueActions.saveEvent(
         {
           name: template.name,
@@ -975,9 +997,23 @@ export const catalogueActions = {
     void loadSummary();
   },
 
+  async updatePayout(id: number, request: Parameters<typeof calendarApi.createPayout>[0]) {
+    await calendarApi.updatePayout(id, request);
+    void loadSummary();
+  },
+
   async deletePayout(id: number) {
     await calendarApi.deletePayout(id);
     void loadSummary();
+  },
+
+  /** Wipes the whole payment ledger. The asking-out-loud happens in the UI. */
+  async wipePayouts() {
+    const { deleted } = await calendarApi.wipePayouts();
+
+    void loadSummary();
+
+    return deleted;
   },
 };
 

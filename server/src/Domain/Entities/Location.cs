@@ -29,6 +29,14 @@ public sealed class Location
 
     public double? Longitude { get; set; }
 
+    /// <summary>
+    /// Why this place was left, in the person's own words — and only for the
+    /// person. Never in the CV, never on a card, never in a gig reply: it is
+    /// the memory that makes the next rate negotiation honest, and memories
+    /// like «ушёл из-за штрафов» are exactly what must not leak.
+    /// </summary>
+    public string? PrivateNote { get; set; }
+
     /// <summary>Hex colour used to tint this location's shifts in the calendar.</summary>
     public string Colour { get; set; } = "#1F3A5F";
 

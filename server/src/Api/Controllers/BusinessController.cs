@@ -169,6 +169,25 @@ public class BusinessController : ControllerBase
         CancellationToken ct)
         => Ok(await _payoutHandler.CreateAsync(request, CurrentUserId(), ct));
 
+    [HttpPut]
+    [Route("payouts/{id:int}")]
+    public async Task<ActionResult<PayoutDto>> UpdatePayout(
+        int id,
+        [FromBody] PayoutCreateDto request,
+        CancellationToken ct)
+        => Ok(await _payoutHandler.UpdateAsync(request, CurrentUserId(), id, ct));
+
+    /// <summary>
+    /// The clean slate: every payment and every period verdict, gone. For the
+    /// person whose ledger went wrong early and who would rather retype a
+    /// year than argue with it row by row. The client asks out loud before
+    /// calling this; the server's part is to make it one honest operation.
+    /// </summary>
+    [HttpDelete]
+    [Route("payouts")]
+    public async Task<ActionResult<object>> WipePayouts(CancellationToken ct)
+        => Ok(new { deleted = await _payoutHandler.WipeAsync(CurrentUserId(), ct) });
+
     [HttpDelete]
     [Route("payouts/{id:int}")]
     public async Task<IActionResult> DeletePayout(int id, CancellationToken ct)

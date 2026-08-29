@@ -8,6 +8,7 @@ import { WorkHistory } from '@/lib/calendar/models';
 import { useI18n } from '@/lib/i18n';
 import { useMoney } from '@/lib/settings/money';
 import { useReveal } from '@/lib/fx';
+import { Chronicle } from '@/components/dashboard/chronicle';
 import { Alert } from '@/components/ui/bits';
 import { Shell } from '@/components/layout/shell';
 
@@ -155,6 +156,9 @@ function Cv() {
           )}
         </>
       )}
+
+      {/* The back room: never printed, never on the card. */}
+      <Chronicle />
     </div>
   );
 }

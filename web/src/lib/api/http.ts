@@ -154,6 +154,31 @@ interface RequestOptions {
   signal?: AbortSignal;
 }
 
+/**
+ * A file over the same authorized channel.
+ *
+ * The papers endpoints answer with bytes — a PDF, a CSV, a zip — and the
+ * JSON-shaped api() would choke on them. Same bearer, same single refresh
+ * retry, but the body comes back as a Blob for downloadBlob to hand over.
+ */
+export async function apiBlob(path: string): Promise<Blob> {
+  const call = async (): Promise<Response> => {
+    const session = readSession();
+
+    return fetch(path, {
+      headers: session === null ? {} : { Authorization: `Bearer ${session.access_token}` },
+    });
+  };
+
+  let response = await call();
+
+  if (response.status === 401 && (await refreshOnce())) response = await call();
+
+  if (!response.ok) throw await errorFrom(response);
+
+  return response.blob();
+}
+
 export async function api<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const call = async (): Promise<Response> => {
     const session = readSession();

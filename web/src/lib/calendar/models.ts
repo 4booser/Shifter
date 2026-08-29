@@ -696,6 +696,8 @@ export interface Payout {
   /** Null when the payment was not attributed to a place. */
   location_id: number | null;
   location_name: string | null;
+  /** Which of the place's payments this settles: everything, wage or commission. */
+  stream: 'all' | 'wage' | 'commission';
   /** What kind of payment it is; see PayoutKind. */
   kind: PayoutKind;
   /** The currency it arrived in. Empty is the app's own. */

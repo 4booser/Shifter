@@ -2,17 +2,22 @@
 
 import Link from 'next/link';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { GIG_CATEGORIES } from '@/lib/api/gigs';
 import { useReveal } from '@/lib/fx';
 import { Icon } from '@/components/ui/icon';
 import { CalendarDemo, GigsDemo, LiveShiftDemo, StretchWeekDemo, WhatIfDemo } from '@/components/landing/demos';
+import { BankForecastDemo, ReceiptDemo } from '@/components/landing/toys';
 
 /**
- * The public face of the product: what Shifter is, shown with its own real
- * screens. Everything here wears the same tokens as the app behind the
- * door — the landing IS the first screenshot.
+ * The public face, staged as the thing the product is about: one shift.
+ *
+ * The page runs like a working night — dusk at the top (the hero commits to
+ * dark whatever the theme, because shifts start when the light goes), then
+ * the counting hours, then the morning the money lands, then the month, the
+ * crew, the papers and the year. Every claim below the fold wears the app's
+ * own tokens: the landing is still the first screenshot.
  */
 const TRADE_RU: Record<string, string> = {
   managing: 'Управляющий', 'floor-manager': 'Менеджер зала', chef: 'Шеф-повар', 'sous-chef': 'Су-шеф',
@@ -59,6 +64,101 @@ const THEMES = [
   },
 ] as const;
 
+/**
+ * The night sky of the hero: a fixed dark palette, deliberately NOT the
+ * theme tokens — the hero is a scene, not a surface, and it must hold
+ * whatever theme the rest of the page wears. Colours echo the app's own
+ * night theme so the scene still smells like the product.
+ */
+const NIGHT = {
+  bg: 'radial-gradient(120% 90% at 70% -10%, #232043 0%, #14121f 48%, #0d0c14 100%)',
+  ink: '#f0eff7',
+  muted: '#a7a5b8',
+  faint: '#67657a',
+  accent: '#8b8ef7',
+  good: '#4fc98d',
+  line: 'rgb(240 239 247 / 12%)',
+} as const;
+
+/** One chapter stamp: the hour badge that carries the shift-story spine. */
+function Hour({ time, children }: { time: string; children: React.ReactNode }) {
+  return (
+    <div className="reveal mb-5 flex items-center gap-3">
+      <span className="rounded-full border border-border bg-surface px-3 py-1 font-mono text-[0.82rem] font-bold tabular text-(--accent)">
+        {time}
+      </span>
+      <span className="h-px flex-1 bg-border" aria-hidden />
+      <h2 className="text-right text-[1.5rem] font-extrabold tracking-tight md:text-[1.8rem]">{children}</h2>
+    </div>
+  );
+}
+
+/** Drifting dust in the hero — cheap ambience, killed for reduced motion. */
+function NightDust() {
+  const canvas = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const node = canvas.current;
+
+    if (node === null) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const context = node.getContext('2d');
+
+    if (context === null) return;
+
+    let width = (node.width = node.offsetWidth);
+    let height = (node.height = node.offsetHeight);
+
+    const motes = Array.from({ length: 42 }, () => ({
+      x: Math.random() * width,
+      y: Math.random() * height,
+      r: 0.6 + Math.random() * 1.6,
+      vx: -0.08 + Math.random() * 0.16,
+      vy: -0.28 - Math.random() * 0.3,
+      a: 0.12 + Math.random() * 0.4,
+    }));
+
+    let frame = 0;
+
+    const draw = () => {
+      context.clearRect(0, 0, width, height);
+
+      for (const mote of motes) {
+        mote.x += mote.vx;
+        mote.y += mote.vy;
+
+        if (mote.y < -4) {
+          mote.y = height + 4;
+          mote.x = Math.random() * width;
+        }
+
+        context.beginPath();
+        context.arc(mote.x, mote.y, mote.r, 0, Math.PI * 2);
+        context.fillStyle = `rgb(139 142 247 / ${mote.a})`;
+        context.fill();
+      }
+
+      frame = requestAnimationFrame(draw);
+    };
+
+    const resize = () => {
+      width = node.width = node.offsetWidth;
+      height = node.height = node.offsetHeight;
+    };
+
+    window.addEventListener('resize', resize);
+    frame = requestAnimationFrame(draw);
+
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener('resize', resize);
+    };
+  }, []);
+
+  return <canvas ref={canvas} className="pointer-events-none absolute inset-0 h-full w-full" aria-hidden />;
+}
+
 export function Landing() {
   const revealHost = useReveal<HTMLDivElement>();
   const [theme, setTheme] = useState(0);
@@ -100,115 +200,107 @@ export function Landing() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4">
-        {/* ==== Hero ==== */}
-        <section className="pb-10 pt-14 text-center md:pt-20">
-          <p className="reveal mb-3 inline-flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1 text-[0.78rem] font-semibold text-muted">
-            <span className="h-1.5 w-1.5 rounded-full bg-good" />
-            Для тех, кто работает сменами: бар, кухня, зал, доставка
+      {/* ==== 16:00 · The night scene ==== */}
+      <section
+        className="relative overflow-hidden"
+        style={{ background: NIGHT.bg, color: NIGHT.ink }}
+      >
+        <NightDust />
+        <div className="relative mx-auto max-w-6xl px-4 pb-16 pt-16 md:pt-24">
+          <p
+            className="reveal mb-4 inline-flex items-center gap-2 rounded-full border px-3 py-1 font-mono text-[0.78rem] font-bold tabular"
+            style={{ borderColor: NIGHT.line, color: NIGHT.muted }}
+          >
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full" style={{ background: NIGHT.good }} />
+            16:00 · смена начинается
           </p>
-          <h1 className="reveal mx-auto max-w-3xl text-balance text-[clamp(2rem,6vw,3.4rem)] font-extrabold leading-[1.06] tracking-tight">
-            Календарь, который знает, сколько вы заработали
-          </h1>
-          <p className="reveal mx-auto mt-4 max-w-xl text-balance text-[1.05rem] text-muted">
-            Отмечаете смены одним касанием — Shifter считает часы, ставки, чаевые, переработки
-            и говорит, когда придут деньги. Живая смена тикает, пока вы работаете.
-          </p>
 
-          <div className="reveal mt-7 flex flex-wrap items-center justify-center gap-3">
-            <Link href="/login" className="btn btn-primary !px-6 !py-3 !text-[1rem]">
-              Открыть в браузере — бесплатно
-            </Link>
-            <StoreBadge kind="apple" />
-            <StoreBadge kind="play" />
-          </div>
+          <div className="grid items-center gap-10 md:grid-cols-[1.2fr_1fr]">
+            <div>
+              <h1 className="reveal max-w-2xl text-balance text-[clamp(2.4rem,6.5vw,4.3rem)] font-extrabold leading-[1.02] tracking-[-0.02em]">
+                Вы работаете смену.
+                <br />
+                <span style={{ color: NIGHT.accent }}>Он считает деньги.</span>
+              </h1>
+              <p className="reveal mt-5 max-w-xl text-balance text-[1.08rem]" style={{ color: NIGHT.muted }}>
+                Shifter — календарь для тех, кто живёт сменами: бар, кухня, зал, доставка.
+                Часы, ставки, чаевые, ночные и переработки считаются сами, пока вы работаете.
+                А потом он сверяет, что вам заплатили столько, сколько должны.
+              </p>
 
-          <div className="reveal mx-auto mt-10">
-            <LiveShiftDemo />
-          </div>
+              <div className="reveal mt-8 flex flex-wrap items-center gap-3">
+                <Link href="/login" className="btn btn-primary !px-6 !py-3 !text-[1rem]">
+                  Открыть в браузере — бесплатно
+                </Link>
+                <a href="#shift" className="btn !border-0 !px-5 !py-3 !text-[0.95rem]" style={{ background: 'rgb(240 239 247 / 9%)', color: NIGHT.ink }}>
+                  Прожить смену за минуту ↓
+                </a>
+              </div>
 
-          <div className="reveal mx-auto mt-10 max-w-5xl">
-            <div className="card overflow-hidden !p-1.5 shadow-(--shadow-lg)">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/landing/calendar.jpg" alt="Календарь Shifter: месяц со сменами и деньгами" className="w-full rounded-[calc(var(--radius)-2px)]" />
+              <p className="reveal mt-6 font-mono text-[0.78rem]" style={{ color: NIGHT.faint }}>
+                бесплатно · без карты · веб уже работает · iOS и Android в разработке
+              </p>
+            </div>
+
+            <div className="reveal">
+              <LiveShiftDemo />
+              <p className="mt-2 text-center font-mono text-[0.72rem]" style={{ color: NIGHT.faint }}>
+                это не видео — таймер настоящий, нажмите
+              </p>
             </div>
           </div>
-        </section>
+        </div>
 
-        {/* ==== Platforms ==== */}
-        <section className="reveal flex flex-wrap items-center justify-center gap-2 pb-12 text-[0.85rem]">
-          {[
-            { label: 'Web', note: 'уже работает', live: true },
-            { label: 'iPhone', note: 'в разработке', live: false },
-            { label: 'Android', note: 'в разработке', live: false },
-            { label: 'Telegram-бот', note: 'уже работает', live: true },
-          ].map((platform) => (
-            <span key={platform.label} className="chip !px-3 !py-1.5">
-              <b>{platform.label}</b>
-              <span className={platform.live ? 'text-good' : 'text-muted'}> · {platform.note}</span>
+        {/* the dawn edge: night dissolves into whatever theme the page wears */}
+        <div className="h-24 w-full" style={{ background: 'linear-gradient(rgb(13 12 20 / 0%), var(--bg))' }} aria-hidden />
+      </section>
+
+      {/* ==== Trades marquee ==== */}
+      <section className="reveal -mt-6 mb-14 overflow-hidden border-y border-border bg-surface py-3">
+        <div className="landing-marquee flex w-max gap-2 whitespace-nowrap">
+          {[...GIG_CATEGORIES, ...GIG_CATEGORIES].map((trade, index) => (
+            <span key={`${trade.id}-${index}`} className="chip !border-transparent !bg-transparent text-[0.85rem] text-muted">
+              {trade.emoji} {TRADE_RU[trade.id] ?? trade.label}
             </span>
           ))}
-        </section>
+        </div>
+      </section>
 
-        {/* ==== Trade marquee ==== */}
-        <section className="reveal relative -mx-4 mb-12 overflow-hidden border-y border-border bg-surface py-3">
-          <div className="landing-marquee flex w-max gap-2 whitespace-nowrap">
-            {[...GIG_CATEGORIES, ...GIG_CATEGORIES].map((trade, index) => (
-              <span key={`${trade.id}-${index}`} className="chip !border-transparent !bg-transparent text-[0.85rem] text-muted">
-                {trade.emoji} {TRADE_RU[trade.id] ?? trade.label}
-              </span>
+      <main className="mx-auto max-w-6xl px-4">
+        {/* ==== 19:30 · The counting hours ==== */}
+        <section id="shift" className="pb-16">
+          <Hour time="19:30">Пока вы в запаре — он считает</Hour>
+          <p className="reveal -mt-2 mb-6 max-w-2xl text-muted">
+            Одна смена описывается один раз — часы, ставка, процент, ночные. Дальше всё
+            в одно касание, а считает сервер: у клиента нет собственной арифметики, поэтому
+            телефон, веб и виджет никогда не спорят о цифре.
+          </p>
+
+          <div className="grid gap-3 md:grid-cols-6">
+            {[
+              { icon: 'clock', title: 'Живая смена', text: 'Нажали «начал» — тикают часы и деньги: на экране, на локскрине, в виджете. Можно назначить час — смена стартует сама.', span: 'md:col-span-3' },
+              { icon: 'calendar', title: 'Календарь одним касанием', text: 'Шаблоны смен красят дни как кисть. Фото графика из рабочего чата? Импорт разберёт снимок и расставит смены сам.', span: 'md:col-span-3' },
+              { icon: 'wallet', title: 'Ночные, переработки, праздники', text: 'Порог недельных часов, множители ночи и праздников — правила вашего заведения, посчитанные без калькулятора.', span: 'md:col-span-2' },
+              { icon: 'chart', title: 'Чаевые и продажи', text: 'Налички и безнал отдельно, процент с продаж по позициям, tip-out персоналу — и всё это видно в статистике.', span: 'md:col-span-2' },
+              { icon: 'mic', title: 'Голосом с планшета', text: '«Тридцать четыре тысячи выручка, чай две» — диктовка на телефоне разберёт и разложит по полям.', span: 'md:col-span-2' },
+            ].map((cell) => (
+              <article key={cell.title} className={`card lift reveal p-4 ${cell.span}`}>
+                <span className="mb-2 grid h-9 w-9 place-items-center rounded-(--radius) bg-(--accent-soft) text-(--accent)">
+                  <Icon name={cell.icon} size={18} />
+                </span>
+                <h3 className="mb-1 text-[1rem] font-bold">{cell.title}</h3>
+                <p className="text-[0.9rem] text-muted">{cell.text}</p>
+              </article>
             ))}
           </div>
         </section>
 
-        {/* ==== Numbers ==== */}
-        <section className="reveal mb-12 grid grid-cols-2 gap-3 text-center md:grid-cols-4">
-          {[
-            { value: '29', label: 'ролей общепита на бирже' },
-            { value: '×1', label: 'касание, чтобы отметить смену' },
-            { value: '436', label: 'автотестов держат каждую цифру' },
-            { value: '24/7', label: 'бэкапы и телеграм-бот на связи' },
-          ].map((stat) => (
-            <div key={stat.label} className="card !p-4">
-              <p className="text-[1.7rem] font-extrabold tabular text-(--accent)">{stat.value}</p>
-              <p className="text-[0.82rem] text-muted">{stat.label}</p>
-            </div>
-          ))}
-        </section>
-
-        <p className="reveal -mt-8 mb-12 text-center">
-          <Link href="/roadmap" className="text-[0.88rem] font-semibold text-(--accent)">
-            Открытая разработка: смотреть прогресс по задачам →
-          </Link>
-        </p>
-
-        {/* ==== Features ==== */}
-        <section className="grid gap-3 pb-14 sm:grid-cols-2 lg:grid-cols-3">
-          {[
-            { icon: 'clock', title: 'Живая смена', text: 'Нажали «начал» — таймер и заработок тикают на глазах. «Закончил» — фактические часы уже в календаре.' },
-            { icon: 'chart', title: 'Статистика без таблиц', text: 'Откуда пришли деньги, форма вашей недели, лучший час, прогноз к концу месяца и «что-если» с ползунками.' },
-            { icon: 'users', title: 'Команда и ротация', text: 'Общий график с коллегами без чужих денег, менеджерская доска с публикацией недели, подмены в два тапа.' },
-            { icon: 'spark', title: 'Биржа подработок', text: 'Разовые смены и постоянка по всему общепиту: 29 ролей, фото заведений, «Я выйду» — и контакты у работодателя.' },
-            { icon: 'wallet', title: 'Выплаты и сверка', text: 'Аванс и зарплата по правилам вашего заведения. Пришло меньше расчёта — Shifter покажет разницу.' },
-            { icon: 'key', title: 'Ваши данные — ваши', text: 'Двухфакторный вход, экспорт всего в один клик, календарная подписка для Google и Apple Calendar.' },
-          ].map((feature) => (
-            <article key={feature.title} className="card lift reveal p-4">
-              <span className="mb-2 grid h-9 w-9 place-items-center rounded-(--radius) bg-(--accent-soft) text-(--accent)">
-                <Icon name={feature.icon} size={18} />
-              </span>
-              <h2 className="mb-1 text-[1rem] font-bold">{feature.title}</h2>
-              <p className="text-[0.9rem] text-muted">{feature.text}</p>
-            </article>
-          ))}
-        </section>
-
-        {/* ==== Playground ==== */}
-        <section className="pb-14">
-          <h2 className="reveal mb-1 text-center text-[1.6rem] font-extrabold tracking-tight">
-            Не верьте скриншотам — потрогайте
-          </h2>
-          <p className="reveal mb-5 text-center text-muted">
-            Три настоящих механики Shifter со случайными данными. Кликайте смело: это песочница.
+        {/* ==== 02:00 · Closing the day ==== */}
+        <section className="pb-16">
+          <Hour time="02:00">Закрыли смену — день уже посчитан</Hour>
+          <p className="reveal -mt-2 mb-6 max-w-2xl text-muted">
+            Не верьте скриншотам — потрогайте. Это настоящие механики Shifter со случайными
+            данными: песочница, кликайте смело.
           </p>
           <div className="grid gap-3 md:grid-cols-2">
             <CalendarDemo />
@@ -218,8 +310,127 @@ export function Landing() {
           </div>
         </section>
 
+        {/* ==== 10:00 · The morning the money lands ==== */}
+        <section className="pb-16">
+          <Hour time="10:00">Утро, когда приходят деньги</Hour>
+          <p className="reveal -mt-2 mb-6 max-w-2xl text-muted">
+            Аванс и зарплата по правилам каждого места. Пришло меньше расчёта — Shifter покажет
+            разницу и с какого периода она тянется. А вкладка «Банк» видит выписку и говорит,
+            дотянете ли вы до следующих денег.
+          </p>
+          <div className="grid gap-3 md:grid-cols-2">
+            <BankForecastDemo />
+            <ReceiptDemo />
+          </div>
+
+          <div className="mt-3 grid gap-3 md:grid-cols-3">
+            {[
+              { icon: 'wallet', title: 'Сверка выплат', text: 'Каждый период: ожидалось, пришло, разница. Недоплату видно сразу, а не в конце месяца.' },
+              { icon: 'shield', title: 'Банк без сервера', text: 'Выписка monobank подтягивается прямо в браузер. Токен не покидает устройство — серверу он не отправляется вовсе.' },
+              { icon: 'doc', title: 'Бумаги за минуту', text: 'Справка о доходе PDF, CSV бухгалтеру, полный экспорт аккаунта — из тех же записей, что и календарь.' },
+            ].map((cell) => (
+              <article key={cell.title} className="card lift reveal p-4">
+                <span className="mb-2 grid h-9 w-9 place-items-center rounded-(--radius) bg-(--accent-soft) text-(--accent)">
+                  <Icon name={cell.icon} size={18} />
+                </span>
+                <h3 className="mb-1 text-[1rem] font-bold">{cell.title}</h3>
+                <p className="text-[0.9rem] text-muted">{cell.text}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        {/* ==== Понедельник · The crew ==== */}
+        <section className="pb-16">
+          <Hour time="ПН">Вся смена, не только вы</Hour>
+          <div className="grid gap-3 md:grid-cols-3">
+            {[
+              { icon: 'users', title: 'Общий график без чужих денег', text: 'Коллеги видят, кто когда работает. Заработок — только у тех, кто сам включил «делиться». Приватность не настройка, а конструкция.' },
+              { icon: 'swap', title: 'Подмены в два тапа', text: '«Нужна подмена» — и предложение уходит команде. Менеджерская доска публикует неделю целиком.' },
+              { icon: 'spark', title: 'Биржа подработок', text: '29 ролей общепита, разовые смены и постоянка, фото заведений. «Я выйду» — и работодатель получает ровно те контакты, что вы вписали.' },
+            ].map((cell) => (
+              <article key={cell.title} className="card lift reveal p-4">
+                <span className="mb-2 grid h-9 w-9 place-items-center rounded-(--radius) bg-(--accent-soft) text-(--accent)">
+                  <Icon name={cell.icon} size={18} />
+                </span>
+                <h3 className="mb-1 text-[1rem] font-bold">{cell.title}</h3>
+                <p className="text-[0.9rem] text-muted">{cell.text}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        {/* ==== Год · The long game ==== */}
+        <section className="pb-16">
+          <Hour time="ГОД">Работа складывается в историю</Hour>
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+            {[
+              { icon: 'chart', title: 'Статистика без таблиц', text: 'Форма недели, лучший час, сезоны и «что-если» с ползунками — сколько добавит ещё одна смена.' },
+              { icon: 'trophy', title: 'Твой год', text: 'Годовая история как wrapped: серии, рекорды, места — можно поделиться карточкой без сумм.' },
+              { icon: 'doc', title: 'Послужной список', text: 'CV из настоящих смен — то, что можно показать тому, у кого нет причин вам верить. И приватная хроника — только для вас.' },
+              { icon: 'sun', title: 'Погода и сезоны', text: 'Дождливые пятницы против солнечных, толстые и тонкие месяцы — и сколько откладывать в жирный, чтобы выровнять тощий.' },
+            ].map((cell) => (
+              <article key={cell.title} className="card lift reveal p-4">
+                <span className="mb-2 grid h-9 w-9 place-items-center rounded-(--radius) bg-(--accent-soft) text-(--accent)">
+                  <Icon name={cell.icon} size={18} />
+                </span>
+                <h3 className="mb-1 text-[0.98rem] font-bold">{cell.title}</h3>
+                <p className="text-[0.88rem] text-muted">{cell.text}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        {/* ==== Principles ticket ==== */}
+        <section className="reveal mx-auto mb-16 max-w-2xl">
+          <div className="card !p-0 shadow-(--shadow-lg)">
+            <div className="border-b border-border px-5 py-4">
+              <p className="font-mono text-[0.72rem] font-bold uppercase tracking-[0.14em] text-faint">Правила смены · зашиты в код</p>
+              <h2 className="text-[1.3rem] font-extrabold tracking-tight">Почему цифрам можно верить</h2>
+            </div>
+            <ol className="px-5 py-4 [counter-reset:rule]">
+              {[
+                ['Считает сервер', 'у приложения нет «своей» арифметики на клиенте, поэтому телефон и веб не спорят о цифре.'],
+                ['Оценка не смешивается с фактом', 'прогноз всегда нарисован пунктиром и подписан «обычно». Что случилось — сплошным.'],
+                ['Ноль — это ответ', '«ноль чаевых» и «не сказали» — разные вещи, и приложение их не путает.'],
+                ['Прошлое не переписывается', 'изменение ставки действует вперёд; август, каким он был, остаётся августом.'],
+                ['Приватность по конструкции', 'зарплата не попадает коллегам, банковский токен не попадает серверу, приватная заметка не попадает в CV.'],
+                ['Всё можно забрать', 'полный экспорт в один клик: JSON, CSV, zip. Что нельзя унести — тем не владеешь.'],
+              ].map(([title, text]) => (
+                <li key={title} className="flex gap-3 border-b border-border py-3 last:border-0 [counter-increment:rule]">
+                  <span className="font-mono text-[0.85rem] font-bold tabular text-(--accent) before:content-[counter(rule,decimal-leading-zero)]" />
+                  <p className="text-[0.92rem]">
+                    <b>{title}</b> <span className="text-muted">— {text}</span>
+                  </p>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
+
+        {/* ==== Numbers ==== */}
+        <section className="reveal mb-16 grid grid-cols-2 gap-3 text-center md:grid-cols-4">
+          {[
+            { value: '1 400+', label: 'автотестов держат каждую цифру' },
+            { value: '×1', label: 'касание, чтобы отметить смену' },
+            { value: '29', label: 'ролей общепита на бирже' },
+            { value: '3', label: 'языка: русский, українська, English' },
+          ].map((stat) => (
+            <div key={stat.label} className="card !p-4">
+              <p className="text-[1.7rem] font-extrabold tabular text-(--accent)">{stat.value}</p>
+              <p className="text-[0.82rem] text-muted">{stat.label}</p>
+            </div>
+          ))}
+        </section>
+
+        <p className="reveal -mt-10 mb-16 text-center">
+          <Link href="/roadmap" className="text-[0.88rem] font-semibold text-(--accent)">
+            Открытая разработка: смотреть прогресс по задачам →
+          </Link>
+        </p>
+
         {/* ==== Screens ==== */}
-        <section className="grid gap-4 pb-14 md:grid-cols-2">
+        <section className="grid gap-4 pb-16 md:grid-cols-2">
           {[
             { src: '/landing/stats.jpg', title: 'Статистика, которую хочется открывать', text: 'Прогноз, цель, «что-если» и месяц одним взглядом.' },
             { src: '/landing/gigs.jpg', title: 'Подработки календарём', text: 'Каждый день показывает, сколько смен ищут людей и сколько платят вместе.' },
@@ -238,7 +449,7 @@ export function Landing() {
         </section>
 
         {/* ==== Mobile ==== */}
-        <section className="reveal mb-14 overflow-hidden rounded-[calc(var(--radius)*1.6)] border border-border bg-surface">
+        <section className="reveal mb-16 overflow-hidden rounded-[calc(var(--radius)*1.6)] border border-border bg-surface">
           <div className="grid items-center gap-6 p-6 md:grid-cols-[1fr_auto] md:p-10">
             <div>
               <p className="mb-1 text-[0.78rem] font-bold uppercase tracking-wide text-(--accent)">iOS и Android</p>
@@ -246,8 +457,8 @@ export function Landing() {
                 Приложение уже в разработке — полный паритет с вебом
               </h2>
               <p className="mb-4 max-w-md text-muted">
-                Родное приложение на обеих платформах: виджеты на домашний экран, живая смена
-                на локскрине, гео-напоминание начать смену и вход по Face ID.
+                Виджеты на домашний экран, живая смена на локскрине, автозапуск по расписанию,
+                диктовка выручки голосом и вход по Face ID.
               </p>
               <div className="flex flex-wrap gap-2.5">
                 <StoreBadge kind="apple" />
@@ -264,7 +475,7 @@ export function Landing() {
         </section>
 
         {/* ==== What's new ==== */}
-        <section className="reveal mb-14">
+        <section className="reveal mb-16">
           <div className="mb-3 flex items-baseline justify-between">
             <h2 className="text-[1.4rem] font-extrabold tracking-tight">Что нового</h2>
             <Link href="/whats-new" className="text-[0.85rem] font-semibold text-(--accent)">
@@ -273,10 +484,10 @@ export function Landing() {
           </div>
           <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
             {[
-              { icon: '✨', date: 'август 2026', title: 'Биржа подработок 2.0', text: 'Фриланс и постоянка, 36 ролей, фото заведений, календарь вакансий и анкеты «я ищу».' },
-              { icon: '🧵', date: 'август 2026', title: 'Аватар из вашего графика', text: 'Фото, значок роли — или узор, сотканный из ваших собственных смен.' },
-              { icon: '🎚️', date: 'август 2026', title: 'Что-если калькулятор', text: 'Два ползунка превращают «ещё смену в неделю» в деньги и дату цели.' },
-              { icon: '📱', date: 'в разработке', title: 'Приложение iOS и Android', text: 'Полный паритет, виджеты, живая смена на локскрине и вход по Face ID.' },
+              { icon: '🏦', date: 'август 2026', title: 'Вкладка «Банк»', text: 'Выписка monobank прямо в браузере, прогноз «до следующих денег», зарплата находит себя в выписке сама.' },
+              { icon: '📄', date: 'август 2026', title: 'Бумаги', text: 'Справка о доходе PDF, CSV бухгалтеру, приватная хроника мест и полный zip всего аккаунта.' },
+              { icon: '⏰', date: 'август 2026', title: 'Смена стартует сама', text: 'Назначьте час — живая смена начнётся без вас. Или жмите вручную, как раньше.' },
+              { icon: '🧹', date: 'август 2026', title: 'Реестр выплат', text: 'Любую выплату можно поправить или убрать, а весь реестр — стереть и заполнить заново.' },
             ].map((item) => (
               <article key={item.title} className="card lift p-4">
                 <p className="mb-1 flex items-center justify-between text-[0.72rem] font-bold uppercase tracking-wide text-faint">
@@ -291,11 +502,12 @@ export function Landing() {
         </section>
 
         {/* ==== FAQ ==== */}
-        <section className="reveal mx-auto mb-14 max-w-2xl">
+        <section className="reveal mx-auto mb-16 max-w-2xl">
           <h2 className="mb-3 text-center text-[1.4rem] font-extrabold tracking-tight">Коротко о важном</h2>
           {[
             { q: 'Это бесплатно?', a: 'Да. Регистрация за минуту, карта не нужна, все функции открыты.' },
             { q: 'Команда увидит мои деньги?', a: 'Нет. В общем графике коллеги видят только кто и когда работает. Заработок виден лишь тем, кто сам включил «делиться».' },
+            { q: 'Банк видит мой токен?', a: 'Выписка ходит из вашего браузера прямо в monobank. Токен хранится только на устройстве — серверу Shifter он не отправляется вовсе.' },
             { q: 'А если у меня фото графика из рабочего чата?', a: 'Пришлите его в импорт — Shifter разберёт снимок и расставит смены по дням сам.' },
             { q: 'Смогу забрать свои данные?', a: 'В один клик: полный экспорт в ZIP (JSON + CSV) и календарная подписка для Google/Apple Calendar.' },
             { q: 'Как биржа передаёт мои контакты?', a: 'Только по вашему «Я выйду»: в отклик кладётся ровно то, что вы вписали в этот момент. Профиль остаётся закрытым.' },
@@ -313,7 +525,7 @@ export function Landing() {
         </section>
 
         {/* ==== Final CTA ==== */}
-        <section className="reveal mb-16 rounded-[calc(var(--radius)*1.6)] bg-(--accent) p-8 text-center text-white md:p-12">
+        <section className="reveal mb-6 rounded-[calc(var(--radius)*1.6)] bg-(--accent) p-8 text-center text-white md:p-12">
           <h2 className="mx-auto max-w-xl text-balance text-[1.7rem] font-extrabold leading-tight">
             Первая смена в календаре — через минуту
           </h2>
@@ -327,6 +539,28 @@ export function Landing() {
             Создать аккаунт
           </Link>
         </section>
+
+        {/* ==== Contacts ==== */}
+        <section id="contacts" className="reveal mb-16">
+          <div
+            className="overflow-hidden rounded-[calc(var(--radius)*1.6)] p-6 md:p-10"
+            style={{ background: NIGHT.bg, color: NIGHT.ink }}
+          >
+            <p className="font-mono text-[0.72rem] font-bold uppercase tracking-[0.14em]" style={{ color: NIGHT.faint }}>
+              После смены · связаться
+            </p>
+            <h2 className="mt-1 text-[1.5rem] font-extrabold tracking-tight">Мы на связи, как бар после закрытия</h2>
+            <p className="mt-1 max-w-lg text-[0.92rem]" style={{ color: NIGHT.muted }}>
+              Вопрос, баг, идея или «а сделайте для нашей кухни» — пишите любым способом, отвечаем живьём.
+            </p>
+
+            <div className="mt-5 grid gap-3 sm:grid-cols-3">
+              {CONTACTS.map((entry) => (
+                <ContactCard key={entry.label} entry={entry} />
+              ))}
+            </div>
+          </div>
+        </section>
       </main>
 
       <footer className="border-t border-border py-8 text-center text-[0.8rem] text-muted">
@@ -335,10 +569,57 @@ export function Landing() {
           <Link href="/whats-new" className="font-semibold text-(--accent)">Что нового</Link>
           <Link href="/roadmap" className="font-semibold text-(--accent)">Дорожная карта</Link>
           <Link href="/status" className="font-semibold text-(--accent)">Статус</Link>
+          <a href="#contacts" className="font-semibold text-(--accent)">Контакты</a>
           <a href="#top" className="font-semibold text-(--accent)">Наверх ↑</a>
         </p>
         <span className="font-bold text-ink">Shifter</span> · смены, деньги и команда — под контролем · www.shifter.ink
       </footer>
+    </div>
+  );
+}
+
+/**
+ * The contact rows. `value: null` renders an honest «скоро» chip instead of
+ * a dead link — the addresses get filled in when they exist, and the section
+ * never pretends otherwise.
+ */
+const CONTACTS: { icon: string; label: string; hint: string; value: string | null; href: string | null }[] = [
+  { icon: '✉️', label: 'Почта', hint: 'на длинные вопросы', value: null, href: null },
+  { icon: '📨', label: 'Telegram', hint: 'быстрее всего', value: null, href: null },
+  { icon: '📸', label: 'Instagram', hint: 'новости и закулисье', value: null, href: null },
+];
+
+function ContactCard({ entry }: { entry: (typeof CONTACTS)[number] }) {
+  const body = (
+    <>
+      <span className="text-[1.4rem]" aria-hidden>{entry.icon}</span>
+      <span className="min-w-0">
+        <span className="block text-[0.95rem] font-bold">{entry.label}</span>
+        <span className="block truncate text-[0.8rem]" style={{ color: NIGHT.muted }}>
+          {entry.value ?? entry.hint}
+        </span>
+      </span>
+      {entry.value === null && (
+        <span
+          className="ml-auto rounded-full px-2 py-0.5 font-mono text-[0.68rem] font-bold uppercase"
+          style={{ background: 'rgb(240 239 247 / 10%)', color: NIGHT.muted }}
+        >
+          скоро
+        </span>
+      )}
+    </>
+  );
+
+  const className = 'flex items-center gap-3 rounded-(--radius) border p-4 transition-colors';
+  const style = { borderColor: NIGHT.line, background: 'rgb(240 239 247 / 4%)' } as React.CSSProperties;
+
+  return entry.href !== null ? (
+    <a href={entry.href} className={`${className} hover:bg-white/10`} style={style}>
+      {body}
+    </a>
+  ) : (
+    <div className={className} style={style}>
+      {body}
     </div>
   );
 }

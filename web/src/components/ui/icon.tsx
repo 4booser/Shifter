@@ -121,6 +121,21 @@ const PATHS: Record<string, React.ReactNode> = {
       <path d="M15.5 8.5v-3a2 2 0 0 0-2-2h-8a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h3" />
     </>
   ),
+  mic: (
+    <>
+      <rect x="9" y="3" width="6" height="11" rx="3" />
+      <path d="M5 11a7 7 0 0 0 14 0M12 18v3M8.5 21h7" />
+    </>
+  ),
+  shield: (
+    <path d="M12 3 5 6v5c0 4.4 3 8.4 7 10 4-1.6 7-5.6 7-10V6l-7-3zM9 11.5l2 2 4-4.5" />
+  ),
+  doc: (
+    <>
+      <path d="M7 3h7l4 4v14H7z" />
+      <path d="M14 3v4h4M10 12h5M10 16h5" />
+    </>
+  ),
   key: (
     <>
       <circle cx="8" cy="15.5" r="4.5" />

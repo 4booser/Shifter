@@ -3,7 +3,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { Appear, Press } from '@/components/motion';
-import { BankFlow } from '@/components/bank-flow';
 import { Palette } from '@/constants/theme';
 import { t } from '@/lib/i18n';
 import { MonoStatementItem, dayOf } from '@/lib/mono';
@@ -26,6 +25,7 @@ import {
   ruleHits,
   spendingByRules,
 } from '@/lib/mono-rules';
+import { categoryDeltas, categoryStyle, dailySpend, merchantsIn, usualDay } from '@/lib/spend-viz';
 import { money } from '@/lib/types';
 import { statementCsv } from '@/lib/mono-export';
 import { shareStatement } from '@/lib/mono-share';
@@ -95,6 +95,35 @@ export function BankSpending({
   const sources = useMemo(() => incomeSources(items, from, to), [items, from, to]);
   const hits = useMemo(() => ruleHits(inRange, rules), [inRange, rules]);
 
+  // Last stretch of the same width, for the signed percent on each row.
+  const previousRange = useMemo(() => {
+    const start = new Date(`${from}T12:00:00`);
+    const end = new Date(`${to}T12:00:00`);
+    const width = Math.round((end.getTime() - start.getTime()) / 86400000) + 1;
+    const prevEnd = new Date(start.getTime() - 86400000);
+    const prevStart = new Date(prevEnd.getTime() - (width - 1) * 86400000);
+    const key = (date: Date) =>
+      `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+
+    return { from: key(prevStart), to: key(prevEnd) };
+  }, [from, to]);
+
+  const previous = useMemo(
+    () => spendingByRules(items, rules, previousRange.from, previousRange.to),
+    [items, rules, previousRange],
+  );
+  const deltas = useMemo(() => categoryDeltas(categories, previous), [categories, previous]);
+  const days = useMemo(() => dailySpend(items, from, to), [items, from, to]);
+  const usual = useMemo(() => usualDay(days), [days]);
+
+  // One denominator for bar, shares and headline: everything that left the
+  // card. flow() keeps transfers out of its totals — right for «пришло»,
+  // wrong for a bar that must sum to its own category list.
+  const spentAll = useMemo(() => deltas.reduce((sum, row) => sum + row.total, 0), [deltas]);
+  const previousAll = useMemo(() => previous.reduce((sum, row) => sum + row.total, 0), [previous]);
+  const spentDelta = previousAll > 0 ? Math.round(((spentAll - previousAll) / previousAll) * 100) : null;
+  const [opened, setOpened] = useState<string | null>(null);
+
   // The bank puts a figure on every line and the app was throwing it away.
   const back = useMemo(
     () => cashback(items, (item) => categorise(item, rules), from, to),
@@ -127,25 +156,57 @@ export function BankSpending({
 
   return (
     <View style={styles.list}>
-      {/* What the money did, before what it was spent on. */}
+      {/* The headline: what the stretch took, and how that compares. */}
       <Appear>
-        <View style={styles.flow}>
-          <View style={styles.flowPart}>
-            <Text style={styles.flowLabel}>{t('Пришло')}</Text>
-            <Text style={[styles.flowValue, { color: palette.good }]}>
-              {money(totals.earned)}
+        <View style={styles.headline}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.flowLabel}>{t('Потрачено за отрезок')}</Text>
+            <Text style={[styles.headlineValue, { color: palette.danger }]}>
+              {money(spentAll)}
             </Text>
+            {spentDelta !== null && (
+              <Text
+                style={[
+                  styles.headlineDelta,
+                  { color: spentDelta > 8 ? palette.danger : spentDelta < -8 ? palette.good : palette.textSecondary },
+                ]}
+              >
+                {spentDelta > 0 ? '▲' : spentDelta < 0 ? '▼' : '='} {Math.abs(spentDelta)}% {t('к прошлому отрезку')}
+              </Text>
+            )}
           </View>
-          <View style={styles.flowPart}>
-            <Text style={styles.flowLabel}>{t('Ушло')}</Text>
-            <Text style={[styles.flowValue, { color: palette.danger }]}>
-              {money(totals.spent)}
+          <View style={{ alignItems: 'flex-end', gap: 2 }}>
+            <Text style={styles.rowMeta}>
+              {t('Пришло')} <Text style={{ color: palette.good, fontWeight: '700' }}>{money(totals.earned)}</Text>
             </Text>
+            {usual > 0 && (
+              <Text style={styles.rowMeta}>
+                {t('Обычный день')} <Text style={{ fontWeight: '700', color: palette.text }}>{money(usual)}</Text>
+              </Text>
+            )}
           </View>
-          <View style={styles.flowPart}>
-            <Text style={styles.flowLabel}>{t('Осталось')}</Text>
-            <Text style={styles.flowValue}>{money(totals.left)}</Text>
-          </View>
+        </View>
+
+        {/* One bar that sums to its own list; colour follows the category. */}
+        <View style={styles.stack}>
+          {deltas.slice(0, 8).map((row) => (
+            <View
+              key={row.name}
+              style={{
+                flexGrow: row.total,
+                flexBasis: 1,
+                backgroundColor: categoryStyle(row.name).hue,
+                minWidth: 4,
+              }}
+            >
+              {spentAll > 0 && row.total / spentAll > 0.16 && (
+                <Text style={styles.stackLabel}>{Math.round((row.total / spentAll) * 100)}%</Text>
+              )}
+            </View>
+          ))}
+          {deltas.length > 8 && (
+            <View style={{ flexGrow: deltas.slice(8).reduce((sum, row) => sum + row.total, 0), flexBasis: 1, backgroundColor: palette.backgroundSelected, minWidth: 4 }} />
+          )}
         </View>
 
         {back.total > 0 && (
@@ -161,22 +222,9 @@ export function BankSpending({
           </Text>
         )}
 
-        {/* The two lists as one picture. Two totals is the shape that hides
-            the answer: a third of the income can be a friend paying back and
-            nobody notices it in a sum. */}
-        <View style={styles.picture}>
-          <BankFlow
-            sources={sources}
-            categories={categories}
-            earned={totals.earned}
-            spent={totals.spent}
-            palette={palette}
-          />
-        </View>
-
         {totals.moved > 0 && (
           <Text style={styles.note}>
-            {t('Ещё')} {money(totals.moved)} {t('переложено между своими счетами — это не доход и не трата.')}
+            {t('Ещё')} {money(totals.moved)} {t('прошло переводами — они не в этих итогах: чей там счёт, выписка не говорит.')}
           </Text>
         )}
         {totals.returned > 0 && (
@@ -274,33 +322,69 @@ export function BankSpending({
             </View>
           )}
 
-          {categories.map((row) => (
+          {deltas.slice(0, 10).map((row) => (
             <Press
               key={row.name}
               style={styles.row}
-              onPress={() => {
-                setEditing(row.name);
-                setLimitText(
-                  `${budgets.find((one) => one.category === row.name)?.limit ?? ''}`,
-                );
-              }}
+              onPress={() => setOpened(opened === row.name ? null : row.name)}
             >
               <View style={styles.rowTop}>
-                <Text style={styles.rowName}>{row.name}</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
+                  <View style={[styles.catDot, { backgroundColor: categoryStyle(row.name).hue }]}>
+                    <Text style={styles.catMark}>{categoryStyle(row.name).mark}</Text>
+                  </View>
+                  <Text style={styles.rowName} numberOfLines={1}>{row.name}</Text>
+                </View>
                 <Text style={styles.rowValue}>{money(row.total)}</Text>
               </View>
               <View style={styles.track}>
                 <View
                   style={[
                     styles.fill,
-                    { width: `${(row.total / peak) * 100}%`, backgroundColor: palette.accent },
+                    {
+                      width: `${spentAll > 0 ? (row.total / spentAll) * 100 : 0}%`,
+                      backgroundColor: categoryStyle(row.name).hue,
+                    },
                   ]}
                 />
               </View>
               <Text style={styles.rowMeta}>
-                {row.count} {t('операций')}
-                {editing === row.name ? '' : ` · ${t('тап — лимит')}`}
+                ×{row.count}
+                {row.percent !== null && (
+                  <Text style={{ color: row.percent > 10 ? palette.danger : row.percent < -10 ? palette.good : palette.textSecondary }}>
+                    {' '}· {row.percent > 0 ? '+' : ''}{row.percent}%
+                  </Text>
+                )}
+                {row.percent === null && row.previous === 0 && <Text style={{ color: palette.accent }}> · {t('новое')}</Text>}
+                {opened === row.name ? '' : ` · ${t('тап — что внутри')}`}
               </Text>
+
+              {opened === row.name && (
+                <View style={styles.inside}>
+                  {merchantsIn(items, rules, row.name, from, to).map((shop) => (
+                    <View key={shop.name} style={styles.rowTop}>
+                      <Text style={styles.insideName} numberOfLines={1}>{shop.name}</Text>
+                      <Text style={styles.insideValue}>
+                        {money(shop.total)}{shop.count > 1 ? ` ×${shop.count}` : ''}
+                      </Text>
+                    </View>
+                  ))}
+                  {row.previous > 0 && (
+                    <Text style={styles.rowMeta}>{t('В прошлый отрезок было')} {money(row.previous)}.</Text>
+                  )}
+                  <Press
+                    style={styles.limitLink}
+                    onPress={() => {
+                      setEditing(editing === row.name ? null : row.name);
+                      setLimitText(`${budgets.find((one) => one.category === row.name)?.limit ?? ''}`);
+                    }}
+                  >
+                    <Text style={{ color: palette.accent, fontSize: 12.5 }}>
+                      {budgets.some((one) => one.category === row.name) ? t('Изменить лимит') : t('Поставить лимит на месяц')}
+                    </Text>
+                  </Press>
+                </View>
+              )}
 
               {editing === row.name && (
                 <View style={styles.limitRow}>
@@ -326,6 +410,58 @@ export function BankSpending({
               )}
             </Press>
           ))}
+
+          {days.some((day) => day.total > 0) && (
+            <View style={{ marginTop: 4 }}>
+              <Text style={styles.rulesHead}>{t('Месяц по дням')}</Text>
+              {usual > 0 && (
+                <Text style={styles.rowMeta}>
+                  {t('Пунктиром — обычный день')}: {money(usual)}. {t('Медиана: один загул её не утащит.')}
+                </Text>
+              )}
+              <View style={styles.rhythm}>
+                {days.map((day) => {
+                  const peakDay = Math.max(1, ...days.map((one) => one.total));
+                  const weekend = [0, 6].includes(new Date(`${day.day}T12:00:00`).getDay());
+
+                  return (
+                    <View
+                      key={day.day}
+                      style={[
+                        styles.rhythmBar,
+                        {
+                          height: `${Math.max(3, (day.total / peakDay) * 100)}%`,
+                          backgroundColor: day.total === 0
+                            ? palette.backgroundSelected
+                            : weekend ? palette.accentSoft && palette.accent : palette.accent,
+                          opacity: day.total === 0 ? 0.6 : weekend ? 0.95 : 0.75,
+                        },
+                      ]}
+                    />
+                  );
+                })}
+              </View>
+              {(() => {
+                const heaviest = days.reduce((best, day) => (day.total > best.total ? day : best), days[0]);
+
+                if (heaviest === undefined || heaviest.total === 0) return null;
+
+                const receipts = items
+                  .filter((item) => item.amount < 0 && !item.hold && dayOf(item) === heaviest.day)
+                  .sort((one, two) => one.amount - two.amount)
+                  .slice(0, 2)
+                  .map((item) => item.description)
+                  .join(' + ');
+
+                return (
+                  <Text style={styles.rowMeta}>
+                    {t('Тяжелее всего')} — {heaviest.day.slice(8)}.{heaviest.day.slice(5, 7)}, {money(heaviest.total)}
+                    {receipts !== '' ? `: ${receipts}` : ''}. {t('Факт, не упрёк.')}
+                  </Text>
+                );
+              })()}
+            </View>
+          )}
 
           {rules.length > 0 && (
             <View style={styles.rules}>
@@ -490,6 +626,19 @@ const makeStyles = (palette: Palette) =>
     empty: { color: palette.textSecondary, fontSize: 14, textAlign: 'center', paddingVertical: 24 },
     grow: { flex: 1, minWidth: 0 },
 
+    headline: { flexDirection: 'row', alignItems: 'flex-end', gap: 10 },
+    headlineValue: { fontSize: 26, fontWeight: '800', fontVariant: ['tabular-nums'] },
+    headlineDelta: { fontSize: 12, fontWeight: '600', fontVariant: ['tabular-nums'] },
+    stack: { flexDirection: 'row', height: 26, borderRadius: 9, overflow: 'hidden', gap: 2, marginTop: 10 },
+    stackLabel: { color: 'rgba(255,255,255,0.95)', fontSize: 10.5, fontWeight: '700', textAlign: 'center', lineHeight: 26 },
+    catDot: { width: 26, height: 26, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+    catMark: { fontSize: 13 },
+    inside: { marginTop: 8, borderRadius: 10, backgroundColor: palette.background, padding: 10, gap: 4 },
+    insideName: { color: palette.text, fontSize: 12.5, flex: 1 },
+    insideValue: { color: palette.text, fontSize: 12.5, fontWeight: '600', fontVariant: ['tabular-nums'] },
+    limitLink: { marginTop: 4 },
+    rhythm: { flexDirection: 'row', alignItems: 'flex-end', gap: 2, height: 72, marginTop: 6 },
+    rhythmBar: { flex: 1, borderTopLeftRadius: 2, borderTopRightRadius: 2 },
     flow: { flexDirection: 'row', gap: 10 },
     flowPart: {
       flex: 1,

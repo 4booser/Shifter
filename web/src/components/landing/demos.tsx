@@ -57,7 +57,7 @@ export function LiveShiftDemo() {
   const pad = (value: number) => `${value}`.padStart(2, '0');
 
   return (
-    <div className="card mx-auto w-full max-w-sm !p-5 text-left shadow-(--shadow-lg)">
+    <div className="card mx-auto w-full max-w-sm !p-5 text-left text-ink shadow-(--shadow-lg)">
       <p className="mb-1 flex items-center gap-2 text-[0.8rem] font-semibold text-muted">
         <span className={`h-2 w-2 rounded-full ${startedAt !== null ? 'animate-pulse bg-good' : 'bg-faint'}`} />
         {startedAt !== null ? 'Смена идёт · демо-время ×60' : done !== null ? 'Смена закрыта' : 'Попробуйте прямо тут'}

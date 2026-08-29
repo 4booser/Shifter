@@ -571,10 +571,47 @@ function TemplateEditor({
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState<string | null>(null);
 
+  // The advert somebody is copying the terms out of. New templates only:
+  // pasting over an existing one would overwrite agreed terms with figures a
+  // regex read off a listing.
+  const [advert, setAdvert] = useState('');
+  const [reading, setReading] = useState(false);
+
+  const readAdvert = async () => {
+    setReading(true);
+
+    try {
+      const read = await api<{
+        pay_amount: number | null;
+        pay_period: string | null;
+        percent: number | null;
+        start: string | null;
+        end: string | null;
+        break_minutes: number | null;
+      }>('/shifter/v1/advert/read', { body: { text: advert } });
+
+      // Only what the advert actually said; blanks stay blank. A blank is a
+      // question and a guess is an answer, and only one of those can be wrong
+      // about somebody's pay.
+      if (read.pay_amount !== null) setAmount(`${read.pay_amount}`);
+      if (read.pay_period !== null && read.pay_period in PERIOD_LABEL)
+        setPeriod(read.pay_period as Period);
+      if (read.percent !== null) setPercent(`${read.percent}`);
+      if (read.start !== null) setStart(read.start);
+      if (read.end !== null) setEnd(read.end);
+      if (read.break_minutes !== null) setBreakMinutes(`${read.break_minutes}`);
+    } catch {
+      setFailed(t('Объявление не разобралось — заполните руками.'));
+    } finally {
+      setReading(false);
+    }
+  };
+
   useEffect(() => {
     if (editing === null) return;
 
     setFailed(null);
+    setAdvert('');
     setName(template?.name ?? '');
     setSymbol(template?.symbol ?? '');
     setStart(template?.start_time.slice(0, 5) ?? '18:00');
@@ -648,6 +685,32 @@ function TemplateEditor({
               <Ionicons name="close" size={26} color={palette.textSecondary} />
             </Press>
           </View>
+
+          {/* The terms are already written in the advert; retyping them is
+              the step half of people skip — and then the shift is priced at a
+              rate nobody checked. */}
+          {template === null && (
+            <View style={styles.advertBox}>
+              <Text style={styles.fieldLabel}>{t('Или вставьте объявление')}</Text>
+              <TextInput
+                style={[styles.input, styles.advertInput]}
+                multiline
+                value={advert}
+                onChangeText={setAdvert}
+                placeholder={t('Бармен, смены 10:00–22:00, 250 грн/час, 5% с бара')}
+                placeholderTextColor={palette.textSecondary}
+              />
+              <Press
+                style={[styles.advertRead, (reading || advert.trim() === '') && { opacity: 0.5 }]}
+                disabled={reading || advert.trim() === ''}
+                onPress={() => void readAdvert()}
+              >
+                <Text style={styles.advertReadText}>
+                  {reading ? t('Разбираем…') : t('Заполнить из объявления')}
+                </Text>
+              </Press>
+            </View>
+          )}
 
           <View style={styles.row}>
             <View style={styles.grow}>
@@ -834,6 +897,16 @@ const makeStyles = (palette: Palette) =>
     section: { color: palette.text, fontSize: 16, fontWeight: '700', marginTop: 12 },
 
     cardStack: { gap: 0 },
+    advertBox: { gap: 6, marginBottom: 4 },
+    advertInput: { minHeight: 64, textAlignVertical: 'top' },
+    advertRead: {
+      borderWidth: 1,
+      borderColor: palette.border,
+      borderRadius: 12,
+      paddingVertical: 9,
+      alignItems: 'center',
+    },
+    advertReadText: { color: palette.accent, fontSize: 13, fontWeight: '600' },
     autoRow: {
       flexDirection: 'row',
       alignItems: 'center',

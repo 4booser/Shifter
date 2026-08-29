@@ -369,6 +369,7 @@ function PeriodCard({
   onBank?: () => void;
 }) {
   const styles = makeStyles(palette);
+  const router = useRouter();
   const tone =
     row.status === 'overdue' || row.status === 'short'
       ? palette.danger
@@ -391,9 +392,17 @@ function PeriodCard({
         </Text>
       </View>
 
-      <Text style={styles.cardPeriod}>
-        {shortDate(row.period_from)} — {shortDate(row.period_to)} · {Math.round(row.hours)} ч
-      </Text>
+      <Press
+        style={styles.periodRow}
+        onPress={() =>
+          router.push(`/payslip?location=${row.location_id}&on=${row.period_from}`)
+        }
+      >
+        <Text style={styles.cardPeriod}>
+          {shortDate(row.period_from)} — {shortDate(row.period_to)} · {Math.round(row.hours)} ч
+        </Text>
+        <Text style={styles.checkLink}>{t('по строкам →')}</Text>
+      </Press>
 
       {bank != null && (
         <Press style={styles.bankLine} onPress={onBank}>
@@ -629,6 +638,8 @@ const makeStyles = (palette: Palette) =>
       paddingVertical: 2,
       overflow: 'hidden',
     },
+    periodRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+    checkLink: { color: palette.accent, fontSize: 12, fontWeight: '600' },
     cardPeriod: { color: palette.textSecondary, fontSize: 13 },
     connect: {
       flexDirection: 'row',

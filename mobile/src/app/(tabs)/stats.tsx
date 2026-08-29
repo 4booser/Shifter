@@ -266,7 +266,12 @@ export default function StatsScreen() {
         />
       }
     >
-      <Text style={styles.title}>{t('Статистика')}</Text>
+      <View style={styles.titleRow}>
+        <Text style={styles.title}>{t('Статистика')}</Text>
+        <Press hitSlop={10} onPress={() => router.push('/compare')}>
+          <Text style={styles.compareLink}>{t('месяц против месяца →')}</Text>
+        </Press>
+      </View>
 
       <View style={styles.toolbar}>
         {(['month', 'year'] as Span[]).map((value) => (
@@ -547,6 +552,13 @@ const makeStyles = (palette: Palette) =>
     // leaves room for it.
     content: { padding: 14, gap: 10, paddingBottom: 44 },
     title: { fontSize: 24, fontWeight: '800', color: palette.text, letterSpacing: -0.5 },
+    titleRow: {
+      flexDirection: 'row',
+      alignItems: 'baseline',
+      justifyContent: 'space-between',
+      gap: 8,
+    },
+    compareLink: { color: palette.accent, fontSize: 12.5, fontWeight: '600' },
     toolbar: { flexDirection: 'row', alignItems: 'center', gap: 6 },
     segment: {
       paddingHorizontal: 12,

@@ -10,10 +10,11 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as ImagePicker from 'expo-image-picker';
 
 import { Loading, Press } from '@/components/motion';
 import { Colors, Palette } from '@/constants/theme';
-import { api, ApiError } from '@/lib/api';
+import { api, ApiError, upload } from '@/lib/api';
 import { todayKey } from '@/lib/calendar';
 import {
   DOCUMENT_KINDS,
@@ -55,6 +56,67 @@ export default function CostsScreen() {
   const [docName, setDocName] = useState('');
   const [docUntil, setDocUntil] = useState('');
   const [addingDoc, setAddingDoc] = useState(false);
+
+  // The receipt reader, offered until the server says there is no model
+  // behind it. The pocket is where the receipt is, which is the entire reason
+  // the feature exists — the site got it first only by accident of order.
+  const [canScan, setCanScan] = useState(true);
+  const [scanning, setScanning] = useState(false);
+
+  const scanReceipt = async () => {
+    const permission = await ImagePicker.requestCameraPermissionsAsync();
+
+    if (!permission.granted) {
+      setError(t('Без доступа к камере чек не снять.'));
+
+      return;
+    }
+
+    const shot = await ImagePicker.launchCameraAsync({ quality: 0.6 });
+
+    if (shot.canceled) return;
+
+    setScanning(true);
+    setError(null);
+
+    try {
+      const asset = shot.assets[0];
+      const form = new FormData();
+
+      form.append('photo', {
+        uri: asset.uri,
+        name: 'receipt.jpg',
+        type: 'image/jpeg',
+      } as unknown as Blob);
+
+      const today = new Date().toISOString().slice(0, 10);
+      const read = await upload<{
+        amount: number | null;
+        date: string | null;
+        merchant: string | null;
+      }>(`/shifter/v1/import/receipt?today=${today}`, form);
+
+      // Only what was actually read; everything stays editable. A reader that
+      // failed by clearing the form would cost somebody the number they came
+      // here to record.
+      if (read.amount !== null) setAmount(`${read.amount}`);
+      if (read.merchant !== null && note.trim() === '') setNote(read.merchant);
+
+      if (read.amount === null && read.merchant === null) {
+        setError(t('Чек не прочитался — впишите вручную.'));
+      }
+    } catch (caught) {
+      if (caught instanceof ApiError && caught.status === 404) {
+        // No model behind the endpoint. Not an error — the button simply
+        // stops pretending.
+        setCanScan(false);
+      } else {
+        setError(t('Чек не прочитался — впишите вручную.'));
+      }
+    } finally {
+      setScanning(false);
+    }
+  };
 
   // The month so far. Long enough to see a pattern, short enough that the
   // list is still a list rather than an archive.
@@ -168,6 +230,19 @@ export default function CostsScreen() {
           <View style={styles.card}>
             <Text style={styles.cardTitle}>{t('Траты за месяц')}</Text>
             <Text style={styles.cardHint}>{t('Из заработка не вычитается — это деньги, которые ушли уже потом.')}</Text>
+
+            {canScan && (
+              <Press
+                style={[styles.scanRow, scanning && { opacity: 0.6 }]}
+                disabled={scanning}
+                onPress={() => void scanReceipt()}
+              >
+                <Ionicons name="camera-outline" size={17} color={palette.accent} />
+                <Text style={styles.scanText}>
+                  {scanning ? t('Читаем чек…') : t('Сфотографировать чек')}
+                </Text>
+              </Press>
+            )}
 
             <View style={styles.chipRow}>
               {EXPENSE_KINDS.map((option) => (
@@ -333,6 +408,19 @@ const makeStyles = (palette: Palette) =>
     cardTitle: { color: palette.text, fontSize: 16, fontWeight: '800' },
     cardHint: { color: palette.textSecondary, fontSize: 12.5, lineHeight: 17 },
     link: { color: palette.accent, fontSize: 14, fontWeight: '700' },
+    scanRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 7,
+      borderWidth: 1,
+      borderColor: palette.border,
+      borderRadius: 12,
+      paddingVertical: 10,
+      marginBottom: 10,
+    },
+    scanText: { color: palette.accent, fontSize: 13.5, fontWeight: '600' },
+
     chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
     chip: {
       paddingHorizontal: 11,

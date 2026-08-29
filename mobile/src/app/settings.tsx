@@ -27,6 +27,8 @@ interface Profile {
   last_name: string | null;
   email: string | null;
   monthly_goal: number | null;
+  /** Whether they asked for the month's letter. Off unless they did. */
+  monthly_letter: boolean;
 }
 
 /**
@@ -58,13 +60,20 @@ export default function SettingsScreen() {
   const [kind, setKind] = useState<LockKind>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // The month's letter: the one email frequency that is not an irritation,
+  // subscribed to from the device the address was typed on.
+  const [letter, setLetter] = useState(false);
+
   useEffect(() => {
     void (async () => {
       setLocked(await lockStore.enabled());
       setKind(await lockKind());
 
       try {
-        setProfile(await api<Profile>('/shifter/v1/account'));
+        const loaded = await api<Profile>('/shifter/v1/account');
+
+        setProfile(loaded);
+        setLetter(loaded.monthly_letter);
       } catch {
         setError(t('Профиль не загрузился.'));
       }
@@ -192,6 +201,53 @@ export default function SettingsScreen() {
         </View>
       </View>
 
+      {profile !== null && (
+        <>
+          <Text style={styles.section}>{t('Письмо месяца')}</Text>
+          {profile.email === null ? (
+            <Text style={styles.lead}>
+              {t('Впишите адрес на сайте — и раз в месяц, после его конца, сюда можно получать итог письмом.')}
+            </Text>
+          ) : (
+            <Press
+              style={styles.linkRow}
+              onPress={() => {
+                const next = !letter;
+
+                // Optimistic and honest about failure: flipped back if the
+                // server refuses, never left claiming what did not happen.
+                setLetter(next);
+
+                void api('/shifter/v1/account/avatar/letter', {
+                  method: 'PUT',
+                  body: { on: next },
+                }).catch(() => setLetter(!next));
+              }}
+            >
+              <Ionicons
+                name={letter ? 'mail' : 'mail-outline'}
+                size={20}
+                color={letter ? palette.accent : palette.textSecondary}
+              />
+              <View style={styles.grow}>
+                <Text style={styles.linkText}>
+                  {letter ? t('Присылать на') : t('Итог месяца письмом')}
+                  {letter ? ` ${profile.email}` : ''}
+                </Text>
+                <Text style={styles.rowHint}>
+                  {t('Раз в месяц, когда цифры окончательные. В каждом письме — ссылка, которая их прекращает.')}
+                </Text>
+              </View>
+              <Ionicons
+                name={letter ? 'checkmark-circle' : 'ellipse-outline'}
+                size={20}
+                color={letter ? palette.good : palette.textSecondary}
+              />
+            </Press>
+          )}
+        </>
+      )}
+
       <Text style={styles.section}>{t('Ваша работа')}</Text>
       <Press style={styles.linkRow} onPress={() => router.push('/templates')}>
         <Ionicons name="time-outline" size={20} color={palette.textSecondary} />
@@ -202,6 +258,12 @@ export default function SettingsScreen() {
       <Press style={styles.linkRow} onPress={() => router.push('/places')}>
         <Ionicons name="business-outline" size={20} color={palette.textSecondary} />
         <Text style={styles.linkText}>{t('Места работы — выплаты, налог, ночные')}</Text>
+        <Ionicons name="chevron-forward" size={16} color={palette.textSecondary} />
+      </Press>
+
+      <Press style={styles.linkRow} onPress={() => router.push('/contract')}>
+        <Ionicons name="document-text-outline" size={20} color={palette.textSecondary} />
+        <Text style={styles.linkText}>{t('Вопросы к договору — до подписи')}</Text>
         <Ionicons name="chevron-forward" size={16} color={palette.textSecondary} />
       </Press>
 
@@ -272,6 +334,7 @@ const makeStyles = (palette: Palette) =>
     row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
     rowTitle: { color: palette.text, fontSize: 15, fontWeight: '600' },
     rowHint: { color: palette.textSecondary, fontSize: 12.5, lineHeight: 18, marginTop: 3 },
+    lead: { color: palette.textSecondary, fontSize: 12.5, lineHeight: 18 },
 
     linkRow: {
       flexDirection: 'row',

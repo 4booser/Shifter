@@ -225,6 +225,11 @@ export interface DaysResponse {
   planned_hours: number;
   days_worked: number;
   days_planned: number;
+  /** The server has sent these all along; the phone only now reads them. */
+  tips_earned: number;
+  net_earned: number;
+  deductions: number;
+  expenses: number;
   /** Present only where the range mixes currencies and one was asked for. */
   conversion?: Conversion | null;
 }

@@ -740,7 +740,7 @@ export const RU: Dictionary = {
   'Left': 'Осталось',
   'Cashback returned': 'Кешбэк вернул',
   'moved between your own accounts — neither income nor spending.':
-    'переложено между своими счетами — это не доход и не трата.',
+    'прошло переводами — они не в этих итогах: чей там счёт, выписка не говорит.',
   'came back — a purchase and its refund cancel out.':
     'вернулось — покупка и возврат сведены и не считаются дважды.',
   'Where the month went': 'Куда делся месяц',
@@ -1014,6 +1014,26 @@ export const RU: Dictionary = {
     'В PDF написано, что данные — со слов владельца. Это не слабость: бумага, которая делает вид, что это не так, стоит меньше.',
   'Your chronicle': 'Ваша хроника',
   'Your cities': 'Ваши города',
+  'over the limit': 'превышен',
+  'Spent over this stretch': 'Потрачено за отрезок',
+  'vs the stretch before': 'к прошлому отрезку',
+  'A usual day costs': 'Обычный день стоит',
+  'Spending by category, one bar': 'Траты по категориям одной полосой',
+  'Where it goes': 'Куда уходит',
+  'new': 'новое',
+  'Last stretch this was': 'В прошлый отрезок было',
+  'Set a monthly limit': 'Поставить лимит на месяц',
+  'Limit': 'Лимит',
+  'The limit is a line you drew, not advice. It lives in this browser.':
+    'Лимит — черта, которую провели вы, а не совет. Живёт в этом браузере.',
+  'The month, day by day': 'Месяц по дням',
+  'The line is your usual day': 'Линия — ваш обычный день',
+  'A median: one splurge cannot drag it.': 'Медиана: один загул её не утащит.',
+  'Heaviest': 'Тяжелее всего',
+  'A fact, not a reproach.': 'Факт, не упрёк.',
+  'Where you actually go': 'Куда вы ходите на самом деле',
+  'Comes round by itself': 'Приходит само',
+
   'Your own hourly rate, season against season. Set a city on a place to include it.':
     'Ваша собственная ставка в час, сезон против сезона. Укажите город у места — и оно попадёт сюда.',
   'Board in': 'Биржа в',
@@ -2996,6 +3016,26 @@ export const UK: Dictionary = {
     'У PDF написано, що дані — зі слів власника. Це не слабкість: папір, який вдає інше, вартий менше.',
   'Your chronicle': 'Ваша хроніка',
   'Your cities': 'Ваші міста',
+  'over the limit': 'перевищено',
+  'Spent over this stretch': 'Витрачено за відрізок',
+  'vs the stretch before': 'до минулого відрізка',
+  'A usual day costs': 'Звичайний день коштує',
+  'Spending by category, one bar': 'Витрати за категоріями однією смугою',
+  'Where it goes': 'Куди йде',
+  'new': 'нове',
+  'Last stretch this was': 'Минулого відрізка було',
+  'Set a monthly limit': 'Поставити ліміт на місяць',
+  'Limit': 'Ліміт',
+  'The limit is a line you drew, not advice. It lives in this browser.':
+    'Ліміт — межа, яку провели ви, а не порада. Живе в цьому браузері.',
+  'The month, day by day': 'Місяць по днях',
+  'The line is your usual day': 'Лінія — ваш звичайний день',
+  'A median: one splurge cannot drag it.': 'Медіана: один загул її не потягне.',
+  'Heaviest': 'Найважче',
+  'A fact, not a reproach.': 'Факт, не докір.',
+  'Where you actually go': 'Куди ви ходите насправді',
+  'Comes round by itself': 'Приходить само',
+
   'Your own hourly rate, season against season. Set a city on a place to include it.':
     'Ваша власна ставка на годину, сезон проти сезону. Вкажіть місто в місця — і воно потрапить сюди.',
   'Board in': 'Біржа в',
@@ -3467,7 +3507,7 @@ export const UK: Dictionary = {
   'Left': 'Залишилось',
   'Cashback returned': 'Кешбек повернув',
   'moved between your own accounts — neither income nor spending.':
-    'перекладено між своїми рахунками — це не дохід і не витрата.',
+    'пройшло переказами — вони не в цих підсумках: чий там рахунок, виписка не каже.',
   'came back — a purchase and its refund cancel out.':
     'повернулося — покупка і повернення зведені й не рахуються двічі.',
   'Where the month went': 'Куди подівся місяць',

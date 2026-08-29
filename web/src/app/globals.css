@@ -1279,3 +1279,14 @@ body,
 @media (prefers-reduced-motion: reduce) {
   .landing-marquee { animation: none; }
 }
+
+/* The category panel's arrival: CSS only, because a tween that can freeze
+   at half-open is worse than none. */
+.bank-open {
+  animation: bank-open calc(0.18s * var(--motion)) ease-out;
+}
+
+@keyframes bank-open {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: none; }
+}

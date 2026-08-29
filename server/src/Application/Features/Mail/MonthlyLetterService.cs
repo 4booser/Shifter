@@ -136,15 +136,30 @@ public sealed class MonthlyLetterService : BackgroundService
     {
         var days = await db.Days
             .AsNoTracking()
+            // Sales as well as shifts: the "not filled in" count asks about
+            // both, and an uninstantiated collection reads as an empty one —
+            // which would report every day as unrecorded.
+            .Include(day => day.Sales)
             .Include(day => day.Shifts)
             .Where(day => day.UserId == userId
                 && day.Date >= from.AddYears(-1)
                 && day.Date <= to)
             .ToArrayAsync(ct);
 
+        // Per-shift pay, which is nothing for anybody on a weekly or monthly
+        // wage — theirs belongs to the period and is added below. Used on its
+        // own only for the best day, where a share of a salary is not what
+        // makes one day better than another anyway.
         decimal EarnedOn(Day day)
             => (day.Tips ?? 0m)
                 + (day.Shifts ?? []).Where(entry => entry.Worked).Sum(entry => entry.Pay);
+
+        // The whole figure, salaries included. A letter that told somebody on
+        // a monthly wage they earned their tips and nothing else would be the
+        // most memorable wrong number this app has ever sent.
+        decimal Earned(Day[] range)
+            => range.Sum(EarnedOn)
+                + business.Services.DayHandler.PeriodSalary(range, workedOnly: true, days);
 
         var month = days.Where(day => day.Date >= from && day.Date <= to).ToArray();
         var worked = month.Where(day => (day.Shifts ?? []).Any(entry => entry.Worked)).ToArray();
@@ -153,7 +168,7 @@ public sealed class MonthlyLetterService : BackgroundService
         var lastYearFrom = from.AddYears(-1);
 
         decimal Total(DateOnly start, DateOnly end)
-            => days.Where(day => day.Date >= start && day.Date <= end).Sum(EarnedOn);
+            => Earned(days.Where(day => day.Date >= start && day.Date <= end).ToArray());
 
         var best = worked
             .Select(day => (Date: day.Date.ToString("dd.MM"), Earned: EarnedOn(day)))
@@ -162,7 +177,7 @@ public sealed class MonthlyLetterService : BackgroundService
 
         return new MonthlyLetter.Facts(
             from.ToString("MMMM yyyy"),
-            worked.Sum(EarnedOn),
+            Earned(worked),
             worked.Sum(day => day.Tips ?? 0m),
             worked.Sum(day =>
                 (day.Shifts ?? []).Where(entry => entry.Worked).Sum(entry => entry.PaidDuration.TotalHours)),

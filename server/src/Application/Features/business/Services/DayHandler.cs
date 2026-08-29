@@ -1179,7 +1179,13 @@ public partial class DayHandler : IDayHandler
             : (entry.ShiftId, date.Year, date.Month);
     }
 
-    private static decimal PeriodSalary(Day[] days, bool workedOnly, Day[]? around = null)
+    /// <summary>
+    /// Public because it is the only correct way to count a weekly or monthly
+    /// wage, and there is now more than one caller. Anything that sums
+    /// <see cref="DayShift.Pay"/> alone silently reports nothing for everybody
+    /// on a salary — see the remarks below for why the share is per worked day.
+    /// </summary>
+    public static decimal PeriodSalary(Day[] days, bool workedOnly, Day[]? around = null)
         => PeriodSalaryByPlace(days, workedOnly, around).Values.Sum();
 
     /// <summary>

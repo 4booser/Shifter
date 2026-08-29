@@ -122,3 +122,19 @@ public class MarketStandingTests
         Assert.Equal(expected, MarketRate.Standing(Band, mine));
     }
 }
+
+/// <summary>
+/// The arithmetic that turns a shift price into an hourly one rests on a
+/// language behaviour worth pinning: subtracting two times of day wraps past
+/// midnight by itself. Read as minus sixteen hours, a close would produce a
+/// negative rate for half the board.
+/// </summary>
+public class ShiftPriceTests
+{
+    [Fact]
+    public void SubtractingTwoTimesOfDayWrapsPastMidnight()
+    {
+        Assert.Equal(12, (new TimeOnly(22, 0) - new TimeOnly(10, 0)).TotalHours);
+        Assert.Equal(8, (new TimeOnly(2, 0) - new TimeOnly(18, 0)).TotalHours);
+    }
+}

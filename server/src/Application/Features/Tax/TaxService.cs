@@ -132,17 +132,34 @@ public sealed class TaxService
     ///
     /// Wages and tips both: a ceiling is on income, and a tax authority does
     /// not care which envelope it arrived in.
+    ///
+    /// Weekly and monthly wages are counted through the handler's own rule
+    /// rather than by summing pay per shift, because a salaried shift's own
+    /// pay is nothing — the wage belongs to the period. Summing the shifts
+    /// alone reported a year of zero for exactly the people most likely to
+    /// have a tax profile.
     /// </summary>
     private async Task<decimal> EarnedAsync(
         int userId, DateOnly from, DateOnly to, CancellationToken ct)
     {
-        var days = await _db.Days
+        // A week either side, because a weekly wage's period can straddle the
+        // turn of the year and its share of the days inside the year can only
+        // be worked out from the whole week.
+        var around = await _db.Days
             .AsNoTracking()
-            .Include(day => day.Shifts)
-            .Where(day => day.UserId == userId && day.Date >= from && day.Date <= to)
+            .Include(day => day.Shifts)!
+            .ThenInclude(entry => entry.Shift)
+            .Where(day => day.UserId == userId
+                && day.Date >= from.AddDays(-8)
+                && day.Date <= to.AddDays(8))
             .ToArrayAsync(ct);
 
-        return days.Sum(day =>
-            (day.Tips ?? 0m) + (day.Shifts ?? []).Where(entry => entry.Worked).Sum(entry => entry.Pay));
+        var days = around.Where(day => day.Date >= from && day.Date <= to).ToArray();
+
+        var perShift = days.Sum(day =>
+            (day.Tips ?? 0m)
+            + (day.Shifts ?? []).Where(entry => entry.Worked).Sum(entry => entry.Pay));
+
+        return perShift + business.Services.DayHandler.PeriodSalary(days, workedOnly: true, around);
     }
 }

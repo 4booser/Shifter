@@ -175,7 +175,11 @@ public sealed class CsvImportService
                     new DayShift
                     {
                         ShiftId = template.Id,
-                        Worked = true,
+                        // The same line the app draws everywhere else: a day
+                        // behind us was worked, one ahead is a plan. A file
+                        // containing next month's rota would otherwise land as
+                        // money already earned.
+                        Worked = date <= DateOnly.FromDateTime(DateTime.UtcNow),
                         SalaryPeriod = SalaryPeriod.Day,
                         // The file's own figure, not a rate multiplied back
                         // out. Whatever the other app paid, this day paid.

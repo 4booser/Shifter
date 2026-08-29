@@ -81,11 +81,11 @@ public sealed class MarketService
     {
         if (period == "hour") return amount;
 
+        // Subtracting two times of day already wraps past midnight, so a
+        // close from 18:00 to 02:00 comes out as eight hours rather than minus
+        // sixteen. A listing with no hours in it at all is dropped rather than
+        // divided by zero into something enormous.
         var hours = (end - start).TotalHours;
-
-        // A close that runs past midnight ends the next day, and without the
-        // wrap it looks like a shift of minus six hours.
-        if (hours <= 0) hours += 24;
 
         return hours <= 0 ? 0m : Math.Round(amount / (decimal)hours, 2);
     }

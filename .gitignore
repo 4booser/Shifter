@@ -22,3 +22,4 @@ web/*.tsbuildinfo
 # rule above — so they are excluded by name here as well.
 * 2
 * 2.*
+node_modules/

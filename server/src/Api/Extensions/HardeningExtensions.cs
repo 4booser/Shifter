@@ -96,14 +96,21 @@ public static class HardeningExtensions
                     QueueLimit = 0
                 }));
 
+            // A burst big enough for a month view that fans out into several
+            // parallel requests, refilled steadily after it. Configurable
+            // because there is one thing that legitimately exceeds it — a
+            // measurement writing years of days as fast as it can — and
+            // because a deployment behind a shared address may need a
+            // different number than one that is not.
+            var burst = configuration.GetValue("RateLimits:ApiBurst", 120);
+            var refill = configuration.GetValue("RateLimits:ApiPerPeriod", 30);
+
             options.AddPolicy(ApiPolicy, context => RateLimitPartition.GetTokenBucketLimiter(
                 ClientKey(context),
                 _ => new TokenBucketRateLimiterOptions
                 {
-                    // A burst big enough for a month view that fans out into
-                    // several parallel requests, refilled steadily after it.
-                    TokenLimit = 120,
-                    TokensPerPeriod = 30,
+                    TokenLimit = burst,
+                    TokensPerPeriod = refill,
                     ReplenishmentPeriod = TimeSpan.FromSeconds(10),
                     QueueLimit = 0
                 }));

@@ -60,6 +60,13 @@ public sealed class Api : WebApplicationFactory<Program>, IAsyncLifetime
         // A signing key, so the host does not refuse to start and so tokens
         // from one run cannot be used against another.
         builder.UseSetting("Jwt:Key", "integration-tests-key-thirty-two-chars!!");
+
+        // The limiter is right for a person and wrong for a measurement that
+        // writes three years of days as fast as it can. Raised here and
+        // nowhere else — its own behaviour is tested separately.
+        builder.UseSetting("RateLimits:ApiBurst", "100000");
+        builder.UseSetting("RateLimits:ApiPerPeriod", "100000");
+
     }
 
     public async ValueTask InitializeAsync()

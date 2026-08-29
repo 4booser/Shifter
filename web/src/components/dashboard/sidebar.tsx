@@ -24,6 +24,7 @@ import { Icon } from '@/components/ui/icon';
 import { Teach } from '@/components/ui/teach';
 import { ImportModal } from './modals/import-modal';
 import { PhotoImportModal } from './modals/photo-import-modal';
+import { IcsImportModal } from './modals/ics-import-modal';
 import { ForeignImportModal } from './modals/foreign-import-modal';
 import { LocationModal } from './modals/location-modal';
 import { PatternModal } from './modals/pattern-modal';
@@ -47,7 +48,7 @@ export function Sidebar() {
   const eventTypes = state.eventTemplates.filter((item) => !item.archived);
   const archivedPositions = state.positions.filter((position) => position.archived);
 
-  const [modal, setModal] = useState<null | 'shift' | 'event' | 'sales' | 'location' | 'pattern' | 'rotation' | 'scheme' | 'payout' | 'import' | 'photo' | 'foreign'>(null);
+  const [modal, setModal] = useState<null | 'shift' | 'event' | 'sales' | 'location' | 'pattern' | 'rotation' | 'scheme' | 'payout' | 'import' | 'photo' | 'ics' | 'foreign'>(null);
   const [editingShift, setEditingShift] = useState<ShiftTemplate | null>(null);
   const [editingEventType, setEditingEventType] = useState<EventTemplate | null>(null);
   const [editingPosition, setEditingPosition] = useState<SalesPosition | null>(null);
@@ -569,6 +570,9 @@ export function Sidebar() {
         <button type="button" className="btn w-full" onClick={() => setModal('photo')}>
           📸 {t('Import from a photo')}
         </button>
+        <button type="button" className="btn w-full" onClick={() => setModal('ics')}>
+          🗓️ {t('Import from a calendar (.ics)')}
+        </button>
         <button
           type="button"
           className="btn w-full !whitespace-normal"
@@ -598,6 +602,7 @@ export function Sidebar() {
       <PayoutModal open={modal === 'payout'} onClose={() => setModal(null)} />
       <ImportModal open={modal === 'import'} onClose={() => setModal(null)} />
       <PhotoImportModal open={modal === 'photo'} onClose={() => setModal(null)} />
+      <IcsImportModal open={modal === 'ics'} onClose={() => setModal(null)} />
       <ForeignImportModal open={modal === 'foreign'} onClose={() => setModal(null)} />
     </aside>
   );

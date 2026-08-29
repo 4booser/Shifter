@@ -1032,6 +1032,16 @@ export const RU: Dictionary = {
   'Worth filling in': 'Дозаполнить',
   'The shelf': 'Полка',
   'Who can': 'Кто может',
+  'Import from a calendar (.ics)': 'Импорт из календаря (.ics)',
+  'Export your Google/Apple calendar as .ics and drop it here. Nothing applies until you say so.':
+    'Выгрузите свой Google/Apple календарь в .ics и бросьте сюда. Ничего не применится, пока вы не скажете.',
+  'Could not read the repetition of:': 'Не разобрали повторение у:',
+  'They are skipped honestly rather than guessed.': 'Они честно пропущены, а не угаданы.',
+  'An event (not work)': 'Событие (не работа)',
+  'Place onto the calendar': 'Разложить по календарю',
+  'Placing…': 'Раскладываем…',
+  'Placed': 'Разложено',
+
   'Who can, that day': 'Кто может в этот день',
   'standing': 'стоят',
   'said no': 'сказали нет',
@@ -3092,6 +3102,16 @@ export const UK: Dictionary = {
   'Worth filling in': 'Дозаповнити',
   'The shelf': 'Полиця',
   'Who can': 'Хто може',
+  'Import from a calendar (.ics)': 'Імпорт із календаря (.ics)',
+  'Export your Google/Apple calendar as .ics and drop it here. Nothing applies until you say so.':
+    'Вивантажте свій Google/Apple календар у .ics і киньте сюди. Нічого не застосується, поки ви не скажете.',
+  'Could not read the repetition of:': 'Не розібрали повторення у:',
+  'They are skipped honestly rather than guessed.': 'Вони чесно пропущені, а не вгадані.',
+  'An event (not work)': 'Подія (не робота)',
+  'Place onto the calendar': 'Розкласти по календарю',
+  'Placing…': 'Розкладаємо…',
+  'Placed': 'Розкладено',
+
   'Who can, that day': 'Хто може в цей день',
   'standing': 'стоять',
   'said no': 'сказали ні',

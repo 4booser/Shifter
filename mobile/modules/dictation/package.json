@@ -1,0 +1,6 @@
+{
+  "name": "dictation",
+  "version": "1.0.0",
+  "description": "Dictation, for hands that are busy.",
+  "main": "index.ts"
+}

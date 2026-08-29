@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { readNumber, readPhrase } from '@/lib/phrase';
+import { asNumber, readNumber, readPhrase } from '@/lib/phrase';
 
 describe('the number in a sentence', () => {
   it('reads digits', () => {
@@ -80,5 +80,111 @@ describe('what the sentence was about', () => {
       amount: 2000,
       rest: '',
     });
+  });
+});
+
+describe('what speech recognition actually returns', () => {
+  // Not invented: these are the transcriptions iOS produced from synthesised
+  // Russian, checked before this shipped. Every one of them is a shape I had
+  // not expected — recognition writes digits, not words.
+
+  it('rejoins the thousands it splits with a space', () => {
+    // "выручка тридцать четыре тысячи" comes back as "Выручка 34 000", which
+    // reads as two numbers and adds up to thirty-four. That is a month's
+    // takings recorded at a thousandth of itself.
+    expect(readPhrase('Выручка 34 000')).toEqual({
+      kind: 'revenue',
+      amount: 34_000,
+      rest: '',
+    });
+  });
+
+  it('does not glue together two numbers that merely follow each other', () => {
+    // A thousands separator is exactly three digits after at most three.
+    // Anything else is two numbers said in a row.
+    expect(readNumber(['1234', '5678'])).toBe(1234 + 5678);
+    expect(readNumber(['12', '34'])).toBe(46);
+  });
+
+  it('reads a decimal that recognition wrote with a comma', () => {
+    // "двенадцать с половиной часов" comes back as "12,5 часов". Stripping
+    // that comma as punctuation makes it twelve and five, which add to
+    // seventeen — an hour and a half of unpaid time, every time.
+    expect(readPhrase('Отработал 12,5 часов')?.amount).toBe(12.5);
+  });
+
+  it('drops an orphan preposition rather than calling it a note', () => {
+    expect(readPhrase('Штраф 50')?.rest).toBe('');
+  });
+
+  it('reads a dictated duration that came back as a clock', () => {
+    // "отработал восемь часов" comes back as "Отработал 08:00" — recognition
+    // heard a length of time and wrote a clock face.
+    expect(readPhrase('Отработал 08:00')?.amount).toBe(8);
+    expect(readPhrase('Отработал 07:30')?.amount).toBe(7.5);
+  });
+
+  it('leaves a clock alone where a clock is what was meant', () => {
+    // "чаевые 18:00" is somebody dictating a time. Reading it as eighteen
+    // hryvnia would be worse than reading nothing at all.
+    expect(readPhrase('Чаевые 18:00')?.amount).toBeNull();
+  });
+
+  it('reads the transcriptions exactly as iOS produced them', () => {
+    expect(readPhrase('Чаевые 1200')).toEqual({ kind: 'tips', amount: 1200, rest: '' });
+    // Both the verb and the noun name the kind, so the note would be a lone
+    // "на" — the wreckage of a sentence rather than a note. Empty is honest;
+    // the kind already carries the meaning.
+    expect(readPhrase('Потратил 150 на такси')).toEqual({
+      kind: 'expense',
+      amount: 150,
+      rest: '',
+    });
+
+    // Recognition clipped the last word. The note keeps what survived rather
+    // than the app pretending it understood the whole sentence.
+    const fine = readPhrase('Штраф 200 за разбитый бока')!;
+
+    expect(fine.kind).toBe('deduction');
+    expect(fine.amount).toBe(200);
+    expect(fine.rest).toBe('за разбитый бока');
+  });
+});
+
+describe('the two separators recognition writes', () => {
+  // Ukrainian dictation groups the thousands with a full stop and marks
+  // decimals with a comma. Reading the first as a decimal records a month's
+  // takings at a thousandth of themselves — and it looks entirely reasonable
+  // on the way past, which is why it took real transcription to find.
+
+  it('reads a stop before three digits as a thousands separator', () => {
+    expect(asNumber('34.000')).toBe(34_000);
+    expect(asNumber('1.500.000')).toBe(1_500_000);
+    expect(readPhrase('Виручка 34.000')?.amount).toBe(34_000);
+  });
+
+  it('reads a comma as a decimal point', () => {
+    expect(asNumber('12,5')).toBe(12.5);
+    expect(asNumber('1,25')).toBe(1.25);
+  });
+
+  it('reads a stop before anything but three digits as a decimal point', () => {
+    expect(asNumber('12.5')).toBe(12.5);
+    expect(asNumber('0.75')).toBe(0.75);
+  });
+
+  it('reads the Ukrainian transcriptions exactly as iOS produced them', () => {
+    expect(readPhrase('Чайові 1200')).toEqual({ kind: 'tips', amount: 1200, rest: '' });
+    expect(readPhrase('Відпрацював 8 годин')?.amount).toBe(8);
+
+    const fine = readPhrase('Штраф 200 за розбитий келих')!;
+
+    expect(fine.kind).toBe('deduction');
+    expect(fine.rest).toBe('за розбитий келих');
+  });
+
+  it('is nothing for a word that is not a number', () => {
+    expect(asNumber('много')).toBeNull();
+    expect(asNumber('18:00')).toBeNull();
   });
 });

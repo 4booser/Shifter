@@ -16,7 +16,9 @@
         ]
       },
       "infoPlist": {
-        "NSSupportsLiveActivities": true
+        "NSSupportsLiveActivities": true,
+        "NSSpeechRecognitionUsageDescription": "Shifter слушает, чтобы записать смену голосом. На большинстве телефонов распознавание идёт прямо на устройстве; где так нельзя — речь уходит в Apple, как и при диктовке с клавиатуры.",
+        "NSMicrophoneUsageDescription": "Shifter включает микрофон только пока вы держите кнопку записи."
       }
     },
     "android": {

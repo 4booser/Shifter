@@ -11,6 +11,9 @@
       ],
       "shift-activity": [
         "./modules/shift-activity/index.ts"
+      ],
+      "dictation": [
+        "./modules/dictation/index.ts"
       ]
     }
   },

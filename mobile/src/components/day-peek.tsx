@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -17,7 +17,9 @@ import {
   tint,
   toSavePayload,
 } from '@/lib/types';
-import { t } from '@/lib/i18n';
+import { t, useLangValue } from '@/lib/i18n';
+import { Listening, askToListen, listen, speechAvailable } from 'dictation';
+import { voiceLocale } from '@/lib/voice';
 import { Phrase, readPhrase } from '@/lib/phrase';
 
 /**
@@ -102,7 +104,47 @@ export function DayPeek({
 
   // One line instead of four taps. Typed here, and the same parser is what a
   // spoken sentence would land in.
+  const lang = useLangValue();
+
   const [said, setSaid] = useState('');
+
+  // Dictation, where the phone can. Hands in this trade have just put a tray
+  // down, and saying it is faster than any form.
+  const [hearing, setHearing] = useState(false);
+  const listening = useRef<Listening | null>(null);
+
+  const canHear = speechAvailable(voiceLocale(lang));
+
+  const hear = () => {
+    if (listening.current !== null) {
+      listening.current.stop();
+      listening.current = null;
+      setHearing(false);
+
+      return;
+    }
+
+    void askToListen().then((allowed) => {
+      if (!allowed) return;
+
+      setHearing(true);
+      setSaid('');
+
+      listening.current = listen(
+        voiceLocale(lang),
+        // Written straight into the same box somebody would have typed into,
+        // so what the app heard is shown before anything is saved — and the
+        // words can be corrected by hand if it misheard.
+        (text) => setSaid(text),
+        () => {
+          listening.current = null;
+          setHearing(false);
+        },
+      );
+    });
+  };
+
+  useEffect(() => () => listening.current?.stop(), []);
   // What the account did on this day. Empty, and the section is not there at
   // all — a bank nobody connected must not leave a hole on the screen.
   const statement = useMono((state) => state.items);
@@ -224,6 +266,19 @@ export function DayPeek({
               показывается до сохранения — парсер, который записал 1 200
               вместо 12 000, хуже, чем никакого. */}
           <View style={styles.quick}>
+            {canHear && (
+              <Press
+                style={[styles.mic, hearing && styles.micOn]}
+                onPress={hear}
+                accessibilityLabel={t(hearing ? 'Перестать слушать' : 'Записать голосом')}
+              >
+                <Ionicons
+                  name={hearing ? 'stop' : 'mic-outline'}
+                  size={16}
+                  color={hearing ? '#ffffff' : palette.textSecondary}
+                />
+              </Press>
+            )}
             <TextInput
               style={styles.quickInput}
               value={said}
@@ -432,6 +487,17 @@ const makeStyles = (palette: Palette) =>
 
     extras: { color: palette.textSecondary, fontSize: 13.5, paddingHorizontal: 2 },
     quick: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    mic: {
+      width: 38,
+      height: 38,
+      borderRadius: 12,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: palette.border,
+      backgroundColor: palette.backgroundElement,
+    },
+    micOn: { backgroundColor: palette.danger, borderColor: palette.danger },
     quickInput: {
       flex: 1,
       color: palette.text,

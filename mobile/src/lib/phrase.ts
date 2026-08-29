@@ -82,9 +82,82 @@ const SCALES: Record<string, number> = {
 const clean = (text: string): string[] =>
   text
     .toLocaleLowerCase()
-    .replace(/[.,;!?]/g, ' ')
+    // Punctuation goes, except between two digits. Recognition writes "12,5
+    // часов" for twelve and a half, and stripping that comma turns it into
+    // twelve and five, which add up to seventeen.
+    .replace(/(?<!\d)[.,](?!\d)/g, ' ')
+    .replace(/[;!?]/g, ' ')
     .split(/\s+/)
     .filter((word) => word.length > 0);
+
+/**
+ * Rejoins the thousands that speech recognition splits.
+ *
+ * Dictating "тридцать четыре тысячи" does not produce those words — iOS hands
+ * back "34 000", with a space, which reads as two numbers and adds up to
+ * thirty-four. That is not a rounding error, it is a wage recorded at a
+ * thousandth of itself, and it was found by transcribing real speech rather
+ * than by imagining what recognition returns.
+ *
+ * Only a group of exactly three digits joins, and only onto a number of at
+ * most three: that is what a thousands separator looks like, and anything
+ * else is two numbers that happened to be said in a row.
+ */
+export function joinThousands(words: string[]): string[] {
+  const joined: string[] = [];
+
+  for (const word of words) {
+    const last = joined[joined.length - 1];
+
+    if (
+      last !== undefined
+      && /^\d{1,3}$/.test(last)
+      && /^\d{3}$/.test(word)
+    ) {
+      joined[joined.length - 1] = last + word;
+
+      continue;
+    }
+
+    joined.push(word);
+  }
+
+  return joined;
+}
+
+/**
+ * A written number, in the two shapes recognition produces.
+ *
+ * Ukrainian dictation writes the thousands with a full stop — "виручка
+ * тридцять чотири тисячі" comes back as "34.000" — and decimals with a comma,
+ * "12,5". Reading the first as a decimal records a month's takings at a
+ * thousandth of themselves, and it looks entirely reasonable on the way past.
+ *
+ * A stop followed by exactly three digits, one or more times, is a separator.
+ * Anything else is a decimal point.
+ */
+export function asNumber(word: string): number | null {
+  if (/^\d{1,3}(?:\.\d{3})+$/.test(word)) return Number(word.replace(/\./g, ''));
+
+  const plain = word.replace(',', '.');
+
+  return /^\d+(?:\.\d+)?$/.test(plain) ? Number(plain) : null;
+}
+
+/**
+ * "08:00" spoken as a length of time.
+ *
+ * "Отработал восемь часов" comes back from recognition as "Отработал 08:00" —
+ * it heard a duration and wrote a clock. Eight is what was said, so eight is
+ * what is read, and half past is half.
+ */
+const asDuration = (word: string): number | null => {
+  const match = /^([0-2]?\d):([0-5]\d)$/.exec(word);
+
+  if (match === null) return null;
+
+  return Number(match[1]) + Number(match[2]) / 60;
+};
 
 /**
  * The number in the sentence, spoken or written.
@@ -93,23 +166,38 @@ const clean = (text: string): string[] =>
  * appears, which multiplies everything said before it and starts again — the
  * way the languages themselves build them.
  */
-export function readNumber(words: string[]): number | null {
+export function readNumber(words: string[], hours = false): number | null {
   let total = 0;
   let current = 0;
   let seen = false;
 
-  for (const word of words) {
-    const digits = word.replace(/\s/g, '').replace(',', '.');
+  for (const word of joinThousands(words)) {
+    // A length of time, where a length of time is what was asked for. Left
+    // alone otherwise: "чаевые 18:00" is somebody dictating a time, and
+    // reading it as eighteen hryvnia would be worse than reading nothing.
+    if (hours) {
+      const duration = asDuration(word);
 
-    if (/^\d+(\.\d+)?$/.test(digits)) {
-      current += Number(digits);
+      if (duration !== null) {
+        current += duration;
+        seen = true;
+
+        continue;
+      }
+    }
+
+    const digits = word.replace(/\s/g, '');
+    const written = asNumber(digits);
+
+    if (written !== null) {
+      current += written;
       seen = true;
 
       continue;
     }
 
     // "12к", "5тыс" — the number and its scale run together.
-    const stuck = /^(\d+(?:\.\d+)?)(к|k|тис|тыс)$/.exec(digits);
+    const stuck = /^(\d+(?:[.,]\d+)?)(к|k|тис|тыс)$/.exec(digits.replace(',', '.'));
 
     if (stuck !== null) {
       total += Number(stuck[1]) * 1_000;
@@ -148,6 +236,20 @@ export function readNumber(words: string[]): number | null {
  * sentence about the weather, and guessing a kind would put somebody's tips in
  * the fines column.
  */
+/**
+ * What is left, once it is worth keeping.
+ *
+ * "Потратил 230 на обед" loses both its verb and its noun to the keyword
+ * filter and leaves a lone "на". A one-word preposition is not a note — it is
+ * the wreckage of one, and putting it in the day's note field would be worse
+ * than leaving that field empty.
+ */
+function note(words: string[]): string {
+  const text = words.join(' ').trim();
+
+  return words.length === 1 && words[0].length <= 3 ? '' : text;
+}
+
 export function readPhrase(text: string): Phrase | null {
   const lowered = (text ?? '').toLocaleLowerCase();
   const found = WORDS.find((entry) => entry.words.some((word) => lowered.includes(word)));
@@ -158,15 +260,15 @@ export function readPhrase(text: string): Phrase | null {
 
   return {
     kind: found.kind,
-    amount: readNumber(words),
-    // Everything that is not a number and not the word that named the kind:
-    // "штраф 200 за розбитий келих" leaves "за розбитий келих", which is
+    amount: readNumber(words, found.kind === 'hours'),
+    // Everything that is not a number and not a word that named the kind:
+    // "штраф 200 за разбитый бокал" leaves "за разбитый бокал", which is
     // exactly what belongs in the note.
-    rest: words
-      .filter((word) => UNITS[word] === undefined && SCALES[word] === undefined)
-      .filter((word) => !/^\d/.test(word))
-      .filter((word) => !found.words.some((one) => word.includes(one.trim())))
-      .join(' ')
-      .trim(),
+    rest: note(
+      joinThousands(words)
+        .filter((word) => UNITS[word] === undefined && SCALES[word] === undefined)
+        .filter((word) => !/^\d/.test(word))
+        .filter((word) => !found.words.some((one) => word.includes(one.trim()))),
+    ),
   };
 }

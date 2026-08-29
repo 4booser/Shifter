@@ -977,6 +977,19 @@ export const RU: Dictionary = {
   'Download everything': 'Скачать всё',
   'Income papers': 'Бумаги о доходе',
   'Nights between shifts': 'Ночи между сменами',
+  'This day was changed on another device': 'День изменён на другом устройстве',
+  'Both versions are here, whole. Nothing is merged — you decide which one is the day.':
+    'Обе версии целиком здесь. Ничего не склеивается — вы решаете, какая из них и есть этот день.',
+  'On the other device': 'На другом устройстве',
+  'Typed here': 'Набрано здесь',
+  'An empty day': 'Пустой день',
+  'shift(s)': 'смен(ы)',
+  'unsaid': 'не сказано',
+  'Keep theirs': 'Оставить их',
+  'Write mine over it': 'Записать моё поверх',
+  'offline': 'офлайн',
+  'Changes will be sent when the network returns': 'Изменения отправятся, когда появится сеть',
+
   'From clocking out to clocking back in — measured on your own record, said without advice.':
     'От ухода до выхода — по вашей же записи, без советов.',
   'Nights shorter than': 'Ночей короче',
@@ -2936,6 +2949,19 @@ export const UK: Dictionary = {
   'Download everything': 'Завантажити все',
   'Income papers': 'Папери про дохід',
   'Nights between shifts': 'Ночі між змінами',
+  'This day was changed on another device': 'День змінено на іншому пристрої',
+  'Both versions are here, whole. Nothing is merged — you decide which one is the day.':
+    'Обидві версії тут цілком. Нічого не склеюється — ви вирішуєте, яка з них і є цей день.',
+  'On the other device': 'На іншому пристрої',
+  'Typed here': 'Набрано тут',
+  'An empty day': 'Порожній день',
+  'shift(s)': 'змін(и)',
+  'unsaid': 'не сказано',
+  'Keep theirs': 'Залишити їхню',
+  'Write mine over it': 'Записати мою поверх',
+  'offline': 'офлайн',
+  'Changes will be sent when the network returns': 'Зміни відправляться, коли з’явиться мережа',
+
   'From clocking out to clocking back in — measured on your own record, said without advice.':
     'Від виходу до виходу — за вашим же записом, без порад.',
   'Nights shorter than': 'Ночей коротших за',

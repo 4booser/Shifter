@@ -37,11 +37,13 @@ public static class DependencyInjection
         // burst answered "sorry, too many clients already", which also failed
         // the health probes. Bounded, and told to ride out a blip rather than
         // surface it as a 500.
+        // The counter rides inside the options: there is no registration
+        // order to get wrong, which is how the last one reported zero.
         services.AddDbContext<ShifterDbContext>(options =>
-            options.UseNpgsql(shifterDb, Tuning));
+            options.UseNpgsql(shifterDb, Tuning).AddInterceptors(new QueryCounter()));
 
         services.AddDbContext<TokensDbContext>(options =>
-            options.UseNpgsql(tokenDb, Tuning));
+            options.UseNpgsql(tokenDb, Tuning).AddInterceptors(new QueryCounter()));
 
         services.AddScoped<IUserCommand, UserCommand>();
         services.AddScoped<IUserQuery, UserQuery>();

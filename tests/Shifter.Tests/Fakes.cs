@@ -12,6 +12,12 @@ namespace Shifter.Tests;
 /// </summary>
 public sealed class FakeShifterQuery : IShifterQuery
 {
+    public Task<int?> GetDayVersionAsync(int userId, DateOnly date, CancellationToken ct)
+        => Task.FromResult(Days
+            .Where(day => day.UserId == userId && day.Date == date)
+            .Select(day => (int?)day.Version)
+            .FirstOrDefault());
+
     public List<Day> Days { get; } = [];
     public List<Location> Locations { get; } = [];
     public List<Payout> Payouts { get; } = [];

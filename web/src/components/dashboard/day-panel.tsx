@@ -263,6 +263,9 @@ export function DayPanel() {
       deduction_reason: deductions !== null && deductions > 0 ? deductionReason : null,
       note: note.trim() === '' ? null : note,
       colour,
+      // Echo what was loaded: the server refuses a save over a version this
+      // panel never saw, and the conflict modal takes it from there.
+      version: day?.version ?? 0,
     });
   };
 

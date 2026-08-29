@@ -247,6 +247,22 @@ public partial class DayHandler : IDayHandler
         if (request.deductions < 0)
             throw new ValidationException("Deductions cannot be negative.");
 
+        // Two devices, one day: whoever saves over a version they never saw
+        // gets stopped, not merged. The day is always sent whole, so a stale
+        // echo means the whole other edit would be buried. Old clients send
+        // no version and keep last-write-wins — they cannot be asked.
+        if (request.version is int seen)
+        {
+            // No row yet reads as version zero — the same zero a client sees
+            // on an empty day — so creating a day both devices thought empty
+            // conflicts only for the second one, which is the truth.
+            var current = await _shifterQuery.GetDayVersionAsync(userId, date, ct) ?? 0;
+
+            if (current != seen)
+                throw new ConflictException(
+                    "The day was changed on another device. Reload it, look at both versions, and decide.");
+        }
+
         List<DayShift> shifts = await ResolveShiftsAsync(request.shifts, userId, date, ct);
         List<DaySale> sales = await ResolveSalesAsync(request.sales, userId, ct);
 
@@ -1325,7 +1341,8 @@ public partial class DayHandler : IDayHandler
             BelowFloor(day, locations),
             Math.Round(shifts.Where(s => s.worked).Sum(s => s.hours), 2),
             workedPay + salesPay + (day.Tips ?? 0m) - tipOut - deductions,
-            plannedPay
+            plannedPay,
+            day.Version
         );
     }
 

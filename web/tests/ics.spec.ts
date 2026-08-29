@@ -11,6 +11,7 @@ import { buildIcs } from '@/lib/export/ics';
 function day(overrides: Partial<CalendarDayData> = {}): CalendarDayData {
   return {
     date: '2026-03-10',
+    version: 0,
     shifts: [],
     sales: [],
     tips: null,

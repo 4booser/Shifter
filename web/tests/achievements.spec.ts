@@ -4,6 +4,7 @@ import { CalendarDayData } from '@/lib/calendar/models';
 function day(date: string, hours: number, start = '10:00', worked = true): CalendarDayData {
   return {
     date,
+    version: 0,
     shifts: [
       {
         shift_id: 1,

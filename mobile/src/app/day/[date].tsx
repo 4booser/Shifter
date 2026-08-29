@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import {
+  Alert,
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
@@ -18,7 +19,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Appear, Press, Roll } from '@/components/motion';
 import { Colors, Palette } from '@/constants/theme';
-import { api } from '@/lib/api';
+import { api, ApiError } from '@/lib/api';
 import { todayKey } from '@/lib/calendar';
 import {
   CalendarDayData,
@@ -246,9 +247,11 @@ export default function DayScreen() {
     setBusy(true);
     setError(null);
 
-    try {
-      const payload = toSavePayload(day);
+    // Built outside the try: the conflict path in catch needs the same
+    // payload to offer «записать мою поверх».
+    const payload = toSavePayload(day);
 
+    try {
       payload.tips = tips.trim() === '' ? null : Number(tips) || 0;
       // Same clamp again: the total has just been retyped, and the cash half
       // the phone cannot show must not be left larger than it.
@@ -263,6 +266,44 @@ export default function DayScreen() {
       await api(`/shifter/v1/days/${date}`, { method: 'PUT', body: payload });
       router.back();
     } catch (caught) {
+      // Another device edited this day first. Show both versions and ask;
+      // never merge — a silent merge of money is the worst outcome there is.
+      if (caught instanceof ApiError && caught.status === 409) {
+        const theirs = await api<{ days: CalendarDayData[] }>(
+          `/shifter/v1/days?from=${date}&to=${date}`,
+        ).then((range) => range.days.find((row) => row.date === date)).catch(() => undefined);
+
+        const sayDay = (row: { shifts: unknown[]; tips: number | null; note: string | null } | undefined) =>
+          row === undefined
+            ? t('пустой день')
+            : `${row.shifts.length} см. · чай ${row.tips ?? '—'}${row.note ? ` · «${row.note}»` : ''}`;
+
+        Alert.alert(
+          t('День изменён на другом устройстве'),
+          `${t('На другом устройстве')}: ${sayDay(theirs)}\n${t('Здесь')}: ${sayDay({ shifts: payload.shifts, tips: payload.tips, note: payload.note })}\n\n${t('Ничего не склеивается — выберите, что оставить.')}`,
+          [
+            {
+              text: t('Оставить их версию'),
+              style: 'cancel',
+              onPress: () => router.back(),
+            },
+            {
+              text: t('Записать мою поверх'),
+              style: 'destructive',
+              onPress: () => {
+                void api(`/shifter/v1/days/${date}`, {
+                  method: 'PUT',
+                  body: { ...payload, version: theirs?.version ?? 0 },
+                }).then(() => router.back()).catch(() => setError(t('Не сохранилось.')));
+              },
+            },
+          ],
+        );
+        setBusy(false);
+
+        return;
+      }
+
       setError(caught instanceof Error ? caught.message : t('Не сохранилось.'));
       setBusy(false);
     }

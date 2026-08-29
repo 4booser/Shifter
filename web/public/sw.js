@@ -1,16 +1,39 @@
 /**
- * Two jobs, both small. First, keep retiring the old offline-first worker:
- * on activate every cache is dropped, so nothing stale can ever be served
- * again — and there is deliberately no fetch handler here. Second, show
- * push notifications: the server sends {title, body, url} and a click
- * focuses the app on that page.
+ * The offline shell, versioned so it can die.
  *
- * Unlike the pure killer this worker stays registered — push needs a living
- * registration — but for browsers that never enable notifications the app
- * still unregisters it on boot, which keeps the old behaviour.
+ * The legacy worker survived three deploys because nothing in it ever
+ * changed; this one carries a build stamp in its cache names, and on every
+ * activation it deletes каждый cache that is not its own vintage. A deploy
+ * rewrites the stamp, the browser sees new bytes, installs, skips waiting,
+ * claims the clients and sweeps the old caches — death by version, by
+ * construction.
+ *
+ * Caching policy, deliberately boring:
+ *  - hashed build assets: cache-first (their names ARE their versions);
+ *  - pages and API GETs: network-first, cache as the fallback for the
+ *    basement where half of every shift is worked;
+ *  - anything that is not GET: straight through, never cached — the offline
+ *    QUEUE owns writes, and a cache pretending a PUT happened would be the
+ *    silent merge this app refuses everywhere else.
+ *
+ * The push half is unchanged from the previous worker.
  */
+const STAMP = '__BUILD__';
+const SHELL = `shifter-shell-${STAMP}`;
+const DATA = `shifter-data-${STAMP}`;
+
+const SHELL_PATHS = ['/', '/dashboard/', '/login/', '/payouts/', '/stats/', '/bank/'];
+
 self.addEventListener('install', (event) => {
-  event.waitUntil(self.skipWaiting());
+  event.waitUntil(
+    (async () => {
+      const cache = await caches.open(SHELL);
+
+      // Best-effort: an uncached page at install simply stays online-only.
+      await Promise.allSettled(SHELL_PATHS.map((path) => cache.add(path)));
+      await self.skipWaiting();
+    })(),
+  );
 });
 
 self.addEventListener('activate', (event) => {
@@ -18,8 +41,84 @@ self.addEventListener('activate', (event) => {
     (async () => {
       const keys = await caches.keys();
 
-      await Promise.all(keys.map((key) => caches.delete(key)));
+      await Promise.all(
+        keys
+          .filter((key) => key !== SHELL && key !== DATA)
+          .map((key) => caches.delete(key)),
+      );
       await self.clients.claim();
+    })(),
+  );
+});
+
+self.addEventListener('fetch', (event) => {
+  const request = event.request;
+
+  if (request.method !== 'GET') return;
+
+  const url = new URL(request.url);
+
+  if (url.origin !== self.location.origin) return;
+
+  // Hashed forever-assets: the name is the version.
+  if (url.pathname.startsWith('/_next/static/') || url.pathname.startsWith('/icons/')) {
+    event.respondWith(
+      (async () => {
+        const cached = await caches.match(request);
+
+        if (cached) return cached;
+
+        const response = await fetch(request);
+
+        if (response.ok) {
+          const cache = await caches.open(SHELL);
+
+          void cache.put(request, response.clone());
+        }
+
+        return response;
+      })(),
+    );
+
+    return;
+  }
+
+  // Auth is never cached: a token response replayed offline is a lie about
+  // being signed in, and refresh must fail honestly.
+  if (url.pathname.startsWith('/shifter/v1/auth/')) return;
+
+  const isApi = url.pathname.startsWith('/shifter/v1/');
+  const isPage = request.mode === 'navigate';
+
+  if (!isApi && !isPage) return;
+
+  event.respondWith(
+    (async () => {
+      try {
+        const response = await fetch(request);
+
+        if (response.ok) {
+          const cache = await caches.open(isApi ? DATA : SHELL);
+
+          void cache.put(request, response.clone());
+        }
+
+        return response;
+      } catch {
+        const cached = await caches.match(request, { ignoreVary: true });
+
+        if (cached) return cached;
+
+        // A page the shell never met: fall back to the calendar shell so
+        // the app can boot and show its own offline state.
+        if (isPage) {
+          const shell = await caches.match('/dashboard/');
+
+          if (shell) return shell;
+        }
+
+        throw new Error('offline and uncached');
+      }
     })(),
   );
 });

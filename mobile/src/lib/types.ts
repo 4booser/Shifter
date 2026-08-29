@@ -111,6 +111,8 @@ export interface CalendarDayData {
   hours: number;
   earned: number;
   planned: number;
+  /** Bumped by the server on every save; echoed back in DaySave. */
+  version?: number;
 }
 
 /** One rate, and the day the bank actually published it. */
@@ -258,6 +260,11 @@ export interface DaySave {
   deduction_reason?: DeductionReason | null;
   note: string | null;
   colour: string | null;
+  /**
+   * The version this phone loaded, echoed back so the server can refuse a
+   * save over an edit made on another device. Absent keeps last-write-wins.
+   */
+  version?: number;
 }
 
 /**
@@ -381,6 +388,7 @@ export const toSavePayload = (day: CalendarDayData | undefined): DaySave => ({
   deduction_reason: day?.deduction_reason ?? null,
   note: day?.note ?? null,
   colour: day?.colour ?? null,
+  version: day?.version ?? 0,
 });
 
 export const money = (value: number) => `₴${Math.round(value).toLocaleString('ru')}`;

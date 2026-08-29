@@ -85,6 +85,12 @@ interface CalendarState {
   /** Extra selected days beyond selectedDate; empty means single-day mode. */
   multiSelected: ReadonlySet<string>;
   pendingOffline: number;
+  /**
+   * A save refused because another device edited the day first. The map
+   * already holds their version (reloaded on refusal); mine waits here for
+   * the person to decide. Never merged.
+   */
+  conflict: { date: string; mine: DaySave } | null;
 }
 
 /**
@@ -117,6 +123,7 @@ export const useCalendar = create<CalendarState>(() => ({
   undoVisible: false,
   multiSelected: new Set(),
   pendingOffline: 0,
+  conflict: null,
 }));
 
 const set = useCalendar.setState;
@@ -457,6 +464,16 @@ export async function saveDay(key: string, request: DaySave): Promise<void> {
     void loadSummary();
   } catch (error) {
     set({ saving: false });
+
+    // Another device got there first. Their version is loaded so both can
+    // be looked at; mine is parked, and a person decides. Never merged —
+    // a silent merge of money is the worst outcome there is.
+    if (error instanceof HttpError && error.status === 409) {
+      await loadGrid();
+      set({ conflict: { date: key, mine: request } });
+
+      return;
+    }
 
     // A connection failure is not the user's mistake, and their day is not
     // theirs to lose: it goes to the queue and the cell keeps what they typed.
@@ -1007,6 +1024,24 @@ export const catalogueActions = {
     void loadSummary();
   },
 
+  /** Conflict, resolved их way: keep what the map already reloaded. */
+  dropConflict() {
+    set({ conflict: null });
+  },
+
+  /** Conflict, resolved my way: rewrite mine over the version just seen. */
+  async overwriteConflict() {
+    const { conflict, days } = get();
+
+    if (conflict === null) return;
+
+    const theirs = days.get(conflict.date);
+
+    set({ conflict: null });
+
+    await saveDay(conflict.date, { ...conflict.mine, version: theirs?.version ?? 0 });
+  },
+
   /** Wipes the whole payment ledger. The asking-out-loud happens in the UI. */
   async wipePayouts() {
     const { deleted } = await calendarApi.wipePayouts();
@@ -1022,6 +1057,7 @@ export const catalogueActions = {
 function blankDay(date: string): CalendarDayData {
   return {
     date,
+    version: 0,
     shifts: [],
     sales: [],
     tips: null,

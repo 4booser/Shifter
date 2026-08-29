@@ -31,39 +31,29 @@ export function Boot({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!('serviceWorker' in navigator)) return;
 
-    // Notifications need a living registration; everyone else keeps the old
-    // clean-slate behaviour, which is what retired the legacy offline worker.
-    const wantsPush = (() => {
-      try {
-        const raw = JSON.parse(localStorage.getItem('shifter.settings') ?? '{}') as {
-          notifyTomorrow?: boolean;
-          notifyUnclosed?: boolean;
-          notifyPayday?: boolean;
-          notifyDigest?: boolean;
-        };
-
-        return (
-          raw.notifyTomorrow === true ||
-          raw.notifyUnclosed === true ||
-          raw.notifyPayday === true ||
-          raw.notifyDigest === true
-        );
-      } catch {
-        return false;
-      }
-    })();
-
-    if (!wantsPush) {
+    // The escape hatch stays: set shifter.sw.kill and the next boot returns
+    // the app to plain HTTP. It exists because the previous generation of
+    // worker could not be evicted any other way, and the lesson keeps.
+    if (localStorage.getItem('shifter.sw.kill') !== null) {
       void navigator.serviceWorker.getRegistrations().then((registrations) => {
         for (const registration of registrations) void registration.unregister();
       });
+
+      if ('caches' in window) {
+        void caches.keys().then((keys) => {
+          for (const key of keys) void caches.delete(key);
+        });
+      }
+
+      return;
     }
 
-    if ('caches' in window) {
-      void caches.keys().then((keys) => {
-        for (const key of keys) void caches.delete(key);
-      });
-    }
+    // Everyone gets the worker now: it is versioned per deploy and sweeps
+    // caches that are not its own vintage, so it can die — which is the
+    // property the old one lacked and the reason it was unregistered here.
+    void navigator.serviceWorker.register('/sw.js').catch(() => {
+      // A refused registration leaves the site exactly as it was: online-only.
+    });
   }, []);
 
   if (!mounted) return null;

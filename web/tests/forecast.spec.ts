@@ -7,6 +7,7 @@ import { forecastFor, paceToGoal, projectionSeries } from '@/lib/calendar/foreca
 function day(date: string, earned: number, planned = 0): CalendarDayData {
   return {
     date,
+    version: 0,
     shifts: [],
     sales: [],
     tips: null,

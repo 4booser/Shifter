@@ -7,6 +7,12 @@ namespace Shifter.Infrastructure.Repositories.Queries;
 
 public class ShifterQuery : IShifterQuery
 {
+    public async Task<int?> GetDayVersionAsync(int userId, DateOnly date, CancellationToken ct)
+        => await _db.Days.AsNoTracking()
+            .Where(day => day.UserId == userId && day.Date == date)
+            .Select(day => (int?)day.Version)
+            .FirstOrDefaultAsync(ct);
+
     private readonly ShifterDbContext _db;
     public ShifterQuery(ShifterDbContext db) => _db = db;
 

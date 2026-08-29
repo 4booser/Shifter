@@ -445,11 +445,15 @@ public class ShifterCommand : IShifterCommand
 
         if (existing is null)
         {
+            incoming.Version = 1;
+
             await _db.Days.AddAsync(incoming, ct);
             await _db.SaveChangesAsync(ct);
 
             return incoming;
         }
+
+        existing.Version++;
 
         // Every scalar the save carries, not a subset. Cash tips, deductions,
         // the tip pool and the fine's reason were each missing here at some

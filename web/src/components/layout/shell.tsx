@@ -102,6 +102,25 @@ export function Shell({ children }: { children: React.ReactNode }) {
     return () => removeEventListener('online', flush);
   }, []);
 
+  // Said out loud, in the outbox's own words: the basement has no bars, the
+  // app keeps working, and nothing typed is lost.
+  const [offline, setOffline] = useState(false);
+
+  useEffect(() => {
+    setOffline(!navigator.onLine);
+
+    const down = () => setOffline(true);
+    const up = () => setOffline(false);
+
+    addEventListener('offline', down);
+    addEventListener('online', up);
+
+    return () => {
+      removeEventListener('offline', down);
+      removeEventListener('online', up);
+    };
+  }, []);
+
   if (!ready) return null;
 
   const logout = () => {
@@ -127,6 +146,11 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
           <div className="ml-auto flex items-center gap-1">
             <LiveBar />
+            {offline && (
+              <span className="chip border-warn/40 bg-(--warn-soft) text-warn" title={t('Changes will be sent when the network returns')}>
+                {t('offline')}
+              </span>
+            )}
             {pendingOffline > 0 && (
               <button
                 type="button"

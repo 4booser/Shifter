@@ -82,6 +82,7 @@ try
         ]);
 
     app.UseMiddleware<GlobalExceptionMiddleware>();
+    app.UseMiddleware<Shifter.Api.Middlewares.QueryCountMiddleware>();
 
     // Configure the HTTP request pipeline.
     if (app.Environment.IsDevelopment())

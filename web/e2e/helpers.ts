@@ -40,6 +40,18 @@ export async function apiPost(token: string, path: string, body: unknown): Promi
   return response.json();
 }
 
+export async function apiPut(token: string, path: string, body: unknown): Promise<unknown> {
+  const response = await fetch(`${API}${path}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) throw new Error(`${path} failed: ${response.status} ${await response.text()}`);
+
+  return response.json();
+}
+
 export async function apiGet(token: string, path: string): Promise<unknown> {
   const response = await fetch(`${API}${path}`, {
     headers: { Authorization: `Bearer ${token}` },

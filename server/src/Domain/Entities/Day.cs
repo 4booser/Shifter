@@ -13,6 +13,13 @@ public sealed class Day
     /// </summary>
     public User? User { get; set; }
     
+    /// <summary>
+    /// Bumped on every save. Two devices editing the same day both send the
+    /// version they loaded; whoever sends a stale one gets a 409 and a human
+    /// decision, instead of silently burying the other device's evening.
+    /// </summary>
+    public int Version { get; set; }
+
     public List<DayShift>? Shifts {get; set;}
     
     public List<DaySale>? Sales { get; set; }

@@ -358,6 +358,11 @@ export interface CalendarDayData {
   hours: number;
   earned: number;
   planned: number;
+  /**
+   * Bumped by the server on every save; echo it in DaySave.version. Optional
+   * only because a dozen chart tests build partial days that never save.
+   */
+  version?: number;
 }
 
 /** The range response: days plus the totals worked out for them. */
@@ -843,6 +848,11 @@ export interface DaySave {
   note: string | null;
   /** '#RRGGBB', or null to clear it. */
   colour: string | null;
+  /**
+   * The version this client loaded, echoed back so the server can refuse a
+   * save over an edit made on another device. Absent keeps last-write-wins.
+   */
+  version?: number;
 }
 
 export const NOTE_MAX_LENGTH = 500;

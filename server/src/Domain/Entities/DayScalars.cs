@@ -21,7 +21,11 @@ public static class DayScalars
     /// another date, or to another person.
     /// </summary>
     private static readonly HashSet<string> Identity =
-        [nameof(Day.Id), nameof(Day.UserId), nameof(Day.Date)];
+        [nameof(Day.Id), nameof(Day.UserId), nameof(Day.Date),
+        // The version is the row's own history, not part of any save: the
+        // incoming day always carries zero, and copying that zero would
+        // reset the very counter the conflict check reads.
+        nameof(Day.Version)];
 
     private static readonly PropertyInfo[] Copied = typeof(Day)
         .GetProperties(BindingFlags.Public | BindingFlags.Instance)

@@ -4,6 +4,9 @@ namespace Shifter.Infrastructure.Repositories.Interfaces;
 
 public interface IShifterQuery
 {
+    /// <summary>The day's save counter, or null where the day does not exist yet.</summary>
+    Task<int?> GetDayVersionAsync(int userId, DateOnly date, CancellationToken ct);
+
     Task<Shift[]> GetShiftsByIdsAsync(int userId, int[] ids, CancellationToken ct);
 
     /// <summary>Palette contents. Archived templates are included only on request.</summary>

@@ -153,9 +153,11 @@ export const DEFAULT_SETTINGS: Settings = {
   language: 'en',
   hideAmounts: false,
   accent: '#4F46E5',
-  currency: '$',
+  // ₴ before the amount, the way the whole product writes money — the '$'
+  // here was scaffolding that survived into every fresh account's first day.
+  currency: '₴',
   baseCurrency: 'UAH',
-  currencyBefore: false,
+  currencyBefore: true,
   moneyDecimals: 2,
   groupThousands: true,
   statsPeriod: 'month',

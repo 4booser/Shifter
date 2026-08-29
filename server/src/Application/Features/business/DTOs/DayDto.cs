@@ -74,7 +74,13 @@ public record DayDto(
     decimal earned,
     /// <summary>Money from shifts still only planned.</summary>
     decimal planned
-    );
+    ,
+    /// <summary>
+    /// Bumped on every save. Echo it back in the save to be told — with a
+    /// 409 — when another device got there first. Not sending it keeps the
+    /// old last-write-wins, which is what an old client expects.
+    /// </summary>
+    int version = 0);
 
 /// <summary>
 /// A range of days plus its totals. The breakdown is computed here rather than
@@ -294,7 +300,12 @@ public record DaySaveDto(
     /// tips from the pool, the person's own share is worked out from this and
     /// overwrites tips — the server prices, the client only reports.
     /// </summary>
-    decimal? tip_pool = null
+    decimal? tip_pool = null,
+    /// <summary>
+    /// The version this client loaded, echoed back. Null means an old client
+    /// that has never heard of versions: last-write-wins, as it always did.
+    /// </summary>
+    int? version = null
     );
 
 public record DayShiftSaveDto(

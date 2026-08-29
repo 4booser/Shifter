@@ -43,6 +43,10 @@ public class MigrationDefaultsTests
         ["MinimumHourly"] = "zero is off — nobody has named a floor",
         ["EarnedAtWriting"] = "an amount, and nothing recorded is nothing",
         ["ContactSeenCount"] = "a tally of looks, and nobody has looked yet",
+        // A save counter: existing days genuinely have zero recorded saves
+        // under the new scheme, and the conflict check treats zero and
+        // «no row» as the same «nothing seen yet».
+        ["Version"] = "a counter, and no save has been counted yet",
 
         // Enums whose zero is the value the entity itself defaults to. Each
         // was read before being listed here; the note says which one it is.

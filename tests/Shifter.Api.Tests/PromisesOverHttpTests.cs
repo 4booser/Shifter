@@ -487,5 +487,66 @@ public sealed class PromisesOverHttpTests(Api api)
         Assert.Equal(0m, range.GetProperty("paid").GetDecimal());
         Assert.Equal(0m, range.GetProperty("difference").GetDecimal());
     }
+
+    [Fact]
+    public async Task Two_devices_editing_one_day_get_a_conflict_not_a_silent_merge()
+    {
+        var (client, _) = await api.SignInAsync("conflict");
+        var place = await PlaceAsync(client, "Бар");
+        var shift = await ShiftAsync(client, "Смена", place, 100m, "10:00", "18:00");
+
+        object Body(decimal? tips, int? version) => new
+        {
+            shifts = new[]
+            {
+                new
+                {
+                    shift_id = shift,
+                    worked = true,
+                    needs_cover = false,
+                    actual_start = (string?)null,
+                    actual_end = (string?)null,
+                    break_minutes = (int?)null,
+                    revenue = (decimal?)null,
+                },
+            },
+            sales = Array.Empty<object>(),
+            tips,
+            tips_cash = (decimal?)null,
+            deductions = 0m,
+            deduction_reason = (string?)null,
+            note = (string?)null,
+            version,
+        };
+
+        // Both devices open an empty day: both see version zero. The first
+        // save lands and stamps version one.
+        var first = await Read(await client.PutAsJsonAsync(
+            $"/shifter/v1/days/{Day(12)}", Body(300m, 0)));
+
+        Assert.Equal(1, first.GetProperty("version").GetInt32());
+
+        // The second device still holds zero: refused, with the other
+        // evening intact.
+        var stale = await client.PutAsJsonAsync($"/shifter/v1/days/{Day(12)}", Body(500m, 0));
+
+        Assert.Equal(HttpStatusCode.Conflict, stale.StatusCode);
+
+        var kept = await Read(await client.GetAsync($"/shifter/v1/days?from={Day(12)}&to={Day(12)}"));
+        var day = kept.GetProperty("days").EnumerateArray().Single();
+
+        Assert.Equal(300m, day.GetProperty("tips").GetDecimal());
+
+        // Echoing the version it just reloaded, the second device may write.
+        var fresh = await Read(await client.PutAsJsonAsync(
+            $"/shifter/v1/days/{Day(12)}", Body(500m, day.GetProperty("version").GetInt32())));
+
+        Assert.Equal(2, fresh.GetProperty("version").GetInt32());
+
+        // And a client that has never heard of versions still wins last:
+        // it cannot be asked, and refusing it would brick old phones.
+        (await client.PutAsJsonAsync(
+            $"/shifter/v1/days/{Day(12)}", Body(700m, null))).EnsureSuccessStatusCode();
+    }
 }
 

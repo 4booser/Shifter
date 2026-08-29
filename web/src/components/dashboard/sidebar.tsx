@@ -567,7 +567,11 @@ export function Sidebar() {
         <button type="button" className="btn w-full" onClick={() => setModal('photo')}>
           📸 {t('Import from a photo')}
         </button>
-        <button type="button" className="btn w-full" onClick={() => setModal('foreign')}>
+        <button
+          type="button"
+          className="btn w-full !whitespace-normal"
+          onClick={() => setModal('foreign')}
+        >
           <Icon name="download" size={14} />
           {t('Bring in another app’s records')}
         </button>

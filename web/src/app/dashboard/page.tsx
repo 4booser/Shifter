@@ -19,6 +19,7 @@ import {
 } from '@/lib/store/calendar';
 import { Shell } from '@/components/layout/shell';
 import { FirstRun } from '@/components/dashboard/first-run';
+import { ConflictModal } from '@/components/dashboard/modals/conflict-modal';
 import { DayPanel } from '@/components/dashboard/day-panel';
 import { DraftWeek } from '@/components/dashboard/draft-week';
 import { MonthGrid } from '@/components/dashboard/month-grid';
@@ -325,6 +326,7 @@ function Dashboard() {
         </div>
         <div className="order-2 w-full flex-none lg:order-none lg:w-72 xl:w-80" data-tour="daypanel">
           <DayPanel />
+          <ConflictModal />
         </div>
       </div>
 

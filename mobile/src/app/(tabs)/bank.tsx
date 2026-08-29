@@ -42,7 +42,8 @@ import {
 import { recurring } from '@/lib/mono-insights';
 import { cashTipOffers, untilPayday, usualDay } from '@/lib/mono-work';
 import { CalendarDayData, DaysResponse, money, moneyIn } from '@/lib/types';
-import { chosenAccount, useMono } from '@/store/mono';
+import { chosenAccount, loadSetup, saveWatching, useMono } from '@/store/mono';
+import { watchForWage } from '@/lib/wage-watch';
 import { t } from '@/lib/i18n';
 import { LockKind, bankLock, lockKind, lockNameBy } from '@/lib/lock';
 
@@ -229,6 +230,28 @@ function Bank() {
       })
       .filter((entry) => entry.matches.length > 0);
   }, [periods, mono.items, mono.payers, mono.used]);
+
+  // What the phone should look for while the app is closed, written down
+  // here because this is where it is worked out. A wake-up the system granted
+  // for a few seconds is the wrong place to be calling two services.
+  useEffect(() => {
+    const soonest = wages
+      .map((entry) => entry.expected)
+      .sort((one, two) => one.due.localeCompare(two.due))[0] ?? null;
+
+    // The list of wages already announced survives this write. Clearing it
+    // whenever the screen recomputes would let one wage be announced twice,
+    // which reads as a second payment.
+    void loadSetup().then((setup) =>
+      saveWatching({
+        expected: soonest,
+        payers: soonest === null ? [] : mono.payers[`${soonest.locationId}`] ?? [],
+        told: setup.watching?.told ?? [],
+      }),
+    );
+
+    void watchForWage(soonest !== null && mono.accountId !== null);
+  }, [wages, mono.payers, mono.accountId]);
 
   const worked = useMemo(
     () =>

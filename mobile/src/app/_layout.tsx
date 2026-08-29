@@ -7,6 +7,9 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { LockGate } from '@/components/lock-gate';
 import { registerForPush, wireNotificationTaps } from '@/lib/notifications';
+// Imported for its side effect: the task has to be defined at module load,
+// before the system ever calls it, and it is defined nowhere else.
+import '@/lib/wage-watch';
 import { useLang } from '@/lib/i18n';
 import { useMono } from '@/store/mono';
 import { useSession } from '@/store/session';

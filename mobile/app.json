@@ -59,7 +59,8 @@
           "color": "#4F46E5"
         }
       ],
-      "expo-sharing"
+      "expo-sharing",
+      "expo-background-task"
     ],
     "experiments": {
       "typedRoutes": true,

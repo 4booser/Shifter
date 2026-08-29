@@ -6,6 +6,7 @@ import { t } from '@/lib/i18n';
 
 import { clientInfo, MonoBusy, MonoRefused, rates as publishedRates, statement, waitFor } from '@/lib/mono-api';
 import {
+  ExpectedWage,
   MonoAccount,
   MonoClientInfo,
   MonoRate,
@@ -70,6 +71,20 @@ interface Setup {
    * finds out that the habit slipped in March.
    */
   jarId?: string | null;
+  /**
+   * The wage the phone should watch for while the app is closed.
+   *
+   * Written by the bank screen whenever it works out what is owed, so the
+   * background task never has to call the Shifter server: a wake-up the
+   * system granted for a few seconds is the wrong place to be doing two
+   * round trips and an authentication.
+   */
+  watching?: {
+    expected: ExpectedWage | null;
+    payers: string[];
+    /** Wages already announced, so one wage is announced once. */
+    told: string[];
+  };
 }
 
 /** The statement cache, keyed by account. Older phones hold a bare array. */
@@ -157,6 +172,17 @@ const readSetup = async (): Promise<Setup> => {
     hidden: [], syncedPer: {}, budgets: [], jarId: null,
   };
 };
+
+/** The setup, for the background task, which has no store to read. */
+export const loadSetup = readSetup;
+
+export const saveWatching = async (watching: Setup['watching']): Promise<void> => {
+  const setup = await readSetup();
+
+  await quietly(AsyncStorage.setItem(SETUP_KEY, JSON.stringify({ ...setup, watching })));
+};
+
+export const MONO_TOKEN_KEY = TOKEN_KEY;
 
 export const useMono = create<MonoState>((set, get) => ({
   token: undefined,

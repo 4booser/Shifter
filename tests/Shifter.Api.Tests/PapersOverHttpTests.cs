@@ -352,6 +352,8 @@ public sealed class PapersOverHttpTests(Api api)
         // Five weeks of silence is the record's own way of saying it ended.
         Assert.False(chapter.GetProperty("current").GetBoolean());
         Assert.Equal("ушёл из-за штрафов", chapter.GetProperty("note").GetString());
+        // The chapter says whose money it counts: empty means the app's own.
+        Assert.Equal("", chapter.GetProperty("currency").GetString());
 
         // And the reason it is private by construction: the CV endpoint must
         // never carry it. The note names the exact kind of sentence that must

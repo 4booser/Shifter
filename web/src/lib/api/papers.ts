@@ -13,6 +13,8 @@ export interface Chapter {
   rate_last: number | null;
   current: boolean;
   note: string | null;
+  /** The place's own money. Empty is the app's own currency. */
+  currency: string;
 }
 
 export const papersApi = {

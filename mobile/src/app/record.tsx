@@ -16,7 +16,7 @@ import { Press } from '@/components/motion';
 import { Colors, Palette } from '@/constants/theme';
 import { api } from '@/lib/api';
 import { t } from '@/lib/i18n';
-import { money } from '@/lib/types';
+import { money, moneyIn } from '@/lib/types';
 
 /**
  * The record and its back room, on the phone.
@@ -50,6 +50,7 @@ interface WorkHistory {
 
 interface Chapter {
   location_id: number;
+  currency: string;
   name: string;
   first_day: string | null;
   last_day: string | null;
@@ -61,6 +62,10 @@ interface Chapter {
   current: boolean;
   note: string | null;
 }
+
+/** A chapter's money in the place's own currency — ₴ on złoty is the confident lie this app does not tell. */
+const said$ = (chapter: { currency: string }, value: number) =>
+  chapter.currency !== '' ? moneyIn(chapter.currency, value) : money(value);
 
 export default function RecordScreen() {
   const scheme = useColorScheme();
@@ -212,11 +217,11 @@ export default function RecordScreen() {
                 </Text>
               </View>
               <Text style={styles.placeMeta}>
-                {chapter.days} {t('дн.')} · {money(chapter.earned)}
+                {chapter.days} {t('дн.')} · {said$(chapter, chapter.earned)}
                 {chapter.rate_first !== null &&
                   chapter.rate_last !== null &&
                   chapter.rate_last !== chapter.rate_first &&
-                  ` · ${t('ставка')} ${money(chapter.rate_first)} → ${money(chapter.rate_last)}`}
+                  ` · ${t('ставка')} ${said$(chapter, chapter.rate_first)} → ${said$(chapter, chapter.rate_last)}`}
               </Text>
 
               {editing === chapter.location_id ? (

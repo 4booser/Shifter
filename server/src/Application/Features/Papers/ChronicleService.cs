@@ -37,7 +37,9 @@ public sealed class ChronicleService
         decimal? RateFirst,
         decimal? RateLast,
         bool Current,
-        string? PrivateNote);
+        string? PrivateNote,
+        /// <summary>The place's own money. Empty is the app's own currency.</summary>
+        string Currency);
 
     public async Task<Chapter[]> ReadAsync(int userId, CancellationToken ct)
     {
@@ -106,7 +108,8 @@ public sealed class ChronicleService
                     // longer than any rota writes is the record's own way of
                     // saying it ended, whatever nobody bothered to close.
                     theirs.Length > 0 && theirs[^1].Date >= today.AddDays(-35),
-                    place.PrivateNote);
+                    place.PrivateNote,
+                    place.Currency);
             })
             .Where(chapter => chapter.DaysWorked > 0)
             .OrderByDescending(chapter => chapter.LastDay)

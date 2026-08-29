@@ -21,7 +21,7 @@ import { Alert } from '@/components/ui/bits';
  */
 export function Chronicle() {
   const { t, n, lang } = useI18n();
-  const { format } = useMoney();
+  const { formatIn } = useMoney();
 
   const [chapters, setChapters] = useState<Chapter[] | null>(null);
   const [editing, setEditing] = useState<number | null>(null);
@@ -78,7 +78,7 @@ export function Chronicle() {
                 {said(chapter.first_day)} — {chapter.current ? t('now') : said(chapter.last_day)}
               </span>
               <span className="ml-auto text-[0.8rem] text-muted tabular">
-                {n(chapter.days, 'days')} · {format(chapter.earned)}
+                {n(chapter.days, 'days')} · {formatIn(chapter.currency, chapter.earned)}
               </span>
             </div>
 
@@ -86,8 +86,8 @@ export function Chronicle() {
               chapter.rate_last !== null &&
               chapter.rate_last !== chapter.rate_first && (
                 <p className="mt-1 text-[0.8rem] text-muted">
-                  {t('Rate went from')} {format(chapter.rate_first)}/{t('h')} {t('to')}{' '}
-                  {format(chapter.rate_last)}/{t('h')}
+                  {t('Rate went from')} {formatIn(chapter.currency, chapter.rate_first)}/{t('h')} {t('to')}{' '}
+                  {formatIn(chapter.currency, chapter.rate_last)}/{t('h')}
                 </p>
               )}
 

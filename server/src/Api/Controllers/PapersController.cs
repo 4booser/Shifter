@@ -46,6 +46,7 @@ public class PapersController : ControllerBase
             rate_last = chapter.RateLast,
             current = chapter.Current,
             note = chapter.PrivateNote,
+            currency = chapter.Currency,
         }));
 
     public record NoteDto(string? note);

@@ -1031,6 +1031,10 @@ export const RU: Dictionary = {
   'The operations themselves': 'Сами операции',
   'Worth filling in': 'Дозаполнить',
   'The shelf': 'Полка',
+  'Goals closed': 'Целей закрыто',
+  'the biggest': 'самая большая',
+  'Dearest hour (all history)': 'Где час дороже (вся история)',
+
   'Who can': 'Кто может',
   'Import from a calendar (.ics)': 'Импорт из календаря (.ics)',
   'Export your Google/Apple calendar as .ics and drop it here. Nothing applies until you say so.':
@@ -3101,6 +3105,10 @@ export const UK: Dictionary = {
   'The operations themselves': 'Самі операції',
   'Worth filling in': 'Дозаповнити',
   'The shelf': 'Полиця',
+  'Goals closed': 'Цілей закрито',
+  'the biggest': 'найбільша',
+  'Dearest hour (all history)': 'Де година дорожча (вся історія)',
+
   'Who can': 'Хто може',
   'Import from a calendar (.ics)': 'Імпорт із календаря (.ics)',
   'Export your Google/Apple calendar as .ics and drop it here. Nothing applies until you say so.':

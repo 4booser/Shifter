@@ -73,6 +73,8 @@ const PERIOD_SUFFIX: Record<Raise['period'], string> = {
  * so nothing can disagree with anything.
  */
 export default function YearScreen() {
+  const [yearCheers, setYearCheers] = useState<{ amount: number }[]>([]);
+
   const router = useRouter();
   const scheme = useColorScheme();
   const palette = Colors[scheme === 'dark' ? 'dark' : 'light'];
@@ -80,6 +82,14 @@ export default function YearScreen() {
   const insets = useSafeAreaInsets();
 
   const [year, setYear] = useState(currentMonth().year);
+
+  useEffect(() => {
+    void api<{ cheers: { period_from: string; amount: number }[] }>('/shifter/v1/goals/history')
+      .then((shelf) => setYearCheers(
+        shelf.cheers.filter((cheer) => cheer.period_from.startsWith(`${year}-`)),
+      ))
+      .catch(() => setYearCheers([]));
+  }, [year]);
   const [summary, setSummary] = useState<YearSummary | null>(null);
   const [previous, setPrevious] = useState<YearSummary | null>(null);
   const [months, setMonths] = useState<{ label: string; value: number; current: boolean }[]>([]);
@@ -271,6 +281,11 @@ export default function YearScreen() {
           </Section>
 
           <Section palette={palette} title={t("Что запомнилось")}>
+            {yearCheers.length > 0 && (
+              <Fact palette={palette} emoji="🏅" title={t('Целей закрыто')}>
+                {yearCheers.length} · {t('самая большая')} {money(Math.max(...yearCheers.map((cheer) => cheer.amount)))}
+              </Fact>
+            )}
             {facts.best !== null && (
               <Fact palette={palette} emoji="🏆" title={t("Лучший день")}>
                 {said(facts.best.date)} · {money(facts.best.earned)}

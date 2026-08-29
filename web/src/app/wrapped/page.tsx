@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import { calendarApi } from '@/lib/api/calendar';
+import { api } from '@/lib/api/http';
 import { apiErrorMessage } from '@/lib/api/http';
 import { currentMonth, fromKey, todayKey } from '@/lib/calendar/calendar-date';
 import { forecastFor } from '@/lib/calendar/forecast';
@@ -58,6 +59,11 @@ function Wrapped() {
   const [storiesOpen, setStoriesOpen] = useState(false);
   const settings = useSettings((state) => state.settings);
 
+  const [shelf, setShelf] = useState<{
+    cheers: { period: string; period_from: string; amount: number }[];
+  } | null>(null);
+  const [cities, setCities] = useState<{ city: string; per_hour: number }[]>([]);
+
   useEffect(() => {
     setLoading(true);
 
@@ -71,7 +77,19 @@ function Wrapped() {
       })
       .catch((caught) => setError(apiErrorMessage(caught)))
       .finally(() => setLoading(false));
+
+    // The year's other chapters: absent where the data is, honestly.
+    void api<{ cheers: { period: string; period_from: string; amount: number }[] }>(
+      '/shifter/v1/goals/history',
+    ).then(setShelf).catch(() => setShelf(null));
+    void api<{ city: string; per_hour: number }[]>('/shifter/v1/gigs/cities')
+      .then(setCities)
+      .catch(() => setCities([]));
   }, [year]);
+
+  const yearCheers = (shelf?.cheers ?? []).filter(
+    (cheer) => cheer.period_from.startsWith(`${year}-`),
+  );
 
   const days = summary.days;
   const averages = averagesFor(summary);
@@ -422,6 +440,21 @@ function Wrapped() {
             {streak !== null && (
               <Superlative emoji="🔥" title={t('Longest streak')}>
                 {streak.length} {t('days running')} · {dayLabel(streak.from)} — {dayLabel(streak.to)}
+              </Superlative>
+            )}
+            {yearCheers.length > 0 && (
+              <Superlative emoji="🏅" title={t('Goals closed')}>
+                {yearCheers.length} · {t('the biggest')}{' '}
+                <Money
+                  value={Math.max(...yearCheers.map((cheer) => cheer.amount))}
+                  className="text-[1.15rem] font-bold"
+                />
+              </Superlative>
+            )}
+            {cities.length >= 2 && (
+              <Superlative emoji="🗺️" title={t('Dearest hour (all history)')}>
+                {cities[0].city} ·{' '}
+                <Money value={cities[0].per_hour} className="text-[1.15rem] font-bold" />/{t('h')}
               </Superlative>
             )}
             {favouriteShift !== null && (

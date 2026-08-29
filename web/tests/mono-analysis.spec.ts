@@ -190,7 +190,9 @@ describe('standing charges', () => {
     expect(found.period).toBe('month');
     expect(found.charges).toBe(3);
     expect(found.last).toBe('2026-08-05');
-    expect(found.next).toBe('2026-09-04');
+    // 30.5 rounds to 31: the honest «через месяц» lands on the 5th in
+    // every timezone now, not just west of Greenwich.
+    expect(found.next).toBe('2026-09-05');
   });
 
   it('will not call two charges a subscription', () => {

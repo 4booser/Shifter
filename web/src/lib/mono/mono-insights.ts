@@ -136,9 +136,13 @@ const median = (values: number[]): number => {
 };
 
 const addDays = (day: string, days: number): string => {
-  const at = new Date(`${day}T00:00:00`);
+  // Parsed and rendered in the same clock (UTC), deliberately: parsing local
+  // and rendering toISOString loses a day everywhere east of Greenwich —
+  // which is where every user of this app lives. Found when CI (UTC) and a
+  // Kyiv laptop disagreed about when Netflix comes round.
+  const at = new Date(`${day}T00:00:00Z`);
 
-  at.setDate(at.getDate() + days);
+  at.setUTCDate(at.getUTCDate() + days);
 
   return at.toISOString().slice(0, 10);
 };

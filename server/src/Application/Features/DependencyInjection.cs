@@ -136,6 +136,7 @@ public static class DependencyInjection
         services.AddHostedService<Shifter.Application.Features.Mail.MonthlyLetterService>();
         services.AddSingleton<IHasher, Hasher>();
         services.AddScoped<IAuthTokenIssuer, AuthTokenIssuer>();
+        services.AddSingleton<Shifter.Application.Features.Auth.Services.LoginThrottle>();
 
         // One clock for the whole app, so "today" means the same thing in the
         // reconciliation, the rate history and a place's current pay period.

@@ -11,15 +11,18 @@ public class LoginHandler : IRequestHandler<LoginDto, AuthResponseDto>
 {
     private readonly IAuthTokenIssuer _issuer;
     private readonly IUserQuery _userQuery;
+    private readonly LoginThrottle _throttle;
     private readonly ILogger<LoginHandler> _logger;
 
     public LoginHandler(
         IAuthTokenIssuer issuer,
         IUserQuery userQuery,
+        LoginThrottle throttle,
         ILogger<LoginHandler> logger)
     {
         _issuer = issuer;
         _userQuery = userQuery;
+        _throttle = throttle;
         _logger = logger;
     }
 
@@ -42,6 +45,10 @@ public class LoginHandler : IRequestHandler<LoginDto, AuthResponseDto>
         if (request.password.Any(c => !AlowedChars.Contains(c)))
             throw new ValidationException("Password must contain only letters, numbers and special characters.");
 
+        // Before the password is even looked at: a shut door answers 429 to
+        // the right password too, or it is not a door.
+        _throttle.EnsureOpen(request.login);
+
         User? user = await _userQuery.GetByLoginAsync(request.login, ct);
         
         // One message for both failures: telling them apart would let a caller
@@ -53,10 +60,14 @@ public class LoginHandler : IRequestHandler<LoginDto, AuthResponseDto>
             || !BCrypt.Net.BCrypt.Verify(request.password, user.PasswordHash))
         {
             _logger.LogWarning("Failed sign-in attempt for login {Login}.", request.login);
+            _throttle.RecordFailure(request.login);
             throw new UnauthorizedException("Invalid login or password.");
         }
 
-        // The password held; the second factor stands between it and tokens.
+        // The password held: the knocking was this person after all.
+        _throttle.Reset(request.login);
+
+        // The second factor stands between the password and tokens.
         if (TwoFactorService.Required(user))
         {
             _logger.LogInformation("User {UserId} passed the password, awaiting the second factor.", user.Id);

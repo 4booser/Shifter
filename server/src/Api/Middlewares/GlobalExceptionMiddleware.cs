@@ -39,6 +39,7 @@ public class GlobalExceptionMiddleware
             ForbiddenException => StatusCodes.Status403Forbidden,
             NotFoundException => StatusCodes.Status404NotFound,
             ConflictException => StatusCodes.Status409Conflict,
+            TooManyAttemptsException => StatusCodes.Status429TooManyRequests,
 
             System.ArgumentException => StatusCodes.Status400BadRequest,
             ArgNullException => StatusCodes.Status400BadRequest,
@@ -67,6 +68,10 @@ public class GlobalExceptionMiddleware
         context.Response.ContentType = "application/json";
         context.Response.StatusCode = statusCode;
 
+        if (exception is TooManyAttemptsException tooMany)
+            context.Response.Headers.RetryAfter =
+                ((int)Math.Ceiling(tooMany.RetryAfter.TotalSeconds)).ToString();
+
         string json = JsonSerializer.Serialize(response);
 
         await context.Response.WriteAsync(json);
@@ -81,6 +86,7 @@ public class GlobalExceptionMiddleware
             StatusCodes.Status403Forbidden => "Forbidden",
             StatusCodes.Status404NotFound => "Not Found",
             StatusCodes.Status409Conflict => "Conflict",
+            StatusCodes.Status429TooManyRequests => "Too Many Requests",
             StatusCodes.Status500InternalServerError => "Internal Server Error",
             _ => "Error"
         };

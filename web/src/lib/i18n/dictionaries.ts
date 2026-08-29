@@ -709,6 +709,67 @@ export const RU: Dictionary = {
     'Заполняется только то, что в объявлении действительно написано, и всё заполненное можно поправить.',
   'Photograph the receipt': 'Сфотографировать чек',
   'Could not read the receipt. Type it in instead.': 'Чек прочитать не удалось. Впишите вручную.',
+  'Connect monobank': 'Подключить monobank',
+  'A read-only token from': 'Токен только для чтения с',
+  'It goes from this browser straight to the bank — the Shifter server never sees it.':
+    'Он идёт из этого браузера прямо в банк — сервер Shifter его не видит.',
+  'Connect': 'Подключить',
+  'The bank refused this token. Check it was copied whole.':
+    'Банк отказал этому токену. Проверьте, что он скопирован целиком.',
+  'Could not reach the bank. Try again in a minute.':
+    'Не удалось достучаться до банка. Попробуйте через минуту.',
+  'The token can only read. Nobody can move money with it.':
+    'Токен умеет только читать. Двигать деньги им нельзя.',
+  'It is stored in this browser, not on our server. A browser is less protected than a phone’s keychain — on a shared computer, do not connect.':
+    'Он хранится в этом браузере, не на нашем сервере. Браузер защищён слабее, чем связка ключей телефона, — на общем компьютере не подключайте.',
+  'One tap at api.monobank.ua revokes it; the button here erases it together with everything downloaded.':
+    'Один тап на api.monobank.ua отзывает его; кнопка здесь стирает его вместе со всем скачанным.',
+  'Accounts': 'Счета',
+  'Disconnect and erase': 'Отключить и стереть',
+  'Refresh this month': 'Обновить этот месяц',
+  'Load three months': 'Догрузить три месяца',
+  'the bank asks to wait': 'банк просит подождать',
+  'One window a minute is the bank’s limit. Keep the tab open; closing it pauses the load.':
+    'Окно в минуту — лимит банка. Держите вкладку открытой; закроете — загрузка встанет.',
+  'The bank refused the token. It may have been revoked — issue a new one at api.monobank.ua.':
+    'Банк отказал токену. Возможно, он отозван — выпустите новый на api.monobank.ua.',
+  'Nothing loaded yet — press “Refresh this month”.':
+    'Пока ничего не загружено — нажмите «Обновить этот месяц».',
+  'Came in': 'Пришло',
+  'Went out': 'Ушло',
+  'Left': 'Осталось',
+  'Cashback returned': 'Кешбэк вернул',
+  'moved between your own accounts — neither income nor spending.':
+    'переложено между своими счетами — это не доход и не трата.',
+  'came back — a purchase and its refund cancel out.':
+    'вернулось — покупка и возврат сведены и не считаются дважды.',
+  'Where the month went': 'Куда делся месяц',
+  'everything else': 'остальное',
+  'from the balance': 'из остатка',
+  'left over': 'осталось',
+  'By category': 'По категориям',
+  'To whom': 'Кому',
+  'Standing': 'Регулярные',
+  'Limits and categories are edited on the row — your rules beat the terminal’s code.':
+    'Лимиты и категории правятся на строке — ваши правила бьют код терминала.',
+  'Nothing repeats month to month yet.':
+    'Пока ничего не повторяется из месяца в месяц.',
+  'next around': 'следующее около',
+  'Unusual this month': 'Необычное в этом месяце',
+  'Download the statement': 'Выгрузить выписку',
+  'What an hour really pays': 'Сколько на самом деле платит час',
+  'on paper': 'на бумаге',
+  'work days cost': 'рабочие дни стоили',
+  'The paper rate, less what working days themselves cost — travel, food on shift, everything spent on days you worked.':
+    'Ставка на бумаге минус то, во что обходятся сами рабочие дни: дорога, еда на смене — всё потраченное в дни, когда вы работали.',
+  'The price of a close': 'Цена закрытия',
+  'closes ended in': 'закрытий закончились',
+  'of rides home — about': 'на дорогу домой — примерно',
+  'per close, against': 'за закрытие, против',
+  'they earned.': 'которые они принесли.',
+  'Work days against days off': 'Рабочие дни против выходных',
+  'a worked day costs': 'рабочий день стоит',
+  'a day off costs': 'выходной стоит',
   'This week': 'Эта неделя',
   'Earned this week': 'Заработано за неделю',
   'Still to come': 'Ещё впереди',
@@ -3178,6 +3239,67 @@ export const UK: Dictionary = {
     'Заповнюється лише те, що в оголошенні справді написано, і все заповнене можна виправити.',
   'Photograph the receipt': 'Сфотографувати чек',
   'Could not read the receipt. Type it in instead.': 'Чек прочитати не вдалося. Впишіть вручну.',
+  'Connect monobank': 'Підключити monobank',
+  'A read-only token from': 'Токен лише для читання з',
+  'It goes from this browser straight to the bank — the Shifter server never sees it.':
+    'Він іде з цього браузера прямо в банк — сервер Shifter його не бачить.',
+  'Connect': 'Підключити',
+  'The bank refused this token. Check it was copied whole.':
+    'Банк відмовив цьому токену. Перевірте, що він скопійований цілком.',
+  'Could not reach the bank. Try again in a minute.':
+    'Не вдалося достукатися до банку. Спробуйте за хвилину.',
+  'The token can only read. Nobody can move money with it.':
+    'Токен уміє лише читати. Рухати гроші ним не можна.',
+  'It is stored in this browser, not on our server. A browser is less protected than a phone’s keychain — on a shared computer, do not connect.':
+    'Він зберігається в цьому браузері, не на нашому сервері. Браузер захищений слабше за в’язку ключів телефона — на спільному комп’ютері не підключайте.',
+  'One tap at api.monobank.ua revokes it; the button here erases it together with everything downloaded.':
+    'Один тап на api.monobank.ua відкликає його; кнопка тут стирає його разом з усім завантаженим.',
+  'Accounts': 'Рахунки',
+  'Disconnect and erase': 'Відключити і стерти',
+  'Refresh this month': 'Оновити цей місяць',
+  'Load three months': 'Довантажити три місяці',
+  'the bank asks to wait': 'банк просить зачекати',
+  'One window a minute is the bank’s limit. Keep the tab open; closing it pauses the load.':
+    'Вікно на хвилину — ліміт банку. Тримайте вкладку відкритою; закриєте — завантаження стане.',
+  'The bank refused the token. It may have been revoked — issue a new one at api.monobank.ua.':
+    'Банк відмовив токену. Можливо, він відкликаний — випустіть новий на api.monobank.ua.',
+  'Nothing loaded yet — press “Refresh this month”.':
+    'Поки нічого не завантажено — натисніть «Оновити цей місяць».',
+  'Came in': 'Надійшло',
+  'Went out': 'Пішло',
+  'Left': 'Залишилось',
+  'Cashback returned': 'Кешбек повернув',
+  'moved between your own accounts — neither income nor spending.':
+    'перекладено між своїми рахунками — це не дохід і не витрата.',
+  'came back — a purchase and its refund cancel out.':
+    'повернулося — покупка і повернення зведені й не рахуються двічі.',
+  'Where the month went': 'Куди подівся місяць',
+  'everything else': 'решта',
+  'from the balance': 'із залишку',
+  'left over': 'залишилось',
+  'By category': 'За категоріями',
+  'To whom': 'Кому',
+  'Standing': 'Регулярні',
+  'Limits and categories are edited on the row — your rules beat the terminal’s code.':
+    'Ліміти й категорії правляться на рядку — ваші правила б’ють код термінала.',
+  'Nothing repeats month to month yet.':
+    'Поки ніщо не повторюється з місяця в місяць.',
+  'next around': 'наступне близько',
+  'Unusual this month': 'Незвичне цього місяця',
+  'Download the statement': 'Вивантажити виписку',
+  'What an hour really pays': 'Скільки насправді платить година',
+  'on paper': 'на папері',
+  'work days cost': 'робочі дні коштували',
+  'The paper rate, less what working days themselves cost — travel, food on shift, everything spent on days you worked.':
+    'Ставка на папері мінус те, у що обходяться самі робочі дні: дорога, їжа на зміні — все витрачене в дні, коли ви працювали.',
+  'The price of a close': 'Ціна закриття',
+  'closes ended in': 'закриттів закінчилися',
+  'of rides home — about': 'на дорогу додому — приблизно',
+  'per close, against': 'за закриття, проти',
+  'they earned.': 'які вони принесли.',
+  'Work days against days off': 'Робочі дні проти вихідних',
+  'a worked day costs': 'робочий день коштує',
+  'a day off costs': 'вихідний коштує',
   'This week': 'Цей тиждень',
   'All time': 'За весь час',
 

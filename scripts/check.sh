@@ -27,10 +27,9 @@ npm test --silent
 # runner that could not check it must not stop everything else.
 if command -v swiftc > /dev/null 2>&1; then
   echo "── widget"
-  cd targets/widget
-  swiftc -O -o "${TMPDIR:-/tmp}/shifter-widget-check" Snapshot.swift check/main.swift
+  swiftc -O -o "${TMPDIR:-/tmp}/shifter-widget-check" \
+    targets/widget/Snapshot.swift tools/widget-check/main.swift
   "${TMPDIR:-/tmp}/shifter-widget-check"
-  cd ../..
 fi
 
 echo "── all clear"

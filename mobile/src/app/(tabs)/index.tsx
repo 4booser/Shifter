@@ -243,7 +243,6 @@ export default function CalendarScreen() {
     monthEarned: thisMonth?.earned ?? 0,
     monthGoal: null,
     monthDays: thisMonth?.worked ?? 0,
-    money: null,
   });
 
   // A page shows the neighbouring months' days in its corners, so it reads

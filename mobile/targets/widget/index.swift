@@ -7,5 +7,6 @@ struct ShifterWidgets: WidgetBundle {
     var body: some Widget {
         TodayWidget()
         MonthWidget()
+        MoneyWidget()
     }
 }

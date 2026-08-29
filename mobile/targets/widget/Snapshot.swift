@@ -92,3 +92,23 @@ func spellMoney(_ value: Double) -> String {
 
     return (value < 0 ? "−" : "") + String(grouped.reversed())
 }
+
+/// "1 день", "3 дня", "5 дней".
+///
+/// Russian counts in threes, and getting it wrong is the kind of thing that
+/// makes an app feel translated. The teens are the trap: eleven days is "дней"
+/// even though one day is "день".
+///
+/// Beside the money formatter rather than beside the widget that uses it, so
+/// the check can compile both without dragging SwiftUI in.
+func dayWord(_ count: Int) -> String {
+    let hundreds = count % 100
+
+    if hundreds >= 11 && hundreds <= 14 { return "дней" }
+
+    switch count % 10 {
+    case 1: return "день"
+    case 2, 3, 4: return "дня"
+    default: return "дней"
+    }
+}

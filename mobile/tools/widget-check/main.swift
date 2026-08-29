@@ -13,6 +13,10 @@ import Foundation
 /// four-figure range a day's work lands in.
 ///
 /// Run by scripts/check.sh wherever a Swift compiler exists.
+///
+/// It lives outside targets/ on purpose: the config plugin links every file in
+/// the target directory into the extension, and a second file called main.swift
+/// collides with the widget bundle's own @main.
 
 func expect(_ got: String, _ want: String, _ what: String, _ failures: inout Int) {
     if got != want {
@@ -139,9 +143,27 @@ func checkStaleness(_ failures: inout Int) {
     }
 }
 
+/// Russian counts in threes, and getting it wrong is the kind of thing that
+/// makes an app feel translated. The teens are the trap: eleven days is
+/// "дней" even though one day is "день".
+func checkDayWord(_ failures: inout Int) {
+    let cases: [(Int, String)] = [
+        (1, "день"), (2, "дня"), (4, "дня"), (5, "дней"),
+        (11, "дней"), (12, "дней"), (14, "дней"),
+        (21, "день"), (22, "дня"), (25, "дней"),
+        (101, "день"), (111, "дней"),
+        (0, "дней"),
+    ]
+
+    for (count, want) in cases {
+        expect(dayWord(count), want, "dayWord(\(count))", &failures)
+    }
+}
+
 var failures = 0
 
 checkMoney(&failures)
+checkDayWord(&failures)
 checkDecoder(&failures)
 checkStaleness(&failures)
 

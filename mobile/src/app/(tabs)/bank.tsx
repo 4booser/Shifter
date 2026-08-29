@@ -44,6 +44,7 @@ import { cashTipOffers, untilPayday, usualDay } from '@/lib/mono-work';
 import { CalendarDayData, DaysResponse, money, moneyIn } from '@/lib/types';
 import { chosenAccount, loadSetup, saveWatching, useMono } from '@/store/mono';
 import { watchForWage } from '@/lib/wage-watch';
+import { useWidgetMoney } from '@/lib/use-widget';
 import { t } from '@/lib/i18n';
 import { LockKind, bankLock, lockKind, lockNameBy } from '@/lib/lock';
 
@@ -337,6 +338,20 @@ function Bank() {
       committed,
     };
   }, [mono.client, mono.accountId, mono.items, periods]);
+
+  // The money half of the widget, written from the same figures this screen
+  // shows. Only from here: the calendar screen has no idea what is in
+  // anybody's bank, and a widget assembled from two screens would be a widget
+  // that disagrees with itself depending which one was opened last.
+  useWidgetMoney(
+    runway === null || mono.accountId === null
+      ? null
+      : {
+          balance: runway.state?.left ?? null,
+          untilPayday: runway.state?.days ?? null,
+          perDay: runway.state?.perDay ?? null,
+        },
+  );
 
   /**
    * How many things the bank has found that nobody has answered yet.

@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { calendarApi } from '@/lib/api/calendar';
 import { Reconciliation } from '@/lib/calendar/models';
 import { useI18n } from '@/lib/i18n';
+import { useMoney } from '@/lib/settings/money';
 import { MonoAccount, MonoStatementItem, dayOf, fromMinor } from '@/lib/mono/mono';
 import { recurring } from '@/lib/mono/mono-insights';
 import { usualDay } from '@/lib/mono/mono-work';
@@ -34,6 +35,7 @@ export function BankForecast({
   items: MonoStatementItem[];
 }) {
   const { t, lang } = useI18n();
+  const { hideAmounts } = useMoney();
   const still = useReducedMotion();
 
   const [owed, setOwed] = useState<Reconciliation | null>(null);
@@ -147,7 +149,7 @@ export function BankForecast({
             ) : (
               <>
                 {t('thinnest around')} {spellDay(runway.thinnest.day)}:{' '}
-                <CountUp value={runway.thinnest.balance} format={(v) => `₴${Math.round(v).toLocaleString('ru')}`} />
+                <CountUp value={runway.thinnest.balance} format={(v) => (hideAmounts ? '₴•••' : `₴${Math.round(v).toLocaleString('ru')}`)} />
               </>
             )}
           </div>

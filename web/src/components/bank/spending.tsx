@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 
 import { useI18n } from '@/lib/i18n';
+import { useMoney } from '@/lib/settings/money';
 import { MonoAccount, MonoStatementItem, dayOf } from '@/lib/mono/mono';
 import { statementCsv, statementFileName } from '@/lib/mono/mono-export';
 import { yearOfStanding } from '@/lib/mono/mono-shape';
@@ -95,6 +96,7 @@ export function SpendHeadline({
 }) {
   const { t } = useI18n();
   const { deltas, totals, usual, back, spentAll, spentDelta } = useSpend(items, from, to);
+  const { hideAmounts } = useMoney();
 
   if (items.length === 0) return null;
 
@@ -109,7 +111,7 @@ export function SpendHeadline({
           <div>
             <span className="field-hint">{t('Spent over this stretch')}</span>
             <div className="tabular text-[2rem] font-extrabold leading-tight text-danger">
-              <CountUp value={spentAll} format={(v) => `₴${Math.round(v).toLocaleString('ru')}`} />
+              <CountUp value={spentAll} format={(v) => (hideAmounts ? '₴•••' : `₴${Math.round(v).toLocaleString('ru')}`)} />
             </div>
             {spentDelta !== null && (
               <span
@@ -144,7 +146,7 @@ export function SpendHeadline({
               key={row.name}
               className="group relative h-full min-w-[6px]"
               style={{ flexGrow: row.total, flexBasis: 0, background: categoryStyle(row.name).hue }}
-              title={`${row.name} — ₴${Math.round(row.total).toLocaleString('ru')}`}
+              title={`${row.name} — ${hideAmounts ? '₴•••' : `₴${Math.round(row.total).toLocaleString('ru')}`}`}
             >
               {row.total / spentAll > 0.14 && (
                 <span className="pointer-events-none absolute inset-0 grid place-items-center text-[0.7rem] font-bold text-white/95">
@@ -213,7 +215,7 @@ export function SpendCategories({
               <div key={row.name} className="border-b border-border py-2 last:border-0">
                 <button
                   type="button"
-                  className="flex w-full items-center gap-2.5 text-left"
+                  className="flex w-full items-center gap-2.5 rounded-md text-left focus-visible:outline-2 focus-visible:outline-(--accent)"
                   aria-expanded={isOpen}
                   onClick={() => setOpen(isOpen ? null : row.name)}
                 >
@@ -517,6 +519,9 @@ function CategoryInside({
               value={limitDraft}
               placeholder="5000"
               onChange={(event) => onLimitDraft(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') onSaveLimit();
+              }}
             />
             <button type="button" className="btn btn-primary btn-sm" onClick={onSaveLimit}>
               {t('Keep')}
@@ -558,6 +563,7 @@ function DayRhythm({
   rules: ReturnType<typeof useMono.getState>['rules'];
 }) {
   const { t } = useI18n();
+  const { hideAmounts } = useMoney();
 
   const peak = Math.max(1, ...days.map((day) => day.total));
   const heaviest = days.reduce((best, day) => (day.total > best.total ? day : best), days[0]);
@@ -602,7 +608,7 @@ function DayRhythm({
                         : 'var(--accent)',
                   opacity: day.total === 0 ? 0.6 : day.day === heaviest?.day ? 1 : 0.78,
                 }}
-                title={`${day.day.slice(8)}.${day.day.slice(5, 7)} — ₴${Math.round(day.total).toLocaleString('ru')}`}
+                title={`${day.day.slice(8)}.${day.day.slice(5, 7)} — ${hideAmounts ? '₴•••' : `₴${Math.round(day.total).toLocaleString('ru')}`}`}
               />
             );
           })}

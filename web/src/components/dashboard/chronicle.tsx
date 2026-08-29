@@ -99,6 +99,9 @@ export function Chronicle() {
                   value={draft}
                   placeholder={t('Why it ended, for your own eyes')}
                   onChange={(event) => setDraft(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) save(chapter.location_id);
+                  }}
                 />
                 <div className="flex gap-2">
                   <button

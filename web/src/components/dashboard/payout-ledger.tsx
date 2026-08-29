@@ -153,6 +153,9 @@ export function PayoutLedger({
                     placeholder={requiredWord}
                     aria-label={t('Type the word to confirm')}
                     onChange={(event) => setWord(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' && word.trim().toUpperCase() === requiredWord) wipe();
+                    }}
                   />
                   <button
                     type="button"

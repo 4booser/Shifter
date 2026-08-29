@@ -3,6 +3,7 @@
 import { useMemo } from 'react';
 
 import { useI18n } from '@/lib/i18n';
+import { useMoney } from '@/lib/settings/money';
 import { MonoAccount, MonoStatementItem, fromMinor } from '@/lib/mono/mono';
 import { balanceCurve } from '@/lib/mono/mono-shape';
 import { ChartTip, CrossHair, useChartHover } from '@/components/charts/hover';
@@ -29,6 +30,7 @@ export function BankHero({
   to: string;
 }) {
   const { t, lang } = useI18n();
+  const { hideAmounts } = useMoney();
 
   const curve = useMemo(() => balanceCurve(items, from, to), [items, from, to]);
   const { ref, hover, onMove, onLeave } = useChartHover<{ day: string; balance: number }>();
@@ -76,7 +78,7 @@ export function BankHero({
         <div>
           <span className="field-hint">{t('On the card')}</span>
           <div className="tabular text-[1.9rem] font-bold leading-tight">
-            <CountUp value={balance} format={(v) => `₴${Math.round(v).toLocaleString('ru')}`} />
+            <CountUp value={balance} format={(v) => (hideAmounts ? '₴•••' : `₴${Math.round(v).toLocaleString('ru')}`)} />
           </div>
         </div>
 

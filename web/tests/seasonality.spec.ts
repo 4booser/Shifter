@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { CalendarDayData } from '@/lib/calendar/models';
-import { sameMonthLastYear, seasonalIndex, yearShape } from '@/lib/calendar/seasonality';
+import { sameMonthLastYear, seasonalCushion, seasonalIndex, yearShape } from '@/lib/calendar/seasonality';
 
 const day = (date: string, earned: number): CalendarDayData =>
   ({
@@ -132,5 +132,49 @@ describe('the seasonal correction', () => {
 
     expect(seasonalIndex(wild, 12)).toBe(1.5);
     expect(seasonalIndex(wild, 6)).toBe(0.5);
+  });
+});
+
+describe('the seasonal cushion', () => {
+  it('says how much of a fat month to put aside', () => {
+    const shape = yearShape(
+      [
+        ...month(2024, 12, 40_000), ...month(2025, 12, 40_000),
+        ...month(2024, 1, 20_000), ...month(2025, 1, 20_000),
+        ...month(2024, 6, 30_000), ...month(2025, 6, 30_000),
+      ],
+      '2026-03-15',
+    );
+
+    const cushion = seasonalCushion(shape);
+
+    // Only six months of shape here — below the floor, so nothing is said.
+    expect(cushion).toBeNull();
+  });
+
+  it('needs at least half a year of shape before it speaks', () => {
+    const months = [12, 1, 2, 6, 7, 8].flatMap((m) => [
+      ...month(2024, m, m === 12 ? 40_000 : m === 1 ? 18_000 : 30_000),
+      ...month(2025, m, m === 12 ? 40_000 : m === 1 ? 18_000 : 30_000),
+    ]);
+
+    const cushion = seasonalCushion(yearShape(months, '2026-03-15'))!;
+
+    expect(cushion).not.toBeNull();
+    expect(cushion.fat.map((row) => row.month)).toEqual([12]);
+    expect(cushion.lean.map((row) => row.month)).toEqual([1]);
+    expect(cushion.saveShare).toBeGreaterThan(0);
+    expect(cushion.saveShare).toBeLessThan(0.5);
+  });
+
+  it('has nothing to say about a flat year', () => {
+    // Telling somebody with a flat year to build a cushion is inventing a
+    // problem to solve.
+    const months = [1, 2, 3, 4, 5, 6].flatMap((m) => [
+      ...month(2024, m, 30_000),
+      ...month(2025, m, 30_000),
+    ]);
+
+    expect(seasonalCushion(yearShape(months, '2026-07-15'))).toBeNull();
   });
 });

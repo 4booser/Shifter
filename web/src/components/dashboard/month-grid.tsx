@@ -15,6 +15,9 @@ import {
 } from '@/lib/calendar/calendar-date';
 import { readableInk } from '@/lib/calendar/contrast';
 import { spokenDay } from '@/lib/calendar/spoken';
+import { recurring } from '@/lib/mono/mono-insights';
+import { chargesAhead } from '@/lib/mono/runway';
+import { useMono } from '@/lib/mono/store';
 import { holidaysInRange } from '@/lib/calendar/holidays';
 import { MARK_COLOURS } from '@/lib/calendar/models';
 import { useI18n } from '@/lib/i18n';
@@ -95,6 +98,34 @@ export function MonthGrid({
     () => (settings.view === 'year' ? buildYearGrid(state.month.year, settings.mondayFirst, lang) : []),
     [settings.view, state.month.year, settings.mondayFirst, lang],
   );
+
+  // The standing payments, laid over the rota. Rent on the 25th and the
+  // wage on the 27th are two facts a person holds side by side in their head
+  // and the app kept in different corners. Bank recurring is client-side and
+  // free to read; a calendar without a connected bank simply shows nothing.
+  const bankItems = useMono((state) => state.items);
+  const hydrateMono = useMono((state) => state.hydrate);
+
+  useEffect(() => {
+    hydrateMono();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const paymentDays = useMemo(() => {
+    if (bankItems.length === 0) return new Map<string, { name: string; amount: number }[]>();
+
+    const today = todayKey();
+    const twoBack = shiftDays(today, -62);
+    const standing = recurring(bankItems, twoBack, today);
+    const ahead = chargesAhead(standing, today, 62);
+    const map = new Map<string, { name: string; amount: number }[]>();
+
+    for (const charge of ahead) {
+      map.set(charge.on, [...(map.get(charge.on) ?? []), { name: charge.name, amount: charge.amount }]);
+    }
+
+    return map;
+  }, [bankItems]);
 
   const holidays = useMemo(() => {
     const from = weeks[0]?.[0]?.key ?? todayKey();
@@ -784,6 +815,19 @@ export function MonthGrid({
                   )}
                 </span>
 
+                {paymentDays.has(day.key) && (
+                  <span
+                    className="text-[0.6rem] leading-none text-warn"
+                    title={paymentDays
+                      .get(day.key)!
+                      .map((charge) => `${charge.name} · ${Math.round(charge.amount)}`)
+                      .join(', ')}
+                  >
+                    {/* One glyph, not a sum: the day cell is the rota's, and
+                        a full figure here would crowd out the work. */}
+                    ●{paymentDays.get(day.key)!.length > 1 ? '●' : ''}
+                  </span>
+                )}
                 {settings.showEarningsInCells && (state.days.get(day.key)?.earned ?? 0) > 0 && (
                   <span className="text-[0.66rem] font-semibold text-good tabular">
                     {format(state.days.get(day.key)!.earned)}

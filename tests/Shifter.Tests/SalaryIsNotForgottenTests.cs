@@ -47,6 +47,12 @@ public class SalaryIsNotForgottenTests
         // worked. Whether the log should carry a share at all is a separate
         // question from this one, and it predates this guard.
         ["DayAuditWriter.cs"] = "a per-day change log, not an income figure",
+        // A draft prices what taking extra shifts would ADD. Extra days on a
+        // weekly or monthly wage add nothing — the wage is fixed — so a
+        // ghost's per-shift pay of zero is the honest answer here, not the
+        // bug this guard exists to catch. Hourly and daily ghosts carry
+        // their price in Pay, and overtime is added separately.
+        ["DraftPricer.cs"] = "extra days on a fixed wage genuinely add nothing",
     };
 
     [Fact]

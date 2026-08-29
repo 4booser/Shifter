@@ -148,3 +148,61 @@ export function seasonalIndex(shape: MonthShape[], month: number): number | null
   // forecast into a rumour.
   return Math.min(1.5, Math.max(0.5, found.index));
 }
+
+export interface Cushion {
+  /** Months that usually run above the typical one, with the surplus share. */
+  fat: { month: number; surplus: number }[];
+  /** Months that usually run under, with the shortfall. */
+  lean: { month: number; shortfall: number }[];
+  /**
+   * Set aside this share of a fat month's earnings and the lean months even
+   * out to the typical level. One number, because a rule with one number gets
+   * followed and a table does not.
+   */
+  saveShare: number | null;
+}
+
+/**
+ * The seasonal cushion: what to put aside in December so January is livable.
+ *
+ * Their own months only, like everything seasonal here — a ski bar and an
+ * office canteen have opposite winters. And strictly a transfer between a
+ * person's own months: no yield, no products, not advice. The arithmetic is
+ * a bathtub filling and draining, nothing more.
+ *
+ * Null while the year has no shape, or while it has no lean months to save
+ * for — telling somebody with a flat year to build a cushion is inventing a
+ * problem to solve.
+ */
+export function seasonalCushion(shape: MonthShape[]): Cushion | null {
+  if (shape.length < 6) return null;
+
+  const typical = shape.reduce((sum, row) => sum + row.average, 0) / shape.length;
+
+  if (typical <= 0) return null;
+
+  const fat = shape
+    .filter((row) => row.average > typical * 1.08)
+    .map((row) => ({ month: row.month, surplus: row.average - typical }));
+
+  const lean = shape
+    .filter((row) => row.average < typical * 0.92)
+    .map((row) => ({ month: row.month, shortfall: typical - row.average }));
+
+  if (fat.length === 0 || lean.length === 0) return null;
+
+  const surplusTotal = fat.reduce((sum, row) => sum + row.surplus, 0);
+  const shortfallTotal = lean.reduce((sum, row) => sum + row.shortfall, 0);
+  const fatEarnings = fat.reduce((sum, row) => sum + row.surplus + typical, 0);
+
+  // The share of a fat month's whole take that covers the lean months' whole
+  // gap — capped where the gap is deeper than the surplus, because "save
+  // more than the surplus" is not advice, it is arithmetic failing politely.
+  const needed = Math.min(shortfallTotal, surplusTotal);
+
+  return {
+    fat,
+    lean,
+    saveShare: Math.round((needed / fatEarnings) * 100) / 100,
+  };
+}

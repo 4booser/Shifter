@@ -343,4 +343,43 @@ public sealed class PromisesOverHttpTests(Api api)
             await real.Content.ReadAsStringAsync(),
             await empty.Content.ReadAsStringAsync());
     }
+
+    [Fact]
+    public async Task A_draft_fifth_shift_prices_dearer_than_a_first_one()
+    {
+        // The one thing a head gets wrong pricing a подработка: the fifth
+        // shift of a week crosses the overtime line the first four built up
+        // to. Only the server can see both halves, and it must write nothing.
+        var (client, _) = await api.SignInAsync("draft");
+        var place = await PlaceAsync(client, "Бар", overtimeAfter: 40, overtimeMultiplier: 1.5m);
+        var shift = await ShiftAsync(client, "Смена", place, 100m, "10:00", "20:00");
+
+        // Four real ten-hour days: forty hours, the line exactly reached.
+        foreach (var day in new[] { 6, 7, 8, 9 })
+            (await WorkAsync(client, Day(day), shift)).EnsureSuccessStatusCode();
+
+        var lone = await Read(await client.PostAsJsonAsync(
+            "/shifter/v1/days/price",
+            new { shift_id = shift, dates = new[] { "2026-04-20" } }));
+
+        var fifth = await Read(await client.PostAsJsonAsync(
+            "/shifter/v1/days/price",
+            new { shift_id = shift, dates = new[] { Day(10) } }));
+
+        // Alone in an empty week: a thousand, no premium.
+        Assert.Equal(1_000m, lone.GetProperty("total").GetDecimal());
+        Assert.Equal(0m, lone.GetProperty("overtime_extra").GetDecimal());
+
+        // Into the loaded week: every hour is past the line, half again on top.
+        Assert.Equal(1_000m, fifth.GetProperty("base_pay").GetDecimal());
+        Assert.Equal(500m, fifth.GetProperty("overtime_extra").GetDecimal());
+        Assert.Equal(1_500m, fifth.GetProperty("total").GetDecimal());
+
+        // And nothing was written: the range still holds four days.
+        var range = await RangeAsync(client, Day(1), Day(30));
+
+        Assert.Equal(4, range.GetProperty("days_worked").GetInt32());
+        Assert.Equal(0m, range.GetProperty("planned_earned").GetDecimal());
+    }
 }
+

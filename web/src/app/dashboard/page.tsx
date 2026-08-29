@@ -20,6 +20,7 @@ import {
 import { Shell } from '@/components/layout/shell';
 import { FirstRun } from '@/components/dashboard/first-run';
 import { DayPanel } from '@/components/dashboard/day-panel';
+import { DraftWeek } from '@/components/dashboard/draft-week';
 import { MonthGrid } from '@/components/dashboard/month-grid';
 import { Sidebar } from '@/components/dashboard/sidebar';
 import { InsightsPanel } from '@/components/dashboard/insights-panel';
@@ -320,6 +321,7 @@ function Dashboard() {
           {/* The page used to trail off under the grid; the day in words
               belongs exactly there. */}
           {!needsSetup && <DailyBrief />}
+          {!needsSetup && <DraftWeek />}
         </div>
         <div className="order-2 w-full flex-none lg:order-none lg:w-72 xl:w-80" data-tour="daypanel">
           <DayPanel />

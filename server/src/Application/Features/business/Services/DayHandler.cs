@@ -645,7 +645,12 @@ public partial class DayHandler : IDayHandler
     /// why none of it ever reached the per-place figures — and therefore never
     /// reached tax, holiday accrual or the reconciliation's "expected".
     /// </summary>
-    private static Dictionary<int, (double Hours, decimal Extra)> OvertimeByPlace(
+    /// <summary>
+    /// Public for the same reason PeriodSalary is: it is the only correct way
+    /// to count the premium, and the draft pricer needs to run it over a week
+    /// that is part real and part hypothetical.
+    /// </summary>
+    public static Dictionary<int, (double Hours, decimal Extra)> OvertimeByPlace(
         Day[] days,
         Dictionary<int, Location> locations,
         DateOnly? from = null,

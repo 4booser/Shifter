@@ -802,6 +802,27 @@ export const RU: Dictionary = {
   'Lock: on': 'Замок: включён',
   'Lock: off': 'Замок: выключен',
   'Bank': 'Банк',
+  'Until the next money': 'До следующих денег',
+  'runs dry around': 'кончатся примерно',
+  'thinnest around': 'тоньше всего примерно',
+  'an ordinary day costs': 'обычный день стоит',
+  'A forecast, and drawn like one: known payments land on their dates, the days between cost your usual median. Nothing here is a promise.':
+    'Прогноз, и нарисован как прогноз: известные платежи ложатся на свои даты, дни между ними стоят вашу обычную медиану. Ничего здесь не обещание.',
+  'Set aside about': 'Откладывайте примерно',
+  'evens out to an ordinary month. Your own months moved between themselves, nothing cleverer.':
+    'выравнивается до обычного месяца. Ваши же месяцы, переложенные между собой, — ничего умнее.',
+  'What if I take these shifts': 'А если возьму эти смены',
+  'Try it': 'Прикинуть',
+  'Sketch a fortnight before agreeing to it. Priced by the server against your real week — the fifth shift knows about the four before it.':
+    'Накидайте две недели до того, как согласиться. Цену считает сервер по вашей настоящей неделе — пятая смена знает о четырёх до неё.',
+  'of this crosses the overtime line': 'из них — за чертой сверхурочных',
+  'on top of the base.': 'сверх базы.',
+  'Turn into a plan': 'Превратить в план',
+  'Drop the draft': 'Сбросить черновик',
+  'Placed as planned shifts — the calendar has them now.':
+    'Поставлено плановыми сменами — они уже в календаре.',
+  'Ghosts cost nothing and save nothing. The price is the server’s, against the real week they would join.':
+    'Призраки ничего не стоят и ничего не сохраняют. Цена — серверная, по настоящей неделе, в которую они встали бы.',
   'This week': 'Эта неделя',
   'Earned this week': 'Заработано за неделю',
   'Still to come': 'Ещё впереди',
@@ -3364,6 +3385,27 @@ export const UK: Dictionary = {
   'Lock: on': 'Замок: увімкнено',
   'Lock: off': 'Замок: вимкнено',
   'Bank': 'Банк',
+  'Until the next money': 'До наступних грошей',
+  'runs dry around': 'скінчаться приблизно',
+  'thinnest around': 'найтонше приблизно',
+  'an ordinary day costs': 'звичайний день коштує',
+  'A forecast, and drawn like one: known payments land on their dates, the days between cost your usual median. Nothing here is a promise.':
+    'Прогноз, і намальований як прогноз: відомі платежі лягають на свої дати, дні між ними коштують вашу звичну медіану. Ніщо тут не обіцянка.',
+  'Set aside about': 'Відкладайте приблизно',
+  'evens out to an ordinary month. Your own months moved between themselves, nothing cleverer.':
+    'вирівнюється до звичайного місяця. Ваші ж місяці, перекладені між собою, — нічого розумнішого.',
+  'What if I take these shifts': 'А якщо візьму ці зміни',
+  'Try it': 'Прикинути',
+  'Sketch a fortnight before agreeing to it. Priced by the server against your real week — the fifth shift knows about the four before it.':
+    'Накидайте два тижні до того, як погодитись. Ціну рахує сервер по вашому справжньому тижню — п’ята зміна знає про чотири до неї.',
+  'of this crosses the overtime line': 'з них — за межею понаднормових',
+  'on top of the base.': 'понад базу.',
+  'Turn into a plan': 'Перетворити на план',
+  'Drop the draft': 'Скинути чернетку',
+  'Placed as planned shifts — the calendar has them now.':
+    'Поставлено плановими змінами — вони вже в календарі.',
+  'Ghosts cost nothing and save nothing. The price is the server’s, against the real week they would join.':
+    'Привиди нічого не коштують і нічого не зберігають. Ціна — серверна, по справжньому тижню, в який вони стали б.',
   'This week': 'Цей тиждень',
   'All time': 'За весь час',
 

@@ -6,6 +6,7 @@ import { useI18n } from '@/lib/i18n';
 import { MonoAccount, MonoStatementItem, fromMinor } from '@/lib/mono/mono';
 import { balanceCurve } from '@/lib/mono/mono-shape';
 import { Money } from '@/components/ui/bits';
+import { CountUp } from '@/components/ui/motion';
 
 /**
  * The top of the bank page: the balance, and the month's curve under it.
@@ -73,7 +74,7 @@ export function BankHero({
         <div>
           <span className="field-hint">{t('On the card')}</span>
           <div className="tabular text-[1.9rem] font-bold leading-tight">
-            <Money value={balance} />
+            <CountUp value={balance} format={(v) => `₴${Math.round(v).toLocaleString('ru')}`} />
           </div>
         </div>
 

@@ -13,6 +13,7 @@ import { Alert, Money } from '@/components/ui/bits';
 import { BankConnect } from '@/components/bank/connect';
 import { BankHero } from '@/components/bank/hero';
 import { BankLock, bankLockEnabled, setBankLock } from '@/components/bank/lock';
+import { BankForecast } from '@/components/bank/forecast';
 import { BankShape } from '@/components/bank/shape';
 import { BankWage } from '@/components/bank/wage';
 import { BankSpending } from '@/components/bank/spending';
@@ -181,6 +182,9 @@ export default function BankPage() {
 
             {/* ==== The wage, if one looks to have landed ==== */}
             <BankWage items={mono.items} />
+
+            {/* ==== Дожить до зарплаты: the one forward-looking chart ==== */}
+            <BankForecast account={account ?? null} items={mono.items} />
 
             {/* ==== Month picker ==== */}
             <div className="flex items-center justify-between">

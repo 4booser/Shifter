@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { calendarApi } from '@/lib/api/calendar';
 import { todayKey } from '@/lib/calendar/calendar-date';
 import { CalendarDayData } from '@/lib/calendar/models';
-import { sameMonthLastYear, seasonalIndex, yearShape } from '@/lib/calendar/seasonality';
+import { sameMonthLastYear, seasonalCushion, seasonalIndex, yearShape } from '@/lib/calendar/seasonality';
 import { useI18n } from '@/lib/i18n';
 import { Money } from '@/components/ui/bits';
 
@@ -117,6 +117,28 @@ export function Seasonality() {
           })}
         </div>
       )}
+
+      {/* The cushion: the one actionable sentence a second year of records
+          buys. Strictly a transfer between a person's own months — no yield,
+          no products, no advice. */}
+      {(() => {
+        const cushion = seasonalCushion(shape);
+
+        if (cushion === null || cushion.saveShare === null || cushion.saveShare <= 0) return null;
+
+        const spellMonths = (rows: { month: number }[]) =>
+          rows.map((row) => t(MONTHS[row.month - 1])).join(', ');
+
+        return (
+          <p className="mt-3 rounded-(--radius) bg-(--accent-soft) px-3 py-2 text-[0.86rem]">
+            {t('Set aside about')}{' '}
+            <strong className="tabular">{Math.round(cushion.saveShare * 100)}%</strong>{' '}
+            {t('of')} {spellMonths(cushion.fat)} —{' '}
+            {t('and')} {spellMonths(cushion.lean)}{' '}
+            {t('evens out to an ordinary month. Your own months moved between themselves, nothing cleverer.')}
+          </p>
+        );
+      })()}
 
       {lastYear !== null && (
         <dl className="mt-3 flex flex-col gap-1 text-[0.86rem]">

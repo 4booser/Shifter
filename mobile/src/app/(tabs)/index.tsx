@@ -239,6 +239,7 @@ export default function CalendarScreen() {
 
   useWidget({
     today: todayIn(thisMonth?.days ?? []),
+    days: thisMonth?.days ?? [],
     monthLabel: monthLabel(currentMonth()),
     monthEarned: thisMonth?.earned ?? 0,
     monthGoal: null,

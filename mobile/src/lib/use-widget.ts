@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { todayKey } from '@/lib/calendar';
 import { bankLock, lockStore } from '@/lib/lock';
 import { CalendarDayData } from '@/lib/types';
-import { WidgetMoney, WidgetMonth, WidgetToday, buildSnapshot } from '@/lib/widget';
+import { WidgetMoney, WidgetMonth, WidgetToday, buildSnapshot, nextShift } from '@/lib/widget';
 import { publishSnapshot } from '@/lib/widget-publish';
 
 /**
@@ -44,6 +44,10 @@ async function publish(): Promise<void> {
     buildSnapshot({
       now: new Date(),
       hidden: locked,
+      // One sign for the whole widget. A person paid in two currencies has a
+      // bigger question than a home screen can answer, and the app's own
+      // headline figures already pick one.
+      currency: '₴',
       bankHidden: bankLocked,
       today: lastToday,
       month: lastMonth,
@@ -56,12 +60,18 @@ async function publish(): Promise<void> {
 export function useWidget(input: {
   /** Today's row, where the loaded month contains it. */
   today: CalendarDayData | undefined;
+  /** The month's days, for finding what comes after today. */
+  days: CalendarDayData[];
   monthLabel: string;
   monthEarned: number;
   monthGoal: number | null;
   monthDays: number;
 }): void {
-  const { today, monthLabel, monthEarned, monthGoal, monthDays } = input;
+  const { today, days, monthLabel, monthEarned, monthGoal, monthDays } = input;
+
+  // Only worth working out where today has nothing on it: a person mid-shift
+  // is not asking what is next.
+  const next = (today?.shifts.length ?? 0) > 0 ? null : nextShift(days, todayKey());
 
   const shift = today?.shifts.find((entry) => entry.worked) ?? today?.shifts[0] ?? null;
 
@@ -71,6 +81,8 @@ export function useWidget(input: {
   const signature = JSON.stringify([
     today?.date,
     today?.earned,
+    next?.inDays,
+    next?.name,
     shift?.name,
     shift?.start_time,
     shift?.end_time,
@@ -91,6 +103,7 @@ export function useWidget(input: {
       // figure is what it would pay, and a number on a home screen before the
       // shift is a promise this trade breaks often enough without our help.
       earned: shift?.worked === true ? (today?.earned ?? null) : null,
+      next,
     };
 
     lastMonth = { label: monthLabel, earned: monthEarned, goal: monthGoal, days: monthDays };

@@ -43,7 +43,7 @@ struct MonthView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .containerBackground(for: .widget) { Color("$widgetBackground") }
+        .containerBackground(for: .widget) { Color.shifterSurface }
     }
 
     @ViewBuilder
@@ -58,21 +58,33 @@ struct MonthView: View {
 
             Spacer()
 
-            Text("\(month.days) смен")
-                .font(.system(size: 10, weight: .medium))
-                .foregroundStyle(.secondary)
+            // The count only sits up here while the money is the headline.
+            // Locked, it becomes the headline itself and printing it twice
+            // would be the widget padding itself out.
+            if month.earned != nil {
+                Text("\(month.days) \(shiftWord(month.days))")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(.secondary)
+            }
         }
 
         if let earned = month.earned {
-            Text(spellMoney(earned))
+            Text(spellMoney(earned, snapshot.currency))
                 .font(.system(size: 30, weight: .bold))
                 .minimumScaleFactor(0.6)
                 .lineLimit(1)
         } else {
-            // Hidden, not zero. The shape of the month is still worth showing
-            // to somebody who asked for the figures to stay off the screen.
-            Text("•••")
+            // The app lock is on. A row of dots where the money was leaves an
+            // almost empty rectangle, which reads as broken rather than as
+            // private — so what is left becomes the headline instead. How much
+            // somebody worked is not a figure anybody minds a stranger seeing.
+            Text("\(month.days) \(shiftWord(month.days))")
                 .font(.system(size: 30, weight: .bold))
+                .minimumScaleFactor(0.6)
+                .lineLimit(1)
+
+            Text("суммы скрыты")
+                .font(.system(size: 11))
                 .foregroundStyle(.secondary)
         }
 
@@ -86,7 +98,7 @@ struct MonthView: View {
                     Capsule()
                         .fill(Color.secondary.opacity(0.18))
                     Capsule()
-                        .fill(Color("$accent"))
+                        .fill(Color.shifterAccent)
                         .frame(width: max(3, geometry.size.width * share))
                 }
             }
@@ -101,7 +113,7 @@ struct MonthView: View {
 
                 // What is left, which is the number somebody actually acts on
                 // — nobody schedules a shift because they are at 68 per cent.
-                Text("ещё \(spellMoney(max(0, goal - earned)))")
+                Text("ещё \(spellMoney(max(0, goal - earned), snapshot.currency))")
                     .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(.secondary)
             }

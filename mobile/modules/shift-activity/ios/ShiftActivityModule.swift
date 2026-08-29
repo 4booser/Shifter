@@ -45,7 +45,8 @@ public class ShiftActivityModule: Module {
 
             let attributes = ShiftActivityAttributes(
                 name: state["name"] as? String ?? "Смена",
-                symbol: state["symbol"] as? String)
+                symbol: state["symbol"] as? String,
+                currency: state["currency"] as? String)
 
             return try? Activity.request(
                 attributes: attributes,

@@ -36,6 +36,7 @@ export function activityState(
   return {
     name: shift.name,
     symbol: shift.symbol,
+    currency: '₴',
     startedAt: shift.startedAt,
     endsAt: shift.plannedEnd,
     breakSeconds: breakSeconds(shift, now),

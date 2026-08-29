@@ -40,7 +40,11 @@ struct MoneyView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             if let money = entry.snapshot?.money {
-                content(money, stale: entry.snapshot?.stale == true, age: entry.snapshot?.age ?? 0)
+                content(
+                    money,
+                    currency: entry.snapshot?.currency,
+                    stale: entry.snapshot?.stale == true,
+                    age: entry.snapshot?.age ?? 0)
             } else if entry.snapshot != nil {
                 // Connected to the app but no bank behind it — or the bank tab
                 // is locked. Both are the person's own choice and neither is
@@ -56,18 +60,23 @@ struct MoneyView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .containerBackground(for: .widget) { Color("$widgetBackground") }
+        .containerBackground(for: .widget) { Color.shifterSurface }
     }
 
     @ViewBuilder
-    private func content(_ money: Snapshot.Money, stale: Bool, age: Int) -> some View {
+    private func content(
+        _ money: Snapshot.Money,
+        currency: String?,
+        stale: Bool,
+        age: Int
+    ) -> some View {
         Text("Остаток")
             .font(.system(size: 10, weight: .semibold))
             .textCase(.uppercase)
             .foregroundStyle(.secondary)
 
         if let balance = money.balance {
-            Text(spellMoney(balance))
+            Text(spellMoney(balance, currency))
                 .font(.system(size: 24, weight: .bold))
                 .minimumScaleFactor(0.6)
                 .lineLimit(1)
@@ -93,9 +102,9 @@ struct MoneyView: View {
             // The number nobody works out for themselves, and the reason the
             // other two are worth showing together.
             if let perDay = money.perDay, perDay > 0 {
-                Text("\(spellMoney(perDay)) в день")
+                Text("\(spellMoney(perDay, currency)) в день")
                     .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(Color("$accent"))
+                    .foregroundStyle(Color.shifterAccent)
             }
         } else {
             Text("Дата выплаты не задана")

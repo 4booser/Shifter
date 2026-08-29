@@ -26,6 +26,8 @@ export interface ActivityState {
   /** The shift's name, as the person calls it. */
   name: string;
   symbol: string | null;
+  /** The sign in front of a figure, so the lock screen does not guess it. */
+  currency: string;
   /** ISO instant the clock started. The lock screen counts from it by itself. */
   startedAt: string;
   /** ISO instant it is meant to end, for the bar that fills. */

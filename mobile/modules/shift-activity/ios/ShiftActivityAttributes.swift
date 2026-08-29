@@ -49,8 +49,13 @@ public struct ShiftActivityAttributes: ActivityAttributes {
     public var name: String
     public var symbol: String?
 
-    public init(name: String, symbol: String?) {
+    /// The sign the app puts in front of a figure, so the lock screen does not
+    /// have to guess at somebody's currency.
+    public var currency: String?
+
+    public init(name: String, symbol: String?, currency: String?) {
         self.name = name
         self.symbol = symbol
+        self.currency = currency
     }
 }

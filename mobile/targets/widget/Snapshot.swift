@@ -9,6 +9,9 @@ import Foundation
 struct Snapshot: Decodable {
     let at: Date
     let hidden: Bool
+    /// The sign the app puts in front of a figure. Optional so a snapshot
+    /// written by an older app still decodes — the two ship separately.
+    let currency: String?
     let today: Today
     let month: Month
     let money: Money?
@@ -19,6 +22,16 @@ struct Snapshot: Decodable {
         let end: String?
         let worked: Bool
         let earned: Double?
+        /// The next shift there is, where today has none. Optional so an
+        /// older app's snapshot still decodes.
+        let next: Next?
+    }
+
+    struct Next: Decodable {
+        /// Days from today. One is tomorrow.
+        let inDays: Int
+        let name: String
+        let start: String
     }
 
     struct Month: Decodable {
@@ -68,7 +81,8 @@ enum SharedStore {
     }
 }
 
-/// Money as the app spells it: a space between the thousands, no kopecks.
+/// Money as the app spells it: the sign in front, a space between the
+/// thousands, no kopecks.
 ///
 /// Grouped by hand rather than through NumberFormatter, which honours the
 /// device locale's minimum grouping digits and therefore renders 42 300 with a
@@ -78,7 +92,7 @@ enum SharedStore {
 ///
 /// The currency sign is deliberately absent. The app knows the currency and the
 /// widget would only be guessing at it.
-func spellMoney(_ value: Double) -> String {
+func spellMoney(_ value: Double, _ currency: String? = nil) -> String {
     let whole = abs(value.rounded())
     let digits = String(Int(whole))
 
@@ -90,7 +104,9 @@ func spellMoney(_ value: Double) -> String {
         grouped.append(digit)
     }
 
-    return (value < 0 ? "−" : "") + String(grouped.reversed())
+    // An older app sent no sign at all. A bare number is better than a wrong
+    // one, so the sign is simply absent rather than assumed to be hryvnia.
+    return (currency ?? "") + (value < 0 ? "−" : "") + String(grouped.reversed())
 }
 
 /// "1 день", "3 дня", "5 дней".
@@ -111,4 +127,27 @@ func dayWord(_ count: Int) -> String {
     case 2, 3, 4: return "дня"
     default: return "дней"
     }
+}
+
+/// "1 смена", "3 смены", "17 смен".
+func shiftWord(_ count: Int) -> String {
+    let hundreds = count % 100
+
+    if hundreds >= 11 && hundreds <= 14 { return "смен" }
+
+    switch count % 10 {
+    case 1: return "смена"
+    case 2, 3, 4: return "смены"
+    default: return "смен"
+    }
+}
+
+/// "завтра", "через 3 дня" — how far off the next shift is, said the way a
+/// person would say it.
+func spellWhen(_ days: Int) -> String {
+    if days <= 0 { return "сегодня" }
+    if days == 1 { return "завтра" }
+    if days == 2 { return "послезавтра" }
+
+    return "через \(days) \(dayWord(days))"
 }

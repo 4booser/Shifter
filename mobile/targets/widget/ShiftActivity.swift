@@ -30,7 +30,7 @@ struct ShiftActivity: Widget {
 
                 DynamicIslandExpandedRegion(.trailing) {
                     if let earned = context.state.earned {
-                        Text(spellMoney(earned))
+                        Text(spellMoney(earned, context.attributes.currency))
                             .font(.system(size: 15, weight: .bold))
                             .monospacedDigit()
                     }
@@ -118,7 +118,7 @@ private struct LockScreenView: View {
                 shiftClock(context.state, size: 26)
 
                 if let earned = context.state.earned {
-                    Text(spellMoney(earned))
+                    Text(spellMoney(earned, context.attributes.currency))
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundStyle(.secondary)
                         .monospacedDigit()

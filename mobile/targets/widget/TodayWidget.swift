@@ -52,7 +52,7 @@ struct TodayView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .containerBackground(for: .widget) { Color("$widgetBackground") }
+        .containerBackground(for: .widget) { Color.shifterSurface }
     }
 
     @ViewBuilder
@@ -62,7 +62,7 @@ struct TodayView: View {
         if let shift = today.shift {
             HStack(spacing: 4) {
                 Circle()
-                    .fill(today.worked ? Color.secondary : Color("$accent"))
+                    .fill(today.worked ? Color.secondary : Color.shifterAccent)
                     .frame(width: 6, height: 6)
                 Text(today.worked ? "Отработана" : "Сегодня")
                     .font(.system(size: 10, weight: .semibold))
@@ -85,7 +85,7 @@ struct TodayView: View {
             // Only what the day has actually earned, and only once it has.
             // Nothing here predicts.
             if let earned = today.earned, earned > 0 {
-                Text(spellMoney(earned))
+                Text(spellMoney(earned, snapshot.currency))
                     .font(.system(size: 20, weight: .bold))
                     .minimumScaleFactor(0.7)
                     .lineLimit(1)
@@ -100,17 +100,32 @@ struct TodayView: View {
                 .textCase(.uppercase)
                 .foregroundStyle(.secondary)
 
-            // A day off is a fact worth stating rather than an absence. The
-            // app itself stopped drawing a dash here for the same reason.
-            Text("Ничего не стоит")
-                .font(.system(size: 17, weight: .bold))
-                .lineLimit(2)
+            // What is next, which is what somebody actually looks at a
+            // calendar for on their day off — and the same answer the app's
+            // own tile gives, so the two cannot disagree.
+            if let next = today.next {
+                Text(spellWhen(next.inDays))
+                    .font(.system(size: 17, weight: .bold))
+                    .lineLimit(1)
+
+                Text("\(next.name), \(next.start)")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            } else {
+                // Nothing planned is its own honest answer, and not one to
+                // dress up: a fortnight of empty rota is worth noticing.
+                Text("Дальше пусто")
+                    .font(.system(size: 17, weight: .bold))
+                    .lineLimit(1)
+            }
 
             Spacer(minLength: 0)
 
-            Text("\(snapshot.month.days) смен в \(snapshot.month.label)")
+            Text("\(snapshot.month.days) \(shiftWord(snapshot.month.days)) за \(snapshot.month.label)")
                 .font(.system(size: 12))
                 .foregroundStyle(.secondary)
+                .lineLimit(1)
         }
 
         if snapshot.stale {

@@ -43,13 +43,21 @@ func checkMoney(_ failures: inout Int) {
     for (value, want) in cases {
         expect(spellMoney(value), want, "spellMoney(\(value))", &failures)
     }
+
+    // The sign goes in front, the way the app writes it.
+    expect(spellMoney(1840, "₴"), "₴1 840", "spellMoney with a sign", &failures)
+    expect(spellMoney(1840, "zł"), "zł1 840", "spellMoney in another currency", &failures)
+
+    // A snapshot from an older app carries no sign at all. A bare number is
+    // better than a wrong one, so hryvnia is not assumed.
+    expect(spellMoney(1840, nil), "1 840", "spellMoney without a sign", &failures)
 }
 
 func checkDecoder(_ failures: inout Int) {
     // The exact shape src/lib/widget.ts writes, including the ISO date, the
     // Cyrillic, and every optional in its null form.
     let full = """
-    {"at":"2026-08-29T07:43:24.267Z","hidden":false,
+    {"at":"2026-08-29T07:43:24.267Z","hidden":false,"currency":"₴",
      "today":{"shift":"Вечер","start":"18:00","end":"02:00","worked":true,"earned":1840},
      "month":{"label":"август","earned":42300,"goal":60000,"days":17},
      "money":{"balance":8420,"untilPayday":6,"perDay":1403}}
@@ -68,7 +76,7 @@ func checkDecoder(_ failures: inout Int) {
 
     expect(snapshot.today.shift ?? "—", "Вечер", "today.shift", &failures)
     expect(snapshot.month.label, "август", "month.label", &failures)
-    expect(spellMoney(snapshot.money?.balance ?? 0), "8 420", "money.balance", &failures)
+    expect(spellMoney(snapshot.money?.balance ?? 0, snapshot.currency), "₴8 420", "money.balance", &failures)
 
     // The locked shape: every figure absent, the shape intact. A widget that
     // could not read this would draw zeroes over somebody's hidden wages.
@@ -160,9 +168,36 @@ func checkDayWord(_ failures: inout Int) {
     }
 }
 
+func checkShiftWord(_ failures: inout Int) {
+    let cases: [(Int, String)] = [
+        (1, "смена"), (2, "смены"), (4, "смены"), (5, "смен"),
+        (11, "смен"), (13, "смен"), (17, "смен"),
+        (21, "смена"), (22, "смены"), (0, "смен"),
+    ]
+
+    for (count, want) in cases {
+        expect(shiftWord(count), want, "shiftWord(\(count))", &failures)
+    }
+}
+
+/// How far off the next shift is, said the way a person says it.
+func checkWhen(_ failures: inout Int) {
+    let cases: [(Int, String)] = [
+        (0, "сегодня"), (1, "завтра"), (2, "послезавтра"),
+        (3, "через 3 дня"), (5, "через 5 дней"), (11, "через 11 дней"),
+        (21, "через 21 день"),
+    ]
+
+    for (days, want) in cases {
+        expect(spellWhen(days), want, "spellWhen(\(days))", &failures)
+    }
+}
+
 var failures = 0
 
 checkMoney(&failures)
+checkWhen(&failures)
+checkShiftWord(&failures)
 checkDayWord(&failures)
 checkDecoder(&failures)
 checkStaleness(&failures)

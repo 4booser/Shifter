@@ -59,6 +59,8 @@ import {
 } from '@/lib/types';
 import { WorkPlace } from '@/lib/places';
 import { LiveShift, useLive } from '@/store/live';
+import { useAutoStart } from '@/store/autostart';
+import { dueAutoStart } from '@/lib/autostart';
 import { ApiError } from '@/lib/api';
 import { heldDays, Pending } from '@/lib/outbox';
 import { useOutbox } from '@/store/outbox';
@@ -303,6 +305,70 @@ export default function CalendarScreen() {
 
     return { hours, limit: limits.length > 0 ? Math.min(...limits) : null };
   }, [byDate, today, templates, places]);
+
+  // The shifts that start themselves, checked on focus and on a slow tick.
+  //
+  // A tick rather than a timer to the exact second: the app may be closed at
+  // 18:00 and opened at 18:20, and the same check answers both — the decision
+  // logic backdates the clock to the chosen hour either way.
+  const autoRules = useAutoStart((state) => state.rules);
+  const autoFired = useAutoStart((state) => state.fired);
+  const hydrateAuto = useAutoStart((state) => state.hydrate);
+  const markFired = useAutoStart((state) => state.markFired);
+
+  useEffect(() => {
+    void hydrateAuto();
+  }, [hydrateAuto]);
+
+  useEffect(() => {
+    const check = () => {
+      const planned = (byDate.get(today)?.shifts ?? [])
+        .filter((entry) => !entry.worked)
+        .map((entry) => ({ shiftId: entry.shift_id }));
+
+      const due = dueAutoStart({
+        rules: autoRules,
+        planned,
+        liveRunning: useLive.getState().live !== null,
+        firedToday: autoFired.day === today ? autoFired.shiftIds : [],
+        now: Date.now(),
+        today,
+      });
+
+      if (due === null) return;
+
+      const plan = byDate.get(today)?.shifts.find((entry) => entry.shift_id === due.shiftId);
+      const template = templates.find((entry) => entry.id === due.shiftId);
+
+      if (plan === undefined) return;
+
+      // Fired before started, so a crash between the two cannot loop the
+      // start — the worse failure is starting twice, not missing once.
+      markFired(due.shiftId, today);
+
+      startLive({
+        date: today,
+        shiftId: plan.shift_id,
+        name: plan.name,
+        symbol: plan.symbol,
+        // The chosen hour, not the moment the app opened: an auto-start is a
+        // statement about when work began.
+        startedAt: due.startedAt,
+        hourlyRate:
+          template !== undefined && template.salary_period === 'hour'
+            ? template.salary_amount
+            : null,
+        plannedStart: plan.start_time,
+        plannedEnd: plan.end_time,
+      });
+    };
+
+    check();
+
+    const tick = setInterval(check, 30_000);
+
+    return () => clearInterval(tick);
+  }, [autoRules, autoFired, byDate, today, templates, startLive, markFired]);
 
   const startable = useMemo(() => {
     const plan = byDate.get(today)?.shifts.find((entry) => !entry.worked);

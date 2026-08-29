@@ -16,6 +16,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Press } from '@/components/motion';
+import { useAutoStart } from '@/store/autostart';
 import { Colors, Palette } from '@/constants/theme';
 import { api, ApiError } from '@/lib/api';
 import { EventKind, EventTemplate, money, rateLine, ShiftTemplate } from '@/lib/types';
@@ -58,6 +59,22 @@ export default function TemplatesScreen() {
   const [editing, setEditing] = useState<ShiftTemplate | 'new' | null>(null);
   const [editingEvent, setEditingEvent] = useState<EventTemplate | 'new' | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const autoRules = useAutoStart((state) => state.rules);
+  const setAutoRule = useAutoStart((state) => state.setRule);
+  const hydrateAuto = useAutoStart((state) => state.hydrate);
+
+  useEffect(() => {
+    void hydrateAuto();
+  }, [hydrateAuto]);
+
+  /** "18:00" ± minutes, clamped to the day. */
+  const nudge = (time: string, delta: number): string => {
+    const [hours, minutes] = time.split(':').map(Number);
+    const total = Math.max(0, Math.min(23 * 60 + 59, hours * 60 + minutes + delta));
+
+    return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
+  };
 
   const load = useCallback(async () => {
     try {
@@ -114,19 +131,66 @@ export default function TemplatesScreen() {
         {templates === null && <ActivityIndicator color={palette.accent} />}
         {error !== null && <Text style={styles.error}>{error}</Text>}
 
-        {live.map((template) => (
-          <Press key={template.id} style={styles.card} onPress={() => setEditing(template)}>
-            <Text style={styles.cardEmoji}>{template.symbol ?? '🕐'}</Text>
-            <View style={styles.grow}>
-              <Text style={styles.cardName}>{template.name}</Text>
-              <Text style={styles.cardMeta}>
-                {template.start_time.slice(0, 5)}–{template.end_time.slice(0, 5)} ·{' '}
-                {rateLine(template)}
-              </Text>
+        {live.map((template) => {
+          const auto = autoRules.find((rule) => rule.shiftId === template.id);
+
+          return (
+            <View key={template.id} style={styles.cardStack}>
+              <Press style={styles.card} onPress={() => setEditing(template)}>
+                <Text style={styles.cardEmoji}>{template.symbol ?? '🕐'}</Text>
+                <View style={styles.grow}>
+                  <Text style={styles.cardName}>{template.name}</Text>
+                  <Text style={styles.cardMeta}>
+                    {template.start_time.slice(0, 5)}–{template.end_time.slice(0, 5)} ·{' '}
+                    {rateLine(template)}
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={palette.textSecondary} />
+              </Press>
+
+              {/* Starts itself, at the hour they chose — or by the button, as
+                  always. Only on days the calendar actually plans it. */}
+              <View style={styles.autoRow}>
+                <Press
+                  style={styles.autoToggle}
+                  onPress={() =>
+                    setAutoRule(
+                      template.id,
+                      auto === undefined ? template.start_time.slice(0, 5) : null,
+                    )
+                  }
+                >
+                  <Ionicons
+                    name={auto === undefined ? 'play-circle-outline' : 'play-circle'}
+                    size={18}
+                    color={auto === undefined ? palette.textSecondary : palette.accent}
+                  />
+                  <Text style={[styles.autoText, auto !== undefined && { color: palette.accent }]}>
+                    {auto === undefined
+                      ? t('Запускать саму в день по плану')
+                      : `${t('Начнётся сама в')} ${auto.at}`}
+                  </Text>
+                </Press>
+
+                {auto !== undefined && (
+                  <View style={styles.autoTimes}>
+                    {[-30, -15, 15, 30].map((delta) => (
+                      <Press
+                        key={delta}
+                        style={styles.autoNudge}
+                        onPress={() => setAutoRule(template.id, nudge(auto.at, delta))}
+                      >
+                        <Text style={styles.autoNudgeText}>
+                          {delta > 0 ? `+${delta}` : delta}
+                        </Text>
+                      </Press>
+                    ))}
+                  </View>
+                )}
+              </View>
             </View>
-            <Ionicons name="chevron-forward" size={18} color={palette.textSecondary} />
-          </Press>
-        ))}
+          );
+        })}
 
         <Press style={styles.addRow} onPress={() => setEditing('new')}>
           <Ionicons name="add-circle-outline" size={20} color={palette.accent} />
@@ -768,6 +832,27 @@ const makeStyles = (palette: Palette) =>
     hint: { color: palette.textSecondary, fontSize: 12, lineHeight: 17, textAlign: 'center' },
     error: { color: palette.danger, fontSize: 13 },
     section: { color: palette.text, fontSize: 16, fontWeight: '700', marginTop: 12 },
+
+    cardStack: { gap: 0 },
+    autoRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 6,
+      paddingBottom: 10,
+      marginTop: -6,
+    },
+    autoToggle: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 4 },
+    autoText: { color: palette.textSecondary, fontSize: 12.5 },
+    autoTimes: { flexDirection: 'row', gap: 4 },
+    autoNudge: {
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: palette.border,
+    },
+    autoNudgeText: { color: palette.textSecondary, fontSize: 11.5 },
 
     card: {
       flexDirection: 'row',

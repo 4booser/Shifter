@@ -84,15 +84,18 @@ export function Seasonality() {
         </p>
       )}
 
+      {/* The row must stay stretched: items-end on it once stopped the
+          columns inheriting a height, and every bar quietly collapsed to its
+          2px floor. Found by eye on the bank's copy of this pattern. */}
       {shape.length > 0 && (
-        <div className="flex h-24 items-end gap-1">
+        <div className="flex h-24 gap-1">
           {Array.from({ length: 12 }, (_, index2) => index2 + 1).map((month) => {
             const row = shape.find((one) => one.month === month);
             const height = row === undefined ? 0 : (row.average / peak) * 100;
 
             return (
               <div key={month} className="flex flex-1 flex-col items-center gap-1">
-                <div className="flex h-full w-full items-end">
+                <div className="flex w-full flex-1 items-end">
                   <div
                     className="w-full rounded-t-[4px]"
                     style={{

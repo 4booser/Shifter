@@ -11,6 +11,10 @@ import { fromMinor } from '@/lib/mono/mono';
 import { Shell } from '@/components/layout/shell';
 import { Alert, Money } from '@/components/ui/bits';
 import { BankConnect } from '@/components/bank/connect';
+import { BankHero } from '@/components/bank/hero';
+import { BankLock, bankLockEnabled, setBankLock } from '@/components/bank/lock';
+import { BankShape } from '@/components/bank/shape';
+import { BankWage } from '@/components/bank/wage';
 import { BankSpending } from '@/components/bank/spending';
 import { BankWork } from '@/components/bank/work';
 
@@ -81,14 +85,33 @@ export default function BankPage() {
         {mono.token === null && <BankConnect />}
 
         {mono.token !== null && mono.token !== undefined && (
-          <>
+          <BankLock>
+            <BankHero
+              account={account ?? null}
+              items={mono.items}
+              from={bounds.from}
+              to={bounds.to}
+            />
+
             {/* ==== Accounts and the sync ==== */}
             <section className="card reveal p-4">
               <div className="panel-head mb-2">
                 <span>{t('Accounts')}</span>
-                <button type="button" className="btn btn-quiet btn-sm" onClick={mono.disconnect}>
-                  {t('Disconnect and erase')}
-                </button>
+                <span className="flex gap-1.5">
+                  <button
+                    type="button"
+                    className="btn btn-quiet btn-sm"
+                    onClick={() => {
+                      setBankLock(!bankLockEnabled());
+                      window.location.reload();
+                    }}
+                  >
+                    {bankLockEnabled() ? t('Lock: on') : t('Lock: off')}
+                  </button>
+                  <button type="button" className="btn btn-quiet btn-sm" onClick={mono.disconnect}>
+                    {t('Disconnect and erase')}
+                  </button>
+                </span>
               </div>
 
               <div className="flex flex-wrap gap-2">
@@ -156,6 +179,9 @@ export default function BankPage() {
               )}
             </section>
 
+            {/* ==== The wage, if one looks to have landed ==== */}
+            <BankWage items={mono.items} />
+
             {/* ==== Month picker ==== */}
             <div className="flex items-center justify-between">
               <button type="button" className="btn btn-sm" onClick={() => shiftMonth(-1)}>←</button>
@@ -180,7 +206,10 @@ export default function BankPage() {
               to={bounds.to}
               account={account ?? null}
             />
-          </>
+
+            {/* ==== The month's shape ==== */}
+            <BankShape items={mono.items} from={bounds.from} to={bounds.to} />
+          </BankLock>
         )}
       </div>
     </Shell>

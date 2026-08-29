@@ -6,6 +6,7 @@ import { useI18n } from '@/lib/i18n';
 import { MonoAccount, MonoStatementItem, dayOf } from '@/lib/mono/mono';
 import { statementCsv, statementFileName } from '@/lib/mono/mono-export';
 import { FlowWords, balance, spareNames } from '@/lib/mono/mono-flow';
+import { yearOfStanding } from '@/lib/mono/mono-shape';
 import {
   cashback,
   counterparties,
@@ -210,11 +211,24 @@ export function BankSpending({
                 <span className="tabular flex-none">
                   <Money value={row.amount} />
                   <span className="ml-1 text-[0.72rem] text-faint">
+                    · <Money value={yearOfStanding(row.amount)} />/{t('yr')} ·{' '}
                     {t('next around')} {row.next.slice(8)}.{row.next.slice(5, 7)}
                   </span>
                 </span>
               </div>
             ))}
+
+            {/* Priced per month to sound small; twelve of everything is the
+                figure that gets things cancelled. */}
+            {standing.length > 1 && (
+              <p className="field-hint mt-1">
+                {t('All of it together')}:{' '}
+                <strong className="tabular">
+                  <Money value={yearOfStanding(standing.reduce((sum, row) => sum + row.amount, 0))} />
+                </strong>{' '}
+                {t('a year')}
+              </p>
+            )}
           </div>
         )}
       </section>
@@ -336,6 +350,9 @@ function FlowPicture({
 
       <div className="overflow-x-auto">
         <svg viewBox={`0 0 ${width} ${height}`} className="w-full" style={{ minWidth: '30rem' }}>
+          {/* Ribbons first, then the solid bars over them: without the bars
+              the two halves read as blocks and the pooling in the middle —
+              the honest part of the picture — disappears. */}
           {sides.left.map((band, index) => {
             const at = leftAt[index];
             const share = (at.h / usable(sides.left.length)) * height;
@@ -348,7 +365,7 @@ function FlowPicture({
                 key={`in-${band.name}`}
                 d={ribbon(column, at.y, at.h, middle, y, share)}
                 fill={spare.has(band.name) ? 'var(--danger)' : 'var(--accent)'}
-                opacity={0.28 + 0.1 * ((sides.left.length - index) / sides.left.length)}
+                opacity={0.16 + 0.07 * ((sides.left.length - index) / sides.left.length)}
               />
             );
           })}
@@ -365,12 +382,36 @@ function FlowPicture({
                 key={`out-${band.name}`}
                 d={ribbon(middle + column, y, share, width - column, at.y, at.h)}
                 fill={spare.has(band.name) ? 'var(--good)' : 'var(--warn)'}
-                opacity={0.28 + 0.1 * ((sides.right.length - index) / sides.right.length)}
+                opacity={0.16 + 0.07 * ((sides.right.length - index) / sides.right.length)}
               />
             );
           })}
 
-          <rect x={middle} y={0} width={column} height={height} rx={3} fill="var(--text)" opacity={0.2} />
+          {sides.left.map((band, index) => (
+            <rect
+              key={`inbar-${band.name}`}
+              x={0}
+              y={leftAt[index].y}
+              width={column}
+              height={leftAt[index].h}
+              rx={3}
+              fill={spare.has(band.name) ? 'var(--danger)' : 'var(--accent)'}
+            />
+          ))}
+
+          {sides.right.map((band, index) => (
+            <rect
+              key={`outbar-${band.name}`}
+              x={width - column}
+              y={rightAt[index].y}
+              width={column}
+              height={rightAt[index].h}
+              rx={3}
+              fill={spare.has(band.name) ? 'var(--good)' : 'var(--warn)'}
+            />
+          ))}
+
+          <rect x={middle} y={0} width={column} height={height} rx={3} fill="var(--text)" opacity={0.45} />
         </svg>
       </div>
 

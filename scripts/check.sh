@@ -25,12 +25,14 @@ fi
 echo "── web"
 cd web
 npx tsc --noEmit
-npm test --silent
+# TZ=UTC, deliberately: CI runs in UTC and three deploys died on a date test
+# that was green in Europe/Kyiv. The gate must fail where CI will fail.
+TZ=UTC npm test --silent
 
 echo "── mobile"
 cd ../mobile
 npx tsc --noEmit
-npm test --silent
+TZ=UTC npm test --silent
 
 # The widget's own arithmetic, where a Swift compiler exists. It is skipped
 # rather than failed elsewhere: the widget only ships from a Mac, and a Linux

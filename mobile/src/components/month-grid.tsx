@@ -39,6 +39,7 @@ export function MonthGrid({
   painting,
   selected,
   paint,
+  paymentDays,
   onPaint,
   onOpen,
 }: {
@@ -52,6 +53,8 @@ export function MonthGrid({
   painting: boolean;
   selected: Set<string>;
   paint: PaintTarget | null;
+  /** Days a standing charge usually lands, read from the bank statement. */
+  paymentDays?: Set<string>;
   /** `first` is true for the cell the finger landed on, which sets the mode. */
   onPaint: (key: string, first: boolean) => void;
   onOpen: (key: string) => void;
@@ -146,6 +149,7 @@ export function MonthGrid({
                   styles={styles}
                   chosen={selected.has(cell.key)}
                   paint={paint}
+                  payday={paymentDays?.has(cell.key) === true}
                 />
               ))}
             </View>
@@ -166,6 +170,7 @@ function Cell({
   styles,
   chosen,
   paint,
+  payday,
 }: {
   cell: GridCell;
   day: CalendarDayData | undefined;
@@ -176,6 +181,8 @@ function Cell({
   styles: ReturnType<typeof makeStyles>;
   chosen: boolean;
   paint: PaintTarget | null;
+  /** A standing charge usually lands this day. */
+  payday: boolean;
 }) {
   const shifts = day?.shifts ?? [];
   const worked = shifts.some((entry) => entry.worked);
@@ -231,6 +238,9 @@ function Cell({
           ]
             .join('')
             .slice(0, 4)}
+          {/* A standing charge usually lands today: the same dot the web
+              calendar wears, so payday planning starts on the grid. */}
+          {payday && <Text style={styles.payDot}>{'\u2009'}●</Text>}
         </Text>
 
         {worked
@@ -298,6 +308,7 @@ const makeStyles = (palette: Palette) =>
       textAlign: 'center',
       fontWeight: '800',
     },
+    payDot: { color: palette.danger, fontSize: 8 },
     marks: { fontSize: 11, height: 14, lineHeight: 14 },
     money: { fontSize: 10, fontWeight: '800', fontVariant: ['tabular-nums'] },
     moneyGap: { height: 12 },

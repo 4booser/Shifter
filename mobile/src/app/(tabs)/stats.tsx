@@ -16,6 +16,7 @@ import { ClockRing, MoneyFlow, MonthBars } from '@/components/charts';
 import { Appear, Press, Roll } from '@/components/motion';
 import { Pace } from '@/components/pace';
 import { RhythmCard } from '@/components/rhythm-card';
+import { CitiesCard } from '@/components/cities-card';
 import { Weekdays } from '@/components/weekdays';
 import { byWeekday } from '@/lib/rhythm';
 import { running } from '@/lib/pace';
@@ -496,6 +497,8 @@ export default function StatsScreen() {
       )}
 
       <RhythmCard palette={palette} />
+
+      <CitiesCard palette={palette} />
     </ScrollView>
     </GestureDetector>
   );

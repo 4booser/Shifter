@@ -32,18 +32,31 @@ RUN dotnet publish "server/Shifter.csproj" \
 # Migrations run from their own image before the API starts. It carries the SDK
 # and the sources because `dotnet ef` needs both; the runtime image below stays
 # small and has no tooling in it.
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS migrate
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS migrate-build
 WORKDIR /source
 ENV PATH="${PATH}:/root/.dotnet/tools"
 RUN dotnet tool install --global dotnet-ef --version 10.0.*
 COPY ["server/Shifter.csproj", "server/"]
 RUN dotnet restore "server/Shifter.csproj"
 COPY server/ server/
-# Two databases, two contexts, applied in order. `dotnet ef` only builds the
-# project, and the Angular target runs on publish, so npm is never reached here.
+# Compiled HERE, where the CI runner has memory to spare — not at deploy
+# time on the production box. `dotnet ef database update` builds the project
+# with Roslyn before migrating, and Roslyn on a one-gigabyte droplet next to
+# a live Postgres is how the site once went down mid-deploy. A bundle is the
+# same migration history, compiled once, run as a plain binary.
+RUN dotnet ef migrations bundle --project server/Shifter.csproj \
+        --context ShifterDbContext --self-contained -r linux-x64 -o /bundle-shifter \
+    && dotnet ef migrations bundle --project server/Shifter.csproj \
+        --context TokensDbContext --self-contained -r linux-x64 -o /bundle-tokens
+
+FROM mcr.microsoft.com/dotnet/runtime-deps:10.0 AS migrate
+COPY --from=migrate-build /bundle-shifter /bundle-tokens /
+# Two databases, two contexts, applied in order — as before, minus the
+# compiler. The bundles read the same connection strings the old entrypoint
+# used, passed explicitly because a bundle does not read ASP.NET config.
 ENTRYPOINT ["sh", "-c", "\
-    dotnet ef database update --project server/Shifter.csproj --context ShifterDbContext && \
-    dotnet ef database update --project server/Shifter.csproj --context TokensDbContext"]
+    /bundle-shifter --connection \"$ConnectionStrings__Shifter\" && \
+    /bundle-tokens --connection \"$ConnectionStrings__Tokens\""]
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 # The runtime image ships without wget or curl, so the compose healthcheck had
@@ -54,6 +67,10 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 EXPOSE 8080
+# «Деплой прошёл» and «прод обновился» are different claims; /status telling
+# the commit it was built from is what separates them.
+ARG BUILD_REF=dev
+ENV BUILD_REF=$BUILD_REF
 COPY --from=build /app/publish .
 USER $APP_UID
 ENTRYPOINT ["dotnet", "Shifter.dll"]

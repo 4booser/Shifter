@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
+  Alert,
   ActivityIndicator,
   Linking,
   ScrollView,
@@ -20,7 +21,7 @@ import { lockKind, LockKind, lockNameBy, lockStore, unlock } from '@/lib/lock';
 import { useSession } from '@/store/session';
 import { t, useLang } from '@/lib/i18n';
 import { DeviceSettings, deviceSettings, deviceToken } from '@/lib/notifications';
-import { shareAccountantCsv, shareIncomePdf, shareTakeout } from '@/lib/papers-share';
+import { paperRanges, shareAccountantCsv, shareIncomePdf, shareTakeout, PaperRange } from '@/lib/papers-share';
 
 interface Profile {
   login: string;
@@ -37,6 +38,25 @@ interface Profile {
  * a person can change lives on the site — putting a second, thinner editor in
  * the app is how the two start disagreeing about what a setting means.
  */
+/**
+ * «За какой период?» — the four stretches people are actually asked for.
+ * An Alert rather than a date picker on purpose: the paper is for a clerk,
+ * and clerks ask in calendar words, not in dates.
+ */
+function askPeriod(onPicked: (range: PaperRange) => void): void {
+  Alert.alert(
+    t('За какой период?'),
+    undefined,
+    [
+      ...paperRanges().map((preset) => ({
+        text: t(preset.label),
+        onPress: () => onPicked(preset.range),
+      })),
+      { text: t('Отмена'), style: 'cancel' as const },
+    ],
+  );
+}
+
 export default function SettingsScreen() {
   const router = useRouter();
   const scheme = useColorScheme();
@@ -268,6 +288,12 @@ export default function SettingsScreen() {
         <Ionicons name="chevron-forward" size={16} color={palette.textSecondary} />
       </Press>
 
+      <Press style={styles.linkRow} onPress={() => router.push('/record')}>
+        <Ionicons name="ribbon-outline" size={20} color={palette.textSecondary} />
+        <Text style={styles.linkText}>{t('Послужной список и хроника')}</Text>
+        <Ionicons name="chevron-forward" size={16} color={palette.textSecondary} />
+      </Press>
+
       <Text style={styles.section}>{t('Бумаги')}</Text>
       <Text style={styles.hint}>
         {t('За этот год, по вашим же записям — и справка честно говорит об этом первой строкой.')}
@@ -276,7 +302,7 @@ export default function SettingsScreen() {
       <Press
         style={styles.linkRow}
         onPress={() => {
-          void shareIncomePdf(lang === 'uk' ? 'ua' : 'ru');
+          askPeriod((range) => void shareIncomePdf(lang === 'uk' ? 'ua' : 'ru', range));
         }}
       >
         <Ionicons name="reader-outline" size={20} color={palette.textSecondary} />
@@ -287,7 +313,7 @@ export default function SettingsScreen() {
       <Press
         style={styles.linkRow}
         onPress={() => {
-          void shareAccountantCsv();
+          askPeriod((range) => void shareAccountantCsv(range));
         }}
       >
         <Ionicons name="grid-outline" size={20} color={palette.textSecondary} />

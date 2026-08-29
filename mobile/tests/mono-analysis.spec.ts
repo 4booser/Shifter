@@ -11,6 +11,7 @@ import {
   oddities,
   recurring,
   refunds,
+  chargesAhead,
 } from '@/lib/mono-insights';
 import {
   CategoryRule,
@@ -511,5 +512,44 @@ describe('where the money came from', () => {
     );
 
     expect(sources).toHaveLength(2);
+  });
+});
+
+describe('standing charges projected forward (mirrored from web runway.spec)', () => {
+  it('lands a monthly charge once and a weekly one every week', () => {
+    const ahead = chargesAhead(
+      [
+        { name: 'Аренда', amount: 8_000, next: '2026-09-11', everyDays: 30 },
+        { name: 'Спортзал', amount: 300, next: '2026-09-03', everyDays: 7 },
+      ],
+      '2026-09-01',
+      14,
+    );
+
+    expect(ahead.filter((c) => c.name === 'Аренда')).toHaveLength(1);
+    expect(ahead.filter((c) => c.name === 'Спортзал').map((c) => c.on)).toEqual([
+      '2026-09-03',
+      '2026-09-10',
+    ]);
+  });
+
+  it('brings an overdue charge into the first projected day', () => {
+    const ahead = chargesAhead(
+      [{ name: 'Аренда', amount: 8_000, next: '2026-08-28', everyDays: 30 }],
+      '2026-09-01',
+      14,
+    );
+
+    expect(ahead[0].on).toBe('2026-09-01');
+  });
+
+  it('ignores what falls beyond the horizon', () => {
+    const ahead = chargesAhead(
+      [{ name: 'Аренда', amount: 8_000, next: '2026-10-20', everyDays: 30 }],
+      '2026-09-01',
+      14,
+    );
+
+    expect(ahead).toEqual([]);
   });
 });

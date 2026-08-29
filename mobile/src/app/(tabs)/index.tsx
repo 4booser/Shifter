@@ -17,6 +17,9 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useMono } from '@/store/mono';
+import { chargesAhead, recurring } from '@/lib/mono-insights';
+
 import { DailyBrief } from '@/components/daily-brief';
 import { DayPeek } from '@/components/day-peek';
 import { Floating } from '@/components/floating';
@@ -137,6 +140,24 @@ export default function CalendarScreen() {
 
   const month = addMonths(anchor, index - SPAN);
   const today = todayKey();
+  // The bank's rhythm on the calendar: days a standing charge usually
+  // lands, projected with the same mirrored library the web grid uses.
+  const bankItems = useMono((state) => state.items);
+  const hydrateMono = useMono((state) => state.hydrate);
+
+  useEffect(() => {
+    void hydrateMono();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const paymentDays = useMemo(() => {
+    if (bankItems.length === 0) return new Set<string>();
+
+    const back = new Date(Date.now() - 62 * 86400000).toISOString().slice(0, 10);
+    const standing = recurring(bankItems, back, today);
+
+    return new Set(chargesAhead(standing, today, 62).map((charge) => charge.on));
+  }, [bankItems, today]);
   const styles = makeStyles(palette);
 
   const fetchMonth = useCallback(async (at: YearMonth) => {
@@ -907,6 +928,7 @@ export default function CalendarScreen() {
                 today={today}
                 held={waiting}
                 palette={palette}
+                paymentDays={paymentDays}
                 painting={brush !== null}
                 selected={chosen}
                 paint={

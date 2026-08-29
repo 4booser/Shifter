@@ -40,13 +40,13 @@ services:
     image: ${REGISTRY:-ghcr.io/4booser}/shifter-migrate:${TAG:-latest}
     restart: "no"
     logging: *logging
-    # Deliberately unlimited. This job compiles the project — `dotnet ef
-    # database update` builds before it migrates — and Roslyn wants more than
-    # any figure that looks reasonable for a container: 300m killed it with an
-    # OutOfMemoryException, the migration never completed, the app never
-    # started, and the site went down. The limits elsewhere exist to stop a
-    # long-running process crowding out the database; this one runs for ninety
-    # seconds, alone, before anything is serving.
+    # Limited again, because the compiler is gone: the image now carries EF
+    # migration BUNDLES compiled at build time, and running one is a plain
+    # binary applying SQL. The old shape — `dotnet ef database update`
+    # building the project with Roslyn on this box — needed «deliberately
+    # unlimited» and once took the site down anyway; that lesson lives in the
+    # Dockerfile's migrate-build stage now.
+    mem_limit: 256m
     environment:
       ConnectionStrings__Shifter: "Host=db;Port=5432;Database=shifter;Username=shifter_user;Password=${POSTGRES_PASSWORD};Maximum Pool Size=30"
       ConnectionStrings__Tokens: "Host=db;Port=5432;Database=tokens;Username=shifter_user;Password=${POSTGRES_PASSWORD};Maximum Pool Size=30"

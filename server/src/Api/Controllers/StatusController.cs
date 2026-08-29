@@ -180,6 +180,10 @@ public class StatusController : ControllerBase
             checked_at = DateTime.UtcNow.ToString("O"),
             uptime_seconds = (long)uptime.TotalSeconds,
             version = typeof(StatusController).Assembly.GetName().Version?.ToString() ?? "dev",
+            // The commit this container was built from. One curl after a
+            // deploy answers «а тот ли код отвечает» — the assembly version
+            // above has said 1.0.0.0 through every build there has been.
+            build = Environment.GetEnvironmentVariable("BUILD_REF") ?? "dev",
             services = new object[]
             {
                 new { name = "api", ok = true, latency_ms = 0 },

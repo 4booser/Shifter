@@ -33,32 +33,54 @@ async function pull(path: string, name: string, mime: string, uti: string, title
   return 'shared';
 }
 
-/** Year-to-date: the stretch a clerk actually asks about. */
-function thisYear(): { from: string; to: string } {
-  const today = new Date();
-  const iso = today.toISOString().slice(0, 10);
-
-  return { from: `${iso.slice(0, 4)}-01-01`, to: iso };
+export interface PaperRange {
+  from: string;
+  to: string;
 }
 
-export function shareIncomePdf(lang: 'ru' | 'ua') {
-  const { from, to } = thisYear();
+/**
+ * The stretches people are actually asked for. A bank wants «за полгода»,
+ * an accountant wants a закрытый quarter or month — the default stays the
+ * year to date, which is what a clerk means by «справку».
+ */
+export function paperRanges(): { label: string; range: PaperRange }[] {
+  const today = new Date();
+  const iso = (date: Date) => date.toISOString().slice(0, 10);
+  const to = iso(today);
+  const year = to.slice(0, 4);
 
+  const firstOfMonth = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), 1));
+  const lastMonthEnd = new Date(firstOfMonth.getTime() - 86400000);
+  const lastMonthStart = new Date(Date.UTC(lastMonthEnd.getUTCFullYear(), lastMonthEnd.getUTCMonth(), 1));
+
+  const quarter = Math.floor(today.getUTCMonth() / 3);
+  const prevQuarterStart = new Date(Date.UTC(today.getUTCFullYear(), quarter * 3 - 3, 1));
+  const prevQuarterEnd = new Date(Date.UTC(today.getUTCFullYear(), quarter * 3, 0));
+
+  const threeBack = new Date(today.getTime() - 91 * 86400000);
+
+  return [
+    { label: 'С начала года', range: { from: `${year}-01-01`, to } },
+    { label: 'Последние 3 месяца', range: { from: iso(threeBack), to } },
+    { label: 'Прошлый месяц', range: { from: iso(lastMonthStart), to: iso(lastMonthEnd) } },
+    { label: 'Прошлый квартал', range: { from: iso(prevQuarterStart), to: iso(prevQuarterEnd) } },
+  ];
+}
+
+export function shareIncomePdf(lang: 'ru' | 'ua', range: PaperRange) {
   return pull(
-    `/shifter/v1/papers/income.pdf?from=${from}&to=${to}&lang=${lang}`,
-    `income-${from}-${to}.pdf`,
+    `/shifter/v1/papers/income.pdf?from=${range.from}&to=${range.to}&lang=${lang}`,
+    `income-${range.from}-${range.to}.pdf`,
     'application/pdf',
     'com.adobe.pdf',
     'Справка о доходе',
   );
 }
 
-export function shareAccountantCsv() {
-  const { from, to } = thisYear();
-
+export function shareAccountantCsv(range: PaperRange) {
   return pull(
-    `/shifter/v1/papers/accountant.csv?from=${from}&to=${to}`,
-    `income-${from}-${to}.csv`,
+    `/shifter/v1/papers/accountant.csv?from=${range.from}&to=${range.to}`,
+    `income-${range.from}-${range.to}.csv`,
     'text/csv',
     'public.comma-separated-values-text',
     'CSV бухгалтеру',

@@ -511,3 +511,49 @@ export const cashback = (
       .sort((one, two) => two.earned - one.earned),
   };
 };
+
+
+/**
+ * Mirrored from the web's runway.ts: one recurring charge unrolled into the
+ * concrete days it will land on. A "next" already behind the window start
+ * still lands — rent due yesterday is not cancelled by being late.
+ */
+export interface PlannedCharge {
+  name: string;
+  amount: number;
+  on: string;
+}
+
+const shiftDay = (day: string, by: number): string => {
+  // Noon, deliberately: midnight parses shift across zones, noon never does.
+  const date = new Date(`${day}T12:00:00`);
+
+  date.setDate(date.getDate() + by);
+
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+};
+
+export function chargesAhead(
+  standing: { name: string; amount: number; next: string; everyDays: number }[],
+  from: string,
+  horizon: number,
+): PlannedCharge[] {
+  const until = shiftDay(from, horizon - 1);
+  const ahead: PlannedCharge[] = [];
+
+  for (const charge of standing) {
+    let on = charge.next;
+
+    if (on < from) on = from;
+
+    while (on <= until) {
+      ahead.push({ name: charge.name, amount: charge.amount, on });
+
+      if (charge.everyDays <= 0) break;
+
+      on = shiftDay(on, charge.everyDays);
+    }
+  }
+
+  return ahead;
+}

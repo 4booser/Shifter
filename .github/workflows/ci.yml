@@ -174,3 +174,69 @@ jobs:
       # run, so this also watches the whole history execute — which the
       # migration guards, being text checks, never do.
       - run: dotnet test tests/Shifter.Api.Tests/Shifter.Api.Tests.csproj --nologo
+
+  screens:
+    name: Screenshots, softly
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: shifter_user
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: shifter
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U shifter_user -d shifter"
+          --health-interval 5s --health-timeout 3s --health-retries 20
+    env:
+      ConnectionStrings__Shifter: "Host=localhost;Port=5432;Database=shifter;Username=shifter_user;Password=ci"
+      ConnectionStrings__Tokens: "Host=localhost;Port=5432;Database=shifter;Username=shifter_user;Password=ci"
+      Jwt__Key: "ci-screenshots-signing-key-32-chars!!"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Build the site into wwwroot
+        run: |
+          cd web
+          npm ci
+          npm run build
+
+      - name: Serve the real thing
+        run: |
+          dotnet run --project server/Shifter.csproj --urls http://localhost:5208 &
+          for i in $(seq 1 60); do
+            curl -sf http://localhost:5208/login > /dev/null && break
+            sleep 2
+          done
+
+      - name: Shoot the screens
+        # A diff is a question, not a failure: the job stays green and hangs
+        # the pictures on the run for a person to look at. The baselines are
+        # darwin-named; Linux renders differently, so CI always writes its
+        # own actuals — which is exactly the artefact worth looking at.
+        continue-on-error: true
+        env:
+          SCREENS: '1'
+        run: |
+          cd web
+          npx playwright install --with-deps chromium
+          npx playwright test e2e/screens.spec.ts --update-snapshots || true
+
+      - name: Hang the shots on the run
+        uses: actions/upload-artifact@v4
+        with:
+          name: screens
+          path: |
+            web/e2e/screens.spec.ts-snapshots/
+            web/test-results/
+          if-no-files-found: ignore

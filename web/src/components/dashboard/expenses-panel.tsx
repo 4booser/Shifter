@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { calendarApi } from '@/lib/api/calendar';
-import { apiErrorMessage } from '@/lib/api/http';
+import { apiErrorMessage, readSession } from '@/lib/api/http';
 import { todayKey } from '@/lib/calendar/calendar-date';
 import { Expense, ExpenseKind, ExpenseRule } from '@/lib/calendar/models';
 import { useI18n } from '@/lib/i18n';
@@ -51,6 +51,11 @@ export function ExpensesPanel({
   const [placeId, setPlaceId] = useState<number | null>(null);
   const [note, setNote] = useState('');
   const [error, setError] = useState<string | null>(null);
+
+  // Null while unknown, false where the server has no reader behind it. No
+  // key, no button — and the form beside it is unaffected either way.
+  const [canRead, setCanRead] = useState<boolean | null>(null);
+  const [reading, setReading] = useState(false);
 
   const refresh = useCallback(() => {
     void calendarApi
@@ -123,6 +128,72 @@ export function ExpensesPanel({
 
       {open && (
         <div className="mb-3 flex flex-col gap-2.5 rounded-(--radius) border border-border p-3">
+          {/* The receipt is in a pocket exactly when the expense is worth
+              asking about. Two days later nobody remembers it at all. */}
+          {canRead !== false && (
+            <label className="btn btn-sm w-full cursor-pointer justify-center">
+              {reading ? t('Reading…') : `📷 ${t('Photograph the receipt')}`}
+              <input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="hidden"
+                disabled={reading}
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+
+                  event.target.value = '';
+
+                  if (file === undefined) return;
+
+                  setReading(true);
+                  setError(null);
+
+                  const body = new FormData();
+
+                  body.append('photo', file);
+
+                  void fetch(`/shifter/v1/import/receipt?today=${todayKey()}`, {
+                    method: 'POST',
+                    headers: { Authorization: `Bearer ${readSession()?.access_token ?? ''}` },
+                    body,
+                  })
+                    .then(async (response) => {
+                      if (response.status === 404) {
+                        setCanRead(false);
+
+                        return;
+                      }
+
+                      if (!response.ok) {
+                        // The form keeps whatever is in it. A reader that
+                        // fails by emptying the form is worse than no reader:
+                        // somebody came here to record a number and would have
+                        // to start again.
+                        setError(t('Could not read the receipt. Type it in instead.'));
+
+                        return;
+                      }
+
+                      const read = (await response.json()) as {
+                        amount: number | null;
+                        date: string | null;
+                        merchant: string | null;
+                      };
+
+                      // Only what was actually read. A blank left blank is a
+                      // question; a blank filled with a guess is an answer.
+                      if (read.amount !== null) setAmount(read.amount);
+                      if (read.date !== null) setDate(read.date);
+                      if (read.merchant !== null && note.trim() === '') setNote(read.merchant);
+                    })
+                    .catch(() => setError(t('Could not read the receipt. Type it in instead.')))
+                    .finally(() => setReading(false));
+                }}
+              />
+            </label>
+          )}
+
           <div className="flex flex-wrap gap-1.5">
             {KINDS.map((option) => (
               <button

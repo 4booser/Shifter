@@ -42,29 +42,7 @@ public sealed class PhotoImportService
         int month,
         CancellationToken ct)
     {
-        // The ledger key rolls with the UTC day; yesterday's spend evaporates.
-        var key = $"{userId}:{DateOnly.FromDateTime(DateTime.UtcNow.Date):yyyyMMdd}";
-
-        // Reserved before the call, not counted after it. Reading the ledger at
-        // the top and writing it at the bottom is a check-then-act: a hundred
-        // uploads fired at once all read zero and all became billed calls
-        // against a limit of ten. AddOrUpdate is atomic, so the reservation
-        // either wins or loses cleanly.
-        int spent = Spent.AddOrUpdate(key, 1, (_, count) => count + 1);
-
-        if (spent > _options.DailyLimit)
-        {
-            // Hand the reservation back so a refusal does not cost anybody a
-            // slot they never used.
-            Spent.AddOrUpdate(key, 0, (_, count) => Math.Max(0, count - 1));
-
-            throw new ValidationException("Daily photo-import limit reached. Tomorrow it resets.");
-        }
-
-        // Yesterday's keys are dropped whenever a new day is first seen: the
-        // ledger is static and lives as long as the process, so without this it
-        // grows one entry per person per day forever.
-        Forget(key);
+        Reserve(userId);
 
         var payload = new
         {
@@ -88,31 +66,105 @@ public sealed class PhotoImportService
             },
         };
 
+        return ScheduleParse.FromModelText(await AskAsync(payload, ct));
+    }
+
+    /// <summary>
+    /// Reads a photographed receipt into the beginnings of an expense.
+    ///
+    /// Shares the daily ledger with the rota reader, because they share the
+    /// bill: a per-feature limit would let ten photographs of each cost twice
+    /// what a limit of ten was meant to cap.
+    /// </summary>
+    public async Task<ReceiptParse.Read> ReadReceiptAsync(
+        int userId,
+        byte[] image,
+        string mediaType,
+        DateOnly today,
+        CancellationToken ct)
+    {
+        Reserve(userId);
+
+        var payload = new
+        {
+            model = _options.Model,
+            max_tokens = 300,
+            messages = new object[]
+            {
+                new
+                {
+                    role = "user",
+                    content = new object[]
+                    {
+                        new
+                        {
+                            type = "image",
+                            source = new { type = "base64", media_type = mediaType, data = Convert.ToBase64String(image) },
+                        },
+                        new { type = "text", text = ReceiptParse.Prompt },
+                    },
+                },
+            },
+        };
+
+        return ReceiptParse.FromModelText(await AskAsync(payload, ct), today);
+    }
+
+    /// <summary>
+    /// Takes today's slot, or refuses.
+    ///
+    /// Reserved before the call and never counted after it: reading the ledger
+    /// at the top and writing it at the bottom is a check-then-act, and a
+    /// hundred uploads at once all read zero and all became billed calls.
+    /// </summary>
+    private void Reserve(int userId)
+    {
+        var key = $"{userId}:{DateOnly.FromDateTime(DateTime.UtcNow.Date):yyyyMMdd}";
+
+        int spent = Spent.AddOrUpdate(key, 1, (_, count) => count + 1);
+
+        if (spent > _options.DailyLimit)
+        {
+            Spent.AddOrUpdate(key, 0, (_, count) => Math.Max(0, count - 1));
+
+            throw new ValidationException("Daily limit for reading photos reached. Tomorrow it resets.");
+        }
+
+        Forget(key);
+    }
+
+    /// <summary>The call itself, which both readers make identically.</summary>
+    private async Task<string> AskAsync(object payload, CancellationToken ct)
+    {
         using var client = _http.CreateClient();
         using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.anthropic.com/v1/messages");
 
         request.Headers.Add("x-api-key", _options.ApiKey);
         request.Headers.Add("anthropic-version", "2023-06-01");
-        request.Content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
+        request.Content = new StringContent(
+            JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
 
         using var response = await client.SendAsync(request, ct);
         var body = await response.Content.ReadAsStringAsync(ct);
 
         if (!response.IsSuccessStatusCode)
         {
-            _logger.LogWarning("Photo import upstream said {Status}: {Body}", response.StatusCode, body[..Math.Min(300, body.Length)]);
+            _logger.LogWarning(
+                "Photo reader upstream said {Status}: {Body}",
+                response.StatusCode,
+                body[..Math.Min(300, body.Length)]);
+
             throw new ValidationException("The reader is unavailable right now. Try again in a minute.");
         }
 
         using var document = JsonDocument.Parse(body);
-        var text = document.RootElement
+
+        return document.RootElement
             .GetProperty("content")
             .EnumerateArray()
             .Where(block => block.GetProperty("type").GetString() == "text")
             .Select(block => block.GetProperty("text").GetString() ?? "")
             .FirstOrDefault("");
-
-        return ScheduleParse.FromModelText(text);
     }
 
     /// <summary>

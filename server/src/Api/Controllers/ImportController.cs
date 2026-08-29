@@ -100,6 +100,52 @@ public class ImportController : ControllerBase
         });
     }
 
+    /// <summary>
+    /// A photographed receipt, read into the beginnings of an expense.
+    ///
+    /// An expense gets recorded when somebody remembers it, and two days later
+    /// nobody does. The receipt is in a pocket exactly when it is worth asking
+    /// about, which is the whole of why this exists.
+    ///
+    /// Every field comes back nullable and the form on the other side stays
+    /// editable whatever happens: a reader that fails by clearing the form is
+    /// worse than no reader at all.
+    /// </summary>
+    [HttpPost("receipt")]
+    [RequestSizeLimit(MaxBytes + 1024)]
+    public async Task<ActionResult> Receipt(
+        [FromForm] IFormFile photo, [FromQuery] DateOnly? today, CancellationToken ct)
+    {
+        if (!_service.Enabled) return NotFound();
+
+        if (photo.Length is 0 or > MaxBytes)
+            throw new ValidationException("The photo must be under 8 MB.");
+
+        if (!MediaTypes.TryGetValue(Path.GetExtension(photo.FileName), out var mediaType))
+            throw new ValidationException("JPEG, PNG, WebP or GIF — HEIC needs converting first.");
+
+        using var stream = new MemoryStream();
+
+        await photo.CopyToAsync(stream, ct);
+
+        var read = await _service.ReadReceiptAsync(
+            CurrentUserId(),
+            stream.ToArray(),
+            mediaType,
+            // The client's own date: a receipt read at 01:00 in Kyiv is not
+            // from yesterday, whatever the server's clock says.
+            today ?? DateOnly.FromDateTime(DateTime.UtcNow),
+            ct);
+
+        return Ok(new
+        {
+            amount = read.Amount,
+            date = read.Date?.ToString("yyyy-MM-dd"),
+            merchant = read.Merchant,
+            currency = read.Currency,
+        });
+    }
+
     private const int CsvMaxBytes = 4 * 1024 * 1024;
 
     private static async Task<string> ReadCsvAsync(IFormFile file, CancellationToken ct)

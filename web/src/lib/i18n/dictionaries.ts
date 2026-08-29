@@ -707,6 +707,8 @@ export const RU: Dictionary = {
   'Read the advert': 'Прочитать объявление',
   'It fills in only what the advert actually says, and everything it fills in is yours to correct.':
     'Заполняется только то, что в объявлении действительно написано, и всё заполненное можно поправить.',
+  'Photograph the receipt': 'Сфотографировать чек',
+  'Could not read the receipt. Type it in instead.': 'Чек прочитать не удалось. Впишите вручную.',
   'This week': 'Эта неделя',
   'Earned this week': 'Заработано за неделю',
   'Still to come': 'Ещё впереди',
@@ -3174,6 +3176,8 @@ export const UK: Dictionary = {
   'Read the advert': 'Прочитати оголошення',
   'It fills in only what the advert actually says, and everything it fills in is yours to correct.':
     'Заповнюється лише те, що в оголошенні справді написано, і все заповнене можна виправити.',
+  'Photograph the receipt': 'Сфотографувати чек',
+  'Could not read the receipt. Type it in instead.': 'Чек прочитати не вдалося. Впишіть вручну.',
   'This week': 'Цей тиждень',
   'All time': 'За весь час',
 

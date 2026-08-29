@@ -27,7 +27,14 @@ export interface WeekCost {
   coveredHours: number;
   /** Hours rostered by people who do not share what they earn. */
   uncoveredHours: number;
-  /** People whose pay is known, out of everybody rostered. */
+  /**
+   * People any of whose shifts could be priced, out of everybody rostered.
+   *
+   * Two different reasons a person is missing from this count, and the figure
+   * is equally incomplete either way: they have not shared what they earn, or
+   * they are on a weekly or monthly wage, which no rota can attribute to a
+   * particular day.
+   */
   sharing: number;
   people: number;
   /**
@@ -64,12 +71,18 @@ export function weekCost(entries: RotaEntry[], members: RotaMember[]): WeekCost 
     days.set(entry.date, day);
   }
 
-  // Counted among the people actually on this rota, not among everybody in the
-  // team: a crew of twenty where four are rostered and all four share is fully
-  // covered, and "4 из 20" would say the opposite.
-  const sharing = members.filter(
-    (member) => rostered.has(member.member_id) && member.shares_earnings,
-  ).length;
+  // Counted from the entries rather than from the sharing flag, and among the
+  // people actually on this rota rather than everybody in the team. A salaried
+  // person may share and still have no priced shift — their wage belongs to
+  // the month, not to a Tuesday — and counting them as covered made a rota
+  // look cheaper the more salaried people were on it.
+  const priced = new Set(
+    entries
+      .filter((entry) => entry.pay !== null && entry.pay !== undefined)
+      .map((entry) => entry.member_id),
+  );
+
+  const sharing = [...priced].filter((id) => rostered.has(id)).length;
 
   return {
     covered: Math.round(covered * 100) / 100,

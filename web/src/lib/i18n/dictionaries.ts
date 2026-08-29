@@ -584,10 +584,10 @@ export const RU: Dictionary = {
   'Tips per hour on days with rain against days without. Wage does not move with the weather, so it is left out.':
     'Чаевые в час в дождливые дни против сухих. Ставка от погоды не зависит, поэтому в расчёт не идёт.',
   'What this rota costs': 'Во что обходится этот график',
-  'sharing': 'делятся',
+  'priced': 'с известной оплатой',
   'Not counted:': 'Не учтено:',
-  'rostered by people who do not share what they earn. There is no estimate for it.':
-    'у тех, кто не делится своим заработком. Оценки по ним нет.',
+  'whose pay this rota cannot price — not shared, or on a salary that belongs to the month rather than the day. There is no estimate for it.':
+    'оплату которых график посчитать не может — либо не делятся, либо оклад, который принадлежит месяцу, а не дню. Оценки по ним нет.',
   'Dearest day': 'Самый дорогой день',
   'Break': 'Перерыв',
   'Break is over': 'Перерыв закончился',
@@ -3054,10 +3054,10 @@ export const UK: Dictionary = {
   'Tips per hour on days with rain against days without. Wage does not move with the weather, so it is left out.':
     'Чайові за годину в дощові дні проти сухих. Ставка від погоди не залежить, тож у розрахунок не йде.',
   'What this rota costs': 'У що обходиться цей графік',
-  'sharing': 'діляться',
+  'priced': 'з відомою оплатою',
   'Not counted:': 'Не враховано:',
-  'rostered by people who do not share what they earn. There is no estimate for it.':
-    'у тих, хто не ділиться своїм заробітком. Оцінки по них немає.',
+  'whose pay this rota cannot price — not shared, or on a salary that belongs to the month rather than the day. There is no estimate for it.':
+    'оплату яких графік порахувати не може — або не діляться, або оклад, що належить місяцю, а не дню. Оцінки по них немає.',
   'Dearest day': 'Найдорожчий день',
   'Break': 'Перерва',
   'Time on break': 'Скільки триває перерва',

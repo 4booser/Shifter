@@ -33,7 +33,7 @@ export function WeekCostPanel({ rota }: { rota: Rota }) {
       <div className="panel-head mb-2">
         <span>{t('What this rota costs')}</span>
         <span className="text-faint">
-          {cost.sharing}/{cost.people} {t('sharing')}
+          {cost.sharing}/{cost.people} {t('priced')}
         </span>
       </div>
 
@@ -57,7 +57,7 @@ export function WeekCostPanel({ rota }: { rota: Rota }) {
       {cost.uncoveredHours > 0 && (
         <p className="field-hint mt-2">
           {t('Not counted:')} {cost.uncoveredHours} {t('h')}{' '}
-          {t('rostered by people who do not share what they earn. There is no estimate for it.')}
+          {t('whose pay this rota cannot price — not shared, or on a salary that belongs to the month rather than the day. There is no estimate for it.')}
         </p>
       )}
 

@@ -58,6 +58,21 @@ describe('what a week of rota costs', () => {
     expect(cost.covered).toBe(800);
   });
 
+  it('does not count a salaried person as costing nothing', () => {
+    // A rota cannot attribute a monthly wage to a Tuesday, so it prices those
+    // shifts as null. Counting them as covered made a rota look cheaper the
+    // more salaried people were on it — which is exactly backwards.
+    const cost = weekCost(
+      [entry(1, '2026-03-02', 8, 800), entry(2, '2026-03-02', 10, null)],
+      [member(1, true), member(2, true)],
+    );
+
+    expect(cost.covered).toBe(800);
+    expect(cost.uncoveredHours).toBe(10);
+    expect(cost.sharing).toBe(1);
+    expect(cost.people).toBe(2);
+  });
+
   it('counts sharers among the people on this rota, not the whole team', () => {
     // A crew of twenty where four are rostered and all four share is fully
     // covered. Counting against the team roll would print "4 of 20" over a

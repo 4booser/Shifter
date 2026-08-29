@@ -150,7 +150,12 @@ public class TeamRepository : ITeamRepository
         {
             SalaryPeriod.Hour => (amount ?? 0m) * (decimal)paid.TotalHours,
             SalaryPeriod.Day => amount ?? 0m,
-            _ => 0m,
+            // Null, not zero. A salaried day is not a free day, and a caller
+            // adding these up got a rota that looked cheaper the more salaried
+            // people were on it. Null already means "no figure here" for
+            // everybody who has not shared, and this is the same answer for a
+            // different reason.
+            _ => null,
         };
     }
 

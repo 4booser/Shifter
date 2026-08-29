@@ -20,8 +20,17 @@ public sealed class TwoFactorService
     private static readonly TimeSpan TicketLife = TimeSpan.FromMinutes(5);
 
     private readonly ShifterDbContext _db;
+    private readonly LoginThrottle _throttle;
 
-    public TwoFactorService(ShifterDbContext db) => _db = db;
+    public TwoFactorService(ShifterDbContext db, LoginThrottle throttle)
+    {
+        _db = db;
+        _throttle = throttle;
+    }
+
+    // Colons cannot appear in logins, so these keys never collide with the
+    // front door's own.
+    private static string DoorKey(int userId) => $"2fa:{userId}";
 
     // ==== Setup ====
 
@@ -70,8 +79,17 @@ public sealed class TwoFactorService
         if (user.TotpEnabledAt is null || user.TotpSecret is null)
             throw new ConflictException("Two-factor is not on.");
 
+        // Turning the lock off is as sensitive as walking through it; the
+        // same door count applies.
+        _throttle.EnsureOpen(DoorKey(userId));
+
         if (!Totp.Verify(user.TotpSecret, code) && !BurnBackup(user, code))
+        {
+            _throttle.RecordFailure(DoorKey(userId));
             throw new ValidationException("That code did not match.");
+        }
+
+        _throttle.Reset(DoorKey(userId));
 
         user.TotpSecret = null;
         user.TotpEnabledAt = null;
@@ -104,17 +122,25 @@ public sealed class TwoFactorService
         if (!Tickets.TryGetValue(ticket, out var entry) || entry.Expires < DateTime.UtcNow)
             throw new UnauthorizedException("Sign in again — the code window expired.");
 
+        // The lock outlives the ticket: a fresh password sign-in mints a new
+        // ticket, and without this the second door could be knocked forever.
+        _throttle.EnsureOpen(DoorKey(entry.UserId));
+
         var user = await UserAsync(entry.UserId, ct);
 
         var totpOk = user.TotpSecret is not null && Totp.Verify(user.TotpSecret, code);
         var backupOk = !totpOk && BurnBackup(user, code);
 
         if (!totpOk && !backupOk)
+        {
+            _throttle.RecordFailure(DoorKey(entry.UserId));
             throw new UnauthorizedException("That code did not match.");
+        }
 
         if (backupOk) await _db.SaveChangesAsync(ct);
 
         Tickets.TryRemove(ticket, out _);
+        _throttle.Reset(DoorKey(entry.UserId));
 
         return (user.Id, user.Login);
     }

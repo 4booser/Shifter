@@ -95,17 +95,20 @@ public class ChangePasswordHandler : IRequestHandler<ChangePasswordDto, ProfileD
     private readonly IUserQuery _users;
     private readonly IUserCommand _command;
     private readonly ITokenCommand _tokens;
+    private readonly Auth.Services.LoginThrottle _throttle;
     private readonly ILogger<ChangePasswordHandler> _logger;
 
     public ChangePasswordHandler(
         IUserQuery users,
         IUserCommand command,
         ITokenCommand tokens,
+        Auth.Services.LoginThrottle throttle,
         ILogger<ChangePasswordHandler> logger)
     {
         _users = users;
         _command = command;
         _tokens = tokens;
+        _throttle = throttle;
         _logger = logger;
     }
 
@@ -123,13 +126,20 @@ public class ChangePasswordHandler : IRequestHandler<ChangePasswordDto, ProfileD
 
         // An account that already has a password must prove it knows the old
         // one: a stolen access token should not be enough to take the account.
+        // And the proof is counted — otherwise this check is a quiet oracle
+        // for guessing the current password from behind that stolen token.
         if (user.PasswordHash is not null)
         {
+            _throttle.EnsureOpen($"pw:{user.Id}");
+
             if (string.IsNullOrEmpty(request.current_password)
                 || !BCrypt.Net.BCrypt.Verify(request.current_password, user.PasswordHash))
             {
+                _throttle.RecordFailure($"pw:{user.Id}");
                 throw new UnauthorizedException("Current password is wrong.");
             }
+
+            _throttle.Reset($"pw:{user.Id}");
         }
 
         user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.new_password);
@@ -237,17 +247,20 @@ public class DeleteAccountHandler : IRequestHandler<DeleteAccountDto, Unit>
     private readonly IUserQuery _users;
     private readonly IUserCommand _command;
     private readonly ITokenCommand _tokens;
+    private readonly Auth.Services.LoginThrottle _throttle;
     private readonly ILogger<DeleteAccountHandler> _logger;
 
     public DeleteAccountHandler(
         IUserQuery users,
         IUserCommand command,
         ITokenCommand tokens,
+        Auth.Services.LoginThrottle throttle,
         ILogger<DeleteAccountHandler> logger)
     {
         _users = users;
         _command = command;
         _tokens = tokens;
+        _throttle = throttle;
         _logger = logger;
     }
 
@@ -261,11 +274,18 @@ public class DeleteAccountHandler : IRequestHandler<DeleteAccountDto, Unit>
         if (!string.Equals(request.confirm_login, user.Login, StringComparison.Ordinal))
             throw new ValidationException("Type your login exactly to confirm.");
 
-        if (user.PasswordHash is not null
-            && (string.IsNullOrEmpty(request.password)
-                || !BCrypt.Net.BCrypt.Verify(request.password, user.PasswordHash)))
+        // The same counted door as the password change: this check is the
+        // third place a stolen token could quietly try passwords against.
+        if (user.PasswordHash is not null)
         {
-            throw new UnauthorizedException("Password is wrong.");
+            _throttle.EnsureOpen($"pw:{user.Id}");
+
+            if (string.IsNullOrEmpty(request.password)
+                || !BCrypt.Net.BCrypt.Verify(request.password, user.PasswordHash))
+            {
+                _throttle.RecordFailure($"pw:{user.Id}");
+                throw new UnauthorizedException("Password is wrong.");
+            }
         }
 
         // Sessions first: if the delete fails the account is at least locked,

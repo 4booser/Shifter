@@ -5,6 +5,7 @@ import { useMemo } from 'react';
 import { useI18n } from '@/lib/i18n';
 import { MonoAccount, MonoStatementItem, fromMinor } from '@/lib/mono/mono';
 import { balanceCurve } from '@/lib/mono/mono-shape';
+import { ChartTip, CrossHair, useChartHover } from '@/components/charts/hover';
 import { Money } from '@/components/ui/bits';
 import { CountUp } from '@/components/ui/motion';
 
@@ -27,9 +28,10 @@ export function BankHero({
   from: string;
   to: string;
 }) {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
 
   const curve = useMemo(() => balanceCurve(items, from, to), [items, from, to]);
+  const { ref, hover, onMove, onLeave } = useChartHover<{ day: string; balance: number }>();
 
   const width = 640;
   const height = 120;
@@ -86,7 +88,36 @@ export function BankHero({
       </div>
 
       {path !== null && curve !== null && (
-        <div className="mt-2">
+        <div
+          ref={ref}
+          className="relative mt-2"
+          onMouseMove={(event) => {
+            const box = ref.current?.getBoundingClientRect();
+
+            if (box === undefined) return;
+
+            onMove(
+              event,
+              curve.map((point, index) => ({
+                x: (index / Math.max(1, curve.length - 1)) * box.width,
+                datum: point,
+              })),
+            );
+          }}
+          onMouseLeave={onLeave}
+        >
+          {hover !== null && <CrossHair x={hover.x} />}
+          {hover !== null && (
+            <ChartTip x={hover.x}>
+              <b>
+                {new Date(`${hover.datum.day}T12:00:00`).toLocaleDateString(lang, {
+                  day: 'numeric',
+                  month: 'short',
+                })}
+              </b>
+              <div className="tabular"><Money value={hover.datum.balance} /></div>
+            </ChartTip>
+          )}
           <svg viewBox={`0 0 ${width} ${height}`} className="block w-full" preserveAspectRatio="none">
             <defs>
               <linearGradient id="bank-hero-fill" x1="0" y1="0" x2="0" y2="1">

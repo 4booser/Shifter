@@ -28,6 +28,7 @@ import { InsightsPanel } from '@/components/dashboard/insights-panel';
 import { TileStrip } from '@/components/dashboard/tiles';
 import { TipsTicker } from '@/components/dashboard/tips-ticker';
 import { DailyBrief } from '@/components/dashboard/daily-brief';
+import { BriefChart } from '@/components/dashboard/brief-chart';
 import { PALETTE_EVENT } from '@/components/command/palette';
 import { useReveal } from '@/lib/fx';
 import { SearchModal } from '@/components/dashboard/modals/search-modal';
@@ -316,15 +317,24 @@ function Dashboard() {
         wheel, and it unpinned halfway down anyway.
       */}
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start">
+        {/* The two side columns wear the same cap and scroll inside it, so
+            they are the same height by construction — one line with the
+            calendar between them. */}
+        <div className="contents lg:block lg:max-h-[calc(100dvh-5.5rem)] lg:flex-none lg:self-start lg:overflow-y-auto lg:pr-0.5 lg:sticky lg:top-[4.25rem]">
         <Sidebar />
+        </div>
         <div className="order-1 flex min-w-0 flex-1 flex-col gap-3 lg:order-none">
           <MonthGrid onSearch={() => setSearchOpen(true)} onSettings={() => setSettingsOpen(true)} />
           {/* The page used to trail off under the grid; the day in words
               belongs exactly there. */}
           {!needsSetup && <DailyBrief />}
+          {!needsSetup && <BriefChart />}
           {!needsSetup && <DraftWeek />}
         </div>
-        <div className="order-2 w-full flex-none lg:order-none lg:w-72 xl:w-80" data-tour="daypanel">
+        <div
+          className="order-2 w-full flex-none lg:order-none lg:sticky lg:top-[4.25rem] lg:max-h-[calc(100dvh-5.5rem)] lg:w-72 lg:overflow-y-auto lg:pr-0.5 xl:w-80"
+          data-tour="daypanel"
+        >
           <DayPanel />
           <ConflictModal />
         </div>

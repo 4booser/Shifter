@@ -165,7 +165,9 @@ export function Sidebar() {
             }}
           />
         ) : (
-          <ul className="flex flex-col gap-1">
+          /* Five rows, then the list scrolls inside itself: the palettes must
+             not decide the column's height — the columns line up instead. */
+          <ul className="flex max-h-[12.5rem] flex-col gap-1 overflow-y-auto pr-1">
             {templates.map((template) => {
               const active = state.brush?.id === template.id;
 
@@ -272,7 +274,7 @@ export function Sidebar() {
             }}
           />
         ) : (
-          <ul className="flex flex-col gap-1">
+          <ul className="flex max-h-[12.5rem] flex-col gap-1 overflow-y-auto pr-1">
             {eventTypes.map((item) => {
               const active = state.eventBrush?.id === item.id;
 

@@ -24,27 +24,10 @@ import { Money } from '@/components/ui/bits';
  * Colour follows the category, never its rank. Every figure comes из
  * выписки and nowhere else; estimates have no seat at this table.
  */
-export function BankSpending({
-  items,
-  from,
-  to,
-  account,
-}: {
-  items: MonoStatementItem[];
-  from: string;
-  to: string;
-  account: MonoAccount | null;
-}) {
-  const { t } = useI18n();
-
+/** Everything the spending cards read, computed once per card. */
+function useSpend(items: MonoStatementItem[], from: string, to: string) {
   const rules = useMono((state) => state.rules);
   const budgets = useMono((state) => state.budgets);
-  const setRules = useMono((state) => state.setRules);
-  const setBudget = useMono((state) => state.setBudget);
-
-  const [open, setOpen] = useState<string | null>(null);
-  const [limitFor, setLimitFor] = useState<string | null>(null);
-  const [limitDraft, setLimitDraft] = useState('');
 
   // Last month, for the «а раньше» column: same width window ending where
   // this one starts.
@@ -85,17 +68,35 @@ export function BankSpending({
     return budgetState(budgets, categories, now.getDate(), daysInMonth);
   }, [budgets, categories]);
 
-  if (items.length === 0) return null;
-
-  // One denominator for the whole card: everything that left the card,
+  // One denominator for the whole shelf: everything that left the card,
   // holds and cancelled refunds excluded. flow() keeps transfers out of its
   // totals — right for «пришло/ушло наружу», wrong here, because the rows
-  // below show «Переводы» as a category and a bar must sum to its own list.
+  // show «Переводы» as a category and a bar must sum to its own list.
   const spentAll = deltas.reduce((sum, row) => sum + row.total, 0);
   const previousAll = previous.reduce((sum, row) => sum + row.total, 0);
-
   const spentDelta =
     previousAll > 0 ? Math.round(((spentAll - previousAll) / previousAll) * 100) : null;
+
+  return {
+    rules, budgets, categories, previous, deltas, totals, days, usual,
+    people, standing, odd, back, limits, spentAll, spentDelta,
+  };
+}
+
+/** ==== The headline: what the stretch took, and the one bar ==== */
+export function SpendHeadline({
+  items,
+  from,
+  to,
+}: {
+  items: MonoStatementItem[];
+  from: string;
+  to: string;
+}) {
+  const { t } = useI18n();
+  const { deltas, totals, usual, back, spentAll, spentDelta } = useSpend(items, from, to);
+
+  if (items.length === 0) return null;
 
   const shown = deltas.slice(0, 8);
   const tail = deltas.slice(8).reduce((sum, row) => sum + row.total, 0);
@@ -139,20 +140,18 @@ export function BankSpending({
             category; the 2px gaps are what keep neighbours readable. */}
         <div className="mt-4 flex h-7 w-full gap-[2px] overflow-hidden rounded-lg" role="img" aria-label={t('Spending by category, one bar')}>
           {shown.map((row) => (
-            <button
+            <div
               key={row.name}
-              type="button"
-              className="group relative h-full min-w-[6px] cursor-pointer transition-[flex-grow] duration-300"
+              className="group relative h-full min-w-[6px]"
               style={{ flexGrow: row.total, flexBasis: 0, background: categoryStyle(row.name).hue }}
               title={`${row.name} — ₴${Math.round(row.total).toLocaleString('ru')}`}
-              onClick={() => setOpen(open === row.name ? null : row.name)}
             >
               {row.total / spentAll > 0.14 && (
                 <span className="pointer-events-none absolute inset-0 grid place-items-center text-[0.7rem] font-bold text-white/95">
                   {Math.round((row.total / spentAll) * 100)}%
                 </span>
               )}
-            </button>
+            </div>
           ))}
           {tail > 0 && (
             <div
@@ -171,8 +170,35 @@ export function BankSpending({
           </p>
         )}
       </section>
+    </>
+  );
+}
 
-      {/* ==== Categories, each one openable ==== */}
+/** ==== Categories, each one openable ==== */
+export function SpendCategories({
+  items,
+  from,
+  to,
+}: {
+  items: MonoStatementItem[];
+  from: string;
+  to: string;
+}) {
+  const { t } = useI18n();
+  const { rules, budgets, deltas, limits, spentAll } = useSpend(items, from, to);
+  const setRules = useMono((state) => state.setRules);
+  const setBudget = useMono((state) => state.setBudget);
+
+  const [open, setOpen] = useState<string | null>(null);
+  const [limitFor, setLimitFor] = useState<string | null>(null);
+  const [limitDraft, setLimitDraft] = useState('');
+
+  if (items.length === 0) return null;
+
+  const shown = deltas.slice(0, 8);
+  const tail = deltas.slice(8).reduce((sum, row) => sum + row.total, 0);
+
+  return (
       <section className="card reveal p-4">
         <h3 className="mb-2 text-[0.98rem] font-bold">{t('Where it goes')}</h3>
 
@@ -267,11 +293,42 @@ export function BankSpending({
           </p>
         )}
       </section>
+  );
+}
 
-      {/* ==== The daily rhythm ==== */}
-      <DayRhythm days={days} usual={usual} items={items} rules={rules} />
+/** ==== The daily rhythm ==== */
+export function SpendRhythm({
+  items,
+  from,
+  to,
+}: {
+  items: MonoStatementItem[];
+  from: string;
+  to: string;
+}) {
+  const { days, usual, rules } = useSpend(items, from, to);
 
-      {/* ==== Who, most often ==== */}
+  if (items.length === 0) return null;
+
+  return <DayRhythm days={days} usual={usual} items={items} rules={rules} />;
+}
+
+/** ==== Who, most often ==== */
+export function SpendPlaces({
+  items,
+  from,
+  to,
+}: {
+  items: MonoStatementItem[];
+  from: string;
+  to: string;
+}) {
+  const { t } = useI18n();
+  const { people } = useSpend(items, from, to);
+
+  if (items.length === 0 || people.length === 0) return null;
+
+  return (
       <section className="card reveal p-4">
         <h3 className="mb-2 text-[0.98rem] font-bold">{t('Where you actually go')}</h3>
         <div className="flex flex-wrap gap-1.5">
@@ -284,8 +341,25 @@ export function BankSpending({
           ))}
         </div>
       </section>
+  );
+}
 
-      {/* ==== Standing charges ==== */}
+/** ==== Standing charges ==== */
+export function SpendStanding({
+  items,
+  from,
+  to,
+}: {
+  items: MonoStatementItem[];
+  from: string;
+  to: string;
+}) {
+  const { t } = useI18n();
+  const { standing } = useSpend(items, from, to);
+
+  if (items.length === 0) return null;
+
+  return (
       <section className="card reveal p-4">
         <h3 className="mb-1 text-[0.98rem] font-bold">{t('Comes round by itself')}</h3>
         {standing.length === 0 ? (
@@ -316,8 +390,26 @@ export function BankSpending({
           </div>
         )}
       </section>
+  );
+}
 
-      {/* ==== Oddities ==== */}
+/** ==== Oddities and the way out ==== */
+export function SpendOddities({
+  items,
+  from,
+  to,
+}: {
+  items: MonoStatementItem[];
+  from: string;
+  to: string;
+}) {
+  const { t } = useI18n();
+  const { rules, odd } = useSpend(items, from, to);
+
+  if (items.length === 0) return null;
+
+  return (
+    <>
       {odd.length > 0 && (
         <section className="card reveal p-4">
           <div className="panel-head mb-2">

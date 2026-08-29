@@ -1,6 +1,6 @@
 import { MonoStatementItem, dayOf, spent } from './mono';
 import { CategoryRule, categorise } from './mono-rules';
-import { merchantKey } from './mono-insights';
+import { isTransfer, merchantKey } from './mono-insights';
 
 /*
  * The visual grammar of «куда уходят деньги».
@@ -156,4 +156,131 @@ export const merchantsIn = (
   return [...totals.values()]
     .sort((one, two) => two.total - one.total)
     .slice(0, keep);
+};
+
+/** One month's in/out, for the paired columns. */
+export interface MonthFlow {
+  month: string;
+  earned: number;
+  spent: number;
+}
+
+/**
+ * The last N months as money in against money out, transfers excluded on
+ * both sides (the same isTransfer the flow card uses), oldest first.
+ */
+export const monthlyFlows = (
+  items: MonoStatementItem[],
+  months: number,
+  today = new Date(),
+): MonthFlow[] => {
+  const rows: MonthFlow[] = [];
+
+  for (let back = months - 1; back >= 0; back -= 1) {
+    const at = new Date(today.getFullYear(), today.getMonth() - back, 1);
+    const key = `${at.getFullYear()}-${String(at.getMonth() + 1).padStart(2, '0')}`;
+
+    rows.push({ month: key, earned: 0, spent: 0 });
+  }
+
+  const index = new Map(rows.map((row) => [row.month, row]));
+
+  for (const item of items) {
+    if (item.hold) continue;
+    if (isTransfer(item)) continue;
+
+    const row = index.get(dayOf(item).slice(0, 7));
+
+    if (row === undefined) continue;
+
+    if (item.amount > 0) row.earned += item.amount / 100;
+    else row.spent += -item.amount / 100;
+  }
+
+  return rows.map((row) => ({
+    ...row,
+    earned: Math.round(row.earned * 100) / 100,
+    spent: Math.round(row.spent * 100) / 100,
+  }));
+};
+
+/** The top categories month by month, for the stacked columns. */
+export interface CategoryMonth {
+  month: string;
+  parts: { name: string; total: number }[];
+}
+
+export const categoryMonths = (
+  items: MonoStatementItem[],
+  rules: CategoryRule[],
+  months: number,
+  keep = 5,
+  today = new Date(),
+): CategoryMonth[] => {
+  const keys: string[] = [];
+
+  for (let back = months - 1; back >= 0; back -= 1) {
+    const at = new Date(today.getFullYear(), today.getMonth() - back, 1);
+
+    keys.push(`${at.getFullYear()}-${String(at.getMonth() + 1).padStart(2, '0')}`);
+  }
+
+  const totals = new Map<string, Map<string, number>>(keys.map((key) => [key, new Map()]));
+  const overall = new Map<string, number>();
+
+  for (const item of items) {
+    if (item.amount >= 0 || item.hold) continue;
+
+    const month = dayOf(item).slice(0, 7);
+    const bucket = totals.get(month);
+
+    if (bucket === undefined) continue;
+
+    const name = categorise(item, rules);
+    const value = spent(item);
+
+    bucket.set(name, (bucket.get(name) ?? 0) + value);
+    overall.set(name, (overall.get(name) ?? 0) + value);
+  }
+
+  // The kept names are chosen across the whole window, so a category keeps
+  // its slot (and its colour) from month to month instead of flickering in
+  // and out of «остальное».
+  const kept = [...overall.entries()]
+    .sort((one, two) => two[1] - one[1])
+    .slice(0, keep)
+    .map(([name]) => name);
+
+  return keys.map((month) => {
+    const bucket = totals.get(month)!;
+    const parts = kept
+      .map((name) => ({ name, total: Math.round((bucket.get(name) ?? 0) * 100) / 100 }))
+      .filter((part) => part.total > 0);
+    const rest = [...bucket.entries()]
+      .filter(([name]) => !kept.includes(name))
+      .reduce((sum, [, value]) => sum + value, 0);
+
+    if (rest > 0) parts.push({ name: 'остальное', total: Math.round(rest * 100) / 100 });
+
+    return { month, parts };
+  });
+};
+
+/**
+ * The month as a running total, day by day — the pace line. Two of these
+ * side by side answer «я трачу быстрее прошлого месяца?» honestly, because
+ * both are drawn from the same statement with the same rule.
+ */
+export const cumulativeSpend = (
+  items: MonoStatementItem[],
+  from: string,
+  to: string,
+): DaySpend[] => {
+  let running = 0;
+
+  return dailySpend(items, from, to).map((day) => {
+    running += day.total;
+
+    return { day: day.day, total: Math.round(running * 100) / 100 };
+  });
 };

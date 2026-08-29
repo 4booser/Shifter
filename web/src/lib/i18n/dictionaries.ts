@@ -1015,6 +1015,28 @@ export const RU: Dictionary = {
   'Your chronicle': 'Ваша хроника',
   'Your cities': 'Ваши города',
   'over the limit': 'превышен',
+  'The month, as the brief sees it': 'Месяц, каким его видит сводка',
+  'by month’s end': 'к концу месяца',
+  'the brief’s projection': 'прогноз сводки',
+  'Solid is recorded; dashed is the brief’s own pace figure, drawn as the guess it is.':
+    'Сплошное — записано; пунктир — темп из самой сводки, нарисованный как догадка, которой он и является.',
+  'The green dot is the best day': 'Зелёная точка — лучший день',
+  'The amber tick is payday.': 'Янтарная засечка — день выплаты.',
+  'In against out, month by month': 'Пришло против ушло, по месяцам',
+  'Transfers stay out of both columns.': 'Переводы не входят ни в один столбик.',
+  'The mix, month by month': 'Состав трат по месяцам',
+  'A category keeps its colour and its slot — what changes is how much of the column it takes.':
+    'Категория держит свой цвет и место — меняется лишь её доля в столбике.',
+  'The pace': 'Темп',
+  'Running total against last month, day for day. Faster is visible by the third day, not the thirtieth.':
+    'Нарастающий итог против прошлого месяца, день в день. Быстрее — видно на третий день, а не на тридцатый.',
+  'last month': 'прошлый месяц',
+  'day': 'день',
+  'Dashed is last month walking the same days.': 'Пунктир — прошлый месяц теми же днями.',
+  'At a usual day, the balance holds': 'При обычном дне остатка хватит на',
+  'Arithmetic, not a promise — the forecast below knows about paydays, this line does not.':
+    'Арифметика, не обещание: прогноз рядом знает про зарплаты, эта строка — нет.',
+
   'Spent over this stretch': 'Потрачено за отрезок',
   'vs the stretch before': 'к прошлому отрезку',
   'A usual day costs': 'Обычный день стоит',
@@ -3017,6 +3039,28 @@ export const UK: Dictionary = {
   'Your chronicle': 'Ваша хроніка',
   'Your cities': 'Ваші міста',
   'over the limit': 'перевищено',
+  'The month, as the brief sees it': 'Місяць, яким його бачить зведення',
+  'by month’s end': 'до кінця місяця',
+  'the brief’s projection': 'прогноз зведення',
+  'Solid is recorded; dashed is the brief’s own pace figure, drawn as the guess it is.':
+    'Суцільне — записано; пунктир — темп із самого зведення, намальований як здогад, яким він і є.',
+  'The green dot is the best day': 'Зелена крапка — найкращий день',
+  'The amber tick is payday.': 'Бурштинова засічка — день виплати.',
+  'In against out, month by month': 'Прийшло проти пішло, за місяцями',
+  'Transfers stay out of both columns.': 'Перекази не входять до жодного стовпчика.',
+  'The mix, month by month': 'Склад витрат за місяцями',
+  'A category keeps its colour and its slot — what changes is how much of the column it takes.':
+    'Категорія тримає свій колір і місце — змінюється лише її частка у стовпчику.',
+  'The pace': 'Темп',
+  'Running total against last month, day for day. Faster is visible by the third day, not the thirtieth.':
+    'Наростаючий підсумок проти минулого місяця, день у день. Швидше — видно на третій день, а не на тридцятий.',
+  'last month': 'минулий місяць',
+  'day': 'день',
+  'Dashed is last month walking the same days.': 'Пунктир — минулий місяць тими ж днями.',
+  'At a usual day, the balance holds': 'За звичайного дня залишку вистачить на',
+  'Arithmetic, not a promise — the forecast below knows about paydays, this line does not.':
+    'Арифметика, не обіцянка: прогноз поруч знає про зарплати, цей рядок — ні.',
+
   'Spent over this stretch': 'Витрачено за відрізок',
   'vs the stretch before': 'до минулого відрізка',
   'A usual day costs': 'Звичайний день коштує',

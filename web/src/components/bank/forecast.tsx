@@ -9,7 +9,8 @@ import { useI18n } from '@/lib/i18n';
 import { MonoAccount, MonoStatementItem, dayOf, fromMinor } from '@/lib/mono/mono';
 import { recurring } from '@/lib/mono/mono-insights';
 import { usualDay } from '@/lib/mono/mono-work';
-import { Runway, buildRunway, chargesAhead } from '@/lib/mono/runway';
+import { Runway, RunwayDay, buildRunway, chargesAhead } from '@/lib/mono/runway';
+import { ChartTip, CrossHair, useChartHover } from '@/components/charts/hover';
 import { CountUp } from '@/components/ui/motion';
 import { Money } from '@/components/ui/bits';
 
@@ -49,6 +50,8 @@ export function BankForecast({
       .then(setOwed)
       .catch(() => setOwed(null));
   }, []);
+
+  const hoverKit = useChartHover<RunwayDay>();
 
   const runway = useMemo((): Runway | null => {
     if (items.length === 0) return null;
@@ -155,7 +158,38 @@ export function BankForecast({
         </span>
       </div>
 
-      <div className="mt-1">
+      <div
+        ref={hoverKit.ref}
+        className="relative mt-1"
+        onMouseMove={(event) => {
+          const box = hoverKit.ref.current?.getBoundingClientRect();
+
+          if (box === undefined) return;
+
+          hoverKit.onMove(
+            event,
+            runway.days.map((day, index) => ({
+              x: (index / Math.max(1, runway.days.length - 1)) * box.width,
+              datum: day,
+            })),
+          );
+        }}
+        onMouseLeave={hoverKit.onLeave}
+      >
+        {hoverKit.hover !== null && <CrossHair x={hoverKit.hover.x} />}
+        {hoverKit.hover !== null && (
+          <ChartTip x={hoverKit.hover.x}>
+            <b>{spellDay(hoverKit.hover.datum.day)}</b>
+            <div className={`tabular ${hoverKit.hover.datum.balance < 0 ? 'text-danger' : ''}`}>
+              ≈<Money value={Math.round(hoverKit.hover.datum.balance)} />
+            </div>
+            {hoverKit.hover.datum.events.map((event) => (
+              <div key={event.name} className={`tabular text-[0.72rem] ${event.amount > 0 ? 'text-good' : 'text-warn'}`}>
+                {event.amount > 0 ? '+' : ''}<Money value={event.amount} /> {event.name}
+              </div>
+            ))}
+          </ChartTip>
+        )}
         <svg viewBox={`0 0 ${width} ${height}`} className="block w-full" preserveAspectRatio="none">
           <defs>
             <linearGradient id="runway-fill" x1="0" y1="0" x2="0" y2="1">

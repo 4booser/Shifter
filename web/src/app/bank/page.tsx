@@ -16,7 +16,20 @@ import { BankLock, bankLockEnabled, setBankLock } from '@/components/bank/lock';
 import { BankForecast } from '@/components/bank/forecast';
 import { BankShape } from '@/components/bank/shape';
 import { BankWage } from '@/components/bank/wage';
-import { BankSpending } from '@/components/bank/spending';
+import {
+  SpendCategories,
+  SpendHeadline,
+  SpendOddities,
+  SpendPlaces,
+  SpendRhythm,
+  SpendStanding,
+} from '@/components/bank/spending';
+import {
+  CategoryMonthsCard,
+  MonthlyFlowsCard,
+  ReserveCard,
+  SpendPaceCard,
+} from '@/components/bank/charts';
 import { BankWork } from '@/components/bank/work';
 
 /**
@@ -80,13 +93,15 @@ export default function BankPage() {
 
   return (
     <Shell>
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-3 py-4">
+      <div className="mx-auto flex w-full max-w-[1380px] flex-col gap-4 px-3 py-4">
         {mono.token === undefined && null}
 
         {mono.token === null && <BankConnect />}
 
         {mono.token !== null && mono.token !== undefined && (
           <BankLock>
+            {/* ==== Row: the curve, with the accounts desk beside it ==== */}
+            <div className="grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
             <BankHero
               account={account ?? null}
               items={mono.items}
@@ -179,12 +194,24 @@ export default function BankPage() {
                 <Alert kind="error">{mono.error}</Alert>
               )}
             </section>
+            </div>
 
-            {/* ==== The wage, if one looks to have landed ==== */}
-            <BankWage items={mono.items} />
+            {/* ==== Row: forward-looking ==== */}
+            <div className="grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+              {/* ==== Дожить до зарплаты: the forward-looking chart ==== */}
+              <BankForecast account={account ?? null} items={mono.items} />
 
-            {/* ==== Дожить до зарплаты: the one forward-looking chart ==== */}
-            <BankForecast account={account ?? null} items={mono.items} />
+              <div className="flex flex-col gap-4">
+                {/* ==== The wage, if one looks to have landed ==== */}
+                <BankWage items={mono.items} />
+                <ReserveCard
+                  account={account ?? null}
+                  items={mono.items}
+                  from={bounds.from}
+                  to={bounds.to}
+                />
+              </div>
+            </div>
 
             {/* ==== Month picker ==== */}
             <div className="flex items-center justify-between">
@@ -200,19 +227,36 @@ export default function BankPage() {
               <Alert kind="info">{t('Nothing loaded yet — press “Refresh this month”.')}</Alert>
             )}
 
-            {/* ==== The work↔money crossovers, which are the whole point ==== */}
-            <BankWork items={mono.items} days={days} from={bounds.from} to={bounds.to} />
+            {/* ==== The headline and its bar, full width ==== */}
+            <SpendHeadline items={mono.items} from={bounds.from} to={bounds.to} />
 
-            {/* ==== Spending analysis ==== */}
-            <BankSpending
-              items={mono.items}
-              from={bounds.from}
-              to={bounds.to}
-              account={account ?? null}
-            />
+            {/* ==== Row: categories beside the rhythm and the pace ==== */}
+            <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+              <SpendCategories items={mono.items} from={bounds.from} to={bounds.to} />
+              <div className="flex flex-col gap-4">
+                <SpendRhythm items={mono.items} from={bounds.from} to={bounds.to} />
+                <SpendPaceCard items={mono.items} from={bounds.from} to={bounds.to} />
+              </div>
+            </div>
 
-            {/* ==== The month's shape ==== */}
-            <BankShape items={mono.items} from={bounds.from} to={bounds.to} />
+            {/* ==== Row: the months, in against out and the mix ==== */}
+            <div className="grid items-start gap-4 xl:grid-cols-2">
+              <MonthlyFlowsCard items={mono.items} />
+              <CategoryMonthsCard items={mono.items} rules={mono.rules} />
+            </div>
+
+            {/* ==== Row: places, standing, oddities ==== */}
+            <div className="grid items-start gap-4 xl:grid-cols-3">
+              <SpendPlaces items={mono.items} from={bounds.from} to={bounds.to} />
+              <SpendStanding items={mono.items} from={bounds.from} to={bounds.to} />
+              <SpendOddities items={mono.items} from={bounds.from} to={bounds.to} />
+            </div>
+
+            {/* ==== Row: the work crossover beside the month's shape ==== */}
+            <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
+              <BankWork items={mono.items} days={days} from={bounds.from} to={bounds.to} />
+              <BankShape items={mono.items} from={bounds.from} to={bounds.to} />
+            </div>
           </BankLock>
         )}
       </div>

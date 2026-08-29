@@ -9,7 +9,12 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "bundleIdentifier": "ink.shifter.app",
-      "supportsTablet": false
+      "supportsTablet": false,
+      "entitlements": {
+        "com.apple.security.application-groups": [
+          "group.ink.shifter.app"
+        ]
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -60,7 +65,8 @@
         }
       ],
       "expo-sharing",
-      "expo-background-task"
+      "expo-background-task",
+      "@bacons/apple-targets"
     ],
     "experiments": {
       "typedRoutes": true,

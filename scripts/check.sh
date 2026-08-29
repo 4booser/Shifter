@@ -22,4 +22,15 @@ cd ../mobile
 npx tsc --noEmit
 npm test --silent
 
+# The widget's own arithmetic, where a Swift compiler exists. It is skipped
+# rather than failed elsewhere: the widget only ships from a Mac, and a Linux
+# runner that could not check it must not stop everything else.
+if command -v swiftc > /dev/null 2>&1; then
+  echo "── widget"
+  cd targets/widget
+  swiftc -O -o "${TMPDIR:-/tmp}/shifter-widget-check" Snapshot.swift check/main.swift
+  "${TMPDIR:-/tmp}/shifter-widget-check"
+  cd ../..
+fi
+
 echo "── all clear"

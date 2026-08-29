@@ -26,6 +26,7 @@ import { MonthJump } from '@/components/month-jump';
 import { Appear, Press } from '@/components/motion';
 import { Brush, brushColour, brushName, brushSymbol, PaintPicker } from '@/components/paint-picker';
 import { Colors, Palette } from '@/constants/theme';
+import { todayIn, useWidget } from '@/lib/use-widget';
 import { api } from '@/lib/api';
 import {
   addMonths,
@@ -33,6 +34,7 @@ import {
   dayLabel,
   monthsBetween,
   monthBounds,
+  monthLabel,
   monthOnly,
   nextDay,
   runsOf,
@@ -226,6 +228,23 @@ export default function CalendarScreen() {
   );
 
   const here = months[monthKeyOf(month)];
+
+  // Everything the widget is allowed to know, written from the figures this
+  // screen has already computed — so what somebody sees on their home screen
+  // and what they see when they open the app cannot disagree.
+  //
+  // Only from the month that actually contains today: swiping to March must
+  // not leave a widget claiming March is the current month.
+  const thisMonth = months[monthKeyOf(currentMonth())];
+
+  useWidget({
+    today: todayIn(thisMonth?.days ?? []),
+    monthLabel: monthLabel(currentMonth()),
+    monthEarned: thisMonth?.earned ?? 0,
+    monthGoal: null,
+    monthDays: thisMonth?.worked ?? 0,
+    money: null,
+  });
 
   // A page shows the neighbouring months' days in its corners, so it reads
   // from all three. The totals above it never do — they are the server's

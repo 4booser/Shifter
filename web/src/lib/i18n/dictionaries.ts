@@ -1030,6 +1030,15 @@ export const RU: Dictionary = {
   'The pace': 'Темп',
   'The operations themselves': 'Сами операции',
   'Worth filling in': 'Дозаполнить',
+  'The shelf': 'Полка',
+  'in a row': 'подряд',
+  'Crossed goals, kept as they stood — raising the bar later does not move a trophy already won.':
+    'Закрытые цели, как они стояли: поднять планку потом — не значит передвинуть уже выигранный кубок.',
+  'дневная': 'дневная',
+  'недельная': 'недельная',
+  'месячная': 'месячная',
+  'годовая': 'годовая',
+
   'Not homework — a map: each line names what the gap costs. The list shortens as you fill it.':
     'Не домашка — карта: каждая строка говорит, что стоит дыра. Список сокращается от заполнения.',
   'e.g.': 'напр.',
@@ -3075,6 +3084,15 @@ export const UK: Dictionary = {
   'The pace': 'Темп',
   'The operations themselves': 'Самі операції',
   'Worth filling in': 'Дозаповнити',
+  'The shelf': 'Полиця',
+  'in a row': 'поспіль',
+  'Crossed goals, kept as they stood — raising the bar later does not move a trophy already won.':
+    'Закриті цілі, як вони стояли: підняти планку потім — не означає пересунути вже виграний кубок.',
+  'дневная': 'денна',
+  'недельная': 'тижнева',
+  'месячная': 'місячна',
+  'годовая': 'річна',
+
   'Not homework — a map: each line names what the gap costs. The list shortens as you fill it.':
     'Не домашка — мапа: кожен рядок каже, чого коштує дірка. Список коротшає від заповнення.',
   'e.g.': 'напр.',

@@ -26,6 +26,7 @@ public class ShifterDbContext : DbContext
     public DbSet<TaxProfile> TaxProfiles => Set<TaxProfile>();
     public DbSet<CoverOffer> CoverOffers => Set<CoverOffer>();
     public DbSet<Goal> Goals => Set<Goal>();
+    public DbSet<GoalCheer> GoalCheers => Set<GoalCheer>();
     public DbSet<WebhookEndpoint> WebhookEndpoints => Set<WebhookEndpoint>();
     public DbSet<WebhookDelivery> WebhookDeliveries => Set<WebhookDelivery>();
     public DbSet<PushSubscription> PushSubscriptions => Set<PushSubscription>();

@@ -76,6 +76,16 @@ public sealed class GoalCelebrator
             tracked.CelebratedOn = from;
             await _command.UpdateGoalAsync(tracked, ct);
 
+            // The trophy row: CelebratedOn above remembers only the latest
+            // period; this is the shelf's material and is append-only.
+            await _command.AddGoalCheerAsync(new GoalCheer
+            {
+                UserId = userId,
+                Period = goal.Period,
+                PeriodFrom = from,
+                Amount = goal.Amount,
+            }, ct);
+
             var label = GoalHandler.PeriodName(goal.Period);
 
             await _push.NotifyAsync(

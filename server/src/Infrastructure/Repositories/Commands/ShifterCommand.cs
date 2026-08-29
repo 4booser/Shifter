@@ -7,6 +7,12 @@ namespace Shifter.Infrastructure.Repositories.Commands;
 
 public class ShifterCommand : IShifterCommand
 {
+    public async Task AddGoalCheerAsync(GoalCheer cheer, CancellationToken ct)
+    {
+        await _db.GoalCheers.AddAsync(cheer, ct);
+        await _db.SaveChangesAsync(ct);
+    }
+
     private readonly ShifterDbContext _db;
 
     public ShifterCommand(ShifterDbContext db) => _db = db;

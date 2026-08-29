@@ -548,5 +548,55 @@ public sealed class PromisesOverHttpTests(Api api)
         (await client.PutAsJsonAsync(
             $"/shifter/v1/days/{Day(12)}", Body(700m, null))).EnsureSuccessStatusCode();
     }
+
+    [Fact]
+    public async Task A_crossed_goal_lands_on_the_shelf_and_stays_there()
+    {
+        var (client, _) = await api.SignInAsync("shelf");
+        var place = await PlaceAsync(client, "Бар");
+        var shift = await ShiftAsync(client, "Смена", place, 100m, "10:00", "18:00");
+
+        // A weekly goal of 500: one 800-hryvnia day crosses it.
+        (await client.PutAsJsonAsync("/shifter/v1/goals", new
+        {
+            period = "week",
+            amount = 500m,
+            anchor = (DateOnly?)null,
+            note = (string?)null,
+        })).EnsureSuccessStatusCode();
+
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+        (await WorkAsync(client, today.ToString("yyyy-MM-dd"), shift)).EnsureSuccessStatusCode();
+
+        var history = await Read(await client.GetAsync("/shifter/v1/goals/history"));
+        var cheers = history.GetProperty("cheers").EnumerateArray().ToArray();
+
+        Assert.Single(cheers);
+        Assert.Equal("week", cheers[0].GetProperty("period").GetString());
+        Assert.Equal(500m, cheers[0].GetProperty("amount").GetDecimal());
+        Assert.Equal(1, history.GetProperty("weekly_streak").GetInt32());
+
+        // Saving the same day again must not double the trophy: each period
+        // is cheered exactly once.
+        (await WorkAsync(client, today.ToString("yyyy-MM-dd"), shift)).EnsureSuccessStatusCode();
+
+        history = await Read(await client.GetAsync("/shifter/v1/goals/history"));
+
+        Assert.Single(history.GetProperty("cheers").EnumerateArray().ToArray());
+
+        // Raising the bar later does not rewrite the trophy already won.
+        (await client.PutAsJsonAsync("/shifter/v1/goals", new
+        {
+            period = "week",
+            amount = 9_000m,
+            anchor = (DateOnly?)null,
+            note = (string?)null,
+        })).EnsureSuccessStatusCode();
+
+        history = await Read(await client.GetAsync("/shifter/v1/goals/history"));
+
+        Assert.Equal(500m, history.GetProperty("cheers")[0].GetProperty("amount").GetDecimal());
+    }
 }
 

@@ -257,6 +257,15 @@ public sealed class FakeShifterCommand : IShifterCommand
         return Task.FromResult(0);
     }
 
+    public List<GoalCheer> Cheers { get; } = [];
+
+    public Task AddGoalCheerAsync(GoalCheer cheer, CancellationToken ct)
+    {
+        Cheers.Add(cheer);
+
+        return Task.CompletedTask;
+    }
+
     public Task DeletePayoutAsync(Payout payout, CancellationToken ct)
     {
         Deleted.Add(payout);

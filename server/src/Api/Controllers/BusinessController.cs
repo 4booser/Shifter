@@ -357,6 +357,44 @@ public class BusinessController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>
+    /// The trophy shelf: every crossed goal, kept, newest first — plus the
+    /// current run of closed weeks, said as a number.
+    /// </summary>
+    [HttpGet]
+    [Route("goals/history")]
+    public async Task<IActionResult> GoalHistory(
+        [FromServices] Shifter.Infrastructure.Persistence.DbContexts.ShifterDbContext db,
+        CancellationToken ct)
+    {
+        var userId = CurrentUserId();
+
+        var cheers = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions
+            .ToArrayAsync(
+                Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions
+                    .AsNoTracking(db.GoalCheers)
+                    .Where(cheer => cheer.UserId == userId)
+                    .OrderByDescending(cheer => cheer.PeriodFrom),
+                ct);
+
+        var streak = Shifter.Domain.Entities.GoalStreaks.Weekly(
+            cheers.Where(cheer => cheer.Period == Shifter.Domain.Entities.GoalPeriod.Week)
+                .Select(cheer => cheer.PeriodFrom),
+            DateOnly.FromDateTime(DateTime.UtcNow));
+
+        return Ok(new
+        {
+            weekly_streak = streak,
+            cheers = cheers.Take(60).Select(cheer => new
+            {
+                period = GoalHandler.PeriodName(cheer.Period),
+                period_from = cheer.PeriodFrom.ToString("yyyy-MM-dd"),
+                amount = cheer.Amount,
+                celebrated_at = cheer.CelebratedAt,
+            }),
+        });
+    }
+
     [HttpGet]
     [Route("goals")]
     public async Task<ActionResult<GoalItemDto[]>> GetGoals(

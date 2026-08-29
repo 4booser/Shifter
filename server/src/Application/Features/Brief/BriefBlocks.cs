@@ -80,7 +80,8 @@ public static class BriefBlocks
         /// and the default nobody has to choose; a person who works split
         /// doubles by arrangement can set their own and stop being told.
         /// </summary>
-        double restHours = RestBetweenShifts.DefaultHours)
+        double restHours = RestBetweenShifts.DefaultHours,
+        int weeklyGoalStreak = 0)
     {
         var say = Say.In(lang);
 
@@ -88,7 +89,7 @@ public static class BriefBlocks
         [
             Today(month, today, facts, say),
             Month(month, previous, today, facts, say),
-            Observations(month, previous, today, say, restHours),
+            Observations(month, previous, today, say, restHours, weeklyGoalStreak),
             Ahead(month, today, ahead, say),
         ];
 
@@ -224,7 +225,7 @@ public static class BriefBlocks
     // ==== What the data noticed ====
 
     private static BriefBlockDto Observations(
-        DaysDto month, DaysDto previous, DateOnly today, Say say, double restHours)
+        DaysDto month, DaysDto previous, DateOnly today, Say say, double restHours, int weeklyGoalStreak = 0)
     {
         List<BriefLineDto> lines = [];
 
@@ -332,6 +333,18 @@ public static class BriefBlocks
                         $"{Nth(streak, true)} день поспіль; найдовша серія була {record} днів"),
                 null,
                 streak >= 7 ? "warn" : null));
+        }
+
+        // Closed weekly goals in a row: the same tone as the day streak —
+        // a number and its history, never advice.
+        if (weeklyGoalStreak >= 3)
+        {
+            lines.Add(new BriefLineDto(
+                say.Of(
+                    $"Недельная цель закрыта {weeklyGoalStreak} недель подряд",
+                    $"Тижнева мета закрита {weeklyGoalStreak} тижнів поспіль"),
+                null,
+                "good"));
         }
 
         // The average shift: the figure people compare a new job against.

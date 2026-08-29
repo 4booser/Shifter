@@ -129,4 +129,22 @@ public sealed class RhythmTests
         Assert.NotNull(verdict);
         Assert.False(verdict.IsNoticeable);
     }
+
+    [Fact]
+    public void A_weekly_goal_streak_counts_back_and_survives_an_open_week()
+    {
+        // Mondays: three consecutive closed weeks before the current one.
+        DateOnly[] closed = [new(2026, 3, 2), new(2026, 3, 9), new(2026, 3, 16)];
+
+        // Thursday of the NEXT week: the current week is still open, and an
+        // open current week must not break the run.
+        Assert.Equal(3, GoalStreaks.Weekly(closed, new DateOnly(2026, 3, 26)));
+
+        // The current week already closed joins the run.
+        Assert.Equal(4, GoalStreaks.Weekly([.. closed, new DateOnly(2026, 3, 23)], new DateOnly(2026, 3, 26)));
+
+        // A whole week missed ends it.
+        Assert.Equal(0, GoalStreaks.Weekly(closed, new DateOnly(2026, 4, 9)));
+    }
 }
+

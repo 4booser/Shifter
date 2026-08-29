@@ -61,6 +61,9 @@ public interface IShifterCommand
     /// <summary>Persists changes to an entity the query layer handed back tracked.</summary>
     Task SaveAsync(CancellationToken ct);
 
+    /// <summary>Appends one trophy row; the shelf is append-only by design.</summary>
+    Task AddGoalCheerAsync(GoalCheer cheer, CancellationToken ct);
+
     /// <summary>
     /// Creates the day or replaces its contents. Keyed on (UserId, Date), which
     /// carries a unique index, so a day cannot end up split across two rows.

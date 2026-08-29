@@ -153,7 +153,16 @@ public sealed class BriefService
             .Select(user => (double?)user.RestHours)
             .FirstOrDefaultAsync(ct) ?? RestBetweenShifts.DefaultHours;
 
-        return BriefBlocks.Build(month, previous, today, facts, ahead, lang, restHours);
+        // The run of closed weekly goals: read here because the blocks are
+        // pure and the shelf lives in the database.
+        var weekCheers = await _db.GoalCheers.AsNoTracking()
+            .Where(cheer => cheer.UserId == userId && cheer.Period == GoalPeriod.Week)
+            .Select(cheer => cheer.PeriodFrom)
+            .ToArrayAsync(ct);
+
+        var goalStreak = GoalStreaks.Weekly(weekCheers, today);
+
+        return BriefBlocks.Build(month, previous, today, facts, ahead, lang, restHours, goalStreak);
     }
 
     /// <summary>Only finished numbers, straight from the handlers the screens read.</summary>

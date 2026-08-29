@@ -139,3 +139,38 @@ jobs:
           PGPASSWORD=ci psql -h localhost -U shifter_user -d shifter -tAc \
             'SELECT count(*) FROM "Users";' | grep -qv '^0$' \
             || { echo "the seeded rows did not survive the migration"; exit 1; }
+
+  api:
+    name: The API answering over HTTP
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: shifter_user
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: shifter
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U shifter_user -d shifter"
+          --health-interval 5s --health-timeout 3s --health-retries 20
+    env:
+      # One schema for both contexts, made and remade by the test host itself.
+      ConnectionStrings__Shifter: "Host=localhost;Port=5432;Database=shifter;Username=shifter_user;Password=ci"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      # Everything this application promises about money happens across a
+      # controller, EF and Postgres together, and until now nothing exercised
+      # the three at once. Every money defect found in the last week survived
+      # a unit test on fakes.
+      #
+      # The schema is built by the migrations from an empty schema on every
+      # run, so this also watches the whole history execute — which the
+      # migration guards, being text checks, never do.
+      - run: dotnet test tests/Shifter.Api.Tests/Shifter.Api.Tests.csproj --nologo

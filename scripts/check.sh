@@ -12,6 +12,16 @@ cd "$(dirname "$0")/.."
 echo "── server"
 dotnet test tests/Shifter.Tests/Shifter.Tests.csproj --nologo --verbosity quiet
 
+# The same application over real HTTP against a real Postgres. Skipped rather
+# than failed where there is no database to talk to: a laptop on a train should
+# still be able to run everything else, and CI has one either way.
+if pg_isready -h localhost -q 2> /dev/null; then
+  echo "── api"
+  dotnet test tests/Shifter.Api.Tests/Shifter.Api.Tests.csproj --nologo --verbosity quiet
+else
+  echo "── api (skipped: no postgres on localhost)"
+fi
+
 echo "── web"
 cd web
 npx tsc --noEmit

@@ -190,3 +190,14 @@ static string Redact(string path)
 
     return path;
 }
+
+/// <summary>
+/// Named so a test host can boot the real application.
+///
+/// Top-level statements produce an internal Program, which
+/// WebApplicationFactory cannot reach. Everything this app does about money
+/// happens across HTTP, EF and Postgres together, and until now nothing
+/// exercised the three of them at once — every defect found this week was
+/// found by hand.
+/// </summary>
+public partial class Program;

@@ -20,6 +20,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useMono } from '@/store/mono';
 import { chargesAhead, recurring } from '@/lib/mono-insights';
 
+import { BriefChart } from '@/components/brief-chart';
 import { DailyBrief } from '@/components/daily-brief';
 import { DayPeek } from '@/components/day-peek';
 import { Floating } from '@/components/floating';
@@ -1064,6 +1065,7 @@ export default function CalendarScreen() {
         {brush === null && (
           <Appear index={2}>
             <DailyBrief palette={palette} onOpen={() => router.push('/assistant')} />
+            <BriefChart palette={palette} days={thisMonth?.days ?? []} />
           </Appear>
         )}
       </ScrollView>

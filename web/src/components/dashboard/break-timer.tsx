@@ -5,8 +5,10 @@ import { useEffect, useState } from 'react';
 import {
   BREAK_KEY,
   BreakRun,
+  TIMED_KEY,
   clock,
   readRun,
+  readTimed,
   remaining,
   runaway,
   taken,
@@ -38,7 +40,8 @@ export function BreakTimer({
   planned: number;
   /** Minutes already on this placement, so the button can say so. */
   taken: number;
-  onTaken: (minutes: number) => void;
+  /** The second argument says whether this placement was already timed today. */
+  onTaken: (minutes: number, alreadyTimed: boolean) => void;
 }) {
   const { t } = useI18n();
 
@@ -89,7 +92,18 @@ export function BreakTimer({
 
     // A break left running for three hours is a shut laptop, not a break.
     // Writing it would put a number nobody typed into somebody's paid hours.
-    if (write && !runaway(run, Date.now())) onTaken(taken(run, Date.now()));
+    if (!write || runaway(run, Date.now())) return;
+
+    // Whether this placement has been timed today decides between replacing
+    // the template's assumed break and adding a second real one.
+    const already = readTimed(window.localStorage.getItem(TIMED_KEY), dayKey);
+
+    onTaken(taken(run, Date.now()), already.includes(shiftId));
+
+    window.localStorage.setItem(
+      TIMED_KEY,
+      JSON.stringify({ dayKey, shiftIds: [...new Set([...already, shiftId])] }),
+    );
   };
 
   if (run !== null && !mine) return null;

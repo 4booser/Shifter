@@ -1,6 +1,15 @@
 import { describe, expect, it } from 'vitest';
 
-import { BreakRun, clock, readRun, remaining, runaway, taken } from '@/lib/calendar/break-timer';
+import {
+  BreakRun,
+  clock,
+  foldBreak,
+  readRun,
+  readTimed,
+  remaining,
+  runaway,
+  taken,
+} from '@/lib/calendar/break-timer';
 
 const run: BreakRun = {
   dayKey: '2026-03-14',
@@ -66,5 +75,39 @@ describe('the break that survives a refresh', () => {
     expect(readRun('not json', '2026-03-14')).toBeNull();
     expect(readRun('{"dayKey":"2026-03-14"}', '2026-03-14')).toBeNull();
     expect(readRun(null, '2026-03-14')).toBeNull();
+  });
+});
+
+describe('what a timed break does to the minutes already there', () => {
+  it('replaces the break a template assumed', () => {
+    // A template can apply half an hour automatically — an assumption about
+    // what this shift usually does. The timed one is a fact, and adding it to
+    // the assumption costs somebody a full hour of paid time instead of half.
+    expect(foldBreak(30, 30, false)).toBe(30);
+    expect(foldBreak(30, 47, false)).toBe(47);
+  });
+
+  it('adds a second break to the first', () => {
+    expect(foldBreak(30, 15, true)).toBe(45);
+  });
+
+  it('remembers which placements it has already spoken for today', () => {
+    const raw = JSON.stringify({ dayKey: '2026-03-14', shiftIds: [7, 9] });
+
+    expect(readTimed(raw, '2026-03-14')).toEqual([7, 9]);
+  });
+
+  it('forgets them on any other day', () => {
+    // Otherwise tomorrow's first break adds to tomorrow's assumption instead
+    // of replacing it.
+    const raw = JSON.stringify({ dayKey: '2026-03-14', shiftIds: [7] });
+
+    expect(readTimed(raw, '2026-03-15')).toEqual([]);
+  });
+
+  it('survives junk in the store', () => {
+    expect(readTimed('not json', '2026-03-14')).toEqual([]);
+    expect(readTimed('{"dayKey":"2026-03-14"}', '2026-03-14')).toEqual([]);
+    expect(readTimed(null, '2026-03-14')).toEqual([]);
   });
 });

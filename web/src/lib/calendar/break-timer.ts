@@ -25,6 +25,49 @@ export interface BreakRun {
 
 export const BREAK_KEY = 'shifter.break';
 
+/**
+ * Placements whose break the timer has already spoken for today.
+ *
+ * A shift template can apply a break automatically, and that figure is an
+ * assumption: "this shift usually has half an hour". The timed one is a fact.
+ * The first timed break on a placement therefore replaces what was assumed
+ * rather than adding to it, or somebody on a template with an automatic thirty
+ * minutes who then times thirty loses a full hour of paid time.
+ *
+ * A second break on the same placement is a second break and does add. Kept in
+ * the browser rather than in React state because the difference between the
+ * first and the second must survive a refresh — that is the whole point.
+ */
+export const TIMED_KEY = 'shifter.break.timed';
+
+export interface Timed {
+  dayKey: string;
+  shiftIds: number[];
+}
+
+/** The placements already timed today, dropping any other day's record. */
+export function readTimed(raw: string | null, dayKey: string): number[] {
+  if (raw === null) return [];
+
+  try {
+    const timed = JSON.parse(raw) as Timed;
+
+    if (timed.dayKey !== dayKey || !Array.isArray(timed.shiftIds)) return [];
+
+    return timed.shiftIds.filter((id) => typeof id === 'number');
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * What the placement's break minutes become after a timed break.
+ *
+ * First one replaces the assumption; later ones add to the record.
+ */
+export const foldBreak = (had: number, minutes: number, alreadyTimed: boolean): number =>
+  alreadyTimed ? had + minutes : minutes;
+
 /** Seconds left. Negative once the break has run over, which is not hidden. */
 export const remaining = (run: BreakRun, now: number): number =>
   Math.round((run.startedAt + run.planned * 60_000 - now) / 1000);

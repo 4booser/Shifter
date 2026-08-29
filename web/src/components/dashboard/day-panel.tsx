@@ -15,6 +15,7 @@ import {
 import { api } from '@/lib/api/http';
 import { useI18n } from '@/lib/i18n';
 import { BreakTimer } from '@/components/dashboard/break-timer';
+import { foldBreak } from '@/lib/calendar/break-timer';
 import { useMoney } from '@/lib/settings/money';
 import { useSettings } from '@/lib/settings/store';
 import { startLiveShift, useLive } from '@/lib/live/live-shift';
@@ -494,13 +495,20 @@ export function DayPanel() {
                         taken={
                           entry.shift_id in breaks ? breaks[entry.shift_id] : entry.break_minutes
                         }
-                        onTaken={(minutes) => {
+                        onTaken={(minutes, alreadyTimed) => {
                           const had =
                             entry.shift_id in breaks
                               ? breaks[entry.shift_id]
                               : entry.break_minutes;
 
-                          const next = { ...breaks, [entry.shift_id]: had + minutes };
+                          // The first timed break replaces what the template
+                          // assumed; a second one adds. Adding to the
+                          // assumption would cost an hour of paid time for a
+                          // half-hour break.
+                          const next = {
+                            ...breaks,
+                            [entry.shift_id]: foldBreak(had, minutes, alreadyTimed),
+                          };
 
                           setBreaks(next);
                           save(next);

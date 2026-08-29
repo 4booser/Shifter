@@ -1,0 +1,6 @@
+{
+  "name": "shift-activity",
+  "version": "1.0.0",
+  "description": "The running shift on the lock screen.",
+  "main": "index.ts"
+}

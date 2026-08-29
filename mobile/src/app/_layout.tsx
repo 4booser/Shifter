@@ -10,6 +10,7 @@ import { registerForPush, wireNotificationTaps } from '@/lib/notifications';
 // Imported for its side effect: the task has to be defined at module load,
 // before the system ever calls it, and it is defined nowhere else.
 import '@/lib/wage-watch';
+import { watchLiveShift } from '@/lib/live-activity';
 import { useLang } from '@/lib/i18n';
 import { useMono } from '@/store/mono';
 import { useSession } from '@/store/session';
@@ -36,7 +37,15 @@ export default function RootLayout() {
 
     void registerForPush(useLang.getState().lang);
 
-    return wireNotificationTaps();
+    const stopTaps = wireNotificationTaps();
+    // The lock screen follows the store for the app's whole life, so the four
+    // places a shift changes never have to remember to say so.
+    const stopShift = watchLiveShift();
+
+    return () => {
+      stopTaps?.();
+      stopShift();
+    };
   }, [session]);
 
   // Keychain still being read: the splash is covering everything anyway.

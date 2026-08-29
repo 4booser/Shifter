@@ -8,5 +8,6 @@ struct ShifterWidgets: WidgetBundle {
         TodayWidget()
         MonthWidget()
         MoneyWidget()
+        ShiftActivity()
     }
 }

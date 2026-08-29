@@ -598,5 +598,27 @@ public sealed class PromisesOverHttpTests(Api api)
 
         Assert.Equal(500m, history.GetProperty("cheers")[0].GetProperty("amount").GetDecimal());
     }
+
+    [Fact]
+    public async Task Every_save_leaves_a_line_in_the_days_own_history()
+    {
+        var (client, _) = await api.SignInAsync("audit");
+        var place = await PlaceAsync(client, "Бар");
+        var shift = await ShiftAsync(client, "Смена", place, 100m, "10:00", "18:00");
+
+        (await WorkAsync(client, Day(16), shift)).EnsureSuccessStatusCode();
+        (await WorkAsync(client, Day(16), shift)).EnsureSuccessStatusCode();
+
+        var trail = (await Read(await client.GetAsync($"/shifter/v1/days/{Day(16)}/history")))
+            .GetProperty("entries").EnumerateArray().ToArray();
+
+        // Two saves, two lines, newest first, each carrying the snapshot it
+        // left behind — the figures a person can check against the calendar.
+        Assert.Equal(2, trail.Length);
+        Assert.Equal("app", trail[0].GetProperty("source").GetString());
+        Assert.Equal(800m, trail[0].GetProperty("earned").GetDecimal());
+        Assert.Equal(1, trail[0].GetProperty("worked_count").GetInt32());
+        Assert.True(trail[0].GetProperty("at").GetDateTime() >= trail[1].GetProperty("at").GetDateTime());
+    }
 }
 

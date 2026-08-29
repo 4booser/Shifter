@@ -20,6 +20,7 @@ import { lockKind, LockKind, lockNameBy, lockStore, unlock } from '@/lib/lock';
 import { useSession } from '@/store/session';
 import { t, useLang } from '@/lib/i18n';
 import { DeviceSettings, deviceSettings, deviceToken } from '@/lib/notifications';
+import { shareAccountantCsv, shareIncomePdf, shareTakeout } from '@/lib/papers-share';
 
 interface Profile {
   login: string;
@@ -267,6 +268,44 @@ export default function SettingsScreen() {
         <Ionicons name="chevron-forward" size={16} color={palette.textSecondary} />
       </Press>
 
+      <Text style={styles.section}>{t('Бумаги')}</Text>
+      <Text style={styles.hint}>
+        {t('За этот год, по вашим же записям — и справка честно говорит об этом первой строкой.')}
+      </Text>
+
+      <Press
+        style={styles.linkRow}
+        onPress={() => {
+          void shareIncomePdf(lang === 'uk' ? 'ua' : 'ru');
+        }}
+      >
+        <Ionicons name="reader-outline" size={20} color={palette.textSecondary} />
+        <Text style={styles.linkText}>{t('Справка о доходе (PDF)')}</Text>
+        <Ionicons name="share-outline" size={16} color={palette.textSecondary} />
+      </Press>
+
+      <Press
+        style={styles.linkRow}
+        onPress={() => {
+          void shareAccountantCsv();
+        }}
+      >
+        <Ionicons name="grid-outline" size={20} color={palette.textSecondary} />
+        <Text style={styles.linkText}>{t('CSV бухгалтеру')}</Text>
+        <Ionicons name="share-outline" size={16} color={palette.textSecondary} />
+      </Press>
+
+      <Press
+        style={styles.linkRow}
+        onPress={() => {
+          void shareTakeout();
+        }}
+      >
+        <Ionicons name="archive-outline" size={20} color={palette.textSecondary} />
+        <Text style={styles.linkText}>{t('Скачать весь аккаунт (zip)')}</Text>
+        <Ionicons name="share-outline" size={16} color={palette.textSecondary} />
+      </Press>
+
       <Text style={styles.section}>{t('Остальное')}</Text>
       <Press
         style={styles.linkRow}
@@ -331,6 +370,7 @@ const makeStyles = (palette: Palette) =>
     langTextOn: { color: '#fff' },
 
     section: { color: palette.text, fontSize: 16, fontWeight: '700', marginTop: 10 },
+    hint: { color: palette.textSecondary, fontSize: 12.5, lineHeight: 17 },
     row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
     rowTitle: { color: palette.text, fontSize: 15, fontWeight: '600' },
     rowHint: { color: palette.textSecondary, fontSize: 12.5, lineHeight: 18, marginTop: 3 },

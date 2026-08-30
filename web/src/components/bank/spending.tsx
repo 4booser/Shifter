@@ -58,7 +58,7 @@ function useSpend(items: MonoStatementItem[], from: string, to: string) {
   const days = useMemo(() => dailySpend(items, from, to), [items, from, to]);
   const usual = useMemo(() => usualDay(days), [days]);
   const people = useMemo(() => counterparties(items, from, to), [items, from, to]);
-  const standing = useMemo(() => recurring(items, from, to), [items, from, to]);
+  const standing = useMemo(() => recurring(items, to), [items, to]);
   const odd = useMemo(() => oddities(items, from, to), [items, from, to]);
   const back = useMemo(() => cashback(items, (item) => categorise(item, rules), from, to), [items, rules, from, to]);
 

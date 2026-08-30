@@ -183,7 +183,7 @@ describe('standing charges', () => {
   it('finds a charge that comes round every month', () => {
     const items = monthly('NETFLIX', 199, ['2026-06-05', '2026-07-05', '2026-08-05']);
 
-    const [found] = recurring(items, '2026-06-01', '2026-08-31');
+    const [found] = recurring(items, '2026-08-31');
 
     expect(found.name).toBe('NETFLIX');
     expect(found.amount).toBe(199);
@@ -200,7 +200,7 @@ describe('standing charges', () => {
     // somebody's forecast.
     const items = monthly('GYM', 500, ['2026-07-05', '2026-08-05']);
 
-    expect(recurring(items, '2026-06-01', '2026-08-31')).toEqual([]);
+    expect(recurring(items, '2026-08-31')).toEqual([]);
   });
 
   it('ignores a shop visited on a rhythm for whatever it costs', () => {
@@ -210,20 +210,20 @@ describe('standing charges', () => {
       item({ day: '2026-08-05', description: 'SILPO', amount: -41000 }),
     ];
 
-    expect(recurring(items, '2026-06-01', '2026-08-31')).toEqual([]);
+    expect(recurring(items, '2026-08-31')).toEqual([]);
   });
 
   it('will not stretch a rhythm across a gap that breaks it', () => {
     const items = monthly('X', 100, ['2026-01-05', '2026-02-05', '2026-08-05']);
 
-    expect(recurring(items, '2026-01-01', '2026-08-31')).toEqual([]);
+    expect(recurring(items, '2026-08-31')).toEqual([]);
   });
 
   it('marks something that started inside the window as new', () => {
     const weekly = monthly('NEW THING', 80, ['2026-08-05', '2026-08-12', '2026-08-19']);
     const old = monthly('OLD THING', 80, ['2026-07-02', '2026-07-09', '2026-07-16']);
 
-    const rows = recurring([...weekly, ...old], '2026-07-01', '2026-08-31');
+    const rows = recurring([...weekly, ...old], '2026-08-31');
 
     expect(rows.find((row) => row.name === 'NEW THING')?.fresh).toBe(true);
     expect(rows.find((row) => row.name === 'OLD THING')?.fresh).toBe(false);
@@ -231,7 +231,7 @@ describe('standing charges', () => {
 
   it('costs a month the same however often it comes round', () => {
     const weekly = monthly('PASS', 70, ['2026-08-01', '2026-08-08', '2026-08-15', '2026-08-22']);
-    const rows = recurring(weekly, '2026-08-01', '2026-08-31');
+    const rows = recurring(weekly, '2026-08-31');
 
     expect(rows[0].period).toBe('week');
     expect(Math.round(monthlyCost(rows))).toBe(300);

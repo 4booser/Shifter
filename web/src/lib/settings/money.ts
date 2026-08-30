@@ -10,15 +10,19 @@ export function formatMoney(settings: Settings, amount: number): string {
   // The mask keeps the currency mark so a hidden value still reads as money.
   if (hideAmounts) return currencyBefore ? `${currency}•••` : `••• ${currency}`;
 
-  const text = amount.toLocaleString(settings.language, {
+  // The sign stands in front of the whole thing: «−₴458», never «₴-458».
+  // Half the bank page said one and half the other before this line.
+  const sign = amount < 0 ? '−' : '';
+
+  const text = Math.abs(amount).toLocaleString(settings.language, {
     minimumFractionDigits: 0,
     maximumFractionDigits: settings.moneyDecimals,
     useGrouping: settings.groupThousands,
   });
 
-  if (currency === '') return text;
+  if (currency === '') return `${sign}${text}`;
 
-  return currencyBefore ? `${currency}${text}` : `${text} ${currency}`;
+  return currencyBefore ? `${sign}${currency}${text}` : `${sign}${text} ${currency}`;
 }
 
 /**

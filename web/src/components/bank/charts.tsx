@@ -71,19 +71,44 @@ export function MonthlyFlowsCard({ items }: { items: MonoStatementItem[] }) {
           </ChartTip>
         )}
 
+        {/* The scale, said once: a faint line at the tallest column's value. */}
+        <div className="absolute inset-x-0 top-[8%] border-t border-dashed border-border" aria-hidden>
+          <span className="absolute -top-2 right-0 bg-surface pl-1 text-[0.66rem] text-faint tabular">
+            <Money value={peak} />
+          </span>
+        </div>
+
         <div className="flex h-full items-end">
-          {shown.map((row) => (
-            <div key={row.month} className="flex h-full items-end justify-center gap-1" style={{ width: `${width}%` }}>
-              <div
-                className="w-[26%] rounded-t-[3px] bg-(--good)"
-                style={{ height: `${Math.max(2, (row.earned / peak) * 92)}%`, opacity: 0.85 }}
-              />
-              <div
-                className="w-[26%] rounded-t-[3px] bg-(--danger)"
-                style={{ height: `${Math.max(2, (row.spent / peak) * 92)}%`, opacity: 0.8 }}
-              />
-            </div>
-          ))}
+          {shown.map((row, index) => {
+            const latest = index === shown.length - 1;
+
+            return (
+              <div key={row.month} className="flex h-full items-end justify-center gap-1" style={{ width: `${width}%` }}>
+                <div className="relative flex h-full w-[26%] items-end">
+                  <div
+                    className="w-full rounded-t-[3px] bg-(--good)"
+                    style={{ height: `${Math.max(2, (row.earned / peak) * 92)}%`, opacity: latest ? 1 : 0.75 }}
+                  />
+                  {latest && (
+                    <span className="absolute -top-0.5 left-1/2 -translate-x-1/2 -translate-y-full text-[0.68rem] font-semibold text-good tabular">
+                      +{Math.round(row.earned / 1000)}K
+                    </span>
+                  )}
+                </div>
+                <div className="relative flex h-full w-[26%] items-end">
+                  <div
+                    className="w-full rounded-t-[3px] bg-(--danger)"
+                    style={{ height: `${Math.max(2, (row.spent / peak) * 92)}%`, opacity: latest ? 0.95 : 0.7 }}
+                  />
+                  {latest && (
+                    <span className="absolute -top-0.5 left-1/2 -translate-x-1/2 -translate-y-full text-[0.68rem] font-semibold text-danger tabular">
+                      −{Math.round(row.spent / 1000)}K
+                    </span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -188,6 +213,23 @@ export function CategoryMonthsCard({
             {monthName(row.month, lang)}
           </span>
         ))}
+      </div>
+
+      {/* The colours, named. Hover answers with figures; the legend answers
+          the cheaper question — which stripe is which — without a pointer. */}
+      <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
+        {[...new Map(
+          shown
+            .flatMap((row) => row.parts)
+            .map((part) => [part.name, part] as const),
+        ).keys()]
+          .slice(0, 6)
+          .map((name) => (
+            <span key={name} className="flex items-center gap-1 text-[0.72rem] text-muted">
+              <i className="h-2 w-2 flex-none rounded-full" style={{ background: categoryStyle(name).hue }} />
+              {name}
+            </span>
+          ))}
       </div>
     </section>
   );

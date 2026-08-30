@@ -71,7 +71,7 @@ export function BankForecast({
     // even out a heavy week, short enough to still be this person.
     const perDay = usualDay(items, monthAgo, today);
 
-    const standing = recurring(items, monthAgo, today);
+    const standing = recurring(items, today);
 
     const incomes = (owed?.periods ?? [])
       .filter((row) => row.expected > row.paid && row.stream !== 'commission')

@@ -74,3 +74,17 @@ public record ReconciliationDto(
     decimal awaited,
     /// <summary>Owed and past its due date.</summary>
     decimal overdue);
+
+/// <summary>
+/// The one rule for "when does money land next": the earliest unsettled
+/// period with something owed, due today or later. Both the brief and the
+/// assistant read paydays through this — two callers, one opinion.
+/// </summary>
+public static class NextPayout
+{
+    public static PayPeriodDto? From(ReconciliationDto schedule, DateOnly today) =>
+        schedule.periods
+            .Where(row => row.settled is null && row.due_on >= today && row.expected > 0m)
+            .OrderBy(row => row.due_on)
+            .FirstOrDefault();
+}

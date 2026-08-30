@@ -74,6 +74,16 @@ public static class AssistantWriter
                 : $"Процент принёс {Money(facts.RevenueEarned)} с выручки {Money(facts.RevenueCounted)}. "
                   + $"Это {Share(facts.RevenueEarned, facts.Earned)} от всего заработка.";
 
+        // "когда зарплата" is about the date; "какая зарплата" is about the
+        // figure and falls through to the earnings answer below.
+        if ((Asks("когда") && Asks("зарплат", "деньги", "аванс", "придут")) || Asks("выплат"))
+            return facts.DaysToPayday is not int wait
+                ? "Сверка выплат молчит: либо всё уже выплачено, либо у мест не задан день зарплаты."
+                : wait == 0
+                    ? $"Деньги должны прийти сегодня{(facts.PaydayAmount is decimal now && now > 0 ? $" — {Money(now)}" : "")}."
+                    : $"Ближайшие деньги через {wait} {Telegram.TelegramCommands.Plural(wait, "день", "дня", "дней")}"
+                      + (facts.PaydayAmount is decimal amount && amount > 0 ? $" — {Money(amount)}." : ".");
+
         if (Asks("налог", "на руки", "нетто"))
             return facts.Tax <= 0
                 ? $"Налог нигде не удерживался, так что на руки — все {Money(facts.Earned)}."

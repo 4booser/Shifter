@@ -133,7 +133,9 @@ public class AssistantTests
         double hours = 112,
         decimal tips = 300m,
         decimal revenue = 2_160m,
-        decimal previous = 15_000m) =>
+        decimal previous = 15_000m,
+        int? daysToPayday = null,
+        decimal? paydayAmount = null) =>
         new(
             "2026-03-01", "2026-03-31", "март 2026",
             earned, 0m, earned, 0m,
@@ -143,7 +145,37 @@ public class AssistantTests
             2_960m, "2026-03-05", "субботу", "пятницу", 640m, 11m, 17,
             [new AssistantPlace("Ночной бар", hours, earned, "UAH")],
             previous,
-            ["UAH"]);
+            ["UAH"],
+            daysToPayday,
+            paydayAmount);
+
+    [Fact]
+    public void WhenIsPaydayNamesTheDayAndTheFigure()
+    {
+        var answer = Flat(AssistantWriter.Answer("когда зарплата?", Facts(daysToPayday: 6, paydayAmount: 14_764m)));
+
+        Assert.Contains("через 6 дней", answer);
+        Assert.Contains("14 764", answer);
+    }
+
+    [Fact]
+    public void PaydayWithNothingOwedSaysSoInsteadOfGuessing()
+    {
+        var answer = AssistantWriter.Answer("когда будут деньги?", Facts());
+
+        Assert.Contains("Сверка выплат молчит", answer);
+    }
+
+    [Fact]
+    public void HowBigIsMyPayStaysAnEarningsQuestion()
+    {
+        // "какая зарплата" asks for the figure, not the date — it must fall
+        // through to the earnings answer even when a payday is known.
+        var answer = Flat(AssistantWriter.Answer("какая у меня зарплата", Facts(daysToPayday: 6)));
+
+        Assert.Contains("заработано", answer);
+        Assert.DoesNotContain("через 6", answer);
+    }
 
     [Fact]
     public void HowMuchIsTheDefaultQuestion()

@@ -194,10 +194,7 @@ public sealed class BriefService
         var schedule = await _reconciliation.BuildAsync(
             userId, today.AddDays(-45), today.AddDays(60), ct);
 
-        var due = schedule.periods
-            .Where(row => row.settled is null && row.due_on >= today && row.expected > 0m)
-            .OrderBy(row => row.due_on)
-            .FirstOrDefault();
+        var due = Shifter.Application.Features.business.DTOs.NextPayout.From(schedule, today);
 
         // With nothing owed yet, the period's own close is still an honest
         // "when it will be counted" — the fallback, never the headline.

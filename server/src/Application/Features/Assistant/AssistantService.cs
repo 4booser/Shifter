@@ -24,12 +24,18 @@ public sealed class AssistantService
 
     private readonly ShifterDbContext _db;
     private readonly IDayHandler _days;
+    private readonly Shifter.Application.Features.business.Services.Interfaces.IReconciliationHandler _reconciliation;
     private readonly GeminiAssistantClient _model;
 
-    public AssistantService(ShifterDbContext db, IDayHandler days, GeminiAssistantClient model)
+    public AssistantService(
+        ShifterDbContext db,
+        IDayHandler days,
+        Shifter.Application.Features.business.Services.Interfaces.IReconciliationHandler reconciliation,
+        GeminiAssistantClient model)
     {
         _db = db;
         _days = days;
+        _reconciliation = reconciliation;
         _model = model;
     }
 
@@ -187,6 +193,13 @@ public sealed class AssistantService
         var span = to.DayNumber - from.DayNumber + 1;
         var previous = await _days.ListAsync(userId, from.AddDays(-span), from.AddDays(-1), ct);
 
+        // Money's next landing goes through the same rule as the payouts
+        // page and the brief: two callers, one opinion (wave 64's law).
+        var anchorDay = today ?? to;
+        var schedule = await _reconciliation.BuildAsync(
+            userId, anchorDay.AddDays(-45), anchorDay.AddDays(60), ct);
+        var due = Shifter.Application.Features.business.DTOs.NextPayout.From(schedule, anchorDay);
+
         var worked = range.days.Where(day => day.shifts.Any(shift => shift.worked)).ToArray();
         var best = worked.OrderByDescending(day => day.earned).FirstOrDefault();
 
@@ -254,7 +267,9 @@ public sealed class AssistantService
                     place.currency.Length == 3 ? place.currency.ToUpperInvariant() : "UAH"))
                 .ToArray(),
             previous.total_earned,
-            range.currencies);
+            range.currencies,
+            due is null ? null : due.due_on.DayNumber - anchorDay.DayNumber,
+            due?.expected);
     }
 
     /// <summary>What to call this span in a sentence.</summary>

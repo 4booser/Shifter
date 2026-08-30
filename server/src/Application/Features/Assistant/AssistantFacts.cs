@@ -42,7 +42,10 @@ public sealed record AssistantFacts(
     AssistantPlace[] Places,
     /// <summary>The previous period of the same length, for "more or less than".</summary>
     decimal PreviousEarned,
-    string[] Currencies);
+    string[] Currencies,
+    /// <summary>Days until money lands, through the same rule the payouts page uses. Null when nothing is owed.</summary>
+    int? DaysToPayday = null,
+    decimal? PaydayAmount = null);
 
 public sealed record AssistantPlace(
     string Name,

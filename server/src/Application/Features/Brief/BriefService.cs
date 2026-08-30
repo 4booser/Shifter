@@ -127,23 +127,15 @@ public sealed class BriefService
             .FirstOrDefault();
         var nextShift = next?.shifts.FirstOrDefault();
 
-        // What lands next, taken from the reconciliation rather than guessed,
-        // so the figure here and the one on the payouts page are the same
-        // figure and not two opinions about it.
-        var schedule = await _reconciliation.BuildAsync(
-            userId, today.AddDays(-45), today.AddDays(60), ct);
-
-        var due = schedule.periods
-            .Where(row => row.settled is null && row.due_on >= today && row.expected > 0m)
-            .OrderBy(row => row.due_on)
-            .FirstOrDefault();
-
+        // The payday now rides in the facts, computed once from the same
+        // reconciliation the payouts page reads — asking again here was the
+        // second opinion this file warned about.
         var ahead = new AheadFacts(
             next?.date,
             nextShift?.name,
             nextShift?.start_time,
-            due is null ? facts.DaysToPayday : due.due_on.DayNumber - today.DayNumber,
-            due?.expected);
+            facts.DaysToPayday,
+            facts.PaydayAmount);
 
         // The rest somebody counts as enough is theirs, so it is read from
         // their account rather than assumed. Eleven is the EU daily rule and
@@ -194,20 +186,37 @@ public sealed class BriefService
 
         for (var cursor = today; worked.Contains(cursor); cursor = cursor.AddDays(-1)) streak++;
 
-        // The next close of a pay period among the places worked this month.
-        var places = await _db.Locations
-            .AsNoTracking()
-            .Where(place => place.UserId == userId && !place.Archived)
-            .ToArrayAsync(ct);
+        // When money actually lands, from the same reconciliation the
+        // payouts page reads — one answer to one question. The brief's own
+        // sentence, the blocks and the chart's amber tick all used to have
+        // opinions: this figure said "period closes tomorrow" while the
+        // blocks said "money in six days", and both were on screen at once.
+        var schedule = await _reconciliation.BuildAsync(
+            userId, today.AddDays(-45), today.AddDays(60), ct);
 
-        // The next close of a pay period among the places worked this month:
-        // the period holding today ends, and that is when money is counted.
-        DateOnly? payday = places
-            .Select(place => PayPeriodCalculator.PeriodFor(place, today).To)
-            .Where(date => date >= today)
-            .OrderBy(date => date)
-            .Select(date => (DateOnly?)date)
+        var due = schedule.periods
+            .Where(row => row.settled is null && row.due_on >= today && row.expected > 0m)
+            .OrderBy(row => row.due_on)
             .FirstOrDefault();
+
+        // With nothing owed yet, the period's own close is still an honest
+        // "when it will be counted" — the fallback, never the headline.
+        DateOnly? payday = due?.due_on;
+
+        if (payday is null)
+        {
+            var places = await _db.Locations
+                .AsNoTracking()
+                .Where(place => place.UserId == userId && !place.Archived)
+                .ToArrayAsync(ct);
+
+            payday = places
+                .Select(place => PayPeriodCalculator.PeriodFor(place, today).To)
+                .Where(date => date >= today)
+                .OrderBy(date => date)
+                .Select(date => (DateOnly?)date)
+                .FirstOrDefault();
+        }
 
         return new BriefFacts(
             today.ToString("yyyy-MM-dd"),
@@ -226,7 +235,7 @@ public sealed class BriefService
             best is null || best.earned <= 0 ? null : best.date.ToString("dd.MM"),
             month.total_earned > 0 ? Math.Round(month.tips_earned / month.total_earned, 3) : 0m,
             payday is DateOnly next ? next.DayNumber - today.DayNumber : null,
-            null,
+            due?.expected,
             []);
     }
 }

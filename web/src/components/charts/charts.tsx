@@ -317,7 +317,9 @@ export function Heatmap({ values, from, to }: { values: ReadonlyMap<string, numb
 
   return (
     <div className="relative">
-      <div className="flex gap-[3px] overflow-x-auto pb-1" onPointerLeave={() => setHover(null)}>
+      <div className="overflow-x-auto pb-1" onPointerLeave={() => setHover(null)}>
+        {/* w-max + mx-auto: a short year sits centred; a long one scrolls. */}
+        <div className="mx-auto flex w-max gap-[3px]">
         {weeks.map((week, weekIndex) => (
           <div key={weekIndex} className="fade-in flex flex-none flex-col gap-[3px]" style={{ ['--i' as string]: weekIndex % 30 }}>
             {week.map((cell, dayIndex) =>
@@ -334,6 +336,7 @@ export function Heatmap({ values, from, to }: { values: ReadonlyMap<string, numb
             )}
           </div>
         ))}
+        </div>
       </div>
       {hover && (
         <div className="card absolute -top-9 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap px-2.5 py-1 text-[0.78rem] shadow-(--shadow-lg)">

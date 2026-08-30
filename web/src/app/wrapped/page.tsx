@@ -351,7 +351,7 @@ function Wrapped() {
       ) : (
         <>
           {/* ==== The poster: a year that fills the screen ==== */}
-          <section className="reveal relative flex min-h-[72dvh] flex-col items-center justify-center overflow-hidden rounded-[calc(var(--radius)*1.8)] border border-border bg-surface p-6 text-center">
+          <section className="reveal relative flex min-h-[52dvh] flex-col items-center justify-center overflow-hidden rounded-[calc(var(--radius)*1.8)] border border-border bg-surface p-6 text-center">
             {/* The year itself is the wallpaper — enormous and half-there. */}
             <span
               aria-hidden

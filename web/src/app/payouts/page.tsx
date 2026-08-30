@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { calendarApi } from '@/lib/api/calendar';
 import { apiErrorMessage } from '@/lib/api/http';
@@ -437,7 +437,31 @@ function PeriodRow({
 }) {
   const { t } = useI18n();
   const [menuFor, setMenuFor] = useState<string | null>(null);
+  const menuHost = useRef<HTMLSpanElement>(null);
   const rowKey = `${row.location_id}:${row.period_from}:${row.stream}`;
+
+  // An open menu closes the way every menu on the platform does: a click
+  // anywhere else, or Escape. Without this it sat open until the next toggle.
+  useEffect(() => {
+    if (menuFor === null) return;
+
+    const away = (event: PointerEvent) => {
+      if (menuHost.current !== null && !menuHost.current.contains(event.target as Node)) {
+        setMenuFor(null);
+      }
+    };
+    const key = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setMenuFor(null);
+    };
+
+    document.addEventListener('pointerdown', away);
+    document.addEventListener('keydown', key);
+
+    return () => {
+      document.removeEventListener('pointerdown', away);
+      document.removeEventListener('keydown', key);
+    };
+  }, [menuFor]);
 
   // A shortfall somebody has finished arguing about: still short, no longer
   // chased. Only these two states can be closed — an open month has nothing
@@ -518,7 +542,7 @@ function PeriodRow({
       {/* Closing moves live behind one dot-menu: the audit counted four
           text buttons per row shouting over the figures. */}
       {(chaseable || row.settled !== null) && (
-        <span className="relative">
+        <span ref={menuHost} className="relative">
           <button
             type="button"
             className="btn btn-quiet btn-sm px-2"

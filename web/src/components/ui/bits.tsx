@@ -5,6 +5,7 @@ import { useI18n } from '@/lib/i18n';
 
 import { useMoney } from '@/lib/settings/money';
 import { Icon } from './icon';
+import { CountUp as TravelNumber } from './motion';
 
 /** Money as text, following the currency/privacy settings. */
 export function Money({
@@ -61,7 +62,10 @@ export function Delta({ percent, invert = false }: { percent: number | null; inv
 
 /**
  * Counts a number up to its value when it changes — the motion says "this just
- * recalculated". Honours reduced motion by jumping straight to the end.
+ * recalculated". Money by default; a custom format keeps hours and counters
+ * honest. One animation engine for the whole app: the framer CountUp in
+ * ui/motion.tsx does the travelling, this wrapper only adds the money default
+ * (a second rAF implementation lived here once and the two drifted).
  */
 export function CountUp({
   value,
@@ -73,41 +77,12 @@ export function CountUp({
   className?: string;
 }) {
   const { format: money } = useMoney();
-  const show = format ?? money;
-  const [frame, setFrame] = useState(value);
-  const from = useRef(0);
 
-  useEffect(() => {
-    const reduced = document.documentElement.dataset['motion'] === 'reduced';
-
-    if (reduced) {
-      from.current = value;
-      setFrame(value);
-
-      return;
-    }
-
-    const start = performance.now();
-    const origin = from.current;
-    const duration = 650;
-    let raf = 0;
-
-    const tick = (now: number) => {
-      const progress = Math.min(1, (now - start) / duration);
-      const eased = 1 - (1 - progress) ** 3;
-
-      setFrame(origin + (value - origin) * eased);
-
-      if (progress < 1) raf = requestAnimationFrame(tick);
-      else from.current = value;
-    };
-
-    raf = requestAnimationFrame(tick);
-
-    return () => cancelAnimationFrame(raf);
-  }, [value]);
-
-  return <span className={`tabular ${className ?? ''}`}>{show(frame)}</span>;
+  return (
+    <span className={`tabular ${className ?? ''}`}>
+      <TravelNumber value={value} format={format ?? money} />
+    </span>
+  );
 }
 
 /** A labelled on/off row with the same look everywhere. */

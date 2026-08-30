@@ -22,6 +22,39 @@ interface Release {
 /** Newest first; hand-written because a changelog is an editorial act. */
 const RELEASES: Release[] = [
   {
+    date: '2026-08-30',
+    icon: '🌙',
+    title: 'The night of locks',
+    points: [
+      'Five wrong passwords shut the door for a quarter hour — on every door, not just the front one',
+      'Two-factor sign-in, password change and «forgot password» now work from the phone',
+      'Sign-in errors speak your language and say how long the lock lasts',
+      'The reset form sends one letter per ten minutes — nobody can point it at your inbox',
+    ],
+  },
+  {
+    date: '2026-08-30',
+    icon: '📱',
+    title: 'The phone catches up',
+    points: [
+      'Hide amounts on the phone too: ₴••• everywhere, even in the wage push',
+      'Sales get steppers in the day editor; the brief draws its month right under itself',
+      'A forgotten running shift knocks on its own and closes at the plan, not at the timer',
+      'Close a pay period — paid in full or written off — right from the payouts card',
+    ],
+  },
+  {
+    date: '2026-08-30',
+    icon: '🟪',
+    title: 'A year at a glance',
+    points: [
+      'A year of weeks as a heat strip on both platforms — an empty cell is not a zero',
+      'One payday everywhere: the chart, the brief and the assistant finally agree',
+      'Ask «когда придут деньги» — the assistant names the day and the figure',
+      'The rain card and the calendar-subscription switch reached the pocket',
+    ],
+  },
+  {
     date: '2026-08-26',
     icon: '🔐',
     title: 'Security and the bot',

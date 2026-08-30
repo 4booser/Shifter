@@ -794,7 +794,7 @@ function Stats() {
 
       {/* ==== Mix + sources ==== */}
       <div className="grid gap-3 lg:grid-cols-2">
-        {trendParts.some((month) => month.shifts + month.sales + month.tips > 0) && (
+        {trendParts.filter((month) => month.shifts + month.sales + month.tips > 0).length >= 3 && (
           <Card title={t('What each month was made of')}>
             <Plot max={mixMax} height="11rem">
               {trendParts.filter((month) => month.shifts + month.sales + month.tips > 0).map((month) => {
@@ -940,38 +940,13 @@ function Stats() {
           </Card>
         )}
 
-        {sources.length > 0 && (
-          <Card title={t('Where the money came from')}>
-            {/* Composition strip: shares of one whole. */}
-            <div className="mb-3 flex h-5 gap-[2px] overflow-hidden rounded-(--radius)">
-              {sources.map((row, index) => (
-                <span
-                  key={row.name}
-                  title={`${t(row.name)}: ${formatMoney(settings, row.value)}`}
-                  style={{ width: `${(row.value / sourceTotal) * 100}%`, background: SOURCE_TINTS[index % SOURCE_TINTS.length] }}
-                />
-              ))}
-            </div>
-            <ul className="flex flex-col gap-1.5">
-              {sources.map((row, index) => (
-                <li key={row.name} className="grid grid-cols-[7rem_1fr_auto] items-center gap-2 text-[0.85rem]">
-                  <span className="flex items-center gap-1.5 text-muted">
-                    <span className="h-2 w-2 rounded-full" style={{ background: SOURCE_TINTS[index % SOURCE_TINTS.length] }} />
-                    {t(row.name)}
-                  </span>
-                  <span className="h-2 overflow-hidden rounded-full bg-surface-2">
-                    <span
-                      className="block h-full rounded-full"
-                      style={{
-                        width: `${(row.value / Math.max(...sources.map((source) => source.value))) * 100}%`,
-                        background: SOURCE_TINTS[index % SOURCE_TINTS.length],
-                      }}
-                    />
-                  </span>
-                  <Money value={row.value} className="font-semibold" />
-                </li>
-              ))}
-            </ul>
+      </div>
+
+      {/* ==== Waterfall + punchcard ==== */}
+      <div className="grid gap-3 lg:grid-cols-2">
+        {waterfallSteps.length > 0 && (
+          <Card title={t('How the money assembled')} hint={t('Every source in one bar; the cuts hang under it.')}>
+            <MoneyFlow steps={waterfallSteps} />
             {(summary.tip_out > 0 || summary.deductions > 0 || summary.tax > 0) && (
               <dl className="mt-3 flex flex-col gap-1 border-t border-border pt-2 text-[0.85rem]">
                 {summary.tip_out > 0 && (
@@ -1041,23 +1016,9 @@ function Stats() {
             )}
           </Card>
         )}
-      </div>
-
-      {/* ==== Waterfall + punchcard ==== */}
-      <div className="grid gap-3 lg:grid-cols-2">
-        {waterfallSteps.length > 0 && (
-          <Card title={t('How the money assembled')} hint={t('Every source in one bar; the cuts hang under it.')}>
-            <MoneyFlow steps={waterfallSteps} />
-          </Card>
-        )}
         {bands.length > 0 && (
           <Card title={t('The shape of your week')} hint={t('When each weekday starts and ends, and what its hour pays.')}>
             <WeekBandsChart bands={bands} />
-          </Card>
-        )}
-        {tipWeek.length > 1 && (
-          <Card title={t('Which nights tip')} hint={t('The average a day of that weekday brings, and what share of it that was.')}>
-            <TipWeek rows={tipWeek} />
           </Card>
         )}
       </div>
@@ -1079,13 +1040,10 @@ function Stats() {
       )}
 
       {/* ==== Heatmap ==== */}
-      <Card title={t('Every day, at a glance')}>
-        <DaysAtGlance values={heatValues} from={range.from === ALL_TIME.from ? `${currentMonth().year}-01-01` : range.from} to={range.to === ALL_TIME.to ? `${currentMonth().year}-12-31` : range.to} />
-      </Card>
 
-      {/* ==== Weekdays + top shifts + start hour ==== */}
-      <div className="grid gap-3 lg:grid-cols-3">
-        <Card title={t('By weekday')}>
+      {/* ==== What feeds the month: days and shifts side by side ==== */}
+      <Card title={t('What feeds the month')} hint={t('The same money twice: by weekday and by shift.')}>
+        <div className="grid gap-4 md:grid-cols-2">
           <ul className="flex flex-col gap-1.5">
             {weekdays.map((day) => (
               <li key={day.name} className="grid grid-cols-[2.4rem_1fr_auto] items-center gap-2 text-[0.85rem]">
@@ -1097,10 +1055,7 @@ function Stats() {
               </li>
             ))}
           </ul>
-        </Card>
-
-        {topShifts.length > 0 && (
-          <Card title={t('Top shifts')}>
+          {topShifts.length > 0 && (
             <ul className="flex flex-col gap-1.5">
               {topShifts.map((row) => (
                 <li key={row.name} className="grid grid-cols-[6rem_1fr_auto] items-center gap-2 text-[0.85rem]">
@@ -1114,25 +1069,9 @@ function Stats() {
                 </li>
               ))}
             </ul>
-          </Card>
-        )}
-
-        {byStartHour.length > 0 && (
-          <Card title={t('Which starting hour pays')}>
-            <Plot max={byStartHour[0].max} height="8rem" tight>
-              {byStartHour.map((row) => (
-                <div key={row.hour} className="flex h-full flex-1 flex-col justify-end" title={`${row.label}: ${formatMoney(settings, row.earned)}`}>
-                  <span
-                    className="grow-y rounded-t"
-                    style={{ height: `${row.height}%`, background: row.best ? 'var(--accent)' : 'color-mix(in srgb, var(--accent) 45%, var(--surface-2))' }}
-                  />
-                  <span className="mt-0.5 text-center text-[0.62rem] text-faint">{row.label}</span>
-                </div>
-              ))}
-            </Plot>
-          </Card>
-        )}
-      </div>
+          )}
+        </div>
+      </Card>
 
       {/* ==== Tips split + best day + overtime ==== */}
       <div className="grid gap-3 md:grid-cols-3">

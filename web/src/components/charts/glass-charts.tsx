@@ -56,6 +56,17 @@ export function MonthBars({ rows }: { rows: MonthBarRow[] }) {
         const share = row.value / peak;
         const best = row.value === peak && row.value > 0;
 
+        // A month with nothing in it earns eight pixels, not a full row of
+        // grey skeleton — ten of those were most of the card.
+        if (row.value === 0 && !row.current) {
+          return (
+            <div key={row.label} className="flex h-2 items-center gap-2.5">
+              <span className="w-9 flex-none text-right text-[0.62rem] capitalize text-faint">{row.label}</span>
+              <span className="h-px min-w-0 flex-1 bg-border" />
+            </div>
+          );
+        }
+
         return (
           <div
             key={row.label}

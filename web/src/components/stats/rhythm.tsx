@@ -65,10 +65,16 @@ export function RhythmCard() {
                 <span className="w-28 flex-none text-[0.75rem] text-muted tabular">
                   {said(window.ended)}
                 </span>
-                <div className="h-4 flex-1 overflow-hidden rounded-full bg-surface-2">
+                <div className="relative h-4 flex-1 overflow-hidden rounded-full bg-surface-2">
                   <div
                     className={`h-full rounded-full ${window.short ? 'bg-danger/70' : 'bg-(--accent)/45'}`}
-                    style={{ width: `${Math.min(100, (window.hours / 16) * 100)}%` }}
+                    style={{ width: `${Math.min(100, (window.hours / 24) * 100)}%` }}
+                  />
+                  {/* The threshold everyone is measured against, drawn once
+                      per row so a short night is short AGAINST something. */}
+                  <span
+                    className="absolute inset-y-0 w-px bg-danger/50"
+                    style={{ left: `${(11 / 24) * 100}%` }}
                   />
                 </div>
                 <span className={`w-14 flex-none text-right text-[0.8rem] font-semibold tabular ${window.short ? 'text-danger' : ''}`}>

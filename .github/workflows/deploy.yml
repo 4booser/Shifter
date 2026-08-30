@@ -85,6 +85,12 @@ jobs:
         run: npm ci && npm run build
         working-directory: web
 
+      # Bytes are a budget line, not a surprise: today's weight plus 15%,
+      # page by page. A new page fails until it is granted a line.
+      - name: Front-end weight within budget
+        run: npm run budget
+        working-directory: web
+
       - name: Start the server
         env:
           ASPNETCORE_ENVIRONMENT: Production

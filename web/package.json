@@ -7,7 +7,8 @@
     "build": "next build && node scripts/sync-wwwroot.mjs",
     "test": "vitest run",
     "lint": "tsc --noEmit",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "budget": "node scripts/budget.mjs"
   },
   "dependencies": {
     "@number-flow/react": "^0.6.2",

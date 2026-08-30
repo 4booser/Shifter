@@ -14,6 +14,7 @@ import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 
 import { ClockRing, MoneyFlow, MonthBars } from '@/components/charts';
 import { SkiaEarnedChart } from '@/components/skia-earned-chart';
+import { WeekStoryCard } from '@/components/week-story';
 import { Appear, Press, Roll } from '@/components/motion';
 import { RhythmCard } from '@/components/rhythm-card';
 import { CitiesCard } from '@/components/cities-card';
@@ -502,6 +503,9 @@ export default function StatsScreen() {
       )}
 
       <RhythmCard palette={palette} />
+
+      <WeekStoryCard palette={palette} />
+
 
       <CitiesCard palette={palette} />
 

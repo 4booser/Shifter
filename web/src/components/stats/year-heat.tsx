@@ -5,6 +5,9 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { calendarApi } from '@/lib/api/calendar';
 import { todayKey } from '@/lib/calendar/calendar-date';
 import { HeatCell, heatGrid } from '@/lib/stats/year-heat';
+import { useRouter } from 'next/navigation';
+
+import { calendarActions, useCalendar } from '@/lib/store/calendar';
 import { useMoney } from '@/lib/settings/money';
 import { useI18n } from '@/lib/i18n';
 
@@ -17,6 +20,7 @@ export function YearHeat() {
   const { t, lang } = useI18n();
   const { format } = useMoney();
 
+  const router = useRouter();
   const [days, setDays] = useState<{ date: string; earned: number }[] | null>(null);
   const [picked, setPicked] = useState<HeatCell | null>(null);
 
@@ -101,6 +105,15 @@ export function YearHeat() {
                     onMouseEnter={() => setPicked(cell)}
                     onFocus={() => setPicked(cell)}
                     onMouseLeave={() => setPicked(null)}
+                    onClick={() => {
+                      // The hover already names the date; a click owes the
+                      // reader the day itself.
+                      useCalendar.setState({
+                        month: { year: Number(cell.date.slice(0, 4)), month: Number(cell.date.slice(5, 7)) },
+                      });
+                      calendarActions.select(cell.date);
+                      router.push('/dashboard');
+                    }}
                     className="h-[11px] w-[11px] rounded-[3px] border"
                     style={
                       cell.level === null

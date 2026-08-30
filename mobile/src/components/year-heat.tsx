@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
@@ -15,6 +16,7 @@ import { HeatCell, heatGrid } from '@/lib/year-heat';
  */
 export function YearHeatCard({ palette }: { palette: Palette }) {
   const styles = makeStyles(palette);
+  const router = useRouter();
   const [days, setDays] = useState<{ date: string; earned: number }[] | null>(null);
   const [picked, setPicked] = useState<HeatCell | null>(null);
 
@@ -99,7 +101,14 @@ export function YearHeatCard({ palette }: { palette: Palette }) {
         </View>
       </ScrollView>
 
-      {picked !== null && <Text style={styles.answer}>{say(picked)}</Text>}
+      {picked !== null && (
+        <View style={styles.answerRow}>
+          <Text style={styles.answer}>{say(picked)}</Text>
+          <Press hitSlop={8} onPress={() => router.push(`/day/${picked.date}`)}>
+            <Text style={styles.openDay}>{t('Открыть день')} →</Text>
+          </Press>
+        </View>
+      )}
 
       <View style={styles.legendRow}>
         <Text style={styles.legend}>{t('меньше')}</Text>
@@ -129,7 +138,9 @@ const makeStyles = (palette: Palette) =>
     strip: { flexDirection: 'row', gap: 3 },
     week: { gap: 3 },
     cell: { width: 11, height: 11, borderRadius: 3 },
-    answer: { color: palette.text, fontSize: 13, fontWeight: '600', marginTop: 10 },
+    answerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 },
+    answer: { color: palette.text, fontSize: 13, fontWeight: '600' },
+    openDay: { color: palette.accent, fontSize: 13, fontWeight: '700' },
     legendRow: { flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 8, justifyContent: 'flex-end' },
     legend: { color: palette.textSecondary, fontSize: 11, marginHorizontal: 3 },
     legendCell: { width: 9, height: 9, borderRadius: 2 },

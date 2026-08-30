@@ -386,8 +386,8 @@ function Wrapped() {
             <Big label={t('Earned')} delta={change(summary.total_earned, previous.total_earned)}>
               <CountUp value={summary.total_earned} className="text-[1.9rem] font-extrabold tracking-tight text-good" />
             </Big>
-            <Big label={t('Minutes worked')} delta={change(summary.hours, previous.hours)}>
-              <CountUp value={Math.round(summary.hours * 60)} format={(value) => `${Math.round(value).toLocaleString(lang)}`} className="text-[1.9rem] font-extrabold tracking-tight" />
+            <Big label={t('Hours worked')} delta={change(summary.hours, previous.hours)}>
+              <CountUp value={Math.round(summary.hours)} format={(value) => `${Math.round(value).toLocaleString(lang)}`} className="text-[1.9rem] font-extrabold tracking-tight" />
             </Big>
             <Big label={t('Shifts')} delta={change(totalShifts, countShifts(previous.days))}>
               <span className="text-[1.9rem] font-extrabold tabular tracking-tight">{totalShifts}</span>
@@ -419,10 +419,22 @@ function Wrapped() {
             </div>
           </section>
 
-          {/* ==== The whole year as one grid ==== */}
+          {/* ==== The whole year as one grid — trimmed to the lived part.
+               January-to-December on a March account is mostly desert, and
+               the audit watched it bury the only month with anything in it. */}
           <section className="card reveal p-4">
             <h2 className="mb-2 text-[0.98rem] font-bold">{t('The shape of the year')}</h2>
-            <Heatmap values={heatValues} from={`${year}-01-01`} to={`${year}-12-31`} />
+            <Heatmap
+              values={heatValues}
+              from={(() => {
+                const first = [...heatValues.keys()].sort()[0];
+
+                return first !== undefined && first.startsWith(`${year}-`)
+                  ? `${first.slice(0, 7)}-01`
+                  : `${year}-01-01`;
+              })()}
+              to={year === currentMonth().year ? todayKey() : `${year}-12-31`}
+            />
           </section>
 
           {/* ==== Superlatives ==== */}

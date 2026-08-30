@@ -18,6 +18,7 @@ import { PayslipCheckModal } from '@/components/dashboard/payslip-check';
 import { PayoutModal, PayoutPrefill } from '@/components/dashboard/modals/payout-modal';
 import { PayoutLedger } from '@/components/dashboard/payout-ledger';
 import { Alert, Money } from '@/components/ui/bits';
+import { SkeletonRows } from '@/components/ui/skeleton';
 import { Empty } from '@/components/ui/empty';
 import { Icon } from '@/components/ui/icon';
 
@@ -332,7 +333,7 @@ function Payouts() {
       <section className="card reveal p-4">
         <h2 className="mb-2 text-[0.98rem] font-bold">{t('Expected')}</h2>
         {loading ? (
-          <p className="field-hint">{t('Loading…')}</p>
+          <SkeletonRows rows={3} height="2.75rem" />
         ) : upcoming.length === 0 ? (
           <Empty
             icon="wallet"

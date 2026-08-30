@@ -2,7 +2,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
   Modal,
   Pressable,
   RefreshControl,
@@ -15,7 +14,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Press } from '@/components/motion';
+import { Loading, Press } from '@/components/motion';
 import { Colors, Palette } from '@/constants/theme';
 import { api, ApiError } from '@/lib/api';
 import { dayLabel, pad, todayKey } from '@/lib/calendar';
@@ -332,7 +331,7 @@ export default function ScheduleScreen() {
           )}
         </View>
 
-        {teams === null && <ActivityIndicator color={palette.accent} />}
+        {teams === null && <Loading colour={palette.backgroundElement} rows={2} height={150} />}
 
         {teams !== null && teams.length === 0 && (
           <View style={styles.card}>

@@ -10,6 +10,8 @@ import { useI18n } from '@/lib/i18n';
 import { useReveal } from '@/lib/fx';
 import { Shell } from '@/components/layout/shell';
 import { Alert, Money, Segmented } from '@/components/ui/bits';
+import { Empty } from '@/components/ui/empty';
+import { SkeletonRows } from '@/components/ui/skeleton';
 import { Icon } from '@/components/ui/icon';
 
 const MAPPING_EXAMPLE = `{
@@ -350,13 +352,11 @@ function Webhooks() {
 
       {/* ==== Endpoints ==== */}
       {loading ? (
-        <p className="field-hint">{t('Loading…')}</p>
+        <SkeletonRows rows={2} height="3.75rem" />
       ) : hooks.length === 0 ? (
-        <section className="card reveal p-4">
-          <p className="field-hint">
-            {t('No endpoints yet. Make one, then paste its address into whatever should feed the calendar.')}
-          </p>
-        </section>
+        <Empty icon="zap" title={t('Nothing listens yet')}>
+          {t('No endpoints yet. Make one, then paste its address into whatever should feed the calendar.')}
+        </Empty>
       ) : (
         hooks.map((hook) => (
           <section key={hook.id} className={`card p-4 ${hook.active ? '' : 'opacity-70'}`}>

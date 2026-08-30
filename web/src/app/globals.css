@@ -1310,3 +1310,26 @@ body,
 @keyframes chart-grow-y {
   from { transform: scaleY(0); }
 }
+
+/* ==== Skeletons: the shape of what is coming, as a quiet pulse ==== */
+.skeleton {
+  border-radius: 12px;
+  background: color-mix(in oklab, var(--border) 60%, var(--surface-2));
+  animation: skeleton-pulse 1s ease-in-out infinite alternate;
+}
+
+@keyframes skeleton-pulse {
+  from {
+    opacity: 0.45;
+  }
+  to {
+    opacity: 0.9;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+    opacity: 0.6;
+  }
+}

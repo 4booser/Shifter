@@ -2,7 +2,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
   Alert,
   Linking,
   RefreshControl,
@@ -14,7 +13,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Press } from '@/components/motion';
+import { Loading, Press } from '@/components/motion';
 import { Colors, Palette } from '@/constants/theme';
 import { api } from '@/lib/api';
 import { Gig, payLine, tradeOf } from '@/lib/gigs';
@@ -142,7 +141,9 @@ export default function MyListingsScreen() {
         </View>
       </View>
 
-      {rows === null && error === null && <ActivityIndicator color={palette.accent} />}
+      {rows === null && error === null && (
+        <Loading colour={palette.backgroundElement} rows={3} height={104} />
+      )}
       {error !== null && <Text className="text-sm text-danger">{error}</Text>}
 
       {rows !== null && rows.length === 0 && (

@@ -21,6 +21,7 @@ import { BadgeWall } from '@/components/achievements/badges';
 import { useReveal } from '@/lib/fx';
 import { Heatmap } from '@/components/charts/charts';
 import { Alert, CountUp, Delta, Money } from '@/components/ui/bits';
+import { SkeletonRows } from '@/components/ui/skeleton';
 import { Empty } from '@/components/ui/empty';
 import { Icon } from '@/components/ui/icon';
 
@@ -338,7 +339,7 @@ function Wrapped() {
       {error && <Alert onDismiss={() => setError(null)}>{error}</Alert>}
 
       {loading ? (
-        <p className="field-hint">{t('Loading…')}</p>
+        <SkeletonRows rows={3} height="5.5rem" />
       ) : days.length === 0 ? (
         <Empty
           icon="trophy"

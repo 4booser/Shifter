@@ -10,6 +10,7 @@ import { useI18n } from '@/lib/i18n';
 import { useReveal } from '@/lib/fx';
 import { Shell } from '@/components/layout/shell';
 import { Alert } from '@/components/ui/bits';
+import { SkeletonRows } from '@/components/ui/skeleton';
 import { Icon } from '@/components/ui/icon';
 
 export default function TeamPage() {
@@ -105,7 +106,7 @@ function TeamAdmin() {
 
       {/* ==== Your teams ==== */}
       {loading ? (
-        <p className="field-hint">{t('Loading…')}</p>
+        <SkeletonRows rows={2} height="9rem" />
       ) : (
         teams.map((team) => (
           <section key={team.id} className="card reveal p-4">

@@ -1784,6 +1784,7 @@ export const RU: Dictionary = {
   'Type at least two characters.': 'Введи хотя бы два символа.',
   'Nothing found.': 'Ничего не нашлось.',
   'Loading…': 'Загружаю…',
+  'Nothing listens yet': 'Пока никто не слушает',
   'Let us set this up': 'Давай настроим',
   'Three steps, and the calendar starts counting for you.':
     'Три шага — и календарь начнёт считать за тебя.',
@@ -4233,6 +4234,7 @@ export const UK: Dictionary = {
   'Type at least two characters.': 'Введи хоча б два символи.',
   'Nothing found.': 'Нічого не знайшлося.',
   'Loading…': 'Завантажую…',
+  'Nothing listens yet': 'Поки ніхто не слухає',
   'Let us set this up': 'Давай налаштуємо',
   'Three steps, and the calendar starts counting for you.':
     'Три кроки — і календар почне рахувати за тебе.',

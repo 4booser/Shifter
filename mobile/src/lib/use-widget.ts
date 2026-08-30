@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 
 import { todayKey } from '@/lib/calendar';
+import { eyeShut } from '@/lib/eye';
 import { bankLock, lockStore } from '@/lib/lock';
 import { CalendarDayData } from '@/lib/types';
 import { WidgetMoney, WidgetMonth, WidgetToday, buildSnapshot, nextShift } from '@/lib/widget';
@@ -39,11 +40,14 @@ async function publish(): Promise<void> {
   if (lastToday === null || lastMonth === null) return;
 
   const [locked, bankLocked] = await Promise.all([lockStore.enabled(), bankLock.enabled()]);
+  // The eye pulls the same lever the app lock does: the widget stands on
+  // the most public glass the phone has.
+  const shuttered = locked || eyeShut();
 
   publishSnapshot(
     buildSnapshot({
       now: new Date(),
-      hidden: locked,
+      hidden: shuttered,
       // One sign for the whole widget. A person paid in two currencies has a
       // bigger question than a home screen can answer, and the app's own
       // headline figures already pick one.

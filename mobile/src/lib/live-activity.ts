@@ -1,3 +1,4 @@
+import { eyeShut } from '@/lib/eye';
 import { ActivityState, endActivity, startActivity, updateActivity } from 'shift-activity';
 
 import { lockStore } from '@/lib/lock';
@@ -44,7 +45,7 @@ export function activityState(
     // A lock screen is the most public surface this app has: it is visible to
     // anybody who picks the phone up, without unlocking it. Somebody who put a
     // lock on the app has already said what they think about that.
-    earned: locked ? null : earnedSoFar(shift, now),
+    earned: locked || eyeShut() ? null : earnedSoFar(shift, now),
   };
 }
 

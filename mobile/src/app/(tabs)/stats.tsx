@@ -13,8 +13,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 
 import { ClockRing, MoneyFlow, MonthBars } from '@/components/charts';
+import { SkiaEarnedChart } from '@/components/skia-earned-chart';
 import { Appear, Press, Roll } from '@/components/motion';
-import { Pace } from '@/components/pace';
 import { RhythmCard } from '@/components/rhythm-card';
 import { CitiesCard } from '@/components/cities-card';
 import { RecordsHealthCard } from '@/components/records-health';
@@ -23,7 +23,6 @@ import { YearHeatCard } from '@/components/year-heat';
 import { TrophyShelf } from '@/components/trophy-shelf';
 import { Weekdays } from '@/components/weekdays';
 import { byWeekday } from '@/lib/rhythm';
-import { running } from '@/lib/pace';
 
 import { Colors, Palette } from '@/constants/theme';
 import { api } from '@/lib/api';
@@ -356,22 +355,24 @@ export default function StatsScreen() {
           started slowly and caught up, or started well and stalled, are two
           completely different conversations and one number cannot tell them
           apart. */}
-      {summary !== null && span === 'month' && (
+      {summary !== null && summary.days.some((day) => day.earned > 0) && (
         <Appear index={1}>
           <View style={styles.card}>
-            <Text style={styles.cardTitle}>{t('Темп месяца')}</Text>
-            <Pace
-              now={running(summary.days, bounds.from, bounds.to)}
-              before={
-                before === null
-                  ? []
-                  : running(
-                      before.days,
-                      previousRange(span, month, todayKey()).range.from,
-                      previousRange(span, month, todayKey()).range.to,
-                    )
-              }
+            <Text style={styles.cardTitle}>
+              {span === 'month' ? t('Темп месяца') : t('Темп года')}
+            </Text>
+            <SkiaEarnedChart
               palette={palette}
+              days={summary.days}
+              from={bounds.from}
+              to={bounds.to}
+              today={todayKey()}
+              ghost={
+                before !== null
+                  ? { days: before.days, ...previousRange(span, month, todayKey()).range }
+                  : null
+              }
+              format={amount}
             />
           </View>
         </Appear>

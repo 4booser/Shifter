@@ -104,10 +104,10 @@ public sealed class PasswordResetService
         var reset = await _db.PasswordResets
             .Include(row => row.User)
             .FirstOrDefaultAsync(row => row.TokenHash == hash, ct)
-            ?? throw new ValidationException("This link is no longer valid — ask for a new one.");
+            ?? throw new ValidationException("This link is no longer valid — ask for a new one.", "auth.reset");
 
         if (reset.UsedAt is not null || reset.ExpiresAt <= DateTime.UtcNow)
-            throw new ValidationException("This link is no longer valid — ask for a new one.");
+            throw new ValidationException("This link is no longer valid — ask for a new one.", "auth.reset");
 
         if (reset.User is null)
             throw new NotFoundException("No such account.");

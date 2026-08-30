@@ -56,10 +56,21 @@ public class GlobalExceptionMiddleware
             _logger.LogWarning(exception, "Handled exception occurred.");
         }
 
+        // The code is what lets a client answer in its own language; the
+        // message stays as the fallback and the log's truth.
+        string? code = exception switch
+        {
+            UnauthorizedException coded => coded.Code,
+            ValidationException coded => coded.Code,
+            TooManyAttemptsException => "auth.locked",
+            _ => null,
+        };
+
         var response = new
         {
             status = statusCode,
             error = GetErrorTitle(statusCode),
+            code,
             message = statusCode == StatusCodes.Status500InternalServerError
                 ? "Internal server error."
                 : exception.Message

@@ -1,3 +1,4 @@
+import { t } from '@/lib/i18n';
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
@@ -50,10 +51,49 @@ export const API_BASE: string =
   ?? 'http://localhost:5208';
 
 export class ApiError extends Error {
-  constructor(public status: number, message: string) {
+  constructor(
+    public status: number,
+    message: string,
+    /** Machine name from the server's envelope; most errors have none yet. */
+    public code: string | null = null,
+    /** Seconds from Retry-After, where the server named a wait. */
+    public retryAfter: number | null = null,
+  ) {
     super(message);
   }
 }
+
+/**
+ * The auth sentences in the reader's language, keyed by the server's codes.
+ * Everything uncoded falls back to the server's own English words — same
+ * contract as the site.
+ */
+const CODED: Record<string, string> = {
+  'auth.invalid': 'Неверный логин или пароль.',
+  'auth.code': 'Код не подошёл. Коды меняются каждые 30 секунд.',
+  'auth.ticket': 'Окно кода истекло — войдите заново.',
+  'auth.current': 'Текущий пароль не подошёл.',
+  'auth.reset': 'Ссылка больше не действует — запросите новую.',
+};
+
+const wordError = (status: number, body: { message?: string; code?: string | null }, retryAfter: number | null): ApiError => {
+  const code = body.code ?? null;
+
+  if (code === 'auth.locked') {
+    const minutes = Math.max(1, Math.ceil((retryAfter ?? 900) / 60));
+
+    return new ApiError(
+      status,
+      `${t('Слишком много попыток. Дверь закрыта, попробуйте через')} ${minutes} ${t('мин')}.`,
+      code,
+      retryAfter,
+    );
+  }
+
+  if (code !== null && code in CODED) return new ApiError(status, t(CODED[code]), code, retryAfter);
+
+  return new ApiError(status, body.message ?? `HTTP ${status}`, code, retryAfter);
+};
 
 let current: Session | null = null;
 let refreshing: Promise<Session | null> | null = null;
@@ -129,17 +169,16 @@ export async function api<T>(
   }
 
   if (!response.ok) {
-    let message = `HTTP ${response.status}`;
+    const retryAfter = Number(response.headers.get('Retry-After')) || null;
+    let body: { message?: string; code?: string | null } = {};
 
     try {
-      const body = (await response.json()) as { message?: string };
-
-      if (typeof body.message === 'string') message = body.message;
+      body = (await response.json()) as { message?: string; code?: string | null };
     } catch {
       // The status alone will have to do.
     }
 
-    throw new ApiError(response.status, message);
+    throw wordError(response.status, body, retryAfter);
   }
 
   if (response.status === 204) return undefined as T;
@@ -169,17 +208,16 @@ export async function upload<T>(path: string, form: FormData, retried = false): 
   }
 
   if (!response.ok) {
-    let message = `HTTP ${response.status}`;
+    const retryAfter = Number(response.headers.get('Retry-After')) || null;
+    let body: { message?: string; code?: string | null } = {};
 
     try {
-      const body = (await response.json()) as { message?: string };
-
-      if (typeof body.message === 'string') message = body.message;
+      body = (await response.json()) as { message?: string; code?: string | null };
     } catch {
       // The status alone will have to do.
     }
 
-    throw new ApiError(response.status, message);
+    throw wordError(response.status, body, retryAfter);
   }
 
   return (await response.json()) as T;

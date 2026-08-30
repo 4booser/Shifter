@@ -86,7 +86,7 @@ public sealed class TwoFactorService
         if (!Totp.Verify(user.TotpSecret, code) && !BurnBackup(user, code))
         {
             _throttle.RecordFailure(DoorKey(userId));
-            throw new ValidationException("That code did not match.");
+            throw new ValidationException("That code did not match.", "auth.code");
         }
 
         _throttle.Reset(DoorKey(userId));
@@ -120,7 +120,7 @@ public sealed class TwoFactorService
     public async Task<(int Id, string Login)> RedeemAsync(string ticket, string code, CancellationToken ct)
     {
         if (!Tickets.TryGetValue(ticket, out var entry) || entry.Expires < DateTime.UtcNow)
-            throw new UnauthorizedException("Sign in again — the code window expired.");
+            throw new UnauthorizedException("Sign in again — the code window expired.", "auth.ticket");
 
         // The lock outlives the ticket: a fresh password sign-in mints a new
         // ticket, and without this the second door could be knocked forever.
@@ -134,7 +134,7 @@ public sealed class TwoFactorService
         if (!totpOk && !backupOk)
         {
             _throttle.RecordFailure(DoorKey(entry.UserId));
-            throw new UnauthorizedException("That code did not match.");
+            throw new UnauthorizedException("That code did not match.", "auth.code");
         }
 
         if (backupOk) await _db.SaveChangesAsync(ct);

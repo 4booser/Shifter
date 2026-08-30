@@ -19,6 +19,8 @@ export interface AuthResponse {
 export interface ApiError {
   status: number;
   error: string;
+  /** Machine name for the dictionary; most errors have none yet. */
+  code?: string | null;
   message: string;
 }
 
@@ -28,6 +30,9 @@ export class HttpError extends Error {
   constructor(
     readonly status: number,
     message: string,
+    readonly code: string | null = null,
+    /** Seconds from Retry-After, where the server named a wait. */
+    readonly retryAfter: number | null = null,
   ) {
     super(message);
   }
@@ -110,20 +115,45 @@ async function refreshOnce(): Promise<boolean> {
 }
 
 async function errorFrom(response: Response): Promise<HttpError> {
+  const retryAfter = Number(response.headers.get('Retry-After')) || null;
+
   try {
     const body = (await response.json()) as Partial<ApiError>;
 
-    if (typeof body.message === 'string') return new HttpError(response.status, body.message);
+    if (typeof body.message === 'string')
+      return new HttpError(response.status, body.message, body.code ?? null, retryAfter);
   } catch {
     // Not the envelope; fall through to the status text.
   }
 
-  return new HttpError(response.status, response.statusText || 'Something went wrong.');
+  return new HttpError(response.status, response.statusText || 'Something went wrong.', null, retryAfter);
 }
 
+/**
+ * The auth sentences, spoken in the reader's language. Keyed by the codes the
+ * server now sends on its most-read errors; everything uncoded still falls
+ * back to the server's own English words below.
+ */
+const CODED: Record<string, string> = {
+  'auth.invalid': 'Wrong login or password.',
+  'auth.code': 'That code did not fit. Codes rotate every 30 seconds.',
+  'auth.ticket': 'The code window expired — sign in again.',
+  'auth.current': 'The current password did not fit.',
+  'auth.reset': 'This link no longer works — ask for a new one.',
+};
+
 export function apiErrorMessage(error: unknown): string {
-  // The server's own words. Translating these needs error codes rather than
-  // sentences, which is a change on the other side; the two messages this
+  if (error instanceof HttpError && error.code !== null) {
+    if (error.code === 'auth.locked') {
+      const minutes = Math.max(1, Math.ceil((error.retryAfter ?? 900) / 60));
+
+      return `${say('Too many attempts. The door is closed; try again in')} ${minutes} ${say('min')}.`;
+    }
+
+    if (error.code in CODED) return say(CODED[error.code]);
+  }
+
+  // The server's own words for everything not yet coded; the sentences this
   // function writes itself are its own responsibility and are translated.
   if (error instanceof HttpError) return error.message;
 

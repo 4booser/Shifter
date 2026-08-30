@@ -136,7 +136,7 @@ public class ChangePasswordHandler : IRequestHandler<ChangePasswordDto, ProfileD
                 || !BCrypt.Net.BCrypt.Verify(request.current_password, user.PasswordHash))
             {
                 _throttle.RecordFailure($"pw:{user.Id}");
-                throw new UnauthorizedException("Current password is wrong.");
+                throw new UnauthorizedException("Current password is wrong.", "auth.current");
             }
 
             _throttle.Reset($"pw:{user.Id}");
@@ -284,7 +284,7 @@ public class DeleteAccountHandler : IRequestHandler<DeleteAccountDto, Unit>
                 || !BCrypt.Net.BCrypt.Verify(request.password, user.PasswordHash))
             {
                 _throttle.RecordFailure($"pw:{user.Id}");
-                throw new UnauthorizedException("Password is wrong.");
+                throw new UnauthorizedException("Password is wrong.", "auth.current");
             }
         }
 

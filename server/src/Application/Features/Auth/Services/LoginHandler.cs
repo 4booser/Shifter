@@ -61,7 +61,7 @@ public class LoginHandler : IRequestHandler<LoginDto, AuthResponseDto>
         {
             _logger.LogWarning("Failed sign-in attempt for login {Login}.", request.login);
             _throttle.RecordFailure(request.login);
-            throw new UnauthorizedException("Invalid login or password.");
+            throw new UnauthorizedException("Invalid login or password.", "auth.invalid");
         }
 
         // The password held: the knocking was this person after all.

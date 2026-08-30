@@ -19,14 +19,22 @@ interface SettingsState {
 function read(): Settings {
   if (typeof localStorage === 'undefined') return { ...DEFAULT_SETTINGS };
 
+  // A fresh browser speaks the visitor's language, not the scaffolding's.
+  // The audience is ru/uk; the audit found a brand-new session greeting a
+  // Ukrainian bartender with «Sign in». Stored choices always win below.
+  const spoken = (navigator.languages ?? [navigator.language ?? ''])
+    .map((tag) => tag.slice(0, 2).toLowerCase())
+    .find((tag) => tag === 'ru' || tag === 'uk');
+  const guessed: Settings = { ...DEFAULT_SETTINGS, language: spoken ?? DEFAULT_SETTINGS.language };
+
   const raw = localStorage.getItem(STORAGE_KEY);
 
-  if (!raw) return { ...DEFAULT_SETTINGS };
+  if (!raw) return guessed;
 
   try {
     // Spread over the defaults so a settings file written by an older build
     // gains any new keys instead of leaving them undefined.
-    return { ...DEFAULT_SETTINGS, ...(JSON.parse(raw) as Partial<Settings>) };
+    return { ...guessed, ...(JSON.parse(raw) as Partial<Settings>) };
   } catch {
     return { ...DEFAULT_SETTINGS };
   }

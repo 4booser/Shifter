@@ -222,6 +222,22 @@ export function WeekBandsChart({ bands }: { bands: WeekBand[] }) {
 
   return (
     <div className="flex flex-col gap-[7px]" onPointerLeave={() => setHover(null)}>
+      {/* The axis, said out loud: the ticks below mean these hours. */}
+      <div className="flex items-center gap-2.5" aria-hidden>
+        <span className="w-7 flex-none" />
+        <span className="relative h-3 min-w-0 flex-1">
+          {[6, 12, 18].map((hour) => (
+            <span
+              key={hour}
+              className="absolute -translate-x-1/2 text-[0.62rem] text-faint tabular"
+              style={{ left: `${(hour / span) * 100}%` }}
+            >
+              {hour}:00
+            </span>
+          ))}
+        </span>
+        <span className="w-24 flex-none" />
+      </div>
       {BAND_DAYS.map((name, weekday) => {
         const band = byDay.get(weekday);
 
@@ -266,6 +282,81 @@ export function WeekBandsChart({ bands }: { bands: WeekBand[] }) {
           </div>
         );
       })}
+    </div>
+  );
+}
+
+// ==== Ranked bars: magnitude with a scale, not a pill with a number ====
+
+/**
+ * Horizontal bars for «which of these earns most» questions. The scale is
+ * visible — quarter gridlines and a labelled peak — the champion row reads
+ * bold at full ink, and the rest stand back until hovered. One hue, because
+ * the rows are ranks of one measure, not different things.
+ */
+export function RankBars({
+  rows,
+  format,
+  labelWidth = '6rem',
+}: {
+  rows: { name: string; value: number; caption?: string }[];
+  format: (value: number) => string;
+  labelWidth?: string;
+}) {
+  const [hover, setHover] = useState<number | null>(null);
+  const peak = Math.max(1, ...rows.map((row) => row.value));
+
+  return (
+    <div className="flex flex-col gap-1.5" onPointerLeave={() => setHover(null)}>
+      {rows.map((row, index) => {
+        const champion = row.value === peak;
+
+        return (
+          <div
+            key={row.name}
+            className="grid items-center gap-2 text-[0.85rem]"
+            style={{ gridTemplateColumns: `${labelWidth} 1fr auto` }}
+            onPointerEnter={() => setHover(index)}
+          >
+            <span className={`truncate ${champion ? 'font-semibold text-ink' : 'text-muted'}`}>
+              {row.name}
+            </span>
+            <span className="relative h-3.5 min-w-0 rounded-full bg-surface-2">
+              {[0.25, 0.5, 0.75].map((tick) => (
+                <span
+                  key={tick}
+                  className="absolute inset-y-[3px] w-px bg-(--border-strong) opacity-60"
+                  style={{ left: `${tick * 100}%` }}
+                />
+              ))}
+              {row.value > 0 && (
+                <span
+                  className="grow-w absolute inset-y-0 rounded-full"
+                  style={{
+                    ['--i' as string]: index,
+                    width: `${Math.max(2, (row.value / peak) * 100)}%`,
+                    background: `linear-gradient(90deg, ${GRAD_BOTTOM}, ${GRAD_TOP})`,
+                    opacity: hover === null || hover === index ? (champion ? 1 : 0.7) : 0.3,
+                  }}
+                />
+              )}
+            </span>
+            <span className={`text-right tabular ${champion ? 'font-bold' : 'text-muted'}`}>
+              {hover === index && row.caption !== undefined ? row.caption : format(row.value)}
+            </span>
+          </div>
+        );
+      })}
+      {/* What the full width means, so the bars are a chart and not a mood. */}
+      <div className="grid items-center gap-2" style={{ gridTemplateColumns: `${labelWidth} 1fr auto` }} aria-hidden>
+        <span />
+        <span className="flex justify-between text-[0.62rem] text-faint tabular">
+          <span>0</span>
+          <span>{format(peak / 2)}</span>
+          <span>{format(peak)}</span>
+        </span>
+        <span />
+      </div>
     </div>
   );
 }

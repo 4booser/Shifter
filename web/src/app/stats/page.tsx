@@ -33,7 +33,7 @@ import { Sheet, buildXlsx, downloadBlob } from '@/lib/export/xlsx';
 import { currentCardTheme, drawShareCard } from '@/lib/export/share-card';
 import { drawStoryCard } from '@/lib/export/story-card';
 import { useI18n } from '@/lib/i18n';
-import { formatMoney, formatMoneyIn } from '@/lib/settings/money';
+import { formatMoney, formatMoneyCompact, formatMoneyIn } from '@/lib/settings/money';
 import { useSettings } from '@/lib/settings/store';
 import { Shell } from '@/components/layout/shell';
 import { useReveal } from '@/lib/fx';
@@ -45,7 +45,7 @@ import { RecordsHealthCard } from '@/components/stats/records-health';
 import { YearHeat } from '@/components/stats/year-heat';
 import { TrophyShelf } from '@/components/stats/trophies';
 import { hourDial, rateTrend, tipsByWeekday, waterfall, weekBands } from '@/lib/charts/report-math';
-import { ClockRing, DaysAtGlance, MoneyFlow, MonthBars, TipWeek, TrendLine, WeekBandsChart } from '@/components/charts/glass-charts';
+import { ClockRing, DaysAtGlance, MoneyFlow, MonthBars, RankBars, TipWeek, TrendLine, WeekBandsChart } from '@/components/charts/glass-charts';
 import { AreaChart, ColumnChart, Plot, ProgressRing } from '@/components/charts/charts';
 import { Alert, CountUp, Delta, Money } from '@/components/ui/bits';
 import { FlowMoney } from '@/components/ui/flow';
@@ -1045,31 +1045,19 @@ function Stats() {
       {/* ==== What feeds the month: days and shifts side by side ==== */}
       <Card title={t('What feeds the month')} hint={t('The same money twice: by weekday and by shift.')}>
         <div className="grid gap-4 md:grid-cols-2">
-          <ul className="flex flex-col gap-1.5">
-            {weekdays.map((day) => (
-              <li key={day.name} className="grid grid-cols-[2.4rem_1fr_auto] items-center gap-2 text-[0.85rem]">
-                <span className="text-muted">{t(day.name)}</span>
-                <span className="h-2 overflow-hidden rounded-full bg-surface-2">
-                  <span className="block h-full rounded-full bg-(--accent)" style={{ width: `${day.share}%` }} />
-                </span>
-                <Money value={day.value} className="tabular" />
-              </li>
-            ))}
-          </ul>
+          <RankBars
+            rows={weekdays.map((day) => ({ name: t(day.name), value: day.value }))}
+            format={(value) => formatMoneyCompact(settings, value)}
+          />
           {topShifts.length > 0 && (
-            <ul className="flex flex-col gap-1.5">
-              {topShifts.map((row) => (
-                <li key={row.name} className="grid grid-cols-[6rem_1fr_auto] items-center gap-2 text-[0.85rem]">
-                  <span className="truncate text-muted">{row.name}</span>
-                  <span className="h-2 overflow-hidden rounded-full bg-surface-2">
-                    <span className="block h-full rounded-full bg-(--accent)" style={{ width: `${row.share}%` }} />
-                  </span>
-                  <span className="tabular">
-                    {row.byPeriod ? `${Math.round(row.hours)}h` : formatMoney(settings, row.value)}
-                  </span>
-                </li>
-              ))}
-            </ul>
+            <RankBars
+              rows={topShifts.map((row) => ({
+                name: row.name,
+                value: row.value,
+                caption: `${Math.round(row.hours)}h`,
+              }))}
+              format={(value) => formatMoneyCompact(settings, value)}
+            />
           )}
         </div>
       </Card>

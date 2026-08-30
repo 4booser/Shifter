@@ -26,6 +26,7 @@ import {
   DEDUCTION_REASONS,
   DaysResponse,
   DeductionReason,
+  SalesPosition,
   ShiftTemplate,
   ShiftZone,
   blankDay,
@@ -60,6 +61,10 @@ export default function DayScreen() {
 
   const [day, setDay] = useState<CalendarDayData | null>(null);
   const [templates, setTemplates] = useState<ShiftTemplate[]>([]);
+  const [positions, setPositions] = useState<SalesPosition[]>([]);
+  // Keyed by sales_id; rows for archived positions ride along so a save
+  // never silently deletes what an older day recorded.
+  const [quantities, setQuantities] = useState<Record<number, number>>({});
   const [tips, setTips] = useState('');
   const [deductions, setDeductions] = useState('');
   const [deductionReason, setDeductionReason] = useState<DeductionReason | null>(null);
@@ -72,8 +77,9 @@ export default function DayScreen() {
     void Promise.all([
       api<DaysResponse>(`/shifter/v1/days?from=${date}&to=${date}`),
       api<ShiftTemplate[]>('/shifter/v1/shifts'),
+      api<SalesPosition[]>('/shifter/v1/sales').catch(() => [] as SalesPosition[]),
     ])
-      .then(([summary, shifts]) => {
+      .then(([summary, shifts, sold]) => {
         // The server only returns days it has: an untouched date comes back
         // as an empty list, not as a blank day.
         const loaded = summary.days[0] ?? blankDay(date);
@@ -85,6 +91,12 @@ export default function DayScreen() {
         setDeductionReason(loaded.deduction_reason ?? null);
         setTipPool(loaded.tip_pool === null ? '' : `${loaded.tip_pool}`);
         setNote(loaded.note ?? '');
+        setPositions(sold.filter((position) => !position.archived));
+
+        const counted: Record<number, number> = {};
+
+        for (const entry of loaded.sales ?? []) counted[entry.sales_id] = entry.quantity;
+        setQuantities(counted);
       })
       .catch(() => setError(t('День не загрузился.')));
   }, [date]);
@@ -250,6 +262,10 @@ export default function DayScreen() {
     // Built outside the try: the conflict path in catch needs the same
     // payload to offer «записать мою поверх».
     const payload = toSavePayload(day);
+
+    payload.sales = Object.entries(quantities)
+      .map(([id, quantity]) => ({ sales_id: Number(id), quantity }))
+      .filter((entry) => entry.quantity > 0);
 
     try {
       payload.tips = tips.trim() === '' ? null : Number(tips) || 0;
@@ -582,6 +598,67 @@ export default function DayScreen() {
               </View>
             )}
 
+            {(positions.length > 0 || Object.keys(quantities).length > 0) && (
+              <>
+                <Text style={styles.section}>{t('Продажи')}</Text>
+                <View style={styles.card}>
+                  {positions.map((position) => (
+                    <View key={position.id} style={styles.saleRow}>
+                      <View style={styles.saleGrow}>
+                        <Text style={styles.saleName}>{position.name}</Text>
+                        <Text style={styles.saleMeta}>
+                          {money(position.price)} · {position.percentage}%
+                        </Text>
+                      </View>
+                      <Press
+                        hitSlop={6}
+                        style={styles.saleStep}
+                        onPress={() =>
+                          setQuantities((have) => {
+                            const next = { ...have };
+                            const now = (next[position.id] ?? 0) - 1;
+
+                            if (now <= 0) delete next[position.id];
+                            else next[position.id] = now;
+
+                            return next;
+                          })
+                        }
+                      >
+                        <Ionicons name="remove" size={18} color={palette.text} />
+                      </Press>
+                      <Text style={styles.saleCount}>{quantities[position.id] ?? 0}</Text>
+                      <Press
+                        hitSlop={6}
+                        style={styles.saleStep}
+                        onPress={() =>
+                          setQuantities((have) => ({
+                            ...have,
+                            [position.id]: (have[position.id] ?? 0) + 1,
+                          }))
+                        }
+                      >
+                        <Ionicons name="add" size={18} color={palette.text} />
+                      </Press>
+                    </View>
+                  ))}
+
+                  {Object.keys(quantities)
+                    .map(Number)
+                    .filter((id) => !positions.some((position) => position.id === id))
+                    .map((id) => (
+                      <View key={id} style={styles.saleRow}>
+                        <View style={styles.saleGrow}>
+                          <Text style={styles.saleName}>{t('Позиция из архива')}</Text>
+                          <Text style={styles.saleMeta}>{t('редактируется на сайте')}</Text>
+                        </View>
+                        <Text style={styles.saleCount}>{quantities[id]}</Text>
+                      </View>
+                    ))}
+                </View>
+              </>
+            )}
+
             <Text style={styles.fieldLabel}>{t('Заметка')}</Text>
             <TextInput
               style={[styles.input, styles.noteInput]}
@@ -618,6 +695,28 @@ const makeStyles = (palette: Palette) =>
       paddingVertical: 7,
     },
     zoneOn: { borderColor: palette.accent, backgroundColor: palette.accentSoft },
+    saleRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 7 },
+    saleGrow: { flex: 1 },
+    saleName: { color: palette.text, fontSize: 14, fontWeight: '600' },
+    saleMeta: { color: palette.textSecondary, fontSize: 12, marginTop: 1 },
+    saleStep: {
+      width: 32,
+      height: 32,
+      borderRadius: 9,
+      borderWidth: 1,
+      borderColor: palette.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: palette.backgroundElement,
+    },
+    saleCount: {
+      color: palette.text,
+      fontSize: 15,
+      fontWeight: '700',
+      minWidth: 22,
+      textAlign: 'center',
+      fontVariant: ['tabular-nums'],
+    },
     zoneText: { color: palette.textSecondary, fontSize: 13 },
     zoneTextOn: { color: palette.accent, fontWeight: '700' },
     screen: { flex: 1, backgroundColor: palette.background },

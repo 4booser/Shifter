@@ -98,6 +98,15 @@ export interface DayShiftEntry {
   revenue_percent: number | null;
 }
 
+/** A thing the venue sells and pays a cut for; the day counts how many went. */
+export interface SalesPosition {
+  id: number;
+  name: string;
+  price: number;
+  percentage: number;
+  archived: boolean;
+}
+
 export interface CalendarDayData {
   date: string;
   shifts: DayShiftEntry[];

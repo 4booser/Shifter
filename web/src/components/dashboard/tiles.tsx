@@ -26,6 +26,8 @@ import { useCalendar } from '@/lib/store/calendar';
 import { CountUp, Money } from '@/components/ui/bits';
 import { FlowMoney } from '@/components/ui/flow';
 import { Icon } from '@/components/ui/icon';
+import { useMono } from '@/lib/mono/store';
+import { fromMinor } from '@/lib/mono/mono';
 
 /**
  * The command-centre strip over the calendar: this month at a glance, one
@@ -34,7 +36,7 @@ import { Icon } from '@/components/ui/icon';
  * below happens to be navigated.
  */
 
-export const TILE_IDS = ['today', 'pace', 'goal', 'payday', 'streak', 'best', 'hours', 'tips', 'heat'] as const;
+export const TILE_IDS = ['today', 'pace', 'goal', 'payday', 'bank', 'streak', 'best', 'hours', 'tips', 'heat'] as const;
 
 export type TileId = (typeof TILE_IDS)[number];
 
@@ -43,6 +45,7 @@ const TILE_LINKS: Partial<Record<TileId, string>> = {
   pace: '/stats',
   goal: '/stats',
   payday: '/payouts',
+  bank: '/bank',
   streak: '/wrapped',
   best: '/report',
   hours: '/report',
@@ -55,6 +58,7 @@ const TILE_NAMES: Record<TileId, string> = {
   pace: 'Heading for',
   goal: 'Goal',
   payday: 'Next money',
+  bank: 'Bank',
   streak: 'Streak',
   best: 'Best day',
   hours: 'Hours',
@@ -244,6 +248,8 @@ function Tile(props: {
       return <GoalTile monthDays={props.monthDays} goals={props.goals} />;
     case 'payday':
       return <PaydayTile schedule={props.schedule} />;
+    case 'bank':
+      return <BankTile />;
     case 'streak':
       return <StreakTile window={props.window} />;
     case 'best':
@@ -255,6 +261,62 @@ function Tile(props: {
     case 'heat':
       return <HeatTile window={props.window} />;
   }
+}
+
+/**
+ * The card's balance on the strip — the bank's one number a morning glance
+ * wants. Reads what the bank page already holds in this browser; with no
+ * bank connected it extends the same quiet invitation the goal tile does.
+ */
+function BankTile() {
+  const { t } = useI18n();
+  const token = useMono((state) => state.token);
+  const client = useMono((state) => state.client);
+  const accountId = useMono((state) => state.accountId);
+  const items = useMono((state) => state.items);
+  const hydrate = useMono((state) => state.hydrate);
+
+  useEffect(() => {
+    hydrate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  if (token === null || token === undefined) {
+    return (
+      <>
+        <Label icon="coins">{t('Bank')}</Label>
+        <span className="tile-value text-[0.95rem] font-semibold text-muted">
+          {t('Connect the statement')} →
+        </span>
+        <span className="field-hint">{t('It stays in this browser')}</span>
+      </>
+    );
+  }
+
+  const account = (client?.accounts ?? []).find((entry) => entry.id === accountId);
+  const balance = account === undefined ? null : fromMinor(account.balance - account.creditLimit);
+
+  const monthStart = new Date();
+
+  monthStart.setDate(1);
+  monthStart.setHours(0, 0, 0, 0);
+
+  const since = monthStart.getTime() / 1000;
+  const spent = items
+    .filter((item) => item.time >= since && item.amount < 0 && !item.hold)
+    .reduce((sum, item) => sum + fromMinor(-item.amount), 0);
+
+  return (
+    <>
+      <Label icon="coins">{t('Bank')}</Label>
+      <span className="tile-value">
+        {balance !== null ? <FlowMoney value={Math.round(balance)} mark="₴" /> : '·'}
+      </span>
+      <span className="field-hint tabular">
+        −<Money value={Math.round(spent)} /> {t('this month')}
+      </span>
+    </>
+  );
 }
 
 function Label({ icon, children }: { icon: string; children: React.ReactNode }) {

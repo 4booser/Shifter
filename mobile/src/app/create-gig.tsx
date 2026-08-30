@@ -20,6 +20,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { DateField } from '@/components/date-field';
 import { Press } from '@/components/motion';
 import { Colors, Palette } from '@/constants/theme';
 import { api, ApiError } from '@/lib/api';
@@ -284,7 +285,7 @@ export default function CreateGigScreen() {
         <View style={styles.pair}>
           <View style={styles.grow}>
             <Text style={styles.label}>{t('Дата')}</Text>
-            <TextInput style={styles.input} value={draft.date} onChangeText={(date) => put({ date })} placeholder="2026-09-05" placeholderTextColor={palette.textSecondary} autoCapitalize="none" />
+            <DateField value={draft.date} onChange={(date) => put({ date })} palette={palette} />
           </View>
           <View style={styles.grow}>
             <Text style={styles.label}>{t('Часы')}</Text>

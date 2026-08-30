@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
@@ -36,6 +37,7 @@ const TAB_LABEL: Record<Tab, string> = {
  * with a filter people have to notice.
  */
 export default function GigsScreen() {
+  const router = useRouter();
   const scheme = useColorScheme();
   const palette = Colors[scheme === 'dark' ? 'dark' : 'light'];
   const styles = makeStyles(palette);
@@ -122,7 +124,12 @@ export default function GigsScreen() {
           />
         }
       >
-        <Text style={styles.title}>{t('Биржа')}</Text>
+        <View style={styles.titleRow}>
+          <Text style={styles.title}>{t('Биржа')}</Text>
+          <Press hitSlop={10} onPress={() => router.push('/my-listings')}>
+            <Ionicons name="briefcase-outline" size={22} color={palette.textSecondary} />
+          </Press>
+        </View>
 
         <View style={styles.tabs}>
           {(Object.keys(TAB_LABEL) as Tab[]).map((value) => (
@@ -670,6 +677,7 @@ const makeStyles = (palette: Palette) =>
     content: { padding: 14, paddingBottom: 48, gap: 12 },
     sheetContent: { padding: 20, paddingTop: 64, paddingBottom: 48, gap: 8 },
     title: { color: palette.text, fontSize: 30, fontWeight: '800' },
+    titleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
     grow: { flex: 1 },
     error: { color: palette.danger, fontSize: 13 },
     // Two answers, side by side, so the quiet one is a choice rather than a

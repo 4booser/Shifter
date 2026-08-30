@@ -16,6 +16,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Appear, Loading, Press } from '@/components/motion';
+import { PendingReviewsCard } from '@/components/pending-reviews';
 import { Colors, Palette } from '@/constants/theme';
 import { api, ApiError } from '@/lib/api';
 import { addMonths, currentMonth, dayLabel, monthBounds, todayKey } from '@/lib/calendar';
@@ -130,6 +131,8 @@ export default function GigsScreen() {
             <Ionicons name="briefcase-outline" size={22} color={palette.textSecondary} />
           </Press>
         </View>
+
+        <PendingReviewsCard palette={palette} />
 
         <View style={styles.tabs}>
           {(Object.keys(TAB_LABEL) as Tab[]).map((value) => (

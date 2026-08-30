@@ -18,8 +18,15 @@ export interface AreaPoint {
   value: number;
 }
 
-/** A cumulative line with a soft wash, an optional goal line, projection and
- * a comparison of the window before — same scale, or it means nothing. */
+/**
+ * The cumulative line, taken seriously.
+ *
+ * One simple idea — money climbing through the days — executed all the way:
+ * a monotone curve instead of a polyline, a layered wash with a glow under
+ * the line, the live end of the line breathing, «today» marked where fact
+ * hands over to forecast, the goal flagged by name, and a crosshair that
+ * answers with this period, the one before, and the gap between them.
+ */
 export function AreaChart({
   points,
   projection = [],
@@ -33,6 +40,7 @@ export function AreaChart({
 }) {
   const { format, compact } = useMoney();
   const [hover, setHover] = useState<number | null>(null);
+  const raw = useId().replace(/[«»:]/g, '');
 
   const max = useMemo(
     () =>
@@ -60,33 +68,51 @@ export function AreaChart({
     }));
 
   const coords = place(points, 0);
-  const projectionCoords =
-    coords.length === 0 ? [] : [coords[coords.length - 1], ...place(projection, coords.length)];
+  const ahead = place(projection, coords.length);
+  const projectionCoords = coords.length === 0 ? [] : [coords[coords.length - 1], ...ahead];
 
-  const path = (list: { x: number; y: number }[]) =>
-    list.map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`).join(' ');
-
-  const comparisonPath = useMemo(() => {
-    if (comparison.length < 2) return '';
+  const comparisonCoords = useMemo(() => {
+    if (comparison.length < 2) return [];
 
     const span = comparison.length - 1;
 
-    return comparison
-      .map((point, index) => {
-        const x = PAD.left + (PLOT_W * index) / span;
-        const y = PAD.top + PLOT_H - (point.value / max) * PLOT_H;
-
-        return `${index === 0 ? 'M' : 'L'} ${x} ${y}`;
-      })
-      .join(' ');
+    return comparison.map((point, index) => ({
+      x: PAD.left + (PLOT_W * index) / span,
+      y: PAD.top + PLOT_H - (point.value / max) * PLOT_H,
+      ...point,
+    }));
   }, [comparison, max]);
 
   const goalY = goal === null || goal <= 0 ? null : PAD.top + PLOT_H - (goal / max) * PLOT_H;
-  const hovered = hover === null ? null : coords[hover];
+
+  // Hover runs over fact and forecast alike; the tooltip says which is which.
+  const all = [...coords, ...ahead];
+  const hovered = hover === null ? null : all[hover];
+  const hoveredAhead = hover !== null && hover >= coords.length;
+  const before = hover === null ? null : (comparison[hover]?.value ?? null);
+  const last = coords.at(-1);
+
+  if (coords.length < 2) return null;
 
   return (
     <div className="relative">
       <svg viewBox={`0 0 ${CHART_W} ${CHART_H}`} className="block w-full" onPointerLeave={() => setHover(null)}>
+        <defs>
+          <linearGradient id={`${raw}-wash`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="var(--accent)" stopOpacity="0.3" />
+            <stop offset="0.55" stopColor="var(--accent)" stopOpacity="0.08" />
+            <stop offset="1" stopColor="var(--accent)" stopOpacity="0" />
+          </linearGradient>
+          {/* The glow is the line's own light on the wash — a blurred copy,
+              never a shadow in grey. */}
+          <filter id={`${raw}-glow`} x="-20%" y="-40%" width="140%" height="180%">
+            <feGaussianBlur stdDeviation="5" result="soft" />
+            <feMerge>
+              <feMergeNode in="soft" />
+            </feMerge>
+          </filter>
+        </defs>
+
         {[0, max / 2, max].map((value) => {
           const y = PAD.top + PLOT_H - (value / max) * PLOT_H;
 
@@ -100,42 +126,70 @@ export function AreaChart({
           );
         })}
 
-        {comparisonPath && <path d={comparisonPath} fill="none" stroke="var(--faint)" strokeWidth="1.5" opacity="0.55" />}
-
-        {coords.length > 1 && (
-          <>
-            <defs>
-              <linearGradient id="area-wash" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0" stopColor="var(--accent)" stopOpacity="0.22" />
-                <stop offset="1" stopColor="var(--accent)" stopOpacity="0" />
-              </linearGradient>
-            </defs>
-            <path
-              className="fade-in"
-              d={`${path(coords)} L ${coords[coords.length - 1].x} ${bottom} L ${coords[0].x} ${bottom} Z`}
-              fill="url(#area-wash)"
-            />
-            <DrawnPath key={points.length + ':' + (points.at(-1)?.value ?? 0)} d={path(coords)} />
-          </>
+        {comparisonCoords.length > 1 && (
+          <path d={smoothPath(comparisonCoords)} fill="none" stroke="var(--faint)" strokeWidth="1.6" opacity="0.5" />
         )}
 
+        <path
+          className="fade-in"
+          d={`${smoothPath(coords)} L ${coords[coords.length - 1].x} ${bottom} L ${coords[0].x} ${bottom} Z`}
+          fill={`url(#${raw}-wash)`}
+        />
+        {/* The blurred twin under the crisp line — the glow. */}
+        <path
+          d={smoothPath(coords)}
+          fill="none"
+          stroke="var(--accent)"
+          strokeWidth="6"
+          opacity="0.28"
+          filter={`url(#${raw}-glow)`}
+        />
+        <DrawnPath key={points.length + ':' + (points.at(-1)?.value ?? 0)} d={smoothPath(coords)} />
+
         {projectionCoords.length > 1 && (
-          <path d={path(projectionCoords)} fill="none" stroke="var(--accent)" strokeWidth="2" strokeDasharray="4 5" opacity="0.7" />
+          <path d={smoothPath(projectionCoords)} fill="none" stroke="var(--accent)" strokeWidth="2" strokeDasharray="4 5" opacity="0.65" />
+        )}
+
+        {/* Fact hands over to forecast here: a quiet meridian named «today». */}
+        {ahead.length > 0 && last !== undefined && (
+          <g>
+            <line x1={last.x} x2={last.x} y1={PAD.top} y2={bottom} stroke="var(--border-strong)" strokeDasharray="3 4" />
+            <text x={last.x} y={PAD.top - 4} textAnchor="middle" fontSize="9" fill="var(--faint)">
+              {new Date().toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
+            </text>
+          </g>
         )}
 
         {goalY !== null && (
-          <line x1={PAD.left} x2={CHART_W - PAD.right} y1={goalY} y2={goalY} stroke="var(--good)" strokeWidth="1.5" strokeDasharray="6 4" />
+          <g>
+            <line x1={PAD.left} x2={CHART_W - PAD.right} y1={goalY} y2={goalY} stroke="var(--good)" strokeWidth="1.5" strokeDasharray="6 4" />
+            <text x={CHART_W - PAD.right} y={goalY - 5} textAnchor="end" fontSize="10" fontWeight="700" fill="var(--good)">
+              {compact(goal ?? 0)}
+            </text>
+          </g>
+        )}
+
+        {/* The live end of the line, breathing — only while a forecast says
+            the period is still running. */}
+        {ahead.length > 0 && last !== undefined && (
+          <g>
+            <circle className="chart-pulse" cx={last.x} cy={last.y} r="10" fill="var(--accent)" />
+            <circle cx={last.x} cy={last.y} r="4" fill="var(--accent)" stroke="var(--surface)" strokeWidth="2" />
+          </g>
         )}
 
         {hovered && (
           <>
             <line x1={hovered.x} x2={hovered.x} y1={PAD.top} y2={bottom} stroke="var(--border-strong)" />
-            <circle cx={hovered.x} cy={hovered.y} r="4" fill="var(--accent)" stroke="var(--surface)" strokeWidth="2" />
+            <circle cx={hovered.x} cy={hovered.y} r="4.5" fill="var(--accent)" stroke="var(--surface)" strokeWidth="2" />
+            {before !== null && hover !== null && comparisonCoords[hover] !== undefined && (
+              <circle cx={comparisonCoords[hover].x} cy={comparisonCoords[hover].y} r="3" fill="var(--faint)" stroke="var(--surface)" strokeWidth="1.5" />
+            )}
           </>
         )}
 
         {/* Hit targets, wider than the marks. */}
-        {coords.map((point, index) => (
+        {all.map((point, index) => (
           <rect
             key={index}
             x={point.x - Math.max(3, step / 2)}
@@ -154,11 +208,76 @@ export function AreaChart({
           style={{ left: `${(hovered.x / CHART_W) * 100}%` }}
         >
           <span className="field-hint block">{hovered.label}</span>
-          <strong className="tabular">{format(hovered.value)}</strong>
+          <strong className="tabular">
+            {hoveredAhead ? '≈ ' : ''}
+            {format(hovered.value)}
+          </strong>
+          {before !== null && before > 0 && !hoveredAhead && (
+            <span className="field-hint block tabular">
+              ×{(hovered.value / before).toFixed(2)} · {format(before)}
+            </span>
+          )}
         </div>
       )}
     </div>
   );
+}
+
+/**
+ * A monotone curve through the points: smooth to read, honest to the data —
+ * cubic segments whose slopes never overshoot a value they pass through
+ * (Fritsch–Carlson), so the curve cannot invent a peak the month never had.
+ */
+function smoothPath(list: { x: number; y: number }[]): string {
+  if (list.length < 2) return '';
+  if (list.length === 2) return `M ${list[0].x} ${list[0].y} L ${list[1].x} ${list[1].y}`;
+
+  const n = list.length;
+  const dx: number[] = [];
+  const dy: number[] = [];
+  const slope: number[] = [];
+
+  for (let i = 0; i < n - 1; i += 1) {
+    dx.push(list[i + 1].x - list[i].x);
+    dy.push(list[i + 1].y - list[i].y);
+    slope.push(dx[i] === 0 ? 0 : dy[i] / dx[i]);
+  }
+
+  const tangent: number[] = [slope[0]];
+
+  for (let i = 1; i < n - 1; i += 1) {
+    tangent.push(slope[i - 1] * slope[i] <= 0 ? 0 : (slope[i - 1] + slope[i]) / 2);
+  }
+  tangent.push(slope[n - 2]);
+
+  for (let i = 0; i < n - 1; i += 1) {
+    if (slope[i] === 0) {
+      tangent[i] = 0;
+      tangent[i + 1] = 0;
+      continue;
+    }
+
+    const a = tangent[i] / slope[i];
+    const b = tangent[i + 1] / slope[i];
+    const size = Math.hypot(a, b);
+
+    if (size > 3) {
+      tangent[i] = (3 * a * slope[i]) / size;
+      tangent[i + 1] = (3 * b * slope[i]) / size;
+    }
+  }
+
+  let d = `M ${list[0].x} ${list[0].y}`;
+
+  for (let i = 0; i < n - 1; i += 1) {
+    const third = dx[i] / 3;
+
+    d += ` C ${list[i].x + third} ${list[i].y + tangent[i] * third}, ${list[i + 1].x - third} ${
+      list[i + 1].y - tangent[i + 1] * third
+    }, ${list[i + 1].x} ${list[i + 1].y}`;
+  }
+
+  return d;
 }
 
 /** Single-series columns with an optional planned overlay on the caps. */

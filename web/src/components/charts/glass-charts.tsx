@@ -7,6 +7,7 @@ import { TipDay, WaterfallStep, WeekBand } from '@/lib/charts/report-math';
 import { stagger } from '@/lib/fx';
 import { useI18n } from '@/lib/i18n';
 import { useMoney } from '@/lib/settings/money';
+import { smoothPath } from '@/lib/charts/math';
 
 /*
  * The second-generation chart kit: fewer axes, bigger marks, direct labels,
@@ -474,7 +475,7 @@ export function TrendLine({ points }: { points: TrendPoint[] }) {
     PAD.left + (points.length === 1 ? (W - PAD.left - PAD.right) / 2 : ((W - PAD.left - PAD.right) * index) / (points.length - 1));
   const y = (value: number) => PAD.top + (H - PAD.top - PAD.bottom) * (1 - (value - floor) / (ceiling - floor));
 
-  const path = points.map((point, index) => `${index === 0 ? 'M' : 'L'} ${x(index)} ${y(point.value)}`).join(' ');
+  const path = smoothPath(points.map((point, index) => ({ x: x(index), y: y(point.value) })));
   const last = points.at(-1);
   const first = points[0];
   const change = first !== undefined && last !== undefined && first.value > 0 ? ((last.value - first.value) / first.value) * 100 : null;

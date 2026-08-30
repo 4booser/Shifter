@@ -9,6 +9,7 @@ import { useMoney } from '@/lib/settings/money';
 import { useI18n } from '@/lib/i18n';
 import { ChartCard } from '@/components/charts/chart-card';
 import { ChartTip, CrossHair, useChartHover } from '@/components/charts/hover';
+import { smoothPath } from '@/lib/charts/math';
 import { Money } from '@/components/ui/bits';
 
 /**
@@ -106,14 +107,12 @@ export function BriefChart() {
   const x = (index: number) => (index / Math.max(1, line.daysInMonth - 1)) * W;
   const y = (value: number) => H - (value / peak) * (H - 16) - 6;
 
-  const factPath = line.fact
-    .map((point, index) => `${index === 0 ? 'M' : 'L'}${x(index).toFixed(1)},${y(point.value).toFixed(1)}`)
-    .join(' ');
+  const factPath = smoothPath(line.fact.map((point, index) => ({ x: x(index), y: y(point.value) })));
   const projPath = line.projected.length > 0
-    ? `M${x(line.fact.length - 1).toFixed(1)},${y(line.fact.at(-1)!.value).toFixed(1)} ` +
-      line.projected
-        .map((point, index) => `L${x(line.fact.length + index).toFixed(1)},${y(point.value).toFixed(1)}`)
-        .join(' ')
+    ? smoothPath([
+        { x: x(line.fact.length - 1), y: y(line.fact.at(-1)!.value) },
+        ...line.projected.map((point, index) => ({ x: x(line.fact.length + index), y: y(point.value) })),
+      ])
     : null;
 
   const bestIndex = facts.bestDayDate !== null
@@ -187,6 +186,12 @@ export function BriefChart() {
         )}
 
         <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label={t('The month, as the brief sees it')}>
+          <defs>
+            <linearGradient id="brief-wash" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stopColor="var(--accent)" stopOpacity="0.26" />
+              <stop offset="1" stopColor="var(--accent)" stopOpacity="0" />
+            </linearGradient>
+          </defs>
           {facts.goal !== null && facts.goal <= peak && (
             <line
               x1="0"
@@ -198,7 +203,31 @@ export function BriefChart() {
               strokeDasharray="2 5"
             />
           )}
-          <path d={factPath} fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round" />
+          <path
+            d={`${factPath} L ${x(line.fact.length - 1)} ${H} L ${x(0)} ${H} Z`}
+            fill="url(#brief-wash)"
+          />
+          <path d={factPath} fill="none" stroke="var(--accent)" strokeWidth="5" opacity="0.2" filter="blur(4px)" />
+          <path d={factPath} fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+          {line.projected.length > 0 && line.fact.length > 0 && (
+            <>
+              <circle
+                className="chart-pulse"
+                cx={x(line.fact.length - 1)}
+                cy={y(line.fact.at(-1)!.value)}
+                r="9"
+                fill="var(--accent)"
+              />
+              <circle
+                cx={x(line.fact.length - 1)}
+                cy={y(line.fact.at(-1)!.value)}
+                r="4"
+                fill="var(--accent)"
+                stroke="var(--surface)"
+                strokeWidth="1.5"
+              />
+            </>
+          )}
           {projPath !== null && (
             <path d={projPath} fill="none" stroke="var(--accent)" strokeWidth="2" strokeDasharray="5 6" opacity="0.7" />
           )}

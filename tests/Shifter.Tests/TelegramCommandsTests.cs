@@ -59,5 +59,18 @@ public class TelegramCommandsTests
     [InlineData(111, "смен")]
     public void Bends_the_counted_word(int count, string expected)
         => Assert.Equal(expected, TelegramCommands.Plural(count, "смена", "смены", "смен"));
+
+    [Theory]
+    [InlineData("зарплата")]
+    [InlineData("Зарплата")]
+    [InlineData("/pay")]
+    [InlineData("гроші")]
+    [InlineData("выплата")]
+    public void The_money_question_lands_on_the_pay_command(string text)
+        => Assert.Equal(TelegramCommand.Pay, TelegramCommands.Parse(text).Command);
+
+    [Fact]
+    public void A_word_containing_money_keeps_its_own_command()
+        => Assert.Equal(TelegramCommand.Today, TelegramCommands.Parse("сегодня").Command);
 }
 

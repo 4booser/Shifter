@@ -10,6 +10,7 @@ public enum TelegramCommand
     Month,
     ClockIn,
     ClockOut,
+    Pay,
     TimeZone,
     Help,
 }
@@ -46,6 +47,8 @@ public static class TelegramCommands
         return lower switch
         {
             "today" or "сегодня" or "сьогодні" => (TelegramCommand.Today, ""),
+            "pay" or "зарплата" or "зарплатня" or "деньги" or "гроші" or "выплата" or "виплата"
+                => (TelegramCommand.Pay, ""),
             "tomorrow" or "завтра" => (TelegramCommand.Tomorrow, ""),
             "week" or "неделя" or "тиждень" => (TelegramCommand.Week, ""),
             "month" or "месяц" or "місяць" => (TelegramCommand.Month, ""),

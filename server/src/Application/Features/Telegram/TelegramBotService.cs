@@ -143,7 +143,7 @@ public sealed class TelegramBotService : BackgroundService
 
             await db.SaveChangesAsync(ct);
 
-            return "Готово — этот чат привязан к вашему Shifter. Команды: сегодня · завтра · месяц · начал · закончил";
+            return "Готово — этот чат привязан к вашему Shifter. Команды: сегодня · завтра · месяц · зарплата · начал · закончил";
         }
 
         if (link is null)
@@ -202,6 +202,27 @@ public sealed class TelegramBotService : BackgroundService
 
             case TelegramCommand.ClockOut:
                 return await ClockOutAsync(scope.ServiceProvider, db, link, zone, today, ct);
+
+            case TelegramCommand.Pay:
+            {
+                // The same NextPayout the payouts page, the brief and the
+                // assistant read — a fourth reader, not a fourth opinion.
+                var reconciliation = scope.ServiceProvider
+                    .GetRequiredService<Shifter.Application.Features.business.Services.Interfaces.IReconciliationHandler>();
+                var schedule = await reconciliation.BuildAsync(
+                    link.UserId, today.AddDays(-45), today.AddDays(60), ct);
+                var due = Shifter.Application.Features.business.DTOs.NextPayout.From(schedule, today);
+
+                if (due is null)
+                    return "Сверка выплат молчит: либо всё уже выплачено, либо у мест не задан день зарплаты.";
+
+                var wait = due.due_on.DayNumber - today.DayNumber;
+                var amount = $"{Math.Round(due.expected):N0}".Replace(',', ' ');
+
+                return wait == 0
+                    ? $"Деньги должны прийти сегодня — {amount} грн ({due.location_name})."
+                    : $"Ближайшие деньги {due.due_on:dd.MM} — через {wait} {TelegramCommands.Plural(wait, "день", "дня", "дней")}: {amount} грн ({due.location_name}).";
+            }
 
             case TelegramCommand.TimeZone:
                 try

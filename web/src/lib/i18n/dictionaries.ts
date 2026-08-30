@@ -718,6 +718,8 @@ export const RU: Dictionary = {
     'Банк отказал этому токену. Проверьте, что он скопирован целиком.',
   'Could not reach the bank. Try again in a minute.':
     'Не удалось достучаться до банка. Попробуйте через минуту.',
+  'The safest home for the statement is the phone app — there the token lives in the keychain. Pasting it here works too; it will not leave this browser.':
+    'Самый безопасный дом для выписки — приложение на телефоне: там токен живёт в связке ключей. Можно вставить и здесь — из этого браузера он не уйдёт.',
   'The token can only read. Nobody can move money with it.':
     'Токен умеет только читать. Двигать деньги им нельзя.',
   'It is stored in this browser, not on our server. A browser is less protected than a phone’s keychain — on a shared computer, do not connect.':
@@ -3695,6 +3697,8 @@ export const UK: Dictionary = {
     'Банк відмовив цьому токену. Перевірте, що він скопійований цілком.',
   'Could not reach the bank. Try again in a minute.':
     'Не вдалося достукатися до банку. Спробуйте за хвилину.',
+  'The safest home for the statement is the phone app — there the token lives in the keychain. Pasting it here works too; it will not leave this browser.':
+    'Найбезпечніший дім для виписки — застосунок на телефоні: там токен живе у в’язці ключів. Можна вставити й тут — із цього браузера він не піде.',
   'The token can only read. Nobody can move money with it.':
     'Токен уміє лише читати. Рухати гроші ним не можна.',
   'It is stored in this browser, not on our server. A browser is less protected than a phone’s keychain — on a shared computer, do not connect.':

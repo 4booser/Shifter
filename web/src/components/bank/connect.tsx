@@ -81,6 +81,7 @@ export function BankConnect() {
           person deciding whether to paste a bank token here is entitled to
           that sentence before they do it, not after. */}
       <div className="mt-4 flex flex-col gap-1.5 text-[0.82rem] text-muted">
+        <p>— {t('The safest home for the statement is the phone app — there the token lives in the keychain. Pasting it here works too; it will not leave this browser.')}</p>
         <p>— {t('The token can only read. Nobody can move money with it.')}</p>
         <p>— {t('It is stored in this browser, not on our server. A browser is less protected than a phone’s keychain — on a shared computer, do not connect.')}</p>
         <p>— {t('One tap at api.monobank.ua revokes it; the button here erases it together with everything downloaded.')}</p>

@@ -43,6 +43,25 @@ export const breakSeconds = (shift: LiveShift, now: number): number =>
 export const onBreak = (shift: LiveShift): boolean =>
   (shift.breaks ?? []).some((entry) => entry.to === null);
 
+/**
+ * The instant the plan says this shift ends. plannedEnd is a wall clock
+ * ("23:00"); an end at or before the start belongs to the next morning —
+ * 17:00–01:00 ends on the day after the shift's date.
+ */
+export const plannedEndInstant = (shift: LiveShift): Date => {
+  const startClock = (shift.plannedStart ?? shift.startedAt.slice(11, 16)).slice(0, 5);
+  const endClock = shift.plannedEnd.slice(0, 5);
+  const end = new Date(`${shift.date}T${endClock}:00`);
+
+  if (endClock <= startClock) end.setDate(end.getDate() + 1);
+
+  return end;
+};
+
+/** True once the plan has been over for a while: the button was forgotten. */
+export const forgotten = (shift: LiveShift, now: number): boolean =>
+  now - plannedEndInstant(shift).getTime() > 2 * 3600_000;
+
 const KEY = 'shifter.live';
 
 /**

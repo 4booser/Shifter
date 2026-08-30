@@ -62,7 +62,7 @@ import {
   toSavePayload,
 } from '@/lib/types';
 import { WorkPlace } from '@/lib/places';
-import { LiveShift, useLive } from '@/store/live';
+import { forgotten, LiveShift, useLive } from '@/store/live';
 import { useAutoStart } from '@/store/autostart';
 import { dueAutoStart } from '@/lib/autostart';
 import { ApiError } from '@/lib/api';
@@ -946,7 +946,7 @@ export default function CalendarScreen() {
 
         <Text style={styles.hint}>
           {brush === null
-            ? t('Свайпайте месяцы, тапайте день. Карандаш закрашивает сразу несколько.')
+            ? t('Свайпайте месяцы, тапайте день. Карандаш закрашивает сразу несколько.') + ' ◆'
             : t('Проведите пальцем по дням — они закрасятся. Ещё раз — снимется.')}
         </Text>
 
@@ -1025,11 +1025,15 @@ export default function CalendarScreen() {
 
         {brush === null && live !== null && (
           <Appear index={1}>
-          <Press style={styles.liveCard} onPress={() => router.push('/live')}>
-            <View style={styles.liveDot} />
+          <Press
+            style={[styles.liveCard, forgotten(live, Date.now()) && styles.liveCardOverdue]}
+            onPress={() => router.push('/live')}
+          >
+            <View style={[styles.liveDot, forgotten(live, Date.now()) && { backgroundColor: palette.danger }]} />
             <Text style={styles.liveText}>
-              Смена идёт: {live.symbol ?? '🕐'} {live.name} с{' '}
-              {new Date(live.startedAt).toTimeString().slice(0, 5)}
+              {forgotten(live, Date.now())
+                ? `${t('Смена всё ещё идёт')} — ${t('план кончился в')} ${live.plannedEnd.slice(0, 5)}`
+                : `Смена идёт: ${live.symbol ?? '🕐'} ${live.name} с ${new Date(live.startedAt).toTimeString().slice(0, 5)}`}
             </Text>
             <Ionicons name="chevron-forward" size={16} color={palette.accent} />
           </Press>
@@ -1491,6 +1495,7 @@ const makeStyles = (palette: Palette) =>
       paddingHorizontal: 12,
       paddingVertical: 11,
     },
+    liveCardOverdue: { borderColor: palette.danger },
     liveDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: palette.accent },
     liveText: { color: palette.text, fontWeight: '600', flex: 1, fontSize: 13.5 },
     startButton: {

@@ -13,7 +13,7 @@ import { api } from '@/lib/api';
 import { pad } from '@/lib/calendar';
 import { stopwatch } from '@/lib/format';
 import { CalendarDayData, DaysResponse, money, toSavePayload } from '@/lib/types';
-import { breakSeconds, onBreak, useLive } from '@/store/live';
+import { breakSeconds, forgotten, onBreak, useLive } from '@/store/live';
 import { t } from '@/lib/i18n';
 
 const clock = (date: Date) => `${pad(date.getHours())}:${pad(date.getMinutes())}`;
@@ -103,7 +103,9 @@ export default function LiveScreen() {
     if (wholeHours > 0) void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   }
 
-  const finish = async () => {
+  // With the button forgotten, "now" is a lie; the plan's own end is the
+  // honest stamp. The person can still disagree and edit the day after.
+  const finish = async (endAt?: string) => {
     setBusy(true);
     setError(null);
 
@@ -114,7 +116,7 @@ export default function LiveScreen() {
       const entry = payload.shifts.find((row) => row.shift_id === live.shiftId);
       const stamp = {
         actual_start: clock(started),
-        actual_end: clock(new Date()),
+        actual_end: endAt ?? clock(new Date()),
         worked: true,
         // Minutes, because that is what the server prices in — and null
         // rather than zero where nobody took one, so the template's own
@@ -158,6 +160,26 @@ export default function LiveScreen() {
           </Text>
         </View>
       </Appear>
+
+      {forgotten(live, Date.now()) && (
+        <Appear>
+          <View style={styles.overdue}>
+            <Text style={styles.overdueText}>
+              {t('План кончился в')} {live.plannedEnd.slice(0, 5)}. {t('Забыли выключить?')}
+            </Text>
+            <Press
+              style={styles.overdueButton}
+              disabled={busy}
+              onPress={() => void finish(live.plannedEnd.slice(0, 5))}
+            >
+              <Text style={styles.overdueButtonText}>{t('Закрыть по плану')}</Text>
+            </Press>
+            <Text style={styles.overdueHint}>
+              {t('Запишутся плановые часы, не таймер. «Закончил» ниже — если правда ещё работаете.')}
+            </Text>
+          </View>
+        </Appear>
+      )}
 
       <Appear index={1}>
         <Ring
@@ -349,6 +371,24 @@ const makeStyles = (palette: Palette) =>
       paddingVertical: 16,
     },
     finishText: { color: '#fff', fontWeight: '800', fontSize: 15.5 },
+    overdue: {
+      borderWidth: 1,
+      borderColor: palette.danger,
+      backgroundColor: palette.backgroundElement,
+      borderRadius: 14,
+      padding: 12,
+      marginTop: 12,
+    },
+    overdueText: { color: palette.text, fontWeight: '700', fontSize: 14 },
+    overdueButton: {
+      backgroundColor: palette.danger,
+      borderRadius: 10,
+      alignItems: 'center',
+      paddingVertical: 10,
+      marginTop: 10,
+    },
+    overdueButtonText: { color: '#fff', fontWeight: '700' },
+    overdueHint: { color: palette.textSecondary, fontSize: 12, marginTop: 8, lineHeight: 16 },
     quiet: { paddingVertical: 9 },
     quietText: { color: palette.textSecondary, fontWeight: '600', fontSize: 13.5 },
   });

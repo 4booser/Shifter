@@ -23,6 +23,7 @@ import { addMonths, currentMonth, dayLabel, monthBounds, todayKey } from '@/lib/
 import { DaysResponse, ShiftTemplate, toSavePayload } from '@/lib/types';
 import { Gig, payLine, photosOf, postedAgo, templateFromGig, tradeOf } from '@/lib/gigs';
 import { t } from '@/lib/i18n';
+import { buzz } from '@/lib/haptics';
 
 type Tab = 'freelance' | 'permanent' | 'mine';
 
@@ -156,7 +157,10 @@ export default function GigsScreen() {
           >
             <Press
               style={[styles.trade, trade === null && styles.tradeOn]}
-              onPress={() => setTrade(null)}
+              onPress={() => {
+                buzz.choose();
+                setTrade(null);
+              }}
             >
               <Text style={[styles.tradeText, trade === null && styles.tradeTextOn]}>
                 {t('Все')} · {board.length}
@@ -167,7 +171,10 @@ export default function GigsScreen() {
               <Press
                 key={one.id}
                 style={[styles.trade, trade === one.id && styles.tradeOn]}
-                onPress={() => setTrade(trade === one.id ? null : one.id)}
+                onPress={() => {
+                  buzz.choose();
+                  setTrade(trade === one.id ? null : one.id);
+                }}
               >
                 <Text style={[styles.tradeText, trade === one.id && styles.tradeTextOn]}>
                   {one.emoji} {t(one.label)} · {one.count}

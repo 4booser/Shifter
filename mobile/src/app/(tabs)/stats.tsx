@@ -38,6 +38,7 @@ import {
 } from '@/lib/calendar';
 import { DaysResponse, money, moneyIn, plural } from '@/lib/types';
 import { t } from '@/lib/i18n';
+import { buzz } from '@/lib/haptics';
 
 /** Money and hours at one place, and what the journey does to them. */
 interface PlaceTotal {
@@ -284,7 +285,10 @@ export default function StatsScreen() {
           <Press
             key={value}
             style={[styles.segment, span === value && styles.segmentOn]}
-            onPress={() => setSpan(value)}
+            onPress={() => {
+              buzz.choose();
+              setSpan(value);
+            }}
           >
             <Text style={[styles.segmentText, span === value && styles.segmentTextOn]}>
               {value === 'month' ? t('Месяц') : t('Год')}

@@ -811,7 +811,10 @@ function Bank() {
             <Press
               key={value}
               style={[styles.segment, view === value && styles.segmentOn]}
-              onPress={() => setView(value)}
+              onPress={() => {
+                buzz.choose();
+                setView(value);
+              }}
             >
               <Text style={[styles.segmentText, view === value && styles.segmentTextOn]}>
                 {label}

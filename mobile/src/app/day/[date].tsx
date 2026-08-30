@@ -37,6 +37,7 @@ import {
   toSavePayload,
 } from '@/lib/types';
 import { t } from '@/lib/i18n';
+import { buzz } from '@/lib/haptics';
 
 /** Short on purpose: a list long enough for every venue is one nobody fills in. */
 const ZONES: { value: ShiftZone; label: string }[] = [
@@ -243,6 +244,8 @@ export default function DayScreen() {
   };
 
   const setWorked = (shiftId: number, worked: boolean) => {
+    buzz.commit();
+
     if (day === null) return;
 
     setDay({

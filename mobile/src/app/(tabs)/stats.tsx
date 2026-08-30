@@ -18,6 +18,7 @@ import { Pace } from '@/components/pace';
 import { RhythmCard } from '@/components/rhythm-card';
 import { CitiesCard } from '@/components/cities-card';
 import { RecordsHealthCard } from '@/components/records-health';
+import { YearHeatCard } from '@/components/year-heat';
 import { TrophyShelf } from '@/components/trophy-shelf';
 import { Weekdays } from '@/components/weekdays';
 import { byWeekday } from '@/lib/rhythm';
@@ -501,6 +502,8 @@ export default function StatsScreen() {
       <RhythmCard palette={palette} />
 
       <CitiesCard palette={palette} />
+
+      <YearHeatCard palette={palette} />
 
       <TrophyShelf palette={palette} />
 

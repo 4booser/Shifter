@@ -42,6 +42,7 @@ import { WhatIfCard } from '@/components/stats/what-if';
 import { RhythmCard } from '@/components/stats/rhythm';
 import { CitiesCard } from '@/components/stats/cities';
 import { RecordsHealthCard } from '@/components/stats/records-health';
+import { YearHeat } from '@/components/stats/year-heat';
 import { TrophyShelf } from '@/components/stats/trophies';
 import { hourDial, rateTrend, tipsByWeekday, waterfall, weekBands } from '@/lib/charts/report-math';
 import { ClockRing, DaysAtGlance, MoneyFlow, MonthBars, TipWeek, TrendLine, WeekBandsChart } from '@/components/charts/glass-charts';
@@ -766,6 +767,8 @@ function Stats() {
       <WhatIfCard suggestedTarget={active?.target ?? null} />
 
       <RhythmCard />
+
+      <YearHeat />
 
       <CitiesCard />
 

@@ -32,6 +32,7 @@ import {
 } from '@/components/bank/charts';
 import { StatementCard } from '@/components/bank/statement';
 import { BankWork } from '@/components/bank/work';
+import { realHourly } from '@/lib/mono/mono-work';
 
 /**
  * The bank, now on the site.
@@ -84,6 +85,14 @@ export default function BankPage() {
   }, [bounds.from, bounds.to]);
 
   const account = (mono.client?.accounts ?? []).find((entry) => entry.id === mono.accountId);
+
+  // The month's real hour — earned minus what going to work took, per hour —
+  // so a spend can be said in the unit this app exists to defend.
+  const hourWorth = useMemo(() => {
+    const rate = realHourly(mono.items, days, bounds.from, bounds.to);
+
+    return rate === null || rate.real <= 0 ? null : rate.real;
+  }, [mono.items, days, bounds.from, bounds.to]);
 
   const shiftMonth = (delta: number) => {
     const [year, month] = monthAt.split('-').map(Number);
@@ -241,7 +250,7 @@ export default function BankPage() {
 
             {/* ==== Row: categories beside the rhythm and the pace ==== */}
             <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
-              <SpendCategories items={mono.items} from={bounds.from} to={bounds.to} />
+              <SpendCategories items={mono.items} from={bounds.from} to={bounds.to} hourWorth={hourWorth} />
               <div className="flex flex-col gap-4">
                 <SpendRhythm items={mono.items} from={bounds.from} to={bounds.to} />
                 <SpendPaceCard items={mono.items} from={bounds.from} to={bounds.to} />
@@ -257,7 +266,7 @@ export default function BankPage() {
             {/* ==== Row: places, standing, oddities ==== */}
             <div className="grid items-start gap-4 xl:grid-cols-3">
               <SpendPlaces items={mono.items} from={bounds.from} to={bounds.to} />
-              <SpendStanding items={mono.items} from={bounds.from} to={bounds.to} />
+              <SpendStanding items={mono.items} from={bounds.from} to={bounds.to} hourWorth={hourWorth} />
               <SpendOddities items={mono.items} from={bounds.from} to={bounds.to} />
             </div>
 

@@ -176,15 +176,29 @@ export function SpendHeadline({
   );
 }
 
+/** A sum said in worked hours: the unit this app exists to defend. */
+function inHours(value: number, hourWorth: number | null | undefined): string | null {
+  if (hourWorth === null || hourWorth === undefined || hourWorth <= 0) return null;
+
+  const hours = value / hourWorth;
+
+  if (hours < 0.75) return null;
+
+  return hours >= 10 ? `${Math.round(hours)}` : `${(Math.round(hours * 2) / 2).toLocaleString('ru')}`;
+}
+
 /** ==== Categories, each one openable ==== */
 export function SpendCategories({
   items,
   from,
   to,
+  hourWorth = null,
 }: {
   items: MonoStatementItem[];
   from: string;
   to: string;
+  /** What a worked hour is really worth, when the rota knows it. */
+  hourWorth?: number | null;
 }) {
   const { t } = useI18n();
   const { rules, budgets, deltas, limits, spentAll } = useSpend(items, from, to);
@@ -228,8 +242,15 @@ export function SpendCategories({
                   <span className="min-w-0 flex-1">
                     <span className="flex items-baseline justify-between gap-2">
                       <span className="truncate text-[0.9rem] font-semibold">{row.name}</span>
-                      <span className="tabular flex-none text-[0.92rem] font-bold">
-                        <Money value={row.total} />
+                      <span className="flex-none text-right">
+                        <span className="tabular block text-[0.92rem] font-bold">
+                          <Money value={row.total} />
+                        </span>
+                        {inHours(row.total, hourWorth) !== null && (
+                          <span className="tabular block text-[0.68rem] leading-tight text-faint">
+                            ≈ {inHours(row.total, hourWorth)} {t('h of work')}
+                          </span>
+                        )}
                       </span>
                     </span>
                     <span className="mt-1 flex items-center gap-2">
@@ -351,10 +372,12 @@ export function SpendStanding({
   items,
   from,
   to,
+  hourWorth = null,
 }: {
   items: MonoStatementItem[];
   from: string;
   to: string;
+  hourWorth?: number | null;
 }) {
   const { t } = useI18n();
   const { standing } = useSpend(items, from, to);
@@ -387,6 +410,9 @@ export function SpendStanding({
                   <Money value={yearOfStanding(standing.reduce((sum, row) => sum + row.amount, 0))} />
                 </strong>{' '}
                 {t('a year')}
+                {inHours(yearOfStanding(standing.reduce((sum, row) => sum + row.amount, 0)), hourWorth) !== null && (
+                  <> — ≈ <strong className="tabular">{inHours(yearOfStanding(standing.reduce((sum, row) => sum + row.amount, 0)), hourWorth)}</strong> {t('h of work')}</>
+                )}
               </p>
             )}
           </div>

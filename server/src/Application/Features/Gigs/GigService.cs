@@ -370,7 +370,7 @@ public sealed class GigService
                 ("uk", _) => ("Відгук на підробіток", $"«{gig.Title}» {gig.Date:dd.MM} — нова людина готова вийти."),
                 _ => ("A reply to your gig", $"“{gig.Title}” {gig.Date:dd.MM} — somebody is in."),
             },
-            "/gigs",
+            "/my-listings",
             ct);
 
         return ToDto(gig, userId);
@@ -489,7 +489,7 @@ public sealed class GigService
                     "uk" => ("Контакти відкриті", $"«{gig.Title}» {gig.Date:dd.MM} — людина погодилась, можна дзвонити."),
                     _ => ("Contacts shared", $"“{gig.Title}” {gig.Date:dd.MM} — they said yes; you can call."),
                 },
-                "/gigs",
+                "/my-listings",
                 ct);
         }
 

@@ -60,6 +60,15 @@ public sealed class PasswordResetService
             .Where(reset => reset.UserId == user.Id && reset.UsedAt == null)
             .ToArrayAsync(ct);
 
+        // One letter per ten minutes per address: asked again inside the
+        // window, this sends nothing and says nothing — the caller already
+        // learns nothing here, and a stranger with somebody's email must not
+        // be able to point this form at them as a mail cannon. The letter
+        // already sent stays valid; a person who clicked twice is served by
+        // the first one.
+        if (live.Any(reset => reset.CreatedAt > DateTime.UtcNow.AddMinutes(-10)))
+            return null;
+
         foreach (var reset in live) reset.UsedAt = DateTime.UtcNow;
 
         var token = NewToken();

@@ -135,9 +135,21 @@ export default function CreateGigScreen() {
         .then((rows) => {
           const found = rows.find((row) => row.gig.id === sourceId)?.gig;
 
-          setDraft(found !== undefined ? fromGig(found, editId !== null) : BLANK);
+          if (found === undefined) {
+            // A stale link or somebody else's id: an empty «edit» form would
+            // quietly create a new listing — worse than saying so.
+            Alert.alert(t('Объявление не нашлось.'));
+            router.back();
+
+            return;
+          }
+
+          setDraft(fromGig(found, editId !== null));
         })
-        .catch(() => setDraft(BLANK));
+        .catch(() => {
+          Alert.alert(t('Не дотянулись до сервера.'));
+          router.back();
+        });
 
       return;
     }

@@ -10,13 +10,14 @@ import {
   Switch,
   Text,
   useColorScheme,
+  TextInput,
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Press } from '@/components/motion';
 import { Colors, Palette } from '@/constants/theme';
-import { api, API_BASE } from '@/lib/api';
+import { ApiError, api, API_BASE } from '@/lib/api';
 import { lockKind, LockKind, lockNameBy, lockStore, unlock } from '@/lib/lock';
 import { useSession } from '@/store/session';
 import { AccountKeys } from '@/components/account-keys';
@@ -90,6 +91,9 @@ export default function SettingsScreen() {
   // The month's letter: the one email frequency that is not an irritation,
   // subscribed to from the device the address was typed on.
   const [letter, setLetter] = useState(false);
+  const [emailDraft, setEmailDraft] = useState('');
+  const [emailBusy, setEmailBusy] = useState(false);
+  const [emailSaid, setEmailSaid] = useState<{ ok: boolean; text: string } | null>(null);
 
   const reloadProfile = useCallback(async () => {
     try {
@@ -97,6 +101,7 @@ export default function SettingsScreen() {
 
       setProfile(loaded);
       setLetter(loaded.monthly_letter);
+      setEmailDraft(loaded.email ?? '');
     } catch {
       setError(t('Профиль не загрузился.'));
     }
@@ -110,6 +115,29 @@ export default function SettingsScreen() {
       await reloadProfile();
     })();
   }, [reloadProfile]);
+
+  const saveEmail = async () => {
+    setEmailBusy(true);
+    setEmailSaid(null);
+
+    try {
+      // Empty clears the address — and the letter subscription with it,
+      // which the server does on its own and the reload will show.
+      await api('/shifter/v1/account/avatar/email', {
+        method: 'PUT',
+        body: { email: emailDraft.trim() === '' ? null : emailDraft.trim() },
+      });
+      await reloadProfile();
+      setEmailSaid({ ok: true, text: t('Сохранено.') });
+    } catch (caught) {
+      setEmailSaid({
+        ok: false,
+        text: caught instanceof ApiError ? caught.message : t('Сеть молчит. Сервер доступен?'),
+      });
+    } finally {
+      setEmailBusy(false);
+    }
+  };
 
   const toggleLock = async (on: boolean) => {
     // Turning it on without proving you can open it is how somebody locks
@@ -256,10 +284,45 @@ export default function SettingsScreen() {
 
       {profile !== null && (
         <>
+          <Text style={styles.section}>{t('Почта')}</Text>
+          <View style={styles.card}>
+            <Text style={styles.rowHint}>
+              {t('Адрес нужен «забыли пароль» и письму месяца. Он не публикуется.')}
+            </Text>
+            <View style={styles.emailRow}>
+              <TextInput
+                style={[styles.emailInput]}
+                placeholder="you@example.com"
+                placeholderTextColor={palette.textSecondary}
+                autoCapitalize="none"
+                autoCorrect={false}
+                keyboardType="email-address"
+                value={emailDraft}
+                onChangeText={setEmailDraft}
+              />
+              <Press
+                style={[styles.emailSave, emailDraft.trim() === (profile.email ?? '') && styles.emailSaveOff]}
+                disabled={emailBusy || emailDraft.trim() === (profile.email ?? '')}
+                onPress={() => void saveEmail()}
+              >
+                {emailBusy ? (
+                  <ActivityIndicator color="#fff" size="small" />
+                ) : (
+                  <Text style={styles.emailSaveText}>{t('Сохранить')}</Text>
+                )}
+              </Press>
+            </View>
+            {emailSaid !== null && (
+              <Text style={[styles.rowHint, { color: emailSaid.ok ? palette.good : palette.danger }]}>
+                {emailSaid.text}
+              </Text>
+            )}
+          </View>
+
           <Text style={styles.section}>{t('Письмо месяца')}</Text>
           {profile.email === null ? (
             <Text style={styles.lead}>
-              {t('Впишите адрес на сайте — и раз в месяц, после его конца, сюда можно получать итог письмом.')}
+              {t('Впишите адрес выше — и раз в месяц, после его конца, сюда можно получать итог письмом.')}
             </Text>
           ) : (
             <Press
@@ -438,6 +501,26 @@ const makeStyles = (palette: Palette) =>
     row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
     rowTitle: { color: palette.text, fontSize: 15, fontWeight: '600' },
     rowHint: { color: palette.textSecondary, fontSize: 12.5, lineHeight: 18, marginTop: 3 },
+    emailRow: { flexDirection: 'row', gap: 8, marginTop: 8 },
+    emailInput: {
+      flex: 1,
+      borderWidth: 1,
+      borderColor: palette.border,
+      borderRadius: 10,
+      paddingHorizontal: 12,
+      paddingVertical: 9,
+      color: palette.text,
+      backgroundColor: palette.background,
+    },
+    emailSave: {
+      backgroundColor: palette.accent,
+      borderRadius: 10,
+      paddingHorizontal: 14,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    emailSaveOff: { backgroundColor: palette.border },
+    emailSaveText: { color: '#fff', fontWeight: '700' },
     lead: { color: palette.textSecondary, fontSize: 12.5, lineHeight: 18 },
 
     linkRow: {

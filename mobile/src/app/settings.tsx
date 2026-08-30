@@ -1,8 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
-  Alert,
   ActivityIndicator,
   Linking,
   ScrollView,
@@ -10,75 +9,36 @@ import {
   Switch,
   Text,
   useColorScheme,
-  TextInput,
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Press } from '@/components/motion';
 import { Colors, Palette } from '@/constants/theme';
-import { ApiError, api, API_BASE } from '@/lib/api';
+import { api, API_BASE } from '@/lib/api';
 import { lockKind, LockKind, lockNameBy, lockStore, unlock } from '@/lib/lock';
 import { useSession } from '@/store/session';
-import { AccountKeys } from '@/components/account-keys';
-import { CalendarFeedCard } from '@/components/calendar-feed';
 import { useEye } from '@/lib/eye';
 import { t, useLang } from '@/lib/i18n';
-import { DeviceSettings, deviceSettings, deviceToken } from '@/lib/notifications';
-import { paperRanges, shareAccountantCsv, shareIncomePdf, shareTakeout, PaperRange } from '@/lib/papers-share';
 
 interface Profile {
   login: string;
   first_name: string;
   last_name: string | null;
   email: string | null;
-  has_password: boolean;
-  two_factor: boolean;
-  monthly_goal: number | null;
-  /** Whether they asked for the month's letter. Off unless they did. */
-  monthly_letter: boolean;
 }
 
 /**
- * The account, and the two switches worth having on a phone. Everything else
- * a person can change lives on the site — putting a second, thinner editor in
- * the app is how the two start disagreeing about what a setting means.
+ * The hub. Device-local switches live here — language, the eye, the lock —
+ * because flipping them must never wait on the network. Everything that
+ * talks to the server got a screen of its own: keys, alerts, papers.
  */
-/**
- * «За какой период?» — the four stretches people are actually asked for.
- * An Alert rather than a date picker on purpose: the paper is for a clerk,
- * and clerks ask in calendar words, not in dates.
- */
-function askPeriod(onPicked: (range: PaperRange) => void): void {
-  Alert.alert(
-    t('За какой период?'),
-    undefined,
-    [
-      ...paperRanges().map((preset) => ({
-        text: t(preset.label),
-        onPress: () => onPicked(preset.range),
-      })),
-      { text: t('Отмена'), style: 'cancel' as const },
-    ],
-  );
-}
-
 export default function SettingsScreen() {
   const router = useRouter();
   const scheme = useColorScheme();
   const palette = Colors[scheme === 'dark' ? 'dark' : 'light'];
   const lang = useLang((state) => state.lang);
   const eyeIsShut = useEye((state) => state.shut);
-  const [nudges, setNudges] = useState<DeviceSettings | null>(null);
-  const token = deviceToken();
-
-  // Asked for once, with nothing to change: the same call that sets a switch
-  // is the one that reads them, so there is no second endpoint to keep in step.
-  useEffect(() => {
-    if (token === null) return;
-
-    void deviceSettings(token).then(setNudges);
-  }, [token]);
   const styles = makeStyles(palette);
   const insets = useSafeAreaInsets();
   const signOut = useSession((state) => state.signOut);
@@ -88,56 +48,18 @@ export default function SettingsScreen() {
   const [kind, setKind] = useState<LockKind>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // The month's letter: the one email frequency that is not an irritation,
-  // subscribed to from the device the address was typed on.
-  const [letter, setLetter] = useState(false);
-  const [emailDraft, setEmailDraft] = useState('');
-  const [emailBusy, setEmailBusy] = useState(false);
-  const [emailSaid, setEmailSaid] = useState<{ ok: boolean; text: string } | null>(null);
-
-  const reloadProfile = useCallback(async () => {
-    try {
-      const loaded = await api<Profile>('/shifter/v1/account');
-
-      setProfile(loaded);
-      setLetter(loaded.monthly_letter);
-      setEmailDraft(loaded.email ?? '');
-    } catch {
-      setError(t('Профиль не загрузился.'));
-    }
-  }, []);
-
   useEffect(() => {
     void (async () => {
       setLocked(await lockStore.enabled());
       setKind(await lockKind());
 
-      await reloadProfile();
+      try {
+        setProfile(await api<Profile>('/shifter/v1/account'));
+      } catch {
+        setError(t('Профиль не загрузился.'));
+      }
     })();
-  }, [reloadProfile]);
-
-  const saveEmail = async () => {
-    setEmailBusy(true);
-    setEmailSaid(null);
-
-    try {
-      // Empty clears the address — and the letter subscription with it,
-      // which the server does on its own and the reload will show.
-      await api('/shifter/v1/account/avatar/email', {
-        method: 'PUT',
-        body: { email: emailDraft.trim() === '' ? null : emailDraft.trim() },
-      });
-      await reloadProfile();
-      setEmailSaid({ ok: true, text: t('Сохранено.') });
-    } catch (caught) {
-      setEmailSaid({
-        ok: false,
-        text: caught instanceof ApiError ? caught.message : t('Сеть молчит. Сервер доступен?'),
-      });
-    } finally {
-      setEmailBusy(false);
-    }
-  };
+  }, []);
 
   const toggleLock = async (on: boolean) => {
     // Turning it on without proving you can open it is how somebody locks
@@ -173,6 +95,24 @@ export default function SettingsScreen() {
         </View>
       )}
 
+      <Press style={styles.linkRow} onPress={() => router.push('/settings-keys')}>
+        <Ionicons name="key-outline" size={20} color={palette.textSecondary} />
+        <Text style={styles.linkText}>{t('Аккаунт и ключи — пароль, 2FA, почта')}</Text>
+        <Ionicons name="chevron-forward" size={16} color={palette.textSecondary} />
+      </Press>
+
+      <Press style={styles.linkRow} onPress={() => router.push('/settings-alerts')}>
+        <Ionicons name="notifications-outline" size={20} color={palette.textSecondary} />
+        <Text style={styles.linkText}>{t('Уведомления — пуши и письмо месяца')}</Text>
+        <Ionicons name="chevron-forward" size={16} color={palette.textSecondary} />
+      </Press>
+
+      <Press style={styles.linkRow} onPress={() => router.push('/settings-data')}>
+        <Ionicons name="calendar-outline" size={20} color={palette.textSecondary} />
+        <Text style={styles.linkText}>{t('Календарь и бумаги — .ics, PDF, CSV')}</Text>
+        <Ionicons name="chevron-forward" size={16} color={palette.textSecondary} />
+      </Press>
+
       <Text style={styles.section}>{t('Язык')}</Text>
       <View style={styles.langRow}>
         {(
@@ -202,82 +142,6 @@ export default function SettingsScreen() {
         </View>
       </View>
 
-      <CalendarFeedCard palette={palette} />
-
-      {profile !== null && (
-        <AccountKeys
-          palette={palette}
-          hasPassword={profile.has_password}
-          twoFactor={profile.two_factor}
-          onChanged={() => void reloadProfile()}
-        />
-      )}
-
-      {/* Only where the phone actually registered. A simulator has no push
-          service, and switches that would do nothing are worse than none. */}
-      {token !== null && nudges !== null && (
-        <>
-          <Text style={styles.section}>{t('Уведомления')}</Text>
-          <View style={styles.card}>
-            <View style={styles.row}>
-              <View style={styles.grow}>
-                <Text style={styles.rowTitle}>{t('Завтра смена')}</Text>
-                <Text style={styles.rowHint}>
-                  {t('Вечером накануне, в')} {nudges.notify_at}
-                </Text>
-              </View>
-              <Switch
-                value={nudges.notify_tomorrow}
-                onValueChange={(value) => {
-                  setNudges({ ...nudges, notify_tomorrow: value });
-                  void deviceSettings(token, { notify_tomorrow: value }).then(
-                    (fresh) => fresh !== null && setNudges(fresh),
-                  );
-                }}
-                trackColor={{ true: palette.accent, false: palette.border }}
-              />
-            </View>
-
-            <View style={styles.row}>
-              <View style={styles.grow}>
-                <Text style={styles.rowTitle}>{t('Сегодня зарплата')}</Text>
-                <Text style={styles.rowHint}>
-                  {t('Утром того дня, когда деньги должны прийти.')}
-                </Text>
-              </View>
-              <Switch
-                value={nudges.notify_payday}
-                onValueChange={(value) => {
-                  setNudges({ ...nudges, notify_payday: value });
-                  void deviceSettings(token, { notify_payday: value }).then(
-                    (fresh) => fresh !== null && setNudges(fresh),
-                  );
-                }}
-                trackColor={{ true: palette.accent, false: palette.border }}
-              />
-            </View>
-            <View style={styles.row}>
-              <View style={styles.grow}>
-                <Text style={styles.rowTitle}>{t('Вчера не закрыт')}</Text>
-                <Text style={styles.rowHint}>
-                  {t('Вечером, если смена записана, а чаевых и продаж нет.')}
-                </Text>
-              </View>
-              <Switch
-                value={nudges.notify_unclosed}
-                onValueChange={(value) => {
-                  setNudges({ ...nudges, notify_unclosed: value });
-                  void deviceSettings(token, { notify_unclosed: value }).then(
-                    (fresh) => fresh !== null && setNudges(fresh),
-                  );
-                }}
-                trackColor={{ true: palette.accent, false: palette.border }}
-              />
-            </View>
-          </View>
-        </>
-      )}
-
       <Text style={styles.section}>{t('Замок')}</Text>
       <View style={styles.card}>
         <View style={styles.row}>
@@ -300,88 +164,6 @@ export default function SettingsScreen() {
         </View>
       </View>
 
-      {profile !== null && (
-        <>
-          <Text style={styles.section}>{t('Почта')}</Text>
-          <View style={styles.card}>
-            <Text style={styles.rowHint}>
-              {t('Адрес нужен «забыли пароль» и письму месяца. Он не публикуется.')}
-            </Text>
-            <View style={styles.emailRow}>
-              <TextInput
-                style={[styles.emailInput]}
-                placeholder="you@example.com"
-                placeholderTextColor={palette.textSecondary}
-                autoCapitalize="none"
-                autoCorrect={false}
-                keyboardType="email-address"
-                value={emailDraft}
-                onChangeText={setEmailDraft}
-              />
-              <Press
-                style={[styles.emailSave, emailDraft.trim() === (profile.email ?? '') && styles.emailSaveOff]}
-                disabled={emailBusy || emailDraft.trim() === (profile.email ?? '')}
-                onPress={() => void saveEmail()}
-              >
-                {emailBusy ? (
-                  <ActivityIndicator color="#fff" size="small" />
-                ) : (
-                  <Text style={styles.emailSaveText}>{t('Сохранить')}</Text>
-                )}
-              </Press>
-            </View>
-            {emailSaid !== null && (
-              <Text style={[styles.rowHint, { color: emailSaid.ok ? palette.good : palette.danger }]}>
-                {emailSaid.text}
-              </Text>
-            )}
-          </View>
-
-          <Text style={styles.section}>{t('Письмо месяца')}</Text>
-          {profile.email === null ? (
-            <Text style={styles.lead}>
-              {t('Впишите адрес выше — и раз в месяц, после его конца, сюда можно получать итог письмом.')}
-            </Text>
-          ) : (
-            <Press
-              style={styles.linkRow}
-              onPress={() => {
-                const next = !letter;
-
-                // Optimistic and honest about failure: flipped back if the
-                // server refuses, never left claiming what did not happen.
-                setLetter(next);
-
-                void api('/shifter/v1/account/avatar/letter', {
-                  method: 'PUT',
-                  body: { on: next },
-                }).catch(() => setLetter(!next));
-              }}
-            >
-              <Ionicons
-                name={letter ? 'mail' : 'mail-outline'}
-                size={20}
-                color={letter ? palette.accent : palette.textSecondary}
-              />
-              <View style={styles.grow}>
-                <Text style={styles.linkText}>
-                  {letter ? t('Присылать на') : t('Итог месяца письмом')}
-                  {letter ? ` ${profile.email}` : ''}
-                </Text>
-                <Text style={styles.rowHint}>
-                  {t('Раз в месяц, когда цифры окончательные. В каждом письме — ссылка, которая их прекращает.')}
-                </Text>
-              </View>
-              <Ionicons
-                name={letter ? 'checkmark-circle' : 'ellipse-outline'}
-                size={20}
-                color={letter ? palette.good : palette.textSecondary}
-              />
-            </Press>
-          )}
-        </>
-      )}
-
       <Text style={styles.section}>{t('Ваша работа')}</Text>
       <Press style={styles.linkRow} onPress={() => router.push('/templates')}>
         <Ionicons name="time-outline" size={20} color={palette.textSecondary} />
@@ -401,54 +183,10 @@ export default function SettingsScreen() {
         <Ionicons name="chevron-forward" size={16} color={palette.textSecondary} />
       </Press>
 
-      <Press style={styles.linkRow} onPress={() => router.push('/import-ics')}>
-        <Ionicons name="calendar-outline" size={20} color={palette.textSecondary} />
-        <Text style={styles.linkText}>{t('Импорт из календаря (.ics)')}</Text>
-        <Ionicons name="chevron-forward" size={16} color={palette.textSecondary} />
-      </Press>
-
       <Press style={styles.linkRow} onPress={() => router.push('/record')}>
         <Ionicons name="ribbon-outline" size={20} color={palette.textSecondary} />
         <Text style={styles.linkText}>{t('Послужной список и хроника')}</Text>
         <Ionicons name="chevron-forward" size={16} color={palette.textSecondary} />
-      </Press>
-
-      <Text style={styles.section}>{t('Бумаги')}</Text>
-      <Text style={styles.hint}>
-        {t('За этот год, по вашим же записям — и справка честно говорит об этом первой строкой.')}
-      </Text>
-
-      <Press
-        style={styles.linkRow}
-        onPress={() => {
-          askPeriod((range) => void shareIncomePdf(lang === 'uk' ? 'ua' : 'ru', range));
-        }}
-      >
-        <Ionicons name="reader-outline" size={20} color={palette.textSecondary} />
-        <Text style={styles.linkText}>{t('Справка о доходе (PDF)')}</Text>
-        <Ionicons name="share-outline" size={16} color={palette.textSecondary} />
-      </Press>
-
-      <Press
-        style={styles.linkRow}
-        onPress={() => {
-          askPeriod((range) => void shareAccountantCsv(range));
-        }}
-      >
-        <Ionicons name="grid-outline" size={20} color={palette.textSecondary} />
-        <Text style={styles.linkText}>{t('CSV бухгалтеру')}</Text>
-        <Ionicons name="share-outline" size={16} color={palette.textSecondary} />
-      </Press>
-
-      <Press
-        style={styles.linkRow}
-        onPress={() => {
-          void shareTakeout();
-        }}
-      >
-        <Ionicons name="archive-outline" size={20} color={palette.textSecondary} />
-        <Text style={styles.linkText}>{t('Скачать весь аккаунт (zip)')}</Text>
-        <Ionicons name="share-outline" size={16} color={palette.textSecondary} />
       </Press>
 
       <Text style={styles.section}>{t('Остальное')}</Text>
@@ -515,31 +253,9 @@ const makeStyles = (palette: Palette) =>
     langTextOn: { color: '#fff' },
 
     section: { color: palette.text, fontSize: 16, fontWeight: '700', marginTop: 10 },
-    hint: { color: palette.textSecondary, fontSize: 12.5, lineHeight: 17 },
     row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
     rowTitle: { color: palette.text, fontSize: 15, fontWeight: '600' },
     rowHint: { color: palette.textSecondary, fontSize: 12.5, lineHeight: 18, marginTop: 3 },
-    emailRow: { flexDirection: 'row', gap: 8, marginTop: 8 },
-    emailInput: {
-      flex: 1,
-      borderWidth: 1,
-      borderColor: palette.border,
-      borderRadius: 10,
-      paddingHorizontal: 12,
-      paddingVertical: 9,
-      color: palette.text,
-      backgroundColor: palette.background,
-    },
-    emailSave: {
-      backgroundColor: palette.accent,
-      borderRadius: 10,
-      paddingHorizontal: 14,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    emailSaveOff: { backgroundColor: palette.border },
-    emailSaveText: { color: '#fff', fontWeight: '700' },
-    lead: { color: palette.textSecondary, fontSize: 12.5, lineHeight: 18 },
 
     linkRow: {
       flexDirection: 'row',

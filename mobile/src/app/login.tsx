@@ -13,7 +13,7 @@ import {
 
 import { Press } from '@/components/motion';
 import { Colors, Palette } from '@/constants/theme';
-import { ApiError } from '@/lib/api';
+import { api, ApiError } from '@/lib/api';
 import { useSession } from '@/store/session';
 import { t } from '@/lib/i18n';
 
@@ -34,6 +34,11 @@ export default function LoginScreen() {
   // A ticket means the password already held; only the code is missing.
   const [ticket, setTicket] = useState<string | null>(null);
   const [code, setCode] = useState('');
+  // The back door: an email in, a letter out, no telling whether the
+  // address was known — that silence is the server's own contract.
+  const [forgot, setForgot] = useState(false);
+  const [email, setEmail] = useState('');
+  const [letterSent, setLetterSent] = useState(false);
   const autoTried = useRef(false);
 
   // Simulator convenience only: EXPO_PUBLIC_AUTOLOGIN="login:password"
@@ -88,6 +93,22 @@ export default function LoginScreen() {
     }
   };
 
+  const submitForgot = async () => {
+    if (email.trim() === '') return;
+
+    setBusy(true);
+    setError(null);
+
+    try {
+      await api('/shifter/v1/auth/password/forgot', { body: { email: email.trim() } });
+      setLetterSent(true);
+    } catch (caught) {
+      setError(caught instanceof ApiError ? caught.message : t('Сеть молчит. Сервер доступен?'));
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const styles = makeStyles(palette);
 
   return (
@@ -102,7 +123,51 @@ export default function LoginScreen() {
           </View>
           <Text style={styles.brand}>Shifter</Text>
         </View>
-        {ticket !== null ? (
+        {forgot ? (
+          <>
+            <Text style={styles.lede}>
+              {letterSent
+                ? t('Если адрес известен, письмо уже идёт. Ссылка из него откроет сайт и даст задать новый пароль.')
+                : t('Куда прислать ссылку для нового пароля?')}
+            </Text>
+            {!letterSent && (
+              <TextInput
+                style={styles.input}
+                placeholder={t('Почта')}
+                placeholderTextColor={palette.textSecondary}
+                autoCapitalize="none"
+                autoCorrect={false}
+                keyboardType="email-address"
+                value={email}
+                onChangeText={setEmail}
+                onSubmitEditing={() => void submitForgot()}
+              />
+            )}
+
+            {error !== null && <Text style={styles.error}>{error}</Text>}
+
+            {!letterSent && (
+              <Pressable
+                style={({ pressed }) => [styles.button, pressed && styles.pressed]}
+                disabled={busy || email.trim() === ''}
+                onPress={() => void submitForgot()}
+              >
+                {busy ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>{t('Прислать письмо')}</Text>}
+              </Pressable>
+            )}
+
+            <Press
+              onPress={() => {
+                setForgot(false);
+                setLetterSent(false);
+                setEmail('');
+                setError(null);
+              }}
+            >
+              <Text style={styles.switch}>{t('Назад ко входу')}</Text>
+            </Press>
+          </>
+        ) : ticket !== null ? (
           <>
             <Text style={styles.lede}>
               {t('Пароль верен. Введите код из приложения-аутентификатора — или один из восьми резервных.')}
@@ -201,6 +266,11 @@ export default function LoginScreen() {
               {mode === 'in' ? t('Впервые тут? Создать аккаунт') : t('Уже есть аккаунт? Войти')}
             </Text>
           </Press>
+            {mode === 'in' && (
+              <Press onPress={() => setForgot(true)}>
+                <Text style={styles.switch}>{t('Забыли пароль?')}</Text>
+              </Press>
+            )}
           </>
         )}
       </View>

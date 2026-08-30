@@ -330,7 +330,7 @@ function Bank() {
     const month = monthBounds(currentMonth());
     // What still has to leave before then: the standing charges the statement
     // itself revealed, not a figure anybody typed.
-    const committed = recurring(mono.items, month.from, month.to)
+    const committed = recurring(mono.items, month.to)
       .filter((row) => row.next <= due.due_on)
       .reduce((sum, row) => sum + row.amount, 0);
 

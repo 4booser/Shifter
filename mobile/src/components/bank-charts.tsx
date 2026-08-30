@@ -16,6 +16,7 @@ import {
 } from '@/lib/spend-viz';
 import { t } from '@/lib/i18n';
 import { money } from '@/lib/types';
+import { todayKey } from '@/lib/calendar';
 
 /*
  * The web's chart shelf, in the pocket. The phone has no cursor, so every
@@ -189,11 +190,14 @@ export function PaceChart({
   );
   const [picked, setPicked] = useState<number | null>(null);
 
-  const todayKey = new Date().toISOString().slice(0, 10);
-  const todayIndex = now.findIndex((point) => point.day === todayKey);
+  // Local, never toISOString: at 02:00 in Kyiv the UTC day is still
+  // yesterday, and this chart drew a blank card every 1st because of it.
+  const todayIndex = now.findIndex((point) => point.day === todayKey());
   const fact = todayIndex >= 0 ? now.slice(0, todayIndex + 1) : now;
   const days = Math.max(fact.length, before.length);
 
+  // Nothing spent yet this stretch — a title over an empty plot says less
+  // than no card at all.
   if (days < 3 || (fact.at(-1)?.total ?? 0) === 0) return null;
 
   const chosen =

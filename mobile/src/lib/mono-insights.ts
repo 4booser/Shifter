@@ -155,9 +155,12 @@ const daysBetween = (one: string, two: string): number =>
  */
 export const recurring = (
   items: MonoStatementItem[],
-  from: string,
   to: string,
 ): Recurring[] => {
+  // Detection always looks back 120 days from the edge, whatever window the
+  // caller is showing. A monthly charge seen through a one-month window is
+  // one line — the web sat on exactly this bug and the mirror had it too.
+  const from = addDays(to, -120);
   const groups = new Map<string, { name: string; days: string[]; amounts: number[] }>();
 
   for (const item of items) {
@@ -228,7 +231,7 @@ export const recurring = (
       next: addDays(last, Math.round(step)),
       // Nothing before the second week of the range: something that starts
       // mid-window is something somebody signed up to, or did not.
-      fresh: daysBetween(from, days[0]) > 14,
+      fresh: daysBetween(days[0], to) <= 45,
     });
   }
 

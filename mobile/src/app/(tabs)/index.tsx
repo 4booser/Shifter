@@ -155,7 +155,7 @@ export default function CalendarScreen() {
     if (bankItems.length === 0) return new Set<string>();
 
     const back = new Date(Date.now() - 62 * 86400000).toISOString().slice(0, 10);
-    const standing = recurring(bankItems, back, today);
+    const standing = recurring(bankItems, today);
 
     return new Set(chargesAhead(standing, today, 62).map((charge) => charge.on));
   }, [bankItems, today]);

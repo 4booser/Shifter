@@ -89,7 +89,7 @@ export function BankSpending({
     [items, rules, from, to],
   );
   const people = useMemo(() => counterparties(items, from, to), [items, from, to]);
-  const standing = useMemo(() => recurring(items, from, to), [items, from, to]);
+  const standing = useMemo(() => recurring(items, to), [items, to]);
   const odd = useMemo(() => oddities(items, from, to), [items, from, to]);
   const totals = useMemo(() => flow(items, from, to), [items, from, to]);
   const sources = useMemo(() => incomeSources(items, from, to), [items, from, to]);

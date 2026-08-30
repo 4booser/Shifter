@@ -24,6 +24,7 @@ import { Alert, CountUp, Delta, Money } from '@/components/ui/bits';
 import { SkeletonRows } from '@/components/ui/skeleton';
 import { Empty } from '@/components/ui/empty';
 import { Icon } from '@/components/ui/icon';
+import { useTitle } from '@/lib/use-title';
 
 /** Earned by hours worked in the year — the badge at the top of the page. */
 const TIERS: { hours: number; name: string; emoji: string }[] = [
@@ -49,6 +50,8 @@ export default function WrappedPage() {
  */
 function Wrapped() {
   const { t, n, lang } = useI18n();
+
+  useTitle('Your year');
   const revealHost = useReveal<HTMLDivElement>();
 
   const [year, setYear] = useState(currentMonth().year);

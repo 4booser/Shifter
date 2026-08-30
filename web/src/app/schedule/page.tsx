@@ -43,6 +43,7 @@ import { currentCardTheme } from '@/lib/export/share-card';
 import { downloadBlob } from '@/lib/export/xlsx';
 import { Alert, Money, Segmented } from '@/components/ui/bits';
 import { Icon } from '@/components/ui/icon';
+import { useTitle } from '@/lib/use-title';
 
 type Span = 'week' | 'month';
 
@@ -62,6 +63,8 @@ export default function SchedulePage() {
 function Schedule() {
   const revealHost = useReveal<HTMLDivElement>();
   const { t, lang, n } = useI18n();
+
+  useTitle('Schedule');
 
   const [teams, setTeams] = useState<Team[]>([]);
   const [selected, setSelected] = useState<number | null>(null);

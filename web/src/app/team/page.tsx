@@ -12,6 +12,7 @@ import { Shell } from '@/components/layout/shell';
 import { Alert } from '@/components/ui/bits';
 import { SkeletonRows } from '@/components/ui/skeleton';
 import { Icon } from '@/components/ui/icon';
+import { useTitle } from '@/lib/use-title';
 
 export default function TeamPage() {
   return (
@@ -29,6 +30,8 @@ export default function TeamPage() {
 function TeamAdmin() {
   const revealHost = useReveal<HTMLDivElement>();
   const { t, n } = useI18n();
+
+  useTitle('Team');
 
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);

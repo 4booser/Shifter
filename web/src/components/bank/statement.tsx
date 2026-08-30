@@ -95,15 +95,30 @@ export function StatementCard({
               {label}
             </button>
           ))}
-          <input
-            className="field-input !w-44 !py-1.5 text-[0.85rem]"
-            value={needle}
-            placeholder={t('Find by name…')}
-            onChange={(event) => {
-              setNeedle(event.target.value);
-              setShown(40);
-            }}
-          />
+          <span className="relative">
+            <input
+              className="field-input !w-44 !py-1.5 pr-7 text-[0.85rem]"
+              value={needle}
+              placeholder={t('Find by name…')}
+              onChange={(event) => {
+                setNeedle(event.target.value);
+                setShown(40);
+              }}
+            />
+            {needle !== '' && (
+              <button
+                type="button"
+                aria-label={t('Clear')}
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-full px-1 text-muted hover:text-ink"
+                onClick={() => {
+                  setNeedle('');
+                  setShown(40);
+                }}
+              >
+                ×
+              </button>
+            )}
+          </span>
         </div>
       </div>
 

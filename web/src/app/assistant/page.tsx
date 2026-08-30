@@ -18,6 +18,7 @@ import { Shell } from '@/components/layout/shell';
 import { RaiseCasePanel } from '@/components/dashboard/raise-case';
 import { Alert } from '@/components/ui/bits';
 import { Icon } from '@/components/ui/icon';
+import { useTitle } from '@/lib/use-title';
 
 export default function AssistantPage() {
   return (
@@ -77,6 +78,8 @@ const OPENERS = [
  */
 function Assistant() {
   const { t, lang } = useI18n();
+
+  useTitle('Assistant');
 
   const [thread, setThread] = useState<AssistantMessage[]>([]);
   const [gaps, setGaps] = useState<AssistantGap[]>([]);

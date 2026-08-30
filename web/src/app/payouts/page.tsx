@@ -22,6 +22,7 @@ import { FlowMoney } from '@/components/ui/flow';
 import { SkeletonRows } from '@/components/ui/skeleton';
 import { Empty } from '@/components/ui/empty';
 import { Icon } from '@/components/ui/icon';
+import { useTitle } from '@/lib/use-title';
 
 const MONTHS_BACK = 6;
 
@@ -50,6 +51,8 @@ export default function PayoutsPage() {
  */
 function Payouts() {
   const { t, lang, n } = useI18n();
+
+  useTitle('Payouts');
   const revealHost = useReveal<HTMLDivElement>();
 
   const [data, setData] = useState<Reconciliation | null>(null);

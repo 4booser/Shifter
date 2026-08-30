@@ -35,6 +35,7 @@ import { SearchModal } from '@/components/dashboard/modals/search-modal';
 import { SettingsModal } from '@/components/dashboard/modals/settings-modal';
 import { Alert } from '@/components/ui/bits';
 import { Icon } from '@/components/ui/icon';
+import { useTitle } from '@/lib/use-title';
 
 export default function DashboardPage() {
   return (
@@ -46,6 +47,8 @@ export default function DashboardPage() {
 
 function Dashboard() {
   const { t, n } = useI18n();
+
+  useTitle('Calendar');
   const revealHost = useReveal<HTMLDivElement>();
   const state = useCalendar();
   const settings = useSettings((sel) => sel.settings);

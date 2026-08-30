@@ -22,6 +22,7 @@ import { SeekersBoard } from '@/components/gigs/seekers';
 import { PendingReviews, Stars } from '@/components/gigs/reviews';
 import { CallBack } from '@/components/gigs/call-back';
 import { Segmented } from '@/components/ui/bits';
+import { useTitle } from '@/lib/use-title';
 
 type Span = 'week' | 'month' | 'year';
 type View = 'board' | 'people' | 'mine' | 'replies';
@@ -43,6 +44,8 @@ export default function GigsPage() {
 function Gigs() {
   const revealHost = useReveal<HTMLDivElement>();
   const { t, lang, n } = useI18n();
+
+  useTitle('Gigs');
   const { format } = useMoney();
 
   const [view, setView] = useState<View>('board');

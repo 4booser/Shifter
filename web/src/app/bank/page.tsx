@@ -33,6 +33,7 @@ import {
 import { StatementCard } from '@/components/bank/statement';
 import { BankWork } from '@/components/bank/work';
 import { realHourly } from '@/lib/mono/mono-work';
+import { useTitle } from '@/lib/use-title';
 
 /**
  * The bank, now on the site.
@@ -48,6 +49,8 @@ import { realHourly } from '@/lib/mono/mono-work';
  */
 export default function BankPage() {
   const { t, lang } = useI18n();
+
+  useTitle('Bank');
 
   useReveal();
 

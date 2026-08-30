@@ -50,6 +50,7 @@ import { AreaChart, ColumnChart, Plot, ProgressRing } from '@/components/charts/
 import { Alert, CountUp, Delta, Money } from '@/components/ui/bits';
 import { FlowMoney } from '@/components/ui/flow';
 import { Icon } from '@/components/ui/icon';
+import { useTitle } from '@/lib/use-title';
 
 type PresetId = 'month' | 'previous' | '3m' | '6m' | 'year' | 'all' | 'custom';
 
@@ -107,6 +108,8 @@ export default function StatsPage() {
 
 function Stats() {
   const { t, n, lang } = useI18n();
+
+  useTitle('Statistics');
   const revealHost = useReveal<HTMLDivElement>();
   const settings = useSettings((state) => state.settings);
   const formatWith = (code: string, amount: number) => formatMoneyIn(settings, code, amount);

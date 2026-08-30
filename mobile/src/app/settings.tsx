@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
   ActivityIndicator,
@@ -19,6 +19,7 @@ import { Colors, Palette } from '@/constants/theme';
 import { api, API_BASE } from '@/lib/api';
 import { lockKind, LockKind, lockNameBy, lockStore, unlock } from '@/lib/lock';
 import { useSession } from '@/store/session';
+import { AccountKeys } from '@/components/account-keys';
 import { useEye } from '@/lib/eye';
 import { t, useLang } from '@/lib/i18n';
 import { DeviceSettings, deviceSettings, deviceToken } from '@/lib/notifications';
@@ -29,6 +30,8 @@ interface Profile {
   first_name: string;
   last_name: string | null;
   email: string | null;
+  has_password: boolean;
+  two_factor: boolean;
   monthly_goal: number | null;
   /** Whether they asked for the month's letter. Off unless they did. */
   monthly_letter: boolean;
@@ -87,21 +90,25 @@ export default function SettingsScreen() {
   // subscribed to from the device the address was typed on.
   const [letter, setLetter] = useState(false);
 
+  const reloadProfile = useCallback(async () => {
+    try {
+      const loaded = await api<Profile>('/shifter/v1/account');
+
+      setProfile(loaded);
+      setLetter(loaded.monthly_letter);
+    } catch {
+      setError(t('Профиль не загрузился.'));
+    }
+  }, []);
+
   useEffect(() => {
     void (async () => {
       setLocked(await lockStore.enabled());
       setKind(await lockKind());
 
-      try {
-        const loaded = await api<Profile>('/shifter/v1/account');
-
-        setProfile(loaded);
-        setLetter(loaded.monthly_letter);
-      } catch {
-        setError(t('Профиль не загрузился.'));
-      }
+      await reloadProfile();
     })();
-  }, []);
+  }, [reloadProfile]);
 
   const toggleLock = async (on: boolean) => {
     // Turning it on without proving you can open it is how somebody locks
@@ -165,6 +172,15 @@ export default function SettingsScreen() {
           <Switch value={eyeIsShut} onValueChange={(value) => useEye.getState().set(value)} />
         </View>
       </View>
+
+      {profile !== null && (
+        <AccountKeys
+          palette={palette}
+          hasPassword={profile.has_password}
+          twoFactor={profile.two_factor}
+          onChanged={() => void reloadProfile()}
+        />
+      )}
 
       {/* Only where the phone actually registered. A simulator has no push
           service, and switches that would do nothing are worse than none. */}

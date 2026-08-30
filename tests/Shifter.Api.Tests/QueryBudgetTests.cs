@@ -22,9 +22,11 @@ namespace Shifter.Api.Tests;
 public sealed class QueryBudgetTests(Api api)
 {
     /// <summary>Asks the middleware to measure one request, returns the count.</summary>
-    private static async Task<int> CountAsync(HttpClient client, string url)
+    private static async Task<int> CountAsync(HttpClient client, string url, object? post = null)
     {
-        using var request = new HttpRequestMessage(HttpMethod.Get, url);
+        using var request = post is null
+            ? new HttpRequestMessage(HttpMethod.Get, url)
+            : new HttpRequestMessage(HttpMethod.Post, url) { Content = System.Net.Http.Json.JsonContent.Create(post) };
 
         request.Headers.Add(QueryCountMiddleware.Ask, "1");
 
@@ -202,6 +204,18 @@ public sealed class QueryBudgetTests(Api api)
         Assert.InRange(schedule, 1, 25);
         Assert.InRange(history, 1, 15);
         Assert.InRange(rota, 1, 20);
+
+        // A chat question now reads the payout reconciliation too (wave 69);
+        // this is the ceiling that notices if that read ever goes O(days).
+        var ask = await CountAsync(client, "/shifter/v1/assistant/ask", new
+        {
+            text = "сколько я заработал в июне?",
+            from = "2026-06-01",
+            to = "2026-06-30",
+            today = "2026-06-30",
+        });
+
+        Assert.InRange(ask, 1, 30);
     }
 }
 

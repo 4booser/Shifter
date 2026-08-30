@@ -51,7 +51,9 @@ test('the shut eye leaves no hryvnia figures behind', async ({ page }) => {
     );
   });
 
-  for (const path of ['/stats', '/payouts', '/bank']) {
+  // /schedule and /team render join screens for a crewless account — no
+  // figures, but the walk still proves no formatter leaks on the shell.
+  for (const path of ['/stats', '/payouts', '/bank', '/schedule', '/team']) {
     await page.goto(path);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(700);

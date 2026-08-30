@@ -7,6 +7,7 @@ import { useMoney } from '@/lib/settings/money';
 import { MonoAccount, MonoStatementItem, fromMinor } from '@/lib/mono/mono';
 import { balanceCurve } from '@/lib/mono/mono-shape';
 import { ChartTip, CrossHair, useChartHover } from '@/components/charts/hover';
+import { smoothPath } from '@/lib/charts/math';
 import { Money } from '@/components/ui/bits';
 import { FlowMoney } from '@/components/ui/flow';
 
@@ -48,9 +49,9 @@ export function BankHero({
     const x = (index: number) => (index / Math.max(1, curve.length - 1)) * width;
     const y = (value: number) => 14 + (1 - (value - low) / span) * (height - 28);
 
-    const line = curve
-      .map((point, index) => `${index === 0 ? 'M' : 'L'} ${x(index).toFixed(1)} ${y(point.balance).toFixed(1)}`)
-      .join(' ');
+    const line = smoothPath(
+      curve.map((point, index) => ({ x: x(index), y: y(point.balance) })),
+    );
 
     return {
       line,
@@ -128,8 +129,10 @@ export function BankHero({
               </linearGradient>
             </defs>
             <path d={path.area} fill="url(#bank-hero-fill)" />
-            <path d={path.line} fill="none" stroke="var(--accent)" strokeWidth="2" />
-            <circle cx={path.lastX} cy={path.lastY} r="3.5" fill="var(--accent)" />
+            <path d={path.line} fill="none" stroke="var(--accent)" strokeWidth="5" opacity="0.22" filter="blur(4px)" />
+            <path d={path.line} fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinejoin="round" />
+            <circle className="chart-pulse" cx={path.lastX} cy={path.lastY} r="9" fill="var(--accent)" />
+            <circle cx={path.lastX} cy={path.lastY} r="3.5" fill="var(--accent)" stroke="var(--surface)" strokeWidth="1.5" />
           </svg>
 
           <div className="flex justify-between px-4 pb-3 text-[0.72rem] text-faint tabular">

@@ -14,6 +14,7 @@ import {
   monthlyFlows,
   usualDay,
 } from '@/lib/mono/spend-viz';
+import { smoothPath } from '@/lib/charts/math';
 import { ChartTip, CrossHair, useChartHover } from '@/components/charts/hover';
 import { Money } from '@/components/ui/bits';
 
@@ -278,7 +279,7 @@ export function SpendPaceCard({
   const y = (value: number) => H - (value / peak) * (H - 14) - 6;
 
   const path = (line: { total: number }[]) =>
-    line.map((point, index) => `${index === 0 ? 'M' : 'L'}${x(index).toFixed(1)},${y(point.total).toFixed(1)}`).join(' ');
+    smoothPath(line.map((point, index) => ({ x: x(index), y: y(point.total) })));
 
   // Today's index inside the current month, so the fact line stops at today
   // instead of flatlining to the month's end.
@@ -333,15 +334,29 @@ export function SpendPaceCard({
             <path d={path(before)} fill="none" stroke="var(--faint)" strokeWidth="2" strokeDasharray="4 5" />
           )}
           {factLine.length > 1 && (
-            <path d={path(factLine)} fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round" />
+            <>
+              <path d={path(factLine)} fill="none" stroke="var(--accent)" strokeWidth="5" opacity="0.22" filter="blur(4px)" />
+              <path d={path(factLine)} fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round" />
+            </>
           )}
           {factLine.length > 0 && (
-            <circle
-              cx={x(factLine.length - 1)}
-              cy={y(factLine[factLine.length - 1].total)}
-              r="4"
-              fill="var(--accent)"
-            />
+            <>
+              <circle
+                className="chart-pulse"
+                cx={x(factLine.length - 1)}
+                cy={y(factLine[factLine.length - 1].total)}
+                r="9"
+                fill="var(--accent)"
+              />
+              <circle
+                cx={x(factLine.length - 1)}
+                cy={y(factLine[factLine.length - 1].total)}
+                r="4"
+                fill="var(--accent)"
+                stroke="var(--surface)"
+                strokeWidth="1.5"
+              />
+            </>
           )}
         </svg>
       </div>

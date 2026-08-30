@@ -3,7 +3,7 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 
 import { fromKey, keysBetween } from '@/lib/calendar/calendar-date';
-import { CHART_H, CHART_W, Column, PAD, PLOT_H, PLOT_W, Tick, niceCeiling } from '@/lib/charts/math';
+import { CHART_H, CHART_W, Column, PAD, PLOT_H, PLOT_W, Tick, niceCeiling, smoothPath } from '@/lib/charts/math';
 import { useMoney } from '@/lib/settings/money';
 
 /*
@@ -221,63 +221,6 @@ export function AreaChart({
       )}
     </div>
   );
-}
-
-/**
- * A monotone curve through the points: smooth to read, honest to the data —
- * cubic segments whose slopes never overshoot a value they pass through
- * (Fritsch–Carlson), so the curve cannot invent a peak the month never had.
- */
-function smoothPath(list: { x: number; y: number }[]): string {
-  if (list.length < 2) return '';
-  if (list.length === 2) return `M ${list[0].x} ${list[0].y} L ${list[1].x} ${list[1].y}`;
-
-  const n = list.length;
-  const dx: number[] = [];
-  const dy: number[] = [];
-  const slope: number[] = [];
-
-  for (let i = 0; i < n - 1; i += 1) {
-    dx.push(list[i + 1].x - list[i].x);
-    dy.push(list[i + 1].y - list[i].y);
-    slope.push(dx[i] === 0 ? 0 : dy[i] / dx[i]);
-  }
-
-  const tangent: number[] = [slope[0]];
-
-  for (let i = 1; i < n - 1; i += 1) {
-    tangent.push(slope[i - 1] * slope[i] <= 0 ? 0 : (slope[i - 1] + slope[i]) / 2);
-  }
-  tangent.push(slope[n - 2]);
-
-  for (let i = 0; i < n - 1; i += 1) {
-    if (slope[i] === 0) {
-      tangent[i] = 0;
-      tangent[i + 1] = 0;
-      continue;
-    }
-
-    const a = tangent[i] / slope[i];
-    const b = tangent[i + 1] / slope[i];
-    const size = Math.hypot(a, b);
-
-    if (size > 3) {
-      tangent[i] = (3 * a * slope[i]) / size;
-      tangent[i + 1] = (3 * b * slope[i]) / size;
-    }
-  }
-
-  let d = `M ${list[0].x} ${list[0].y}`;
-
-  for (let i = 0; i < n - 1; i += 1) {
-    const third = dx[i] / 3;
-
-    d += ` C ${list[i].x + third} ${list[i].y + tangent[i] * third}, ${list[i + 1].x - third} ${
-      list[i + 1].y - tangent[i + 1] * third
-    }, ${list[i + 1].x} ${list[i + 1].y}`;
-  }
-
-  return d;
 }
 
 /** Single-series columns with an optional planned overlay on the caps. */

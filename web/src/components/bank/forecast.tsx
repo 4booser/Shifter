@@ -6,13 +6,13 @@ import { useEffect, useMemo, useState } from 'react';
 import { calendarApi } from '@/lib/api/calendar';
 import { Reconciliation } from '@/lib/calendar/models';
 import { useI18n } from '@/lib/i18n';
-import { useMoney } from '@/lib/settings/money';
 import { MonoAccount, MonoStatementItem, dayOf, fromMinor } from '@/lib/mono/mono';
 import { recurring } from '@/lib/mono/mono-insights';
+import { smoothPath } from '@/lib/charts/math';
+import { FlowMoney } from '@/components/ui/flow';
 import { usualDay } from '@/lib/mono/mono-work';
 import { Runway, RunwayDay, buildRunway, chargesAhead } from '@/lib/mono/runway';
 import { ChartTip, CrossHair, useChartHover } from '@/components/charts/hover';
-import { CountUp } from '@/components/ui/motion';
 import { Money } from '@/components/ui/bits';
 
 /**
@@ -35,7 +35,6 @@ export function BankForecast({
   items: MonoStatementItem[];
 }) {
   const { t, lang } = useI18n();
-  const { hideAmounts } = useMoney();
   const still = useReducedMotion();
 
   const [owed, setOwed] = useState<Reconciliation | null>(null);
@@ -118,9 +117,7 @@ export function BankForecast({
   const y = (value: number) =>
     pad.top + (1 - (value - low) / span) * (height - pad.top - pad.bottom);
 
-  const line = runway.days
-    .map((day, index) => `${index === 0 ? 'M' : 'L'} ${x(index).toFixed(1)} ${y(day.balance).toFixed(1)}`)
-    .join(' ');
+  const line = smoothPath(runway.days.map((day, index) => ({ x: x(index), y: y(day.balance) })));
 
   const zeroY = y(0);
   const crossesZero = low < 0;
@@ -149,7 +146,7 @@ export function BankForecast({
             ) : (
               <>
                 {t('thinnest around')} {spellDay(runway.thinnest.day)}:{' '}
-                <CountUp value={runway.thinnest.balance} format={(v) => (hideAmounts ? '₴•••' : `₴${Math.round(v).toLocaleString('ru')}`)} />
+                <FlowMoney value={Math.round(runway.thinnest.balance)} mark="₴" />
               </>
             )}
           </div>

@@ -192,6 +192,12 @@ export default function MyListingsScreen() {
                   <Text style={styles.smallButtonText}>{t('Открыть заново')}</Text>
                 </Press>
               )}
+              <Press style={styles.smallButton} onPress={() => router.push(`/create-gig?edit=${gig.id}`)}>
+                <Text style={styles.smallButtonText}>{t('Изменить')}</Text>
+              </Press>
+              <Press style={styles.smallButton} onPress={() => router.push(`/create-gig?copy=${gig.id}`)}>
+                <Text style={styles.smallButtonText}>{t('Повторить')}</Text>
+              </Press>
             </View>
 
             {replies.length === 0 ? (
@@ -270,7 +276,7 @@ const makeStyles = (palette: Palette) =>
     gigTitle: { color: palette.text, fontSize: 15.5, fontWeight: '700', flex: 1 },
     status: { fontSize: 12.5, fontWeight: '700', color: palette.textSecondary },
     meta: { color: palette.textSecondary, fontSize: 12.5, marginTop: 2 },
-    statusRow: { flexDirection: 'row', gap: 8, marginTop: 10 },
+    statusRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 10 },
     smallButton: {
       borderWidth: 1,
       borderColor: palette.border,

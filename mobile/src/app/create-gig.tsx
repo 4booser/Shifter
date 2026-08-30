@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as ImageManipulator from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -24,7 +24,7 @@ import { Press } from '@/components/motion';
 import { Colors, Palette } from '@/constants/theme';
 import { api, ApiError } from '@/lib/api';
 import { todayKey } from '@/lib/calendar';
-import { TRADES } from '@/lib/gigs';
+import { Gig, TRADES } from '@/lib/gigs';
 import { t } from '@/lib/i18n';
 
 /**
@@ -92,8 +92,33 @@ async function shrink(uri: string): Promise<string> {
   throw new Error('photo will not fit');
 }
 
+const fromGig = (gig: Gig, keepDate: boolean): Draft => ({
+  venue: gig.venue,
+  title: gig.title,
+  details: gig.details ?? '',
+  category: gig.category,
+  employment: gig.employment,
+  date: keepDate ? gig.date : todayKey(),
+  start: gig.start.slice(0, 5),
+  end: gig.end.slice(0, 5),
+  payAmount: gig.pay_amount > 0 ? `${gig.pay_amount}` : '',
+  payPeriod: gig.pay_period,
+  payPercent: gig.pay_percent === null ? '' : `${gig.pay_percent}`,
+  city: gig.city,
+  slots: `${gig.slots}`,
+  urgent: false,
+  photos: gig.photos,
+});
+
 export default function CreateGigScreen() {
   const router = useRouter();
+  // ?edit=id opens the same form over an existing listing (PUT, replies
+  // kept); ?copy=id starts a fresh one from it with today's date — the
+  // second Friday should not begin from scratch. Both run in memory:
+  // neither may trample a from-zero draft someone left behind.
+  const { edit, copy } = useLocalSearchParams<{ edit?: string; copy?: string }>();
+  const editId = edit !== undefined ? Number(edit) : null;
+  const sourceId = editId ?? (copy !== undefined ? Number(copy) : null);
   const scheme = useColorScheme();
   const palette = Colors[scheme === 'dark' ? 'dark' : 'light'];
   const styles = makeStyles(palette);
@@ -105,14 +130,27 @@ export default function CreateGigScreen() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (sourceId !== null) {
+      void api<{ gig: Gig }[]>('/shifter/v1/gigs/mine')
+        .then((rows) => {
+          const found = rows.find((row) => row.gig.id === sourceId)?.gig;
+
+          setDraft(found !== undefined ? fromGig(found, editId !== null) : BLANK);
+        })
+        .catch(() => setDraft(BLANK));
+
+      return;
+    }
+
     void AsyncStorage.getItem(DRAFT_KEY)
       .then((raw) => setDraft(raw !== null ? { ...BLANK, ...(JSON.parse(raw) as Draft) } : BLANK))
       .catch(() => setDraft(BLANK));
-  }, []);
+  }, [sourceId, editId]);
 
   useEffect(() => {
-    if (draft !== null) void AsyncStorage.setItem(DRAFT_KEY, JSON.stringify(draft)).catch(() => undefined);
-  }, [draft]);
+    if (draft !== null && sourceId === null)
+      void AsyncStorage.setItem(DRAFT_KEY, JSON.stringify(draft)).catch(() => undefined);
+  }, [draft, sourceId]);
 
   const put = (patch: Partial<Draft>) => setDraft((have) => (have === null ? have : { ...have, ...patch }));
 
@@ -171,7 +209,8 @@ export default function CreateGigScreen() {
     setError(null);
 
     try {
-      await api('/shifter/v1/gigs', {
+      await api(editId !== null ? `/shifter/v1/gigs/${editId}` : '/shifter/v1/gigs', {
+        method: editId !== null ? 'PUT' : 'POST',
         body: {
           venue: draft.venue.trim(),
           category: draft.category,
@@ -192,7 +231,7 @@ export default function CreateGigScreen() {
         },
       });
 
-      await AsyncStorage.removeItem(DRAFT_KEY).catch(() => undefined);
+      if (sourceId === null) await AsyncStorage.removeItem(DRAFT_KEY).catch(() => undefined);
       router.replace('/my-listings');
     } catch (caught) {
       setError(caught instanceof ApiError ? caught.message : t('Сеть молчит. Сервер доступен?'));
@@ -204,7 +243,7 @@ export default function CreateGigScreen() {
     <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView contentContainerStyle={[styles.content, { paddingTop: insets.top + 12 }]}>
         <View style={styles.head}>
-          <Text style={styles.title}>{t('Новое объявление')}</Text>
+          <Text style={styles.title}>{editId !== null ? t('Изменить объявление') : t('Новое объявление')}</Text>
           <Press hitSlop={12} onPress={() => router.back()}>
             <Ionicons name="close" size={26} color={palette.textSecondary} />
           </Press>
@@ -308,16 +347,18 @@ export default function CreateGigScreen() {
         {error !== null && <Text style={styles.error}>{error}</Text>}
 
         <Press style={[styles.submit, !ready && styles.submitOff]} disabled={busy || !ready} onPress={() => void submit()}>
-          {busy ? <ActivityIndicator color="#fff" /> : <Text style={styles.submitText}>{t('Опубликовать')}</Text>}
+          {busy ? <ActivityIndicator color="#fff" /> : <Text style={styles.submitText}>{editId !== null ? t('Сохранить') : t('Опубликовать')}</Text>}
         </Press>
-        <Press
-          onPress={() => {
-            setDraft(BLANK);
-            void AsyncStorage.removeItem(DRAFT_KEY).catch(() => undefined);
-          }}
-        >
-          <Text style={styles.wipe}>{t('Очистить черновик')}</Text>
-        </Press>
+        {sourceId === null && (
+          <Press
+            onPress={() => {
+              setDraft(BLANK);
+              void AsyncStorage.removeItem(DRAFT_KEY).catch(() => undefined);
+            }}
+          >
+            <Text style={styles.wipe}>{t('Очистить черновик')}</Text>
+          </Press>
+        )}
       </ScrollView>
     </KeyboardAvoidingView>
   );

@@ -602,6 +602,9 @@ function Schedule() {
                 <td className="sticky left-0 z-10 whitespace-nowrap bg-surface px-2 py-1.5 text-[0.82rem]">
                   <span className="mr-1.5 inline-block h-2.5 w-2.5 rounded-full" style={{ background: member.colour }} />
                   {member.display_name}
+                  {member.trainee && (
+                    <span className="ml-1 text-[0.72rem]" title={t('Training')}>🎓</span>
+                  )}
                   {member.is_you && <span className="field-hint"> · {t('you')}</span>}
                 </td>
                 {cells.map((cell) => (
@@ -739,6 +742,41 @@ function Schedule() {
                 <p className="field-hint">
                   {you.hidden} {t('of your shifts are hidden from the crew')}
                 </p>
+              )}
+              <label className="flex items-center gap-2 text-[0.88rem]">
+                <input
+                  type="checkbox"
+                  checked={you.trainee}
+                  disabled={busy}
+                  onChange={(event) =>
+                    void run(
+                      teamApi.updateMembership(selected!, {
+                        trainee: event.target.checked,
+                        // Turning it off retires the date with it.
+                        ...(event.target.checked ? {} : { trial_ends_on: null }),
+                      }),
+                    )
+                  }
+                />
+                {t('I am training here — let the rota show it')}
+              </label>
+              {you.trainee && (
+                <label className="flex items-center gap-2 text-[0.85rem]">
+                  <span className="field-label mb-0">{t('Trial ends')}</span>
+                  <input
+                    type="date"
+                    className="input w-auto"
+                    defaultValue={you.trial_ends_on ?? ''}
+                    disabled={busy}
+                    onChange={(event) =>
+                      void run(
+                        teamApi.updateMembership(selected!, {
+                          trial_ends_on: event.target.value === '' ? null : event.target.value,
+                        }),
+                      )
+                    }
+                  />
+                </label>
               )}
             </div>
           </section>

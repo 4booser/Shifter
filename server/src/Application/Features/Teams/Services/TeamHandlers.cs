@@ -517,7 +517,8 @@ public class GetRotaHandler : IRequestHandler<GetRotaDto, RotaDto>
                     you
                         ? theirs.Count(entry => Hidden(entry.visibility, member.PrivateByDefault))
                         : null,
-                    you ? member.PrivateByDefault : null);
+                    you ? member.PrivateByDefault : null,
+                    you ? member.TrialEndsOn : null);
             })
             .ToArray();
 

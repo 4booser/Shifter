@@ -193,11 +193,16 @@ public class RotaPrivacyTests
         // person on that shift knows it by the second hour, and the rota
         // pretending otherwise only stops it from warning that a Friday night
         // has nobody on it who has closed before.
+        //
+        // trial_ends_on is the line inside that: the flag is the crew's
+        // business, the date is yours. It is only ever set on your own row —
+        // when your probation ends is between you and the place, and the
+        // handler nulls it for everybody else.
         Assert.Equal(
             [
                 "colour", "cover_requests", "days", "display_name", "earned",
                 "hidden", "hours", "is_you", "member_id", "private_by_default",
-                "shares_earnings", "trainee",
+                "shares_earnings", "trainee", "trial_ends_on",
             ],
             Fields(typeof(RotaMemberDto)));
     }

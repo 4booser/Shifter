@@ -66,6 +66,8 @@ export interface RotaMember {
   private_by_default: boolean | null;
   /** Still learning the room. Everybody on a shift already knows who is new. */
   trainee: boolean;
+  /** Only on your own row: the flag is the crew's business, the date is yours. */
+  trial_ends_on?: string | null;
 }
 
 export interface Membership {
@@ -144,6 +146,8 @@ export const teamApi = {
       colour: string;
       share_earnings: boolean;
       private_by_default: boolean;
+      trainee: boolean;
+      trial_ends_on: string | null;
     }>,
   ) => api<Membership>(`${TEAMS}/${id}/me`, { method: 'PATCH', body: changes }),
   setVisibility: (dayShiftId: number, visible: boolean | null) =>

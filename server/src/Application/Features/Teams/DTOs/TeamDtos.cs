@@ -85,7 +85,10 @@ public record RotaMemberDto(
     /// somebody hides by habit or by exception says something about them that
     /// the rota has no business saying.
     /// </summary>
-    bool? private_by_default);
+    bool? private_by_default,
+    /// <summary>When your trial ends. Only ever set for you: the flag is the
+    /// crew's business, the date is yours.</summary>
+    DateOnly? trial_ends_on = null);
 
 /// <summary>One day of the rota, seen across the whole team.</summary>
 public record RotaDayDto(

@@ -23,6 +23,8 @@ import { SkeletonRows } from '@/components/ui/skeleton';
 import { Empty } from '@/components/ui/empty';
 import { Icon } from '@/components/ui/icon';
 import { useTitle } from '@/lib/use-title';
+import { useMono } from '@/lib/mono/store';
+import { wageCandidates } from '@/lib/mono/mono';
 
 const MONTHS_BACK = 6;
 
@@ -37,6 +39,13 @@ const STATUS_LABEL: Record<PayPeriodRow['status'], string> = {
 };
 
 export default function PayoutsPage() {
+  const hydrateBank = useMono((state) => state.hydrate);
+
+  useEffect(() => {
+    hydrateBank();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <Shell>
       <Payouts />
@@ -471,6 +480,32 @@ function PeriodRow({
   // to close yet.
   const chaseable = row.settled === null && (row.status === 'short' || row.status === 'overdue');
 
+  // The statement's side of the story, where a bank is connected: one credit
+  // near the due day and near the amount is worth a question mark, and the
+  // full is-this-your-wage flow lives on the bank page it links to.
+  const bankItems = useMono((state) => state.items);
+  const landed = useMemo(() => {
+    if (bankItems.length === 0) return null;
+    if (row.settled !== null || row.expected <= row.paid || row.stream === 'commission') return null;
+
+    const [candidate] = wageCandidates(
+      bankItems,
+      {
+        locationId: row.location_id,
+        locationName: row.location_name,
+        periodFrom: row.period_from,
+        periodTo: row.period_to,
+        amount: row.expected - row.paid,
+        due: row.due_on,
+      },
+      [],
+    );
+
+    if (candidate === undefined || Math.abs(candidate.difference) > 0.15) return null;
+
+    return candidate;
+  }, [bankItems, row]);
+
   const tone =
     row.status === 'short' || row.status === 'overdue'
       ? 'border-danger/40'
@@ -502,6 +537,11 @@ function PeriodRow({
             <span className="chip text-muted">
               {t(row.settled === 'paid' ? 'Settled off the books' : 'Written off')}
             </span>
+          )}
+          {landed !== null && (
+            <Link href="/bank" className="chip border-good/40 text-good" title={t('A credit near this amount landed near the due day — the bank page can match it properly.')}>
+              {t('on the card?')} +<Money value={landed.total} />
+            </Link>
           )}
         </span>
         <span className="field-hint tabular">

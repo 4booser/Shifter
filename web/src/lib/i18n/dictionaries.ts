@@ -1786,6 +1786,10 @@ export const RU: Dictionary = {
   'Type at least two characters.': 'Введи хотя бы два символа.',
   'Nothing found.': 'Ничего не нашлось.',
   'Loading…': 'Загружаю…',
+  'on the card?':
+    'на карту пришло?',
+  'A credit near this amount landed near the due day — the bank page can match it properly.':
+    'Возле дня выплаты на карту пришла похожая сумма — страница банка сверит её как следует.',
   'Connect the statement': 'Подключить выписку',
   'It stays in this browser': 'Она останется в этом браузере',
   'The card, this day': 'Карта в этот день',
@@ -4253,6 +4257,10 @@ export const UK: Dictionary = {
   'Type at least two characters.': 'Введи хоча б два символи.',
   'Nothing found.': 'Нічого не знайшлося.',
   'Loading…': 'Завантажую…',
+  'on the card?':
+    'на картку прийшло?',
+  'A credit near this amount landed near the due day — the bank page can match it properly.':
+    'Біля дня виплати на картку прийшла схожа сума — сторінка банку звірить її як слід.',
   'Connect the statement': 'Підключити виписку',
   'It stays in this browser': 'Вона залишиться в цьому браузері',
   'The card, this day': 'Картка цього дня',

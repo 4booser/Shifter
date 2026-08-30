@@ -255,13 +255,25 @@ function Payouts() {
       {/* ==== KPI ==== */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
         <div className="card reveal p-3">
-          <span className="field-hint block">{t('Awaited')}</span>
-          <Money value={data?.awaited ?? 0} className="text-[1.25rem] font-bold" />
+          <span className="field-hint block">
+            {(data?.overdue ?? 0) === (data?.awaited ?? 0) && (data?.awaited ?? 0) > 0
+              ? t('Awaited — all of it late')
+              : t('Awaited')}
+          </span>
+          <Money
+            value={data?.awaited ?? 0}
+            className={`text-[1.25rem] font-bold ${
+              (data?.overdue ?? 0) === (data?.awaited ?? 0) && (data?.awaited ?? 0) > 0 ? 'text-danger' : ''
+            }`}
+          />
         </div>
-        <div className="card reveal p-3">
-          <span className="field-hint block">{t('Of that, late')}</span>
-          <Money value={data?.overdue ?? 0} className={`text-[1.25rem] font-bold ${(data?.overdue ?? 0) > 0 ? 'text-danger' : ''}`} />
-        </div>
+        {/* The twin tile only earns its spot when it says something new. */}
+        {(data?.overdue ?? 0) !== (data?.awaited ?? 0) && (
+          <div className="card reveal p-3">
+            <span className="field-hint block">{t('Of that, late')}</span>
+            <Money value={data?.overdue ?? 0} className={`text-[1.25rem] font-bold ${(data?.overdue ?? 0) > 0 ? 'text-danger' : ''}`} />
+          </div>
+        )}
         <div className="card reveal p-3">
           <span className="field-hint block">{t('Gone missing')}</span>
           <Money
@@ -422,6 +434,8 @@ function PeriodRow({
   streamChip: (row: { stream: PayPeriodRow['stream'] }) => string | null;
 }) {
   const { t } = useI18n();
+  const [menuFor, setMenuFor] = useState<string | null>(null);
+  const rowKey = `${row.location_id}:${row.period_from}:${row.stream}`;
 
   // A shortfall somebody has finished arguing about: still short, no longer
   // chased. Only these two states can be closed — an open month has nothing
@@ -499,31 +513,38 @@ function PeriodRow({
         </button>
       )}
 
-      {chaseable && (
-        <span className="flex gap-1.5">
+      {/* Closing moves live behind one dot-menu: the audit counted four
+          text buttons per row shouting over the figures. */}
+      {(chaseable || row.settled !== null) && (
+        <span className="relative">
           <button
             type="button"
-            className="btn btn-quiet btn-sm"
-            title={t('The difference arrived in cash or in kind')}
-            onClick={() => onSettle(row, 'paid')}
+            className="btn btn-quiet btn-sm px-2"
+            aria-label={t('Close the question')}
+            onClick={() => setMenuFor(menuFor === rowKey ? null : rowKey)}
           >
-            {t('Got it in cash')}
+            ···
           </button>
-          <button
-            type="button"
-            className="btn btn-quiet btn-sm"
-            title={t('Stop counting this as owed')}
-            onClick={() => onSettle(row, 'written-off')}
-          >
-            {t('Let it go')}
-          </button>
+          {menuFor === rowKey && (
+            <span className="absolute right-0 top-full z-20 mt-1 flex w-52 flex-col rounded-(--radius) border border-border bg-surface p-1 shadow-lg">
+              {chaseable && (
+                <>
+                  <button type="button" className="btn btn-quiet btn-sm justify-start" onClick={() => { setMenuFor(null); onSettle(row, 'paid'); }}>
+                    {t('Got it in cash')}
+                  </button>
+                  <button type="button" className="btn btn-quiet btn-sm justify-start text-danger" onClick={() => { setMenuFor(null); onSettle(row, 'written-off'); }}>
+                    {t('Let it go')}
+                  </button>
+                </>
+              )}
+              {row.settled !== null && (
+                <button type="button" className="btn btn-quiet btn-sm justify-start" onClick={() => { setMenuFor(null); onSettle(row, null); }}>
+                  {t('Chase it again')}
+                </button>
+              )}
+            </span>
+          )}
         </span>
-      )}
-
-      {row.settled !== null && (
-        <button type="button" className="btn btn-quiet btn-sm" onClick={() => onSettle(row, null)}>
-          {t('Chase it again')}
-        </button>
       )}
     </li>
   );

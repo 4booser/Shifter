@@ -3,13 +3,13 @@ import { Ionicons } from '@expo/vector-icons';
 // re-exports the navigator it actually mounts, and the two can be different
 // copies with incompatible types.
 import type { BottomTabBarProps } from 'expo-router/build/react-navigation/bottom-tabs';
-import * as Haptics from 'expo-haptics';
 import { useEffect } from 'react';
 import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Palette } from '@/constants/theme';
+import { buzz } from '@/lib/haptics';
 
 const PILL_HEIGHT = 30;
 
@@ -78,7 +78,7 @@ export function TabBar({
 
               if (active || event.defaultPrevented) return;
 
-              void Haptics.selectionAsync();
+              buzz.choose();
               navigation.navigate(route.name);
             }}
           >

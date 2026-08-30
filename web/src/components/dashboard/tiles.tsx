@@ -24,6 +24,7 @@ import { useMoney } from '@/lib/settings/money';
 import { useSettings } from '@/lib/settings/store';
 import { useCalendar } from '@/lib/store/calendar';
 import { CountUp, Money } from '@/components/ui/bits';
+import { FlowMoney } from '@/components/ui/flow';
 import { Icon } from '@/components/ui/icon';
 
 /**
@@ -294,7 +295,7 @@ function TodayTile({ window, templates }: { window: CalendarDayData[]; templates
       <>
         <Label icon="spark">{t('On shift')}</Label>
         <span className="tile-value text-good">
-          {tick.earned === null ? formatElapsed(tick.elapsed) : <Money value={tick.earned} />}
+          {tick.earned === null ? formatElapsed(tick.elapsed) : <FlowMoney value={tick.earned} />}
         </span>
         <span className="field-hint flex items-center gap-1.5">
           <span className="live-dot" />
@@ -347,7 +348,7 @@ function TodayTile({ window, templates }: { window: CalendarDayData[]; templates
     return (
       <>
         <Label icon="spark">{t('Today')}</Label>
-        <span className="tile-value"><Money value={day?.earned ?? 0} /></span>
+        <span className="tile-value"><FlowMoney value={day?.earned ?? 0} /></span>
         <span className="field-hint truncate">{worked.name}</span>
       </>
     );

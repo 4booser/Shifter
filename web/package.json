@@ -10,6 +10,7 @@
     "e2e": "playwright test"
   },
   "dependencies": {
+    "@number-flow/react": "^0.6.2",
     "framer-motion": "^13.1.1",
     "next": "^15.5.6",
     "qrcode": "^1.5.4",

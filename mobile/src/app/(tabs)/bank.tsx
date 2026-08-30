@@ -1,5 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
@@ -54,6 +53,7 @@ import { watchForWage } from '@/lib/wage-watch';
 import { useWidgetMoney } from '@/lib/use-widget';
 import { t } from '@/lib/i18n';
 import { LockKind, bankLock, lockKind, lockNameBy } from '@/lib/lock';
+import { buzz } from '@/lib/haptics';
 
 /** What the reconciliation endpoint says is still owed. */
 interface PayPeriodRow {
@@ -202,7 +202,7 @@ function Bank() {
     }
 
     setTyped('');
-    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    buzz.won();
   };
 
   // ---- what the bank says about the money that was owed ----
@@ -414,7 +414,7 @@ function Bank() {
       await mono.markUsed(match.items.map((item) => item.id));
 
       setDone((was) => [...was, tag]);
-      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      buzz.won();
       void loadShifter();
     } catch {
       setProblem(t('Не записалось — попробуйте ещё раз.'));
@@ -471,7 +471,7 @@ function Bank() {
 
       await mono.markUsed([item.id]);
       setDone((was) => [...was, tag]);
-      void Haptics.selectionAsync();
+      buzz.choose();
       void loadShifter();
     } catch {
       setProblem(t('Не записалось — попробуйте ещё раз.'));
@@ -499,7 +499,7 @@ function Bank() {
 
       await mono.markUsed([item.id]);
       setDone((was) => [...was, tag]);
-      void Haptics.selectionAsync();
+      buzz.choose();
     } catch {
       setProblem(t('Не записалось — попробуйте ещё раз.'));
     } finally {

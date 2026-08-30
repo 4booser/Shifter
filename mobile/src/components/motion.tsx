@@ -1,10 +1,10 @@
-import * as Haptics from 'expo-haptics';
 import { ReactNode, useEffect } from 'react';
 import { Pressable, StyleProp, TextInput, TextStyle, ViewStyle } from 'react-native';
 import { cssInterop } from 'nativewind';
 
 import { eyeShut } from '@/lib/eye';
 import { spaced } from '@/lib/format';
+import { buzz } from '@/lib/haptics';
 import Animated, {
   FadeInDown,
   withRepeat,
@@ -73,7 +73,7 @@ export function Press({
       accessibilityLabel={accessibilityLabel}
       onPressIn={() => {
         down.value = withTiming(1, { duration: 80 });
-        if (haptic) void Haptics.selectionAsync();
+        if (haptic) buzz.choose();
       }}
       onPressOut={() => {
         down.value = withSpring(0, { damping: 15, stiffness: 320, mass: 0.5 });

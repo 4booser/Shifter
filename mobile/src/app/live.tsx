@@ -1,5 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-import * as Haptics from 'expo-haptics';
 import { useKeepAwake } from 'expo-keep-awake';
 import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
@@ -15,6 +14,7 @@ import { stopwatch } from '@/lib/format';
 import { CalendarDayData, DaysResponse, money, toSavePayload } from '@/lib/types';
 import { breakSeconds, forgotten, onBreak, useLive } from '@/store/live';
 import { t } from '@/lib/i18n';
+import { buzz } from '@/lib/haptics';
 
 const clock = (date: Date) => `${pad(date.getHours())}:${pad(date.getMinutes())}`;
 
@@ -100,7 +100,7 @@ export default function LiveScreen() {
 
   if (wholeHours > hoursMarked.current) {
     hoursMarked.current = wholeHours;
-    if (wholeHours > 0) void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    if (wholeHours > 0) buzz.won();
   }
 
   // With the button forgotten, "now" is a lie; the plan's own end is the
@@ -136,12 +136,12 @@ export default function LiveScreen() {
       }
 
       await api(`/shifter/v1/days/${live.date}`, { method: 'PUT', body: payload });
-      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      buzz.won();
       clear();
       router.back();
     } catch {
       setError(t('Не записалось — попробуйте ещё раз.'));
-      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      buzz.lost();
       setBusy(false);
     }
   };
@@ -239,7 +239,7 @@ export default function LiveScreen() {
             style={[styles.break, resting && styles.breakOn]}
             onPress={() => {
               toggleBreak();
-              void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              buzz.commit();
             }}
           >
             <Ionicons

@@ -1,5 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-import * as Haptics from 'expo-haptics';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -69,6 +68,7 @@ import { ApiError } from '@/lib/api';
 import { heldDays, Pending } from '@/lib/outbox';
 import { useOutbox } from '@/store/outbox';
 import { t } from '@/lib/i18n';
+import { buzz } from '@/lib/haptics';
 
 /** Three years each way. Further than that and nobody is planning, they are lost. */
 const SPAN = 36;
@@ -455,7 +455,7 @@ export default function CalendarScreen() {
       set.delete(key);
     }
 
-    void Haptics.selectionAsync();
+    buzz.choose();
     setChosen(new Set(set));
   }, []);
 
@@ -518,7 +518,7 @@ export default function CalendarScreen() {
         },
       ]);
       await refresh();
-      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      buzz.won();
     },
     [post, refresh],
   );
@@ -661,7 +661,7 @@ export default function CalendarScreen() {
 
       clearPaint();
       void refresh();
-      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      buzz.won();
 
       // Offered only when the whole stroke went. Undoing something still
       // sitting in the queue would mean unpicking the queue, and a button
@@ -674,7 +674,7 @@ export default function CalendarScreen() {
       if (kept > 0) setError(t('Сети нет — сохраним, когда она вернётся.'));
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : t('Не сохранилось.'));
-      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      buzz.lost();
     } finally {
       setApplying(false);
     }
@@ -689,7 +689,7 @@ export default function CalendarScreen() {
       await post(writesToUndo(undo));
       setUndo(null);
       void refresh();
-      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      buzz.won();
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : t('Не отменилось.'));
     } finally {
@@ -721,7 +721,7 @@ export default function CalendarScreen() {
 
     chosenAt.current = next;
     setChosen(next);
-    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    buzz.touch();
   };
 
   // What this stroke is about to do, before it does it. Painting a fortnight
@@ -1097,7 +1097,7 @@ export default function CalendarScreen() {
         <Press
           style={[styles.pencil, { bottom: insets.bottom + (undo === null ? 22 : 84) }]}
           onPress={() => {
-            void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            buzz.touch();
             setUndo(null);
             setPicking(true);
           }}
@@ -1170,7 +1170,7 @@ export default function CalendarScreen() {
           // never the template — it was the month somebody wants filled in.
           setBrush({ kind: 'shift', template });
           sheet.current?.scrollTo({ y: 0, animated: true });
-          void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          buzz.won();
         }}
         onClose={() => setStarting(false)}
       />
@@ -1188,7 +1188,7 @@ export default function CalendarScreen() {
           setChosen(new Set());
           setBrush(picked);
           sheet.current?.scrollTo({ y: 0, animated: true });
-          void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          buzz.commit();
         }}
         onClose={() => setPicking(false)}
         onManage={() => {

@@ -48,6 +48,7 @@ import { hourDial, rateTrend, tipsByWeekday, waterfall, weekBands } from '@/lib/
 import { ClockRing, DaysAtGlance, MoneyFlow, MonthBars, TipWeek, TrendLine, WeekBandsChart } from '@/components/charts/glass-charts';
 import { AreaChart, ColumnChart, Plot, ProgressRing } from '@/components/charts/charts';
 import { Alert, CountUp, Delta, Money } from '@/components/ui/bits';
+import { FlowMoney } from '@/components/ui/flow';
 import { Icon } from '@/components/ui/icon';
 
 type PresetId = 'month' | 'previous' | '3m' | '6m' | 'year' | 'all' | 'custom';
@@ -677,13 +678,13 @@ function Stats() {
           <CountUp value={summary.hours} format={(value) => `${Math.round(value)}`} className="text-[1.25rem] font-bold" />
         </Kpi>
         <Kpi label={t('Per working day')} delta={delta(averages.perDay, beforeAverages.perDay)}>
-          <Money value={averages.perDay} className="text-[1.25rem] font-bold" />
+          <FlowMoney value={averages.perDay} className="text-[1.25rem] font-bold" />
         </Kpi>
         <Kpi label={t('Per hour')} delta={delta(averages.perHour, beforeAverages.perHour)}>
-          <Money value={averages.perHour} className="text-[1.25rem] font-bold" />
+          <FlowMoney value={averages.perHour} className="text-[1.25rem] font-bold" />
         </Kpi>
         <Kpi label={t('Median day')} delta={null}>
-          <Money value={dayMedian} className="text-[1.25rem] font-bold" />
+          <FlowMoney value={dayMedian} className="text-[1.25rem] font-bold" />
         </Kpi>
         <Kpi label={t('Days worked')} delta={delta(summary.days_worked, previous.days_worked)}>
           <span className="text-[1.25rem] font-bold tabular">{summary.days_worked}</span>

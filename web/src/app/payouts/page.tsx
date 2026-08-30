@@ -18,6 +18,7 @@ import { PayslipCheckModal } from '@/components/dashboard/payslip-check';
 import { PayoutModal, PayoutPrefill } from '@/components/dashboard/modals/payout-modal';
 import { PayoutLedger } from '@/components/dashboard/payout-ledger';
 import { Alert, Money } from '@/components/ui/bits';
+import { FlowMoney } from '@/components/ui/flow';
 import { SkeletonRows } from '@/components/ui/skeleton';
 import { Empty } from '@/components/ui/empty';
 import { Icon } from '@/components/ui/icon';
@@ -224,7 +225,7 @@ function Payouts() {
         <section className="card reveal flex flex-wrap items-center gap-x-6 gap-y-1 p-4">
           <div>
             <span className="field-hint block">{t('Next money in')}</span>
-            <Money value={nextDue.amount} className="text-[1.6rem] font-bold text-good" />
+            <FlowMoney value={nextDue.amount} className="text-[1.6rem] font-bold text-good" />
           </div>
           <p className="text-[0.9rem] text-muted">
             {nextDue.days === 0 ? t('today') : nextDue.days === 1 ? t('tomorrow') : `${t('in')} ${n(nextDue.days, 'days')}`} ·{' '}
@@ -261,7 +262,7 @@ function Payouts() {
               ? t('Awaited — all of it late')
               : t('Awaited')}
           </span>
-          <Money
+          <FlowMoney
             value={data?.awaited ?? 0}
             className={`text-[1.25rem] font-bold ${
               (data?.overdue ?? 0) === (data?.awaited ?? 0) && (data?.awaited ?? 0) > 0 ? 'text-danger' : ''
@@ -272,12 +273,12 @@ function Payouts() {
         {(data?.overdue ?? 0) !== (data?.awaited ?? 0) && (
           <div className="card reveal p-3">
             <span className="field-hint block">{t('Of that, late')}</span>
-            <Money value={data?.overdue ?? 0} className={`text-[1.25rem] font-bold ${(data?.overdue ?? 0) > 0 ? 'text-danger' : ''}`} />
+            <FlowMoney value={data?.overdue ?? 0} className={`text-[1.25rem] font-bold ${(data?.overdue ?? 0) > 0 ? 'text-danger' : ''}`} />
           </div>
         )}
         <div className="card reveal p-3">
           <span className="field-hint block">{t('Gone missing')}</span>
-          <Money
+          <FlowMoney
             // A shortfall somebody has drawn a line under is not still owed:
             // leaving it in this figure is the nagging the line exists to stop.
             value={periods

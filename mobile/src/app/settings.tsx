@@ -20,6 +20,7 @@ import { api, API_BASE } from '@/lib/api';
 import { lockKind, LockKind, lockNameBy, lockStore, unlock } from '@/lib/lock';
 import { useSession } from '@/store/session';
 import { AccountKeys } from '@/components/account-keys';
+import { CalendarFeedCard } from '@/components/calendar-feed';
 import { useEye } from '@/lib/eye';
 import { t, useLang } from '@/lib/i18n';
 import { DeviceSettings, deviceSettings, deviceToken } from '@/lib/notifications';
@@ -172,6 +173,8 @@ export default function SettingsScreen() {
           <Switch value={eyeIsShut} onValueChange={(value) => useEye.getState().set(value)} />
         </View>
       </View>
+
+      <CalendarFeedCard palette={palette} />
 
       {profile !== null && (
         <AccountKeys

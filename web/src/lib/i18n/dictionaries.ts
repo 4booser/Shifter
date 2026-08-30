@@ -1786,11 +1786,13 @@ export const RU: Dictionary = {
   'Type at least two characters.': 'Введи хотя бы два символа.',
   'Nothing found.': 'Ничего не нашлось.',
   'Loading…': 'Загружаю…',
+  'The card, this day': 'Карта в этот день',
+  'The whole statement': 'Вся выписка',
   'h of work': 'ч работы',
   'Look around on an example':
     'Посмотреть на примере',
   'Ninety made-up days, drawn right here. No bank involved, nothing saved.':
-    'Девяносто выдуманных дней, нарисованных прямо здесь. Банк не участвует, ничего не сохраняется.',
+    'Девяносто выдуманных дней, нарисованных прямо здесь. Банк не участвует; пример живёт, пока открыта вкладка.',
   'This is an example: ninety generated days, no bank behind them. Paste your own token to see your month like this.':
     'Это пример: девяносто сгенерированных дней, за ними нет банка. Вставьте свой токен — и так же увидите свой месяц.',
   'Leave the example':
@@ -4249,11 +4251,13 @@ export const UK: Dictionary = {
   'Type at least two characters.': 'Введи хоча б два символи.',
   'Nothing found.': 'Нічого не знайшлося.',
   'Loading…': 'Завантажую…',
+  'The card, this day': 'Картка цього дня',
+  'The whole statement': 'Уся виписка',
   'h of work': 'год роботи',
   'Look around on an example':
     'Подивитися на прикладі',
   'Ninety made-up days, drawn right here. No bank involved, nothing saved.':
-    'Дев’яносто вигаданих днів, намальованих просто тут. Банк не бере участі, нічого не зберігається.',
+    'Дев’яносто вигаданих днів, намальованих просто тут. Банк не бере участі; приклад живе, поки відкрита вкладка.',
   'This is an example: ninety generated days, no bank behind them. Paste your own token to see your month like this.':
     'Це приклад: дев’яносто згенерованих днів, за ними немає банку. Вставте свій токен — і так само побачите свій місяць.',
   'Leave the example':

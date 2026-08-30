@@ -67,6 +67,7 @@ const readJson = <T,>(key: string, fallback: T): T => {
  * silently not existing.
  */
 const CACHE_ITEMS = 4_000;
+const DEMO_KEY = 'shifter.mono.demo';
 
 interface MonoState {
   /** Undefined while localStorage has not been read yet. */
@@ -111,6 +112,17 @@ export const useMono = create<MonoState>((set, get) => ({
   progress: null,
 
   hydrate: () => {
+    if (get().demo) return;
+
+    // A demo lives for the tab: sessionStorage remembers the choice, the
+    // deterministic generator rebuilds the same ninety days on any screen
+    // that hydrates, and closing the tab forgets the whole fiction.
+    if (window.sessionStorage.getItem(DEMO_KEY) === '1') {
+      get().enterDemo();
+
+      return;
+    }
+
     const token = window.localStorage.getItem(TOKEN_KEY);
     const setup = readJson<Setup>(SETUP_KEY, {
       accountId: null, rules: [], budgets: [], syncedPer: {},
@@ -166,8 +178,8 @@ export const useMono = create<MonoState>((set, get) => ({
     // The card's balance is whatever the statement ran up to.
     client.accounts[0].balance = items[0]?.balance ?? 0;
 
-    // Memory only: a reload lands back on the connect screen, which is the
-    // honest lifetime for numbers that were never anybody's.
+    quietly(() => window.sessionStorage.setItem(DEMO_KEY, '1'));
+
     set({
       token: 'demo', demo: true, client, accountId: client.accounts[0].id,
       items, rules: [], budgets: [], error: null, progress: null,
@@ -182,6 +194,7 @@ export const useMono = create<MonoState>((set, get) => ({
       window.localStorage.removeItem(TOKEN_KEY);
       window.localStorage.removeItem(SETUP_KEY);
       window.localStorage.removeItem(CACHE_KEY);
+      window.sessionStorage.removeItem(DEMO_KEY);
     });
 
     set({

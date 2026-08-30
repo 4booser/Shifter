@@ -46,6 +46,7 @@ const REASONS: { value: DeductionReason; label: string }[] = [
 ];
 import { Money, SwatchRow } from '@/components/ui/bits';
 import { EventModal } from './modals/event-modal';
+import { DayBank } from '@/components/dashboard/day-bank';
 
 /** Short on purpose: a list long enough for every venue is one nobody fills in. */
 const ZONES: { value: ShiftZone; label: string }[] = [
@@ -872,6 +873,7 @@ export function DayPanel() {
         onClose={() => setEventOpen(false)}
       />
       <DayWeek dayKey={key} />
+      <DayBank dayKey={key} />
       <DayContext dayKey={key} />
       <DayHistory dayKey={key} />
     </aside>

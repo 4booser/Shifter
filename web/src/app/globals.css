@@ -1311,6 +1311,13 @@ body,
   from { transform: scaleY(0); }
 }
 
+/* Native controls — sliders, checkboxes, the date field's innards — follow
+   the accent instead of the browser's stock blue, in both themes. */
+input,
+progress {
+  accent-color: var(--accent);
+}
+
 /* ==== Skeletons: the shape of what is coming, as a quiet pulse ==== */
 .skeleton {
   border-radius: 12px;

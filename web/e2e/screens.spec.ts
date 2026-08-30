@@ -7,7 +7,7 @@ import { apiPut, createShiftTemplate, registerUser, signIn } from './helpers';
  *
  * Four widget bugs were found the day somebody finally rendered the widgets;
  * nothing renders the web screens except people. These shots are the web's
- * equivalent: calendar, day panel, stats and bank, in both themes. A diff is
+ * equivalent: calendar, stats, payouts, bank and the year, in both themes. A diff is
  * a question, not an automatic failure — run with --update-snapshots after
  * looking, and the look is the point.
  */
@@ -16,6 +16,7 @@ const SCREENS = [
   { path: '/stats', name: 'stats' },
   { path: '/payouts', name: 'payouts' },
   { path: '/bank', name: 'bank' },
+  { path: '/wrapped', name: 'year' },
 ] as const;
 
 // The committed baselines are darwin-rendered; on any other platform this

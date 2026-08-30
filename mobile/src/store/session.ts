@@ -6,7 +6,9 @@ interface SessionState {
   /** null = signed out; undefined = still reading the keychain. */
   session: Session | null | undefined;
   hydrate: () => Promise<void>;
-  signIn: (login: string, password: string) => Promise<'ok' | 'two-factor'>;
+  signIn: (login: string, password: string) => Promise<'ok' | { ticket: string }>;
+  /** The second half of a two-factor sign-in: six digits, or eight from the backup sheet. */
+  completeTwoFactor: (ticket: string, code: string) => Promise<void>;
   register: (login: string, password: string, firstName: string, lastName: string) => Promise<void>;
   signOut: () => void;
 }
@@ -23,17 +25,28 @@ export const useSession = create<SessionState>((set) => ({
   },
 
   signIn: async (login, password) => {
-    const response = await api<Session & { two_factor_required?: boolean }>(
+    const response = await api<Session & { two_factor_required?: boolean; ticket?: string }>(
       '/shifter/v1/auth/user/login',
       { body: { login, password } },
     );
 
-    if (response.two_factor_required === true) return 'two-factor';
+    // The password held; the ticket is the claim check for the code screen.
+    if (response.two_factor_required === true && response.ticket !== undefined)
+      return { ticket: response.ticket };
 
     setSession(response);
     set({ session: response });
 
     return 'ok';
+  },
+
+  completeTwoFactor: async (ticket, code) => {
+    const response = await api<Session>('/shifter/v1/auth/user/login/2fa', {
+      body: { ticket, code: code.trim() },
+    });
+
+    setSession(response);
+    set({ session: response });
   },
 
   register: async (login, password, firstName, lastName) => {

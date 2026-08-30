@@ -21,6 +21,7 @@ export default function LoginScreen() {
   const scheme = useColorScheme();
   const palette = Colors[scheme === 'dark' ? 'dark' : 'light'];
   const signIn = useSession((state) => state.signIn);
+  const completeTwoFactor = useSession((state) => state.completeTwoFactor);
   const register = useSession((state) => state.register);
 
   const [mode, setMode] = useState<'in' | 'up'>('in');
@@ -30,6 +31,9 @@ export default function LoginScreen() {
   const [lastName, setLastName] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // A ticket means the password already held; only the code is missing.
+  const [ticket, setTicket] = useState<string | null>(null);
+  const [code, setCode] = useState('');
   const autoTried = useRef(false);
 
   // Simulator convenience only: EXPO_PUBLIC_AUTOLOGIN="login:password"
@@ -55,11 +59,29 @@ export default function LoginScreen() {
       if (mode === 'in') {
         const result = await signIn(login.trim(), password);
 
-        if (result === 'two-factor') setError(t('Двухфакторный вход появится в M1 — пока зайдите без него.'));
+        if (result !== 'ok') setTicket(result.ticket);
       } else {
         await register(login.trim(), password, firstName.trim() || t('Я'), lastName.trim() || t('Смена'));
       }
     } catch (caught) {
+      setError(caught instanceof ApiError ? caught.message : t('Сеть молчит. Сервер доступен?'));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const submitCode = async () => {
+    if (ticket === null || code.trim() === '') return;
+
+    setBusy(true);
+    setError(null);
+
+    try {
+      await completeTwoFactor(ticket, code);
+    } catch (caught) {
+      // The wave-54 lock answers 429 with its own words; show them rather
+      // than a generic shrug. An expired ticket lands here too and its
+      // message says to sign in again.
       setError(caught instanceof ApiError ? caught.message : t('Сеть молчит. Сервер доступен?'));
     } finally {
       setBusy(false);
@@ -80,66 +102,107 @@ export default function LoginScreen() {
           </View>
           <Text style={styles.brand}>Shifter</Text>
         </View>
-        <Text style={styles.lede}>
-          {mode === 'in' ? t('Смены, деньги и команда — в кармане.') : t('Минута — и календарь начнёт считать за вас.')}
-        </Text>
-
-        {mode === 'up' && (
-          <View style={styles.nameRow}>
+        {ticket !== null ? (
+          <>
+            <Text style={styles.lede}>
+              {t('Пароль верен. Введите код из приложения-аутентификатора — или один из восьми резервных.')}
+            </Text>
             <TextInput
-              style={[styles.input, styles.nameInput]}
-              placeholder={t("Имя")}
+              style={styles.input}
+              placeholder={t('Код из приложения')}
               placeholderTextColor={palette.textSecondary}
-              value={firstName}
-              onChangeText={setFirstName}
+              keyboardType="number-pad"
+              autoFocus
+              maxLength={8}
+              value={code}
+              onChangeText={setCode}
+              onSubmitEditing={() => void submitCode()}
             />
-            <TextInput
-              style={[styles.input, styles.nameInput]}
-              placeholder={t("Фамилия")}
-              placeholderTextColor={palette.textSecondary}
-              value={lastName}
-              onChangeText={setLastName}
-            />
-          </View>
-        )}
-        <TextInput
-          style={styles.input}
-          placeholder={t("Логин")}
-          placeholderTextColor={palette.textSecondary}
-          autoCapitalize="none"
-          autoCorrect={false}
-          value={login}
-          onChangeText={setLogin}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder={t("Пароль")}
-          placeholderTextColor={palette.textSecondary}
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-          onSubmitEditing={() => void submit()}
-        />
 
-        {error !== null && <Text style={styles.error}>{error}</Text>}
+            {error !== null && <Text style={styles.error}>{error}</Text>}
 
-        <Pressable
-          style={({ pressed }) => [styles.button, pressed && styles.pressed]}
-          disabled={busy || login.trim() === '' || password === ''}
-          onPress={() => void submit()}
-        >
-          {busy ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.buttonText}>{mode === 'in' ? t('Войти') : t('Создать аккаунт')}</Text>
-          )}
-        </Pressable>
+            <Pressable
+              style={({ pressed }) => [styles.button, pressed && styles.pressed]}
+              disabled={busy || code.trim().length < 6}
+              onPress={() => void submitCode()}
+            >
+              {busy ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>{t('Подтвердить')}</Text>}
+            </Pressable>
 
-        <Press onPress={() => setMode(mode === 'in' ? 'up' : 'in')}>
-          <Text style={styles.switch}>
-            {mode === 'in' ? t('Впервые тут? Создать аккаунт') : t('Уже есть аккаунт? Войти')}
+            <Press
+              onPress={() => {
+                setTicket(null);
+                setCode('');
+                setError(null);
+              }}
+            >
+              <Text style={styles.switch}>{t('Назад ко входу')}</Text>
+            </Press>
+          </>
+        ) : (
+          <>
+          <Text style={styles.lede}>
+            {mode === 'in' ? t('Смены, деньги и команда — в кармане.') : t('Минута — и календарь начнёт считать за вас.')}
           </Text>
-        </Press>
+
+          {mode === 'up' && (
+            <View style={styles.nameRow}>
+              <TextInput
+                style={[styles.input, styles.nameInput]}
+                placeholder={t("Имя")}
+                placeholderTextColor={palette.textSecondary}
+                value={firstName}
+                onChangeText={setFirstName}
+              />
+              <TextInput
+                style={[styles.input, styles.nameInput]}
+                placeholder={t("Фамилия")}
+                placeholderTextColor={palette.textSecondary}
+                value={lastName}
+                onChangeText={setLastName}
+              />
+            </View>
+          )}
+          <TextInput
+            style={styles.input}
+            placeholder={t("Логин")}
+            placeholderTextColor={palette.textSecondary}
+            autoCapitalize="none"
+            autoCorrect={false}
+            value={login}
+            onChangeText={setLogin}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder={t("Пароль")}
+            placeholderTextColor={palette.textSecondary}
+            secureTextEntry
+            value={password}
+            onChangeText={setPassword}
+            onSubmitEditing={() => void submit()}
+          />
+
+          {error !== null && <Text style={styles.error}>{error}</Text>}
+
+          <Pressable
+            style={({ pressed }) => [styles.button, pressed && styles.pressed]}
+            disabled={busy || login.trim() === '' || password === ''}
+            onPress={() => void submit()}
+          >
+            {busy ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.buttonText}>{mode === 'in' ? t('Войти') : t('Создать аккаунт')}</Text>
+            )}
+          </Pressable>
+
+          <Press onPress={() => setMode(mode === 'in' ? 'up' : 'in')}>
+            <Text style={styles.switch}>
+              {mode === 'in' ? t('Впервые тут? Создать аккаунт') : t('Уже есть аккаунт? Войти')}
+            </Text>
+          </Press>
+          </>
+        )}
       </View>
     </KeyboardAvoidingView>
   );

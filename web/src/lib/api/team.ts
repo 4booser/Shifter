@@ -422,4 +422,6 @@ export interface WhoRead {
   free: WhoRow[];
   busy: WhoRow[];
   away: WhoRow[];
+  /** Took a gig that day: hands full without an assignment saying so. */
+  out: WhoRow[];
 }

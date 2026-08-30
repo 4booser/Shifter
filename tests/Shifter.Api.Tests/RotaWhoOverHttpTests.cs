@@ -84,6 +84,8 @@ public sealed class RotaWhoOverHttpTests(Api api)
         Assert.DoesNotContain("Олег", free);
         Assert.Contains(who.GetProperty("free").EnumerateArray(),
             row => row.GetProperty("trainee").GetBoolean());
+        // The pile exists even when empty: clients branch on value, not shape.
+        Assert.Equal(JsonValueKind.Array, who.GetProperty("out").ValueKind);
         Assert.Contains(standing, row => row.GetProperty("name").GetString() == "Ира"
             && row.GetProperty("detail").GetString()!.Contains("Бар"));
         Assert.Contains(away, row => row.GetProperty("name").GetString() == "Олег"

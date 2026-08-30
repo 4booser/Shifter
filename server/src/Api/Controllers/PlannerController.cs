@@ -45,7 +45,7 @@ public class PlannerController : ControllerBase
                 trainee = row.Trainee,
             });
 
-        return Ok(new { free = Rows(read.Free), busy = Rows(read.Busy), away = Rows(read.Away) });
+        return Ok(new { free = Rows(read.Free), busy = Rows(read.Busy), away = Rows(read.Away), @out = Rows(read.Out) });
     }
 
     [HttpPost("assignments")]

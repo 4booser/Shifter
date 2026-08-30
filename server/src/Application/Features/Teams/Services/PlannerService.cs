@@ -1093,7 +1093,7 @@ public sealed class PlannerService
 
     public sealed record WhoRow(int UserId, string Name, string Colour, string? Detail, bool Trainee = false);
 
-    public sealed record WhoRead(WhoRow[] Free, WhoRow[] Busy, WhoRow[] Away);
+    public sealed record WhoRead(WhoRow[] Free, WhoRow[] Busy, WhoRow[] Away, WhoRow[] Out);
 
     /// <summary>
     /// The day's cast, three ways: who can be asked, who already stands, who
@@ -1114,15 +1114,36 @@ public sealed class PlannerService
             .Where(row => row.TeamId == teamId && row.Date == date)
             .ToArrayAsync(ct);
 
+        // A member who took a gig that day has their hands full even though
+        // no assignment and no availability row says so — the rota grid has
+        // shown these outings for a while; the asking panel now sees them too.
+        var userIds = members.Select(member => member.UserId).ToArray();
+        var outings = await _db.GigResponses
+            .AsNoTracking()
+            .Where(reply => reply.AcceptedAt != null
+                && userIds.Contains(reply.UserId)
+                && reply.Listing!.Date == date
+                && reply.Listing.Status != Domain.Entities.GigStatus.Closed)
+            .Select(reply => new
+            {
+                reply.UserId,
+                reply.Listing!.StartTime,
+                reply.Listing.EndTime,
+            })
+            .ToArrayAsync(ct);
+
         var busyIds = standing.Select(row => row.UserId).ToHashSet();
         var awayIds = away.Select(row => row.UserId).ToHashSet();
+        var outIds = outings.Select(row => row.UserId).ToHashSet();
 
         WhoRow Row(TeamMember member, string? detail) =>
             new(member.UserId, member.DisplayName, member.Colour, detail, member.Trainee);
 
         return new WhoRead(
             [.. members
-                .Where(member => !busyIds.Contains(member.UserId) && !awayIds.Contains(member.UserId))
+                .Where(member => !busyIds.Contains(member.UserId)
+                    && !awayIds.Contains(member.UserId)
+                    && !outIds.Contains(member.UserId))
                 .Select(member => Row(member, null))],
             [.. members
                 .Where(member => busyIds.Contains(member.UserId))
@@ -1135,7 +1156,14 @@ public sealed class PlannerService
                 .Where(member => awayIds.Contains(member.UserId))
                 .Select(member => Row(
                     member,
-                    away.First(row => row.UserId == member.UserId).Reason))]);
+                    away.First(row => row.UserId == member.UserId).Reason))],
+            [.. members
+                .Where(member => outIds.Contains(member.UserId) && !busyIds.Contains(member.UserId))
+                .Select(member => Row(
+                    member,
+                    string.Join(", ", outings
+                        .Where(row => row.UserId == member.UserId)
+                        .Select(row => $"{row.StartTime:HH\\:mm}–{row.EndTime:HH\\:mm}"))))]);
     }
 }
 

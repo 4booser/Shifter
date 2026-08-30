@@ -594,6 +594,17 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
                   ))}
                 </div>
               )}
+              {who.read.out.length > 0 && (
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="w-20 text-[0.72rem] uppercase tracking-wide text-faint">{t('on a gig')}</span>
+                  {who.read.out.map((row) => (
+                    <span key={row.user_id} className="chip !py-1 opacity-75">
+                      <i className="h-2 w-2 rounded-full" style={{ background: row.colour }} />
+                      ✨ {row.name} <span className="text-faint">{row.detail}</span>
+                    </span>
+                  ))}
+                </div>
+              )}
               {who.read.away.length > 0 && (
                 <div className="flex flex-wrap items-center gap-1.5">
                   <span className="w-20 text-[0.72rem] uppercase tracking-wide text-warn">{t('said no')}</span>

@@ -222,7 +222,7 @@ export default function BoardScreen() {
   const coverage = new Map((board?.coverage ?? []).map((day) => [day.date, day]));
 
   interface WhoRow { user_id: number; name: string; colour: string; detail: string | null; trainee: boolean }
-  const [who, setWho] = useState<{ date: string; free: WhoRow[]; busy: WhoRow[]; away: WhoRow[] } | null>(null);
+  const [who, setWho] = useState<{ date: string; free: WhoRow[]; busy: WhoRow[]; away: WhoRow[]; out: WhoRow[] } | null>(null);
 
   const askWho = (date: string) => {
     if (who?.date === date) {
@@ -231,7 +231,7 @@ export default function BoardScreen() {
       return;
     }
 
-    void api<{ free: WhoRow[]; busy: WhoRow[]; away: WhoRow[] }>(
+    void api<{ free: WhoRow[]; busy: WhoRow[]; away: WhoRow[]; out: WhoRow[] }>(
       `/shifter/v1/teams/${teamId}/planner/who?date=${date}`,
     )
       .then((read) => setWho({ date, ...read }))
@@ -334,6 +334,7 @@ export default function BoardScreen() {
                     {([
                       [t('свободны'), who.free],
                       [t('стоят'), who.busy],
+                      [t('на подработке'), who.out],
                       [t('сказали нет'), who.away],
                     ] as const).map(([label, rows]) => (
                       rows.length === 0 ? null : (

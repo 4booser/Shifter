@@ -1,6 +1,8 @@
 import * as Haptics from 'expo-haptics';
 import { ReactNode, useEffect } from 'react';
 import { Pressable, StyleProp, TextInput, TextStyle, ViewStyle } from 'react-native';
+import { cssInterop } from 'nativewind';
+
 import { eyeShut } from '@/lib/eye';
 import { spaced } from '@/lib/format';
 import Animated, {
@@ -47,6 +49,8 @@ export function Press({
 }: {
   children: ReactNode;
   style?: StyleProp<ViewStyle>;
+  /** NativeWind's door: mapped onto `style` via cssInterop below. */
+  className?: string;
   onPress?: () => void;
   onLongPress?: () => void;
   disabled?: boolean;
@@ -222,3 +226,8 @@ export function Roll({
     />
   );
 }
+
+// NativeWind: let `className` land on Press/Appear as their style prop, so
+// migrated screens can speak Tailwind to the same primitives.
+cssInterop(Press, { className: 'style' });
+cssInterop(Appear, { className: 'style' });

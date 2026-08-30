@@ -130,8 +130,8 @@ export default function MyListingsScreen() {
         />
       }
     >
-      <View style={styles.head}>
-        <Text style={styles.title}>{t('Мои объявления')}</Text>
+      <View className="mb-1.5 flex-row items-center justify-between">
+        <Text className="text-2xl font-extrabold text-ink">{t('Мои объявления')}</Text>
         <View style={styles.headActions}>
           <Press hitSlop={10} onPress={() => router.push('/create-gig')}>
             <Ionicons name="add-circle-outline" size={26} color={palette.accent} />
@@ -143,12 +143,15 @@ export default function MyListingsScreen() {
       </View>
 
       {rows === null && error === null && <ActivityIndicator color={palette.accent} />}
-      {error !== null && <Text style={styles.error}>{error}</Text>}
+      {error !== null && <Text className="text-sm text-danger">{error}</Text>}
 
       {rows !== null && rows.length === 0 && (
-        <Press style={styles.emptyCreate} onPress={() => router.push('/create-gig')}>
+        <Press
+          className="flex-row items-center justify-center gap-2 rounded-2xl bg-accent py-3.5"
+          onPress={() => router.push('/create-gig')}
+        >
           <Ionicons name="add" size={20} color="#fff" />
-          <Text style={styles.emptyCreateText}>{t('Создать объявление')}</Text>
+          <Text className="text-[15px] font-extrabold text-white">{t('Создать объявление')}</Text>
         </Press>
       )}
 

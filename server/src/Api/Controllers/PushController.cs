@@ -90,6 +90,7 @@ public class PushController : ControllerBase
                 NotifyAt = At(request.notify_at),
                 NotifyTomorrow = request.notify_tomorrow ?? true,
                 NotifyPayday = request.notify_payday ?? true,
+                NotifyUnclosed = request.notify_unclosed ?? true,
             });
         }
         else
@@ -117,6 +118,7 @@ public class PushController : ControllerBase
             existing.NotifyAt = request.notify_at is null ? existing.NotifyAt : At(request.notify_at);
             existing.NotifyTomorrow = request.notify_tomorrow ?? existing.NotifyTomorrow;
             existing.NotifyPayday = request.notify_payday ?? existing.NotifyPayday;
+            existing.NotifyUnclosed = request.notify_unclosed ?? existing.NotifyUnclosed;
             existing.LastSeenAt = DateTime.UtcNow;
         }
 
@@ -128,7 +130,7 @@ public class PushController : ControllerBase
         // the server rather than guessing at them.
         var row = await _db.DeviceTokens.FirstAsync(device => device.Token == request.token, ct);
 
-        return Ok(new DeviceSettingsDto(row.TimeZone, row.NotifyAt, row.NotifyTomorrow, row.NotifyPayday));
+        return Ok(new DeviceSettingsDto(row.TimeZone, row.NotifyAt, row.NotifyTomorrow, row.NotifyPayday, row.NotifyUnclosed));
     }
 
     [HttpDelete("device/{token}")]
@@ -260,11 +262,13 @@ public record DeviceTokenDto(
     string? notify_at = null,
     /// <summary>Null leaves the setting alone; the app sends only what changed.</summary>
     bool? notify_tomorrow = null,
-    bool? notify_payday = null);
+    bool? notify_payday = null,
+    bool? notify_unclosed = null);
 
 /// <summary>What the phone is currently set to, so a screen can draw it.</summary>
 public record DeviceSettingsDto(
     string time_zone,
     string notify_at,
     bool notify_tomorrow,
-    bool notify_payday);
+    bool notify_payday,
+    bool notify_unclosed);

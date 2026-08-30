@@ -256,6 +256,24 @@ export default function SettingsScreen() {
                 trackColor={{ true: palette.accent, false: palette.border }}
               />
             </View>
+            <View style={styles.row}>
+              <View style={styles.grow}>
+                <Text style={styles.rowTitle}>{t('Вчера не закрыт')}</Text>
+                <Text style={styles.rowHint}>
+                  {t('Вечером, если смена записана, а чаевых и продаж нет.')}
+                </Text>
+              </View>
+              <Switch
+                value={nudges.notify_unclosed}
+                onValueChange={(value) => {
+                  setNudges({ ...nudges, notify_unclosed: value });
+                  void deviceSettings(token, { notify_unclosed: value }).then(
+                    (fresh) => fresh !== null && setNudges(fresh),
+                  );
+                }}
+                trackColor={{ true: palette.accent, false: palette.border }}
+              />
+            </View>
           </View>
         </>
       )}

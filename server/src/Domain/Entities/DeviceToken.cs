@@ -37,6 +37,11 @@ public sealed class DeviceToken
     /// <summary>Money due today, mid-morning.</summary>
     public bool NotifyPayday { get; set; } = true;
 
+    /// <summary>Evening knock about yesterday's recorded-but-unclosed day.</summary>
+    public bool NotifyUnclosed { get; set; } = true;
+
+    public DateOnly? UnclosedSentOn { get; set; }
+
     /// <summary>
     /// The local date each nudge last went out. Stamped rather than counted,
     /// so however often the loop runs — or however long the process was down —

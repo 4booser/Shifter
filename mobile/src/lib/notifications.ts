@@ -31,6 +31,7 @@ export interface DeviceSettings {
   notify_at: string;
   notify_tomorrow: boolean;
   notify_payday: boolean;
+  notify_unclosed: boolean;
 }
 
 /**

@@ -175,7 +175,7 @@ public sealed class PushScheduler : BackgroundService
         var phones = scope.ServiceProvider.GetRequiredService<ExpoPushSender>();
 
         var devices = await db.DeviceTokens
-            .Where(device => device.NotifyTomorrow || device.NotifyPayday)
+            .Where(device => device.NotifyTomorrow || device.NotifyPayday || device.NotifyUnclosed)
             .ToListAsync(ct);
 
         foreach (var device in devices)
@@ -214,6 +214,12 @@ public sealed class PushScheduler : BackgroundService
             {
                 device.PaydaySentOn = today;
                 dead = !await PhonePaydayAsync(scope.ServiceProvider, phones, device, today, ct);
+            }
+
+            if (!dead && chosenOpen && device.NotifyUnclosed && device.UnclosedSentOn != today)
+            {
+                device.UnclosedSentOn = today;
+                dead = !await PhoneUnclosedAsync(db, phones, device, today.AddDays(-1), ct);
             }
 
             if (dead) db.DeviceTokens.Remove(device);
@@ -483,6 +489,36 @@ public sealed class PushScheduler : BackgroundService
         };
 
         return await _sender.SendAsync(subscription, title, body, "/account");
+    }
+
+    /// <summary>The web nudge's phone twin — and it opens the day itself.</summary>
+    private async Task<bool> PhoneUnclosedAsync(
+        ShifterDbContext db,
+        ExpoPushSender phones,
+        DeviceToken device,
+        DateOnly yesterday,
+        CancellationToken ct)
+    {
+        var day = await db.Days
+            .Include(entry => entry.Shifts)
+            .Include(entry => entry.Sales)
+            .FirstOrDefaultAsync(
+                entry => entry.UserId == device.UserId && entry.Date == yesterday,
+                ct);
+
+        var worked = day?.Shifts?.Any(entry => entry.Worked) == true;
+        var closed = (day?.Tips ?? 0) != 0 || (day?.TipsCash ?? 0) != 0 || day?.Sales is { Count: > 0 };
+
+        if (!worked || closed) return true;
+
+        var (title, body) = device.Language switch
+        {
+            "ru" => ("Вчерашний день не закрыт", "Смена записана, а чаевых и продаж нет. Впишите, пока помните."),
+            "uk" => ("Вчорашній день не закрито", "Зміну записано, а чайових і продажів немає. Впишіть, поки пам’ятаєте."),
+            _ => ("Yesterday is still open", "The shift is there, but no tips or sales. Add them while you remember."),
+        };
+
+        return await phones.SendAsync(device.Token, title, body, $"/day/{yesterday:yyyy-MM-dd}", ct);
     }
 
     private async Task<bool> SendUnclosedAsync(

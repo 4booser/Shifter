@@ -421,11 +421,13 @@ function GoalTile({ monthDays, goals }: { monthDays: CalendarDayData[]; goals: G
   const earned = monthDays.reduce((sum, day) => sum + day.earned, 0);
 
   if (active === null) {
+    // The audit called the dash a dead tile. The tile already links to
+    // statistics — let it say so instead of shrugging.
     return (
       <>
         <Label icon="target">{t('Goal')}</Label>
-        <span className="tile-value">—</span>
-        <span className="field-hint">{t('Set one in statistics')}</span>
+        <span className="mt-1 text-[0.86rem] font-semibold text-(--accent)">{t('Set one in statistics')} →</span>
+        <span className="field-hint">{t('The period fills this meter.')}</span>
       </>
     );
   }
@@ -569,52 +571,54 @@ function HoursTile({ monthDays }: { monthDays: CalendarDayData[] }) {
   );
 }
 
-/** Twelve weeks of days as a mini heat grid; the year page has the full one. */
+/** Twelve weeks as a spark of weekly sums — the year page has the full map. */
 function HeatTile({ window }: { window: CalendarDayData[] }) {
   const { t } = useI18n();
   const today = todayKey();
   const byDate = new Map(window.map((day) => [day.date, day.earned]));
 
-  // Align the grid so today sits in the last column, Monday on top.
   const weekday = (new Date(`${today}T00:00:00`).getDay() + 6) % 7;
   const start = shiftDays(today, -(11 * 7 + weekday));
-  const peak = Math.max(1, ...window.map((day) => day.earned));
 
-  const weeks = Array.from({ length: 12 }, (_, weekIndex) =>
-    Array.from({ length: 7 }, (_, dayIndex) => {
+  const weeks = Array.from({ length: 12 }, (_, weekIndex) => {
+    let sum = 0;
+
+    for (let dayIndex = 0; dayIndex < 7; dayIndex += 1) {
       const key = shiftDays(start, weekIndex * 7 + dayIndex);
-      const value = key > today ? null : (byDate.get(key) ?? 0);
 
-      return { key, value };
-    }),
-  );
+      if (key <= today) sum += byDate.get(key) ?? 0;
+    }
+
+    return sum;
+  });
+
+  const peak = Math.max(1, ...weeks);
+  const W = 120;
+  const H = 36;
+  const step = W / 11;
+  const points = weeks
+    .map((sum, index) => `${index * step},${H - 3 - (sum / peak) * (H - 8)}`)
+    .join(' ');
 
   return (
     <>
       <Label icon="calendar">{t('Twelve weeks')}</Label>
-      <span className="mt-auto flex gap-[3px]">
-        {weeks.map((week, weekIndex) => (
-          <span key={weekIndex} className="fade-in flex flex-1 flex-col gap-[3px]" style={stagger(weekIndex % 12)}>
-            {week.map((cell) =>
-              cell.value === null ? (
-                <span key={cell.key} className="aspect-square w-full" />
-              ) : (
-                <span
-                  key={cell.key}
-                  className="aspect-square w-full rounded-[2px]"
-                  style={{
-                    background:
-                      cell.value === 0
-                        ? 'var(--surface-2)'
-                        : `color-mix(in srgb, var(--accent) ${25 + (cell.value / peak) * 75}%, var(--surface-2))`,
-                  }}
-                  title={cell.key}
-                />
-              ),
-            )}
-          </span>
-        ))}
-      </span>
+      <svg viewBox={`0 0 ${W} ${H}`} className="mt-auto w-full" aria-hidden>
+        <polyline
+          points={points}
+          fill="none"
+          stroke="var(--accent)"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <circle
+          cx={11 * step}
+          cy={H - 3 - (weeks[11] / peak) * (H - 8)}
+          r="3"
+          fill="var(--accent)"
+        />
+      </svg>
     </>
   );
 }

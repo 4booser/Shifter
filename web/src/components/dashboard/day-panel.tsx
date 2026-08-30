@@ -884,6 +884,7 @@ export function DayPanel() {
  * point of selecting several days.
  */
 function BulkPanel({ keys }: { keys: string[] }) {
+  const [showAllColours, setShowAllColours] = useState(false);
   const { t, n } = useI18n();
   const { format } = useMoney();
   const templates = useCalendar((state) => state.templates);
@@ -935,8 +936,10 @@ function BulkPanel({ keys }: { keys: string[] }) {
 
       <section className="mb-4">
         <h3 className="field-label">{t('Colour')}</h3>
+        {/* Eight up front; the whole two dozen — behind one tap. The audit
+            counted the full palette eating half the day column. */}
         <div className="flex flex-wrap gap-1.5">
-          {MARK_COLOURS.map((option) => (
+          {(showAllColours ? MARK_COLOURS : MARK_COLOURS.slice(0, 8)).map((option) => (
             <button
               key={option.value}
               type="button"
@@ -947,6 +950,16 @@ function BulkPanel({ keys }: { keys: string[] }) {
               onClick={() => void paintColour(keys, option.value)}
             />
           ))}
+          {!showAllColours && MARK_COLOURS.length > 8 && (
+            <button
+              type="button"
+              className="swatch grid place-items-center border border-border-strong bg-surface text-[0.62rem] font-bold text-muted"
+              title={t('More colours')}
+              onClick={() => setShowAllColours(true)}
+            >
+              +{MARK_COLOURS.length - 8}
+            </button>
+          )}
           <button
             type="button"
             className="swatch grid place-items-center border border-border-strong bg-surface text-muted"

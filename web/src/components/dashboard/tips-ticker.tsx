@@ -45,7 +45,7 @@ export function TipsTicker() {
   }, []);
 
   return (
-    <section className="reveal relative overflow-hidden rounded-(--radius) border border-border bg-surface py-2" aria-label={t('Tips')}>
+    <section className="reveal relative overflow-hidden rounded-(--radius) border border-border bg-surface py-2 [mask-image:linear-gradient(90deg,transparent,black_6%,black_94%,transparent)]" aria-label={t('Tips')}>
       <div className="landing-marquee flex w-max gap-6 whitespace-nowrap px-4">
         {[...tips, ...tips].map(([icon, text], index) => (
           <span key={index} className="flex items-center gap-2 text-[0.82rem] text-muted">

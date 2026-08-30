@@ -187,15 +187,35 @@ export function SwatchRow({
   value,
   onPick,
   clearable = false,
+  fold = 8,
 }: {
   colours: { label: string; value: string }[];
   value: string | null;
   onPick: (value: string) => void;
   clearable?: boolean;
+  /** Colours shown up front; the rest sit behind a +N. 0 folds nothing. */
+  fold?: number;
 }) {
+  const [unfolded, setUnfolded] = useState(false);
+  // The picked colour must never hide behind the fold — pull it forward.
+  const shown =
+    unfolded || fold === 0 || colours.length <= fold
+      ? colours
+      : (() => {
+          const head = colours.slice(0, fold);
+
+          if (value !== null && !head.some((option) => option.value === value)) {
+            const picked = colours.find((option) => option.value === value);
+
+            if (picked !== undefined) head[fold - 1] = picked;
+          }
+
+          return head;
+        })();
+
   return (
     <div className="flex flex-wrap gap-1.5">
-      {colours.map((option) => (
+      {shown.map((option) => (
         <button
           key={option.value}
           type="button"
@@ -206,6 +226,16 @@ export function SwatchRow({
           onClick={() => onPick(option.value)}
         />
       ))}
+      {shown.length < colours.length && (
+        <button
+          type="button"
+          className="swatch grid place-items-center border border-border-strong bg-surface text-[0.6rem] font-bold text-muted"
+          title="More"
+          onClick={() => setUnfolded(true)}
+        >
+          +{colours.length - shown.length}
+        </button>
+      )}
       {clearable && (
         <button
           type="button"

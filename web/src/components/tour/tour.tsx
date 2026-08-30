@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useDialogKeys } from '@/lib/a11y';
+import { useCalendar } from '@/lib/store/calendar';
 import { useI18n } from '@/lib/i18n';
 
 /**
@@ -78,7 +79,13 @@ export function FeatureTour() {
 
     if (localStorage.getItem(SEEN_KEY) === null) {
       handle = window.setTimeout(() => {
-        if (document.querySelector('[data-tour="tiles"]') !== null) begin();
+        // Auto-run is for newcomers. A seasoned account on a fresh browser
+        // (new laptop, cleared storage) knows the page better than the tour
+        // does — the audit caught the spotlight sitting on top of a hundred
+        // shifts. The header's own button still starts it on demand.
+        const seasoned = useCalendar.getState().summary.days_worked >= 3;
+
+        if (!seasoned && document.querySelector('[data-tour="tiles"]') !== null) begin();
       }, 2200);
     }
 

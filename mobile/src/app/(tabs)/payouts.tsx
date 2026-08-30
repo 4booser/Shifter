@@ -56,6 +56,8 @@ interface PayPeriodRow {
   stream: 'all' | 'wage' | 'commission';
   /** How much of what arrived was an advance. */
   paid_advance: number;
+  /** 'paid' | 'written-off' when somebody closed the question by hand. */
+  settled: string | null;
 }
 
 interface Shortfall {
@@ -136,6 +138,23 @@ export default function PayoutsScreen() {
       to: monthBounds(addMonths(now, 1)).to,
     };
   }, []);
+
+  const settlePeriod = async (row: PayPeriodRow, kind: 'paid' | 'written-off' | null) => {
+    try {
+      await api('/shifter/v1/payouts/settle', {
+        body: {
+          location_id: row.location_id,
+          period_from: row.period_from,
+          stream: row.stream,
+          kind,
+          note: null,
+        },
+      });
+      await load();
+    } catch {
+      Alert.alert(t('Не закрылось — попробуйте ещё раз.'));
+    }
+  };
 
   const load = useCallback(async () => {
     try {
@@ -241,6 +260,7 @@ export default function PayoutsScreen() {
                 bank={bankSees(row, statement, payers)}
                 onMark={() => setPrefill(row)}
                 onBank={() => router.push('/(tabs)/bank')}
+                onSettle={(kind) => void settlePeriod(row, kind)}
               />
             ))}
           </Section>
@@ -254,6 +274,7 @@ export default function PayoutsScreen() {
                 row={row}
                 palette={palette}
                 onMark={() => setPrefill(row)}
+                onSettle={(kind) => void settlePeriod(row, kind)}
               />
             ))}
           </Section>
@@ -397,12 +418,15 @@ function PeriodCard({
   bank,
   onMark,
   onBank,
+  onSettle,
 }: {
   row: PayPeriodRow;
   palette: Palette;
   bank?: { total: number; when: string } | null;
   onMark: () => void;
   onBank?: () => void;
+  /** Closing the question by hand: paid in full, written off, or reopened. */
+  onSettle?: (kind: 'paid' | 'written-off' | null) => void;
 }) {
   const styles = makeStyles(palette);
   const router = useRouter();
@@ -467,6 +491,30 @@ function PeriodCard({
         <Press style={styles.markButton} onPress={onMark}>
           <Text style={styles.markText}>{t('Отметить')}</Text>
         </Press>
+        {onSettle !== undefined && (
+          <Press
+            hitSlop={8}
+            style={styles.moreButton}
+            onPress={() =>
+              row.settled !== null
+                ? Alert.alert(t('Период закрыт вручную'), t('Вернуть его в ожидание?'), [
+                    { text: t('Оставить'), style: 'cancel' },
+                    { text: t('Вернуть'), onPress: () => onSettle(null) },
+                  ])
+                : Alert.alert(t('Закрыть период'), t('Как считать этот вопрос решённым?'), [
+                    { text: t('Выплачено полностью'), onPress: () => onSettle('paid') },
+                    {
+                      text: t('Смириться и списать'),
+                      style: 'destructive',
+                      onPress: () => onSettle('written-off'),
+                    },
+                    { text: t('Оставить'), style: 'cancel' },
+                  ])
+            }
+          >
+            <Ionicons name="ellipsis-horizontal" size={16} color={palette.textSecondary} />
+          </Press>
+        )}
       </View>
     </View>
   );
@@ -741,6 +789,16 @@ const makeStyles = (palette: Palette) =>
       borderRadius: 999,
       paddingHorizontal: 14,
       paddingVertical: 8,
+    },
+    moreButton: {
+      width: 34,
+      height: 34,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: palette.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginLeft: 6,
     },
     markText: { color: palette.accent, fontSize: 13, fontWeight: '700' },
 

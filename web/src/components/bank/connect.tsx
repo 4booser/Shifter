@@ -77,6 +77,19 @@ export function BankConnect() {
         <Alert kind="error">{t('Could not reach the bank. Try again in a minute.')}</Alert>
       )}
 
+      {/* Looking costs nothing: the demo draws a statement in this browser
+          and involves no bank, which is the whole pitch of it. */}
+      <button
+        type="button"
+        className="btn btn-quiet mt-3"
+        onClick={() => useMono.getState().enterDemo()}
+      >
+        {t('Look around on an example')}
+      </button>
+      <p className="field-hint mt-1">
+        {t('Ninety made-up days, drawn right here. No bank involved, nothing saved.')}
+      </p>
+
       {/* The honest paragraph. Browser storage is not a keychain, and the
           person deciding whether to paste a bank token here is entitled to
           that sentence before they do it, not after. */}

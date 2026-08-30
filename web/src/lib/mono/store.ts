@@ -9,6 +9,7 @@ import {
 } from '@/lib/mono/mono';
 import { MonoBusy, MonoRefused, clientInfo, statement, waitFor } from '@/lib/mono/mono-api';
 import { Budget, CategoryRule } from '@/lib/mono/mono-rules';
+import { demoClient, demoStatement } from '@/lib/mono/demo';
 
 /**
  * The bank, in the browser.
@@ -70,6 +71,8 @@ const CACHE_ITEMS = 4_000;
 interface MonoState {
   /** Undefined while localStorage has not been read yet. */
   token: string | null | undefined;
+  /** A generated statement for looking around — no bank behind it. */
+  demo: boolean;
   client: MonoClientInfo | null;
   accountId: string | null;
   items: MonoStatementItem[];
@@ -84,6 +87,8 @@ interface MonoState {
 
   hydrate: () => void;
   connect: (token: string) => Promise<'ok' | 'refused' | 'failed'>;
+  /** Ninety believable days, drawn in this browser; nothing stored. */
+  enterDemo: () => void;
   disconnect: () => void;
   chooseAccount: (accountId: string) => void;
   /** Fetches what is missing, one window at a time. */
@@ -94,6 +99,7 @@ interface MonoState {
 
 export const useMono = create<MonoState>((set, get) => ({
   token: undefined,
+  demo: false,
   client: null,
   accountId: null,
   items: [],
@@ -153,6 +159,21 @@ export const useMono = create<MonoState>((set, get) => ({
     }
   },
 
+  enterDemo: () => {
+    const client = demoClient();
+    const items = demoStatement(Math.floor(Date.now() / 1000));
+
+    // The card's balance is whatever the statement ran up to.
+    client.accounts[0].balance = items[0]?.balance ?? 0;
+
+    // Memory only: a reload lands back on the connect screen, which is the
+    // honest lifetime for numbers that were never anybody's.
+    set({
+      token: 'demo', demo: true, client, accountId: client.accounts[0].id,
+      items, rules: [], budgets: [], error: null, progress: null,
+    });
+  },
+
   disconnect: () => {
     // The token and everything fetched with it, gone together. A statement
     // left behind after the token is removed is somebody's spending sitting
@@ -164,7 +185,7 @@ export const useMono = create<MonoState>((set, get) => ({
     });
 
     set({
-      token: null, client: null, accountId: null, items: [],
+      token: null, demo: false, client: null, accountId: null, items: [],
       rules: [], budgets: [], error: null, progress: null,
     });
   },
@@ -179,6 +200,7 @@ export const useMono = create<MonoState>((set, get) => ({
   sync: async (daysBack) => {
     const { token, accountId } = get();
 
+    if (get().demo) return;
     if (token === null || token === undefined || accountId === null) return;
     if (get().busy) return;
 

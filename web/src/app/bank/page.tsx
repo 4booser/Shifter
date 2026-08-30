@@ -101,6 +101,14 @@ export default function BankPage() {
 
         {mono.token !== null && mono.token !== undefined && (
           <BankLock>
+            {mono.demo && (
+              <Alert kind="info">
+                {t('This is an example: ninety generated days, no bank behind them. Paste your own token to see your month like this.')}{' '}
+                <button type="button" className="font-semibold underline" onClick={mono.disconnect}>
+                  {t('Leave the example')}
+                </button>
+              </Alert>
+            )}
             {/* ==== Row: the curve, with the accounts desk beside it ==== */}
             <div className="grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
             <BankHero
@@ -150,7 +158,7 @@ export default function BankPage() {
                 <button
                   type="button"
                   className="btn btn-sm"
-                  disabled={mono.busy}
+                  disabled={mono.busy || mono.demo}
                   onClick={() => void mono.sync(35)}
                 >
                   {t('Refresh this month')}

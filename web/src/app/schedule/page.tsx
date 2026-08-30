@@ -485,20 +485,6 @@ function Schedule() {
       {/* ==== What the rota costs, while it is still a draft ==== */}
       {rota !== null && <WeekCostPanel rota={rota} />}
 
-      {/* ==== The pool: one number instead of five ==== */}
-      {selected !== null && <PoolPanel teamId={selected} />}
-
-      {/* ==== The handover: read before the shift, written after it ==== */}
-      {selected !== null && <HandoverPanel teamId={selected} />}
-
-      {/* ==== Time off: a stretch of days that needs an answer ==== */}
-      {selected !== null && <LeavePanel teamId={selected} onChanged={refresh} />}
-
-      {/* ==== Swaps: pending trades and the button that starts one ==== */}
-      {selected !== null && rota !== null && rota.members.length > 1 && (
-        <SwapsPanel teamId={selected} rota={rota} onChanged={refresh} />
-      )}
-
       {/* ==== Cover requests ==== */}
       {coverRequests.length > 0 && (
         <section className="card reveal border-warn/40 p-4">
@@ -639,6 +625,24 @@ function Schedule() {
           </tbody>
         </table>
       </section>
+
+      {/* ==== Crew ledgers: pool, handover, time off, swaps — below
+           the grid, two by two, so an empty week never buries the rota ==== */}
+      <div className="grid items-start gap-3 lg:grid-cols-2">
+      {/* ==== The pool: one number instead of five ==== */}
+      {selected !== null && <PoolPanel teamId={selected} />}
+
+      {/* ==== The handover: read before the shift, written after it ==== */}
+      {selected !== null && <HandoverPanel teamId={selected} />}
+
+      {/* ==== Time off: a stretch of days that needs an answer ==== */}
+      {selected !== null && <LeavePanel teamId={selected} onChanged={refresh} />}
+
+      {/* ==== Swaps: pending trades and the button that starts one ==== */}
+      {selected !== null && rota !== null && rota.members.length > 1 && (
+        <SwapsPanel teamId={selected} rota={rota} onChanged={refresh} />
+      )}
+      </div>
 
       {/* ==== One day, opened ==== */}
       {focusDay !== null && focusEntries.length > 0 && (

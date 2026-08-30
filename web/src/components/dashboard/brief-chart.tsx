@@ -7,6 +7,7 @@ import { todayKey } from '@/lib/calendar/calendar-date';
 import { useCalendar } from '@/lib/store/calendar';
 import { useMoney } from '@/lib/settings/money';
 import { useI18n } from '@/lib/i18n';
+import { ChartCard } from '@/components/charts/chart-card';
 import { ChartTip, CrossHair, useChartHover } from '@/components/charts/hover';
 import { Money } from '@/components/ui/bits';
 
@@ -98,8 +99,10 @@ export function BriefChart() {
 
   const all = [...line.fact, ...line.projected];
   const peak = Math.max(1, facts.goal ?? 0, ...all.map((point) => point.value));
+  // 16:5 — the ChartCard strip aspect. 720×130 used to squash the month
+  // into a flat ribbon; the plot now owns real height.
   const W = 720;
-  const H = 130;
+  const H = 225;
   const x = (index: number) => (index / Math.max(1, line.daysInMonth - 1)) * W;
   const y = (value: number) => H - (value / peak) * (H - 16) - 6;
 
@@ -122,16 +125,29 @@ export function BriefChart() {
     : -1;
 
   return (
-    <section className="card reveal p-4">
-      <div className="mb-1 flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="text-[0.98rem] font-bold">{t('The month, as the brief sees it')}</h2>
+    <ChartCard
+      title={t('The month, as the brief sees it')}
+      aspect="strip"
+      right={
         <span className="field-hint tabular">
           {format(facts.monthEarned)}
           {facts.projectedMonth !== null && (
             <> → ≈{format(facts.projectedMonth)} {t('by month’s end')}</>
           )}
         </span>
-      </div>
+      }
+      footer={
+        <>
+          {t('Solid is recorded; dashed is the brief’s own pace figure, drawn as the guess it is.')}
+          {bestIndex >= 0 && facts.bestDayAmount !== null && (
+            <> {t('The green dot is the best day')} — <Money value={facts.bestDayAmount} />.</>
+          )}
+          {paydayIndex >= 0 && paydayIndex < line.daysInMonth && (
+            <> {t('The amber tick is payday.')}</>
+          )}
+        </>
+      }
+    >
 
       <div
         ref={ref}
@@ -208,16 +224,6 @@ export function BriefChart() {
           />
         </svg>
       </div>
-
-      <p className="field-hint mt-1">
-        {t('Solid is recorded; dashed is the brief’s own pace figure, drawn as the guess it is.')}
-        {bestIndex >= 0 && facts.bestDayAmount !== null && (
-          <> {t('The green dot is the best day')} — <Money value={facts.bestDayAmount} />.</>
-        )}
-        {paydayIndex >= 0 && paydayIndex < line.daysInMonth && (
-          <> {t('The amber tick is payday.')}</>
-        )}
-      </p>
-    </section>
+    </ChartCard>
   );
 }

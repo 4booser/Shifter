@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { Press } from '@/components/motion';
 import { Palette } from '@/constants/theme';
+import { SkiaClimb } from '@/components/skia-climb';
 import { MonoStatementItem } from '@/lib/mono';
 import { CategoryRule } from '@/lib/mono-rules';
 import {
@@ -195,46 +196,30 @@ export function PaceChart({
 
   if (days < 3 || (fact.at(-1)?.total ?? 0) === 0) return null;
 
-  const peak = Math.max(1, fact.at(-1)?.total ?? 0, before.at(-1)?.total ?? 0);
-  const chosen = picked !== null
-    ? { day: picked + 1, now: fact[picked]?.total ?? null, before: before[picked]?.total ?? null }
-    : null;
+  const chosen =
+    picked !== null
+      ? {
+          day: picked,
+          now: picked <= fact.length ? (fact[picked - 1]?.total ?? null) : null,
+          before: before[picked - 1]?.total ?? null,
+        }
+      : null;
 
   return (
     <View style={styles.card}>
       <Text style={styles.cardTitle}>{t('Темп')}</Text>
       <Text style={styles.hint}>
-        {t('Светлые столбики — прошлый месяц теми же днями. Тап — цифры дня.')}
+        {t('Серая линия — прошлый месяц теми же днями. Веди пальцем — цифры дня.')}
       </Text>
 
-      <View style={styles.paceRow}>
-        {Array.from({ length: days }, (_, index) => (
-          <Press
-            key={index}
-            style={[styles.paceCell, picked === index && styles.columnCellOn]}
-            onPress={() => setPicked(picked === index ? null : index)}
-          >
-            <View style={styles.paceBars}>
-              {index < before.length && (
-                <View
-                  style={[
-                    styles.paceGhost,
-                    { height: `${Math.max(2, (before[index].total / peak) * 100)}%` },
-                  ]}
-                />
-              )}
-              {index < fact.length && (
-                <View
-                  style={[
-                    styles.paceFact,
-                    { height: `${Math.max(2, (fact[index].total / peak) * 100)}%`, backgroundColor: palette.accent },
-                  ]}
-                />
-              )}
-            </View>
-          </Press>
-        ))}
-      </View>
+      <SkiaClimb
+        fact={now.map((point) => point.total)}
+        ghost={before.map((point) => point.total)}
+        cut={fact.length}
+        palette={palette}
+        height={180}
+        onPick={setPicked}
+      />
 
       {chosen !== null && (
         <Text style={styles.answer}>

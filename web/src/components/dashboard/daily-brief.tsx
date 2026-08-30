@@ -130,6 +130,18 @@ export function DailyBrief() {
                   </li>
                 ))}
               </ul>
+
+              {/* The observations are a sample; the full spread lives one
+                  click away instead of being pasted here in twelve lines. */}
+              {(block.kind === 'observations' || block.kind === 'month') && (
+                <Link
+                  href="/stats"
+                  className="mt-1.5 inline-flex items-center gap-1 text-[0.78rem] font-semibold text-(--accent) hover:underline"
+                >
+                  {t(block.kind === 'month' ? 'The whole month, charted' : 'All the numbers behind this')}
+                  <span aria-hidden>›</span>
+                </Link>
+              )}
             </section>
           ))}
         </div>

@@ -166,29 +166,14 @@ public static class BriefBlocks
         BriefFacts facts,
         Say say)
     {
-        List<BriefLineDto> lines =
-        [
-            new BriefLineDto(
-                say.Of($"{month.days_worked} смен, {Hours(month.hours, say)}", $"{month.days_worked} змін, {Hours(month.hours, say)}"),
-                Money(month.total_earned),
-                "good"),
-        ];
+        // The totals, the projection and the goal already sit on the tiles a
+        // few pixels up (and in the brief's own prose); repeating them here
+        // was the page saying one thing four times. What this block owns is
+        // the comparison — the line the tiles cannot say.
+        List<BriefLineDto> lines = [];
 
         if (month.hours > 0)
             lines.Add(new BriefLineDto(say.Of("Ваш час стоит", "Ваша година коштує"), Money(month.total_earned / (decimal)month.hours)));
-
-        if (facts.Goal is decimal goal && goal > 0)
-        {
-            var left = Math.Max(0m, goal - month.total_earned);
-
-            lines.Add(left <= 0
-                ? new BriefLineDto(say.Of($"Цель {Money(goal)} взята — дальше всё сверху.", $"Ціль {Money(goal)} взята — далі все зверху."), null, "good")
-                : new BriefLineDto(say.Of($"До цели {Money(goal)} осталось", $"До цілі {Money(goal)} лишилося"), Money(left)));
-        }
-        else if (facts.ProjectedMonth > month.total_earned)
-        {
-            lines.Add(new BriefLineDto(say.Of("Такими темпами к концу месяца", "Такими темпами до кінця місяця"), Money(facts.ProjectedMonth)));
-        }
 
         // Only the same number of days back, or a full month always beats a
         // month that is nine days old.
@@ -238,9 +223,6 @@ public static class BriefBlocks
 
         var best = worked.OrderByDescending(day => day.earned).FirstOrDefault();
 
-        if (best is not null && best.earned > 0)
-            lines.Add(new BriefLineDto(say.Of($"Лучший день — {Said(best.date, say)}", $"Найкращий день — {Said(best.date, say)}"), Money(best.earned), "good"));
-
         // Which weekday tips, averaged over the days worked rather than summed.
         var tipDays = worked
             .Where(day => day.tips is not null)
@@ -253,16 +235,6 @@ public static class BriefBlocks
             lines.Add(new BriefLineDto(
                 say.Of($"Лучше всего на чай платят в {(say.IsUk ? WeekdaysUk : WeekdaysRu)[(int)tipDays.Key]}", $"Найкраще на чай платять у {(say.IsUk ? WeekdaysUk : WeekdaysRu)[(int)tipDays.Key]}"),
                 Money(tipDays.Average)));
-
-        if (month.revenue_earned > 0)
-            lines.Add(new BriefLineDto(
-                say.Of($"Процент принёс {Money(month.revenue_earned)} с выручки {Money(month.revenue_counted)}", $"Відсоток приніс {Money(month.revenue_earned)} з виторгу {Money(month.revenue_counted)}"),
-                null,
-                "good"));
-
-        if (month.premium_earned > 0)
-            lines.Add(new BriefLineDto(
-                say.Of("Надбавки за ночные и праздники", "Надбавки за нічні та свята"), Money(month.premium_earned), "good"));
 
         if (month.overtime_hours > 0)
             lines.Add(new BriefLineDto(
@@ -299,12 +271,6 @@ public static class BriefBlocks
                 null,
                 "warn"));
 
-            lines.Add(new BriefLineDto(
-                say.Of(
-                    $"Короче всего было {Hours(shortest, say)} — с ухода до выхода",
-                    $"Найкоротше було {Hours(shortest, say)} — від виходу до виходу"),
-                null,
-                shortest <= restHours / 2 ? "warn" : null));
         }
 
         // The run happening right now, said as a number and its history —
@@ -347,34 +313,9 @@ public static class BriefBlocks
                 "good"));
         }
 
-        // The average shift: the figure people compare a new job against.
-        var placed = worked.SelectMany(day => day.shifts.Where(shift => shift.worked)).ToArray();
-
-        if (placed.Length > 1)
-            lines.Add(new BriefLineDto(
-                say.Of($"Средняя смена — {Hours(placed.Average(shift => shift.hours), say)}", $"Середня зміна — {Hours(placed.Average(shift => shift.hours), say)}"),
-                Money(placed.Average(shift => shift.earned))));
-
-        var longest = placed.OrderByDescending(shift => shift.hours).FirstOrDefault();
-
-        if (longest is not null && longest.hours >= 10)
-            lines.Add(new BriefLineDto(
-                say.Of($"Самая длинная смена — {Hours(longest.hours, say)}", $"Найдовша зміна — {Hours(longest.hours, say)}"), null, longest.hours >= 12 ? "warn" : null));
-
-        var favourite = placed
-            .GroupBy(shift => shift.name)
-            .OrderByDescending(group => group.Count())
-            .FirstOrDefault();
-
-        if (favourite is not null && favourite.Count() > 1 && placed.Select(s => s.name).Distinct().Count() > 1)
-            lines.Add(new BriefLineDto(say.Of($"Чаще всего выходили на «{favourite.Key}» — {Times(favourite.Count(), say)}", $"Найчастіше виходили на «{favourite.Key}» — {Times(favourite.Count(), say)}")));
-
-        if (month.night_hours > 0 && month.hours > 0)
-            lines.Add(new BriefLineDto(
-                say.Of($"Ночных часов {Hours(month.night_hours, say)} — {Math.Round(month.night_hours / month.hours * 100)}% всех", $"Нічних годин {Hours(month.night_hours, say)} — {Math.Round(month.night_hours / month.hours * 100)}% усіх")));
-
         // Weekend against weekday, per shift rather than in total: two Saturdays
         // and twelve Tuesdays would otherwise say the wrong thing.
+        var placed = worked.SelectMany(day => day.shifts.Where(shift => shift.worked)).ToArray();
         var weekend = placed.Where(shift => IsWeekend(worked, shift)).ToArray();
         var weekday = placed.Except(weekend).ToArray();
 
@@ -391,9 +332,6 @@ public static class BriefBlocks
                     Money(weekendAverage)));
         }
 
-        if (month.sales_earned > 0)
-            lines.Add(new BriefLineDto(say.Of("Продажи принесли", "Продажі принесли"), Money(month.sales_earned), "good"));
-
         // Shifts placed in the past and never marked: the totals are waiting
         // on them, and nothing else will point it out.
         var unmarked = month.days
@@ -404,21 +342,6 @@ public static class BriefBlocks
         if (unmarked > 0)
             lines.Add(new BriefLineDto(
                 say.Of($"Прошедших смен без отметки «отработана»: {unmarked}", $"Минулих змін без позначки «відпрацьована»: {unmarked}"), null, "warn"));
-
-        if (month.tip_out > 0)
-            lines.Add(new BriefLineDto(say.Of("Отдано персоналу из чаевых", "Віддано персоналу з чайових"), Money(month.tip_out)));
-
-        if (month.tax > 0)
-            lines.Add(new BriefLineDto(say.Of($"Налог {Money(month.tax)} — на руки", $"Податок {Money(month.tax)} — на руки"), Money(month.net_earned)));
-
-        if (month.by_location.Length > 1)
-        {
-            var top = month.by_location.OrderByDescending(place => place.earned).First();
-
-            lines.Add(new BriefLineDto(
-                $"Больше всего приносит {(top.location_id == 0 ? "работа без места" : top.name)}",
-                Money(top.earned)));
-        }
 
         return new BriefBlockDto("observations", "🔍", say.Of("Что видно по цифрам", "Що видно з цифр"), [.. lines]);
     }

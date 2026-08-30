@@ -82,9 +82,31 @@ public record ReconciliationDto(
 /// </summary>
 public static class NextPayout
 {
-    public static PayPeriodDto? From(ReconciliationDto schedule, DateOnly today) =>
-        schedule.periods
+    /// <summary>
+    /// Everything landing on the nearest payday, added up. Two places paying
+    /// the same Friday used to make the brief name one figure and the payouts
+    /// page another — both correct, both on screen, visibly disagreeing.
+    /// </summary>
+    public static NextPayoutDto? From(ReconciliationDto schedule, DateOnly today)
+    {
+        var queue = schedule.periods
             .Where(row => row.settled is null && row.due_on >= today && row.expected > 0m)
             .OrderBy(row => row.due_on)
-            .FirstOrDefault();
+            .ToArray();
+
+        if (queue.Length == 0) return null;
+
+        var day = queue[0].due_on;
+        var landing = queue.Where(row => row.due_on == day).ToArray();
+        var names = landing.Select(row => row.location_name).Distinct().ToArray();
+
+        return new NextPayoutDto(
+            day,
+            landing.Sum(row => row.expected),
+            landing.Length,
+            names.Length == 1 ? names[0] : string.Join(" + ", names));
+    }
 }
+
+/// <summary>The nearest payday as one answer: the day, and all of it.</summary>
+public sealed record NextPayoutDto(DateOnly due_on, decimal expected, int payments, string location_name);

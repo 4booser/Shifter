@@ -40,6 +40,13 @@ public sealed class RotaWhoOverHttpTests(Api api)
             })).EnsureSuccessStatusCode();
         }
 
+        // The manager declares themself a trainee — self-service, wave 65 —
+        // and the who-panel should say so on their free chip.
+        (await manager.PatchAsJsonAsync($"/shifter/v1/teams/{teamId}/me", new
+        {
+            trainee = true,
+        })).EnsureSuccessStatusCode();
+
         // Member ids come off the board, which is where the manager reads them.
         var board = await Read(await manager.GetAsync(
             $"/shifter/v1/teams/{teamId}/planner?from=2026-09-07&to=2026-09-13"));
@@ -75,6 +82,8 @@ public sealed class RotaWhoOverHttpTests(Api api)
         // Олег is away with his own words.
         Assert.DoesNotContain("Ира", free);
         Assert.DoesNotContain("Олег", free);
+        Assert.Contains(who.GetProperty("free").EnumerateArray(),
+            row => row.GetProperty("trainee").GetBoolean());
         Assert.Contains(standing, row => row.GetProperty("name").GetString() == "Ира"
             && row.GetProperty("detail").GetString()!.Contains("Бар"));
         Assert.Contains(away, row => row.GetProperty("name").GetString() == "Олег"

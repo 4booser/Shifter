@@ -579,6 +579,7 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
                   <span key={row.user_id} className="chip !py-1">
                     <i className="h-2 w-2 rounded-full" style={{ background: row.colour }} />
                     {row.name}
+                    {row.trainee && <span title={t('Training')}>🎓</span>}
                   </span>
                 ))}
               </div>

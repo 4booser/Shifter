@@ -414,6 +414,8 @@ export interface WhoRow {
   name: string;
   colour: string;
   detail: string | null;
+  /** Still learning the room — the fact the asking manager needs most. */
+  trainee: boolean;
 }
 
 export interface WhoRead {

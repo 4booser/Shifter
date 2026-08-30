@@ -221,7 +221,7 @@ export default function BoardScreen() {
   const blocked = new Set((board?.blocked ?? []).map((row) => `${row.user_id}|${row.date}`));
   const coverage = new Map((board?.coverage ?? []).map((day) => [day.date, day]));
 
-  interface WhoRow { user_id: number; name: string; colour: string; detail: string | null }
+  interface WhoRow { user_id: number; name: string; colour: string; detail: string | null; trainee: boolean }
   const [who, setWho] = useState<{ date: string; free: WhoRow[]; busy: WhoRow[]; away: WhoRow[] } | null>(null);
 
   const askWho = (date: string) => {
@@ -345,6 +345,7 @@ export default function BoardScreen() {
                                 <View style={[styles.dot, { backgroundColor: row.colour }]} />
                                 <Text style={styles.whoName} numberOfLines={1}>
                                   {row.name}
+                                  {row.trainee ? ' 🎓' : ''}
                                   {row.detail !== null ? ` · ${row.detail}` : ''}
                                 </Text>
                               </View>

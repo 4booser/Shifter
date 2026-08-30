@@ -1091,7 +1091,7 @@ public sealed class PlannerService
         await _db.SaveChangesAsync(ct);
     }
 
-    public sealed record WhoRow(int UserId, string Name, string Colour, string? Detail);
+    public sealed record WhoRow(int UserId, string Name, string Colour, string? Detail, bool Trainee = false);
 
     public sealed record WhoRead(WhoRow[] Free, WhoRow[] Busy, WhoRow[] Away);
 
@@ -1118,7 +1118,7 @@ public sealed class PlannerService
         var awayIds = away.Select(row => row.UserId).ToHashSet();
 
         WhoRow Row(TeamMember member, string? detail) =>
-            new(member.UserId, member.DisplayName, member.Colour, detail);
+            new(member.UserId, member.DisplayName, member.Colour, detail, member.Trainee);
 
         return new WhoRead(
             [.. members

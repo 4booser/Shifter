@@ -42,6 +42,7 @@ public class PlannerController : ControllerBase
                 name = row.Name,
                 colour = row.Colour,
                 detail = row.Detail,
+                trainee = row.Trainee,
             });
 
         return Ok(new { free = Rows(read.Free), busy = Rows(read.Busy), away = Rows(read.Away) });

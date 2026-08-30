@@ -132,18 +132,24 @@ export default function MyListingsScreen() {
     >
       <View style={styles.head}>
         <Text style={styles.title}>{t('Мои объявления')}</Text>
-        <Press hitSlop={12} onPress={() => router.back()}>
-          <Ionicons name="close" size={26} color={palette.textSecondary} />
-        </Press>
+        <View style={styles.headActions}>
+          <Press hitSlop={10} onPress={() => router.push('/create-gig')}>
+            <Ionicons name="add-circle-outline" size={26} color={palette.accent} />
+          </Press>
+          <Press hitSlop={12} onPress={() => router.back()}>
+            <Ionicons name="close" size={26} color={palette.textSecondary} />
+          </Press>
+        </View>
       </View>
 
       {rows === null && error === null && <ActivityIndicator color={palette.accent} />}
       {error !== null && <Text style={styles.error}>{error}</Text>}
 
       {rows !== null && rows.length === 0 && (
-        <Text style={styles.lead}>
-          {t('Объявлений пока нет. Создать можно на сайте — карманная форма на подходе.')}
-        </Text>
+        <Press style={styles.emptyCreate} onPress={() => router.push('/create-gig')}>
+          <Ionicons name="add" size={20} color="#fff" />
+          <Text style={styles.emptyCreateText}>{t('Создать объявление')}</Text>
+        </Press>
       )}
 
       {(rows ?? []).map(({ gig, replies }) => {
@@ -247,6 +253,9 @@ const makeStyles = (palette: Palette) =>
     screen: { flex: 1, backgroundColor: palette.background },
     content: { padding: 16, paddingBottom: 48, gap: 10 },
     head: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
+    headActions: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+    emptyCreate: { flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: palette.accent, borderRadius: 14, paddingVertical: 13 },
+    emptyCreateText: { color: '#fff', fontWeight: '800', fontSize: 15 },
     title: { color: palette.text, fontSize: 24, fontWeight: '800' },
     lead: { color: palette.textSecondary, fontSize: 14, lineHeight: 20 },
     error: { color: palette.danger, fontSize: 14 },

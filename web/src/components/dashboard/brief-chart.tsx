@@ -214,7 +214,7 @@ export function BriefChart() {
         {bestIndex >= 0 && facts.bestDayAmount !== null && (
           <> {t('The green dot is the best day')} — <Money value={facts.bestDayAmount} />.</>
         )}
-        {facts.daysToPayday !== null && facts.daysToPayday >= 0 && (
+        {paydayIndex >= 0 && paydayIndex < line.daysInMonth && (
           <> {t('The amber tick is payday.')}</>
         )}
       </p>

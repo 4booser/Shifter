@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Notifications from 'expo-notifications';
 import { create } from 'zustand';
 
 /** A running shift: which template, on which day, since when. */
@@ -28,6 +29,11 @@ export interface LiveShift {
    * a missing field must not read as a break of unknown length.
    */
   breaks?: { from: string; to: string | null }[];
+  /**
+   * The forgotten-shift alarm scheduled at start, so ending the shift can
+   * cancel it. Optional: shifts started by an older build have none.
+   */
+  alarmId?: string | null;
 }
 
 /** Seconds spent on break, counting an open one up to `now`. */
@@ -103,10 +109,36 @@ export const useLive = create<LiveState>((set, get) => ({
   },
 
   start: (shift) => {
-    const fresh = { ...shift, breaks: shift.breaks ?? [] };
+    const fresh: LiveShift = { ...shift, breaks: shift.breaks ?? [], alarmId: null };
 
     set({ live: fresh });
     quietly(AsyncStorage.setItem(KEY, JSON.stringify(fresh)));
+
+    // The wave-60 banner only helps whoever opens the app — and the whole
+    // failure mode of a forgotten timer is that nobody did. Knock instead,
+    // two hours after the plan ran out, straight into the live screen.
+    quietly(
+      Notifications.scheduleNotificationAsync({
+        content: {
+          title: 'Смена всё ещё идёт',
+          body: `План кончился в ${fresh.plannedEnd.slice(0, 5)} — закрыть по плану?`,
+          data: { url: '/live' },
+        },
+        trigger: {
+          type: Notifications.SchedulableTriggerInputTypes.DATE,
+          date: new Date(plannedEndInstant(fresh).getTime() + 2 * 3600_000),
+        },
+      }).then((alarmId) => {
+        const current = get().live;
+
+        if (current === null || current.startedAt !== fresh.startedAt) return;
+
+        const armed = { ...current, alarmId };
+
+        set({ live: armed });
+        quietly(AsyncStorage.setItem(KEY, JSON.stringify(armed)));
+      }),
+    );
   },
 
   toggleBreak: () => {
@@ -131,6 +163,10 @@ export const useLive = create<LiveState>((set, get) => ({
   },
 
   clear: () => {
+    const alarmId = get().live?.alarmId;
+
+    if (alarmId != null) quietly(Notifications.cancelScheduledNotificationAsync(alarmId));
+
     set({ live: null });
     quietly(AsyncStorage.removeItem(KEY));
   },

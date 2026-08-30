@@ -13,6 +13,7 @@ export default defineConfig({
       // The language is read out of the keychain at module load; in node that
       // would pull React Native's Flow source into a parser that cannot read it.
       'expo-secure-store': path.resolve(import.meta.dirname, 'tests/stubs/secure-store.ts'),
+      'expo-notifications': path.resolve(import.meta.dirname, 'tests/stubs/notifications.ts'),
     },
   },
   test: { include: ['tests/**/*.spec.ts'], environment: 'node', globals: true },

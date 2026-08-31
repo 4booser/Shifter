@@ -15,6 +15,7 @@ import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { ClockRing, MoneyFlow, MonthBars } from '@/components/charts';
 import { SkiaEarnedChart } from '@/components/skia-earned-chart';
 import { WeekStoryCard } from '@/components/week-story';
+import { GoalCard } from '@/components/goal-card';
 import { Appear, Press, Roll } from '@/components/motion';
 import { RhythmCard } from '@/components/rhythm-card';
 import { CitiesCard } from '@/components/cities-card';
@@ -382,6 +383,12 @@ export default function StatsScreen() {
           </View>
         </Appear>
       )}
+
+      <GoalCard
+        palette={palette}
+        earned={summary?.total_earned ?? 0}
+        visible={span === 'month' && summary !== null}
+      />
 
       {before !== null && earnedBefore !== null && earnedBefore > 0 && (
         <Text style={styles.against}>

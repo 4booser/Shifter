@@ -2,11 +2,12 @@ import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowUpRight } from 'lucide-react';
 
+import { Bars, BarRow, Panel, Split } from '@/components/charts/bars';
 import { Climb } from '@/components/charts/climb';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { calendarApi } from '@/lib/api/calendar';
-import { keysBetween, monthBounds, todayKey } from '@/lib/calendar/calendar-date';
+import { fromKey, keysBetween, monthBounds, todayKey } from '@/lib/calendar/calendar-date';
 import { formatMoney } from '@/lib/settings/money';
 import { useSettings } from '@/lib/settings/store';
 import { cn } from '@/lib/utils';
@@ -105,6 +106,121 @@ export function Stats() {
           },
         ];
 
+  /* Averaged per day worked rather than totalled: a month with five Fridays
+     and four Saturdays would otherwise make Friday look like the better
+     shift when it is only the more frequent one. */
+  const byWeekday = useMemo((): BarRow[] => {
+    if (summary === undefined) return [];
+
+    const names = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
+    const totals = new Map<number, { earned: number; days: number }>();
+
+    for (const day of summary.days) {
+      if (day.earned <= 0) continue;
+
+      const weekday = fromKey(day.date).getDay();
+      const seen = totals.get(weekday) ?? { earned: 0, days: 0 };
+
+      totals.set(weekday, { earned: seen.earned + day.earned, days: seen.days + 1 });
+    }
+
+    const order = settings.mondayFirst ? [1, 2, 3, 4, 5, 6, 0] : [0, 1, 2, 3, 4, 5, 6];
+
+    return order
+      .filter((weekday) => totals.has(weekday))
+      .map((weekday) => {
+        const seen = totals.get(weekday)!;
+        const average = seen.earned / seen.days;
+
+        return {
+          key: `${weekday}`,
+          label: names[weekday]!,
+          value: average,
+          shown: money(average),
+          hint: `${seen.days} ${seen.days === 1 ? 'день' : 'дн.'}`,
+        };
+      });
+  }, [summary, settings.mondayFirst]);
+
+  const bestWeekday = [...byWeekday].sort((a, b) => b.value - a.value)[0]?.key;
+
+  const ZONE_NAMES: Record<string, string> = {
+    unset: 'не сказано',
+    hall: 'зал',
+    bar: 'бар',
+    terrace: 'терраса',
+    banquet: 'банкет',
+    takeaway: 'навынос',
+  };
+
+  const byZone = (summary?.by_zone ?? [])
+    .filter((zone) => zone.hours > 0 && zone.tips > 0)
+    .sort((a, b) => b.tips_per_hour - a.tips_per_hour)
+    .map(
+      (zone): BarRow => ({
+        key: zone.zone,
+        label: ZONE_NAMES[zone.zone] ?? zone.zone,
+        value: zone.tips_per_hour,
+        shown: `${money(zone.tips_per_hour)}/ч`,
+        hint: `${Math.round(zone.hours)} ч`,
+      }),
+    );
+
+  const byPlace = (summary?.by_location ?? [])
+    .filter((place) => place.earned > 0)
+    .sort((a, b) => b.earned - a.earned)
+    .map(
+      (place): BarRow => ({
+        key: `${place.location_id}`,
+        label: place.name === '' ? 'без места' : place.name,
+        value: place.earned,
+        shown: money(place.earned),
+        hint: `${place.days_worked} см. · ${Math.round(place.hours)} ч`,
+        colour: place.colour === '' ? undefined : place.colour,
+      }),
+    );
+
+  const REASON_NAMES: Record<string, string> = {
+    breakage: 'разбили',
+    shortfall: 'недостача',
+    late: 'опоздание',
+    waste: 'списание',
+    uniform: 'форма',
+    other: 'другое',
+    unsaid: 'без причины',
+  };
+
+  const fines = (summary?.deductions_by_reason ?? []).map(
+    (split): BarRow => ({
+      key: split.reason,
+      label: REASON_NAMES[split.reason] ?? split.reason,
+      value: split.amount,
+      shown: money(split.amount),
+      hint: `${split.days} ${split.days === 1 ? 'день' : 'дн.'}`,
+      colour: 'var(--danger)',
+    }),
+  );
+
+  const best = [...(summary?.days ?? [])].sort((a, b) => b.earned - a.earned)[0];
+
+  const extras =
+    summary === undefined
+      ? []
+      : [
+          { label: 'Лучший день', value: best === undefined || best.earned <= 0 ? '·' : money(best.earned) },
+          { label: 'Ночных часов', value: `${Math.round(summary.night_hours)}` },
+          { label: 'Сверх нормы', value: summary.overtime_hours > 0 ? `${Math.round(summary.overtime_hours)} ч` : '·' },
+          { label: 'Надбавки', value: summary.premium_earned > 0 ? money(summary.premium_earned) : '·' },
+          { label: 'Отдано в котёл', value: summary.tip_out > 0 ? money(summary.tip_out) : '·' },
+          { label: 'Удержано', value: summary.deductions > 0 ? money(summary.deductions) : '·' },
+          { label: 'Налог', value: summary.tax > 0 ? money(summary.tax) : '·' },
+          { label: 'Отпускные копятся', value: summary.holiday_accrued > 0 ? money(summary.holiday_accrued) : '·' },
+          { label: 'Гостей', value: summary.guests_counted > 0 ? `${summary.guests_counted}` : '·' },
+          { label: 'Средний чек', value: summary.average_cheque == null ? '·' : money(summary.average_cheque) },
+          { label: 'Запланировано', value: summary.planned_earned > 0 ? money(summary.planned_earned) : '·' },
+          { label: 'Дорога съела чаевых', value: summary.travel_share_of_tips == null ? '·' : `${Math.round(summary.travel_share_of_tips)}%` },
+        ].filter((extra) => extra.value !== '·');
+
   return (
     <div className="flex flex-col gap-5">
       <header className="flex flex-wrap items-center justify-between gap-3">
@@ -170,13 +286,96 @@ export function Stats() {
             ))}
           </div>
 
-          <section className="card p-4">
-            <h2 className="text-base font-bold">Заработано за период</h2>
-            <p className="field-hint mb-2">
-              Плотная линия — этот {span === 'month' ? 'месяц' : 'год'}, бледная — прошлый. Веди курсором — цифры дня.
-            </p>
-            <Climb points={climb.line} ghost={climb.ghost} />
-          </section>
+          <Panel
+            title="Заработано за период"
+            hint={`Плотная линия — этот ${span === 'month' ? 'месяц' : 'год'}, бледная — прошлый. Веди курсором — цифры дня.`}
+          >
+            <Climb points={climb.line} ghost={climb.ghost} height={240} />
+          </Panel>
+
+          {/* Columns rather than a grid: the panels are independent answers of very
+              different heights, and a grid row would stretch a four-line card to
+              match a ten-line one and leave the hole between them. */}
+          <div className="columns-1 gap-3 lg:columns-2 [&>*]:mb-3 [&>*]:break-inside-avoid">
+            <Panel title="Из чего сложились деньги" hint="Ставка, чаевые и всё, что сверху.">
+              <Split
+                total={money(summary.total_earned)}
+                parts={[
+                  {
+                    key: 'base',
+                    label: 'ставка',
+                    // The premiums and the revenue share both live inside
+                    // shifts_earned; counting them again would make the bar
+                    // add up to more than the money.
+                    value:
+                      summary.shifts_earned - summary.premium_earned - summary.revenue_earned,
+                    colour: 'var(--s1)',
+                  },
+                  { key: 'tips', label: 'чаевые', value: summary.tips_earned, colour: 'var(--s2)' },
+                  {
+                    key: 'premium',
+                    label: 'надбавки',
+                    value: summary.premium_earned,
+                    colour: 'var(--s3)',
+                  },
+                  {
+                    key: 'revenue',
+                    label: '% с выручки',
+                    value: summary.revenue_earned,
+                    colour: 'var(--s4)',
+                  },
+                  {
+                    key: 'sales',
+                    label: 'позиции',
+                    value: summary.sales_earned,
+                    colour: 'var(--s5)',
+                  },
+                  {
+                    key: 'period',
+                    label: 'оклад',
+                    value: summary.period_earned,
+                    colour: 'var(--border-strong)',
+                  },
+                ]}
+              />
+            </Panel>
+
+            <Panel title="Какой день недели платит" hint="Средний заработок за отработанный день.">
+              <Bars rows={byWeekday} highlight={bestWeekday} />
+            </Panel>
+
+            {byZone.length > 0 && (
+              <Panel
+                title="Где чаевые гуще"
+                hint="Чаевые за час, по участкам. Тот самый спор."
+              >
+                <Bars rows={byZone} highlight={byZone[0]?.key} />
+              </Panel>
+            )}
+
+            {byPlace.length > 1 && (
+              <Panel title="Где заработано" hint="За период, по местам.">
+                <Bars rows={byPlace} highlight={byPlace[0]?.key} />
+              </Panel>
+            )}
+
+            {fines.length > 0 && (
+              <Panel title="За что удержали" hint="Штрафы отдельно от питания.">
+                <Bars rows={fines} />
+              </Panel>
+            )}
+
+            <Panel title="Что ещё случилось" hint="Мелочи, которые обычно негде увидеть.">
+              <dl className="grid grid-cols-2 gap-x-4 gap-y-2">
+                {extras.map((extra) => (
+                  <div key={extra.label} className="flex flex-col">
+                    <dt className="field-hint">{extra.label}</dt>
+                    <dd className="text-sm font-semibold tabular">{extra.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </Panel>
+          </div>
         </>
       )}
     </div>

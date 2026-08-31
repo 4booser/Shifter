@@ -1,6 +1,7 @@
 import { useId, useMemo, useState } from 'react';
 
 import { smoothPath } from '@/lib/charts/math';
+import { useChartWidth } from '@/lib/charts/measure';
 import { formatMoney, formatMoneyCompact } from '@/lib/settings/money';
 import { useSettings } from '@/lib/settings/store';
 
@@ -30,7 +31,7 @@ export function Climb({
   const raw = useId().replace(/[«»:]/g, '');
   const [hover, setHover] = useState<number | null>(null);
 
-  const width = 720;
+  const [host, width] = useChartWidth();
   const pad = { top: 18, right: 16, bottom: 26, left: 52 };
   const plotW = width - pad.left - pad.right;
   const plotH = height - pad.top - pad.bottom;
@@ -68,10 +69,12 @@ export function Climb({
   const step = plotW / Math.max(1, line.length - 1);
 
   return (
-    <div className="relative">
+    <div className="relative" ref={host}>
       <svg
         viewBox={`0 0 ${width} ${height}`}
-        className="block w-full"
+        width={width}
+        height={height}
+        className="block"
         onPointerLeave={() => setHover(null)}
       >
         <defs>

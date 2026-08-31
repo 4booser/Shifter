@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
@@ -515,6 +516,12 @@ export default function StatsScreen() {
 
       <RhythmCard palette={palette} />
 
+      <Press style={styles.reportDoor} onPress={() => router.push('/report')}>
+        <Ionicons name="reader-outline" size={18} color={palette.accent} />
+        <Text style={styles.reportDoorText}>{t('Отчёт за месяц — день за днём')}</Text>
+        <Ionicons name="chevron-forward" size={16} color={palette.textSecondary} />
+      </Press>
+
       <WeekStoryCard palette={palette} />
 
 
@@ -646,6 +653,19 @@ const makeStyles = (palette: Palette) =>
     kpiLabel: { color: palette.textSecondary, fontSize: 12, fontWeight: '600' },
     kpiValue: { color: palette.text, fontSize: 20, fontWeight: '800', fontVariant: ['tabular-nums'] },
     kpiValueStrong: { color: palette.good, fontSize: 24 },
+    reportDoor: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      backgroundColor: palette.backgroundElement,
+      borderColor: palette.border,
+      borderWidth: 1,
+      borderRadius: 14,
+      paddingHorizontal: 14,
+      paddingVertical: 13,
+    },
+    reportDoorText: { color: palette.text, fontSize: 14, flex: 1 },
+
     card: {
       backgroundColor: palette.backgroundElement,
       borderWidth: 1,

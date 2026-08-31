@@ -81,6 +81,7 @@ export default function RootLayout() {
             <Stack.Screen name="settings-keys" options={{ presentation: 'modal' }} />
             <Stack.Screen name="settings-alerts" options={{ presentation: 'modal' }} />
             <Stack.Screen name="settings-data" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="report" options={{ presentation: 'modal' }} />
             <Stack.Screen name="assistant" options={{ presentation: 'modal' }} />
             <Stack.Screen name="year" options={{ presentation: 'modal' }} />
             <Stack.Screen name="templates" options={{ presentation: 'modal' }} />

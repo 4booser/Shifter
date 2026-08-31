@@ -33,10 +33,13 @@ export function Dashboard() {
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <h1 className="text-2xl font-bold tracking-tight first-letter:uppercase">
-            {/* Not `capitalize`: it title-cases every word, and Russian turns
-                «август 2026 г.» into «Август 2026 Г.» — a stray capital on an
-                abbreviation nobody wrote. */}
-            {fromKey(month).toLocaleDateString('ru', { month: 'long', year: 'numeric' })}
+            {/* Month and year are formatted apart because asking for both at
+                once gets «август 2026 г.» in Russian, and the trailing «г.» is
+                an abbreviation no headline needs. `first-letter:uppercase`
+                rather than `capitalize`, which would title-case the year's
+                abbreviation too. */}
+            {fromKey(month).toLocaleDateString('ru', { month: 'long' })}{' '}
+            {fromKey(month).getFullYear()}
           </h1>
           <span className="flex items-center gap-1">
             <Button
@@ -90,7 +93,11 @@ export function Dashboard() {
               selected={selected}
               onSelect={setSelected}
             />
-            <DayPanel day={selected === null ? null : days.data.days.find((row) => row.date === selected) ?? null} date={selected} />
+            <DayPanel
+              day={selected === null ? null : days.data.days.find((row) => row.date === selected) ?? null}
+              date={selected}
+              onSaved={() => void days.refetch()}
+            />
           </div>
         </>
       )}

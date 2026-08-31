@@ -45,6 +45,8 @@ export interface Profile {
   two_factor: boolean;
   /** Whether they asked for the month's letter. Off unless they did. */
   monthly_letter: boolean;
+  /** Colours saved to reuse, newest first. */
+  colour_presets?: string[] | null;
 }
 
 /**
@@ -152,6 +154,9 @@ export interface CardSettings {
 }
 
 export const accountApi = {
+  /** The palette this person saved to reuse, kept on the account. */
+  setColours: (colours: string[]) =>
+    api<{ colours: string[] }>('/shifter/v1/auth/colours', { method: 'PUT', body: { colours } }),
   card: () => api<CardSettings>('/shifter/v1/account/card'),
   setCard: (body: { on: boolean; show_places: boolean; show_money: boolean }) =>
     api<CardSettings>('/shifter/v1/account/card', { method: 'PUT', body }),

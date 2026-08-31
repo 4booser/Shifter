@@ -34,6 +34,16 @@ cd ../mobile
 npx tsc --noEmit
 TZ=UTC npm test --silent
 
+# The front end being built on Vite. No test runner here yet — the screens are
+# still being moved over one at a time — so the gate holds it to what it can
+# check today: it compiles, and the linter finds nothing worse than a
+# warning. (--quiet reports errors only; the fast-refresh warnings shadcn's own
+# files raise are not worth failing a push over.)
+# In a subshell: the widget step below reads paths relative to mobile/, and a
+# `cd` that leaks out of here sends it looking for Swift files in the wrong tree.
+echo "── app"
+(cd ../app && npx tsc -b && npx oxlint --quiet)
+
 # The widget's own arithmetic, where a Swift compiler exists. It is skipped
 # rather than failed elsewhere: the widget only ships from a Mac, and a Linux
 # runner that could not check it must not stop everything else.

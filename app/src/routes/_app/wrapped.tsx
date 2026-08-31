@@ -1,7 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
 
-import { Soon } from '@/screens/soon';
+import { Wrapped } from '@/screens/wrapped';
 
-export const Route = createFileRoute('/_app/wrapped')({
-  component: () => <Soon title="wrapped" />,
-});
+export const Route = createFileRoute('/_app/wrapped')({ component: Wrapped });

@@ -245,8 +245,16 @@ public class ReconciliationTests
     [Fact]
     public async Task APeriodStillBeingWorkedIsNotChased()
     {
-        Location place = Monthly();
         DateOnly today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+        // Payday deliberately after today, so the period around today is
+        // unambiguously still running. Pinned at 1, this test asserted the
+        // right thing on 364 days a year and the wrong thing on the first of
+        // the month: there the period that ended yesterday really is due, and
+        // saying so is the handler doing its job.
+        Location place = Monthly();
+
+        place.PayDay = today.Day == 28 ? 1 : today.Day + 1;
 
         Worked(place, today.ToString("yyyy-MM-dd"));
 

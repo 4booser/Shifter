@@ -27,9 +27,12 @@ const NAV = [
 /** То, что открывают раз в месяц: в верхней строке ему места нет. */
 const MORE = [
   { to: '/report', label: 'Отчёт за месяц' },
+  { to: '/payslip', label: 'Сверить расчётку' },
   { to: '/compare', label: 'Сравнить периоды' },
   { to: '/costs', label: 'Что работа стоила' },
   { to: '/team', label: 'Команда' },
+  { to: '/seekers', label: 'Люди на бирже' },
+  { to: '/service', label: 'Состояние и данные' },
 ] as const;
 
 function Shell() {

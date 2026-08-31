@@ -3,7 +3,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { MapPin, Pencil, Plus } from 'lucide-react';
 
 import { Head } from '@/components/screen';
-import { Button, Field, Modal, Pills, Switch } from '@/components/ui/kit';
+import { Button, Field, Modal, Pills, Switch, Over } from '@/components/ui/kit';
 import { PLACES } from '@/mock/data';
 
 function Places() {
@@ -37,9 +37,7 @@ function Places() {
         ))}
       </div>
 
-      {open && (
-        <div className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-night/70 p-5 backdrop-blur-sm">
-          <div className="w-full max-w-[560px]">
+      <Over open={open} onClose={() => setOpen(false)}>
             <Modal
               title="Новое место"
               wide
@@ -69,10 +67,8 @@ function Places() {
                 <Field label="Налог, %" value="19,5" />
               </div>
               <Switch label="Налог и с чаевых" />
-            </Modal>
-          </div>
-        </div>
-      )}
+      </Modal>
+      </Over>
     </>
   );
 }

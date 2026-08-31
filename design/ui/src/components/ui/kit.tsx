@@ -258,6 +258,37 @@ export function Empty({
   );
 }
 
+/* ── окно поверх экрана ───────────────────────────────────────────────── */
+
+/**
+ * Затемнение и окно посередине.
+ *
+ * Закрывается щелчком по фону и по «Отмена» — единственное поведение, которое
+ * каркасу нужно: окно, которое нельзя закрыть, невозможно и посмотреть.
+ */
+export function Over({
+  open,
+  onClose,
+  children,
+}: {
+  open: boolean;
+  onClose: () => void;
+  children: ReactNode;
+}) {
+  if (!open) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-night/70 p-5 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div className="w-full max-w-[600px]" onClick={(event) => event.stopPropagation()}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
 /* ── модальное окно ───────────────────────────────────────────────────── */
 
 export function Modal({

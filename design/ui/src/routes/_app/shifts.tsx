@@ -3,7 +3,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { Archive, Pencil, Plus } from 'lucide-react';
 
 import { Head } from '@/components/screen';
-import { Button, Field, Modal, Pills, Switch } from '@/components/ui/kit';
+import { Button, Field, Modal, Pills, Switch, Over } from '@/components/ui/kit';
 import { SHIFTS } from '@/mock/data';
 
 function Shifts() {
@@ -50,9 +50,7 @@ function Shifts() {
         </div>
       </section>
 
-      {open && (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-night/70 p-5 backdrop-blur-sm">
-          <div className="w-full max-w-[430px]">
+      <Over open={open} onClose={() => setOpen(false)}>
             <Modal
               title="Новая смена"
               said="Шаблон помнит часы и ставку — дальше смена ставится одним нажатием."
@@ -82,10 +80,8 @@ function Shifts() {
                 <Field label="% с выручки" placeholder="—" />
               </div>
               <Switch label="Красит день в календаре" />
-            </Modal>
-          </div>
-        </div>
-      )}
+      </Modal>
+      </Over>
     </>
   );
 }

@@ -3,7 +3,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { Plus } from 'lucide-react';
 
 import { Head } from '@/components/screen';
-import { Button, Field, Modal, Pills } from '@/components/ui/kit';
+import { Button, Field, Modal, Pills, Over } from '@/components/ui/kit';
 import { GIGS } from '@/mock/data';
 import { cn } from '@/lib/utils';
 
@@ -48,9 +48,7 @@ function Gigs() {
         ))}
       </div>
 
-      {open && (
-        <div className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-night/70 p-5 backdrop-blur-sm">
-          <div className="w-full max-w-[560px]">
+      <Over open={open} onClose={() => setOpen(false)}>
             <Modal
               title="Нужен человек"
               wide
@@ -89,10 +87,8 @@ function Gigs() {
                   <span className="grid size-16 place-items-center rounded-lg border border-dashed border-paper/17 text-faint">+</span>
                 </div>
               </div>
-            </Modal>
-          </div>
-        </div>
-      )}
+      </Modal>
+      </Over>
     </>
   );
 }

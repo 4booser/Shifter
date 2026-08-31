@@ -13,6 +13,8 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as JoinRouteImport } from './routes/join'
 import { Route as KitRouteImport } from './routes/kit'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as RegisterRouteImport } from './routes/register'
+import { Route as ResetRouteImport } from './routes/reset'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppAccountRouteImport } from './routes/_app/account'
 import { Route as AppBankRouteImport } from './routes/_app/bank'
@@ -20,9 +22,12 @@ import { Route as AppCompareRouteImport } from './routes/_app/compare'
 import { Route as AppCostsRouteImport } from './routes/_app/costs'
 import { Route as AppGigsRouteImport } from './routes/_app/gigs'
 import { Route as AppPayoutsRouteImport } from './routes/_app/payouts'
+import { Route as AppPayslipRouteImport } from './routes/_app/payslip'
 import { Route as AppPlacesRouteImport } from './routes/_app/places'
 import { Route as AppReportRouteImport } from './routes/_app/report'
 import { Route as AppScheduleRouteImport } from './routes/_app/schedule'
+import { Route as AppSeekersRouteImport } from './routes/_app/seekers'
+import { Route as AppServiceRouteImport } from './routes/_app/service'
 import { Route as AppShiftsRouteImport } from './routes/_app/shifts'
 import { Route as AppStatsRouteImport } from './routes/_app/stats'
 import { Route as AppTeamRouteImport } from './routes/_app/team'
@@ -49,6 +54,16 @@ const KitRoute = KitRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetRoute = ResetRouteImport.update({
+  id: '/reset',
+  path: '/reset',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppIndexRoute = AppIndexRouteImport.update({
@@ -86,6 +101,11 @@ const AppPayoutsRoute = AppPayoutsRouteImport.update({
   path: '/payouts',
   getParentRoute: () => AppRoute,
 } as any)
+const AppPayslipRoute = AppPayslipRouteImport.update({
+  id: '/payslip',
+  path: '/payslip',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppPlacesRoute = AppPlacesRouteImport.update({
   id: '/places',
   path: '/places',
@@ -99,6 +119,16 @@ const AppReportRoute = AppReportRouteImport.update({
 const AppScheduleRoute = AppScheduleRouteImport.update({
   id: '/schedule',
   path: '/schedule',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSeekersRoute = AppSeekersRouteImport.update({
+  id: '/seekers',
+  path: '/seekers',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppServiceRoute = AppServiceRouteImport.update({
+  id: '/service',
+  path: '/service',
   getParentRoute: () => AppRoute,
 } as any)
 const AppShiftsRoute = AppShiftsRouteImport.update({
@@ -147,15 +177,20 @@ export interface FileRoutesByFullPath {
   '/join': typeof JoinRoute
   '/kit': typeof KitRouteWithChildren
   '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
+  '/reset': typeof ResetRoute
   '/account': typeof AppAccountRoute
   '/bank': typeof AppBankRoute
   '/compare': typeof AppCompareRoute
   '/costs': typeof AppCostsRoute
   '/gigs': typeof AppGigsRoute
   '/payouts': typeof AppPayoutsRoute
+  '/payslip': typeof AppPayslipRoute
   '/places': typeof AppPlacesRoute
   '/report': typeof AppReportRoute
   '/schedule': typeof AppScheduleRoute
+  '/seekers': typeof AppSeekersRoute
+  '/service': typeof AppServiceRoute
   '/shifts': typeof AppShiftsRoute
   '/stats': typeof AppStatsRoute
   '/team': typeof AppTeamRoute
@@ -168,15 +203,20 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/join': typeof JoinRoute
   '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
+  '/reset': typeof ResetRoute
   '/account': typeof AppAccountRoute
   '/bank': typeof AppBankRoute
   '/compare': typeof AppCompareRoute
   '/costs': typeof AppCostsRoute
   '/gigs': typeof AppGigsRoute
   '/payouts': typeof AppPayoutsRoute
+  '/payslip': typeof AppPayslipRoute
   '/places': typeof AppPlacesRoute
   '/report': typeof AppReportRoute
   '/schedule': typeof AppScheduleRoute
+  '/seekers': typeof AppSeekersRoute
+  '/service': typeof AppServiceRoute
   '/shifts': typeof AppShiftsRoute
   '/stats': typeof AppStatsRoute
   '/team': typeof AppTeamRoute
@@ -193,15 +233,20 @@ export interface FileRoutesById {
   '/join': typeof JoinRoute
   '/kit': typeof KitRouteWithChildren
   '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
+  '/reset': typeof ResetRoute
   '/_app/account': typeof AppAccountRoute
   '/_app/bank': typeof AppBankRoute
   '/_app/compare': typeof AppCompareRoute
   '/_app/costs': typeof AppCostsRoute
   '/_app/gigs': typeof AppGigsRoute
   '/_app/payouts': typeof AppPayoutsRoute
+  '/_app/payslip': typeof AppPayslipRoute
   '/_app/places': typeof AppPlacesRoute
   '/_app/report': typeof AppReportRoute
   '/_app/schedule': typeof AppScheduleRoute
+  '/_app/seekers': typeof AppSeekersRoute
+  '/_app/service': typeof AppServiceRoute
   '/_app/shifts': typeof AppShiftsRoute
   '/_app/stats': typeof AppStatsRoute
   '/_app/team': typeof AppTeamRoute
@@ -219,15 +264,20 @@ export interface FileRouteTypes {
     | '/join'
     | '/kit'
     | '/login'
+    | '/register'
+    | '/reset'
     | '/account'
     | '/bank'
     | '/compare'
     | '/costs'
     | '/gigs'
     | '/payouts'
+    | '/payslip'
     | '/places'
     | '/report'
     | '/schedule'
+    | '/seekers'
+    | '/service'
     | '/shifts'
     | '/stats'
     | '/team'
@@ -240,15 +290,20 @@ export interface FileRouteTypes {
   to:
     | '/join'
     | '/login'
+    | '/register'
+    | '/reset'
     | '/account'
     | '/bank'
     | '/compare'
     | '/costs'
     | '/gigs'
     | '/payouts'
+    | '/payslip'
     | '/places'
     | '/report'
     | '/schedule'
+    | '/seekers'
+    | '/service'
     | '/shifts'
     | '/stats'
     | '/team'
@@ -264,15 +319,20 @@ export interface FileRouteTypes {
     | '/join'
     | '/kit'
     | '/login'
+    | '/register'
+    | '/reset'
     | '/_app/account'
     | '/_app/bank'
     | '/_app/compare'
     | '/_app/costs'
     | '/_app/gigs'
     | '/_app/payouts'
+    | '/_app/payslip'
     | '/_app/places'
     | '/_app/report'
     | '/_app/schedule'
+    | '/_app/seekers'
+    | '/_app/service'
     | '/_app/shifts'
     | '/_app/stats'
     | '/_app/team'
@@ -289,6 +349,8 @@ export interface RootRouteChildren {
   JoinRoute: typeof JoinRoute
   KitRoute: typeof KitRouteWithChildren
   LoginRoute: typeof LoginRoute
+  RegisterRoute: typeof RegisterRoute
+  ResetRoute: typeof ResetRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -319,6 +381,20 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset': {
+      id: '/reset'
+      path: '/reset'
+      fullPath: '/reset'
+      preLoaderRoute: typeof ResetRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app/': {
@@ -370,6 +446,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPayoutsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/payslip': {
+      id: '/_app/payslip'
+      path: '/payslip'
+      fullPath: '/payslip'
+      preLoaderRoute: typeof AppPayslipRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/places': {
       id: '/_app/places'
       path: '/places'
@@ -389,6 +472,20 @@ declare module '@tanstack/react-router' {
       path: '/schedule'
       fullPath: '/schedule'
       preLoaderRoute: typeof AppScheduleRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/seekers': {
+      id: '/_app/seekers'
+      path: '/seekers'
+      fullPath: '/seekers'
+      preLoaderRoute: typeof AppSeekersRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/service': {
+      id: '/_app/service'
+      path: '/service'
+      fullPath: '/service'
+      preLoaderRoute: typeof AppServiceRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/shifts': {
@@ -457,9 +554,12 @@ interface AppRouteChildren {
   AppCostsRoute: typeof AppCostsRoute
   AppGigsRoute: typeof AppGigsRoute
   AppPayoutsRoute: typeof AppPayoutsRoute
+  AppPayslipRoute: typeof AppPayslipRoute
   AppPlacesRoute: typeof AppPlacesRoute
   AppReportRoute: typeof AppReportRoute
   AppScheduleRoute: typeof AppScheduleRoute
+  AppSeekersRoute: typeof AppSeekersRoute
+  AppServiceRoute: typeof AppServiceRoute
   AppShiftsRoute: typeof AppShiftsRoute
   AppStatsRoute: typeof AppStatsRoute
   AppTeamRoute: typeof AppTeamRoute
@@ -474,9 +574,12 @@ const AppRouteChildren: AppRouteChildren = {
   AppCostsRoute: AppCostsRoute,
   AppGigsRoute: AppGigsRoute,
   AppPayoutsRoute: AppPayoutsRoute,
+  AppPayslipRoute: AppPayslipRoute,
   AppPlacesRoute: AppPlacesRoute,
   AppReportRoute: AppReportRoute,
   AppScheduleRoute: AppScheduleRoute,
+  AppSeekersRoute: AppSeekersRoute,
+  AppServiceRoute: AppServiceRoute,
   AppShiftsRoute: AppShiftsRoute,
   AppStatsRoute: AppStatsRoute,
   AppTeamRoute: AppTeamRoute,
@@ -507,6 +610,8 @@ const rootRouteChildren: RootRouteChildren = {
   JoinRoute: JoinRoute,
   KitRoute: KitRouteWithChildren,
   LoginRoute: LoginRoute,
+  RegisterRoute: RegisterRoute,
+  ResetRoute: ResetRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

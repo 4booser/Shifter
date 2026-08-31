@@ -1,15 +1,17 @@
 import { useState } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Search } from 'lucide-react';
 
 import { Docket, Month } from '@/components/calendar';
 import { Head } from '@/components/screen';
-import { Button, Card, Field, Modal, Pills, Switch } from '@/components/ui/kit';
+import { Button, Card, Field, Modal, Pills, Switch, Over } from '@/components/ui/kit';
+import { Window, Windows } from '@/components/windows';
 import { TILES } from '@/mock/data';
 import { cn } from '@/lib/utils';
 
 function Calendar() {
   const [shiftModal, setShiftModal] = useState(false);
+  const [win, setWin] = useState<Window>(null);
 
   return (
     <>
@@ -20,6 +22,8 @@ function Calendar() {
           <>
             <Button size="icon" tone="line"><ChevronLeft className="size-4" /></Button>
             <Button size="icon" tone="line"><ChevronRight className="size-4" /></Button>
+            <span onClick={() => setWin('search')}><Button tone="quiet" size="sm"><Search className="size-3.5" />Найти</Button></span>
+            <span onClick={() => setWin('rotation')}><Button tone="line" size="sm">Разложить</Button></span>
             <Button tone="quiet" size="sm">Сегодня</Button>
             <Button tone="go" size="sm" className="cursor-pointer" >
               <span onClick={() => setShiftModal(true)}>Поставить смену</span>
@@ -67,7 +71,10 @@ function Calendar() {
         <Month />
         <div className="flex flex-col gap-4">
           <Docket />
-          <Card title="Цель на месяц">
+          <Card
+            title="Цель на месяц"
+            right={<span onClick={() => setWin('goal')}><Button tone="quiet" size="sm">Изменить</Button></span>}
+          >
             <p className="text-xl font-bold tabular">
               ₴24 700 <span className="text-base font-semibold text-faint">из ₴40 000</span>
             </p>
@@ -76,7 +83,10 @@ function Calendar() {
             </div>
             <p className="hint mt-2">Осталось ₴15 300 за 1 день.</p>
           </Card>
-          <Card title="День без смены">
+          <Card
+            title="День без смены"
+            right={<span onClick={() => setWin('event')}><Button tone="quiet" size="sm">Подробно</Button></span>}
+          >
             <Pills options={['отпуск', 'больничный', 'выходной']} />
             <div className="mt-3 border-t border-paper/9 pt-3">
               <Switch label="Прошу подменить" hint="Смена появится на графике команды." />
@@ -85,9 +95,33 @@ function Calendar() {
         </div>
       </div>
 
-      {shiftModal && (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-night/70 p-5 backdrop-blur-sm">
-          <div className="w-full max-w-[430px]">
+      {/* Всё, что открывают из календаря: цель, событие, поиск, раскладка,
+          импорты и разрешение конфликта. */}
+      <Card title="Ещё из календаря" hint="Окна, которые открываются отсюда.">
+        <div className="flex flex-wrap gap-2">
+          {([
+            ['goal', 'Цель'],
+            ['event', 'День без смены'],
+            ['sales', 'Позиции с продаж'],
+            ['search', 'Поиск'],
+            ['rotation', 'Два через два'],
+            ['pattern', 'Повторить неделю'],
+            ['scheme', 'Цвета по дням'],
+            ['photo', 'Фото графика'],
+            ['ics', 'Календарь по ссылке'],
+            ['foreign', 'Файл из другого приложения'],
+            ['conflict', 'Конфликт версий'],
+          ] as [Window, string][]).map(([name, label]) => (
+            <span key={label} onClick={() => setWin(name)}>
+              <Button tone="line" size="sm">{label}</Button>
+            </span>
+          ))}
+        </div>
+      </Card>
+
+      <Windows open={win} onClose={() => setWin(null)} />
+
+      <Over open={shiftModal} onClose={() => setShiftModal(false)}>
             <Modal
               title="Поставить смену"
               said="Выберите шаблон — часы и ставка подставятся сами."
@@ -101,10 +135,8 @@ function Calendar() {
               <Pills options={['🍸 Вечер', '☕️ День', '🥂 Банкет']} value="🍸 Вечер" />
               <Field label="На какой день" value="31.08.2026" />
               <Switch on label="Отметить сразу отработанной" />
-            </Modal>
-          </div>
-        </div>
-      )}
+      </Modal>
+      </Over>
     </>
   );
 }

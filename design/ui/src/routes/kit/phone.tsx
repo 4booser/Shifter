@@ -222,7 +222,7 @@ function PhoneScreens() {
 
             <div className="flex h-16 items-end gap-1">
               {YEAR_MONTHS.map((month, i) => (
-                <span key={i} className="flex flex-1 flex-col items-center gap-1">
+                <span key={i} className="flex h-full flex-1 flex-col items-center justify-end gap-1">
                   <span
                     className="w-full rounded-t-sm bg-brass"
                     style={{ height: `${Math.max(4, month.v)}%`, opacity: month.v === 70 ? 1 : 0.45 }}

@@ -28,6 +28,10 @@ const monthName = (key: string) =>
   new Date(`${key}-15T12:00:00`).toLocaleDateString('ru', { month: 'short' });
 
 /** ==== In against out, month by month — tap a month for its figures ==== */
+/** Thousands said short, for a label the width of half a column. */
+const kShort = (value: number): string =>
+  value >= 1000 ? `${Math.round(value / 1000)}K` : `${Math.round(value)}`;
+
 export function MonthlyFlowsChart({
   items,
   palette,
@@ -57,17 +61,32 @@ export function MonthlyFlowsChart({
             style={[styles.columnCell, picked === index && styles.columnCellOn]}
             onPress={() => setPicked(picked === index ? null : index)}
           >
+            {/* The current month wears its figures; the past answers a tap. */}
+            {index === shown.length - 1 && (
+              <Text style={styles.pairTag}>
+                <Text style={{ color: palette.good }}>+{kShort(row.earned)}</Text>{' '}
+                <Text style={{ color: palette.danger }}>−{kShort(row.spent)}</Text>
+              </Text>
+            )}
             <View style={styles.pairRow}>
               <View
                 style={[
                   styles.pairBar,
-                  { height: `${Math.max(3, (row.earned / peak) * 100)}%`, backgroundColor: palette.good },
+                  {
+                    height: `${Math.max(3, (row.earned / peak) * 100)}%`,
+                    backgroundColor: palette.good,
+                    opacity: index === shown.length - 1 ? 1 : 0.75,
+                  },
                 ]}
               />
               <View
                 style={[
                   styles.pairBar,
-                  { height: `${Math.max(3, (row.spent / peak) * 100)}%`, backgroundColor: palette.danger },
+                  {
+                    height: `${Math.max(3, (row.spent / peak) * 100)}%`,
+                    backgroundColor: palette.danger,
+                    opacity: index === shown.length - 1 ? 0.95 : 0.7,
+                  },
                 ]}
               />
             </View>
@@ -142,6 +161,19 @@ export function CategoryMonthsChart({
             </Press>
           );
         })}
+      </View>
+
+      {/* The colours, named — the tap answers with figures, the legend
+          answers the cheaper question without one. */}
+      <View style={styles.legendRow}>
+        {[...new Map(shown.flatMap((row) => row.parts).map((part) => [part.name, part])).keys()]
+          .slice(0, 6)
+          .map((name) => (
+            <View key={name} style={styles.legendItem}>
+              <View style={[styles.partDot, { backgroundColor: categoryStyle(name).hue }]} />
+              <Text style={styles.legendName}>{name}</Text>
+            </View>
+          ))}
       </View>
 
       {chosen !== null && (
@@ -280,6 +312,10 @@ const makeStyles = (palette: Palette) =>
     columnCellOn: { backgroundColor: palette.backgroundSelected },
     pairRow: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'center', gap: 2, flex: 1 },
     pairBar: { width: '26%', borderTopLeftRadius: 3, borderTopRightRadius: 3, opacity: 0.85 },
+    pairTag: { fontSize: 10, fontWeight: '700', marginBottom: 2 },
+    legendRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 8 },
+    legendItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+    legendName: { color: palette.textSecondary, fontSize: 11 },
     monthLabel: { color: palette.textSecondary, fontSize: 10.5, textAlign: 'center', marginTop: 3 },
     stackHolder: { width: '58%', alignSelf: 'center', flexDirection: 'column-reverse', borderRadius: 4, overflow: 'hidden' },
     answer: { color: palette.text, fontSize: 13, fontVariant: ['tabular-nums'] },

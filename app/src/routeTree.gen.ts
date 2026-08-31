@@ -16,6 +16,7 @@ import { Route as AppAccountRouteImport } from './routes/_app/account'
 import { Route as AppBankRouteImport } from './routes/_app/bank'
 import { Route as AppGigsRouteImport } from './routes/_app/gigs'
 import { Route as AppPayoutsRouteImport } from './routes/_app/payouts'
+import { Route as AppPlacesRouteImport } from './routes/_app/places'
 import { Route as AppScheduleRouteImport } from './routes/_app/schedule'
 import { Route as AppShiftsRouteImport } from './routes/_app/shifts'
 import { Route as AppStatsRouteImport } from './routes/_app/stats'
@@ -55,6 +56,11 @@ const AppPayoutsRoute = AppPayoutsRouteImport.update({
   path: '/payouts',
   getParentRoute: () => AppRoute,
 } as any)
+const AppPlacesRoute = AppPlacesRouteImport.update({
+  id: '/places',
+  path: '/places',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppScheduleRoute = AppScheduleRouteImport.update({
   id: '/schedule',
   path: '/schedule',
@@ -83,6 +89,7 @@ export interface FileRoutesByFullPath {
   '/bank': typeof AppBankRoute
   '/gigs': typeof AppGigsRoute
   '/payouts': typeof AppPayoutsRoute
+  '/places': typeof AppPlacesRoute
   '/schedule': typeof AppScheduleRoute
   '/shifts': typeof AppShiftsRoute
   '/stats': typeof AppStatsRoute
@@ -94,6 +101,7 @@ export interface FileRoutesByTo {
   '/bank': typeof AppBankRoute
   '/gigs': typeof AppGigsRoute
   '/payouts': typeof AppPayoutsRoute
+  '/places': typeof AppPlacesRoute
   '/schedule': typeof AppScheduleRoute
   '/shifts': typeof AppShiftsRoute
   '/stats': typeof AppStatsRoute
@@ -108,6 +116,7 @@ export interface FileRoutesById {
   '/_app/bank': typeof AppBankRoute
   '/_app/gigs': typeof AppGigsRoute
   '/_app/payouts': typeof AppPayoutsRoute
+  '/_app/places': typeof AppPlacesRoute
   '/_app/schedule': typeof AppScheduleRoute
   '/_app/shifts': typeof AppShiftsRoute
   '/_app/stats': typeof AppStatsRoute
@@ -123,6 +132,7 @@ export interface FileRouteTypes {
     | '/bank'
     | '/gigs'
     | '/payouts'
+    | '/places'
     | '/schedule'
     | '/shifts'
     | '/stats'
@@ -134,6 +144,7 @@ export interface FileRouteTypes {
     | '/bank'
     | '/gigs'
     | '/payouts'
+    | '/places'
     | '/schedule'
     | '/shifts'
     | '/stats'
@@ -147,6 +158,7 @@ export interface FileRouteTypes {
     | '/_app/bank'
     | '/_app/gigs'
     | '/_app/payouts'
+    | '/_app/places'
     | '/_app/schedule'
     | '/_app/shifts'
     | '/_app/stats'
@@ -210,6 +222,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPayoutsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/places': {
+      id: '/_app/places'
+      path: '/places'
+      fullPath: '/places'
+      preLoaderRoute: typeof AppPlacesRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/schedule': {
       id: '/_app/schedule'
       path: '/schedule'
@@ -246,6 +265,7 @@ interface AppRouteChildren {
   AppBankRoute: typeof AppBankRoute
   AppGigsRoute: typeof AppGigsRoute
   AppPayoutsRoute: typeof AppPayoutsRoute
+  AppPlacesRoute: typeof AppPlacesRoute
   AppScheduleRoute: typeof AppScheduleRoute
   AppShiftsRoute: typeof AppShiftsRoute
   AppStatsRoute: typeof AppStatsRoute
@@ -258,6 +278,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppBankRoute: AppBankRoute,
   AppGigsRoute: AppGigsRoute,
   AppPayoutsRoute: AppPayoutsRoute,
+  AppPlacesRoute: AppPlacesRoute,
   AppScheduleRoute: AppScheduleRoute,
   AppShiftsRoute: AppShiftsRoute,
   AppStatsRoute: AppStatsRoute,

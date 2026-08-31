@@ -364,7 +364,6 @@ export function LocationModal({
           <label>
             <span className="field-label">{t('Overtime after, hours a week')}</span>
             <input type="number" min={1} max={168} className="field-input" value={overtimeHours} onChange={num(setOvertimeHours)} />
-            inputMode="decimal"
           </label>
           <label>
             <span className="field-label">{t('Paid at')}</span>

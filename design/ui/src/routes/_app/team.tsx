@@ -61,7 +61,7 @@ function Team() {
               { name: 'Аня', role: 'вы · владелец', colour: '#e0a45b' },
               { name: 'Ира', role: 'менеджер', colour: '#7fbf7a' },
               { name: 'Костя', role: 'бармен', colour: '#d9705f' },
-              { name: 'Марк', role: 'стажёр до 15 сентября', colour: '#b5ada3' },
+              { name: 'Марк', role: 'стажёр до 14 сентября', colour: '#b5ada3' },
             ].map((one) => (
               <span key={one.name} className="flex items-center gap-3 border-b border-paper/9 py-3 last:border-0">
                 <span className="size-2.5 flex-none rounded-full" style={{ background: one.colour }} />

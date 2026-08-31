@@ -298,16 +298,19 @@ function Stats() {
           hint="Этих денег нет в суммах выше — они уходят до того, как их посчитали."
         >
           <Bars
+            // Те же четыре строки, что на экране расходов. Два экрана с
+            // разными суммами одного и того же — это два разных ответа на
+            // вопрос «во сколько мне обошлась работа».
             rows={[
-              { name: 'Такси домой', under: '14 раз', share: 100, value: '₴2 380', tone: 'taken' },
-              { name: 'Проезд', under: '21 раз', share: 34, value: '₴812', tone: 'taken' },
-              { name: 'Форма и обувь', under: '1 раз', share: 25, value: '₴600', tone: 'taken' },
-              { name: 'Кофе на смене', under: '17 раз', share: 14, value: '₴340', tone: 'taken' },
+              { name: 'Дорога', under: '38 раз', share: 100, value: '₴3 040', tone: 'taken' },
+              { name: 'Еда', under: '12 раз', share: 42, value: '₴1 280', tone: 'taken' },
+              { name: 'Форма', under: '2 раза', share: 22, value: '₴670', tone: 'taken' },
+              { name: 'Инструмент', under: '1 раз', share: 12, value: '₴350', tone: 'taken' },
             ]}
           />
           <div className="mt-3 flex flex-wrap justify-between gap-3 border-t border-paper/9 pt-3">
             <span className="hint">Час с дорогой и тратами</span>
-            <span className="font-mono text-sm font-semibold tabular">₴212 вместо ₴238</span>
+            <span className="font-mono text-sm font-semibold tabular">₴205 вместо ₴238</span>
           </div>
         </Card>
 

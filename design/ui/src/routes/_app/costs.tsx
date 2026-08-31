@@ -33,11 +33,11 @@ function Costs() {
 
         <Card title="Что это значит">
           <p className="text-2xl font-bold tabular">₴5 340</p>
-          <p className="hint mt-1">за месяц, это 22% чаевых</p>
+          <p className="hint mt-1">за месяц — 14% заработка и почти три четверти чаевых</p>
           <div className="mt-4 border-t border-paper/9 pt-3">
             <span className="lbl">Час после расходов</span>
             <p className="mt-1 text-xl font-bold tabular">
-              ₴212 <span className="text-sm font-normal text-faint">вместо ₴238</span>
+              ₴205 <span className="text-sm font-normal text-faint">вместо ₴238</span>
             </p>
           </div>
         </Card>

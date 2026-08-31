@@ -21,6 +21,8 @@ import { Colors, Palette } from '@/constants/theme';
 import { api, ApiError } from '@/lib/api';
 import { EventKind, EventTemplate, money, rateLine, ShiftTemplate } from '@/lib/types';
 import { t } from '@/lib/i18n';
+import { ColourPicker } from '@/components/colour-picker';
+import { buzz } from '@/lib/haptics';
 
 interface Place {
   id: number;
@@ -610,6 +612,8 @@ function TemplateEditor({
   const [pooled, setPooled] = useState(false);
   const [poolShare, setPoolShare] = useState('');
   const [breakMinutes, setBreakMinutes] = useState('');
+  const [shiftColour, setShiftColour] = useState<string | null>(null);
+  const [paintsDay, setPaintsDay] = useState(false);
   const [placeId, setPlaceId] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState<string | null>(null);
@@ -671,6 +675,8 @@ function TemplateEditor({
       template?.tip_pool_percent === null || template === null ? '' : `${template.tip_pool_percent}`,
     );
     setBreakMinutes(template === null || template.break_minutes === 0 ? '' : `${template.break_minutes}`);
+    setShiftColour(template?.colour ?? null);
+    setPaintsDay(template?.paints_day ?? false);
     setPlaceId(template?.location_id ?? null);
   }, [editing, template]);
 
@@ -696,7 +702,8 @@ function TemplateEditor({
       // Carried, not cleared. The contract defaults this to absent precisely so
       // an older client cannot wipe it; sending an explicit null threw away a
       // colour chosen on the web the moment the template was opened here.
-      colour: template?.colour ?? null,
+      colour: shiftColour,
+      paints_day: paintsDay,
       revenue_percent: percent.trim() === '' ? null : Number(percent.replace(',', '.')),
       tip_source: pooled ? 'pool' : 'personal',
       tip_pool_percent:
@@ -846,6 +853,32 @@ function TemplateEditor({
             placeholder="0"
             placeholderTextColor={palette.textSecondary}
           />
+
+          {/* The shift's own colour, and whether the calendar wears it. One
+              switch instead of colouring thirty days by hand; a day painted
+              by hand still keeps what its owner chose. */}
+          <Text style={styles.fieldLabel}>{t('Цвет смены')}</Text>
+          <ColourPicker palette={palette} value={shiftColour} onPick={setShiftColour} />
+
+          <Press
+            style={styles.toggleRow}
+            onPress={() => {
+              buzz.choose();
+              setPaintsDay((was) => !was);
+            }}
+          >
+            <Ionicons
+              name={paintsDay ? 'color-fill' : 'color-fill-outline'}
+              size={20}
+              color={paintsDay ? palette.accent : palette.textSecondary}
+            />
+            <View style={styles.grow}>
+              <Text style={styles.toggleText}>{t('Красить день этим цветом')}</Text>
+              <Text style={styles.toggleHint}>
+                {t('Каждый день с этой сменой станет таким. День, покрашенный вручную, останется вашим.')}
+              </Text>
+            </View>
+          </Press>
 
           <Text style={styles.fieldLabel}>{t('Чаевые')}</Text>
           <View style={styles.segmentRow}>
@@ -1026,7 +1059,8 @@ const makeStyles = (palette: Palette) =>
     },
     swatchOn: { borderColor: palette.text },
     toggleRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 4 },
-    toggleText: { color: palette.text, fontSize: 14, flex: 1 },
+    toggleText: { color: palette.text, fontSize: 14 },
+    toggleHint: { color: palette.textSecondary, fontSize: 12, lineHeight: 16, marginTop: 2 },
     segment: {
       flex: 1,
       alignItems: 'center',

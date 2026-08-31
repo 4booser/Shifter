@@ -19,6 +19,8 @@ export interface ShiftTemplate {
   /** Unpaid minutes inside the shift; already taken off hours. */
   break_minutes: number;
   location_id: number | null;
+  /** Whether days carrying this shift take its colour. */
+  paints_day?: boolean;
   archived: boolean;
 }
 

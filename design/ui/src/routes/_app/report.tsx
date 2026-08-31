@@ -30,7 +30,7 @@ function Report() {
               Shifter · отчёт за период
             </p>
             <p className="mt-1 text-xl font-bold">1 — 31 августа 2026</p>
-            <p className="text-sm text-night/60">Аня · Бар «Сова», Ресторан «Дым»</p>
+            <p className="text-sm text-night/60">Аня · Бар «Полночь», Ресторан «Веранда»</p>
           </div>
           <p className="text-3xl font-extrabold tabular">₴24 700</p>
         </div>

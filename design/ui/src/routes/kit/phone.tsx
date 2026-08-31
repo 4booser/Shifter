@@ -116,7 +116,7 @@ function PhoneScreens() {
             <div>
               <span className="lbl">Ближайшие деньги</span>
               <p className="text-3xl font-extrabold text-money tabular">₴16 590</p>
-              <p className="hint mt-1">через 5 дней · Бар «Сова»</p>
+              <p className="hint mt-1">через 5 дней · Бар «Полночь»</p>
             </div>
 
             <div className="card p-3">
@@ -256,7 +256,7 @@ function PhoneScreens() {
 
           <Phone tab="Доска">
             <div>
-              <span className="lbl">Смена «Сова»</span>
+              <span className="lbl">Смена «Полночь»</span>
               <p className="text-base font-bold">31 авг — 6 сент</p>
             </div>
 

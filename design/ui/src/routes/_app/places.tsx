@@ -50,7 +50,7 @@ function Places() {
               }
             >
               <div className="grid grid-cols-2 gap-2.5">
-                <Field label="Название" value="Бар «Сова»" />
+                <Field label="Название" value="Бар «Полночь»" />
                 <Field label="Город" value="Днепр" />
               </div>
               <div className="border-t border-paper/9 pt-3">

@@ -257,7 +257,7 @@ export function Windows({ open, onClose }: { open: Window; onClose: () => void }
           said="Отметьте, что и когда пришло — приложение сверит с тем, что было обещано."
           foot={FOOT(shut, 'Записать')}
         >
-          <Field label="Место" value="Бар «Сова»" />
+          <Field label="Место" value="Бар «Полночь»" />
           <div className="grid grid-cols-2 gap-2.5">
             <Field label="Сколько" value="16 590" />
             <Field label="Когда" value="05.09.2026" />
@@ -283,7 +283,7 @@ export function Windows({ open, onClose }: { open: Window; onClose: () => void }
               месяцы пересчитан не будет.
             </p>
           </div>
-          <Field label="Введите название, чтобы подтвердить" placeholder="Бар «Сова»" />
+          <Field label="Введите название, чтобы подтвердить" placeholder="Бар «Полночь»" />
         </Modal>
       ))}
 

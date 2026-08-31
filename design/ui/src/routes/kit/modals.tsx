@@ -47,13 +47,13 @@ function Modals() {
 
       <Plate title="Место работы" path="location-modal" why="Длинное окно, поэтому разбито на смысловые группы, а не на одну простыню полей.">
         <Modal
-          title="Бар «Сова»"
+          title="Бар «Полночь»"
           wide
           said="Когда приходят деньги, сколько стоит ночь и что удерживает заведение."
           foot={<><Button tone="line">Отмена</Button><Button tone="go">Сохранить</Button></>}
         >
           <div className="grid grid-cols-2 gap-2.5">
-            <Field label="Название" value="Бар «Сова»" />
+            <Field label="Название" value="Бар «Полночь»" />
             <Field label="Город" value="Днепр" />
           </div>
           <div className="border-t border-paper/9 pt-3">
@@ -89,7 +89,7 @@ function Modals() {
             said="Отметьте, что и когда пришло — приложение сверит с тем, что было обещано."
             foot={<><Button tone="line">Отмена</Button><Button tone="go">Записать</Button></>}
           >
-            <Field label="Место" value="Бар «Сова»" />
+            <Field label="Место" value="Бар «Полночь»" />
             <div className="grid grid-cols-2 gap-2.5">
               <Field label="Сколько" value="16 590" />
               <Field label="Когда" value="05.09.2026" />
@@ -342,7 +342,7 @@ function Modals() {
                 месяцы пересчитан не будет.
               </p>
             </div>
-            <Field label="Введите название, чтобы подтвердить" placeholder="Бар «Сова»" />
+            <Field label="Введите название, чтобы подтвердить" placeholder="Бар «Полночь»" />
           </Modal>
         </div>
       </Plate>

@@ -16,7 +16,7 @@ function Join() {
       <section className="relative flex w-full max-w-sm flex-col gap-4 text-center">
         <div>
           <span className="lbl">Вас зовут в команду</span>
-          <h1 className="mt-2 text-2xl font-bold">Смена «Сова»</h1>
+          <h1 className="mt-2 text-2xl font-bold">Смена «Полночь»</h1>
           <p className="hint mt-1">Днепр · 4 человека</p>
         </div>
 

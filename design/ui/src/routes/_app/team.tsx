@@ -10,7 +10,7 @@ function Team() {
     <>
       <Head
         said="Команда"
-        title="Смена «Сова»"
+        title="Смена «Полночь»"
         hint="Состав и права. Кто когда выходит — на графике."
         right={<Button tone="go"><UserPlus className="size-4" />Позвать</Button>}
       />

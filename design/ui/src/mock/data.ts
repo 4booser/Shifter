@@ -77,9 +77,8 @@ export const MONTH_TOTALS = {
 };
 
 export const TILES = [
-  { said: 'Заработано', num: '₴24 700', foot: '17 смен · 137 ч', tone: 'good' as const },
-  { said: 'Твой час', num: '₴180', foot: '137 ч в этом месяце' },
-  { said: 'Чаевые', num: '₴7 700', foot: '31% от заработка' },
+  { said: 'Твой час', num: '₴180', foot: 'был ₴167 в июле' },
+  { said: 'Чаевые', num: '₴7 700', foot: '₴453 на смену · вчера ₴610' },
   { said: 'Лучший день', num: '₴2 470', foot: '1 августа' },
   { said: 'Ночные часы', num: '62', foot: '45% всех часов' },
   { said: 'Удержано', num: '₴2 230', foot: 'штрафы и питание', tone: 'bad' as const },

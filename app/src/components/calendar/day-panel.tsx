@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Link } from '@tanstack/react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Check, ChevronDown, Loader2, Plus, X } from 'lucide-react';
@@ -18,7 +18,7 @@ import {
   ShiftZone,
   toSavePayload,
 } from '@/lib/calendar/models';
-import { fromKey } from '@/lib/calendar/calendar-date';
+import { fromKey, todayKey } from '@/lib/calendar/calendar-date';
 import { formatMoney } from '@/lib/settings/money';
 import { useSettings } from '@/lib/settings/store';
 import { cn } from '@/lib/utils';
@@ -49,16 +49,31 @@ export function DayPanel({
   const templates = useQuery({ queryKey: ['shifts'], queryFn: () => calendarApi.shifts() });
   const [opened, setOpened] = useState<number | null>(null);
 
-  const payload = useMemo(() => toSavePayload(day ?? undefined), [day]);
-
+  /**
+   * Every edit is a function of the day as it stands on the server, read at
+   * the moment of saving.
+   *
+   * A save replaces the whole day, so building one from a snapshot taken when
+   * the panel last rendered loses whatever a previous save added: tap a shift
+   * chip and type the tips a second later, and the second save — built before
+   * the first had come back — sends an empty shift list and takes the shift
+   * with it. Re-reading first costs one request and makes that impossible.
+   */
   const save = useMutation({
-    mutationFn: (patch: Partial<DaySave>) =>
-      calendarApi.saveDay(date!, { ...payload, ...patch }),
+    mutationFn: async (edit: (current: DaySave) => Partial<DaySave>) => {
+      const fresh = await calendarApi.days(date!, date!);
+      const current = toSavePayload(fresh.days.find((row) => row.date === date));
+
+      return calendarApi.saveDay(date!, { ...current, ...edit(current) });
+    },
     onSuccess: () => {
       void client.invalidateQueries({ queryKey: ['days'] });
       onSaved();
     },
-    onError: () => toast.error('Не сохранилось — попробуйте ещё раз.'),
+    // The server explains itself — cash tips over the total, a day changed on
+    // another device — and «попробуйте ещё раз» would be advice to repeat
+    // something that will fail the same way.
+    onError: (error: Error) => toast.error(error.message),
   });
 
   if (date === null) {
@@ -74,12 +89,14 @@ export function DayPanel({
   const shown = [...worked, ...planned];
 
   const addShift = (template: ShiftTemplate) => {
-    save.mutate({
+    save.mutate((current) => ({
       shifts: [
-        ...payload.shifts,
+        ...current.shifts,
         {
           shift_id: template.id,
-          worked: date <= new Date().toISOString().slice(0, 10),
+          // Local, not UTC: at half past one in Kyiv the UTC date is still
+          // yesterday, and a shift added to today would land as a plan.
+          worked: date <= todayKey(),
           needs_cover: false,
           actual_start: null,
           actual_end: null,
@@ -88,19 +105,21 @@ export function DayPanel({
           guests: null,
         },
       ],
-    });
+    }));
   };
 
   const dropShift = (shiftId: number) => {
-    save.mutate({ shifts: payload.shifts.filter((entry) => entry.shift_id !== shiftId) });
+    save.mutate((current) => ({
+      shifts: current.shifts.filter((entry) => entry.shift_id !== shiftId),
+    }));
   };
 
   const toggleWorked = (shiftId: number, worked: boolean) => {
-    save.mutate({
-      shifts: payload.shifts.map((entry) =>
+    save.mutate((current) => ({
+      shifts: current.shifts.map((entry) =>
         entry.shift_id === shiftId ? { ...entry, worked } : entry,
       ),
-    });
+    }));
   };
 
   return (
@@ -188,11 +207,11 @@ export function DayPanel({
                   entry={entry}
                   busy={save.isPending}
                   onSave={(patch) =>
-                    save.mutate({
-                      shifts: payload.shifts.map((one) =>
+                    save.mutate((current) => ({
+                      shifts: current.shifts.map((one) =>
                         one.shift_id === entry.shift_id ? { ...one, ...patch } : one,
                       ),
-                    })
+                    }))
                   }
                 />
               )}
@@ -249,7 +268,7 @@ export function DayPanel({
           placeholder="0"
           numeric
           busy={save.isPending}
-          onSave={(value) => save.mutate({ tips: value === '' ? null : Number(value.replace(',', '.')) })}
+          onSave={(value) => save.mutate(() => ({ tips: value === '' ? null : Number(value.replace(',', '.')) }))}
         />
 
         <div className="grid grid-cols-2 gap-2">
@@ -262,7 +281,7 @@ export function DayPanel({
             numeric
             busy={save.isPending}
             onSave={(value) =>
-              save.mutate({ tips_cash: value === '' ? null : Number(value.replace(',', '.')) })
+              save.mutate(() => ({ tips_cash: value === '' ? null : Number(value.replace(',', '.')) }))
             }
           />
           <Field
@@ -274,7 +293,7 @@ export function DayPanel({
             numeric
             busy={save.isPending}
             onSave={(value) =>
-              save.mutate({ deductions: value === '' ? null : Number(value.replace(',', '.')) })
+              save.mutate(() => ({ deductions: value === '' ? null : Number(value.replace(',', '.')) }))
             }
           />
         </div>
@@ -289,7 +308,7 @@ export function DayPanel({
                 <button
                   key={reason.value}
                   type="button"
-                  onClick={() => save.mutate({ deduction_reason: reason.value })}
+                  onClick={() => save.mutate(() => ({ deduction_reason: reason.value }))}
                   className={cn(
                     'rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors',
                     day?.deduction_reason === reason.value
@@ -307,7 +326,7 @@ export function DayPanel({
         <ColourField
           label="Цвет дня"
           value={day?.colour}
-          onPick={(colour) => save.mutate({ colour })}
+          onPick={(colour) => save.mutate(() => ({ colour }))}
         />
 
         <Field
@@ -317,7 +336,7 @@ export function DayPanel({
           placeholder="—"
           maxLength={500}
           busy={save.isPending}
-          onSave={(value) => save.mutate({ note: value === '' ? null : value })}
+          onSave={(value) => save.mutate(() => ({ note: value === '' ? null : value }))}
         />
       </div>
     </aside>

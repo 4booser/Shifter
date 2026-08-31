@@ -4,7 +4,7 @@ import { ArrowUpRight, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { teamApi } from '@/lib/api/team';
-import { keysBetween, todayKey } from '@/lib/calendar/calendar-date';
+import { keysBetween, todayKey, weekBounds } from '@/lib/calendar/calendar-date';
 import { cn } from '@/lib/utils';
 
 /**
@@ -20,20 +20,10 @@ export function Schedule() {
   const team = teams.data?.[0] ?? null;
 
   const today = todayKey();
-  const monday = (() => {
-    const at = new Date(`${today}T12:00:00`);
-
-    at.setDate(at.getDate() - ((at.getDay() + 6) % 7));
-
-    return at.toISOString().slice(0, 10);
-  })();
-  const sunday = (() => {
-    const at = new Date(`${monday}T12:00:00`);
-
-    at.setDate(at.getDate() + 6);
-
-    return at.toISOString().slice(0, 10);
-  })();
+  // `weekBounds` already does this from local date parts. Rebuilding it here
+  // and serialising with toISOString put the week a day early wherever local
+  // noon is the previous day in UTC.
+  const { from: monday, to: sunday } = weekBounds(today);
 
   const rota = useQuery({
     queryKey: ['rota', team?.id, monday, sunday],

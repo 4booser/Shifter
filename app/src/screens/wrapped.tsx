@@ -15,6 +15,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { calendarApi } from '@/lib/api/calendar';
 import { DaysResponse } from '@/lib/calendar/models';
 import { todayKey } from '@/lib/calendar/calendar-date';
+import { hoursWord, shiftsWord } from '@/lib/text/plural';
 import { formatMoney } from '@/lib/settings/money';
 import { useSettings } from '@/lib/settings/store';
 import { cn } from '@/lib/utils';
@@ -118,7 +119,7 @@ export function Wrapped() {
               {money(summary.total_earned)}
             </p>
             <p className="field-hint relative mt-2">
-              {shifts} смен · {Math.round(summary.hours)} ч ·{' '}
+              {shifts} {shiftsWord(shifts)} · {Math.round(summary.hours)} ч ·{' '}
               {summary.hours > 0 ? `${money(summary.total_earned / summary.hours)}/час` : '—'}
             </p>
 
@@ -207,7 +208,7 @@ function YearStory({
       .sort((one, two) => two.earned - one.earned)[0] ?? null;
 
   const lines: string[] = [
-    `В ${year} году вы отработали ${shifts} смен — ${Math.round(summary.hours)} часов, и они принесли ${money(summary.total_earned)}.`,
+    `В ${year} году вы отработали ${shifts} ${shiftsWord(shifts)} — ${Math.round(summary.hours)} ${hoursWord(Math.round(summary.hours))}, и они принесли ${money(summary.total_earned)}.`,
     `Час вашего года стоил ${money(perHour)}${
       grew === null
         ? '.'

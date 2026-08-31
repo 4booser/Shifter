@@ -17,6 +17,7 @@ import type { LucideIcon } from 'lucide-react';
 
 import { CalendarDayData, DaysResponse } from '@/lib/calendar/models';
 import { streakOf } from '@/lib/calendar/streak';
+import { daysWord, shiftsWord } from '@/lib/text/plural';
 import { fromKey, todayKey } from '@/lib/calendar/calendar-date';
 import { formatMoney } from '@/lib/settings/money';
 import { useSettings } from '@/lib/settings/store';
@@ -45,6 +46,10 @@ export function TileStrip({ days, summary }: { days: CalendarDayData[]; summary:
 
   const worked = days.filter((day) => day.shifts.some((entry) => entry.worked));
   const streak = streakOf(worked.map((day) => day.date));
+  const daysInMonth =
+    days.length === 0
+      ? 0
+      : new Date(Number(days[0]!.date.slice(0, 4)), Number(days[0]!.date.slice(5, 7)), 0).getDate();
   const shifts = days.reduce(
     (count, day) => count + day.shifts.filter((entry) => entry.worked).length,
     0,
@@ -64,7 +69,7 @@ export function TileStrip({ days, summary }: { days: CalendarDayData[]; summary:
       icon: Coins,
       label: 'Заработано',
       value: money(summary.total_earned),
-      hint: `${shifts} смен · ${Math.round(summary.hours)} ч`,
+      hint: `${shifts} ${shiftsWord(shifts)} · ${Math.round(summary.hours)} ч`,
       to: '/stats',
       tone: 'good',
     },
@@ -96,7 +101,7 @@ export function TileStrip({ days, summary }: { days: CalendarDayData[]; summary:
         best === null
           ? 'в этом месяце'
           : fromKey(best.date).toLocaleDateString('ru', { day: 'numeric', month: 'long' }),
-      to: '/report',
+      to: '/stats',
     },
     {
       id: 'nights',
@@ -112,7 +117,12 @@ export function TileStrip({ days, summary }: { days: CalendarDayData[]; summary:
       icon: CalendarClock,
       label: 'Ещё впереди',
       value: ahead.length > 0 ? money(ahead.reduce((sum, day) => sum + day.planned, 0)) : '·',
-      hint: ahead.length > 0 ? `${ahead.length} смен впереди` : 'Пока ничего не поставлено',
+      // Days with something planned, which is what `ahead` counts — calling
+      // them shifts made a day with two of them read as one.
+      hint:
+        ahead.length > 0
+          ? `${ahead.length} ${daysWord(ahead.length)} впереди`
+          : 'Пока ничего не поставлено',
       to: '/payouts',
     },
     {
@@ -121,7 +131,7 @@ export function TileStrip({ days, summary }: { days: CalendarDayData[]; summary:
       label: 'Переработка',
       value: `${Math.round(summary.overtime_hours)}`,
       hint: summary.overtime_hours > 0 ? 'часов сверх нормы' : 'ничего сверх нормы',
-      to: '/report',
+      to: '/stats',
       tone: summary.overtime_hours > 0 ? 'warn' : undefined,
     },
     {
@@ -130,7 +140,7 @@ export function TileStrip({ days, summary }: { days: CalendarDayData[]; summary:
       label: 'Удержано',
       value: withheld > 0 ? money(withheld) : '·',
       hint: withheld > 0 ? 'штрафы и питание' : 'ничего не удержано',
-      to: '/payslip',
+      to: '/payouts',
       tone: withheld > 0 ? 'danger' : undefined,
     },
     {
@@ -140,8 +150,8 @@ export function TileStrip({ days, summary }: { days: CalendarDayData[]; summary:
       value: `${streak.run}`,
       hint:
         streak.record > streak.run
-          ? `дней без выходного · рекорд ${streak.record}`
-          : 'дней без выходного',
+          ? `${daysWord(streak.run)} без выходного · рекорд ${streak.record}`
+          : `${daysWord(streak.run)} без выходного`,
       to: '/wrapped',
     },
     {
@@ -150,7 +160,7 @@ export function TileStrip({ days, summary }: { days: CalendarDayData[]; summary:
       label: 'Откуда деньги',
       value: topPlace(summary) ?? '·',
       hint: topShare(summary),
-      to: '/report',
+      to: '/stats',
     },
     {
       id: 'guests',
@@ -168,8 +178,10 @@ export function TileStrip({ days, summary }: { days: CalendarDayData[]; summary:
       icon: CalendarRange,
       label: 'Дней отработано',
       value: `${worked.length}`,
-      hint: `из ${days.length} в месяце`,
-      to: '/report',
+      // Days the server has a row for, not days in the month: a month with
+      // fourteen worked days and two coloured ones read «из 16 в месяце».
+      hint: `из ${daysInMonth} в месяце`,
+      to: '/stats',
     },
   ];
 

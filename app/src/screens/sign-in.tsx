@@ -40,6 +40,15 @@ export function SignIn() {
   const [peeking, setPeeking] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  /**
+   * The ticket the server hands back when the password held but a code still
+   * stands in the way. Holding it turns this form into its own second step —
+   * without it, anybody with two-factor sign-in typed the right password,
+   * got no session, and was bounced straight back to this form by the first
+   * request that 401'd.
+   */
+  const [ticket, setTicket] = useState<string | null>(null);
+  const [code, setCode] = useState('');
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -47,7 +56,22 @@ export function SignIn() {
     setError(null);
 
     try {
-      await authApi.login({ login: login.trim(), password });
+      if (ticket !== null) {
+        await authApi.loginSecondFactor(ticket, code.trim());
+        window.location.assign(landing());
+
+        return;
+      }
+
+      const asked = await authApi.login({ login: login.trim(), password });
+
+      if (asked !== null) {
+        setTicket(asked);
+        setBusy(false);
+
+        return;
+      }
+
       window.location.assign(landing());
     } catch (caught) {
       setError(apiErrorMessage(caught));
@@ -84,6 +108,25 @@ export function SignIn() {
         </header>
 
         <form onSubmit={submit} className="flex flex-col gap-4" noValidate>
+          {ticket !== null ? (
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="code">Код из приложения</Label>
+              <Input
+                id="code"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                autoFocus
+                maxLength={9}
+                placeholder="123456"
+                value={code}
+                onChange={(event) => setCode(event.target.value)}
+              />
+              <span className="field-hint">
+                Шесть цифр из приложения-аутентификатора или один из запасных кодов.
+              </span>
+            </div>
+          ) : (
+          <>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="login">Логин</Label>
             <Input
@@ -119,6 +162,8 @@ export function SignIn() {
               )}
             </div>
           </div>
+          </>
+          )}
 
           {error !== null && (
             <p
@@ -130,9 +175,14 @@ export function SignIn() {
             </p>
           )}
 
-          <Button type="submit" size="lg" disabled={busy || login === '' || password === ''} className="group">
+          <Button
+            type="submit"
+            size="lg"
+            className="group"
+            disabled={busy || (ticket === null ? login === '' || password === '' : code.trim() === '')}
+          >
             {busy ? <Loader2 className="size-4 animate-spin" /> : null}
-            Войти
+            {ticket === null ? 'Войти' : 'Подтвердить'}
             <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
           </Button>
         </form>

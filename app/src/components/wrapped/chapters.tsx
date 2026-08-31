@@ -1,5 +1,6 @@
 import { Bars, BarRow, Panel } from '@/components/charts/bars';
 import { streakOf } from '@/lib/calendar/streak';
+import { daysWord, timesWord } from '@/lib/text/plural';
 import { DaysResponse } from '@/lib/calendar/models';
 import { formatMoney } from '@/lib/settings/money';
 import { useSettings } from '@/lib/settings/store';
@@ -111,7 +112,12 @@ export function Records({ summary }: { summary: DaysResponse }) {
 
   const worked = summary.days.filter((day) => day.shifts.some((entry) => entry.worked));
   const best = [...summary.days].sort((one, two) => two.earned - one.earned)[0];
-  const longestHours = [...summary.days].sort((one, two) => two.hours - one.hours)[0];
+  /* The longest single shift, not the longest day: two six-hour shifts on
+     one date are not a twelve-hour shift, and calling them one would be the
+     app inventing a record nobody worked. */
+  const longestShift = summary.days
+    .flatMap((day) => day.shifts.filter((entry) => entry.worked).map((entry) => ({ day, entry })))
+    .sort((one, two) => two.entry.hours - one.entry.hours)[0];
 
   const byMonth = new Map<string, number>();
 
@@ -135,15 +141,15 @@ export function Records({ summary }: { summary: DaysResponse }) {
           hint: new Date(`${bestMonth[0]}-15T12:00:00`).toLocaleDateString('ru', { month: 'long' }),
         }
       : null,
-    longestHours !== undefined && longestHours.hours > 0
+    longestShift !== undefined && longestShift.entry.hours > 0
       ? {
           label: 'Самая длинная смена',
-          value: `${longestHours.hours} ч`,
-          hint: pretty(longestHours.date),
+          value: `${longestShift.entry.hours} ч`,
+          hint: pretty(longestShift.day.date),
         }
       : null,
     streak.record > 1
-      ? { label: 'Без выходного', value: `${streak.record} дн.`, hint: 'подряд' }
+      ? { label: 'Без выходного', value: `${streak.record} ${daysWord(streak.record)}`, hint: 'подряд' }
       : null,
   ].filter((fact): fact is { label: string; value: string; hint: string } => fact !== null);
 
@@ -262,7 +268,7 @@ export function CostOfWork({ summary }: { summary: DaysResponse }) {
         label: EXPENSE_NAMES[split.kind] ?? split.kind,
         value: split.amount,
         shown: money(split.amount),
-        hint: `${split.count} раз`,
+        hint: `${split.count} ${timesWord(split.count)}`,
         colour: 'var(--warn)',
       }),
     );

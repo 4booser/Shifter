@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils';
  * money matters.
  */
 const WEEKDAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+const SUNDAY_FIRST = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
 
 export function MonthGrid({
   month,
@@ -37,6 +38,7 @@ export function MonthGrid({
   onSelect: (key: string) => void;
 }) {
   const settings = useSettings((state) => state.settings);
+  const mondayFirst = settings.mondayFirst;
   const onDay = (key: string) =>
     events.filter((event) => event.start_date <= key && key <= event.end_date);
   const today = todayKey();
@@ -48,8 +50,12 @@ export function MonthGrid({
     const first = new Date(at.getFullYear(), at.getMonth(), 1);
     const start = new Date(first);
 
-    // Monday-first, like every rota in the trade.
-    start.setDate(first.getDate() - ((first.getDay() + 6) % 7));
+    // Monday-first is the trade's default, but the setting is offered and so
+    // it has to be honoured — a switch that reorders one bar chart and leaves
+    // the calendar alone is worse than no switch.
+    start.setDate(
+      first.getDate() - (mondayFirst ? (first.getDay() + 6) % 7 : first.getDay()),
+    );
 
     return Array.from({ length: 42 }, (_, index) => {
       const date = new Date(start);
@@ -62,17 +68,19 @@ export function MonthGrid({
         weekend: date.getDay() === 0 || date.getDay() === 6,
       };
     });
-  }, [month]);
+  }, [month, mondayFirst]);
 
   return (
     <div className="card overflow-hidden p-3">
       <div className="mb-1 grid grid-cols-7 gap-1.5">
-        {WEEKDAYS.map((name, index) => (
+        {(mondayFirst ? WEEKDAYS : SUNDAY_FIRST).map((name, index) => (
           <span
             key={name}
             className={cn(
               'px-1 text-2xs font-semibold uppercase tracking-wide',
-              index >= 5 ? 'text-warn' : 'text-faint',
+              (mondayFirst ? index >= 5 : index === 0 || index === 6)
+                ? 'text-warn'
+                : 'text-faint',
             )}
           >
             {name}
@@ -98,6 +106,10 @@ export function MonthGrid({
               className={cn(
                 'relative flex min-h-[5.5rem] flex-col gap-1 overflow-hidden rounded-[var(--radius-field)] border p-1.5 text-left transition-colors',
                 cell.inMonth ? 'border-border bg-surface' : 'border-transparent bg-surface-2/40',
+                cell.inMonth &&
+                  cell.weekend &&
+                  settings.highlightWeekends &&
+                  'bg-[var(--warn-soft)]',
                 selected === cell.key && 'ring-2 ring-[var(--accent)]',
                 cell.inMonth && 'hover:bg-surface-2',
               )}
@@ -155,7 +167,16 @@ export function MonthGrid({
                       className="size-1.5 flex-none rounded-full"
                       style={{ background: entry.colour ?? 'var(--accent)' }}
                     />
-                    <span className="hidden truncate sm:inline">{entry.name}</span>
+                    {settings.showShiftNamesInCells && (
+                      <span className="hidden truncate sm:inline">{entry.name}</span>
+                    )}
+                    {settings.cellTimes !== 'none' && (
+                      <span className="hidden truncate tabular sm:inline">
+                        {(entry.actual_start ?? entry.start_time).slice(0, 5)}
+                        {settings.cellTimes === 'range' &&
+                          `–${(entry.actual_end ?? entry.end_time).slice(0, 5)}`}
+                      </span>
+                    )}
                   </span>
                 ))}
                 {shifts.length > 2 && (
@@ -163,7 +184,7 @@ export function MonthGrid({
                 )}
               </span>
 
-              {earned > 0 && (
+              {earned > 0 && settings.showEarningsInCells && (
                 <span className="mt-auto text-xs font-semibold tabular text-good">
                   <span className="sm:hidden">
                     {formatMoneyCompact(settings, Math.round(earned))}

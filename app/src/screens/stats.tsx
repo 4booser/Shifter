@@ -106,6 +106,19 @@ export function Stats() {
           },
         ];
 
+  /* What was earned before anything was taken off it. The server's total is
+     already net of the tip-out and the deductions, so a bar of the parts
+     could never add up to it. */
+  const gross =
+    summary === undefined
+      ? 0
+      : summary.shifts_earned +
+        summary.sales_earned +
+        summary.tips_earned +
+        summary.period_earned +
+        summary.overtime_earned +
+        summary.premium_earned;
+
   /* Averaged per day worked rather than totalled: a month with five Fridays
      and four Saturdays would otherwise make Friday look like the better
      shift when it is only the more frequent one. */
@@ -297,18 +310,25 @@ export function Stats() {
               different heights, and a grid row would stretch a four-line card to
               match a ten-line one and leave the hole between them. */}
           <div className="columns-1 gap-3 lg:columns-2 [&>*]:mb-3 [&>*]:break-inside-avoid">
-            <Panel title="Из чего сложились деньги" hint="Ставка, чаевые и всё, что сверху.">
+            <Panel
+              title="Из чего сложились деньги"
+              hint={
+                gross > summary.total_earned
+                  ? `Заработано ${money(gross)}; на руки ${money(summary.total_earned)} — остальное в котёл и удержания.`
+                  : 'Ставка, чаевые и всё, что сверху.'
+              }
+            >
               <Split
-                total={money(summary.total_earned)}
+                total={money(gross)}
                 parts={[
                   {
                     key: 'base',
                     label: 'ставка',
-                    // The premiums and the revenue share both live inside
-                    // shifts_earned; counting them again would make the bar
-                    // add up to more than the money.
-                    value:
-                      summary.shifts_earned - summary.premium_earned - summary.revenue_earned,
+                    // Only the revenue share is inside shifts_earned. The
+                    // premiums and the overtime are added to the total beside
+                    // it, so subtracting them here made the segments add up to
+                    // less than the money and every percentage wrong.
+                    value: summary.shifts_earned - summary.revenue_earned,
                     colour: 'var(--s1)',
                   },
                   { key: 'tips', label: 'чаевые', value: summary.tips_earned, colour: 'var(--s2)' },
@@ -329,6 +349,12 @@ export function Stats() {
                     label: 'позиции',
                     value: summary.sales_earned,
                     colour: 'var(--s5)',
+                  },
+                  {
+                    key: 'overtime',
+                    label: 'переработка',
+                    value: summary.overtime_earned,
+                    colour: 'var(--warn)',
                   },
                   {
                     key: 'period',

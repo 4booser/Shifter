@@ -13,3 +13,7 @@ export function plural(count: number, one: string, few: string, many: string): s
 }
 
 export const daysWord = (count: number) => plural(count, 'день', 'дня', 'дней');
+export const shiftsWord = (count: number) => plural(count, 'смена', 'смены', 'смен');
+export const hoursWord = (count: number) => plural(count, 'час', 'часа', 'часов');
+export const timesWord = (count: number) => plural(count, 'раз', 'раза', 'раз');
+export const paymentsWord = (count: number) => plural(count, 'платёж', 'платежа', 'платежей');

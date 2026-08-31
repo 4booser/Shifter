@@ -5,6 +5,7 @@ import { ArrowUpRight, CalendarClock, CircleAlert, Coins } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Bars, BarRow, Panel } from '@/components/charts/bars';
 import { dayOf, spanOf } from '@/lib/calendar/spans';
+import { paymentsWord } from '@/lib/text/plural';
 import { Skeleton } from '@/components/ui/skeleton';
 import { calendarApi } from '@/lib/api/calendar';
 import { PayPeriodRow } from '@/lib/calendar/models';
@@ -108,6 +109,9 @@ export function Payouts() {
   const lateOnes = (schedule.data?.periods ?? []).filter((row) => row.days_late > 0);
   const worst = lateOnes.reduce((most, row) => Math.max(most, row.days_late), 0);
   const received = closed.reduce((sum, row) => sum + row.paid, 0);
+  // The figures below cover every place in the schedule, so a singular
+  // heading over two employers would be a claim about the wrong one.
+  const places = new Set((schedule.data?.periods ?? []).map((row) => row.location_id)).size;
 
   const cadence =
     (schedule.data?.periods ?? []).length === 0
@@ -173,7 +177,7 @@ export function Payouts() {
                       day: 'numeric',
                       month: 'long',
                     })}
-                    {next.payments > 1 ? ` · ${next.payments} платежа` : ''} · {next.places.join(' + ')}
+                    {next.payments > 1 ? ` · ${next.payments} ${paymentsWord(next.payments)}` : ''} · {next.places.join(' + ')}
                   </p>
                 </>
               )}
@@ -211,7 +215,10 @@ export function Payouts() {
             )}
 
             {cadence.length > 0 && (
-              <Panel title="Как это место платит" hint="По тому, что уже случилось.">
+              <Panel
+                title={places > 1 ? 'Как здесь платят' : 'Как это место платит'}
+                hint="По тому, что уже случилось."
+              >
                 <dl className="grid grid-cols-2 gap-x-4 gap-y-2">
                   {cadence.map((fact) => (
                     <div key={fact.label} className="flex flex-col">

@@ -171,6 +171,8 @@ export function Places() {
           onSaved={() => {
             void client.invalidateQueries({ queryKey: ['locations'] });
             void client.invalidateQueries({ queryKey: ['days'] });
+            // The pay cycle lives here and the payout dates are read from it.
+            void client.invalidateQueries({ queryKey: ['schedule'] });
             setEditing(null);
           }}
         />
@@ -390,7 +392,6 @@ function PlaceDialog({
               <Num
                 label="Ночь ×"
                 value={form.night_multiplier}
-                step={0.05}
                 onPick={(value) => set('night_multiplier', value)}
               />
               <Time
@@ -408,7 +409,6 @@ function PlaceDialog({
               <Num
                 label="Праздник ×"
                 value={form.public_holiday_multiplier}
-                step={0.05}
                 onPick={(value) => set('public_holiday_multiplier', value)}
               />
               <Pills
@@ -429,7 +429,6 @@ function PlaceDialog({
               <Num
                 label="Переработка ×"
                 value={form.overtime_multiplier}
-                step={0.05}
                 min={1}
                 onPick={(value) => set('overtime_multiplier', value)}
               />
@@ -446,13 +445,11 @@ function PlaceDialog({
               <Num
                 label="В котёл, % чаевых"
                 value={form.tip_out_of_tips_percent}
-                step={0.5}
                 onPick={(value) => set('tip_out_of_tips_percent', value)}
               />
               <Num
                 label="В котёл, % выручки"
                 value={form.tip_out_of_sales_percent}
-                step={0.5}
                 onPick={(value) => set('tip_out_of_sales_percent', value)}
               />
             </div>
@@ -465,7 +462,6 @@ function PlaceDialog({
               <Num
                 label="Налог, %"
                 value={form.tax_percent}
-                step={0.5}
                 onPick={(value) => set('tax_percent', value)}
               />
             </div>
@@ -477,7 +473,6 @@ function PlaceDialog({
             <Num
               label="Отпускные копятся, %"
               value={form.holiday_percent}
-              step={0.5}
               onPick={(value) => set('holiday_percent', value)}
             />
           </Group>
@@ -487,7 +482,6 @@ function PlaceDialog({
               <Num
                 label="Перерыв после, ч"
                 value={form.auto_break_after_hours ?? 0}
-                step={0.5}
                 onPick={(value) => set('auto_break_after_hours', value)}
               />
               <Num
@@ -565,35 +559,55 @@ function Text({
 function Num({
   label,
   value,
-  step = 1,
   min,
   max,
   onPick,
 }: {
   label: string;
   value: number;
-  step?: number;
   /** Where the server has a floor, the field keeps to it rather than letting
       somebody send a number it will refuse in a language they do not read. */
   min?: number;
   max?: number;
   onPick: (value: number) => void;
 }) {
+  /**
+   * The box holds text while it is being typed, and a number only once it is
+   * a number.
+   *
+   * Round-tripping every keystroke through `Number` made a decimal point
+   * impossible to enter: «1.» parses to 1, the field re-renders as «1», and
+   * the dot is gone before the tenths can be typed — so a night rate of ×1.5
+   * or a tax of 19.5% could not be written at all.
+   */
+  const [text, setText] = useState<string | null>(null);
+  const shown = text ?? `${value}`;
+
+  const commit = (raw: string) => {
+    const next = Number(raw.replace(',', '.'));
+
+    if (raw.trim() === '' || Number.isNaN(next)) {
+      setText(null);
+
+      return;
+    }
+
+    const held = min !== undefined && next < min ? min : max !== undefined && next > max ? max : next;
+
+    setText(null);
+    onPick(held);
+  };
+
   return (
     <label className="flex flex-col gap-1">
       <span className="field-label">{label}</span>
       <Input
         inputMode="decimal"
-        value={`${value}`}
-        step={step}
-        onChange={(event) => {
-          const next = Number(event.target.value.replace(',', '.'));
-
-          if (Number.isNaN(next)) return;
-          if (min !== undefined && next < min) return onPick(min);
-          if (max !== undefined && next > max) return onPick(max);
-
-          onPick(next);
+        value={shown}
+        onChange={(event) => setText(event.target.value)}
+        onBlur={(event) => commit(event.target.value)}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') event.currentTarget.blur();
         }}
       />
     </label>

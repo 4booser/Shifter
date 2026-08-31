@@ -394,8 +394,10 @@ export const toSavePayload = (day: CalendarDayData | undefined): DaySave => ({
     revenue: entry.revenue,
     // Carried for the same reason the positions below are: the server builds
     // each shift row from the template again, so a field missing from the
-    // request is erased, not left alone. The phone has no field for either of
-    // these — which is exactly why it must hand them back untouched.
+    // request is erased, not left alone. The day editor edits both of these
+    // on its local copy and then saves through here, so leaving them out did
+    // not merely lose what the web had recorded — it threw away what somebody
+    // had just typed on this screen.
     guests: entry.guests,
     zone: entry.zone,
   })),

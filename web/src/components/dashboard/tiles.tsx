@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { calendarApi } from '@/lib/api/calendar';
-import { fromKey, monthBounds, shiftDays, todayKey } from '@/lib/calendar/calendar-date';
+import { fromKey, keyOf, monthBounds, shiftDays, todayKey } from '@/lib/calendar/calendar-date';
 import { forecastFor } from '@/lib/calendar/forecast';
 import { bestDay } from '@/lib/calendar/insights';
 import { CalendarDayData, Goal, Reconciliation, ShiftTemplate } from '@/lib/calendar/models';
@@ -36,7 +36,11 @@ import { fromMinor } from '@/lib/mono/mono';
  * below happens to be navigated.
  */
 
-export const TILE_IDS = ['today', 'pace', 'goal', 'payday', 'bank', 'streak', 'best', 'hours', 'tips', 'heat'] as const;
+export const TILE_IDS = [
+  'today', 'pace', 'goal', 'payday', 'bank', 'streak', 'best', 'hours', 'tips', 'heat',
+  'hourly', 'nights', 'overtime', 'planned', 'places', 'weekday', 'deductions', 'week',
+  'guests', 'rest',
+] as const;
 
 export type TileId = (typeof TILE_IDS)[number];
 
@@ -51,6 +55,16 @@ const TILE_LINKS: Partial<Record<TileId, string>> = {
   hours: '/report',
   tips: '/stats',
   heat: '/wrapped',
+  hourly: '/stats',
+  nights: '/stats',
+  overtime: '/report',
+  planned: '/payouts',
+  places: '/report',
+  weekday: '/stats',
+  deductions: '/payslip',
+  week: '/schedule',
+  guests: '/stats',
+  rest: '/stats',
 };
 
 const TILE_NAMES: Record<TileId, string> = {
@@ -64,6 +78,16 @@ const TILE_NAMES: Record<TileId, string> = {
   hours: 'Hours',
   tips: 'Tips',
   heat: 'Twelve weeks',
+  hourly: 'Your hour',
+  nights: 'Night hours',
+  overtime: 'Overtime',
+  planned: 'Still to come',
+  places: 'Where it comes from',
+  weekday: 'Best weekday',
+  deductions: 'Taken off',
+  week: 'This week',
+  guests: 'Guests served',
+  rest: 'Shortest rest',
 };
 
 export function TileStrip() {
@@ -260,6 +284,26 @@ function Tile(props: {
       return <TipsTile monthDays={props.monthDays} />;
     case 'heat':
       return <HeatTile window={props.window} />;
+    case 'hourly':
+      return <HourlyTile monthDays={props.monthDays} />;
+    case 'nights':
+      return <NightsTile monthDays={props.monthDays} />;
+    case 'overtime':
+      return <OvertimeTile monthDays={props.monthDays} />;
+    case 'planned':
+      return <PlannedTile monthDays={props.monthDays} />;
+    case 'places':
+      return <PlacesTile monthDays={props.monthDays} />;
+    case 'weekday':
+      return <WeekdayTile monthDays={props.monthDays} />;
+    case 'deductions':
+      return <DeductionsTile monthDays={props.monthDays} />;
+    case 'week':
+      return <WeekTile window={props.window} />;
+    case 'guests':
+      return <GuestsTile monthDays={props.monthDays} />;
+    case 'rest':
+      return <RestTile window={props.window} />;
   }
 }
 
@@ -314,6 +358,271 @@ function BankTile() {
       </span>
       <span className="field-hint tabular">
         −<Money value={Math.round(spent)} /> {t('this month')}
+      </span>
+    </>
+  );
+}
+
+/** What an hour of this month actually paid — the figure people quote. */
+function HourlyTile({ monthDays }: { monthDays: CalendarDayData[] }) {
+  const { t } = useI18n();
+  const hours = monthDays.reduce((sum, day) => sum + day.hours, 0);
+  const earned = monthDays.reduce((sum, day) => sum + day.earned, 0);
+
+  return (
+    <>
+      <Label icon="clock">{t('Your hour')}</Label>
+      <span className="tile-value">
+        {hours > 0 ? <FlowMoney value={Math.round(earned / hours)} /> : '·'}
+      </span>
+      <span className="field-hint">
+        {hours > 0 ? `${Math.round(hours)} ${t('h this month')}` : t('No hours yet')}
+      </span>
+    </>
+  );
+}
+
+/** Hours worked after ten in the evening: the ones that cost sleep. */
+function NightsTile({ monthDays }: { monthDays: CalendarDayData[] }) {
+  const { t } = useI18n();
+  const nights = monthDays.reduce(
+    (sum, day) =>
+      sum
+      + day.shifts
+        .filter((entry) => entry.worked && Number(entry.end_time.slice(0, 2)) <= 6)
+        .reduce((hours, entry) => hours + entry.hours, 0),
+    0,
+  );
+  const hours = monthDays.reduce((sum, day) => sum + day.hours, 0);
+
+  return (
+    <>
+      <Label icon="moon">{t('Night hours')}</Label>
+      <span className="tile-value">
+        <CountUp value={nights} format={(value) => `${Math.round(value)}`} />
+      </span>
+      <span className="field-hint">
+        {hours > 0 ? `${Math.round((nights / hours) * 100)}% ${t('of all hours')}` : t('this month')}
+      </span>
+    </>
+  );
+}
+
+/** Hours past the week's agreed ceiling, where a place sets one. */
+function OvertimeTile({ monthDays }: { monthDays: CalendarDayData[] }) {
+  const { t } = useI18n();
+  // Weeks that ran past forty hours, counted from the days themselves: the
+  // server prices the premium, this only says how much time it was.
+  const byWeek = new Map<number, number>();
+
+  for (const day of monthDays) {
+    const at = fromKey(day.date);
+    const week = Math.floor((at.getTime() - new Date(at.getFullYear(), 0, 1).getTime()) / (7 * 86_400_000));
+
+    byWeek.set(week, (byWeek.get(week) ?? 0) + day.hours);
+  }
+
+  const over = [...byWeek.values()].reduce((sum, hours) => sum + Math.max(0, hours - 40), 0);
+
+  return (
+    <>
+      <Label icon="spark">{t('Overtime')}</Label>
+      <span className={`tile-value ${over > 0 ? 'text-warn' : ''}`}>
+        <CountUp value={over} format={(value) => `${Math.round(value)}`} />
+      </span>
+      <span className="field-hint">
+        {over > 0 ? t('hours past forty a week') : t('nothing past forty a week')}
+      </span>
+    </>
+  );
+}
+
+/** Shifts already on the calendar but not yet worked. */
+function PlannedTile({ monthDays }: { monthDays: CalendarDayData[] }) {
+  const { t, n } = useI18n();
+  const today = todayKey();
+  const ahead = monthDays.filter(
+    (day) => day.date > today && day.shifts.some((entry) => !entry.worked),
+  );
+  const money = ahead.reduce((sum, day) => sum + day.planned, 0);
+
+  return (
+    <>
+      <Label icon="calendar">{t('Still to come')}</Label>
+      <span className="tile-value">
+        {money > 0 ? <FlowMoney value={Math.round(money)} /> : '·'}
+      </span>
+      <span className="field-hint">
+        {ahead.length > 0 ? `${n(ahead.length, 'shifts')} ${t('ahead')}` : t('Nothing planned yet')}
+      </span>
+    </>
+  );
+}
+
+/** Which place pays most of this month's money. */
+function PlacesTile({ monthDays }: { monthDays: CalendarDayData[] }) {
+  const { t } = useI18n();
+  const byPlace = new Map<string, number>();
+
+  for (const day of monthDays) {
+    for (const entry of day.shifts) {
+      if (!entry.worked) continue;
+
+      byPlace.set(entry.name, (byPlace.get(entry.name) ?? 0) + entry.earned);
+    }
+  }
+
+  const ranked = [...byPlace.entries()].sort((one, two) => two[1] - one[1]);
+  const top = ranked[0];
+  const total = ranked.reduce((sum, [, value]) => sum + value, 0);
+
+  return (
+    <>
+      <Label icon="business">{t('Where it comes from')}</Label>
+      <span className="tile-value truncate text-[1.15rem]">{top?.[0] ?? '·'}</span>
+      <span className="field-hint">
+        {top !== undefined && total > 0
+          ? `${Math.round((top[1] / total) * 100)}% ${t('of the month')}`
+          : t('this month')}
+      </span>
+    </>
+  );
+}
+
+/** The weekday that pays best per shift — the one worth asking for. */
+function WeekdayTile({ monthDays }: { monthDays: CalendarDayData[] }) {
+  const { t } = useI18n();
+  const names = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const byDay = new Map<number, { total: number; count: number }>();
+
+  for (const day of monthDays) {
+    if (!day.shifts.some((entry) => entry.worked)) continue;
+
+    const weekday = fromKey(day.date).getDay();
+    const bucket = byDay.get(weekday) ?? { total: 0, count: 0 };
+
+    bucket.total += day.earned;
+    bucket.count += 1;
+    byDay.set(weekday, bucket);
+  }
+
+  const best = [...byDay.entries()]
+    .map(([weekday, bucket]) => ({ weekday, average: bucket.total / bucket.count }))
+    .sort((one, two) => two.average - one.average)[0];
+
+  return (
+    <>
+      <Label icon="chart">{t('Best weekday')}</Label>
+      <span className="tile-value">{best === undefined ? '·' : t(names[best.weekday])}</span>
+      <span className="field-hint">
+        {best === undefined ? t('this month') : <><Money value={Math.round(best.average)} /> {t('a shift')}</>}
+      </span>
+    </>
+  );
+}
+
+/** Fines, breakages and meals: money that left before it arrived. */
+function DeductionsTile({ monthDays }: { monthDays: CalendarDayData[] }) {
+  const { t } = useI18n();
+  const taken = monthDays.reduce((sum, day) => sum + day.deductions, 0);
+  const days = monthDays.filter((day) => day.deductions > 0).length;
+
+  return (
+    <>
+      <Label icon="alert">{t('Taken off')}</Label>
+      <span className={`tile-value ${taken > 0 ? 'text-danger' : ''}`}>
+        {taken > 0 ? <FlowMoney value={Math.round(taken)} /> : '·'}
+      </span>
+      <span className="field-hint">
+        {days > 0 ? `${days} ${t('days this month')}` : t('nothing withheld')}
+      </span>
+    </>
+  );
+}
+
+/** The seven days somebody is actually inside right now. */
+function WeekTile({ window }: { window: CalendarDayData[] }) {
+  const { t } = useI18n();
+  const today = fromKey(todayKey());
+  const monday = new Date(today);
+
+  monday.setDate(today.getDate() - ((today.getDay() + 6) % 7));
+
+  const from = keyOf(monday);
+  const to = keyOf(new Date(monday.getTime() + 6 * 86_400_000));
+  const inside = window.filter((day) => day.date >= from && day.date <= to);
+  const hours = inside.reduce((sum, day) => sum + day.hours, 0);
+  const earned = inside.reduce((sum, day) => sum + day.earned, 0);
+
+  return (
+    <>
+      <Label icon="calendar">{t('This week')}</Label>
+      <span className="tile-value">
+        <FlowMoney value={Math.round(earned)} />
+      </span>
+      <span className="field-hint">{Math.round(hours * 10) / 10} {t('h so far')}</span>
+    </>
+  );
+}
+
+/** How many people went through the room, where anybody counted. */
+function GuestsTile({ monthDays }: { monthDays: CalendarDayData[] }) {
+  const { t } = useI18n();
+  const counted = monthDays.flatMap((day) => day.shifts.filter((entry) => entry.guests !== null));
+  const guests = counted.reduce((sum, entry) => sum + (entry.guests ?? 0), 0);
+  const tips = monthDays.reduce((sum, day) => sum + (day.tips ?? 0) + (day.tips_cash ?? 0), 0);
+
+  return (
+    <>
+      <Label icon="users">{t('Guests served')}</Label>
+      <span className="tile-value">
+        <CountUp value={guests} format={(value) => `${Math.round(value)}`} />
+      </span>
+      <span className="field-hint">
+        {guests > 0 && tips > 0
+          ? <><Money value={Math.round((tips / guests) * 100) / 100} /> {t('a guest in tips')}</>
+          : t('where anybody counted')}
+      </span>
+    </>
+  );
+}
+
+/** The shortest gap between leaving and coming back this fortnight. */
+function RestTile({ window }: { window: CalendarDayData[] }) {
+  const { t } = useI18n();
+  const spans: { start: number; end: number }[] = [];
+
+  for (const day of window) {
+    for (const entry of day.shifts) {
+      if (!entry.worked) continue;
+
+      const start = new Date(`${day.date}T${entry.actual_start ?? entry.start_time}:00`).getTime();
+      let end = new Date(`${day.date}T${entry.actual_end ?? entry.end_time}:00`).getTime();
+
+      if (end <= start) end += 86_400_000;
+
+      spans.push({ start, end });
+    }
+  }
+
+  spans.sort((one, two) => one.start - two.start);
+
+  let shortest: number | null = null;
+
+  for (let index = 1; index < spans.length; index += 1) {
+    const gap = (spans[index].start - spans[index - 1].end) / 3_600_000;
+
+    if (gap >= 0 && (shortest === null || gap < shortest)) shortest = gap;
+  }
+
+  return (
+    <>
+      <Label icon="moon">{t('Shortest rest')}</Label>
+      <span className={`tile-value ${shortest !== null && shortest < 11 ? 'text-warn' : ''}`}>
+        {shortest === null ? '·' : `${Math.round(shortest)}${t('h')}`}
+      </span>
+      <span className="field-hint">
+        {shortest === null ? t('nothing to compare yet') : t('between two shifts')}
       </span>
     </>
   );

@@ -1,10 +1,14 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowUpRight } from 'lucide-react';
+import { ArrowUpRight, ChevronLeft, ChevronRight } from 'lucide-react';
 
+import { DayPanel } from '@/components/calendar/day-panel';
+import { MonthGrid } from '@/components/calendar/month-grid';
 import { TileStrip } from '@/components/tiles/tile-strip';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { calendarApi } from '@/lib/api/calendar';
-import { monthBounds, todayKey } from '@/lib/calendar/calendar-date';
+import { fromKey, keyOf, monthBounds, todayKey } from '@/lib/calendar/calendar-date';
 
 /**
  * The calendar page, rebuilt.
@@ -15,17 +19,47 @@ import { monthBounds, todayKey } from '@/lib/calendar/calendar-date';
  * on screen.
  */
 export function Dashboard() {
-  const bounds = monthBounds(todayKey());
+  const [month, setMonth] = useState(todayKey());
+  const [selected, setSelected] = useState<string | null>(todayKey());
+  const bounds = monthBounds(month);
 
-  const month = useQuery({
+  const days = useQuery({
     queryKey: ['days', bounds.from, bounds.to],
     queryFn: () => calendarApi.days(bounds.from, bounds.to),
   });
 
   return (
     <div className="flex flex-col gap-5">
-      <header className="flex items-baseline justify-between gap-3">
-        <h1 className="text-2xl font-bold tracking-tight">Календарь</h1>
+      <header className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <h1 className="text-2xl font-bold tracking-tight first-letter:uppercase">
+            {/* Not `capitalize`: it title-cases every word, and Russian turns
+                «август 2026 г.» into «Август 2026 Г.» — a stray capital on an
+                abbreviation nobody wrote. */}
+            {fromKey(month).toLocaleDateString('ru', { month: 'long', year: 'numeric' })}
+          </h1>
+          <span className="flex items-center gap-1">
+            <Button
+              variant="outline"
+              size="icon"
+              aria-label="Предыдущий месяц"
+              onClick={() => setMonth((was) => shiftMonth(was, -1))}
+            >
+              <ChevronLeft className="size-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              aria-label="Следующий месяц"
+              onClick={() => setMonth((was) => shiftMonth(was, 1))}
+            >
+              <ChevronRight className="size-4" />
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => setMonth(todayKey())}>
+              Сегодня
+            </Button>
+          </span>
+        </div>
         <a
           href="/dashboard"
           className="flex items-center gap-1 text-sm font-medium text-muted-foreground transition-colors hover:text-ink"
@@ -35,19 +69,38 @@ export function Dashboard() {
         </a>
       </header>
 
-      {month.isPending ? (
+      {days.isPending ? (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 xl:grid-cols-6">
           {Array.from({ length: 6 }, (_, index) => (
             <Skeleton key={index} className="h-28 rounded-[var(--radius-card)]" />
           ))}
         </div>
-      ) : month.isError ? (
+      ) : days.isError ? (
         <p className="card p-4 text-sm" style={{ color: 'var(--danger)' }}>
           Не дотянулись до сервера.
         </p>
       ) : (
-        <TileStrip days={month.data.days} summary={month.data} />
+        <>
+          <TileStrip days={days.data.days} summary={days.data} />
+
+          <div className="grid gap-4 xl:grid-cols-[minmax(0,3fr)_minmax(0,1fr)]">
+            <MonthGrid
+              month={month}
+              days={days.data.days}
+              selected={selected}
+              onSelect={setSelected}
+            />
+            <DayPanel day={selected === null ? null : days.data.days.find((row) => row.date === selected) ?? null} date={selected} />
+          </div>
+        </>
       )}
     </div>
   );
+}
+
+/** A month either side, keeping the day-of-month sane at the edges. */
+function shiftMonth(key: string, delta: number): string {
+  const at = fromKey(key);
+
+  return keyOf(new Date(at.getFullYear(), at.getMonth() + delta, 1));
 }

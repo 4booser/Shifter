@@ -2,7 +2,7 @@ import { createFileRoute, Link } from '@tanstack/react-router';
 import { Printer, Share2 } from 'lucide-react';
 
 import { Head } from '@/components/screen';
-import { Button, Card, Pills } from '@/components/ui/kit';
+import { Bars, Button, Card, Pills } from '@/components/ui/kit';
 
 /**
  * Отчёт. Единственный экран, который печатают, — поэтому лист светлый:
@@ -67,6 +67,43 @@ function Report() {
         <p className="mt-5 font-mono text-2xs text-night/45">
           Собрано приложением из отмеченных смен. Не является платёжным документом.
         </p>
+      </div>
+
+      {/* Разбор ниже листа: то, что в печатный отчёт не влезает, но из-за
+          чего его и открывают. */}
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Card title="По местам" hint="Одно место — одна строка. Итог по всем сразу смешал бы ставки.">
+          <div className="flex flex-col">
+            {[
+              { name: 'Бар «Полночь»', days: 16, hours: 133, earned: '₴32 100', per: '₴241/ч' },
+              { name: 'Ресторан «Веранда»', days: 3, hours: 23, earned: '₴5 030', per: '₴219/ч' },
+              { name: 'Подработка', days: 1, hours: 7, earned: '₴1 640', per: '₴234/ч' },
+            ].map((one) => (
+              <div key={one.name} className="border-b border-paper/9 py-2.5 last:border-0">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <span className="text-sm">{one.name}</span>
+                  <span className="font-mono text-sm font-semibold tabular">{one.earned}</span>
+                </div>
+                <p className="lbl">
+                  {one.days} смен · {one.hours} ч · {one.per}
+                </p>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        <Card title="Чаевые по залам" hint="За час, действительно проведённый там.">
+          <Bars
+            rows={[
+              { name: 'Бар', under: '77 ч', share: 100, value: '₴68/ч', tone: 'brass' },
+              { name: 'Терраса', under: '24 ч', share: 62, value: '₴42/ч' },
+              { name: 'Зал', under: '62 ч', share: 39, value: '₴26/ч' },
+            ]}
+          />
+          <p className="hint mt-3 border-t border-paper/9 pt-3">
+            За стойкой чаевые вдвое гуще, чем в зале, — при той же ставке.
+          </p>
+        </Card>
       </div>
 
       {/* Сверка с расчёткой стояла здесь второй копией той же таблицы — и

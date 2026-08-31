@@ -1,9 +1,10 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowUpRight, Eye, Landmark, RefreshCw } from 'lucide-react';
 
 import { Climb } from '@/components/charts/climb';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Bars, BarRow, Panel, Split } from '@/components/charts/bars';
 import { calendarApi } from '@/lib/api/calendar';
 import { daysWord, timesWord } from '@/lib/text/plural';
@@ -171,6 +172,22 @@ export function Bank() {
     .filter((item) => item.amount < 0 && !item.hold)
     .reduce((sum, item) => sum + fromMinor(-item.amount), 0);
 
+  const [typed, setTyped] = useState('');
+  const [refused, setRefused] = useState<string | null>(null);
+
+  /* The token goes from this tab to api.monobank.ua and nowhere else — the
+     one promise this screen makes, and the reason it is typed here rather
+     than posted anywhere. */
+  const link = async () => {
+    setRefused(null);
+
+    const answer = await mono.connect(typed.trim());
+
+    if (answer === 'refused') setRefused('Банк не принял этот токен.');
+    else if (answer === 'failed') setRefused('Не дотянулись до банка. Попробуйте ещё раз.');
+    else setTyped('');
+  };
+
   if (mono.token === undefined) return null;
 
   if (mono.token === null) {
@@ -193,12 +210,34 @@ export function Bank() {
           Девяносто выдуманных дней, нарисованных прямо здесь. Банк не участвует.
         </p>
 
-        <Button className="mt-4 w-full" asChild>
-          <a href="/bank">
-            Подключить выписку на старой странице
-            <ArrowUpRight className="size-3.5" />
-          </a>
-        </Button>
+        <div className="mt-5 flex flex-col gap-2 border-t border-border pt-4">
+          <span className="field-label">Токен из monobank</span>
+          <span className="flex gap-2">
+            <Input
+              type="password"
+              autoComplete="off"
+              spellCheck={false}
+              value={typed}
+              placeholder="u...."
+              onChange={(event) => setTyped(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' && typed.trim() !== '') void link();
+              }}
+            />
+            <Button disabled={typed.trim() === '' || mono.busy} onClick={() => void link()}>
+              Подключить
+            </Button>
+          </span>
+          <span className="field-hint">
+            Берётся на api.monobank.ua/index.html. Он только на чтение, отзывается в банке одним
+            нажатием, и хранится в этом браузере — на сервер Shifter не уходит.
+          </span>
+          {refused !== null && (
+            <span className="text-sm" style={{ color: 'var(--danger)' }}>
+              {refused}
+            </span>
+          )}
+        </div>
       </section>
     );
   }
@@ -465,11 +504,60 @@ export function Bank() {
         )}
       </div>
 
-      {mono.items.length === 0 && !mono.busy && (
-        <p className="card flex items-center gap-2 p-4 text-sm">
-          <RefreshCw className="size-4" />
-          Выписка ещё не загружена — это делается на старой странице.
-        </p>
+      {!mono.demo && (
+        <section className="card flex flex-wrap items-center gap-x-4 gap-y-2 p-4">
+          {(mono.client?.accounts ?? []).length > 1 && (
+            <span className="flex flex-wrap items-center gap-1.5">
+              <span className="field-label">Счёт</span>
+              {(mono.client?.accounts ?? []).map((one) => (
+                <button
+                  key={one.id}
+                  type="button"
+                  onClick={() => mono.chooseAccount(one.id)}
+                  className={cn(
+                    'rounded-full border px-2.5 py-1 text-xs font-medium transition-colors',
+                    mono.accountId === one.id
+                      ? 'border-transparent bg-accent text-accent-foreground'
+                      : 'border-border text-muted-foreground hover:text-ink',
+                  )}
+                >
+                  {one.maskedPan?.[0] ?? one.iban?.slice(-4) ?? one.type}
+                </button>
+              ))}
+            </span>
+          )}
+
+          <span className="ml-auto flex items-center gap-2">
+            {mono.progress !== null && (
+              <span className="field-hint tabular">
+                {mono.progress.done} из {mono.progress.total}
+              </span>
+            )}
+            {mono.waiting > 0 && (
+              <span className="field-hint tabular">банк просит подождать {mono.waiting} с</span>
+            )}
+            {/* Monobank allows one statement request a minute, so the days
+                asked for are a real choice rather than a slider nobody reads. */}
+            {[31, 90].map((back) => (
+              <Button
+                key={back}
+                size="sm"
+                variant="outline"
+                disabled={mono.busy || mono.accountId === null}
+                onClick={() => void mono.sync(back)}
+              >
+                <RefreshCw className={cn('size-3.5', mono.busy && 'animate-spin')} />
+                {back} дней
+              </Button>
+            ))}
+          </span>
+
+          {mono.error !== null && (
+            <span className="w-full text-sm" style={{ color: 'var(--danger)' }}>
+              {mono.error}
+            </span>
+          )}
+        </section>
       )}
     </div>
   );

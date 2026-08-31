@@ -1,7 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
 
-import { Soon } from '@/screens/soon';
+import { Bank } from '@/screens/bank';
 
-export const Route = createFileRoute('/_app/bank')({
-  component: () => <Soon title="bank" />,
-});
+export const Route = createFileRoute('/_app/bank')({ component: Bank });

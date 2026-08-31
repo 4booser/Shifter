@@ -17,20 +17,27 @@ import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ResetRouteImport } from './routes/reset'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppAccountRouteImport } from './routes/_app/account'
+import { Route as AppAssistantRouteImport } from './routes/_app/assistant'
 import { Route as AppBankRouteImport } from './routes/_app/bank'
 import { Route as AppCompareRouteImport } from './routes/_app/compare'
+import { Route as AppContractRouteImport } from './routes/_app/contract'
 import { Route as AppCostsRouteImport } from './routes/_app/costs'
+import { Route as AppCvRouteImport } from './routes/_app/cv'
 import { Route as AppGigsRouteImport } from './routes/_app/gigs'
 import { Route as AppPayoutsRouteImport } from './routes/_app/payouts'
 import { Route as AppPayslipRouteImport } from './routes/_app/payslip'
 import { Route as AppPlacesRouteImport } from './routes/_app/places'
 import { Route as AppReportRouteImport } from './routes/_app/report'
+import { Route as AppRoadmapRouteImport } from './routes/_app/roadmap'
 import { Route as AppScheduleRouteImport } from './routes/_app/schedule'
 import { Route as AppSeekersRouteImport } from './routes/_app/seekers'
 import { Route as AppServiceRouteImport } from './routes/_app/service'
 import { Route as AppShiftsRouteImport } from './routes/_app/shifts'
 import { Route as AppStatsRouteImport } from './routes/_app/stats'
+import { Route as AppStatusRouteImport } from './routes/_app/status'
 import { Route as AppTeamRouteImport } from './routes/_app/team'
+import { Route as AppWebhooksRouteImport } from './routes/_app/webhooks'
+import { Route as AppWhatsNewRouteImport } from './routes/_app/whats-new'
 import { Route as AppWrappedRouteImport } from './routes/_app/wrapped'
 import { Route as KitIndexRouteImport } from './routes/kit/index'
 import { Route as KitModalsRouteImport } from './routes/kit/modals'
@@ -76,6 +83,11 @@ const AppAccountRoute = AppAccountRouteImport.update({
   path: '/account',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAssistantRoute = AppAssistantRouteImport.update({
+  id: '/assistant',
+  path: '/assistant',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppBankRoute = AppBankRouteImport.update({
   id: '/bank',
   path: '/bank',
@@ -86,9 +98,19 @@ const AppCompareRoute = AppCompareRouteImport.update({
   path: '/compare',
   getParentRoute: () => AppRoute,
 } as any)
+const AppContractRoute = AppContractRouteImport.update({
+  id: '/contract',
+  path: '/contract',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppCostsRoute = AppCostsRouteImport.update({
   id: '/costs',
   path: '/costs',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCvRoute = AppCvRouteImport.update({
+  id: '/cv',
+  path: '/cv',
   getParentRoute: () => AppRoute,
 } as any)
 const AppGigsRoute = AppGigsRouteImport.update({
@@ -116,6 +138,11 @@ const AppReportRoute = AppReportRouteImport.update({
   path: '/report',
   getParentRoute: () => AppRoute,
 } as any)
+const AppRoadmapRoute = AppRoadmapRouteImport.update({
+  id: '/roadmap',
+  path: '/roadmap',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppScheduleRoute = AppScheduleRouteImport.update({
   id: '/schedule',
   path: '/schedule',
@@ -141,9 +168,24 @@ const AppStatsRoute = AppStatsRouteImport.update({
   path: '/stats',
   getParentRoute: () => AppRoute,
 } as any)
+const AppStatusRoute = AppStatusRouteImport.update({
+  id: '/status',
+  path: '/status',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppTeamRoute = AppTeamRouteImport.update({
   id: '/team',
   path: '/team',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppWebhooksRoute = AppWebhooksRouteImport.update({
+  id: '/webhooks',
+  path: '/webhooks',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppWhatsNewRoute = AppWhatsNewRouteImport.update({
+  id: '/whats-new',
+  path: '/whats-new',
   getParentRoute: () => AppRoute,
 } as any)
 const AppWrappedRoute = AppWrappedRouteImport.update({
@@ -180,20 +222,27 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/reset': typeof ResetRoute
   '/account': typeof AppAccountRoute
+  '/assistant': typeof AppAssistantRoute
   '/bank': typeof AppBankRoute
   '/compare': typeof AppCompareRoute
+  '/contract': typeof AppContractRoute
   '/costs': typeof AppCostsRoute
+  '/cv': typeof AppCvRoute
   '/gigs': typeof AppGigsRoute
   '/payouts': typeof AppPayoutsRoute
   '/payslip': typeof AppPayslipRoute
   '/places': typeof AppPlacesRoute
   '/report': typeof AppReportRoute
+  '/roadmap': typeof AppRoadmapRoute
   '/schedule': typeof AppScheduleRoute
   '/seekers': typeof AppSeekersRoute
   '/service': typeof AppServiceRoute
   '/shifts': typeof AppShiftsRoute
   '/stats': typeof AppStatsRoute
+  '/status': typeof AppStatusRoute
   '/team': typeof AppTeamRoute
+  '/webhooks': typeof AppWebhooksRoute
+  '/whats-new': typeof AppWhatsNewRoute
   '/wrapped': typeof AppWrappedRoute
   '/kit/modals': typeof KitModalsRoute
   '/kit/phone': typeof KitPhoneRoute
@@ -206,20 +255,27 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/reset': typeof ResetRoute
   '/account': typeof AppAccountRoute
+  '/assistant': typeof AppAssistantRoute
   '/bank': typeof AppBankRoute
   '/compare': typeof AppCompareRoute
+  '/contract': typeof AppContractRoute
   '/costs': typeof AppCostsRoute
+  '/cv': typeof AppCvRoute
   '/gigs': typeof AppGigsRoute
   '/payouts': typeof AppPayoutsRoute
   '/payslip': typeof AppPayslipRoute
   '/places': typeof AppPlacesRoute
   '/report': typeof AppReportRoute
+  '/roadmap': typeof AppRoadmapRoute
   '/schedule': typeof AppScheduleRoute
   '/seekers': typeof AppSeekersRoute
   '/service': typeof AppServiceRoute
   '/shifts': typeof AppShiftsRoute
   '/stats': typeof AppStatsRoute
+  '/status': typeof AppStatusRoute
   '/team': typeof AppTeamRoute
+  '/webhooks': typeof AppWebhooksRoute
+  '/whats-new': typeof AppWhatsNewRoute
   '/wrapped': typeof AppWrappedRoute
   '/kit/modals': typeof KitModalsRoute
   '/kit/phone': typeof KitPhoneRoute
@@ -236,20 +292,27 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/reset': typeof ResetRoute
   '/_app/account': typeof AppAccountRoute
+  '/_app/assistant': typeof AppAssistantRoute
   '/_app/bank': typeof AppBankRoute
   '/_app/compare': typeof AppCompareRoute
+  '/_app/contract': typeof AppContractRoute
   '/_app/costs': typeof AppCostsRoute
+  '/_app/cv': typeof AppCvRoute
   '/_app/gigs': typeof AppGigsRoute
   '/_app/payouts': typeof AppPayoutsRoute
   '/_app/payslip': typeof AppPayslipRoute
   '/_app/places': typeof AppPlacesRoute
   '/_app/report': typeof AppReportRoute
+  '/_app/roadmap': typeof AppRoadmapRoute
   '/_app/schedule': typeof AppScheduleRoute
   '/_app/seekers': typeof AppSeekersRoute
   '/_app/service': typeof AppServiceRoute
   '/_app/shifts': typeof AppShiftsRoute
   '/_app/stats': typeof AppStatsRoute
+  '/_app/status': typeof AppStatusRoute
   '/_app/team': typeof AppTeamRoute
+  '/_app/webhooks': typeof AppWebhooksRoute
+  '/_app/whats-new': typeof AppWhatsNewRoute
   '/_app/wrapped': typeof AppWrappedRoute
   '/kit/modals': typeof KitModalsRoute
   '/kit/phone': typeof KitPhoneRoute
@@ -267,20 +330,27 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset'
     | '/account'
+    | '/assistant'
     | '/bank'
     | '/compare'
+    | '/contract'
     | '/costs'
+    | '/cv'
     | '/gigs'
     | '/payouts'
     | '/payslip'
     | '/places'
     | '/report'
+    | '/roadmap'
     | '/schedule'
     | '/seekers'
     | '/service'
     | '/shifts'
     | '/stats'
+    | '/status'
     | '/team'
+    | '/webhooks'
+    | '/whats-new'
     | '/wrapped'
     | '/kit/modals'
     | '/kit/phone'
@@ -293,20 +363,27 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset'
     | '/account'
+    | '/assistant'
     | '/bank'
     | '/compare'
+    | '/contract'
     | '/costs'
+    | '/cv'
     | '/gigs'
     | '/payouts'
     | '/payslip'
     | '/places'
     | '/report'
+    | '/roadmap'
     | '/schedule'
     | '/seekers'
     | '/service'
     | '/shifts'
     | '/stats'
+    | '/status'
     | '/team'
+    | '/webhooks'
+    | '/whats-new'
     | '/wrapped'
     | '/kit/modals'
     | '/kit/phone'
@@ -322,20 +399,27 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset'
     | '/_app/account'
+    | '/_app/assistant'
     | '/_app/bank'
     | '/_app/compare'
+    | '/_app/contract'
     | '/_app/costs'
+    | '/_app/cv'
     | '/_app/gigs'
     | '/_app/payouts'
     | '/_app/payslip'
     | '/_app/places'
     | '/_app/report'
+    | '/_app/roadmap'
     | '/_app/schedule'
     | '/_app/seekers'
     | '/_app/service'
     | '/_app/shifts'
     | '/_app/stats'
+    | '/_app/status'
     | '/_app/team'
+    | '/_app/webhooks'
+    | '/_app/whats-new'
     | '/_app/wrapped'
     | '/kit/modals'
     | '/kit/phone'
@@ -411,6 +495,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAccountRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/assistant': {
+      id: '/_app/assistant'
+      path: '/assistant'
+      fullPath: '/assistant'
+      preLoaderRoute: typeof AppAssistantRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/bank': {
       id: '/_app/bank'
       path: '/bank'
@@ -425,11 +516,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCompareRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/contract': {
+      id: '/_app/contract'
+      path: '/contract'
+      fullPath: '/contract'
+      preLoaderRoute: typeof AppContractRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/costs': {
       id: '/_app/costs'
       path: '/costs'
       fullPath: '/costs'
       preLoaderRoute: typeof AppCostsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/cv': {
+      id: '/_app/cv'
+      path: '/cv'
+      fullPath: '/cv'
+      preLoaderRoute: typeof AppCvRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/gigs': {
@@ -467,6 +572,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppReportRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/roadmap': {
+      id: '/_app/roadmap'
+      path: '/roadmap'
+      fullPath: '/roadmap'
+      preLoaderRoute: typeof AppRoadmapRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/schedule': {
       id: '/_app/schedule'
       path: '/schedule'
@@ -502,11 +614,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppStatsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/status': {
+      id: '/_app/status'
+      path: '/status'
+      fullPath: '/status'
+      preLoaderRoute: typeof AppStatusRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/team': {
       id: '/_app/team'
       path: '/team'
       fullPath: '/team'
       preLoaderRoute: typeof AppTeamRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/webhooks': {
+      id: '/_app/webhooks'
+      path: '/webhooks'
+      fullPath: '/webhooks'
+      preLoaderRoute: typeof AppWebhooksRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/whats-new': {
+      id: '/_app/whats-new'
+      path: '/whats-new'
+      fullPath: '/whats-new'
+      preLoaderRoute: typeof AppWhatsNewRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/wrapped': {
@@ -549,40 +682,54 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteChildren {
   AppAccountRoute: typeof AppAccountRoute
+  AppAssistantRoute: typeof AppAssistantRoute
   AppBankRoute: typeof AppBankRoute
   AppCompareRoute: typeof AppCompareRoute
+  AppContractRoute: typeof AppContractRoute
   AppCostsRoute: typeof AppCostsRoute
+  AppCvRoute: typeof AppCvRoute
   AppGigsRoute: typeof AppGigsRoute
   AppPayoutsRoute: typeof AppPayoutsRoute
   AppPayslipRoute: typeof AppPayslipRoute
   AppPlacesRoute: typeof AppPlacesRoute
   AppReportRoute: typeof AppReportRoute
+  AppRoadmapRoute: typeof AppRoadmapRoute
   AppScheduleRoute: typeof AppScheduleRoute
   AppSeekersRoute: typeof AppSeekersRoute
   AppServiceRoute: typeof AppServiceRoute
   AppShiftsRoute: typeof AppShiftsRoute
   AppStatsRoute: typeof AppStatsRoute
+  AppStatusRoute: typeof AppStatusRoute
   AppTeamRoute: typeof AppTeamRoute
+  AppWebhooksRoute: typeof AppWebhooksRoute
+  AppWhatsNewRoute: typeof AppWhatsNewRoute
   AppWrappedRoute: typeof AppWrappedRoute
   AppIndexRoute: typeof AppIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppAccountRoute: AppAccountRoute,
+  AppAssistantRoute: AppAssistantRoute,
   AppBankRoute: AppBankRoute,
   AppCompareRoute: AppCompareRoute,
+  AppContractRoute: AppContractRoute,
   AppCostsRoute: AppCostsRoute,
+  AppCvRoute: AppCvRoute,
   AppGigsRoute: AppGigsRoute,
   AppPayoutsRoute: AppPayoutsRoute,
   AppPayslipRoute: AppPayslipRoute,
   AppPlacesRoute: AppPlacesRoute,
   AppReportRoute: AppReportRoute,
+  AppRoadmapRoute: AppRoadmapRoute,
   AppScheduleRoute: AppScheduleRoute,
   AppSeekersRoute: AppSeekersRoute,
   AppServiceRoute: AppServiceRoute,
   AppShiftsRoute: AppShiftsRoute,
   AppStatsRoute: AppStatsRoute,
+  AppStatusRoute: AppStatusRoute,
   AppTeamRoute: AppTeamRoute,
+  AppWebhooksRoute: AppWebhooksRoute,
+  AppWhatsNewRoute: AppWhatsNewRoute,
   AppWrappedRoute: AppWrappedRoute,
   AppIndexRoute: AppIndexRoute,
 }

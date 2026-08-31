@@ -24,15 +24,47 @@ const NAV = [
   { to: '/wrapped', label: 'Год' },
 ] as const;
 
-/** То, что открывают раз в месяц: в верхней строке ему места нет. */
+/**
+ * То, что открывают раз в месяц: в верхней строке ему места нет.
+ *
+ * Четырьмя стопками, а не одним списком из тринадцати строк: в списке такой
+ * длины нужный пункт ищут перечитыванием, а в стопках — сразу нужной.
+ */
 const MORE = [
-  { to: '/report', label: 'Отчёт за месяц' },
-  { to: '/payslip', label: 'Сверить расчётку' },
-  { to: '/compare', label: 'Сравнить периоды' },
-  { to: '/costs', label: 'Что работа стоила' },
-  { to: '/team', label: 'Команда' },
-  { to: '/seekers', label: 'Люди на бирже' },
-  { to: '/service', label: 'Состояние и данные' },
+  {
+    head: 'Деньги',
+    items: [
+      { to: '/report', label: 'Отчёт за месяц' },
+      { to: '/payslip', label: 'Сверить расчётку' },
+      { to: '/compare', label: 'Сравнить периоды' },
+      { to: '/costs', label: 'Что работа стоила' },
+    ],
+  },
+  {
+    head: 'Люди',
+    items: [
+      { to: '/team', label: 'Команда' },
+      { to: '/seekers', label: 'Люди на бирже' },
+    ],
+  },
+  {
+    head: 'О себе',
+    items: [
+      { to: '/cv', label: 'Послужной список' },
+      { to: '/contract', label: 'Вопросы до подписи' },
+      { to: '/assistant', label: 'Спросить про месяцы' },
+    ],
+  },
+  {
+    head: 'Служебное',
+    items: [
+      { to: '/service', label: 'Данные и уведомления' },
+      { to: '/webhooks', label: 'Подключения' },
+      { to: '/status', label: 'Работает ли сервис' },
+      { to: '/whats-new', label: 'Что нового' },
+      { to: '/roadmap', label: 'Планы' },
+    ],
+  },
 ] as const;
 
 function Shell() {
@@ -95,16 +127,21 @@ function Shell() {
             {/* Ящик для того, что открывают раз в месяц: в верхней строке оно
                 отнимало бы место у восьми вкладок, которыми пользуются каждый день. */}
             {more && (
-              <div className="absolute top-11 right-0 z-50 w-60 rounded-[var(--radius-card)] border border-paper/17 bg-table p-2 shadow-[0_30px_70px_-25px_rgba(0,0,0,0.9)]">
-                {MORE.map((one) => (
-                  <Link
-                    key={one.to}
-                    to={one.to}
-                    onClick={() => setMore(false)}
-                    className="block rounded-lg px-3 py-2 text-sm text-dim transition-colors hover:bg-paper/5 hover:text-paper"
-                  >
-                    {one.label}
-                  </Link>
+              <div className="absolute top-11 right-0 z-50 max-h-[75vh] w-64 overflow-y-auto rounded-[var(--radius-card)] border border-paper/17 bg-table p-2 shadow-[0_30px_70px_-25px_rgba(0,0,0,0.9)]">
+                {MORE.map((group) => (
+                  <div key={group.head} className="mb-1 last:mb-0">
+                    <span className="lbl block px-3 pt-2 pb-1">{group.head}</span>
+                    {group.items.map((one) => (
+                      <Link
+                        key={one.to}
+                        to={one.to}
+                        onClick={() => setMore(false)}
+                        className="block rounded-lg px-3 py-2 text-sm text-dim transition-colors hover:bg-paper/5 hover:text-paper"
+                      >
+                        {one.label}
+                      </Link>
+                    ))}
+                  </div>
                 ))}
                 <span className="mt-1 block border-t border-paper/9 pt-1">
                   <Link

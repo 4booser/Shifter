@@ -1786,6 +1786,88 @@ export const RU: Dictionary = {
   'Type at least two characters.': 'Введи хотя бы два символа.',
   'Nothing found.': 'Ничего не нашлось.',
   'Loading…': 'Загружаю…',
+  'Meals': 'Питание',
+  'Other': 'Другое',
+  'worth': 'принесло',
+  'on': 'на',
+  'Your year, written out':
+    'Ваш год словами',
+  'Every figure here is your own record. Nothing is an estimate and nothing is advice.':
+    'Каждая цифра здесь — ваша собственная запись. Ничего не выдумано и ничего не советует.',
+  'you worked':
+    'вы отработали',
+  'hours in all':
+    'часов всего',
+  'and they came to':
+    'и они принесли',
+  'An hour of your year was worth':
+    'Час вашего года стоил',
+  'exactly what it was worth last year':
+    'ровно столько же, сколько в прошлом году',
+  'more than last year':
+    'больше, чем в прошлом году',
+  'less than last year':
+    'меньше, чем в прошлом году',
+  'Tips brought':
+    'Чаевые принесли',
+  'of everything':
+    'от всего',
+  'of those hours were night ones':
+    'этих часов — ночные',
+  'hours after the city went quiet':
+    'часов после того, как город затих',
+  'hours went past the week’s ceiling':
+    'часов ушло за недельный потолок',
+  'and the premium for them was':
+    'а надбавка за них составила',
+  'Most of it':
+    'Больше всего',
+  'came from':
+    'принесло',
+  'Your rate moved on':
+    'Ваша ставка изменилась',
+  'was withheld in fines and meals':
+    'удержано штрафами и питанием',
+  'Getting to work cost':
+    'Дорога на работу стоила',
+  'of the tips':
+    'от чаевых',
+  'A share of the takings':
+    'Процент с выручки',
+  'Where the tips happened':
+    'Где случались чаевые',
+  'Per hour spent standing there — the comparison the argument is about.':
+    'За час, проведённый там, — то самое сравнение, о котором спорят.',
+  'Hall':
+    'Зал',
+  'Terrace':
+    'Терраса',
+  'Banquets':
+    'Банкеты',
+  'Takeaway':
+    'Навынос',
+  'What your rate did':
+    'Что делала ваша ставка',
+  'Never subtracted from anything above: take-home is what arrived, and these happened around it.':
+    'Ничего из этого не вычтено из сумм выше: на руки — это то, что пришло, а это случилось вокруг.',
+  'Spent to work':
+    'Потрачено ради работы',
+  'The travelling ate':
+    'Дорога съела',
+  'The room, counted':
+    'Зал, посчитанный',
+  'guests served':
+    'гостей обслужено',
+  'average cheque':
+    'средний чек',
+  'Counted, but not in your hand':
+    'Посчитано, но не в руках',
+  'Tax across the year':
+    'Налог за год',
+  'Take-home after it':
+    'На руки после него',
+  'Handed to support staff':
+    'Отдано персоналу',
   'Your hour': 'Твой час',
   'h this month': 'ч в этом месяце',
   'No hours yet': 'Часов пока нет',
@@ -4291,6 +4373,88 @@ export const UK: Dictionary = {
   'Type at least two characters.': 'Введи хоча б два символи.',
   'Nothing found.': 'Нічого не знайшлося.',
   'Loading…': 'Завантажую…',
+  'Meals': 'Харчування',
+  'Other': 'Інше',
+  'worth': 'принесло',
+  'on': 'на',
+  'Your year, written out':
+    'Ваш рік словами',
+  'Every figure here is your own record. Nothing is an estimate and nothing is advice.':
+    'Кожна цифра тут — ваш власний запис. Нічого не вигадано і нічого не радить.',
+  'you worked':
+    'ви відпрацювали',
+  'hours in all':
+    'годин усього',
+  'and they came to':
+    'і вони принесли',
+  'An hour of your year was worth':
+    'Година вашого року коштувала',
+  'exactly what it was worth last year':
+    'рівно стільки ж, скільки торік',
+  'more than last year':
+    'більше, ніж торік',
+  'less than last year':
+    'менше, ніж торік',
+  'Tips brought':
+    'Чайові принесли',
+  'of everything':
+    'від усього',
+  'of those hours were night ones':
+    'цих годин — нічні',
+  'hours after the city went quiet':
+    'годин після того, як місто затихло',
+  'hours went past the week’s ceiling':
+    'годин пішло за тижневу стелю',
+  'and the premium for them was':
+    'а надбавка за них склала',
+  'Most of it':
+    'Найбільше',
+  'came from':
+    'принесло',
+  'Your rate moved on':
+    'Ваша ставка змінилася',
+  'was withheld in fines and meals':
+    'утримано штрафами та харчуванням',
+  'Getting to work cost':
+    'Дорога на роботу коштувала',
+  'of the tips':
+    'від чайових',
+  'A share of the takings':
+    'Відсоток з виторгу',
+  'Where the tips happened':
+    'Де траплялися чайові',
+  'Per hour spent standing there — the comparison the argument is about.':
+    'За годину, проведену там, — те саме порівняння, про яке сперечаються.',
+  'Hall':
+    'Зала',
+  'Terrace':
+    'Тераса',
+  'Banquets':
+    'Банкети',
+  'Takeaway':
+    'На винос',
+  'What your rate did':
+    'Що робила ваша ставка',
+  'Never subtracted from anything above: take-home is what arrived, and these happened around it.':
+    'Нічого з цього не відняте від сум вище: на руки — це те, що прийшло, а це сталося навколо.',
+  'Spent to work':
+    'Витрачено заради роботи',
+  'The travelling ate':
+    'Дорога з’їла',
+  'The room, counted':
+    'Зала, порахована',
+  'guests served':
+    'гостей обслужено',
+  'average cheque':
+    'середній чек',
+  'Counted, but not in your hand':
+    'Пораховано, але не в руках',
+  'Tax across the year':
+    'Податок за рік',
+  'Take-home after it':
+    'На руки після нього',
+  'Handed to support staff':
+    'Віддано персоналу',
   'Your hour': 'Твоя година',
   'h this month': 'год цього місяця',
   'No hours yet': 'Годин поки немає',

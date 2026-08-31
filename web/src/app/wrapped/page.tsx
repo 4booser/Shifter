@@ -25,6 +25,8 @@ import { SkeletonRows } from '@/components/ui/skeleton';
 import { Empty } from '@/components/ui/empty';
 import { Icon } from '@/components/ui/icon';
 import { useTitle } from '@/lib/use-title';
+import { YearStory } from '@/components/wrapped/year-story';
+import { CostOfWork, MadeOf, OwedLater, RaiseTrail, RoomCounted, ZoneTips } from '@/components/wrapped/year-charts';
 
 /** Earned by hours worked in the year — the badge at the top of the page. */
 const TIERS: { hours: number; name: string; emoji: string }[] = [
@@ -441,6 +443,10 @@ function Wrapped() {
             />
           </section>
 
+          <YearStory year={year} summary={summary} previous={previous} />
+
+          <MadeOf summary={summary} />
+
           {/* ==== Superlatives ==== */}
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {best !== null && (
@@ -516,11 +522,28 @@ function Wrapped() {
             </ul>
           </section>
 
+          <ZoneTips zones={summary.by_zone} />
+
+          <RaiseTrail summary={summary} />
+
+          <RoomCounted summary={summary} />
+
+          <CostOfWork
+            expenses={summary.expenses_by_kind}
+            total={summary.expenses}
+            travelShare={summary.travel_share_of_tips}
+            withheld={summary.deductions}
+            fines={summary.deductions_by_reason}
+          />
+
+          <OwedLater summary={summary} />
+
           {/* ==== Badges ==== */}
           <BadgeWall />
 
           {/* ==== Where the year is heading ==== */}
           {live && (
+
             <section className="card border-(--accent)/40 p-4">
               <h2 className="mb-1 text-[0.98rem] font-bold">{t('Where the year is heading')}</h2>
               <p className="text-[0.9rem]">

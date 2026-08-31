@@ -255,7 +255,9 @@ export interface DaysResponse {
 
 /** An amount labelled with its ISO code, for money that sits beside other money. */
 export const moneyIn = (code: string, value: number) =>
-  eyeShut() ? `••• ${code}` : `${Math.round(value).toLocaleString('ru')} ${code}`;
+  eyeShut()
+    ? `••• ${code}`
+    : `${value < 0 ? '−' : ''}${Math.abs(Math.round(value)).toLocaleString('ru')} ${code}`;
 
 export interface DaySave {
   shifts: {
@@ -409,7 +411,11 @@ export const toSavePayload = (day: CalendarDayData | undefined): DaySave => ({
 });
 
 export const money = (value: number) =>
-  eyeShut() ? '₴•••' : `₴${Math.round(value).toLocaleString('ru')}`;
+  eyeShut()
+    ? '₴•••'
+    // The sign stands in front of the whole thing — «−₴458», never «₴-458» —
+    // the same rule the web's formatMoney learned.
+    : `${value < 0 ? '−' : ''}₴${Math.abs(Math.round(value)).toLocaleString('ru')}`;
 
 /**
  * Money the width of a calendar cell: 1 240 becomes "1,2к".

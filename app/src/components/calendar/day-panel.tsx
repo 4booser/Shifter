@@ -8,7 +8,12 @@ import { ColourField } from '@/components/colour-field';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { calendarApi } from '@/lib/api/calendar';
-import { CalendarDayData, DaySave, ShiftTemplate } from '@/lib/calendar/models';
+import {
+  CalendarDayData,
+  DaySave,
+  ShiftTemplate,
+  toSavePayload,
+} from '@/lib/calendar/models';
 import { fromKey } from '@/lib/calendar/calendar-date';
 import { formatMoney } from '@/lib/settings/money';
 import { useSettings } from '@/lib/settings/store';
@@ -36,31 +41,7 @@ export function DayPanel({
   const client = useQueryClient();
   const templates = useQuery({ queryKey: ['shifts'], queryFn: () => calendarApi.shifts() });
 
-  const payload = useMemo(
-    (): DaySave => ({
-      shifts: (day?.shifts ?? []).map((entry) => ({
-        shift_id: entry.shift_id,
-        worked: entry.worked,
-        needs_cover: entry.needs_cover,
-        actual_start: entry.actual_start,
-        actual_end: entry.actual_end,
-        break_minutes: entry.break_minutes,
-        revenue: entry.revenue,
-        guests: entry.guests,
-        zone: entry.zone,
-      })),
-      sales: (day?.sales ?? []).map((row) => ({ sales_id: row.sales_id, quantity: row.quantity })),
-      tips: day?.tips ?? null,
-      tips_cash: day?.tips_cash ?? null,
-      tip_pool: day?.tip_pool ?? null,
-      deductions: day?.deductions ?? null,
-      deduction_reason: day?.deduction_reason ?? null,
-      note: day?.note ?? null,
-      colour: day?.colour ?? null,
-      version: day?.version,
-    }),
-    [day],
-  );
+  const payload = useMemo(() => toSavePayload(day ?? undefined), [day]);
 
   const save = useMutation({
     mutationFn: (patch: Partial<DaySave>) =>
@@ -154,8 +135,12 @@ export function DayPanel({
 
               <span className="min-w-0 flex-1">
                 <span className="block text-sm font-medium">{entry.name}</span>
+                {/* The clock that was actually worked wins over the one the
+                    template planned: that is the pair the day was paid on. */}
                 <span className="field-hint tabular">
-                  {entry.start_time.slice(0, 5)}–{entry.end_time.slice(0, 5)} · {entry.hours} ч
+                  {(entry.actual_start ?? entry.start_time).slice(0, 5)}–
+                  {(entry.actual_end ?? entry.end_time).slice(0, 5)} · {entry.hours} ч
+                  {entry.actual_start != null && ' · по факту'}
                   {entry.worked ? '' : ' · план'}
                 </span>
               </span>

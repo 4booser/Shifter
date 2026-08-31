@@ -271,6 +271,10 @@ export interface DaySave {
     break_minutes: number | null;
     /** What this shift took. Null leaves it uncounted, not zero. */
     revenue: number | null;
+    /** How many it served. Null is "nobody counted", which is not zero. */
+    guests?: number | null;
+    /** Where in the venue it was worked. */
+    zone?: ShiftZone;
   }[];
   sales: { sales_id: number; quantity: number }[];
   tips: number | null;
@@ -388,6 +392,12 @@ export const toSavePayload = (day: CalendarDayData | undefined): DaySave => ({
     actual_end: entry.actual_end,
     break_minutes: entry.break_minutes,
     revenue: entry.revenue,
+    // Carried for the same reason the positions below are: the server builds
+    // each shift row from the template again, so a field missing from the
+    // request is erased, not left alone. The phone has no field for either of
+    // these — which is exactly why it must hand them back untouched.
+    guests: entry.guests,
+    zone: entry.zone,
   })),
   // Carried through untouched. Sending [] here wiped every position recorded
   // on the web, along with its commission, on any save from the phone —

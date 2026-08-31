@@ -956,6 +956,12 @@ export function toSavePayload(day: CalendarDayData | undefined): DaySave {
       actual_end: entry.actual_end,
       break_minutes: entry.break_minutes,
       revenue: entry.revenue,
+      // The covers counted and the section worked survive too. A save
+      // replaces the day — the server builds each shift row from scratch —
+      // so a field left out of here is not "unchanged", it is deleted. Every
+      // bulk edit, undo and clock-out goes through this function.
+      guests: entry.guests,
+      zone: entry.zone,
     })),
     sales: (day?.sales ?? []).map((entry) => ({
       sales_id: entry.sales_id,

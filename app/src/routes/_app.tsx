@@ -11,6 +11,7 @@ import {
   Wallet,
 } from 'lucide-react';
 
+import { LiveBar } from '@/components/live/live-bar';
 import { cn } from '@/lib/utils';
 
 /**
@@ -78,6 +79,7 @@ function AppShell() {
             <Coins className="size-4" />
           </Link>
         </div>
+        <LiveBar />
       </header>
 
       <main className="mx-auto w-full max-w-[1440px] px-3 py-5 sm:px-5">

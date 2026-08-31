@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { ArrowUpRight, ChevronLeft, ChevronRight } from 'lucide-react';
 
 import { DayPanel } from '@/components/calendar/day-panel';
+import { StartLive } from '@/components/live/live-bar';
 import { MonthGrid } from '@/components/calendar/month-grid';
 import { TileStrip } from '@/components/tiles/tile-strip';
 import { Button } from '@/components/ui/button';
@@ -63,6 +64,7 @@ export function Dashboard() {
             </Button>
           </span>
         </div>
+        <StartLive />
         <a
           href="/dashboard"
           className="flex items-center gap-1 text-sm font-medium text-muted-foreground transition-colors hover:text-ink"

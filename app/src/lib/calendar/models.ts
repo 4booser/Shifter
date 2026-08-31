@@ -952,6 +952,10 @@ export function toSavePayload(day: CalendarDayData | undefined): DaySave {
       actual_end: entry.actual_end,
       break_minutes: entry.break_minutes,
       revenue: entry.revenue,
+      // Carried too, because a save replaces the day: anything left out here
+      // is not "unchanged", it is deleted.
+      guests: entry.guests,
+      zone: entry.zone,
     })),
     sales: (day?.sales ?? []).map((entry) => ({
       sales_id: entry.sales_id,
@@ -964,6 +968,7 @@ export function toSavePayload(day: CalendarDayData | undefined): DaySave {
     deduction_reason: day?.deduction_reason ?? null,
     note: day?.note ?? null,
     colour: day?.colour ?? null,
+    version: day?.version,
   };
 }
 

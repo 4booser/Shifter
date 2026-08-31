@@ -20,12 +20,15 @@ import { lockKind, LockKind, lockNameBy, lockStore, unlock } from '@/lib/lock';
 import { useSession } from '@/store/session';
 import { useEye } from '@/lib/eye';
 import { t, useLang } from '@/lib/i18n';
+import { buzz } from '@/lib/haptics';
 
 interface Profile {
   login: string;
   first_name: string;
   last_name: string | null;
   email: string | null;
+  /** Hours of rest that count as enough between shifts. */
+  rest_hours: number;
 }
 
 /**
@@ -60,6 +63,24 @@ export default function SettingsScreen() {
       }
     })();
   }, []);
+
+  const [rest, setRest] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (profile !== null) setRest(profile.rest_hours);
+  }, [profile]);
+
+  const chooseRest = async (hours: number) => {
+    buzz.choose();
+    setRest(hours);
+
+    try {
+      await api('/shifter/v1/auth/rest', { method: 'PUT', body: { rest_hours: hours } });
+    } catch {
+      buzz.lost();
+      setRest(profile?.rest_hours ?? null);
+    }
+  };
 
   const toggleLock = async (on: boolean) => {
     // Turning it on without proving you can open it is how somebody locks
@@ -164,6 +185,30 @@ export default function SettingsScreen() {
         </View>
       </View>
 
+      {rest !== null && (
+        <>
+          <Text style={styles.section}>{t('Отдых между сменами')}</Text>
+          <View style={styles.card}>
+            <Text style={styles.rowHint}>
+              {t('Сколько часов от ухода до выхода считать нормой. Меньше — сводка скажет «закрытие и открытие подряд».')}
+            </Text>
+            <View style={styles.restRow}>
+              {[8, 10, 11, 12, 14].map((hours) => (
+                <Press
+                  key={hours}
+                  style={[styles.restChip, rest === hours && styles.restChipOn]}
+                  onPress={() => void chooseRest(hours)}
+                >
+                  <Text style={[styles.restChipText, rest === hours && styles.restChipTextOn]}>
+                    {hours}{t('ч')}
+                  </Text>
+                </Press>
+              ))}
+            </View>
+          </View>
+        </>
+      )}
+
       <Text style={styles.section}>{t('Ваша работа')}</Text>
       <Press style={styles.linkRow} onPress={() => router.push('/templates')}>
         <Ionicons name="time-outline" size={20} color={palette.textSecondary} />
@@ -256,6 +301,19 @@ const makeStyles = (palette: Palette) =>
     row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
     rowTitle: { color: palette.text, fontSize: 15, fontWeight: '600' },
     rowHint: { color: palette.textSecondary, fontSize: 12.5, lineHeight: 18, marginTop: 3 },
+
+    restRow: { flexDirection: 'row', gap: 8, marginTop: 10 },
+    restChip: {
+      flex: 1,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: palette.border,
+      borderRadius: 12,
+      paddingVertical: 10,
+    },
+    restChipOn: { backgroundColor: palette.accent, borderColor: palette.accent },
+    restChipText: { color: palette.text, fontSize: 14, fontWeight: '600' },
+    restChipTextOn: { color: '#fff' },
 
     linkRow: {
       flexDirection: 'row',

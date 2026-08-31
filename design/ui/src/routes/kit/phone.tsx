@@ -43,11 +43,11 @@ function PhoneScreens() {
 
             <div>
               <span className="lbl">Заработано</span>
-              <p className="text-3xl font-extrabold tabular">₴24 700</p>
+              <p className="text-3xl font-extrabold tabular">₴38 770</p>
             </div>
 
             <div className="flex gap-2 overflow-hidden">
-              {[['Твой час', '₴180'], ['Чаевые', '₴7 700']].map(([said, num]) => (
+              {[['Твой час', '₴238'], ['Чаевые', '₴7 700']].map(([said, num]) => (
                 <span key={said} className="card flex-none basis-[62%] p-3">
                   <span className="lbl">{said}</span>
                   <span className="mt-1 block text-lg font-bold tabular">{num}</span>

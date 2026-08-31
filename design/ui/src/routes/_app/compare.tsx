@@ -17,16 +17,16 @@ function Compare() {
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(300px,360px)]">
         <Card title="Заработано" hint="Плотная линия — август, пунктир — июль. Шкала у них одна.">
-          <Climb points={CLIMB} ghost={CLIMB.map((one) => one * 0.87)} height={220} />
+          <Climb points={CLIMB} ghost={CLIMB.map((one) => one * 0.918)} height={220} />
         </Card>
 
         <Card title="Что изменилось">
           <Bars rows={[
-            { name: 'Заработано', under: 'было ₴21 400', share: 100, value: '+15%', tone: 'money' },
-            { name: 'Часы', under: 'было 128 ч', share: 40, value: '+7%', tone: 'money' },
-            { name: 'Твой час', under: 'было ₴167', share: 55, value: '+8%', tone: 'money' },
+            { name: 'Заработано', under: 'было ₴35 600', share: 100, value: '+9%', tone: 'money' },
+            { name: 'Часы', under: 'было 152 ч', share: 72, value: '+7%', tone: 'money' },
+            { name: 'Твой час', under: 'было ₴234', share: 20, value: '+2%', tone: 'money' },
             { name: 'Чаевые', under: 'было ₴8 900', share: 62, value: '−13%', tone: 'taken' },
-            { name: 'Удержали', under: 'было ₴1 100', share: 88, value: '+103%', tone: 'taken' },
+            { name: 'Удержали', under: 'было ₴7 400', share: 45, value: '+9%', tone: 'taken' },
           ]} />
         </Card>
       </div>

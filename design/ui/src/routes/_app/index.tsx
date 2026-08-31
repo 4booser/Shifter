@@ -7,14 +7,18 @@ import { Docket, Month } from '@/components/calendar';
 import { Head } from '@/components/screen';
 import { Button, Card, Field, Modal, Over, Pills, Switch } from '@/components/ui/kit';
 import { Window, Windows } from '@/components/windows';
-import { TILES } from '@/mock/data';
+import { MONTH, MONTH_TOTALS, TILES } from '@/mock/data';
 import { cn } from '@/lib/utils';
 
-/** Сколько принёс каждый день месяца — для полосы под сводкой. */
-const BY_DAY = [
-  2470, 1340, 0, 0, 2200, 2200, 2470, 1340, 1340, 0, 0, 2200, 2200, 2470, 0, 0, 0, 0, 0, 2200,
-  2470, 1340, 1340, 0, 0, 2200, 2200, 2470, 1340, 1340, 1640,
-];
+/**
+ * Сколько принёс каждый день месяца — для полосы под сводкой.
+ *
+ * Ряд снят с той же сетки, что рисуется ниже: полоса, нарисованная по
+ * отдельному массиву, рано или поздно начинает показывать другой месяц.
+ */
+const BY_DAY = MONTH.filter((day) => day.blank !== true).map((day) =>
+  day.amount === undefined ? 0 : Number(day.amount.replace(/\s/g, '')),
+);
 
 /** Всё, что делают с клавиатуры. Открывается на ⌘K. */
 const COMMANDS = [
@@ -29,7 +33,7 @@ const COMMANDS = [
 /** Первый запуск: четыре вопроса, после которых календарь уже считает. */
 const STEPS = [
   { ask: 'Где вы работаете?', said: 'Как называете вслух — бар на углу, кофейня, ресторан.', value: 'Бар «Полночь»' },
-  { ask: 'Что платят?', said: 'В час, за смену или в месяц. Проценты и надбавки добавим потом.', value: '₴180 в час' },
+  { ask: 'Что платят?', said: 'В час, за смену или в месяц. Проценты и надбавки добавим потом.', value: '₴200 в час' },
   { ask: 'В какие дни обычно?', said: 'Приблизительно — календарь потом поправит.', value: 'ср, чт, пт, сб' },
   { ask: 'Когда смена начинается и кончается', said: 'Тоже приблизительно.', value: '17:00 — 01:00' },
 ];
@@ -72,16 +76,20 @@ function Calendar() {
       <div>
         <span className="lbl">Заработано</span>
         <p className="mt-1.5 text-5xl font-extrabold tracking-[-0.05em] tabular">
-          <span className="font-medium text-faint">₴</span>24 700
+          <span className="font-medium text-faint">₴</span>
+          {MONTH_TOTALS.earned}
         </p>
-        <p className="hint mt-2">17 смен · 137 часов · 1—31 августа</p>
+        <p className="hint mt-2">
+          {MONTH_TOTALS.shifts} смен · {MONTH_TOTALS.hours} часа · 1—31 августа
+        </p>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[1fr_360px]">
         <Brief>
           <p className="text-sm text-dim">
-            Сегодня вечер в «Полночи» с 17:00. Это 17-я смена месяца — на одну меньше, чем в
-            июле, но час дороже: ₴180 против ₴167. До цели ₴3 300, и одна суббота её закрывает.
+            Сегодня вечер в «Полночи» с 17:00 — двадцатая смена месяца. Час вышел в ₴238 против
+            ₴212 в июле, и почти всю разницу дали субботы. До цели ₴3 230, и одна смена её
+            закрывает.
           </p>
           <div className="mt-3 flex flex-wrap gap-2 border-t border-paper/9 pt-3">
             <Button tone="line" size="sm">Спросить об этом</Button>
@@ -169,12 +177,12 @@ function Calendar() {
             right={<span onClick={() => setWin('goal')}><Button tone="quiet" size="sm">Изменить</Button></span>}
           >
             <p className="text-xl font-bold tabular">
-              ₴24 700 <span className="text-base font-semibold text-faint">из ₴28 000</span>
+              ₴38 770 <span className="text-base font-semibold text-faint">из ₴42 000</span>
             </p>
             <div className="mt-2 h-2 overflow-hidden rounded-full bg-raised">
-              <div className="h-full rounded-full bg-brass" style={{ width: '88%' }} />
+              <div className="h-full rounded-full bg-brass" style={{ width: '92%' }} />
             </div>
-            <p className="hint mt-2">Осталось ₴3 300 за 1 день — нужна ещё одна суббота.</p>
+            <p className="hint mt-2">Осталось ₴3 230 за 1 день — сегодняшняя смена её и закроет.</p>
           </Card>
           <Card
             title="День без смены"

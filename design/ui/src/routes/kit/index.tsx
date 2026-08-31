@@ -51,7 +51,7 @@ function Foundations() {
           <div className="flex flex-col gap-4">
             <div>
               <span className="lbl">Деньги · 800 · табличные</span>
-              <p className="mt-1 text-5xl font-extrabold tracking-[-0.05em] tabular">₴24 700</p>
+              <p className="mt-1 text-5xl font-extrabold tracking-[-0.05em] tabular">₴38 770</p>
             </div>
             <div>
               <span className="lbl">Заголовок · 700</span>
@@ -132,7 +132,7 @@ function Foundations() {
             />
           </Card>
           <Card title="Из чего сложились деньги">
-            <p className="mb-3 text-2xl font-bold tabular">₴24 700</p>
+            <p className="mb-3 text-2xl font-bold tabular">₴38 770</p>
             <Split
               parts={[
                 { name: 'ставка', share: 64, colour: '#e0a45b' },

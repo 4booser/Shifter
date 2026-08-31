@@ -34,33 +34,31 @@ const SPANS = [
 const HOURLY = [162, 164, 161, 165, 163, 166, 181, 179, 183, 180, 184, 182, 186, 185];
 
 const YEAR = [
-  { name: 'С', kept: 19400, cut: 4100 },
-  { name: 'О', kept: 21200, cut: 4600 },
-  { name: 'Н', kept: 20100, cut: 4300 },
-  { name: 'Д', kept: 27800, cut: 6100 },
-  { name: 'Я', kept: 16200, cut: 3400 },
-  { name: 'Ф', kept: 18700, cut: 3900 },
-  { name: 'М', kept: 20400, cut: 4300 },
-  { name: 'А', kept: 21900, cut: 4700 },
-  { name: 'М', kept: 23100, cut: 4900 },
-  { name: 'И', kept: 22400, cut: 4800 },
-  { name: 'И', kept: 17300, cut: 3700 },
-  { name: 'А', kept: 24700, cut: 5300 },
+  { name: 'С', kept: 24100, cut: 5100 },
+  { name: 'О', kept: 26300, cut: 5600 },
+  { name: 'Н', kept: 25000, cut: 5300 },
+  { name: 'Д', kept: 33900, cut: 6179 },
+  { name: 'Я', kept: 19200, cut: 4900 },
+  { name: 'Ф', kept: 23200, cut: 4900 },
+  { name: 'М', kept: 25400, cut: 5300 },
+  { name: 'А', kept: 27200, cut: 5800 },
+  { name: 'М', kept: 28700, cut: 6100 },
+  { name: 'И', kept: 27800, cut: 5900 },
+  { name: 'И', kept: 21500, cut: 4600 },
+  { name: 'А', kept: 30740, cut: 8030 },
 ];
 
 /** Из чего сложились деньги: сначала то, что пришло, потом то, что срезали. */
 const CAME = [
-  { name: 'Ставка', num: 15800, note: '137 ч × ₴180' },
+  { name: 'Ставка', num: 29975, note: '85 ч вечером по ₴200, 45 ч днём по ₴150, банкет ₴1 400' },
   { name: 'Чаевые', num: 7700, note: 'из них ₴2 900 наличными' },
-  { name: 'Продажи', num: 2142, note: '3% с выручки ₴71 400' },
-  { name: 'Надбавки', num: 1830, note: 'ночные и праздничные' },
-  { name: 'Сверхурочные', num: 1284, note: '9 ч сверх недельной нормы' },
+  { name: 'Ночные и праздничные', num: 1095, note: '62 ночных часа, ×1,35' },
 ];
 
 const CUT = [
-  { name: 'Налог', num: 5955, note: 'официально, 19,5%' },
-  { name: 'В котёл', num: 634, note: '5% от чаевых' },
-  { name: 'Питание и штрафы', num: 1240, note: '22 обеда и один бой посуды' },
+  { name: 'Налог', num: 5845, note: 'официально, 19,5% со ставки' },
+  { name: 'В котёл', num: 385, note: '5% от чаевых' },
+  { name: 'Питание', num: 1800, note: '20 смен по ₴90' },
 ];
 
 function Money({ n }: { n: number }) {
@@ -95,12 +93,12 @@ function Stats() {
       {/* Шесть чисел, которыми месяц описывают вслух. */}
       <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {[
-          { said: 'Заработано', num: '₴24 700', delta: '↓ 4%' },
-          { said: 'На руки', num: '₴18 745', delta: '↓ 5%' },
-          { said: 'Часов', num: '137', delta: '↑ 7%' },
-          { said: 'Смен', num: '17', delta: '↓ 4%' },
-          { said: 'В час', num: '₴180', delta: '↑ 8%' },
-          { said: 'Средний день', num: '₴1 453', delta: '↓ 1%' },
+          { said: 'Заработано', num: '₴38 770', delta: '↑ 9%' },
+          { said: 'На руки', num: '₴30 740', delta: '↑ 8%' },
+          { said: 'Часов', num: '163', delta: '↑ 7%' },
+          { said: 'Смен', num: '20', delta: '↑ 5%' },
+          { said: 'В час', num: '₴238', delta: '↑ 2%' },
+          { said: 'Средний день', num: '₴1 939', delta: '↑ 3%' },
         ].map(({ said, num, delta }) => (
           <div key={said} className="card p-4">
             <span className="lbl">{said}</span>
@@ -118,8 +116,8 @@ function Stats() {
       </div>
 
       <p className="hint -mt-1">
-        Работа в двух валютах сведена в одну по курсу, по которому банк покупает: ₴24 700 — это
-        ₴21 300 и 78 € за подработки на террасе.
+        Работа в двух валютах сведена в одну по курсу, по которому банк покупает: ₴38 770 — это
+        ₴35 400 и 78 € за подработки на террасе.
       </p>
 
       <div className="grid gap-4 lg:grid-cols-[1fr_360px]">
@@ -129,8 +127,8 @@ function Stats() {
         >
           <Climb points={CLIMB} height={200} />
           <div className="mt-3 flex flex-wrap justify-between gap-2 border-t border-paper/9 pt-3">
-            <span className="hint">К концу периода выйдет ₴26 100</span>
-            <span className="hint">Прошлый период: ₴25 700</span>
+            <span className="hint">К концу периода выйдет ₴40 400</span>
+            <span className="hint">Прошлый период: ₴35 600</span>
           </div>
         </Card>
 
@@ -143,14 +141,14 @@ function Stats() {
             </Button>
           }
         >
-          <Meter reached={24700} goal={28000} projected={26100} />
+          <Meter reached={38770} goal={42000} projected={40400} />
 
           <dl className="mt-4 flex flex-col gap-2.5 border-t border-paper/9 pt-4">
             {[
-              ['Осталось добрать', '₴3 300'],
+              ['Осталось добрать', '₴3 230'],
               ['Дней в периоде', '1'],
               ['Уже поставлено смен', '1 · ₴1 640'],
-              ['Чтобы дотянуть', 'нужна ещё одна суббота'],
+              ['Чтобы дотянуть', 'хватит сегодняшней смены'],
             ].map(([what, value]) => (
               <div key={what} className="flex items-baseline justify-between gap-3">
                 <dt className="text-xs text-faint">{what}</dt>
@@ -279,10 +277,10 @@ function Stats() {
             </div>
             <dl className="grid grid-cols-2 gap-x-5 gap-y-3 border-t border-paper/9 pt-3">
               {[
-                ['На смену', '₴453'],
+                ['На смену', '₴385'],
                 ['Лучшая смена', '₴1 240'],
-                ['Доля в заработке', '31%'],
-                ['Отдано в котёл', '₴634'],
+                ['Доля в заработке', '20%'],
+                ['Отдано в котёл', '₴385'],
               ].map(([what, value]) => (
                 <div key={what}>
                   <dt className="lbl">{what}</dt>
@@ -309,16 +307,16 @@ function Stats() {
           />
           <div className="mt-3 flex flex-wrap justify-between gap-3 border-t border-paper/9 pt-3">
             <span className="hint">Час с дорогой и тратами</span>
-            <span className="font-mono text-sm font-semibold tabular">₴149 вместо ₴180</span>
+            <span className="font-mono text-sm font-semibold tabular">₴212 вместо ₴238</span>
           </div>
         </Card>
 
         <Card title="Этот месяц нормальный?" hint="Сравнение не с чужими, а с вашими же двенадцатью.">
           <div className="flex flex-col gap-3">
             {[
-              { what: 'Заработок', mine: 24700, low: 16200, high: 27800, said: 'выше обычного' },
-              { what: 'Часы', mine: 137, low: 96, high: 164, said: 'как всегда' },
-              { what: 'Час', mine: 180, low: 158, high: 186, said: 'у верхней границы' },
+              { what: 'Заработок', mine: 38770, low: 24100, high: 40079, said: 'почти рекорд' },
+              { what: 'Часы', mine: 163, low: 96, high: 178, said: 'как всегда' },
+              { what: 'Час', mine: 238, low: 196, high: 244, said: 'у верхней границы' },
             ].map((row) => (
               <div key={row.what}>
                 <div className="flex items-baseline justify-between gap-3">

@@ -37,7 +37,7 @@ function Costs() {
           <div className="mt-4 border-t border-paper/9 pt-3">
             <span className="lbl">Час после расходов</span>
             <p className="mt-1 text-xl font-bold tabular">
-              ₴141 <span className="text-sm font-normal text-faint">вместо ₴180</span>
+              ₴212 <span className="text-sm font-normal text-faint">вместо ₴238</span>
             </p>
           </div>
         </Card>

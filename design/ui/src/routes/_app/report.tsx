@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, Link } from '@tanstack/react-router';
 import { Printer, Share2 } from 'lucide-react';
 
 import { Head } from '@/components/screen';
@@ -32,18 +32,17 @@ function Report() {
             <p className="mt-1 text-xl font-bold">1 — 31 августа 2026</p>
             <p className="text-sm text-night/60">Аня · Бар «Полночь», Ресторан «Веранда»</p>
           </div>
-          <p className="text-3xl font-extrabold tabular">₴24 700</p>
+          <p className="text-3xl font-extrabold tabular">₴38 770</p>
         </div>
 
         <table className="mt-5 w-full border-collapse font-mono text-sm">
           <tbody>
             {[
-              ['Смены · 137 ч', '19 480'],
+              ['Смены · 163 ч', '29 975'],
               ['Чаевые', '7 700'],
-              ['Надбавки за ночь', '2 142'],
-              ['Отдано в котёл', '−634'],
-              ['Питание', '−1 530'],
-              ['Штраф · разбили', '−700'],
+              ['Надбавки за ночь', '1 095'],
+              ['Отдано в котёл', '−385'],
+              ['Питание · 20 смен', '−1 800'],
             ].map(([what, sum]) => (
               <tr key={what} className="border-b border-night/10">
                 <td className="py-2 text-night/70">{what}</td>
@@ -52,15 +51,15 @@ function Report() {
             ))}
             <tr>
               <td className="pt-3 font-semibold">Итого до налога</td>
-              <td className="pt-3 text-right font-semibold tabular">26 458</td>
+              <td className="pt-3 text-right font-semibold tabular">36 585</td>
             </tr>
             <tr>
               <td className="py-1 text-night/70">Налог 19,5%</td>
-              <td className="py-1 text-right tabular">−5 159</td>
+              <td className="py-1 text-right tabular">−5 845</td>
             </tr>
             <tr className="border-t-2 border-night/70">
               <td className="pt-2 text-base font-bold">На руки</td>
-              <td className="pt-2 text-right text-base font-bold tabular">₴21 299</td>
+              <td className="pt-2 text-right text-base font-bold tabular">₴30 740</td>
             </tr>
           </tbody>
         </table>
@@ -70,35 +69,19 @@ function Report() {
         </p>
       </div>
 
-      <Card title="Сверка с расчёткой" hint="Сходится всё, кроме надбавки за ночь — недосчитали ₴642.">
-        <table className="w-full border-collapse font-mono text-sm">
-          <thead>
-            <tr>
-              <th className="pb-2 text-left lbl">Строка</th>
-              <th className="pb-2 text-right lbl">Приложение</th>
-              <th className="pb-2 text-right lbl">Расчётка</th>
-              <th className="pb-2 text-right lbl">Разница</th>
-            </tr>
-          </thead>
-          <tbody>
-            {[
-              ['Часы', '137', '137', ''],
-              ['Ставка', '19 480', '19 480', ''],
-              ['Ночные', '2 142', '1 500', '−642'],
-              ['Чаевые', '7 700', '7 700', ''],
-              ['Питание', '−1 530', '−1 530', ''],
-            ].map(([what, mine, theirs, diff]) => (
-              <tr key={what} className="border-t border-paper/9">
-                <td className="py-2.5 text-dim">{what}</td>
-                <td className="py-2.5 text-right tabular">{mine}</td>
-                <td className="py-2.5 text-right tabular">{theirs}</td>
-                <td className={`py-2.5 text-right tabular ${diff === '' ? 'text-faint' : 'font-bold text-taken'}`}>
-                  {diff === '' ? '—' : diff}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      {/* Сверка с расчёткой стояла здесь второй копией той же таблицы — и
+          расходилась с оригиналом, потому что правили одну. Она живёт на
+          своей странице. */}
+      <Card title="Сверить с расчёткой" hint="Что насчитало приложение против того, что написано в бумаге.">
+        <p className="text-sm text-dim">
+          За август расходится надбавка за ночь: ₴1 095 против ₴700, и ночных часов в бумаге
+          насчитали 46 вместо 62.
+        </p>
+        <div className="mt-3">
+          <Link to="/payslip">
+            <Button tone="line" size="sm">Открыть сверку</Button>
+          </Link>
+        </div>
       </Card>
     </>
   );

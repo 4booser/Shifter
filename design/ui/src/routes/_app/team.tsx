@@ -1,18 +1,57 @@
-import { createFileRoute } from '@tanstack/react-router';
-import { Copy, UserPlus } from 'lucide-react';
+import { useState } from 'react';
+import { createFileRoute, Link } from '@tanstack/react-router';
+import { Copy, LogOut, UserPlus, Users } from 'lucide-react';
 
 import { Head } from '@/components/screen';
-import { Button, Card, Pills } from '@/components/ui/kit';
+import { Button, Card, Empty, Field, Modal, Over, Pills } from '@/components/ui/kit';
 import { cn } from '@/lib/utils';
 
+/**
+ * Команда.
+ *
+ * Здесь заводят смену и раздают код. Всё, что видит команда, перечислено
+ * списком — и рядом сказано, чего она не видит: обещание «заработок ваш»
+ * стоит ровно столько, сколько стоит место, где его написали.
+ */
 function Team() {
+  const [none, setNone] = useState(false);
+  const [leaving, setLeaving] = useState(false);
+
+  if (none) {
+    return (
+      <>
+        <Head said="Команда" title="Смены пока нет" />
+        <Empty
+          glyph={<Users className="size-7" />}
+          title="Вы ни в одной команде"
+          said="Заведите свою — и раздайте код. Или спросите код из шести букв у того, кто ставит график."
+          action="Завести смену"
+        />
+        <div className="mx-auto flex w-full max-w-sm flex-col gap-3">
+          <Field label="Код приглашения" placeholder="K7MDPX" />
+          <Button tone="line">Войти по коду</Button>
+        </div>
+        <button type="button" onClick={() => setNone(false)} className="self-start">
+          <Button tone="quiet" size="sm">Вернуть команду</Button>
+        </button>
+      </>
+    );
+  }
+
   return (
     <>
       <Head
         said="Команда"
         title="Смена «Полночь»"
         hint="Состав и права. Кто когда выходит — на графике."
-        right={<Button tone="go"><UserPlus className="size-4" />Позвать</Button>}
+        right={
+          <>
+            <Link to="/schedule">
+              <Button tone="line">Открыть график</Button>
+            </Link>
+            <Button tone="go"><UserPlus className="size-4" />Позвать</Button>
+          </>
+        }
       />
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(300px,340px)]">
@@ -39,12 +78,16 @@ function Team() {
         <div className="flex flex-col gap-4">
           <Card title="Код приглашения" hint="Раздайте смене — по нему заходят в общий график.">
             <div className="rounded-[var(--radius-field)] border border-paper/17 bg-night px-3 py-3 text-center font-mono text-lg tracking-[0.3em] select-all">
-              SOVA-4K2
+              K7MDPX
             </div>
             <div className="mt-3 flex gap-2">
               <Button tone="line" size="sm" className="flex-1"><Copy className="size-3.5" />Скопировать</Button>
-              <Button tone="quiet" size="sm" className="flex-1">Сменить</Button>
+              <Button tone="quiet" size="sm" className="flex-1">Новый код</Button>
             </div>
+            <p className="hint mt-3">
+              Новый код закрывает старый: тот, у кого на руках прежние шесть букв, войти уже не
+              сможет. Это и есть способ выгнать чужого.
+            </p>
           </Card>
 
           <Card title="Что видит команда" hint="Всё остальное остаётся вашим.">
@@ -56,6 +99,26 @@ function Team() {
             <p className="hint mt-3 border-t border-paper/9 pt-3">
               Заработок, чаевые и удержания не видит никто, включая владельца.
             </p>
+
+            <div className="mt-3 border-t border-paper/9 pt-3">
+              <Field label="Имя, которое видит смена" value="Аня" />
+              <p className="hint mt-2">Можно не своё — на графике важно, чтобы вас узнавали.</p>
+            </div>
+          </Card>
+
+          <Card title="Уйти из команды">
+            <p className="hint">
+              Ваши смены останутся у вас — они и так были вашими. Из общего графика вы просто
+              пропадёте.
+            </p>
+            <div className="mt-3">
+              <button type="button" onClick={() => setLeaving(true)}>
+                <Button tone="danger" size="sm">
+                  <LogOut className="size-3.5" />
+                  Уйти из «Полночи»
+                </Button>
+              </button>
+            </div>
           </Card>
         </div>
       </div>
@@ -108,6 +171,31 @@ function Team() {
         </div>
         <p className="hint mt-3">Пунктиром — черновик: команда его пока не видит.</p>
       </Card>
+
+      <button type="button" onClick={() => setNone(true)} className="self-start">
+        <Button tone="quiet" size="sm">Показать, как без команды</Button>
+      </button>
+
+      <Over open={leaving} onClose={() => setLeaving(false)}>
+        <Modal
+          title="Уйти из «Полночи»?"
+          said="Вы владелец: если уйдёте, смену придётся передать кому-то из команды."
+          foot={
+            <>
+              <button type="button" onClick={() => setLeaving(false)}>
+                <Button tone="line" className="w-full">Остаться</Button>
+              </button>
+              <Button tone="danger">Уйти</Button>
+            </>
+          }
+        >
+          <Field label="Кому передать смену" value="Ира · менеджер" />
+          <p className="hint">
+            Ваши смены, деньги и статистика останутся при вас — из команды уходит только ваше имя
+            в её графике.
+          </p>
+        </Modal>
+      </Over>
     </>
   );
 }

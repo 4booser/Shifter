@@ -54,7 +54,7 @@ export function Windows({ open, onClose }: { open: Window; onClose: () => void }
         >
           <Pills options={['в неделю', 'в месяц', 'в год']} value="в месяц" />
           <Field label="Сколько" value="40 000" />
-          <p className="hint">Сейчас выходит ₴24 700 — до цели ₴15 300.</p>
+          <p className="hint">Сейчас выходит ₴38 770 — до цели ₴3 230.</p>
         </Modal>
       ))}
 

@@ -107,6 +107,8 @@ export function Docket() {
     <div className="card p-5 font-mono">
       <div className="flex items-baseline justify-between gap-3">
         <span className="text-xs tracking-[0.05em] text-dim">ПН 31 АВГУСТА</span>
+        {/* То же число, что стоит в ИТОГО внизу и в клетке 31-го. Заголовок,
+            который спорит с итогом на том же чеке, — первое, что заметят. */}
         <span className="text-2xl font-bold text-money tabular">₴1 640</span>
       </div>
 
@@ -117,15 +119,15 @@ export function Docket() {
       {line('8,0 ч × ₴200', '1 600')}
 
       <div className="tear my-3.5" />
-      {line('Чаевые', '400')}
-      {line('из них наличными', '150', 'small')}
+      {line('Чаевые', '150')}
+      {line('из них наличными', '60', 'small')}
       {line('Питание', '−90', 'minus')}
       {line('В котёл, 5%', '−20', 'minus')}
 
       <div className="tear my-3.5" />
       <div className="flex justify-between gap-3 pt-1">
         <span className="text-sm font-semibold">ИТОГО</span>
-        <span className="text-sm font-semibold text-money tabular">₴1 890</span>
+        <span className="text-sm font-semibold text-money tabular">₴1 640</span>
       </div>
     </div>
   );

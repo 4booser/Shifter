@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 
-import { CalendarDayData } from '@/lib/calendar/models';
+import { CalendarDayData, CalendarEvent } from '@/lib/calendar/models';
 import { fromKey, keyOf, todayKey } from '@/lib/calendar/calendar-date';
 import { formatMoney } from '@/lib/settings/money';
 import { useSettings } from '@/lib/settings/store';
@@ -20,16 +20,25 @@ const WEEKDAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
 export function MonthGrid({
   month,
   days,
+  events = [],
   selected,
   onSelect,
 }: {
   /** Any day inside the month being drawn. */
   month: string;
   days: CalendarDayData[];
+  /**
+   * Everything overlapping the month, once each rather than per day it
+   * covers — a fortnight of leave arrives as one event and is spread across
+   * the cells here.
+   */
+  events?: CalendarEvent[];
   selected: string | null;
   onSelect: (key: string) => void;
 }) {
   const settings = useSettings((state) => state.settings);
+  const onDay = (key: string) =>
+    events.filter((event) => event.start_date <= key && key <= event.end_date);
   const today = todayKey();
 
   const byDate = useMemo(() => new Map(days.map((day) => [day.date, day])), [days]);
@@ -118,6 +127,19 @@ export function MonthGrid({
               </span>
 
               <span className="flex min-w-0 flex-col gap-0.5">
+                {onDay(cell.key).map((event) => (
+                  <span
+                    key={event.id}
+                    className="flex min-w-0 items-center gap-1 text-2xs text-muted-foreground"
+                  >
+                    <span
+                      aria-hidden
+                      className="size-1.5 flex-none rounded-full"
+                      style={{ background: event.colour }}
+                    />
+                    <span className="truncate">{event.name}</span>
+                  </span>
+                ))}
                 {shifts.slice(0, 2).map((entry, index) => (
                   <span
                     key={`${entry.shift_id}-${index}`}

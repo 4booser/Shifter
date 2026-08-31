@@ -5,11 +5,13 @@ import { Check, ChevronDown, Loader2, Plus, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { ColourField } from '@/components/colour-field';
+import { DayEvents } from '@/components/calendar/day-events';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { calendarApi } from '@/lib/api/calendar';
 import {
   CalendarDayData,
+  CalendarEvent,
   DaySave,
   DeductionReason,
   ShiftTemplate,
@@ -32,10 +34,13 @@ import { cn } from '@/lib/utils';
 export function DayPanel({
   day,
   date,
+  events = [],
   onSaved,
 }: {
   day: CalendarDayData | null;
   date: string | null;
+  /** Everything overlapping the shown month; the panel picks its own day. */
+  events?: CalendarEvent[];
   onSaved: () => void;
 }) {
   const settings = useSettings((state) => state.settings);
@@ -195,6 +200,8 @@ export function DayPanel({
           ))}
         </ul>
       )}
+
+      <DayEvents date={date} events={events} />
 
       {/* Nowhere to go from an empty calendar unless the panel says where the
           shifts are kept. */}

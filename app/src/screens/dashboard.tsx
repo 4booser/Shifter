@@ -93,6 +93,7 @@ export function Dashboard() {
             <MonthGrid
               month={month}
               days={days.data.days}
+              events={days.data.events}
               selected={selected}
               onSelect={setSelected}
             />
@@ -105,6 +106,7 @@ export function Dashboard() {
                     : days.data.days.find((row) => row.date === selected) ?? null
                 }
                 date={selected}
+                events={days.data.events}
                 onSaved={() => void days.refetch()}
               />
             </div>

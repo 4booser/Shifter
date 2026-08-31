@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   ScrollView,
   StyleSheet,
   Text,
@@ -16,9 +17,11 @@ import { AccountKeys } from '@/components/account-keys';
 import { Press } from '@/components/motion';
 import { Colors, Palette } from '@/constants/theme';
 import { ApiError, api } from '@/lib/api';
+import { useSession } from '@/store/session';
 import { t } from '@/lib/i18n';
 
 interface Profile {
+  login: string;
   email: string | null;
   has_password: boolean;
   two_factor: boolean;
@@ -41,6 +44,32 @@ export default function SettingsKeysScreen() {
   const [emailDraft, setEmailDraft] = useState('');
   const [emailBusy, setEmailBusy] = useState(false);
   const [emailSaid, setEmailSaid] = useState<{ ok: boolean; text: string } | null>(null);
+  const [arming, setArming] = useState(false);
+  const [confirmLogin, setConfirmLogin] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [removing, setRemoving] = useState(false);
+  const [removeSaid, setRemoveSaid] = useState<string | null>(null);
+  const signOut = useSession((state) => state.signOut);
+
+  const removeAccount = async () => {
+    setRemoving(true);
+    setRemoveSaid(null);
+
+    try {
+      await api('/shifter/v1/account', {
+        method: 'DELETE',
+        body: {
+          password: confirmPassword === '' ? null : confirmPassword,
+          confirm_login: confirmLogin.trim(),
+        },
+      });
+      await signOut();
+    } catch (caught) {
+      setRemoveSaid(caught instanceof ApiError ? caught.message : t('Сеть молчит. Сервер доступен?'));
+    } finally {
+      setRemoving(false);
+    }
+  };
 
   const reloadProfile = useCallback(async () => {
     try {
@@ -138,6 +167,68 @@ export default function SettingsKeysScreen() {
             twoFactor={profile.two_factor}
             onChanged={() => void reloadProfile()}
           />
+
+          {/* The red zone, last on purpose. The App Store also requires the
+              account to be deletable from inside the app — but mostly this is
+              simply the person's own data, and the door out belongs to them. */}
+          <Text style={styles.sectionDanger}>{t('Удалить аккаунт')}</Text>
+          <View style={styles.card}>
+            <Text style={styles.rowHint}>
+              {t('Уйдёт всё: дни, смены, места, история. Обратной дороги нет.')}
+            </Text>
+            {!arming ? (
+              <Press style={styles.dangerDoor} onPress={() => setArming(true)}>
+                <Text style={styles.dangerDoorText}>{t('Я понимаю — показать форму')}</Text>
+              </Press>
+            ) : (
+              <>
+                <TextInput
+                  style={[styles.emailInput, { marginTop: 8 }]}
+                  placeholder={profile.login}
+                  placeholderTextColor={palette.textSecondary}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  value={confirmLogin}
+                  onChangeText={setConfirmLogin}
+                />
+                {profile.has_password && (
+                  <TextInput
+                    style={[styles.emailInput, { marginTop: 8 }]}
+                    placeholder={t('Пароль')}
+                    placeholderTextColor={palette.textSecondary}
+                    secureTextEntry
+                    value={confirmPassword}
+                    onChangeText={setConfirmPassword}
+                  />
+                )}
+                <Press
+                  style={[styles.dangerGo, confirmLogin.trim() !== profile.login && styles.dangerGoOff]}
+                  disabled={removing || confirmLogin.trim() !== profile.login}
+                  onPress={() => {
+                    Alert.alert(
+                      t('Точно удалить аккаунт?'),
+                      t('Это навсегда.'),
+                      [
+                        { text: t('Отмена'), style: 'cancel' },
+                        {
+                          text: t('Удалить'),
+                          style: 'destructive',
+                          onPress: () => void removeAccount(),
+                        },
+                      ],
+                    );
+                  }}
+                >
+                  {removing ? (
+                    <ActivityIndicator color="#fff" size="small" />
+                  ) : (
+                    <Text style={styles.dangerGoText}>{t('Удалить навсегда')}</Text>
+                  )}
+                </Press>
+                {removeSaid !== null && <Text style={[styles.rowHint, { color: palette.danger }]}>{removeSaid}</Text>}
+              </>
+            )}
+          </View>
         </>
       )}
     </ScrollView>
@@ -181,5 +272,24 @@ const makeStyles = (palette: Palette) =>
       justifyContent: 'center',
     },
     emailSaveOff: { backgroundColor: palette.border },
+    sectionDanger: { color: palette.danger, fontSize: 16, fontWeight: '700', marginTop: 18 },
+    dangerDoor: {
+      alignItems: 'center',
+      borderColor: palette.danger,
+      borderWidth: 1,
+      borderRadius: 12,
+      paddingVertical: 11,
+      marginTop: 10,
+    },
+    dangerDoorText: { color: palette.danger, fontSize: 14, fontWeight: '700' },
+    dangerGo: {
+      backgroundColor: palette.danger,
+      borderRadius: 12,
+      paddingVertical: 12,
+      alignItems: 'center',
+      marginTop: 10,
+    },
+    dangerGoOff: { opacity: 0.4 },
+    dangerGoText: { color: '#fff', fontSize: 15, fontWeight: '700' },
     emailSaveText: { color: '#fff', fontWeight: '700' },
   });

@@ -51,6 +51,7 @@ import { Alert, CountUp, Delta, Money } from '@/components/ui/bits';
 import { FlowMoney } from '@/components/ui/flow';
 import { Icon } from '@/components/ui/icon';
 import { useTitle } from '@/lib/use-title';
+import { ConfettiBurst } from '@/components/ui/confetti';
 
 type PresetId = 'month' | 'previous' | '3m' | '6m' | 'year' | 'all' | 'custom';
 
@@ -738,7 +739,8 @@ function Stats() {
           {goalProgress === null ? (
             <p className="field-hint">{t('Set an amount to aim for and the period fills this meter.')}</p>
           ) : (
-            <div className="flex items-center gap-4">
+            <div className="relative flex items-center gap-4">
+              <GoalCheer periodFrom={range.from} reached={goalProgress.reached} />
               <div className="relative">
                 <ProgressRing percent={goalProgress.percent} />
                 <span className="absolute inset-0 grid place-items-center text-[1.05rem] font-bold tabular">
@@ -1251,4 +1253,25 @@ function Card({
       {children}
     </section>
   );
+}
+
+/**
+ * The shower for the moment the meter fills — once per period, remembered
+ * locally: the tenth visit to a taken goal is a fact, not a party.
+ */
+function GoalCheer({ periodFrom, reached }: { periodFrom: string; reached: boolean }) {
+  const [burst, setBurst] = useState(false);
+
+  useEffect(() => {
+    if (!reached) return;
+
+    const key = `shifter.cheer.${periodFrom}`;
+
+    if (window.localStorage.getItem(key) !== null) return;
+
+    window.localStorage.setItem(key, '1');
+    setBurst(true);
+  }, [periodFrom, reached]);
+
+  return burst ? <ConfettiBurst /> : null;
 }

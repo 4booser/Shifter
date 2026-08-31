@@ -1370,3 +1370,29 @@ progress {
     transform: scale(0.5);
   }
 }
+
+/* The milestone shower: falls once, then the card is just a card again. */
+.confetti-piece {
+  position: absolute;
+  top: -8%;
+  border-radius: 2px;
+  opacity: 0;
+  animation: confetti-fall 1.4s ease-in forwards;
+}
+
+@keyframes confetti-fall {
+  0% {
+    opacity: 1;
+    transform: translateY(0) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(120px) rotate(280deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .confetti-piece {
+    display: none;
+  }
+}

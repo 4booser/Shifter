@@ -18,6 +18,7 @@ function LoginForm() {
 
   const [login, setLogin] = useState('');
   const [password, setPassword] = useState('');
+  const [peeking, setPeeking] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -128,13 +129,25 @@ function LoginForm() {
 
         <label>
           <span className="field-label">{t('Password')}</span>
-          <input
-            className="field-input"
-            type="password"
-            autoComplete="current-password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-          />
+          <span className="relative block">
+            <input
+              className="field-input pr-16"
+              type={peeking ? 'text' : 'password'}
+              autoComplete="current-password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+            />
+            {password !== '' && (
+              <button
+                type="button"
+                tabIndex={-1}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-[0.78rem] font-semibold text-muted hover:text-ink"
+                onClick={() => setPeeking((was) => !was)}
+              >
+                {peeking ? t('Hide') : t('Show')}
+              </button>
+            )}
+          </span>
         </label>
 
         <button type="submit" className="btn btn-primary mt-1 w-full" disabled={pending}>

@@ -54,10 +54,10 @@ export default function StatusPage() {
     const hours = Math.floor((seconds % 86_400) / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
 
-    if (days > 0) return `${days} дн. ${hours} ч`;
-    if (hours > 0) return `${hours} ч ${minutes} мин`;
+    if (days > 0) return `${days} ${t('d.')} ${hours} ${t('hr')}`;
+    if (hours > 0) return `${hours} ${t('hr')} ${minutes} ${t('min')}`;
 
-    return `${minutes} мин`;
+    return `${minutes} ${t('min')}`;
   };
 
   const good = status?.ok === true && !unreachable;
@@ -71,7 +71,7 @@ export default function StatusPage() {
             Shifter
           </Link>
           <Link href="/roadmap" className="ml-auto text-[0.85rem] font-semibold text-(--accent)">
-            Дорожная карта →
+            {t('Roadmap')} →
           </Link>
         </div>
       </header>

@@ -1786,6 +1786,9 @@ export const RU: Dictionary = {
   'Type at least two characters.': 'Введи хотя бы два символа.',
   'Nothing found.': 'Ничего не нашлось.',
   'Loading…': 'Загружаю…',
+  'Roadmap': 'Дорожная карта',
+  'hr': 'ч',
+  'No reason recorded': 'Причина не записана',
   'Throwing out…': 'Выбрасываю…',
   'Fewer': 'Свернуть',
   'on the card?':
@@ -4259,6 +4262,9 @@ export const UK: Dictionary = {
   'Type at least two characters.': 'Введи хоча б два символи.',
   'Nothing found.': 'Нічого не знайшлося.',
   'Loading…': 'Завантажую…',
+  'Roadmap': 'Дорожня мапа',
+  'hr': 'год',
+  'No reason recorded': 'Причину не записано',
   'Throwing out…': 'Викидаю…',
   'Fewer': 'Згорнути',
   'on the card?':

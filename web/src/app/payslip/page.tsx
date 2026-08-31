@@ -221,6 +221,7 @@ function Payslip() {
 }
 
 const REASONS: Record<string, string> = {
+  unsaid: 'No reason recorded',
   shortfall: 'Till came up short',
   breakage: 'Breakage',
   late: 'Turned up late',

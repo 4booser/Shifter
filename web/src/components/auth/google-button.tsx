@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { authApi } from '@/lib/api/auth';
+import { useI18n } from '@/lib/i18n';
 
 /** The slice of Google Identity Services this app uses. */
 interface GoogleAccounts {
@@ -25,13 +26,15 @@ declare global {
 
 let loading: Promise<void> | null = null;
 
-function loadScript(): Promise<void> {
+function loadScript(hl: string): Promise<void> {
   loading ??= new Promise<void>((resolve, reject) => {
     if (window.google !== undefined) return resolve();
 
     const script = document.createElement('script');
 
-    script.src = 'https://accounts.google.com/gsi/client';
+    // hl pinned to the app's language: Google otherwise guesses from its
+    // own cookies, and an English page grew a Ukrainian button.
+    script.src = `https://accounts.google.com/gsi/client?hl=${hl}`;
     script.async = true;
     script.defer = true;
     script.onload = () => resolve();
@@ -48,6 +51,7 @@ function loadScript(): Promise<void> {
  * server simply keeps the button hidden.
  */
 export function GoogleButton({ onCredential }: { onCredential: (credential: string) => void }) {
+  const { lang } = useI18n();
   const host = useRef<HTMLDivElement>(null);
   const [available, setAvailable] = useState(false);
 
@@ -61,7 +65,7 @@ export function GoogleButton({ onCredential }: { onCredential: (credential: stri
 
         if (!clientId || cancelled || host.current === null) return;
 
-        await loadScript();
+        await loadScript(lang === 'ru' ? 'ru' : lang === 'uk' ? 'uk' : 'en');
 
         if (cancelled || window.google === undefined || host.current === null) return;
 
@@ -81,6 +85,9 @@ export function GoogleButton({ onCredential }: { onCredential: (credential: stri
           shape: 'pill',
           text: 'continue_with',
           width: host.current.clientWidth || 320,
+          // Google guesses the locale from its own cookies otherwise, and an
+          // English page grew a Ukrainian button — the card names its own.
+          locale: lang === 'ru' ? 'ru' : lang === 'uk' ? 'uk' : 'en',
         });
 
         setAvailable(true);
@@ -93,7 +100,8 @@ export function GoogleButton({ onCredential }: { onCredential: (credential: stri
     // onCredential is stable enough per page; re-rendering the Google iframe
     // on every parent render would flicker it.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lang]);
 
   return <div ref={host} className={available ? 'flex justify-center' : 'hidden'} />;
 }

@@ -44,6 +44,7 @@ import { downloadBlob } from '@/lib/export/xlsx';
 import { Alert, Money, Segmented } from '@/components/ui/bits';
 import { Icon } from '@/components/ui/icon';
 import { useTitle } from '@/lib/use-title';
+import { SkeletonRows } from '@/components/ui/skeleton';
 
 type Span = 'week' | 'month';
 
@@ -463,6 +464,10 @@ function Schedule() {
           </span>
         </Alert>
       )}
+
+      {/* The grid's shape while the rota is on its way — the page used to
+          render toolbar-then-nothing for the first second. */}
+      {loading && teams.length === 0 && <SkeletonRows rows={3} height="8rem" />}
 
       {/* ==== Who is on the floor right now ==== */}
       {mode === 'rota' && <OnShiftNow rota={rota} />}

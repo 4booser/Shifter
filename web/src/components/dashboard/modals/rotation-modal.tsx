@@ -83,8 +83,7 @@ export function RotationModal({ open, onClose }: { open: boolean; onClose: () =>
           <div className="grid grid-cols-2 gap-3">
             <label>
               <span className="field-label">{t('Days on')}</span>
-              <input type="number" min={1} max={31} className="field-input" value={on} onChange={(event) => setOn(Number(event.target.value) || 1)} />
-              inputMode="decimal"
+              <input type="number" min={1} max={31} className="field-input" value={on} onChange={(event) => setOn(Number(event.target.value) || 1)} inputMode="decimal" />
             </label>
             <label>
               <span className="field-label">{t('Days off')}</span>
@@ -99,8 +98,7 @@ export function RotationModal({ open, onClose }: { open: boolean; onClose: () =>
             </label>
             <label>
               <span className="field-label">{t('For, days')}</span>
-              <input type="number" min={1} max={400} className="field-input" value={span} onChange={(event) => setSpan(Number(event.target.value) || 1)} />
-              inputMode="decimal"
+              <input type="number" min={1} max={400} className="field-input" value={span} onChange={(event) => setSpan(Number(event.target.value) || 1)} inputMode="decimal" />
             </label>
           </div>
 

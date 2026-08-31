@@ -1207,8 +1207,7 @@ function EditModal({
 
         <label>
           <span className="field-label">{t('People')}</span>
-          <input type="number" min={1} max={20} className="field-input w-full" value={form.slots} onChange={(event) => set('slots', Math.max(1, Number(event.target.value) || 1))} />
-          inputMode="decimal"
+          <input type="number" min={1} max={20} className="field-input w-full" value={form.slots} onChange={(event) => set('slots', Math.max(1, Number(event.target.value) || 1))} inputMode="decimal" />
         </label>
 
         {/* Only for a shift today, because the word is the whole mechanism:

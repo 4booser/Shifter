@@ -60,8 +60,7 @@ export function SalesModal({
         <div className="grid grid-cols-2 gap-3">
           <label>
             <span className="field-label">{t('Price per unit')}</span>
-            <input type="number" min={0} className="field-input" value={price} onChange={(event) => setPrice(Number(event.target.value) || 0)} />
-            inputMode="decimal"
+            <input type="number" min={0} className="field-input" value={price} onChange={(event) => setPrice(Number(event.target.value) || 0)} inputMode="decimal" />
           </label>
           <label>
             <span className="field-label">{t('Your share, %')}</span>

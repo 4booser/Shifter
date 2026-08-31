@@ -290,8 +290,7 @@ export function SchemeModal({ open, onClose }: { open: boolean; onClose: () => v
         {scope === 'ahead' && (
           <label>
             <span className="field-label">{t('How many months')}</span>
-            <input type="number" min={1} max={12} className="field-input" value={months} onChange={(event) => setMonths(Number(event.target.value) || 1)} />
-            inputMode="decimal"
+            <input type="number" min={1} max={12} className="field-input" value={months} onChange={(event) => setMonths(Number(event.target.value) || 1)} inputMode="decimal" />
           </label>
         )}
 

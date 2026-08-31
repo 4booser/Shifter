@@ -43,6 +43,7 @@ export function TileStrip({ days, summary }: { days: CalendarDayData[]; summary:
   const money = (value: number) => formatMoney(settings, Math.round(value));
 
   const worked = days.filter((day) => day.shifts.some((entry) => entry.worked));
+  const streak = streakOf(worked);
   const shifts = days.reduce(
     (count, day) => count + day.shifts.filter((entry) => entry.worked).length,
     0,
@@ -135,8 +136,8 @@ export function TileStrip({ days, summary }: { days: CalendarDayData[]; summary:
       id: 'streak',
       icon: Flame,
       label: 'Подряд',
-      value: `${streakOf(worked)}`,
-      hint: 'дней без выходного',
+      value: `${streak.longest}`,
+      hint: streak.live ? 'дней без выходного, идёт' : 'дней без выходного, дольше всего',
       to: '/wrapped',
     },
     {
@@ -198,21 +199,44 @@ export function TileStrip({ days, summary }: { days: CalendarDayData[]; summary:
 }
 
 /** Days in a row up to today, counted backwards from the newest worked day. */
-function streakOf(worked: CalendarDayData[]): number {
+/**
+ * The longest run of days worked without a day off, and whether it is the run
+ * happening right now.
+ *
+ * Counting back from today alone read as broken: a month with twenty-two
+ * shifts in it showed «0 дней подряд» on any day off, which is the one day
+ * somebody is likely to be looking.
+ */
+function streakOf(worked: CalendarDayData[]): { longest: number; live: boolean } {
   const keys = new Set(worked.map((day) => day.date));
-  const at = fromKey(todayKey());
+  const sorted = [...keys].sort();
+
+  let longest = 0;
   let run = 0;
+  let previous: string | null = null;
+  let endsLast: string | null = null;
 
-  for (;;) {
-    const key = `${at.getFullYear()}-${`${at.getMonth() + 1}`.padStart(2, '0')}-${`${at.getDate()}`.padStart(2, '0')}`;
+  for (const key of sorted) {
+    run = previous !== null && nextDayOf(previous) === key ? run + 1 : 1;
+    previous = key;
 
-    if (!keys.has(key)) break;
-
-    run += 1;
-    at.setDate(at.getDate() - 1);
+    if (run > longest) {
+      longest = run;
+      endsLast = key;
+    }
   }
 
-  return run;
+  const today = todayKey();
+
+  return { longest, live: endsLast !== null && (endsLast === today || nextDayOf(endsLast) === today) };
+}
+
+function nextDayOf(key: string): string {
+  const at = fromKey(key);
+
+  at.setDate(at.getDate() + 1);
+
+  return `${at.getFullYear()}-${`${at.getMonth() + 1}`.padStart(2, '0')}-${`${at.getDate()}`.padStart(2, '0')}`;
 }
 
 function topPlace(summary: DaysResponse): string | null {

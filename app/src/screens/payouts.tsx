@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { ArrowUpRight, CalendarClock, CircleAlert, Coins } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
+import { Bars, BarRow, Panel } from '@/components/charts/bars';
 import { Skeleton } from '@/components/ui/skeleton';
 import { calendarApi } from '@/lib/api/calendar';
 import { PayPeriodRow } from '@/lib/calendar/models';
@@ -79,6 +80,52 @@ export function Payouts() {
     (new Date(`${next.day}T00:00:00`).getTime() - new Date(`${todayKey()}T00:00:00`).getTime()) / 86_400_000,
   );
 
+  /* Every period the schedule knows, oldest first: the point of the chart is
+     the shape over time, and a list sorted by urgency has no shape. */
+  const history = (schedule.data?.periods ?? [])
+    .slice()
+    .sort((one, two) => one.due_on.localeCompare(two.due_on))
+    .slice(-12)
+    .map(
+      (row): BarRow => ({
+        key: `${row.location_id}:${row.period_from}:${row.stream}`,
+        label: spanOf(row.period_from, row.period_to),
+        value: row.expected,
+        shown: money(row.expected),
+        colour:
+          row.expected <= row.paid || row.settled !== null
+            ? 'var(--border-strong)'
+            : row.status === 'overdue' || row.status === 'short'
+              ? 'var(--danger)'
+              : 'var(--accent)',
+      }),
+    );
+
+  const closed = (schedule.data?.periods ?? []).filter(
+    (row) => row.expected <= row.paid || row.settled !== null,
+  );
+  const lateOnes = (schedule.data?.periods ?? []).filter((row) => row.days_late > 0);
+  const worst = lateOnes.reduce((most, row) => Math.max(most, row.days_late), 0);
+  const received = closed.reduce((sum, row) => sum + row.paid, 0);
+
+  const cadence =
+    (schedule.data?.periods ?? []).length === 0
+      ? []
+      : [
+          { label: 'Уже получено', value: received > 0 ? money(received) : '·', tone: '' },
+          { label: 'Периодов закрыто', value: closed.length > 0 ? `${closed.length}` : '·', tone: '' },
+          {
+            label: 'Задерживали раз',
+            value: `${lateOnes.length}`,
+            tone: lateOnes.length > 0 ? 'text-danger' : '',
+          },
+          {
+            label: 'Дольше всего',
+            value: worst > 0 ? `${worst} дн.` : '·',
+            tone: worst > 0 ? 'text-danger' : '',
+          },
+        ].filter((fact) => fact.value !== '·');
+
   return (
     <div className="flex flex-col gap-5">
       <header className="flex flex-wrap items-center justify-between gap-3">
@@ -151,6 +198,33 @@ export function Payouts() {
           </div>
 
           <Rows title="Ждём" rows={waiting} money={money} />
+
+          <div className="columns-1 gap-3 lg:columns-2 [&>*]:mb-3 [&>*]:break-inside-avoid">
+            {history.length > 1 && (
+              <Panel
+                title="Сколько выходит за период"
+                hint="Слева старые, справа свежие. Красным — то, что ещё не пришло."
+              >
+                <Bars rows={history} />
+              </Panel>
+            )}
+
+            {cadence.length > 0 && (
+              <Panel title="Как это место платит" hint="По тому, что уже случилось.">
+                <dl className="grid grid-cols-2 gap-x-4 gap-y-2">
+                  {cadence.map((fact) => (
+                    <div key={fact.label} className="flex flex-col">
+                      <dt className="field-hint">{fact.label}</dt>
+                      <dd className={cn('text-sm font-semibold tabular', fact.tone)}>
+                        {fact.value}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              </Panel>
+            )}
+          </div>
+
           {settled.length > 0 && <Rows title="Закрыто" rows={settled} money={money} muted />}
         </>
       )}
@@ -199,11 +273,7 @@ function Rows({
                   )}
                 </span>
                 <span className="field-hint tabular">
-                  {row.period_from} — {row.period_to} · выплата{' '}
-                  {new Date(`${row.due_on}T12:00:00`).toLocaleDateString('ru', {
-                    day: 'numeric',
-                    month: 'short',
-                  })}
+                  {spanOf(row.period_from, row.period_to)} · выплата {dayOf(row.due_on)}
                 </span>
               </span>
 
@@ -219,4 +289,32 @@ function Rows({
       </ul>
     </section>
   );
+}
+
+/**
+ * Dates people can read.
+ *
+ * The period is the thing being paid for, so it is said as a span with the
+ * month named once — «16–30 июня», not the pair of stamps the API sends.
+ */
+function dayOf(key: string): string {
+  return new Date(`${key}T12:00:00`).toLocaleDateString('ru', {
+    day: 'numeric',
+    month: 'short',
+  });
+}
+
+function spanOf(from: string, to: string): string {
+  const start = new Date(`${from}T12:00:00`);
+  const end = new Date(`${to}T12:00:00`);
+
+  // Asked for on its own, Russian gives the month in the nominative — «июнь»,
+  // which reads wrong after a date. Asking for the day as well gets the
+  // genitive the sentence needs, and the day is then dropped.
+  const month = (date: Date) =>
+    date.toLocaleDateString('ru', { day: 'numeric', month: 'long' }).replace(/^\d+\s*/, '');
+
+  return start.getMonth() === end.getMonth()
+    ? `${start.getDate()}–${end.getDate()} ${month(end)}`
+    : `${start.getDate()} ${month(start)} — ${end.getDate()} ${month(end)}`;
 }

@@ -10,7 +10,8 @@ import { TileStrip } from '@/components/tiles/tile-strip';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { calendarApi } from '@/lib/api/calendar';
-import { fromKey, keyOf, monthBounds, todayKey } from '@/lib/calendar/calendar-date';
+import { useSettings } from '@/lib/settings/store';
+import { fromKey, gridBounds, keyOf, todayKey } from '@/lib/calendar/calendar-date';
 
 /**
  * The calendar page, rebuilt.
@@ -23,7 +24,12 @@ import { fromKey, keyOf, monthBounds, todayKey } from '@/lib/calendar/calendar-d
 export function Dashboard() {
   const [month, setMonth] = useState(todayKey());
   const [selected, setSelected] = useState<string | null>(todayKey());
-  const bounds = monthBounds(month);
+  const mondayFirst = useSettings((state) => state.settings.mondayFirst);
+  /* The six weeks the grid draws, not the month it is named after: a month
+     query left the leading and trailing cells empty, so the first days of
+     next month read as days with nothing on them and opened a panel that
+     said exactly that. */
+  const bounds = gridBounds(month, mondayFirst);
 
   const days = useQuery({
     queryKey: ['days', bounds.from, bounds.to],

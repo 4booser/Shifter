@@ -438,6 +438,7 @@ function ShiftDetail({
   entry: CalendarDayData['shifts'][number];
   busy: boolean;
   onSave: (patch: {
+    needs_cover?: boolean;
     actual_start?: string | null;
     actual_end?: string | null;
     break_minutes?: number | null;
@@ -522,6 +523,42 @@ function ShiftDetail({
           onSave={(value) => onSave({ guests: value === '' ? null : Number(value) })}
         />
       </div>
+
+      {/* Asking the crew to take a shift is an edit of your own day, which is
+          why it lives here and not on the rota: the rota is where everybody
+          else answers. */}
+      <button
+        type="button"
+        role="switch"
+        aria-checked={entry.needs_cover}
+        disabled={busy || entry.worked}
+        onClick={() => onSave({ needs_cover: !entry.needs_cover })}
+        className="flex items-center justify-between gap-3 text-left disabled:opacity-50"
+      >
+        <span className="min-w-0">
+          <span className="block text-sm font-medium">Прошу подменить</span>
+          <span className="field-hint">
+            {entry.worked
+              ? 'Смена уже отработана — передавать нечего.'
+              : entry.needs_cover
+                ? 'Команда видит это на графике.'
+                : 'Смена появится на графике как «ищут подмену».'}
+          </span>
+        </span>
+        <span
+          className={cn(
+            'relative h-6 w-10 flex-none rounded-full transition-colors',
+            entry.needs_cover ? 'bg-[var(--warn)]' : 'bg-surface ring-1 ring-border',
+          )}
+        >
+          <span
+            className={cn(
+              'absolute top-1 size-4 rounded-full bg-surface-2 shadow-sm transition-all',
+              entry.needs_cover ? 'left-5' : 'left-1',
+            )}
+          />
+        </span>
+      </button>
 
       <div className="flex flex-col gap-1.5">
         <span className="field-label">Где работали</span>

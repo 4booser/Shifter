@@ -218,3 +218,20 @@ export function buildYearGrid(year: number, mondayFirst = true, locale = 'en'): 
     weeks: buildMonthGrid({ year, month: index + 1 }, mondayFirst),
   }));
 }
+
+/**
+ * The six weeks a month grid actually draws, Monday-first.
+ *
+ * A month query leaves the leading and trailing cells empty, so the last days
+ * of August and the first of September look like days with nothing on them —
+ * and clicking one opened a panel that said so.
+ */
+export function gridBounds(key: string, mondayFirst = true): { from: string; to: string } {
+  const at = fromKey(key);
+  const first = new Date(at.getFullYear(), at.getMonth(), 1);
+  const lead = mondayFirst ? (first.getDay() + 6) % 7 : first.getDay();
+  const from = new Date(first.getFullYear(), first.getMonth(), 1 - lead);
+  const to = new Date(from.getFullYear(), from.getMonth(), from.getDate() + 41);
+
+  return { from: toKey(from), to: toKey(to) };
+}

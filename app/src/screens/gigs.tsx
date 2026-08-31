@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowUpRight, MapPin, Sparkles, TrendingDown, TrendingUp } from 'lucide-react';
+import { ArrowUpRight, MapPin, Plus, Sparkles, TrendingDown, TrendingUp } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
+import { PostGig } from '@/components/gigs/post-gig';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { GIG_CATEGORIES, GIG_GROUPS, GigEmployment, gigApi } from '@/lib/api/gigs';
@@ -29,6 +30,7 @@ export function Gigs() {
      against a board of hundreds is a lot of work to show somebody a list
      that empties as they type «Дн». */
   const [asked, setAsked] = useState('');
+  const [posting, setPosting] = useState(false);
 
   const ahead = addMonths(currentMonth(), 1);
   const to = `${ahead.year}-${`${ahead.month}`.padStart(2, '0')}-28`;
@@ -56,13 +58,21 @@ export function Gigs() {
     <div className="flex flex-col gap-5">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold tracking-tight">Подработки</h1>
-        <Button variant="ghost" size="sm" asChild>
-          <a href="/gigs">
-            Старая версия
-            <ArrowUpRight className="size-3.5" />
-          </a>
-        </Button>
+        <span className="flex items-center gap-2">
+          <Button onClick={() => setPosting(true)}>
+            <Plus className="size-4" />
+            Нужен человек
+          </Button>
+          <Button variant="ghost" size="sm" asChild>
+            <a href="/gigs">
+              Старая версия
+              <ArrowUpRight className="size-3.5" />
+            </a>
+          </Button>
+        </span>
       </header>
+
+      {posting && <PostGig onClose={() => setPosting(false)} />}
 
       {/* One row of filters above the board, the way every list of things to
           apply for is read: what kind of work, where, and in what part of the
@@ -177,11 +187,9 @@ export function Gigs() {
                   : `В городе «${asked}» пока пусто`}
               </p>
               <p className="field-hint">Загляните позже — или разместите своё объявление.</p>
-              <Button variant="outline" size="sm" asChild>
-                <a href="/gigs">
-                  Разместить на старой странице
-                  <ArrowUpRight className="size-3.5" />
-                </a>
+              <Button variant="outline" size="sm" onClick={() => setPosting(true)}>
+                <Plus className="size-3.5" />
+                Разместить своё
               </Button>
             </>
           )}

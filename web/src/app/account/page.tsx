@@ -743,10 +743,19 @@ interface SessionRow {
   user_agent: string | null;
 }
 
-/** "Chrome on a Mac, since Tuesday" — every key out there, revocable alone. */
+/**
+ * "Chrome on a Mac, ×214, last Tuesday" — the keys out there, grouped.
+ *
+ * Every sign-in mints a session, and a person who lives in the app mints
+ * hundreds from one browser; listing each one was a wall nobody could read
+ * or act on. One row per device now, carrying its count, its newest date
+ * and one button that throws the whole pile out.
+ */
 function SessionsSection() {
   const { t, lang } = useI18n();
   const [rows, setRows] = useState<SessionRow[] | null>(null);
+  const [showAll, setShowAll] = useState(false);
+  const [clearing, setClearing] = useState<string | null>(null);
 
   const refresh = () =>
     void api<{ sessions: SessionRow[] }>('/shifter/v1/account/sessions')
@@ -786,32 +795,67 @@ function SessionsSection() {
     return os === '' ? browser : `${browser} · ${os}`;
   };
 
+  const groups = [...rows
+    .reduce((map, row) => {
+      const name = describe(row.user_agent);
+      const group = map.get(name) ?? { name, ids: [] as number[], latest: '' };
+
+      group.ids.push(row.id);
+      if (row.created_at > group.latest) group.latest = row.created_at;
+
+      return map.set(name, group);
+    }, new Map<string, { name: string; ids: number[]; latest: string }>())
+    .values()]
+    .sort((one, two) => two.latest.localeCompare(one.latest));
+
+  const shown = showAll ? groups : groups.slice(0, 6);
+
+  const throwOut = async (group: { name: string; ids: number[] }) => {
+    setClearing(group.name);
+
+    // One by one, deliberately: half thrown out is still progress if the
+    // network dies, and refresh() will show exactly what is left.
+    for (const id of group.ids) {
+      await api(`/shifter/v1/account/sessions/${id}`, { method: 'DELETE' }).catch(() => undefined);
+    }
+
+    setClearing(null);
+    refresh();
+  };
+
   return (
     <section className="card reveal p-4">
       <h2 className="mb-1 text-[0.98rem] font-bold">{t('Devices holding a key')}</h2>
       <p className="field-hint mb-3">{t('Every signed-in session. Throw one out and it is signed out on its next breath.')}</p>
       <ul className="flex flex-col gap-1.5">
-        {rows.map((row) => (
-          <li key={row.id} className="flex flex-wrap items-center gap-2 rounded-(--radius) border border-border px-2.5 py-1.5 text-[0.85rem]">
+        {shown.map((group) => (
+          <li key={group.name} className="flex flex-wrap items-center gap-2 rounded-(--radius) border border-border px-2.5 py-1.5 text-[0.85rem]">
             <span className="min-w-0 flex-1">
-              <span className="block font-semibold">{describe(row.user_agent)}</span>
+              <span className="block font-semibold">
+                {group.name}
+                {group.ids.length > 1 && <span className="ml-1.5 text-[0.75rem] font-normal text-faint tabular">×{group.ids.length}</span>}
+              </span>
               <span className="field-hint tabular">
-                {t('since')}{' '}
-                {new Date(row.created_at).toLocaleDateString(lang, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                {t('last')}{' '}
+                {new Date(group.latest).toLocaleDateString(lang, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
               </span>
             </span>
             <button
               type="button"
               className="btn btn-quiet btn-sm text-danger"
-              onClick={() =>
-                void api(`/shifter/v1/account/sessions/${row.id}`, { method: 'DELETE' }).then(refresh)
-              }
+              disabled={clearing !== null}
+              onClick={() => void throwOut(group)}
             >
-              {t('Sign out')}
+              {clearing === group.name ? t('Throwing out…') : group.ids.length > 1 ? `${t('Sign out')} ×${group.ids.length}` : t('Sign out')}
             </button>
           </li>
         ))}
       </ul>
+      {groups.length > 6 && (
+        <button type="button" className="btn btn-quiet btn-sm mt-2" onClick={() => setShowAll((was) => !was)}>
+          {showAll ? t('Fewer') : `${t('Show all')} (${groups.length})`}
+        </button>
+      )}
     </section>
   );
 }

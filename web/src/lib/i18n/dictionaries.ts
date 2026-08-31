@@ -1786,6 +1786,8 @@ export const RU: Dictionary = {
   'Type at least two characters.': 'Введи хотя бы два символа.',
   'Nothing found.': 'Ничего не нашлось.',
   'Loading…': 'Загружаю…',
+  'Throwing out…': 'Выбрасываю…',
+  'Fewer': 'Свернуть',
   'on the card?':
     'на карту пришло?',
   'A credit near this amount landed near the due day — the bank page can match it properly.':
@@ -4257,6 +4259,8 @@ export const UK: Dictionary = {
   'Type at least two characters.': 'Введи хоча б два символи.',
   'Nothing found.': 'Нічого не знайшлося.',
   'Loading…': 'Завантажую…',
+  'Throwing out…': 'Викидаю…',
+  'Fewer': 'Згорнути',
   'on the card?':
     'на картку прийшло?',
   'A credit near this amount landed near the due day — the bank page can match it properly.':

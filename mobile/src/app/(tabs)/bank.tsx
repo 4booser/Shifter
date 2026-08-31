@@ -827,7 +827,11 @@ function Bank() {
               ['ledger', t('Список')],
               ['analysis', t('Работа')],
             ] as const
-          ).map(([value, label]) => (
+          )
+            // Never inside the example: «К записи» would offer to write
+            // fictional credits into a real calendar.
+            .filter(([value]) => !(mono.demo && value === 'todo'))
+            .map(([value, label]) => (
             <Press
               key={value}
               style={[styles.segment, view === value && styles.segmentOn]}

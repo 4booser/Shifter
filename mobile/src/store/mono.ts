@@ -335,6 +335,8 @@ export const useMono = create<MonoState>((set, get) => ({
   chooseJar: async (jarId) => {
     set({ jarId });
 
+    if (get().demo) return;
+
     const setup = await readSetup();
 
     await quietly(AsyncStorage.setItem(SETUP_KEY, JSON.stringify({ ...setup, jarId })));
@@ -348,6 +350,8 @@ export const useMono = create<MonoState>((set, get) => ({
 
     set({ budgets });
 
+    if (get().demo) return;
+
     const setup = await readSetup();
 
     await quietly(AsyncStorage.setItem(SETUP_KEY, JSON.stringify({ ...setup, budgets })));
@@ -359,6 +363,8 @@ export const useMono = create<MonoState>((set, get) => ({
       : [...new Set([...get().hidden, accountId])];
 
     set({ hidden });
+
+    if (get().demo) return;
 
     const setup = await readSetup();
 
@@ -390,6 +396,8 @@ export const useMono = create<MonoState>((set, get) => ({
   setRules: async (rules) => {
     set({ rules });
 
+    if (get().demo) return;
+
     const setup = await readSetup();
 
     await quietly(AsyncStorage.setItem(SETUP_KEY, JSON.stringify({ ...setup, rules })));
@@ -404,6 +412,10 @@ export const useMono = create<MonoState>((set, get) => ({
    * account.
    */
   chooseAccount: async (accountId) => {
+    // The demo's single account has no cache behind it; reading the empty
+    // storage here would wipe the generated statement on a stray tap.
+    if (get().demo) return;
+
     const setup = await readSetup();
     const per = setup.syncedPer ?? {};
 

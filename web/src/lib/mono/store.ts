@@ -298,7 +298,9 @@ export const useMono = create<MonoState>((set, get) => ({
 
   setRules: (rules) => {
     set({ rules });
-    persistSetup(get);
+    // Inside the example the rules live and die with it — persisting them
+    // would leave fictional preferences behind for a future real connection.
+    if (!get().demo) persistSetup(get);
   },
 
   setBudget: (category, limit) => {
@@ -308,7 +310,7 @@ export const useMono = create<MonoState>((set, get) => ({
     ];
 
     set({ budgets });
-    persistSetup(get);
+    if (!get().demo) persistSetup(get);
   },
 }));
 

@@ -224,7 +224,10 @@ export default function BankPage() {
 
               <div className="flex flex-col gap-4">
                 {/* ==== The wage, if one looks to have landed ==== */}
-                <BankWage items={mono.items} />
+                {/* Never inside the example: matching fictional credits
+                    against the real reconciliation would offer to record
+                    fiction into a real calendar. */}
+                {!mono.demo && <BankWage items={mono.items} />}
                 <ReserveCard
                   account={account ?? null}
                   items={mono.items}

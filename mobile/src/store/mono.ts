@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
 import { create } from 'zustand';
+import { demoClient, demoStatement } from '@/lib/mono-demo';
 
 import { t } from '@/lib/i18n';
 
@@ -93,6 +94,8 @@ type Cache = Record<string, MonoStatementItem[]>;
 interface MonoState {
   /** Undefined while the keychain is still being read. */
   token: string | null | undefined;
+  /** A generated statement for looking around — no bank behind it. */
+  demo: boolean;
   client: MonoClientInfo | null;
   accountId: string | null;
   payers: Record<string, string[]>;
@@ -118,6 +121,10 @@ interface MonoState {
   waiting: number;
 
   hydrate: () => Promise<void>;
+  /** Ninety believable days, drawn on this phone; memory only. */
+  enterDemo: () => void;
+  /** Back to the connect screen; touches no storage. */
+  leaveDemo: () => void;
   /** Checks the token against the bank before keeping it. */
   connect: (token: string) => Promise<'ok' | 'refused' | 'failed'>;
   disconnect: () => Promise<void>;
@@ -186,6 +193,7 @@ export const MONO_TOKEN_KEY = TOKEN_KEY;
 
 export const useMono = create<MonoState>((set, get) => ({
   token: undefined,
+  demo: false,
   client: null,
   accountId: null,
   payers: {},
@@ -204,6 +212,10 @@ export const useMono = create<MonoState>((set, get) => ({
   waiting: 0,
 
   hydrate: async () => {
+    // A demo in progress is in-memory on purpose; a second screen asking to
+    // hydrate must not wash it away with the keychain's empty answer.
+    if (get().demo) return;
+
     let token: string | null = null;
 
     try {
@@ -262,6 +274,29 @@ export const useMono = create<MonoState>((set, get) => ({
 
       void get().loadRates();
     }
+  },
+
+  enterDemo: () => {
+    const client = demoClient();
+    const items = demoStatement(Math.floor(Date.now() / 1000));
+
+    // The card's balance is whatever the statement ran up to.
+    client.accounts[0].balance = items[0]?.balance ?? 0;
+
+    // Memory only, and deliberately so: nothing touches the keychain or the
+    // cache, so a person's real connection — if one ever existed — survives
+    // the fiction untouched, and an app restart forgets it.
+    set({
+      token: 'demo', demo: true, client, accountId: client.accounts[0].id,
+      items, error: null, progress: null,
+    });
+  },
+
+  leaveDemo: () => {
+    set({
+      token: null, demo: false, client: null, accountId: null, items: [],
+      error: null, progress: null,
+    });
   },
 
   connect: async (token) => {
@@ -382,6 +417,8 @@ export const useMono = create<MonoState>((set, get) => ({
   },
 
   sync: async (sinceSeconds) => {
+    if (get().demo) return 0;
+
     const { token, accountId, items, busy } = get();
 
     if (token === null || token === undefined || accountId === null || busy) return 0;

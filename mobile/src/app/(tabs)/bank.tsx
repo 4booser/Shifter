@@ -559,6 +559,15 @@ function Bank() {
               <Text style={styles.primaryText}>{t('Подключить')}</Text>
             )}
           </Press>
+
+          {/* Looking costs nothing: the demo draws a statement on this
+              phone and involves no bank — the whole pitch of it. */}
+          <Press style={styles.demoDoor} onPress={() => mono.enterDemo()}>
+            <Text style={styles.demoDoorText}>{t('Посмотреть на примере')}</Text>
+          </Press>
+          <Text style={styles.hint}>
+            {t('Девяносто выдуманных дней, нарисованных прямо здесь. Банк не участвует; пример живёт до перезапуска приложения.')}
+          </Text>
         </ScrollView>
       </KeyboardAvoidingView>
     );
@@ -571,6 +580,17 @@ function Bank() {
       contentContainerStyle={[styles.content, { paddingTop: insets.top + 12 }]}
     >
       <Text style={styles.title}>{t('Банк')}</Text>
+
+      {mono.demo && (
+        <View style={styles.demoNote}>
+          <Text style={styles.demoNoteText}>
+            {t('Это пример: цифры выдуманы, банка за ними нет. Свой токен покажет так же ваш месяц.')}
+          </Text>
+          <Press onPress={() => mono.leaveDemo()}>
+            <Text style={styles.demoLeave}>{t('Выйти из примера')}</Text>
+          </Press>
+        </View>
+      )}
 
       {mono.client !== null && view === 'summary' && (
         <>
@@ -730,7 +750,7 @@ function Bank() {
         );
       })()}
 
-      {mono.accountId !== null && (
+      {mono.accountId !== null && !mono.demo && (
         <>
           <Press
             style={styles.sync}
@@ -1160,6 +1180,25 @@ const makeStyles = (palette: Palette) =>
     },
     error: { color: palette.danger, fontSize: 13.5 },
     empty: { color: palette.textSecondary, fontSize: 13.5, lineHeight: 19, paddingVertical: 8 },
+    demoDoor: {
+      alignItems: 'center',
+      borderColor: palette.border,
+      borderWidth: 1,
+      borderRadius: 14,
+      paddingVertical: 13,
+      marginTop: 10,
+    },
+    demoDoorText: { color: palette.text, fontSize: 15, fontWeight: '600' },
+    demoNote: {
+      backgroundColor: palette.backgroundElement,
+      borderColor: palette.border,
+      borderWidth: 1,
+      borderRadius: 14,
+      padding: 12,
+      gap: 6,
+    },
+    demoNoteText: { color: palette.textSecondary, fontSize: 12.5, lineHeight: 17 },
+    demoLeave: { color: palette.accent, fontSize: 13, fontWeight: '700' },
     hint: { color: palette.textSecondary, fontSize: 12.5, lineHeight: 17 },
 
     primary: {

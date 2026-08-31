@@ -95,8 +95,8 @@ function Assistant() {
 
   useEffect(() => {
     void assistantApi.messages().then(setThread).catch(() => undefined);
-    void assistantApi.gaps(todayKey()).then(setGaps).catch(() => undefined);
-  }, []);
+    void assistantApi.gaps(todayKey(), lang).then(setGaps).catch(() => undefined);
+  }, [lang]);
 
   useEffect(() => {
     bottom.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });

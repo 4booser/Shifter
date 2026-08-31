@@ -62,7 +62,8 @@ export const assistant = {
     api<AssistantMessage>(`${BASE}/ask`, { method: 'POST', body: { text, from, to, today } }),
   clear: () => api<void>(`${BASE}/messages`, { method: 'DELETE' }),
   report: (from: string, to: string) => api<AssistantReport>(`${BASE}/report?from=${from}&to=${to}`),
-  gaps: (today: string) => api<AssistantGap[]>(`${BASE}/gaps?today=${today}`),
+  gaps: (today: string) =>
+    api<AssistantGap[]>(`${BASE}/gaps?today=${today}&lang=${useLang.getState().lang}`),
   answerGap: (kind: string, date: string, shiftId: number | null, value: number) =>
     api<void>(`${BASE}/gaps`, { method: 'POST', body: { kind, date, shift_id: shiftId, value } }),
   // The language goes with the request rather than being remembered on the

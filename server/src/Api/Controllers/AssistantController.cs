@@ -136,9 +136,10 @@ public class AssistantController : ControllerBase
         => Ok(await _assistant.ReportAsync(UserId(), from, to, ct));
 
     [HttpGet("gaps")]
-    public async Task<IActionResult> Gaps([FromQuery] DateOnly? today, CancellationToken ct)
+    public async Task<IActionResult> Gaps(
+        [FromQuery] DateOnly? today, [FromQuery] string? lang, CancellationToken ct)
         => Ok(await _assistant.GapsAsync(
-            UserId(), today ?? DateOnly.FromDateTime(DateTime.UtcNow), ct));
+            UserId(), today ?? DateOnly.FromDateTime(DateTime.UtcNow), ct, lang));
 
     [HttpPost("gaps")]
     public async Task<IActionResult> AnswerGap([FromBody] GapAnswerDto request, CancellationToken ct)

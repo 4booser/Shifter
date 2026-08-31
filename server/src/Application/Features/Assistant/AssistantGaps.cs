@@ -1,3 +1,4 @@
+using Shifter.Application.Common.Text;
 using Shifter.Application.Features.business.DTOs;
 
 namespace Shifter.Application.Features.Assistant;
@@ -28,8 +29,9 @@ public static class AssistantGaps
     /// <summary>How many to raise at once. More than a handful reads as a chore.</summary>
     public const int Limit = 6;
 
-    public static Gap[] Find(DayDto[] days, DateOnly today)
+    public static Gap[] Find(DayDto[] days, DateOnly today, string? lang = null)
     {
+        var say = Say.In(lang);
         var gaps = new List<Gap>();
 
         // Newest first: this week's blanks are the ones somebody can still
@@ -44,8 +46,9 @@ public static class AssistantGaps
                 gaps.Add(new Gap(
                     $"revenue-{day.date:yyyy-MM-dd}-{shift.shift_id}",
                     "revenue",
-                    $"{Said(day.date)} вы работали «{shift.name}» под {Percent(shift.revenue_percent!.Value)}% "
-                    + "от выручки, но выручка не записана. Сколько было?",
+                    say.Of(
+                        $"{Said(day.date, say)} вы работали «{shift.name}» под {Percent(shift.revenue_percent!.Value)}% от выручки, но выручка не записана. Сколько было?",
+                        $"{Said(day.date, say)} ви працювали «{shift.name}» під {Percent(shift.revenue_percent!.Value)}% від виторгу, але виторг не записано. Скільки було?"),
                     day.date.ToString("yyyy-MM-dd"),
                     shift.shift_id,
                     shift.name,
@@ -57,7 +60,9 @@ public static class AssistantGaps
                 gaps.Add(new Gap(
                     $"tips-{day.date:yyyy-MM-dd}",
                     "tips",
-                    $"{Said(day.date)} смена была, а чаевые не отмечены. Сколько вышло?",
+                    say.Of(
+                        $"{Said(day.date, say)} смена была, а чаевые не отмечены. Сколько вышло?",
+                        $"{Said(day.date, say)} зміна була, а чайові не позначено. Скільки вийшло?"),
                     day.date.ToString("yyyy-MM-dd"),
                     null,
                     null,
@@ -71,14 +76,19 @@ public static class AssistantGaps
     private static string Percent(decimal value) =>
         value == Math.Truncate(value) ? ((int)value).ToString() : value.ToString("0.##");
 
-    private static string Said(DateOnly date)
+    private static string Said(DateOnly date, Say say)
     {
-        string[] months =
+        string[] ru =
         [
             "января", "февраля", "марта", "апреля", "мая", "июня",
             "июля", "августа", "сентября", "октября", "ноября", "декабря",
         ];
+        string[] uk =
+        [
+            "січня", "лютого", "березня", "квітня", "травня", "червня",
+            "липня", "серпня", "вересня", "жовтня", "листопада", "грудня",
+        ];
 
-        return $"{date.Day} {months[date.Month - 1]}";
+        return $"{date.Day} {(say.IsUk ? uk : ru)[date.Month - 1]}";
     }
 }

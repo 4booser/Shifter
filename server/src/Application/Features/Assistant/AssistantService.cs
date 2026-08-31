@@ -137,13 +137,14 @@ public sealed class AssistantService
     }
 
     /// <summary>What the assistant would like to ask, newest blanks first.</summary>
-    public async Task<AssistantGaps.Gap[]> GapsAsync(int userId, DateOnly today, CancellationToken ct)
+    public async Task<AssistantGaps.Gap[]> GapsAsync(
+        int userId, DateOnly today, CancellationToken ct, string? lang = null)
     {
         // Six weeks back: far enough to catch a forgotten fortnight, near
         // enough that somebody still remembers the answer.
         var range = await _days.ListAsync(userId, today.AddDays(-42), today, ct);
 
-        return AssistantGaps.Find(range.days, today);
+        return AssistantGaps.Find(range.days, today, lang);
     }
 
     /// <summary>

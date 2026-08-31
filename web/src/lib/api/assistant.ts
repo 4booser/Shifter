@@ -69,7 +69,7 @@ export const assistantApi = {
     api<AssistantMessage>(`${BASE}/ask`, { body: { text, from, to, today } }),
   clear: () => api<void>(`${BASE}/messages`, { method: 'DELETE' }),
   report: (from: string, to: string) => api<AssistantReport>(`${BASE}/report?from=${from}&to=${to}`),
-  gaps: (today: string) => api<AssistantGap[]>(`${BASE}/gaps?today=${today}`),
+  gaps: (today: string, lang: string) => api<AssistantGap[]>(`${BASE}/gaps?today=${today}&lang=${lang}`),
   answerGap: (kind: string, date: string, shiftId: number | null, value: number) =>
     api<void>(`${BASE}/gaps`, { body: { kind, date, shift_id: shiftId, value } }),
 };

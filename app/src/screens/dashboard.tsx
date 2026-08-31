@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { ArrowUpRight, ChevronLeft, ChevronRight } from 'lucide-react';
 
 import { DayPanel } from '@/components/calendar/day-panel';
+import { GoalCard } from '@/components/dashboard/goal-card';
 import { StartLive } from '@/components/live/live-bar';
 import { MonthGrid } from '@/components/calendar/month-grid';
 import { TileStrip } from '@/components/tiles/tile-strip';
@@ -95,11 +96,18 @@ export function Dashboard() {
               selected={selected}
               onSelect={setSelected}
             />
-            <DayPanel
-              day={selected === null ? null : days.data.days.find((row) => row.date === selected) ?? null}
-              date={selected}
-              onSaved={() => void days.refetch()}
-            />
+            <div className="flex flex-col gap-4">
+              <GoalCard />
+              <DayPanel
+                day={
+                  selected === null
+                    ? null
+                    : days.data.days.find((row) => row.date === selected) ?? null
+                }
+                date={selected}
+                onSaved={() => void days.refetch()}
+              />
+            </div>
           </div>
         </>
       )}

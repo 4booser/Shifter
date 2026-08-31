@@ -1,0 +1,220 @@
+import { useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Pencil, Target } from 'lucide-react';
+import { toast } from 'sonner';
+
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { calendarApi } from '@/lib/api/calendar';
+import { Goal, GoalPeriod } from '@/lib/calendar/models';
+import { todayKey } from '@/lib/calendar/calendar-date';
+import { daysWord } from '@/lib/text/plural';
+import { formatMoney } from '@/lib/settings/money';
+import { useSettings } from '@/lib/settings/store';
+import { cn } from '@/lib/utils';
+
+const PERIODS: { value: GoalPeriod; label: string }[] = [
+  { value: 'week', label: 'в неделю' },
+  { value: 'month', label: 'в месяц' },
+  { value: 'year', label: 'в год' },
+];
+
+/**
+ * The month against what somebody said they wanted from it.
+ *
+ * The bar is the answer, but the sentence under it is the useful part: not
+ * «68%», which nobody can act on, but how much is left and how many days
+ * there are to earn it in — and, once the month is far enough along to mean
+ * anything, whether the current pace gets there.
+ */
+export function GoalCard() {
+  const settings = useSettings((state) => state.settings);
+  const money = (value: number) => formatMoney(settings, Math.round(value));
+  const client = useQueryClient();
+
+  const goals = useQuery({ queryKey: ['goals'], queryFn: () => calendarApi.goals() });
+  const [editing, setEditing] = useState(false);
+
+  // Whichever goal exists, not the monthly one: the form offers a week and a
+  // year too, and a card that only reads months would make those choices do
+  // nothing.
+  const goal = (goals.data ?? [])[0] ?? null;
+
+  /* The stretch a goal governs comes from the server — a week runs Monday to
+     Sunday there, and re-deriving that here is how the two quietly disagree. */
+  const window = useQuery({
+    queryKey: ['days', goal?.current_from, goal?.current_to],
+    queryFn: () => calendarApi.days(goal!.current_from, goal!.current_to),
+    enabled: goal !== null,
+  });
+
+  if (goals.isPending) return null;
+
+  if (goal === null || editing) {
+    return (
+      <GoalForm
+        goal={goal}
+        onClose={() => setEditing(false)}
+        onSaved={() => {
+          void client.invalidateQueries({ queryKey: ['goals'] });
+          setEditing(false);
+        }}
+      />
+    );
+  }
+
+  const earned = window.data?.total_earned ?? 0;
+  const share = Math.min(1, goal.amount > 0 ? earned / goal.amount : 0);
+  const left = Math.max(0, goal.amount - earned);
+  const done = left === 0;
+
+  const today = todayKey();
+  const daysLeft =
+    goal.current_to < today
+      ? 0
+      : Math.round(
+          (new Date(`${goal.current_to}T12:00:00`).getTime() -
+            new Date(`${today}T12:00:00`).getTime()) /
+            86_400_000,
+        ) + 1;
+  const perDay = daysLeft > 0 ? left / daysLeft : 0;
+
+  return (
+    <section className="card flex flex-col gap-2 p-4">
+      <div className="flex items-start justify-between gap-2">
+        <span className="field-hint flex items-center gap-1.5">
+          <Target className="size-3.5" />
+          Цель {PERIOD_LABELS[goal.period]}
+        </span>
+        <button
+          type="button"
+          aria-label="Изменить цель"
+          onClick={() => setEditing(true)}
+          className="text-muted-foreground transition-colors hover:text-ink"
+        >
+          <Pencil className="size-3.5" />
+        </button>
+      </div>
+
+      <p className="text-2xl font-bold tabular">
+        {money(earned)}
+        <span className="text-base font-semibold text-muted-foreground">
+          {' '}
+          из {money(goal.amount)}
+        </span>
+      </p>
+
+      <span className="h-2 overflow-hidden rounded-full bg-surface-2">
+        <span
+          className="block h-full rounded-full transition-[width] duration-700"
+          style={{
+            width: `${Math.max(1, share * 100)}%`,
+            background: done ? 'var(--good)' : 'var(--accent)',
+          }}
+        />
+      </span>
+
+      <p className={cn('field-hint', done && 'text-good')}>
+        {done
+          ? 'Цель закрыта — всё, что дальше, сверху.'
+          : daysLeft > 0
+            ? `Осталось ${money(left)} за ${daysLeft} ${daysWord(daysLeft)} — по ${money(perDay)} в день.`
+            : `Не хватило ${money(left)}.`}
+      </p>
+    </section>
+  );
+}
+
+const PERIOD_LABELS: Record<GoalPeriod, string> = {
+  day: 'на день',
+  week: 'на неделю',
+  month: 'на месяц',
+  year: 'на год',
+};
+
+function GoalForm({
+  goal,
+  onClose,
+  onSaved,
+}: {
+  goal: Goal | null;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const settings = useSettings((state) => state.settings);
+  const [amount, setAmount] = useState(goal === null ? '' : `${goal.amount}`);
+  const [period, setPeriod] = useState<GoalPeriod>(goal?.period ?? 'month');
+
+  const save = useMutation({
+    mutationFn: () =>
+      calendarApi.saveGoal({
+        period,
+        amount: Number(amount.replace(',', '.')),
+        // Null: a standing goal, the same every month. A goal for one
+        // particular March is a different feature and nobody asked for it.
+        anchor: null,
+        note: null,
+      }),
+    onSuccess: () => {
+      toast.success('Цель поставлена');
+      onSaved();
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  const valid = Number(amount.replace(',', '.')) > 0;
+
+  return (
+    <section className="card flex flex-col gap-2.5 p-4">
+      <span className="field-hint flex items-center gap-1.5">
+        <Target className="size-3.5" />
+        {goal === null ? 'Поставьте цель' : 'Изменить цель'}
+      </span>
+
+      {goal === null && (
+        <p className="field-hint">
+          Сколько хотите зарабатывать. Приложение посчитает, по сколько выходит в день.
+        </p>
+      )}
+
+      <div className="flex flex-wrap gap-1.5">
+        {PERIODS.map((one) => (
+          <button
+            key={one.value}
+            type="button"
+            onClick={() => setPeriod(one.value)}
+            className={cn(
+              'rounded-full border px-3 py-1 text-sm font-medium transition-colors',
+              period === one.value
+                ? 'border-transparent bg-accent text-accent-foreground'
+                : 'border-border text-muted-foreground hover:text-ink',
+            )}
+          >
+            {one.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="flex gap-2">
+        <Input
+          inputMode="decimal"
+          value={amount}
+          placeholder={settings.currency}
+          autoFocus={goal !== null}
+          onChange={(event) => setAmount(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' && valid) save.mutate();
+          }}
+        />
+        <Button disabled={!valid || save.isPending} onClick={() => save.mutate()}>
+          Сохранить
+        </Button>
+        {goal !== null && (
+          <Button variant="ghost" onClick={onClose}>
+            Отмена
+          </Button>
+        )}
+      </div>
+    </section>
+  );
+}

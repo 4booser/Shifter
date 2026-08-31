@@ -19,6 +19,7 @@ import { FeatureTour } from '@/components/tour/tour';
 import { Icon } from '@/components/ui/icon';
 import { Avatar } from '@/components/ui/avatar';
 import { Profile, accountApi } from '@/lib/api/auth';
+import { LiveTitle } from '@/components/layout/live-title';
 
 const NAV: { href: string; label: string; icon: string }[] = [
   { href: '/dashboard', label: 'Calendar', icon: 'calendar' },
@@ -130,6 +131,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-dvh">
+      <LiveTitle />
       <header className="sticky top-0 z-40 border-b border-border bg-(--surface)/85 backdrop-blur-md">
         <div className="mx-auto flex h-14 max-w-[1440px] items-center gap-1 px-3 sm:px-5">
           <Link href="/dashboard" className="mr-2 flex items-center gap-2 font-bold tracking-tight">

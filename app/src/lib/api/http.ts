@@ -240,8 +240,12 @@ export async function api<T>(path: string, options: RequestOptions = {}): Promis
     } else {
       clearSession();
 
-      if (typeof location !== 'undefined' && !location.pathname.startsWith('/login')) {
-        location.assign(`/login?returnUrl=${encodeURIComponent(location.pathname)}`);
+      // This front's sign-in lives at /sign-in. The port arrived pointing at
+      // the old client's /login, which is not a route here — so an expired
+      // token sent people to a page that does not exist instead of to the
+      // form that would have let them back in.
+      if (typeof location !== 'undefined' && !location.pathname.startsWith('/sign-in')) {
+        location.assign(`/sign-in?returnUrl=${encodeURIComponent(location.pathname)}`);
       }
     }
   }

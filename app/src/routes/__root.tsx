@@ -1,7 +1,9 @@
+import { useEffect } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createRootRoute, Outlet } from '@tanstack/react-router';
 
 import { Toaster } from '@/components/ui/sonner';
+import { bindSettingsToDocument } from '@/lib/settings/store';
 
 /**
  * The application root: one query client, one toaster, one outlet.
@@ -21,11 +23,18 @@ const queryClient = new QueryClient({
   },
 });
 
-export const Route = createRootRoute({
-  component: () => (
+function Root() {
+  // Subscribed once, here: every theme, accent and size choice is written
+  // onto the document root, so plain CSS carries it and no component has to
+  // ask what the settings say.
+  useEffect(bindSettingsToDocument, []);
+
+  return (
     <QueryClientProvider client={queryClient}>
       <Outlet />
       <Toaster position="bottom-right" />
     </QueryClientProvider>
-  ),
-});
+  );
+}
+
+export const Route = createRootRoute({ component: Root });

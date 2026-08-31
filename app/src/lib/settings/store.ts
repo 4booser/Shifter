@@ -100,9 +100,13 @@ export function bindSettingsToDocument(): () => void {
     root.dataset['weekends'] = settings.highlightWeekends ? 'on' : 'off';
     root.dataset['glass'] = settings.glass ? 'on' : 'off';
     root.style.setProperty('--motion', settings.reduceMotion ? '0' : `${settings.motionSpeed}`);
+    // This front names its radii after what wears them, and scales type by
+    // moving the root font size the rem scale is built on — so the slider
+    // reaches every heading without a single component knowing about it.
+    root.style.setProperty('--radius-field', `${settings.roundness}px`);
+    root.style.setProperty('--radius-card', `${settings.roundness + 4}px`);
     root.style.setProperty('--radius', `${settings.roundness}px`);
-    root.style.setProperty('--radius-lg', `${settings.roundness + 4}px`);
-    root.style.setProperty('--font-size', `${settings.fontScale}px`);
+    root.style.fontSize = `${settings.fontScale}px`;
     root.style.setProperty('--accent', settings.accent);
     root.style.setProperty('--accent-hover', lighten(settings.accent, 0.14));
     root.style.setProperty('--accent-ink', readable(settings.accent));

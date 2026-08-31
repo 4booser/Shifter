@@ -16,6 +16,23 @@ import { apiErrorMessage } from '@/lib/api/http';
  * ambience is two soft lights behind glass, not a photograph: it costs
  * nothing to paint and never competes with the form.
  */
+/**
+ * Where signing in lands.
+ *
+ * Back to whatever the expired session interrupted, and to the calendar
+ * otherwise. Only a same-site path is honoured — a returnUrl is a string a
+ * stranger can put in a link, and an absolute one would make this form an
+ * open redirect.
+ */
+function landing(): string {
+  const asked = new URLSearchParams(window.location.search).get('returnUrl');
+
+  if (asked == null || !asked.startsWith('/') || asked.startsWith('//')) return '/';
+  if (asked.startsWith('/sign-in')) return '/';
+
+  return asked;
+}
+
 export function SignIn() {
   const [login, setLogin] = useState('');
   const [password, setPassword] = useState('');
@@ -30,7 +47,7 @@ export function SignIn() {
 
     try {
       await authApi.login({ login: login.trim(), password });
-      window.location.assign('/dashboard');
+      window.location.assign(landing());
     } catch (caught) {
       setError(apiErrorMessage(caught));
       setBusy(false);

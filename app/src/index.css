@@ -69,7 +69,9 @@
 
 /* The dark side is picked, not inverted: the ground goes cool-neutral, the
    accent brightens to keep its contrast, and the greys keep their hue. */
-:root:not([data-theme='light']) {
+:root:not([data-theme='light']):not([data-theme='grey']):not([data-theme='sand']):not(
+    [data-theme='mint']
+  ) {
   @media (prefers-color-scheme: dark) {
     --bg: oklch(17.5% 0.012 275);
     --surface: oklch(21.5% 0.014 275);
@@ -127,6 +129,175 @@
   --shadow-pop: 0 4px 12px oklch(0% 0 0 / 35%), 0 32px 64px -24px oklch(0% 0 0 / 65%);
 
   color-scheme: dark;
+}
+
+/*
+ * The rest of the palettes.
+ *
+ * Each is a mood rather than a shade of the last: the light three differ in
+ * the temperature of their paper, the dark four in what the ground is made of.
+ * They only restate the tokens they change — ink stays dark under the light
+ * ones, so those blocks are short by design, not by omission.
+ */
+
+[data-theme='grey'] {
+  --bg: oklch(94.5% 0.003 275);
+  --surface: oklch(98.4% 0.002 275);
+  --surface-2: oklch(92.4% 0.004 275);
+  --border: oklch(88% 0.005 275);
+  --border-strong: oklch(78.5% 0.007 275);
+}
+
+[data-theme='sand'] {
+  --bg: oklch(93.5% 0.021 78);
+  --surface: oklch(97.6% 0.014 78);
+  --surface-2: oklch(91% 0.026 78);
+  --border: oklch(86.5% 0.03 78);
+  --border-strong: oklch(77% 0.038 74);
+  --ink: oklch(24% 0.026 60);
+  --muted: oklch(50% 0.028 60);
+  --faint: oklch(64% 0.024 60);
+}
+
+[data-theme='mint'] {
+  --bg: oklch(95.4% 0.019 165);
+  --surface: oklch(98.6% 0.011 165);
+  --surface-2: oklch(93% 0.026 165);
+  --border: oklch(88.5% 0.03 165);
+  --border-strong: oklch(79% 0.038 165);
+  --ink: oklch(22% 0.024 180);
+  --muted: oklch(49% 0.026 180);
+  --faint: oklch(64% 0.022 180);
+}
+
+/* The dark four. Every one of them restates the whole set: the tokens above
+   are a light palette, and a half-stated dark theme is dark paper with dark
+   type on it. */
+
+[data-theme='night'] {
+  --bg: oklch(12.5% 0.004 275);
+  --surface: oklch(16.5% 0.005 275);
+  --surface-2: oklch(21% 0.006 275);
+  --border: oklch(27% 0.007 275);
+  --border-strong: oklch(37% 0.008 275);
+
+  --ink: oklch(95% 0.003 275);
+  --muted: oklch(72% 0.006 275);
+  --faint: oklch(56% 0.006 275);
+
+  --accent-ink: oklch(13% 0.01 275);
+  --good: oklch(72% 0.15 155);
+  --good-soft: oklch(72% 0.15 155 / 16%);
+  --warn: oklch(78% 0.14 75);
+  --warn-soft: oklch(78% 0.14 75 / 16%);
+  --danger: oklch(68% 0.17 20);
+  --danger-soft: oklch(68% 0.17 20 / 16%);
+
+  --shadow-card: 0 1px 2px oklch(0% 0 0 / 40%), 0 12px 32px -16px oklch(0% 0 0 / 65%);
+  --shadow-pop: 0 4px 12px oklch(0% 0 0 / 45%), 0 32px 64px -24px oklch(0% 0 0 / 75%);
+
+  color-scheme: dark;
+}
+
+[data-theme='ocean'] {
+  --bg: oklch(17% 0.034 245);
+  --surface: oklch(21% 0.04 245);
+  --surface-2: oklch(25% 0.045 245);
+  --border: oklch(31% 0.05 245);
+  --border-strong: oklch(41% 0.055 245);
+
+  --ink: oklch(96% 0.012 230);
+  --muted: oklch(74% 0.028 230);
+  --faint: oklch(58% 0.03 235);
+
+  --accent-ink: oklch(17% 0.04 245);
+  --good: oklch(74% 0.14 165);
+  --good-soft: oklch(74% 0.14 165 / 16%);
+  --warn: oklch(79% 0.13 80);
+  --warn-soft: oklch(79% 0.13 80 / 16%);
+  --danger: oklch(69% 0.17 22);
+  --danger-soft: oklch(69% 0.17 22 / 16%);
+
+  --shadow-card: 0 1px 2px oklch(8% 0.04 245 / 40%), 0 12px 32px -16px oklch(8% 0.04 245 / 65%);
+  --shadow-pop: 0 4px 12px oklch(8% 0.04 245 / 45%), 0 32px 64px -24px oklch(8% 0.04 245 / 75%);
+
+  color-scheme: dark;
+}
+
+[data-theme='plum'] {
+  --bg: oklch(17.5% 0.04 320);
+  --surface: oklch(21.5% 0.048 320);
+  --surface-2: oklch(25.5% 0.054 320);
+  --border: oklch(31.5% 0.058 320);
+  --border-strong: oklch(41% 0.062 320);
+
+  --ink: oklch(96% 0.014 320);
+  --muted: oklch(75% 0.03 320);
+  --faint: oklch(59% 0.032 320);
+
+  --accent-ink: oklch(17% 0.04 320);
+  --good: oklch(74% 0.14 158);
+  --good-soft: oklch(74% 0.14 158 / 16%);
+  --warn: oklch(80% 0.13 78);
+  --warn-soft: oklch(80% 0.13 78 / 16%);
+  --danger: oklch(70% 0.17 18);
+  --danger-soft: oklch(70% 0.17 18 / 16%);
+
+  --shadow-card: 0 1px 2px oklch(9% 0.04 320 / 40%), 0 12px 32px -16px oklch(9% 0.04 320 / 65%);
+  --shadow-pop: 0 4px 12px oklch(9% 0.04 320 / 45%), 0 32px 64px -24px oklch(9% 0.04 320 / 75%);
+
+  color-scheme: dark;
+}
+
+/* The one theme whose ground is not a flat colour. The surfaces stay opaque
+   so a card is still a card standing on it. */
+[data-theme='gradient'] {
+  --bg: oklch(16% 0.03 285);
+  --surface: oklch(21% 0.032 285);
+  --surface-2: oklch(25% 0.034 285);
+  --border: oklch(31% 0.036 285);
+  --border-strong: oklch(41% 0.04 285);
+
+  --ink: oklch(96% 0.01 285);
+  --muted: oklch(75% 0.024 285);
+  --faint: oklch(59% 0.026 285);
+
+  --accent-ink: oklch(16% 0.03 285);
+  --good: oklch(74% 0.14 158);
+  --good-soft: oklch(74% 0.14 158 / 16%);
+  --warn: oklch(80% 0.13 78);
+  --warn-soft: oklch(80% 0.13 78 / 16%);
+  --danger: oklch(70% 0.17 18);
+  --danger-soft: oklch(70% 0.17 18 / 16%);
+
+  --shadow-card: 0 1px 2px oklch(6% 0.03 285 / 45%), 0 12px 32px -16px oklch(6% 0.03 285 / 70%);
+  --shadow-pop: 0 4px 12px oklch(6% 0.03 285 / 50%), 0 32px 64px -24px oklch(6% 0.03 285 / 78%);
+
+  color-scheme: dark;
+}
+
+[data-theme='gradient'] body {
+  background:
+    radial-gradient(120% 90% at 12% -8%, oklch(28% 0.09 290 / 85%), transparent 62%),
+    radial-gradient(110% 80% at 92% 4%, oklch(26% 0.08 215 / 70%), transparent 58%),
+    var(--bg);
+  background-attachment: fixed;
+}
+
+/* Everything the settings write onto the root, honoured. A switch that moves
+   nothing is worse than a switch that is not offered. */
+[data-density='compact'] {
+  --text-xs: 0.72rem;
+  --text-sm: 0.82rem;
+  --text-base: 0.92rem;
+}
+
+[data-motion='reduced'] *,
+[data-motion='reduced'] *::before,
+[data-motion='reduced'] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
 }
 
 /* Tailwind utilities read the tokens, so `bg-surface` and `text-muted` work

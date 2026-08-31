@@ -1,0 +1,279 @@
+@import 'tailwindcss';
+
+/*
+ * The design system, one level up.
+ *
+ * The identity is the one people already know — warm paper, indigo accent,
+ * ink text — but everything is stated as an OKLCH token so the dark side is
+ * a chosen palette rather than an inversion, and shadcn's primitives read
+ * from the same dozen variables the app's own components do.
+ */
+
+@theme {
+  --font-sans: 'Inter var', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', 'JetBrains Mono', monospace;
+
+  /* The type scale, fixed here so a heading is never an arbitrary rem. */
+  --text-2xs: 0.6875rem;
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-base: 0.9375rem;
+  --text-lg: 1.0625rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.9rem;
+  --text-4xl: 2.5rem;
+
+  --radius-card: 16px;
+  --radius-field: 12px;
+  --radius-pill: 999px;
+}
+
+:root {
+  /* Paper: warm neutrals with a hint of the accent in the greys, so the
+     page reads as chosen rather than as an unstyled default. */
+  --bg: oklch(95.6% 0.008 85);
+  --surface: oklch(98.6% 0.005 85);
+  --surface-2: oklch(93.8% 0.009 85);
+  --border: oklch(89% 0.012 85);
+  --border-strong: oklch(80% 0.016 85);
+
+  --ink: oklch(21% 0.012 275);
+  --muted: oklch(52% 0.014 275);
+  --faint: oklch(66% 0.012 275);
+
+  --accent: oklch(52% 0.19 275);
+  --accent-hover: oklch(57% 0.19 275);
+  --accent-ink: oklch(99% 0 0);
+  --accent-soft: oklch(52% 0.19 275 / 12%);
+
+  --good: oklch(56% 0.13 155);
+  --good-soft: oklch(56% 0.13 155 / 12%);
+  --warn: oklch(66% 0.13 75);
+  --warn-soft: oklch(66% 0.13 75 / 14%);
+  --danger: oklch(56% 0.18 20);
+  --danger-soft: oklch(56% 0.18 20 / 12%);
+
+  /* Chart series: one fixed order, never cycled. */
+  --s1: oklch(58% 0.15 250);
+  --s2: oklch(66% 0.16 45);
+  --s3: oklch(62% 0.13 160);
+  --s4: oklch(56% 0.17 330);
+  --s5: oklch(64% 0.12 120);
+
+  --shadow-card: 0 1px 2px oklch(21% 0.012 275 / 5%), 0 10px 30px -14px oklch(21% 0.012 275 / 18%);
+  --shadow-pop: 0 2px 8px oklch(21% 0.012 275 / 8%), 0 28px 60px -20px oklch(21% 0.012 275 / 30%);
+
+  color-scheme: light;
+}
+
+/* The dark side is picked, not inverted: the ground goes cool-neutral, the
+   accent brightens to keep its contrast, and the greys keep their hue. */
+:root:not([data-theme='light']) {
+  @media (prefers-color-scheme: dark) {
+    --bg: oklch(17.5% 0.012 275);
+    --surface: oklch(21.5% 0.014 275);
+    --surface-2: oklch(25.5% 0.015 275);
+    --border: oklch(31% 0.016 275);
+    --border-strong: oklch(41% 0.018 275);
+
+    --ink: oklch(96% 0.006 275);
+    --muted: oklch(74% 0.012 275);
+    --faint: oklch(58% 0.012 275);
+
+    --accent: oklch(72% 0.16 275);
+    --accent-hover: oklch(77% 0.16 275);
+    --accent-ink: oklch(18% 0.02 275);
+    --accent-soft: oklch(72% 0.16 275 / 16%);
+
+    --good: oklch(72% 0.15 155);
+    --good-soft: oklch(72% 0.15 155 / 16%);
+    --warn: oklch(78% 0.14 75);
+    --warn-soft: oklch(78% 0.14 75 / 16%);
+    --danger: oklch(68% 0.17 20);
+    --danger-soft: oklch(68% 0.17 20 / 16%);
+
+    --shadow-card: 0 1px 2px oklch(0% 0 0 / 30%), 0 12px 32px -16px oklch(0% 0 0 / 55%);
+    --shadow-pop: 0 4px 12px oklch(0% 0 0 / 35%), 0 32px 64px -24px oklch(0% 0 0 / 65%);
+
+    color-scheme: dark;
+  }
+}
+
+[data-theme='dark'] {
+  --bg: oklch(17.5% 0.012 275);
+  --surface: oklch(21.5% 0.014 275);
+  --surface-2: oklch(25.5% 0.015 275);
+  --border: oklch(31% 0.016 275);
+  --border-strong: oklch(41% 0.018 275);
+
+  --ink: oklch(96% 0.006 275);
+  --muted: oklch(74% 0.012 275);
+  --faint: oklch(58% 0.012 275);
+
+  --accent: oklch(72% 0.16 275);
+  --accent-hover: oklch(77% 0.16 275);
+  --accent-ink: oklch(18% 0.02 275);
+  --accent-soft: oklch(72% 0.16 275 / 16%);
+
+  --good: oklch(72% 0.15 155);
+  --good-soft: oklch(72% 0.15 155 / 16%);
+  --warn: oklch(78% 0.14 75);
+  --warn-soft: oklch(78% 0.14 75 / 16%);
+  --danger: oklch(68% 0.17 20);
+  --danger-soft: oklch(68% 0.17 20 / 16%);
+
+  --shadow-card: 0 1px 2px oklch(0% 0 0 / 30%), 0 12px 32px -16px oklch(0% 0 0 / 55%);
+  --shadow-pop: 0 4px 12px oklch(0% 0 0 / 35%), 0 32px 64px -24px oklch(0% 0 0 / 65%);
+
+  color-scheme: dark;
+}
+
+/* Tailwind utilities read the tokens, so `bg-surface` and `text-muted` work
+   everywhere and no component ever hardcodes a colour. */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-ink: var(--accent-ink);
+  --color-good: var(--good);
+  --color-good-soft: var(--good-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-s1: var(--s1);
+  --color-s2: var(--s2);
+  --color-s3: var(--s3);
+  --color-s4: var(--s4);
+  --color-s5: var(--s5);
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+    letter-spacing: -0.015em;
+  }
+
+  /* Digits that line up wherever they are compared. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+  }
+
+  .field-label {
+    display: block;
+    font-size: var(--text-xs);
+    font-weight: 600;
+    color: var(--muted);
+    letter-spacing: 0.01em;
+  }
+
+  .field-hint {
+    font-size: var(--text-xs);
+    line-height: 1.45;
+    color: var(--faint);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/*
+ * The bridge: shadcn's primitives speak in semantic variables, and every one
+ * of them is answered from the palette above. Nothing in components/ui needs
+ * to know Shifter exists, and nothing in Shifter needs to know shadcn does.
+ */
+@layer base {
+  :root,
+  [data-theme='dark'] {
+    --background: var(--bg);
+    --foreground: var(--ink);
+    --card: var(--surface);
+    --card-foreground: var(--ink);
+    --popover: var(--surface);
+    --popover-foreground: var(--ink);
+    --primary: var(--accent);
+    --primary-foreground: var(--accent-ink);
+    --secondary: var(--surface-2);
+    --secondary-foreground: var(--ink);
+    --muted-bg: var(--surface-2);
+    --muted-foreground: var(--muted);
+    --accent-bg: var(--accent-soft);
+    --accent-foreground: var(--accent);
+    --destructive: var(--danger);
+    --destructive-foreground: var(--accent-ink);
+    --input: var(--border);
+    --ring: var(--accent);
+    --sidebar: var(--surface);
+    --sidebar-foreground: var(--ink);
+  }
+}
+
+@theme inline {
+  --color-background: var(--bg);
+  --color-foreground: var(--ink);
+  --color-card: var(--surface);
+  --color-card-foreground: var(--ink);
+  --color-popover: var(--surface);
+  --color-popover-foreground: var(--ink);
+  --color-primary: var(--accent);
+  --color-primary-foreground: var(--accent-ink);
+  --color-secondary: var(--surface-2);
+  --color-secondary-foreground: var(--ink);
+  --color-muted: var(--surface-2);
+  --color-muted-foreground: var(--muted);
+  --color-accent: var(--accent-soft);
+  --color-accent-foreground: var(--accent);
+  --color-destructive: var(--danger);
+  --color-destructive-foreground: var(--accent-ink);
+  --color-input: var(--border);
+  --color-ring: var(--accent);
+  --radius: var(--radius-field);
+  --radius-sm: calc(var(--radius-field) - 4px);
+  --radius-md: var(--radius-field);
+  --radius-lg: var(--radius-card);
+  --radius-xl: calc(var(--radius-card) + 4px);
+}

@@ -1,6 +1,7 @@
 import { Bars, BarRow, Panel } from '@/components/charts/bars';
 import { streakOf } from '@/lib/calendar/streak';
 import { daysWord, timesWord } from '@/lib/text/plural';
+import { kindName } from '@/lib/text/kinds';
 import { DaysResponse } from '@/lib/calendar/models';
 import { formatMoney } from '@/lib/settings/money';
 import { useSettings } from '@/lib/settings/store';
@@ -246,14 +247,6 @@ export function Raises({ summary }: { summary: DaysResponse }) {
   );
 }
 
-const EXPENSE_NAMES: Record<string, string> = {
-  transport: 'дорога',
-  uniform: 'форма',
-  tools: 'инструмент',
-  food: 'еда',
-  training: 'учёба',
-  other: 'другое',
-};
 
 /** What the work cost. Never subtracted from anything: it happened after. */
 export function CostOfWork({ summary }: { summary: DaysResponse }) {
@@ -265,7 +258,7 @@ export function CostOfWork({ summary }: { summary: DaysResponse }) {
     .map(
       (split): BarRow => ({
         key: split.kind,
-        label: EXPENSE_NAMES[split.kind] ?? split.kind,
+        label: kindName(split.kind),
         value: split.amount,
         shown: money(split.amount),
         hint: `${split.count} ${timesWord(split.count)}`,

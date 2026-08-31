@@ -132,6 +132,7 @@ export function TipJar() {
             <div className="flex gap-2">
               <input
                 type="number"
+                inputMode="decimal"
                 min={0}
                 className="field-input"
                 placeholder={t('No target, just a total')}

@@ -172,6 +172,7 @@ export function EventTemplateModal({
             <span className="field-label">{t('Costs, each time')}</span>
             <input
               type="number"
+              inputMode="decimal"
               min={0}
               step="any"
               className="field-input"

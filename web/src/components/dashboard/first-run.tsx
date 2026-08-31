@@ -199,6 +199,7 @@ export function FirstRun() {
             <span className="field-label">{t('What do they pay?')}</span>
             <input
               type="number"
+              inputMode="decimal"
               min={0}
               className="field-input"
               autoFocus

@@ -254,6 +254,7 @@ export function ShiftModal({
           <span className="field-label">{t('Unpaid break, minutes')}</span>
           <input
             type="number"
+            inputMode="decimal"
             min={0}
             max={720}
             step={5}
@@ -276,6 +277,7 @@ export function ShiftModal({
           <span className="field-label">{t('Amount')}</span>
           <input
             type="number"
+            inputMode="decimal"
             min={0}
             className="field-input"
             value={amount ?? ''}
@@ -292,6 +294,7 @@ export function ShiftModal({
           <div className="flex items-center gap-2">
             <input
               type="number"
+              inputMode="decimal"
               min={0}
               max={100}
               step={0.5}
@@ -330,6 +333,7 @@ export function ShiftModal({
               <div className="flex items-center gap-2">
                 <input
                   type="number"
+                  inputMode="decimal"
                   min={0}
                   max={100}
                   step={0.5}

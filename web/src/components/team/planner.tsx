@@ -698,6 +698,7 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
               <span className="field-label">{t('How many people')}</span>
               <input
                 type="number"
+                inputMode="decimal"
                 min={1}
                 max={20}
                 className="field-input"

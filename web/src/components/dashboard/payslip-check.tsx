@@ -140,6 +140,7 @@ export function PayslipCheckModal({
                       <td className="px-2 py-1.5 text-right">
                         <input
                           type="number"
+                          inputMode="decimal"
                           className="field-input w-28 text-right"
                           aria-label={`${t(LABEL[line.kind])} — ${t('The payslip')}`}
                           value={said[`${index}`] ?? ''}

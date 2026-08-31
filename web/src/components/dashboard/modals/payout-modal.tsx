@@ -173,6 +173,7 @@ export function PayoutModal({
             <span className="field-label">{t('Amount received')}</span>
             <input
               type="number"
+              inputMode="decimal"
               min={0}
               className="field-input"
               value={amount ?? ''}

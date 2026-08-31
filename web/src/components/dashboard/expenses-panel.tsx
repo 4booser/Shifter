@@ -213,6 +213,7 @@ export function ExpensesPanel({
               <span className="field-label">{t('How much')}</span>
               <input
                 type="number"
+                inputMode="decimal"
                 min={0}
                 className="field-input"
                 value={amount ?? ''}
@@ -473,6 +474,7 @@ function StandingCosts({
             />
             <input
               type="number"
+              inputMode="decimal"
               min={0}
               className="field-input"
               placeholder={t('How much')}
@@ -504,6 +506,7 @@ function StandingCosts({
                 <span className="field-hint">{t('on the')}</span>
                 <input
                   type="number"
+                  inputMode="decimal"
                   min={1}
                   max={28}
                   className="field-input w-16"

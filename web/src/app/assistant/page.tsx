@@ -388,6 +388,7 @@ function GapCards({ gaps, onAnswered }: { gaps: AssistantGap[]; onAnswered: (id:
           <div className="mt-2 flex gap-2">
             <input
               type="number"
+              inputMode="decimal"
               min={0}
               className="field-input flex-1"
               placeholder="0"

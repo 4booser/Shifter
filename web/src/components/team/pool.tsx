@@ -84,6 +84,7 @@ export function PoolPanel({ teamId }: { teamId: number }) {
             <span className="field-label">{t('What the room took')}</span>
             <input
               type="number"
+              inputMode="decimal"
               min={0}
               autoFocus
               className="field-input"

@@ -65,6 +65,7 @@ export function TaxCard() {
       <span className="field-label">{t(label)}</span>
       <input
         type="number"
+        inputMode="decimal"
         step="0.01"
         min="0"
         className="field-input"

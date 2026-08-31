@@ -226,6 +226,7 @@ export function SchemeModal({ open, onClose }: { open: boolean; onClose: () => v
                 <span className="field-label">{t('Cycle length')}</span>
                 <input
                   type="number"
+                  inputMode="decimal"
                   min={2}
                   max={31}
                   className="field-input"
@@ -290,6 +291,7 @@ export function SchemeModal({ open, onClose }: { open: boolean; onClose: () => v
           <label>
             <span className="field-label">{t('How many months')}</span>
             <input type="number" min={1} max={12} className="field-input" value={months} onChange={(event) => setMonths(Number(event.target.value) || 1)} />
+            inputMode="decimal"
           </label>
         )}
 

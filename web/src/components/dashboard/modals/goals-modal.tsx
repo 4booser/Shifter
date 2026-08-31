@@ -168,6 +168,7 @@ export function GoalsModal({
           <span className="field-label">{t('Amount')}</span>
           <input
             type="number"
+            inputMode="decimal"
             min={1}
             step={500}
             className="field-input"

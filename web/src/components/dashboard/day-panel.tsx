@@ -409,6 +409,7 @@ export function DayPanel() {
                         </span>
                         <input
                           type="number"
+                          inputMode="decimal"
                           min={0}
                           className="field-input"
                           placeholder={t('not counted')}
@@ -429,6 +430,7 @@ export function DayPanel() {
                         <span className="field-label">{t('Guests')}</span>
                         <input
                           type="number"
+                          inputMode="numeric"
                           min={0}
                           className="field-input"
                           placeholder={t('nobody counted')}
@@ -620,6 +622,7 @@ export function DayPanel() {
                       </button>
                       <input
                         type="number"
+                        inputMode="numeric"
                         min={0}
                         step={1}
                         className="field-input !w-12 !px-1 text-center font-semibold tabular"
@@ -679,6 +682,7 @@ export function DayPanel() {
           <>
             <input
               type="number"
+              inputMode="decimal"
               min={0}
               className="field-input"
               value={tipPool ?? ''}
@@ -696,6 +700,7 @@ export function DayPanel() {
           <>
         <input
           type="number"
+          inputMode="decimal"
           min={0}
           className="field-input"
           value={tips ?? ''}
@@ -739,6 +744,7 @@ export function DayPanel() {
               <span className="field-label">{t('Of that, cash')}</span>
               <input
                 type="number"
+                inputMode="decimal"
                 min={0}
                 className="field-input"
                 value={tipsCash ?? ''}
@@ -761,6 +767,7 @@ export function DayPanel() {
         </h3>
         <input
           type="number"
+          inputMode="decimal"
           min={0}
           className="field-input"
           value={deductions ?? ''}

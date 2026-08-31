@@ -312,6 +312,7 @@ export function LocationModal({
           <label>
             <span className="field-label">{t('Payday')}</span>
             <input type="number" min={1} max={28} className="field-input" value={payDay} onChange={num(setPayDay)} />
+            inputMode="decimal"
             <span className="field-hint mt-1 block">{t('Day of the month a period starts. 1 gives plain calendar months.')}</span>
           </label>
         )}
@@ -348,6 +349,7 @@ export function LocationModal({
           <label>
             <span className="field-label">{t('Commission payday')}</span>
             <input type="number" min={1} max={28} className="field-input" value={salesPayDay} onChange={num(setSalesPayDay)} />
+            inputMode="decimal"
           </label>
         )}
 
@@ -362,6 +364,7 @@ export function LocationModal({
           <label>
             <span className="field-label">{t('Overtime after, hours a week')}</span>
             <input type="number" min={1} max={168} className="field-input" value={overtimeHours} onChange={num(setOvertimeHours)} />
+            inputMode="decimal"
           </label>
           <label>
             <span className="field-label">{t('Paid at')}</span>
@@ -377,6 +380,7 @@ export function LocationModal({
             <label>
               <span className="field-hint">{t('Night pays')}</span>
               <input type="number" min={1} max={3} step={0.05} className="field-input w-full" value={nightMultiplier} onChange={num(setNightMultiplier)} />
+              inputMode="decimal"
             </label>
             <label>
               <span className="field-hint">{t('Night from')}</span>
@@ -391,6 +395,7 @@ export function LocationModal({
             <label>
               <span className="field-hint">{t('Public holiday pays')}</span>
               <input type="number" min={1} max={3} step={0.1} className="field-input w-full" value={holidayMultiplier} onChange={num(setHolidayMultiplier)} />
+              inputMode="decimal"
             </label>
             <label>
               <span className="field-hint">{t('Holiday calendar')}</span>
@@ -413,6 +418,7 @@ export function LocationModal({
           <label>
             <span className="field-label">{t('Tip-out, % of tips')}</span>
             <input type="number" min={0} max={100} step={0.5} className="field-input" value={tipOutTips} onChange={num(setTipOutTips)} />
+            inputMode="decimal"
           </label>
           <label>
             <span className="field-label">{t('Tip-out, % of sales')}</span>
@@ -423,6 +429,7 @@ export function LocationModal({
         <label>
           <span className="field-label">{t('Staff meal, per day worked')}</span>
           <input type="number" min={0} step={10} className="field-input" value={mealDeduction} onChange={num(setMealDeduction)} />
+          inputMode="decimal"
         </label>
 
         {/* A house rule nobody re-types per shift. Both halves or neither:
@@ -431,6 +438,7 @@ export function LocationModal({
           <label>
             <span className="field-label">{t('Break after, h')}</span>
             <input type="number" min={0} max={24} step={0.5} className="field-input" value={breakAfter} onChange={num(setBreakAfter)} />
+            inputMode="decimal"
           </label>
           <label>
             <span className="field-label">{t('Break length, min')}</span>
@@ -446,6 +454,7 @@ export function LocationModal({
         <label>
           <span className="field-label">{t('Your floor, per hour')}</span>
           <input type="number" min={0} step={10} className="field-input" value={floor} onChange={num(setFloor)} />
+          inputMode="decimal"
           <span className="field-hint mt-1 block">
             {t('Days here that pay less per hour get flagged. Your own line, not a legal one.')}
           </span>
@@ -456,6 +465,7 @@ export function LocationModal({
             <span className="field-label">{t('Journey here, minutes one way')}</span>
             <input
               type="number"
+              inputMode="decimal"
               min={0}
               max={600}
               step={5}
@@ -468,6 +478,7 @@ export function LocationModal({
             <span className="field-label">{t('One trip costs')}</span>
             <input
               type="number"
+              inputMode="decimal"
               min={0}
               step={5}
               className="field-input"
@@ -484,6 +495,7 @@ export function LocationModal({
           <label>
             <span className="field-label">{t('Tax withheld, %')}</span>
             <input type="number" min={0} max={100} step={0.5} className="field-input" value={taxPercent} onChange={num(setTaxPercent)} />
+            inputMode="decimal"
           </label>
           <label>
             <span className="field-label">{t('Holiday pay accrual, %')}</span>

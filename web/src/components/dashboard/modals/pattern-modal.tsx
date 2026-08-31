@@ -120,6 +120,7 @@ export function PatternModal({ open, onClose }: { open: boolean; onClose: () => 
             <label>
               <span className="field-label">{t('How many months')}</span>
               <input type="number" min={1} max={12} className="field-input" value={months} onChange={(event) => setMonths(Number(event.target.value) || 1)} />
+              inputMode="decimal"
             </label>
           )}
 

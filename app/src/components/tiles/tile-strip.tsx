@@ -174,7 +174,17 @@ export function TileStrip({ days, summary }: { days: CalendarDayData[]; summary:
   ];
 
   return (
-    <section aria-label="Обзор" className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
+    /* A row that scrolls sideways on a phone, a grid from tablet up. Twelve
+       tiles stacked two-wide put six screens of scrolling between somebody
+       and the calendar they opened the app for. */
+    <section
+      aria-label="Обзор"
+      className={cn(
+        'flex snap-x snap-mandatory gap-3 overflow-x-auto pb-1',
+        '[&>*]:w-[62%] [&>*]:flex-none [&>*]:snap-start',
+        'sm:grid sm:grid-cols-3 sm:overflow-visible sm:pb-0 sm:[&>*]:w-auto xl:grid-cols-6',
+      )}
+    >
       {tiles.map((tile) => (
         <Link
           key={tile.id}

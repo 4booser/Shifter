@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 
 import { CalendarDayData, CalendarEvent } from '@/lib/calendar/models';
 import { fromKey, keyOf, todayKey } from '@/lib/calendar/calendar-date';
-import { formatMoney } from '@/lib/settings/money';
+import { formatMoney, formatMoneyCompact } from '@/lib/settings/money';
 import { useSettings } from '@/lib/settings/store';
 import { cn } from '@/lib/utils';
 
@@ -122,7 +122,9 @@ export function MonthGrid({
                   {Number(cell.key.slice(8))}
                 </span>
                 {day !== undefined && day.hours > 0 && (
-                  <span className="text-2xs text-faint tabular">{Math.round(day.hours * 10) / 10}ч</span>
+                  <span className="hidden text-2xs text-faint tabular sm:inline">
+                    {Math.round(day.hours * 10) / 10}ч
+                  </span>
                 )}
               </span>
 
@@ -137,7 +139,7 @@ export function MonthGrid({
                       className="size-1.5 flex-none rounded-full"
                       style={{ background: event.colour }}
                     />
-                    <span className="truncate">{event.name}</span>
+                    <span className="hidden truncate sm:inline">{event.name}</span>
                   </span>
                 ))}
                 {shifts.slice(0, 2).map((entry, index) => (
@@ -153,7 +155,7 @@ export function MonthGrid({
                       className="size-1.5 flex-none rounded-full"
                       style={{ background: entry.colour ?? 'var(--accent)' }}
                     />
-                    <span className="truncate">{entry.name}</span>
+                    <span className="hidden truncate sm:inline">{entry.name}</span>
                   </span>
                 ))}
                 {shifts.length > 2 && (
@@ -163,7 +165,12 @@ export function MonthGrid({
 
               {earned > 0 && (
                 <span className="mt-auto text-xs font-semibold tabular text-good">
-                  {formatMoney(settings, Math.round(earned))}
+                  <span className="sm:hidden">
+                    {formatMoneyCompact(settings, Math.round(earned))}
+                  </span>
+                  <span className="hidden sm:inline">
+                    {formatMoney(settings, Math.round(earned))}
+                  </span>
                 </span>
               )}
             </button>

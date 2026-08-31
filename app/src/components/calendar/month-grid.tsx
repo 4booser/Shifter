@@ -106,10 +106,13 @@ export function MonthGrid({
               className={cn(
                 'relative flex min-h-[5.5rem] flex-col gap-1 overflow-hidden rounded-[var(--radius-field)] border p-1.5 text-left transition-colors',
                 cell.inMonth ? 'border-border bg-surface' : 'border-transparent bg-surface-2/40',
+                // A whole column wearing the warning tint is heavier than
+                // the hint it is meant to be, so the weekend gets a wash of
+                // it rather than the tint itself.
                 cell.inMonth &&
                   cell.weekend &&
                   settings.highlightWeekends &&
-                  'bg-[var(--warn-soft)]',
+                  'bg-[color-mix(in_oklch,var(--warn)_7%,var(--surface))]',
                 selected === cell.key && 'ring-2 ring-[var(--accent)]',
                 cell.inMonth && 'hover:bg-surface-2',
               )}

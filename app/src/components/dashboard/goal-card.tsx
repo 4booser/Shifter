@@ -35,10 +35,18 @@ export function GoalCard() {
   const goals = useQuery({ queryKey: ['goals'], queryFn: () => calendarApi.goals() });
   const [editing, setEditing] = useState(false);
 
-  // Whichever goal exists, not the monthly one: the form offers a week and a
-  // year too, and a card that only reads months would make those choices do
-  // nothing.
-  const goal = (goals.data ?? [])[0] ?? null;
+  /*
+   * Whichever goal exists — the form offers a week and a year as well as a
+   * month, and a card that only read months would make those choices do
+   * nothing.
+   *
+   * The newest wins where there are several. Saving upserts by period, so
+   * changing «в неделю» back to «в месяц» leaves both on the account, and the
+   * server hands them back in period order: reading the first would have kept
+   * showing the abandoned weekly goal and made the edit look like a no-op.
+   */
+  const goal =
+    [...(goals.data ?? [])].sort((one, two) => two.id - one.id)[0] ?? null;
 
   /* The stretch a goal governs comes from the server — a week runs Monday to
      Sunday there, and re-deriving that here is how the two quietly disagree. */
@@ -146,15 +154,25 @@ function GoalForm({
   const [period, setPeriod] = useState<GoalPeriod>(goal?.period ?? 'month');
 
   const save = useMutation({
-    mutationFn: () =>
-      calendarApi.saveGoal({
+    mutationFn: async () => {
+      const saved = await calendarApi.saveGoal({
         period,
         amount: Number(amount.replace(',', '.')),
         // Null: a standing goal, the same every month. A goal for one
         // particular March is a different feature and nobody asked for it.
         anchor: null,
         note: null,
-      }),
+      });
+
+      // Changing the period of a goal is editing it, not adding a second one.
+      // The server upserts by period, so the old one has to go explicitly or
+      // the account quietly collects a goal per period ever chosen.
+      if (goal !== null && goal.period !== period) {
+        await calendarApi.deleteGoal(goal.id).catch(() => undefined);
+      }
+
+      return saved;
+    },
     onSuccess: () => {
       toast.success('Цель поставлена');
       onSaved();

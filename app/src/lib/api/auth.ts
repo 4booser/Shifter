@@ -115,6 +115,14 @@ export const authApi = {
     saveSession(await api<AuthResponse>(`${AUTH}/user/login/2fa`, { body: { ticket, code } }));
   },
 
+  /** Every device still holding a key, newest first. */
+  sessions: () =>
+    api<{ sessions: { id: number; created_at: string; expires_at: string; user_agent: string | null }[] }>(
+      '/shifter/v1/account/sessions',
+    ),
+  revokeSession: (id: number) =>
+    api<void>(`/shifter/v1/account/sessions/${id}`, { method: 'DELETE' }),
+
   twoFactorSetup: () => api<{ secret: string; otpauth_url: string }>(`${AUTH}/2fa/setup`, { method: 'POST', body: {} }),
   twoFactorEnable: (code: string) => api<{ backup_codes: string[] }>(`${AUTH}/2fa/enable`, { body: { code } }),
   twoFactorDisable: (code: string) => api<void>(`${AUTH}/2fa/disable`, { body: { code } }),

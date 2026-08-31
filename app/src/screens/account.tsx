@@ -4,6 +4,7 @@ import { useNavigate } from '@tanstack/react-router';
 import { LogOut } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { Security } from '@/components/account/security';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { accountApi, authApi } from '@/lib/api/auth';
@@ -262,8 +263,8 @@ export function Account() {
           </label>
 
           <p className="field-hint">
-            Пароль, вход по Google, второй фактор и удаление аккаунта пока живут в старой
-            версии — там же, где привязка Telegram и подписка на календарь.
+            Привязка Google и Telegram, подписка на календарь и удаление аккаунта пока живут
+            в старой версии.
           </p>
 
           <Button
@@ -282,6 +283,8 @@ export function Account() {
             Выйти
           </Button>
         </Section>
+
+        <Security profile={profile.data} />
       </div>
     </div>
   );

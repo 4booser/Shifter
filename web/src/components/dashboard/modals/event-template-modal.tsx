@@ -106,7 +106,7 @@ export function EventTemplateModal({
 
         <div>
           <span className="field-label">{t('Colour')}</span>
-          <SwatchRow colours={MARK_COLOURS} value={colour} onPick={setColour} />
+          <SwatchRow colours={MARK_COLOURS} saveable value={colour} onPick={setColour} />
         </div>
 
         <div>

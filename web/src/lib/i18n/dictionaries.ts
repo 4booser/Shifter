@@ -1786,6 +1786,14 @@ export const RU: Dictionary = {
   'Type at least two characters.': 'Введи хотя бы два символа.',
   'Nothing found.': 'Ничего не нашлось.',
   'Loading…': 'Загружаю…',
+  'Save this colour':
+    'Сохранить этот цвет',
+  'long press to forget':
+    'правый клик — убрать',
+  'Paint the day in this colour':
+    'Красить день этим цветом',
+  'Every day this shift lands on takes it. A day you coloured by hand keeps yours.':
+    'Каждый день с этой сменой станет таким. День, покрашенный вручную, останется вашим.',
   'Roadmap': 'Дорожная карта',
   'hr': 'ч',
   'No reason recorded': 'Причина не записана',
@@ -4262,6 +4270,14 @@ export const UK: Dictionary = {
   'Type at least two characters.': 'Введи хоча б два символи.',
   'Nothing found.': 'Нічого не знайшлося.',
   'Loading…': 'Завантажую…',
+  'Save this colour':
+    'Зберегти цей колір',
+  'long press to forget':
+    'правий клік — прибрати',
+  'Paint the day in this colour':
+    'Фарбувати день цим кольором',
+  'Every day this shift lands on takes it. A day you coloured by hand keeps yours.':
+    'Кожен день із цією зміною стане таким. День, пофарбований вручну, залишиться вашим.',
   'Roadmap': 'Дорожня мапа',
   'hr': 'год',
   'No reason recorded': 'Причину не записано',

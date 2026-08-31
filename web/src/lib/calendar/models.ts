@@ -45,6 +45,8 @@ export interface ShiftTemplate {
   /** Paid hours, breaks already deducted. */
   hours: number;
   archived: boolean;
+  /** Whether a day with this shift paints itself in its colour. */
+  paints_day?: boolean;
 }
 
 export interface ShiftCreate {
@@ -61,6 +63,8 @@ export interface ShiftCreate {
   tip_source: TipSource;
   tip_pool_percent: number | null;
   break_minutes: number;
+  /** Whether days carrying this shift take its colour. */
+  paints_day?: boolean;
 }
 
 export type PayPeriodKind = 'monthly' | 'semimonthly' | 'biweekly' | 'weekly';

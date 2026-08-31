@@ -29,6 +29,8 @@ public record ShiftDto(
     string? colour,
     /// <summary>What the calendar should actually draw: own colour, else the place's.</summary>
     string? effective_colour,
+    /// <summary>Whether a day with this shift paints itself in its colour.</summary>
+    bool paints_day,
     bool archived
     );
 
@@ -55,5 +57,7 @@ public record ShiftCreateDto(
     decimal? revenue_percent = null,
     /// <summary>"personal" or "pool"; anything else reads as personal.</summary>
     string? tip_source = null,
-    decimal? tip_pool_percent = null
+    decimal? tip_pool_percent = null,
+    /// <summary>Whether days carrying this shift take its colour.</summary>
+    bool paints_day = false
     );

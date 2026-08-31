@@ -31,6 +31,17 @@ public sealed class Shift
     public string? Colour { get; set; }
 
     /// <summary>
+    /// Whether a day carrying this shift paints itself in the shift's colour.
+    ///
+    /// The day has always had a colour of its own, set by hand — good for the
+    /// one day somebody wants to mark, useless for "every вечер should be
+    /// violet". A template that paints says it once and the calendar obeys
+    /// forever; a day coloured by hand still wins, because a person saying
+    /// something about one day outranks a standing rule.
+    /// </summary>
+    public bool PaintsDay { get; set; }
+
+    /// <summary>
     /// Explicit foreign key alongside the Location navigation below, so the
     /// template can be assigned a place without loading one first.
     /// </summary>

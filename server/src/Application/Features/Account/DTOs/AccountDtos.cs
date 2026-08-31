@@ -33,7 +33,9 @@ public record ProfileDto(
     /// </summary>
     bool two_factor = false,
     /// <summary>Whether they asked for the month's letter. Off unless they did.</summary>
-    bool monthly_letter = false);
+    bool monthly_letter = false,
+    /// <summary>The colours saved to reuse, as "#RRGGBB". Empty until any are.</summary>
+    string[]? colour_presets = null);
 
 public record GetProfileDto(int UserId) : IRequest<ProfileDto>;
 

@@ -130,6 +130,7 @@ public partial class ShiftHandler : IShiftHandler
             : request.symbol.Trim();
         shift.LocationId = request.location_id;
         shift.Colour = NormaliseColour(request.colour);
+        shift.PaintsDay = request.paints_day;
         shift.StartTime = start;
         shift.EndTime = end;
         shift.SalaryPeriod = ParsePeriod(request.salary_period);
@@ -170,6 +171,7 @@ public partial class ShiftHandler : IShiftHandler
         // Worked out here rather than in the client, so the calendar, the rota
         // and the share card cannot each answer it differently.
         shift.Colour ?? shift.Location?.Colour,
+        shift.PaintsDay,
         shift.Archived
     );
 

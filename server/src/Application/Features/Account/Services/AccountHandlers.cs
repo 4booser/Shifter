@@ -34,7 +34,24 @@ public static class AccountRules
         user.Email,
         user.RestHours,
         user.TotpEnabledAt is not null,
-        user.MonthlyLetter);
+        user.MonthlyLetter,
+        // Stored as JSON because it is a list a person edits, not a schema:
+        // unreadable text reads as "no palette yet" rather than as a crash.
+        ReadPresets(user.ColourPresets));
+
+    private static string[] ReadPresets(string? stored)
+    {
+        if (string.IsNullOrWhiteSpace(stored)) return [];
+
+        try
+        {
+            return System.Text.Json.JsonSerializer.Deserialize<string[]>(stored) ?? [];
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            return [];
+        }
+    }
 
     public static string RequireName(string? value, string field)
     {

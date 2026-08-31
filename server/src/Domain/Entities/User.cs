@@ -36,6 +36,15 @@ public sealed class User
     public double RestHours { get; set; } = RestBetweenShifts.DefaultHours;
 
     /// <summary>
+    /// Colours this person saved to reuse, as a JSON array of "#RRGGBB".
+    ///
+    /// On the account rather than in a browser: somebody who picked their
+    /// venue's colours on a laptop should find the same swatches on the phone
+    /// the same evening. Empty until they save one.
+    /// </summary>
+    public string ColourPresets { get; set; } = "[]";
+
+    /// <summary>
     /// A share of tips to put aside, as a percent. Zero is off.
     ///
     /// Tips are the only money in this trade that arrives in cash and leaves

@@ -6,6 +6,7 @@ import { useI18n } from '@/lib/i18n';
 import { useMoney } from '@/lib/settings/money';
 import { Icon } from './icon';
 import { CountUp as TravelNumber } from './motion';
+import { usePalette } from '@/lib/settings/palette';
 
 /** Money as text, following the currency/privacy settings. */
 export function Money({
@@ -163,6 +164,7 @@ export function SwatchRow({
   onPick,
   clearable = false,
   fold = 8,
+  saveable = false,
 }: {
   colours: { label: string; value: string }[];
   value: string | null;
@@ -170,8 +172,19 @@ export function SwatchRow({
   clearable?: boolean;
   /** Colours shown up front; the rest sit behind a +N. 0 folds nothing. */
   fold?: number;
+  /** Offer the saved palette above the row, and a star to add to it. */
+  saveable?: boolean;
 }) {
+  const { t } = useI18n();
   const [unfolded, setUnfolded] = useState(false);
+  const saved = usePalette((state) => state.colours);
+  const loadPalette = usePalette((state) => state.load);
+  const savePalette = usePalette((state) => state.save);
+  const forgetPalette = usePalette((state) => state.forget);
+
+  useEffect(() => {
+    if (saveable) loadPalette();
+  }, [saveable, loadPalette]);
   // The picked colour must never hide behind the fold — pull it forward.
   const shown =
     unfolded || fold === 0 || colours.length <= fold
@@ -188,8 +201,33 @@ export function SwatchRow({
           return head;
         })();
 
+  const kept = value !== null && saved.includes(value.toUpperCase());
+
   return (
-    <div className="flex flex-wrap gap-1.5">
+    <div className="flex flex-col gap-1.5">
+      {saveable && saved.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="text-[0.68rem] font-semibold uppercase tracking-wide text-faint">
+            {t('Mine')}
+          </span>
+          {saved.map((colour) => (
+            <button
+              key={colour}
+              type="button"
+              className={`swatch ${value?.toUpperCase() === colour ? 'is-active' : ''}`}
+              style={{ background: colour }}
+              title={`${colour} — ${t('long press to forget')}`}
+              onClick={() => onPick(colour)}
+              onContextMenu={(event) => {
+                event.preventDefault();
+                forgetPalette(colour);
+              }}
+            />
+          ))}
+        </div>
+      )}
+
+      <div className="flex flex-wrap gap-1.5">
       {shown.map((option) => (
         <button
           key={option.value}
@@ -223,6 +261,20 @@ export function SwatchRow({
           <Icon name="close" size={12} />
         </button>
       )}
+
+      {/* Keeping a colour is a star, not a menu: one tap while it is picked
+          puts it in the palette every picker in the app then offers. */}
+      {saveable && value !== null && value !== '' && !kept && (
+        <button
+          type="button"
+          className="swatch grid place-items-center border border-border-strong bg-surface text-muted"
+          title={t('Save this colour')}
+          onClick={() => savePalette(value)}
+        >
+          <span className="text-[0.7rem] font-bold leading-none">+</span>
+        </button>
+      )}
+      </div>
     </div>
   );
 }

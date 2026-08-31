@@ -333,7 +333,36 @@ public class AuthController : Controller
             Shifter.Domain.Entities.TipJar.Reaches(state, today)));
     }
 
+    /// <summary>
+    /// The colours somebody saved to reuse.
+    ///
+    /// On the account rather than in a browser: a palette picked on a laptop
+    /// should be there on the phone the same evening. Kept to twenty-four —
+    /// past that it is not a palette, it is a colour picker with extra steps.
+    /// </summary>
+    [HttpPut]
+    [Route("colours")]
+    public async Task<IActionResult> SetColours(
+        [FromBody] PresetsDto request,
+        [FromServices] Shifter.Infrastructure.Repositories.Interfaces.IUserCommand users,
+        CancellationToken ct)
+    {
+        var colours = (request.colours ?? [])
+            .Select(colour => colour?.Trim().ToUpperInvariant() ?? string.Empty)
+            .Where(colour => System.Text.RegularExpressions.Regex.IsMatch(colour, "^#[0-9A-F]{6}$"))
+            .Distinct()
+            .Take(24)
+            .ToArray();
+
+        await users.SetColourPresetsAsync(
+            CurrentUserId(), System.Text.Json.JsonSerializer.Serialize(colours), ct);
+
+        return Ok(new { colours });
+    }
+
     public record RestDto(double rest_hours);
+
+    public record PresetsDto(string[] colours);
 
     /// <summary>
     /// How much rest between shifts this person counts as enough.

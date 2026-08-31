@@ -1337,7 +1337,14 @@ public partial class DayHandler : IDayHandler
             deductions,
             day.DeductionReason,
             day.Note,
-            day.Colour,
+            // A day painted by hand wins; otherwise the first shift that says
+            // it paints days lends its colour. Standing rule, single answer:
+            // both clients would otherwise invent their own.
+            day.Colour
+                ?? (day.Shifts ?? [])
+                    .Select(entry => entry.Shift)
+                    .FirstOrDefault(shift => shift is { PaintsDay: true })
+                    ?.Colour,
             BelowFloor(day, locations),
             Math.Round(shifts.Where(s => s.worked).Sum(s => s.hours), 2),
             workedPay + salesPay + (day.Tips ?? 0m) - tipOut - deductions,

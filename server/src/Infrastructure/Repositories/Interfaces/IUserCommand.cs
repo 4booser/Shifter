@@ -18,6 +18,9 @@ public interface IUserCommand
     /// <summary>The rest between shifts this person counts as enough, in hours.</summary>
     public Task SetRestHoursAsync(int userId, double hours, CancellationToken ct);
 
+    /// <summary>The colours this person saved to reuse, as a JSON array.</summary>
+    public Task SetColourPresetsAsync(int userId, string presets, CancellationToken ct);
+
     /// <summary>
     /// A share of tips to put aside, and what for. Starting the rule stamps
     /// the day: tips earned before it are not counted, because a counter that

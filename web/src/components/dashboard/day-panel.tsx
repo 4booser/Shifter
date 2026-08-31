@@ -297,6 +297,7 @@ export function DayPanel() {
         <h3 className="field-label mt-3">{t('Colour')}</h3>
         <SwatchRow
           colours={MARK_COLOURS}
+          saveable
           value={colour}
           clearable={colour !== null}
           onPick={(value) => setColour(value === '' || value === colour ? null : value)}

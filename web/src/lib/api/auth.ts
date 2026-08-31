@@ -41,6 +41,7 @@ export interface Profile {
   monthly_goal: number | null;
   /** Rest between shifts this person counts as enough, in hours. */
   rest_hours: number;
+  colour_presets?: string[] | null;
   /** Whether a second factor is on. */
   two_factor: boolean;
   /** Whether they asked for the month's letter. Off unless they did. */
@@ -152,6 +153,9 @@ export interface CardSettings {
 }
 
 export const accountApi = {
+  /** The palette this person saved to reuse, kept on the account. */
+  setColours: (colours: string[]) =>
+    api<{ colours: string[] }>('/shifter/v1/auth/colours', { method: 'PUT', body: { colours } }),
   card: () => api<CardSettings>('/shifter/v1/account/card'),
   setCard: (body: { on: boolean; show_places: boolean; show_money: boolean }) =>
     api<CardSettings>('/shifter/v1/account/card', { method: 'PUT', body }),

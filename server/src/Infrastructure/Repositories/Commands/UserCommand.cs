@@ -105,6 +105,13 @@ public class UserCommand : IUserCommand
             .ExecuteUpdateAsync(set => set.SetProperty(user => user.RestHours, hours), ct);
     }
 
+    public async Task SetColourPresetsAsync(int userId, string presets, CancellationToken ct)
+    {
+        await _db.Users
+            .Where(user => user.Id == userId)
+            .ExecuteUpdateAsync(set => set.SetProperty(user => user.ColourPresets, presets), ct);
+    }
+
     public async Task SetTipJarAsync(int userId, decimal percent, decimal goal, CancellationToken ct)
     {
         var user = await _db.Users.FirstOrDefaultAsync(row => row.Id == userId, ct);

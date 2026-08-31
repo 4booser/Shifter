@@ -45,6 +45,7 @@ export function ShiftModal({
   const [breakMinutes, setBreakMinutes] = useState(0);
   const [locationId, setLocationId] = useState<number | null>(null);
   const [colour, setColour] = useState<string | null>(null);
+  const [paintsDay, setPaintsDay] = useState(false);
   const [percent, setPercent] = useState<number | null>(null);
   const [tipSource, setTipSource] = useState<TipSource>('personal');
   const [poolShare, setPoolShare] = useState<number | null>(null);
@@ -71,6 +72,7 @@ export function ShiftModal({
     setBreakMinutes(editing?.break_minutes ?? 0);
     setLocationId(editing?.location_id ?? null);
     setColour(editing?.colour ?? null);
+    setPaintsDay(editing?.paints_day ?? false);
     setPercent(editing?.revenue_percent ?? null);
     setTipSource(editing?.tip_source ?? 'personal');
     setPoolShare(editing?.tip_pool_percent ?? null);
@@ -95,6 +97,7 @@ export function ShiftModal({
           break_minutes: breakMinutes,
           location_id: locationId,
           colour,
+          paints_day: paintsDay,
           revenue_percent: percent,
           tip_source: tipSource,
           tip_pool_percent: poolShare,
@@ -225,6 +228,7 @@ export function ShiftModal({
               back to borrowing its place's. */}
           <SwatchRow
             colours={MARK_COLOURS}
+            saveable
             value={colour}
             onPick={(value) => setColour((current) => (current === value ? null : value))}
           />
@@ -235,6 +239,23 @@ export function ShiftModal({
                 : 'Click the same colour again to go back to the place’s.',
             )}
           </p>
+
+          {/* One switch instead of colouring thirty days by hand. A day
+              painted by hand still wins — the person outranks the rule. */}
+          <label className="mt-2 flex cursor-pointer items-start gap-2">
+            <input
+              type="checkbox"
+              className="mt-0.5"
+              checked={paintsDay}
+              onChange={(event) => setPaintsDay(event.target.checked)}
+            />
+            <span>
+              <span className="block text-[0.88rem] font-medium">{t('Paint the day in this colour')}</span>
+              <span className="field-hint">
+                {t('Every day this shift lands on takes it. A day you coloured by hand keeps yours.')}
+              </span>
+            </span>
+          </label>
         </div>
 
         <div className="grid grid-cols-2 gap-3">

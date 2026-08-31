@@ -61,9 +61,10 @@ import {
   toSavePayload,
 } from '@/lib/types';
 import { WorkPlace } from '@/lib/places';
-import { forgotten, LiveShift, useLive } from '@/store/live';
+import { forgotten, LiveShift, plannedEndInstant, useLive } from '@/store/live';
 import { useAutoStart } from '@/store/autostart';
-import { dueAutoStart } from '@/lib/autostart';
+import { dueAutoStart, dueAutoStop } from '@/lib/autostart';
+import { writeFinishedShift } from '@/lib/live-finish';
 import { ApiError } from '@/lib/api';
 import { heldDays, Pending } from '@/lib/outbox';
 import { useOutbox } from '@/store/outbox';
@@ -505,6 +506,42 @@ export default function CalendarScreen() {
 
     return ensure(indexAt.current, true);
   }, [ensure]);
+
+  // …and the shifts that close themselves. The same slow tick: a phone in a
+  // locker until noon still records the shift as ending at the chosen hour,
+  // because the end is backdated exactly like the start.
+  useEffect(() => {
+    const check = () => {
+      const live = useLive.getState().live;
+
+      if (live === null) return;
+
+      const rule = autoRules.find((entry) => entry.shiftId === live.shiftId);
+      const due = dueAutoStop({
+        stopAt: rule?.stopAt,
+        startedMs: new Date(live.startedAt).getTime(),
+        plannedEndMs: plannedEndInstant(live).getTime(),
+        now: Date.now(),
+      });
+
+      if (due === null) return;
+
+      void writeFinishedShift({ live, endAt: due.endsAt })
+        .then(() => {
+          useLive.getState().clear();
+          void refresh();
+        })
+        // A network that is down does not lose the shift: the marker stays,
+        // the next tick tries again, and the button still works meanwhile.
+        .catch(() => undefined);
+    };
+
+    check();
+
+    const tick = setInterval(check, 30_000);
+
+    return () => clearInterval(tick);
+  }, [autoRules, refresh]);
 
   const writeDay = useCallback(
     async (key: string, payload: DaySave) => {

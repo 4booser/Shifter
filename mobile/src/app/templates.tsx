@@ -62,6 +62,7 @@ export default function TemplatesScreen() {
 
   const autoRules = useAutoStart((state) => state.rules);
   const setAutoRule = useAutoStart((state) => state.setRule);
+  const setAutoStop = useAutoStart((state) => state.setStop);
   const hydrateAuto = useAutoStart((state) => state.hydrate);
 
   useEffect(() => {
@@ -156,29 +157,71 @@ export default function TemplatesScreen() {
                   onPress={() =>
                     setAutoRule(
                       template.id,
-                      auto === undefined ? template.start_time.slice(0, 5) : null,
+                      auto?.at == null ? template.start_time.slice(0, 5) : null,
                     )
                   }
                 >
                   <Ionicons
-                    name={auto === undefined ? 'play-circle-outline' : 'play-circle'}
+                    name={auto?.at == null ? 'play-circle-outline' : 'play-circle'}
                     size={18}
-                    color={auto === undefined ? palette.textSecondary : palette.accent}
+                    color={auto?.at == null ? palette.textSecondary : palette.accent}
                   />
-                  <Text style={[styles.autoText, auto !== undefined && { color: palette.accent }]}>
-                    {auto === undefined
+                  <Text style={[styles.autoText, auto?.at != null && { color: palette.accent }]}>
+                    {auto?.at == null
                       ? t('Запускать саму в день по плану')
                       : `${t('Начнётся сама в')} ${auto.at}`}
                   </Text>
                 </Press>
 
-                {auto !== undefined && (
+                {auto?.at != null && (
                   <View style={styles.autoTimes}>
                     {[-30, -15, 15, 30].map((delta) => (
                       <Press
                         key={delta}
                         style={styles.autoNudge}
-                        onPress={() => setAutoRule(template.id, nudge(auto.at, delta))}
+                        onPress={() => setAutoRule(template.id, nudge(auto.at!, delta))}
+                      >
+                        <Text style={styles.autoNudgeText}>
+                          {delta > 0 ? `+${delta}` : delta}
+                        </Text>
+                      </Press>
+                    ))}
+                  </View>
+                )}
+              </View>
+
+              {/* …and the hour it closes itself. Read against the plan's own
+                  end, so a сутки shift planned 11:00→11:00 that stops «at
+                  10:45» means the next morning, not a quarter after start. */}
+              <View style={styles.autoRow}>
+                <Press
+                  style={styles.autoToggle}
+                  onPress={() =>
+                    setAutoStop(
+                      template.id,
+                      auto?.stopAt == null ? template.end_time.slice(0, 5) : null,
+                    )
+                  }
+                >
+                  <Ionicons
+                    name={auto?.stopAt == null ? 'stop-circle-outline' : 'stop-circle'}
+                    size={18}
+                    color={auto?.stopAt == null ? palette.textSecondary : palette.accent}
+                  />
+                  <Text style={[styles.autoText, auto?.stopAt != null && { color: palette.accent }]}>
+                    {auto?.stopAt == null
+                      ? t('Закрывать саму по часам')
+                      : `${t('Закроется сама в')} ${auto.stopAt}`}
+                  </Text>
+                </Press>
+
+                {auto?.stopAt != null && (
+                  <View style={styles.autoTimes}>
+                    {[-30, -15, 15, 30].map((delta) => (
+                      <Press
+                        key={delta}
+                        style={styles.autoNudge}
+                        onPress={() => setAutoStop(template.id, nudge(auto.stopAt!, delta))}
                       >
                         <Text style={styles.autoNudgeText}>
                           {delta > 0 ? `+${delta}` : delta}

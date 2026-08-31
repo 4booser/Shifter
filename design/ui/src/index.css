@@ -1,0 +1,130 @@
+@import 'tailwindcss';
+
+/*
+ * «Ночная смена» — язык макета.
+ *
+ * Приложением пользуются в два часа ночи, после закрытия, с телефона в
+ * подсобке. Отсюда тёплая темнота вместо белого дашборда, один латунный
+ * акцент — цвет лампы над раздачей — и чек с раздачи как опорный объект.
+ *
+ * Тема одна и намеренно: это не «тёмный режим» приложения, а его вид.
+ */
+
+@theme {
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, monospace;
+
+  /* Ground: тёплая темнота. Не сине-чёрный — он читается как офис. */
+  --color-night: #0b0a09;
+  --color-deep: #121110;
+  --color-table: #1a1816;
+  --color-raised: #232120;
+  --color-edge: #2e2b29;
+  --color-edge-firm: #423e3b;
+
+  --color-paper: #f2ede6;
+  --color-dim: #b5ada3;
+  --color-faint: #7c746b;
+
+  --color-brass: #e0a45b;
+  --color-brass-lit: #f5be7a;
+
+  /* Деньги говорят двумя цветами и только ими: пришло и удержали. */
+  --color-money: #7fbf7a;
+  --color-taken: #d9705f;
+
+  --text-2xs: 0.66rem;
+  --text-xs: 0.74rem;
+  --text-sm: 0.83rem;
+  --text-base: 0.94rem;
+  --text-lg: 1.06rem;
+  --text-xl: 1.28rem;
+  --text-2xl: 1.55rem;
+  --text-3xl: 2rem;
+  --text-4xl: 2.75rem;
+  --text-5xl: 3.9rem;
+
+  --radius-field: 10px;
+  --radius-card: 16px;
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    background: var(--color-night);
+    color: var(--color-paper);
+    font-family: var(--font-sans);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    letter-spacing: -0.025em;
+    text-wrap: balance;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-brass);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  /* Цифры денег выравниваются в столбик везде, где их сравнивают. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .card {
+    background: var(--color-deep);
+    border: 1px solid --alpha(var(--color-paper) / 9%);
+    border-radius: var(--radius-card);
+  }
+
+  /* Служебная подпись: моно, разрежённая, капсом. Повторяется всюду. */
+  .lbl {
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--color-faint);
+  }
+
+  .hint {
+    font-size: var(--text-sm);
+    color: var(--color-faint);
+    line-height: 1.45;
+  }
+
+  .rule {
+    border-color: --alpha(var(--color-paper) / 9%);
+  }
+
+  .rule-firm {
+    border-color: --alpha(var(--color-paper) / 17%);
+  }
+
+  /* Линия отрыва чека: делит смену, чаевые и удержания без заголовков. */
+  .tear {
+    height: 1px;
+    background: repeating-linear-gradient(
+      90deg,
+      --alpha(var(--color-paper) / 17%) 0 5px,
+      transparent 5px 10px
+    );
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

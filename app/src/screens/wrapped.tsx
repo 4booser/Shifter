@@ -3,6 +3,14 @@ import { useQuery } from '@tanstack/react-query';
 import { ArrowUpRight, ChevronLeft, ChevronRight } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
+import {
+  CostOfWork,
+  Elsewhere,
+  Raises,
+  Records,
+  YearGrid,
+  ZoneTips,
+} from '@/components/wrapped/chapters';
 import { Skeleton } from '@/components/ui/skeleton';
 import { calendarApi } from '@/lib/api/calendar';
 import { DaysResponse } from '@/lib/calendar/models';
@@ -152,7 +160,18 @@ export function Wrapped() {
 
           <YearStory year={year} summary={summary} previous={previous.data} />
 
-          <MadeOf summary={summary} />
+          <YearGrid summary={summary} year={year} />
+
+          {/* Columns, so a two-line chapter does not stretch to match a
+              ten-line one and leave a hole where the year should be. */}
+          <div className="columns-1 gap-3 lg:columns-2 [&>*]:mb-3 [&>*]:break-inside-avoid">
+            <MadeOf summary={summary} />
+            <Records summary={summary} />
+            <ZoneTips summary={summary} />
+            <Raises summary={summary} />
+            <CostOfWork summary={summary} />
+            <Elsewhere summary={summary} />
+          </div>
         </>
       )}
     </div>

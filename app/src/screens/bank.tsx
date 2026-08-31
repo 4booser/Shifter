@@ -8,12 +8,21 @@ import { Bars, BarRow, Panel, Split } from '@/components/charts/bars';
 import { calendarApi } from '@/lib/api/calendar';
 import { daysWord, timesWord } from '@/lib/text/plural';
 import { kindName } from '@/lib/text/kinds';
+import { buildRunway, chargesAhead } from '@/lib/mono/runway';
 import { balanceCurve } from '@/lib/mono/mono-shape';
 import { fromMinor } from '@/lib/mono/mono';
 import { counterparties, flow, recurring, refunds } from '@/lib/mono/mono-insights';
-import { WorkedDay, realHourly, spendingByDayKind } from '@/lib/mono/mono-work';
+import {
+  WorkedDay,
+  punctuality,
+  realHourly,
+  spendingByDayKind,
+  untilPayday,
+  usualDay,
+} from '@/lib/mono/mono-work';
 import { useMono } from '@/lib/mono/store';
-import { keysBetween, monthBounds, todayKey } from '@/lib/calendar/calendar-date';
+import { cn } from '@/lib/utils';
+import { keysBetween, monthBounds, shiftDays, todayKey } from '@/lib/calendar/calendar-date';
 import { formatMoney } from '@/lib/settings/money';
 import { useSettings } from '@/lib/settings/store';
 
@@ -83,6 +92,66 @@ export function Bank() {
   );
 
   const given = useMemo(() => refunds(mono.items), [mono.items]);
+
+  /* The payout schedule is the calendar's half of two questions the bank
+     cannot answer alone: how long the money has to last, and whether the
+     places that promised it have actually paid on time. */
+  const schedule = useQuery({ queryKey: ['schedule', todayKey()], queryFn: () => calendarApi.schedule(todayKey(), shiftDays(todayKey(), 90)) });
+
+  const balance =
+    account === undefined ? 0 : fromMinor(account.balance - account.creditLimit);
+
+  const perDay = useMemo(
+    () => usualDay(mono.items, bounds.from, bounds.to),
+    [mono.items, bounds.from, bounds.to],
+  );
+
+  const ahead = useMemo(
+    () => chargesAhead(standing, shiftDays(todayKey(), 1), 60),
+    [standing],
+  );
+
+  const runway = useMemo(
+    () =>
+      buildRunway({
+        balance,
+        usualPerDay: perDay,
+        charges: ahead,
+        incomes: (schedule.data?.periods ?? [])
+          .filter((row) => row.settled === null && row.expected > row.paid && row.due_on >= todayKey())
+          .map((row) => ({ name: row.location_name, amount: row.expected - row.paid, on: row.due_on })),
+        from: shiftDays(todayKey(), 1),
+        horizon: 60,
+      }),
+    [balance, perDay, ahead, schedule.data],
+  );
+
+  const nextPay = (schedule.data?.periods ?? [])
+    .filter((row) => row.settled === null && row.expected > row.paid && row.due_on >= todayKey())
+    .sort((one, two) => one.due_on.localeCompare(two.due_on))[0];
+
+  const stretch = useMemo(() => {
+    if (nextPay === undefined) return null;
+
+    const days = Math.round(
+      (new Date(`${nextPay.due_on}T12:00:00`).getTime() -
+        new Date(`${todayKey()}T12:00:00`).getTime()) /
+        86_400_000,
+    );
+
+    return untilPayday(
+      balance,
+      days,
+      ahead.filter((one) => one.on <= nextPay.due_on).reduce((sum, one) => sum + one.amount, 0),
+      perDay,
+    );
+  }, [balance, ahead, perDay, nextPay]);
+
+  const paying = useMemo(
+    () => punctuality(schedule.data?.periods ?? []),
+    [schedule.data],
+  );
+
 
   const where = useMemo(
     (): BarRow[] =>
@@ -193,6 +262,74 @@ export function Bank() {
       )}
 
       <div className="columns-1 gap-3 lg:columns-2 [&>*]:mb-3 [&>*]:break-inside-avoid">
+        {stretch !== null && (
+          <Panel
+            title="До зарплаты"
+            hint={`${stretch.days} ${daysWord(stretch.days)}, ${money(stretch.committed)} уже обещано подпискам.`}
+          >
+            <div className="flex items-baseline gap-3">
+              <span className="text-2xl font-bold tabular">{money(stretch.perDay)}</span>
+              <span className="field-hint">в день</span>
+            </div>
+            <p className="field-hint">
+              {stretch.usual > 0 && stretch.perDay < stretch.usual
+                ? `Обычно уходит ${money(stretch.usual)} — на ${money(stretch.usual - stretch.perDay)} больше.`
+                : stretch.usual > 0
+                  ? `Обычно уходит ${money(stretch.usual)}, так что запас есть.`
+                  : 'Пока не с чем сравнить — выписка короткая.'}
+            </p>
+          </Panel>
+        )}
+
+        {runway !== null && (
+          <Panel
+            title={runway.dry === null ? 'Хватит на два месяца' : 'Когда закончится'}
+            hint={`Считаем по ${money(runway.usualPerDay)} в день плюс то, что списывается само.`}
+          >
+            <Climb
+              points={runway.days.map((day) => ({ label: day.day, value: day.balance }))}
+              height={160}
+            />
+            <p className="field-hint">
+              {runway.dry === null
+                ? `Тоньше всего ${dayOfMonth(runway.thinnest.day)} — ${money(runway.thinnest.balance)}.`
+                : `Ноль ${dayOfMonth(runway.dry)}, если ничего не изменится.`}
+            </p>
+          </Panel>
+        )}
+
+        {paying.length > 0 && (
+          <Panel
+            title="Платят ли вовремя"
+            hint="По периодам, где деньги уже пришли. Банк это подтверждает, память — нет."
+          >
+            <ul className="flex flex-col gap-2">
+              {paying.map((place) => (
+                <li key={place.locationId} className="flex flex-col gap-0.5">
+                  <span className="flex items-baseline justify-between gap-2">
+                    <span className="min-w-0 truncate text-sm font-medium">{place.place}</span>
+                    <span
+                      className={cn(
+                        'flex-none text-sm font-semibold tabular',
+                        place.averageLate > 1 ? 'text-danger' : 'text-good',
+                      )}
+                    >
+                      {place.averageLate <= 0
+                        ? 'день в день'
+                        : `+${Math.round(place.averageLate)} ${daysWord(Math.round(place.averageLate))}`}
+                    </span>
+                  </span>
+                  <span className="field-hint">
+                    {place.settled} {place.settled === 1 ? 'выплата' : 'выплат'} · худшая задержка{' '}
+                    {place.worstLate} {daysWord(place.worstLate)}
+                    {place.short > 0 && ` · недоплат: ${place.short}`}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </Panel>
+        )}
+
         {/* The one thing only this app can say: what a working day costs
             before it has paid anything. It needs both halves of the data and
             says nothing at all on a thin sample. */}
@@ -336,4 +473,9 @@ export function Bank() {
       )}
     </div>
   );
+}
+
+/** «5 сентября» — a date said the way somebody would read it aloud. */
+function dayOfMonth(key: string): string {
+  return new Date(`${key}T12:00:00`).toLocaleDateString('ru', { day: 'numeric', month: 'long' });
 }

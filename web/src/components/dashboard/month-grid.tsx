@@ -115,7 +115,6 @@ export function MonthGrid({
     if (bankItems.length === 0) return new Map<string, { name: string; amount: number }[]>();
 
     const today = todayKey();
-    const twoBack = shiftDays(today, -62);
     const standing = recurring(bankItems, today);
     const ahead = chargesAhead(standing, today, 62);
     const map = new Map<string, { name: string; amount: number }[]>();

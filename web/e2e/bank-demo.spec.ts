@@ -30,6 +30,21 @@ test('the bank example walks in, shows a living month, and leaves cleanly', asyn
   // the tab, and hydrate rebuilds the same deterministic days anywhere.
   await page.getByRole('link', { name: 'Calendar' }).first().click();
   await expect(page.locator('[data-day]').first()).toBeVisible({ timeout: 15_000 });
+
+  // The day panel picks up the statement's half of the story. The wage day
+  // is the one date the generator fills unconditionally — the 5th and 20th
+  // always carry the salary credit — so the spec stands on it whatever the
+  // calendar says today. Yesterday would be probabilistic and flake.
+  const now = new Date();
+  const pad = (value: number) => String(value).padStart(2, '0');
+  const wageDay =
+    now.getDate() >= 5
+      ? `${now.getFullYear()}-${pad(now.getMonth() + 1)}-05`
+      : `${new Date(now.getFullYear(), now.getMonth() - 1, 20).getFullYear()}-${pad(new Date(now.getFullYear(), now.getMonth() - 1, 20).getMonth() + 1)}-20`;
+
+  await page.locator(`[data-day="${wageDay}"]`).click();
+  await expect(page.getByText('The card, this day')).toBeVisible();
+
   await page.getByRole('link', { name: 'Bank' }).first().click();
   await expect(page.getByText('This is an example', { exact: false }).first()).toBeVisible();
 

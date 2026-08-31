@@ -393,7 +393,10 @@ export function SpendStanding({
           <div className="flex flex-col gap-1.5">
             {standing.map((row) => (
               <div key={row.key} className="flex items-baseline justify-between gap-2 text-[0.88rem]">
-                <span className="truncate">{row.name}</span>
+                <span className="truncate">
+                  {row.name}
+                  {row.fresh && <span className="ml-1.5 text-[0.72rem] font-bold text-(--accent)">{t('new')}</span>}
+                </span>
                 <span className="tabular flex-none">
                   <Money value={row.amount} />
                   <span className="ml-1 text-[0.72rem] text-faint">

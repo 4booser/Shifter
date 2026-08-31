@@ -231,6 +231,11 @@ export const recurring = (
 
     const last = days[days.length - 1];
 
+    // A rhythm that stopped is not a standing charge with a future: the last
+    // charge more than one-and-a-half beats ago means the series ended, and
+    // predicting «next around» a date already past is the tell of a dead row.
+    if (daysBetween(last, to) > step * 1.5) continue;
+
     found.push({
       key,
       name: group.name,

@@ -216,13 +216,24 @@ describe('standing charges', () => {
   });
 
   it('marks something that started inside the window as new', () => {
-    const weekly = monthly('NEW THING', 80, ['2026-08-05', '2026-08-12', '2026-08-19']);
-    const old = monthly('OLD THING', 80, ['2026-07-02', '2026-07-09', '2026-07-16']);
+    const weekly = monthly('NEW THING', 80, ['2026-08-15', '2026-08-22', '2026-08-29']);
+    const old = monthly('OLD THING', 80, [
+      '2026-07-04', '2026-07-11', '2026-07-18', '2026-07-25',
+      '2026-08-01', '2026-08-08', '2026-08-15', '2026-08-22', '2026-08-29',
+    ]);
 
     const rows = recurring([...weekly, ...old], '2026-08-31');
 
     expect(rows.find((row) => row.name === 'NEW THING')?.fresh).toBe(true);
     expect(rows.find((row) => row.name === 'OLD THING')?.fresh).toBe(false);
+  });
+
+it('drops a rhythm that stopped instead of predicting a past date', () => {
+    // Three clean weekly charges, then silence for a month: the series is
+    // over, and «next around 10.08» said in September is a dead row talking.
+    const stopped = monthly('OLD PASS', 70, ['2026-07-20', '2026-07-27', '2026-08-03']);
+
+    expect(recurring(stopped, '2026-09-01')).toEqual([]);
   });
 
   it('costs a month the same however often it comes round', () => {

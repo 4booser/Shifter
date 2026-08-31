@@ -25,10 +25,11 @@ import { apiErrorMessage } from '@/lib/api/http';
  * open redirect.
  */
 function landing(): string {
+  const home = import.meta.env.BASE_URL;
   const asked = new URLSearchParams(window.location.search).get('returnUrl');
 
-  if (asked == null || !asked.startsWith('/') || asked.startsWith('//')) return '/';
-  if (asked.startsWith('/sign-in')) return '/';
+  if (asked == null || !asked.startsWith('/') || asked.startsWith('//')) return home;
+  if (asked.startsWith(`${home.replace(/\/$/, '')}/sign-in`)) return home;
 
   return asked;
 }

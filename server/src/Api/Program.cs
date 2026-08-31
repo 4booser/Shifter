@@ -108,6 +108,19 @@ try
     {
         var path = context.Request.Path.Value ?? string.Empty;
 
+        // The Vite front lives under /next and is a single page: every route
+        // inside it is that one file. It is checked first because the rule
+        // below looks for a file per route, which this bundle does not have.
+        if (path.StartsWith("/next", StringComparison.Ordinal) && !Path.HasExtension(path))
+        {
+            context.Request.Path = "/next/index.html";
+            context.SetEndpoint(null);
+
+            await next();
+
+            return;
+        }
+
         if (path.Length > 1
             && !path.StartsWith("/shifter/", StringComparison.Ordinal)
             && !Path.HasExtension(path))
@@ -158,7 +171,7 @@ try
     // SPA fallback: deep links such as /dashboard render the Angular shell so
     // they survive a refresh. Paths under shifter/ are excluded so that unknown
     // API routes still return 404 rather than a page of HTML.
-    app.MapFallbackToFile("{*path:nonfile:regex(^(?!shifter/|g/).*$)}", "index.html");
+    app.MapFallbackToFile("{*path:nonfile:regex(^(?!shifter/|g/|next/).*$)}", "index.html");
 
     app.Run();
 

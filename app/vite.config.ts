@@ -12,6 +12,13 @@ import { defineConfig } from 'vite';
  * not something a person on a shift should meet.
  */
 export default defineConfig({
+  /**
+   * The new front is served alongside the old one rather than instead of it:
+   * the shipping client is still `web/`, and this can be looked at on the
+   * real server without anybody losing a screen that has not moved across
+   * yet. Dev runs under the same prefix so the two cannot drift.
+   */
+  base: '/next/',
   plugins: [
     // Before react(), as the router plugin asks.
     tanstackRouter({ target: 'react', autoCodeSplitting: true }),

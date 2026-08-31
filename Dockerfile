@@ -15,6 +15,17 @@ ENV NEXT_PUBLIC_BUILD=$BUILD_REF
 # ../server/wwwroot — which lands at /server/wwwroot here.
 RUN npm run build
 
+# The front end being rebuilt on Vite, in its own stage for the same reason.
+# It ships beside the current one rather than instead of it: the screens that
+# have moved across can be looked at on the real server without costing
+# anybody a screen that has not.
+FROM node:24-alpine AS next
+WORKDIR /app
+COPY ["app/package.json", "app/package-lock.json", "./"]
+RUN npm ci
+COPY app/ ./
+RUN npm run build
+
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /source
@@ -22,6 +33,8 @@ COPY ["server/Shifter.csproj", "server/"]
 RUN dotnet restore "server/Shifter.csproj"
 COPY server/ server/
 COPY --from=client /server/wwwroot server/wwwroot
+# After the bundle above, not before: that copy replaces the whole directory.
+COPY --from=next /app/dist server/wwwroot/next
 # SkipClientBuild: the bundle is already here, and this image has no npm.
 RUN dotnet publish "server/Shifter.csproj" \
     -c $BUILD_CONFIGURATION \

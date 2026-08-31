@@ -244,8 +244,10 @@ export async function api<T>(path: string, options: RequestOptions = {}): Promis
       // the old client's /login, which is not a route here — so an expired
       // token sent people to a page that does not exist instead of to the
       // form that would have let them back in.
-      if (typeof location !== 'undefined' && !location.pathname.startsWith('/sign-in')) {
-        location.assign(`/sign-in?returnUrl=${encodeURIComponent(location.pathname)}`);
+      const signIn = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/sign-in`;
+
+      if (typeof location !== 'undefined' && !location.pathname.startsWith(signIn)) {
+        location.assign(`${signIn}?returnUrl=${encodeURIComponent(location.pathname)}`);
       }
     }
   }

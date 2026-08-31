@@ -16,8 +16,8 @@ function Compare() {
       />
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(300px,360px)]">
-        <Card title="Заработано" hint="Плотная линия — август, бледная — июль.">
-          <Climb points={CLIMB} height={220} />
+        <Card title="Заработано" hint="Плотная линия — август, пунктир — июль. Шкала у них одна.">
+          <Climb points={CLIMB} ghost={CLIMB.map((one) => one * 0.87)} height={220} />
         </Card>
 
         <Card title="Что изменилось">

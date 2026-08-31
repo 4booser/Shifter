@@ -137,25 +137,118 @@ export function Docket() {
  * Нарисована как есть, без сглаживания в красивую дугу — месяц с отпуском
  * посередине и должен иметь плато посередине.
  */
-export function Climb({ points, height = 150 }: { points: number[]; height?: number }) {
+export function Climb({
+  points,
+  ghost,
+  height = 150,
+  scale = true,
+  from = '1 авг',
+  mid = '15 авг',
+  to = '31 авг',
+  format = (value: number) => `₴${value.toFixed(0)}К`,
+}: {
+  points: number[];
+  /** Прошлый период бледной линией — для экрана сравнения. */
+  ghost?: number[];
+  height?: number;
+  scale?: boolean;
+  from?: string;
+  mid?: string;
+  to?: string;
+  /** Ряд идёт в тысячах — так его удобно и писать, и подписывать. */
+  format?: (value: number) => string;
+}) {
   const width = 720;
-  const peak = Math.max(...points, 1);
-  const step = width / Math.max(1, points.length - 1);
+  // Обе линии меряются одной шкалой. Две шкалы на одном поле — способ
+  // показать что угодно: подгоняя их независимо, можно нарисовать рост там,
+  // где его нет.
+  const peak = Math.max(...points, ...(ghost ?? []), 1);
 
-  const path = points
-    .map((value, index) => `${index === 0 ? 'M' : 'L'} ${index * step} ${height - (value / peak) * (height - 12)}`)
-    .join(' ');
+  const draw = (series: number[]) => {
+    const step = width / Math.max(1, series.length - 1);
+
+    return series
+      .map((value, index) => `${index === 0 ? 'M' : 'L'} ${index * step} ${height - (value / peak) * (height - 12)}`)
+      .join(' ');
+  };
+
+  const path = draw(points);
 
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} className="block w-full" preserveAspectRatio="none">
-      <defs>
-        <linearGradient id="wash" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#e0a45b" stopOpacity="0.22" />
-          <stop offset="1" stopColor="#e0a45b" stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <path d={`${path} L ${width} ${height} L 0 ${height} Z`} fill="url(#wash)" />
-      <path d={path} fill="none" stroke="#e0a45b" strokeWidth="2" strokeLinejoin="round" />
-    </svg>
+    <div className={scale ? 'grid grid-cols-[3rem_1fr] gap-2' : undefined}>
+      {scale && (
+        <div className="flex flex-col justify-between py-0.5 text-right" style={{ height }}>
+          {[1, 0.5, 0].map((line) => (
+            <span key={line} className="lbl">
+              {line === 0 ? '0' : format(peak * line)}
+            </span>
+          ))}
+        </div>
+      )}
+
+      <div>
+        {/* Высота задана в пикселях, а не оставлена на откуп viewBox: SVG с
+            шириной 100% тянет за собой и высоту, и на широком экране график
+            вырастает вдвое против задуманного. */}
+        <svg
+          viewBox={`0 0 ${width} ${height}`}
+          className="block w-full"
+          style={{ height }}
+          preserveAspectRatio="none"
+        >
+          <defs>
+            <linearGradient id="wash" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stopColor="#e0a45b" stopOpacity="0.22" />
+              <stop offset="1" stopColor="#e0a45b" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+
+          {scale &&
+            [0.5].map((line) => (
+              <line
+                key={line}
+                x1="0"
+                x2={width}
+                y1={height * line}
+                y2={height * line}
+                stroke="#2e2b29"
+                strokeWidth="1"
+                vectorEffect="non-scaling-stroke"
+              />
+            ))}
+
+          <path d={`${path} L ${width} ${height} L 0 ${height} Z`} fill="url(#wash)" />
+
+          {ghost !== undefined && (
+            <path
+              d={draw(ghost)}
+              fill="none"
+              stroke="#7c746b"
+              strokeWidth="1.5"
+              strokeDasharray="5 4"
+              strokeLinejoin="round"
+              vectorEffect="non-scaling-stroke"
+            />
+          )}
+
+          <path
+            d={path}
+            fill="none"
+            stroke="#e0a45b"
+            strokeWidth="2"
+            strokeLinejoin="round"
+            vectorEffect="non-scaling-stroke"
+          />
+        </svg>
+
+        {scale && (
+          <div className="mt-1.5 flex justify-between">
+            <span className="lbl">{from}</span>
+            <span className="lbl">{mid}</span>
+            <span className="lbl">{to}</span>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

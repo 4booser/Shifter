@@ -204,6 +204,10 @@ export const useMono = create<MonoState>((set, get) => ({
   },
 
   chooseAccount: (accountId) => {
+    // The demo's single account has no cache behind it; reading the empty
+    // localStorage here wiped the generated statement on a stray tap.
+    if (get().demo) return;
+
     const cache = readJson<Record<string, MonoStatementItem[]>>(CACHE_KEY, {});
 
     set({ accountId, items: cache[accountId] ?? [] });

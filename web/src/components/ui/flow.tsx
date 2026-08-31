@@ -41,17 +41,22 @@ export function FlowMoney({
     );
   }
 
+  // The sign stands in front of the whole thing — «−₴458», never «₴-458» —
+  // matching formatMoney, which learned this the same night.
+  const amount = value ?? 0;
+  const sign = amount < 0 ? '−' : '';
+
   return (
     <NumberFlow
       className={`tabular ${className ?? ''}`.trim()}
-      value={value ?? 0}
+      value={Math.abs(amount)}
       locales={settings.language}
       format={{
         minimumFractionDigits: 0,
         maximumFractionDigits: settings.moneyDecimals,
         useGrouping: settings.groupThousands,
       }}
-      prefix={currencyBefore && currency !== '' ? currency : undefined}
+      prefix={currencyBefore && currency !== '' ? `${sign}${currency}` : sign === '' ? undefined : sign}
       suffix={!currencyBefore && currency !== '' ? ` ${currency}` : undefined}
     />
   );

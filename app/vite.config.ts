@@ -21,6 +21,11 @@ export default defineConfig({
   resolve: {
     alias: { '@': path.resolve(import.meta.dirname, './src') },
   },
-  server: { port: 5210 },
+  server: {
+    port: 5210,
+    // The API is the same server the Next app is served from; in development
+    // it lives next door, so the paths stay origin-relative in the code.
+    proxy: { '/shifter': { target: 'http://localhost:5208', changeOrigin: true } },
+  },
   build: { outDir: 'dist', sourcemap: false },
 });

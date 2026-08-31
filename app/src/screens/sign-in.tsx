@@ -93,7 +93,7 @@ export function SignIn() {
                   type="button"
                   tabIndex={-1}
                   aria-label={peeking ? 'Скрыть пароль' : 'Показать пароль'}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted transition-colors hover:text-ink"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground transition-colors hover:text-ink"
                   onClick={() => setPeeking((was) => !was)}
                 >
                   {peeking ? <EyeOff className="size-4" /> : <Eye className="size-4" />}

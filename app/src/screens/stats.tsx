@@ -8,7 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { calendarApi } from '@/lib/api/calendar';
 import { fromKey, keysBetween, monthBounds, todayKey } from '@/lib/calendar/calendar-date';
-import { formatMoney } from '@/lib/settings/money';
+import { formatMoney, formatMoneyIn } from '@/lib/settings/money';
 import { useSettings } from '@/lib/settings/store';
 import { cn } from '@/lib/utils';
 
@@ -41,9 +41,14 @@ export function Stats() {
         }))
       : { from: `${year - 1}-01-01`, to: `${year - 1}-12-31` };
 
+  /* The base currency is asked for so the server restates a range that mixes
+     them. Without it, two places in two countries are added together into a
+     number in nothing and printed with one symbol. */
+  const base = settings.baseCurrency;
+
   const current = useQuery({
-    queryKey: ['days', bounds.from, bounds.to],
-    queryFn: () => calendarApi.days(bounds.from, bounds.to),
+    queryKey: ['days', bounds.from, bounds.to, base],
+    queryFn: () => calendarApi.days(bounds.from, bounds.to, base),
   });
   const previous = useQuery({
     queryKey: ['days', before.from, before.to],
@@ -82,8 +87,18 @@ export function Stats() {
       ? []
       : [
           {
+            // Restated where the range mixes currencies: the raw total there
+            // is 20 000 ₴ and 4 000 zł added together, which is a number in
+            // nothing and would be printed with one of the two symbols.
             label: 'Заработано',
-            value: money(summary.total_earned),
+            value:
+              summary.conversion === null
+                ? money(summary.total_earned)
+                : formatMoneyIn(
+                    settings,
+                    summary.conversion.base_currency,
+                    Math.round(summary.conversion.total_earned),
+                  ),
             delta: past === undefined ? null : change(summary.total_earned, past.total_earned),
           },
           {
@@ -98,7 +113,16 @@ export function Stats() {
           },
           {
             label: 'В час',
-            value: summary.hours > 0 ? money(summary.total_earned / summary.hours) : '·',
+            value:
+              summary.hours <= 0
+                ? '·'
+                : summary.conversion === null
+                  ? money(summary.total_earned / summary.hours)
+                  : formatMoneyIn(
+                      settings,
+                      summary.conversion.base_currency,
+                      Math.round(summary.conversion.total_earned / summary.hours),
+                    ),
             delta:
               past === undefined || past.hours === 0 || summary.hours === 0
                 ? null
@@ -179,15 +203,27 @@ export function Stats() {
       }),
     );
 
+  /* Where a range mixes currencies the bars have to be comparable, so they
+     are drawn on the converted figures and labelled with what was actually
+     earned there. A bar drawn on 8 000 zł beside one on 40 000 ₴ would say
+     the Kraków job was a fifth of the Kyiv one when it is nearly twice it. */
+  const converted = new Map(
+    (summary?.conversion?.by_location ?? []).map((place) => [place.location_id, place]),
+  );
+
   const byPlace = (summary?.by_location ?? [])
     .filter((place) => place.earned > 0)
-    .sort((a, b) => b.earned - a.earned)
+    .map((place) => ({ place, restated: converted.get(place.location_id) }))
+    .sort((a, b) => (b.restated?.earned ?? b.place.earned) - (a.restated?.earned ?? a.place.earned))
     .map(
-      (place): BarRow => ({
+      ({ place, restated }): BarRow => ({
         key: `${place.location_id}`,
         label: place.name === '' ? 'без места' : place.name,
-        value: place.earned,
-        shown: money(place.earned),
+        value: restated?.earned ?? place.earned,
+        shown:
+          place.currency !== '' && place.currency !== undefined
+            ? formatMoneyIn(settings, place.currency, Math.round(place.earned))
+            : money(place.earned),
         hint: `${place.days_worked} см. · ${Math.round(place.hours)} ч`,
         colour: place.colour === '' ? undefined : place.colour,
       }),
@@ -299,6 +335,45 @@ export function Stats() {
             ))}
           </div>
 
+          {/* A total that adds two currencies together is a number in
+              nothing. Say so, and say what it comes to restated — including
+              the currencies the bank had no rate for, which are simply not
+              in it. */}
+          {summary.currencies.length > 1 && (
+            <p
+              className="card flex flex-wrap items-baseline gap-x-2 p-3 text-sm"
+              style={{ background: 'var(--warn-soft)' }}
+            >
+              <span className="font-semibold">Период смешивает валюты:</span>
+              <span>{summary.currencies.join(', ')}.</span>
+              {summary.conversion !== null ? (
+                <>
+                  <span>
+                    Всего это{' '}
+                    <b className="tabular">
+                      {formatMoneyIn(
+                        settings,
+                        summary.conversion.base_currency,
+                        Math.round(summary.conversion.total_earned),
+                      )}
+                    </b>{' '}
+                    по сегодняшнему курсу.
+                  </span>
+                  {summary.conversion.unconverted.length > 0 && (
+                    <span className="field-hint">
+                      Курса нет для: {summary.conversion.unconverted.join(', ')} — эти деньги в
+                      пересчёт не вошли.
+                    </span>
+                  )}
+                </>
+              ) : (
+                <span className="field-hint">
+                  Валюта пересчёта не выбрана — суммы выше просто сложены.
+                </span>
+              )}
+            </p>
+          )}
+
           <Panel
             title="Заработано за период"
             hint={`Плотная линия — этот ${span === 'month' ? 'месяц' : 'год'}, бледная — прошлый. Веди курсором — цифры дня.`}
@@ -313,9 +388,11 @@ export function Stats() {
             <Panel
               title="Из чего сложились деньги"
               hint={
-                gross > summary.total_earned
-                  ? `Заработано ${money(gross)}; на руки ${money(summary.total_earned)} — остальное в котёл и удержания.`
-                  : 'Ставка, чаевые и всё, что сверху.'
+                summary.conversion !== null
+                  ? 'Доли считаны по суммам как есть — валюты разные, поэтому проценты точнее самих чисел.'
+                  : gross > summary.total_earned
+                    ? `Заработано ${money(gross)}; на руки ${money(summary.total_earned)} — остальное в котёл и удержания.`
+                    : 'Ставка, чаевые и всё, что сверху.'
               }
             >
               <Split

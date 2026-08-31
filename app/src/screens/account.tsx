@@ -176,6 +176,23 @@ export function Account() {
             on={settings.groupThousands}
             onPick={(value) => update('groupThousands', value)}
           />
+          <label className="flex flex-col gap-1">
+            <span className="field-label">Считать всё в</span>
+            <span className="flex items-center gap-2">
+              <Input
+                className="w-24"
+                value={settings.baseCurrency}
+                maxLength={3}
+                placeholder="UAH"
+                onChange={(event) => update('baseCurrency', event.target.value.toUpperCase())}
+              />
+              <span className="field-hint">
+                Код валюты, в которую пересчитываются периоды с разными валютами. Пусто —
+                не пересчитывать.
+              </span>
+            </span>
+          </label>
+
           <Toggle
             label="Прятать суммы"
             hint="Числа заменяются точками — для чужих глаз через плечо."

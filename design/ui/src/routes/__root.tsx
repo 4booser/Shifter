@@ -1,5 +1,5 @@
 import { Link, Outlet, createRootRoute, useRouterState } from '@tanstack/react-router';
-import { Landmark, Layers, PanelsTopLeft, Smartphone, SquareStack } from 'lucide-react';
+import { Boxes, FileText, Landmark, Layers, PanelsTopLeft, Settings, Smartphone, SquareStack } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 
@@ -15,6 +15,9 @@ const SECTIONS = [
   { to: '/screens', label: 'Экраны', icon: PanelsTopLeft },
   { to: '/modals', label: 'Окна', icon: SquareStack },
   { to: '/phone', label: 'Телефон', icon: Smartphone },
+  { to: '/account', label: 'Настройки', icon: Settings },
+  { to: '/papers', label: 'Бумаги', icon: FileText },
+  { to: '/more', label: 'Остальное', icon: Boxes },
   { to: '/foundations', label: 'Основа', icon: Landmark },
 ] as const;
 

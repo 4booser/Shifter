@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router';
 
 import { Plate, Sheet } from '@/components/frame';
 import { Button, Field, Modal, Pills, Switch } from '@/components/ui/kit';
+import { cn } from '@/lib/utils';
 
 /**
  * Окна.
@@ -219,6 +220,148 @@ function Modals() {
               <Pills className="mt-1.5" options={['отпуск', 'больничный', 'выходной']} />
             </div>
             <Switch label="Прошу подменить" hint="Смена появится на графике команды." />
+          </div>
+        </div>
+      </Plate>
+
+      <Plate title="Ротация и схема" path="rotation-modal · scheme-modal" why="Два способа описать неделю, которые люди правда используют: «два через два» и «цвет по дню недели».">
+        <div className="grid gap-4 lg:grid-cols-2">
+          <Modal
+            title="Два через два"
+            said="Разложить смену по кругу на несколько месяцев вперёд."
+            foot={<><Button tone="line">Отмена</Button><Button tone="go">Разложить</Button></>}
+          >
+            <Field label="Какая смена" value="🍸 Вечер, бар" />
+            <div className="grid grid-cols-3 gap-2.5">
+              <Field label="Работаю" value="2" />
+              <Field label="Отдыхаю" value="2" />
+              <Field label="Месяцев" value="3" />
+            </div>
+            <Field label="Начиная с" value="01.09.2026" />
+            <p className="hint">Получится 46 смен до конца ноября.</p>
+          </Modal>
+
+          <Modal
+            title="Цвета по дням"
+            said="Схема раскрашивает календарь, не трогая смены."
+            foot={<><Button tone="line">Удалить</Button><Button tone="go">Сохранить</Button></>}
+          >
+            <Field label="Название" value="Мой обычный график" />
+            <div className="flex flex-col gap-2">
+              {['понедельник', 'вторник', 'среда', 'четверг', 'пятница'].map((day, i) => (
+                <span key={day} className="flex items-center gap-2.5">
+                  <span className="w-24 text-xs text-dim">{day}</span>
+                  <span className="flex gap-1.5">
+                    {['#e0a45b', '#7fbf7a', '#d9705f', '#b5ada3'].map((c, j) => (
+                      <span
+                        key={c}
+                        className={cn('size-5 rounded-full', i % 4 === j && 'ring-2 ring-paper ring-offset-2 ring-offset-table')}
+                        style={{ background: c }}
+                      />
+                    ))}
+                  </span>
+                </span>
+              ))}
+            </div>
+          </Modal>
+        </div>
+      </Plate>
+
+      <Plate title="Импорт календаря и чужой файл" path="ics-import-modal · foreign-import-modal">
+        <div className="grid gap-4 lg:grid-cols-2">
+          <Modal
+            title="Календарь по ссылке"
+            said="Подписка на .ics: смены появятся сами, когда их поставят."
+            foot={<><Button tone="line">Отмена</Button><Button tone="go">Подключить</Button></>}
+          >
+            <Field label="Ссылка" value="https://cal.sova.bar/anya.ics" />
+            <div className="rounded-[var(--radius-field)] border border-paper/9 p-3">
+              <span className="lbl">Нашлось</span>
+              <p className="mt-1 font-mono text-sm tabular">14 смен · 1–30 сентября</p>
+              <p className="hint">Все совпадают с шаблоном «Вечер».</p>
+            </div>
+          </Modal>
+
+          <Modal
+            title="Файл из другого приложения"
+            said="Разберём таблицу и покажем, что получилось, до того как записать."
+            foot={<><Button tone="line">Отмена</Button><Button tone="go">Записать 22</Button></>}
+          >
+            <div className="flex flex-col">
+              {[
+                ['01.08', 'Вечер · 17:00–01:00', 'узнали'],
+                ['02.08', 'День · 09:00–17:00', 'узнали'],
+                ['03.08', 'Night shift', 'не поняли'],
+              ].map(([when, what, how]) => (
+                <span key={when} className="flex items-center gap-3 border-b border-paper/9 py-2 last:border-0">
+                  <span className="font-mono text-2xs text-faint">{when}</span>
+                  <span className="min-w-0 flex-1 truncate text-sm">{what}</span>
+                  <span className={cn('text-2xs font-semibold', how === 'узнали' ? 'text-money' : 'text-taken')}>
+                    {how}
+                  </span>
+                </span>
+              ))}
+            </div>
+            <p className="hint">Непонятые строки не запишутся — их можно поправить руками.</p>
+          </Modal>
+        </div>
+      </Plate>
+
+      <Plate title="Обмен сменами и удаление" path="swaps · location-delete">
+        <div className="grid gap-4 lg:grid-cols-2">
+          <Modal
+            title="Отдать смену"
+            said="Команда увидит просьбу. Взять её сможет любой, отдать — только вы."
+            foot={<><Button tone="line">Отмена</Button><Button tone="go">Попросить подмену</Button></>}
+          >
+            <div className="rounded-[var(--radius-field)] border border-paper/9 p-3 font-mono">
+              <span className="text-xs text-dim">СР 2 СЕНТЯБРЯ</span>
+              <p className="mt-1 text-sm">Вечер · бар · 17:00–01:00</p>
+            </div>
+            <div className="flex flex-col gap-2">
+              <span className="lbl">Вызвались</span>
+              {[{ who: 'Костя', stars: '4.9' }, { who: 'Марк', stars: '4.6' }].map(({ who, stars }) => (
+                <span key={who} className="flex items-center gap-2.5">
+                  <span className="grid size-7 flex-none place-items-center rounded-full bg-raised text-2xs">{who[0]}</span>
+                  <span className="flex-1 text-sm">{who}</span>
+                  <span className="font-mono text-2xs text-faint">{stars}</span>
+                  <Button tone="go" size="sm">Отдать</Button>
+                </span>
+              ))}
+            </div>
+          </Modal>
+
+          <Modal
+            title="Удалить место?"
+            said="На нём 47 отмеченных смен. Они останутся — но потеряют правила расчёта."
+            foot={<><Button tone="line">Оставить</Button><Button tone="danger">Удалить</Button></>}
+          >
+            <div className="rounded-[var(--radius-field)] border border-taken/40 bg-taken/10 p-3">
+              <p className="text-sm text-paper">
+                Ночные надбавки, налог и питание перестанут считаться. Заработок за прошлые
+                месяцы пересчитан не будет.
+              </p>
+            </div>
+            <Field label="Введите название, чтобы подтвердить" placeholder="Бар «Сова»" />
+          </Modal>
+        </div>
+      </Plate>
+
+      <Plate title="Боковая панель" path="sidebar" why="Не окно, а ящик: сюда убрано всё, чем пользуются раз в месяц.">
+        <div className="flex gap-4">
+          <div className="w-64 flex-none rounded-[var(--radius-card)] border border-paper/17 bg-table p-4">
+            <span className="lbl">Ещё</span>
+            <div className="mt-3 flex flex-col gap-0.5">
+              {['Отчёт за месяц', 'Сравнить периоды', 'Расчётка', 'Справка о доходе', 'Расходы', 'Импорт', 'Экспорт данных', 'Что нового'].map((one) => (
+                <span key={one} className="rounded-md px-2.5 py-2 text-sm text-dim">{one}</span>
+              ))}
+            </div>
+            <div className="mt-3 border-t border-paper/9 pt-3">
+              <span className="rounded-md px-2.5 py-2 text-sm text-faint">Настройки</span>
+            </div>
+          </div>
+          <div className="grid flex-1 place-items-center rounded-[var(--radius-card)] border border-dashed border-paper/17">
+            <p className="hint">Календарь остаётся на месте — панель выезжает поверх края.</p>
           </div>
         </div>
       </Plate>

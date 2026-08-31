@@ -10,14 +10,22 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AccountRouteImport } from './routes/account'
 import { Route as FoundationsRouteImport } from './routes/foundations'
 import { Route as ModalsRouteImport } from './routes/modals'
+import { Route as MoreRouteImport } from './routes/more'
+import { Route as PapersRouteImport } from './routes/papers'
 import { Route as PhoneRouteImport } from './routes/phone'
 import { Route as ScreensRouteImport } from './routes/screens'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AccountRoute = AccountRouteImport.update({
+  id: '/account',
+  path: '/account',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FoundationsRoute = FoundationsRouteImport.update({
@@ -28,6 +36,16 @@ const FoundationsRoute = FoundationsRouteImport.update({
 const ModalsRoute = ModalsRouteImport.update({
   id: '/modals',
   path: '/modals',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MoreRoute = MoreRouteImport.update({
+  id: '/more',
+  path: '/more',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PapersRoute = PapersRouteImport.update({
+  id: '/papers',
+  path: '/papers',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PhoneRoute = PhoneRouteImport.update({
@@ -43,38 +61,75 @@ const ScreensRoute = ScreensRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
   '/foundations': typeof FoundationsRoute
   '/modals': typeof ModalsRoute
+  '/more': typeof MoreRoute
+  '/papers': typeof PapersRoute
   '/phone': typeof PhoneRoute
   '/screens': typeof ScreensRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
   '/foundations': typeof FoundationsRoute
   '/modals': typeof ModalsRoute
+  '/more': typeof MoreRoute
+  '/papers': typeof PapersRoute
   '/phone': typeof PhoneRoute
   '/screens': typeof ScreensRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
   '/foundations': typeof FoundationsRoute
   '/modals': typeof ModalsRoute
+  '/more': typeof MoreRoute
+  '/papers': typeof PapersRoute
   '/phone': typeof PhoneRoute
   '/screens': typeof ScreensRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/foundations' | '/modals' | '/phone' | '/screens'
+  fullPaths:
+    | '/'
+    | '/account'
+    | '/foundations'
+    | '/modals'
+    | '/more'
+    | '/papers'
+    | '/phone'
+    | '/screens'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/foundations' | '/modals' | '/phone' | '/screens'
-  id: '__root__' | '/' | '/foundations' | '/modals' | '/phone' | '/screens'
+  to:
+    | '/'
+    | '/account'
+    | '/foundations'
+    | '/modals'
+    | '/more'
+    | '/papers'
+    | '/phone'
+    | '/screens'
+  id:
+    | '__root__'
+    | '/'
+    | '/account'
+    | '/foundations'
+    | '/modals'
+    | '/more'
+    | '/papers'
+    | '/phone'
+    | '/screens'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AccountRoute: typeof AccountRoute
   FoundationsRoute: typeof FoundationsRoute
   ModalsRoute: typeof ModalsRoute
+  MoreRoute: typeof MoreRoute
+  PapersRoute: typeof PapersRoute
   PhoneRoute: typeof PhoneRoute
   ScreensRoute: typeof ScreensRoute
 }
@@ -86,6 +141,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/account': {
+      id: '/account'
+      path: '/account'
+      fullPath: '/account'
+      preLoaderRoute: typeof AccountRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/foundations': {
@@ -100,6 +162,20 @@ declare module '@tanstack/react-router' {
       path: '/modals'
       fullPath: '/modals'
       preLoaderRoute: typeof ModalsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/more': {
+      id: '/more'
+      path: '/more'
+      fullPath: '/more'
+      preLoaderRoute: typeof MoreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/papers': {
+      id: '/papers'
+      path: '/papers'
+      fullPath: '/papers'
+      preLoaderRoute: typeof PapersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/phone': {
@@ -121,8 +197,11 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AccountRoute: AccountRoute,
   FoundationsRoute: FoundationsRoute,
   ModalsRoute: ModalsRoute,
+  MoreRoute: MoreRoute,
+  PapersRoute: PapersRoute,
   PhoneRoute: PhoneRoute,
   ScreensRoute: ScreensRoute,
 }

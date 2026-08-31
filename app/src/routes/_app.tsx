@@ -2,6 +2,7 @@ import { Link, Outlet, createFileRoute, useRouterState } from '@tanstack/react-r
 import {
   BarChart3,
   CalendarDays,
+  Clock,
   Coins,
   Landmark,
   Sparkles,
@@ -21,6 +22,7 @@ import { cn } from '@/lib/utils';
  */
 const NAV = [
   { to: '/', label: 'Календарь', icon: CalendarDays },
+  { to: '/shifts', label: 'Смены', icon: Clock },
   { to: '/schedule', label: 'График', icon: Users },
   { to: '/gigs', label: 'Подработки', icon: Sparkles },
   { to: '/payouts', label: 'Выплаты', icon: Wallet },

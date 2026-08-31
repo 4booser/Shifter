@@ -1,14 +1,15 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
+import { Link } from '@tanstack/react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Check, Loader2, Plus, Star, X } from 'lucide-react';
+import { Check, Loader2, Plus, X } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { ColourField } from '@/components/colour-field';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { calendarApi } from '@/lib/api/calendar';
-import { CalendarDayData, DaySave, MARK_COLOURS, ShiftTemplate } from '@/lib/calendar/models';
+import { CalendarDayData, DaySave, ShiftTemplate } from '@/lib/calendar/models';
 import { fromKey } from '@/lib/calendar/calendar-date';
-import { usePalette } from '@/lib/settings/palette';
 import { formatMoney } from '@/lib/settings/money';
 import { useSettings } from '@/lib/settings/store';
 import { cn } from '@/lib/utils';
@@ -33,13 +34,6 @@ export function DayPanel({
   const settings = useSettings((state) => state.settings);
   const money = (value: number) => formatMoney(settings, Math.round(value));
   const client = useQueryClient();
-  const saved = usePalette((state) => state.colours);
-  const loadPalette = usePalette((state) => state.load);
-  const keepColour = usePalette((state) => state.save);
-  const forgetColour = usePalette((state) => state.forget);
-
-  useEffect(() => loadPalette(), [loadPalette]);
-
   const templates = useQuery({ queryKey: ['shifts'], queryFn: () => calendarApi.shifts() });
 
   const payload = useMemo(
@@ -185,6 +179,19 @@ export function DayPanel({
 
       {/* Adding is one tap per template: the palette people actually keep is
           three or four, and a picker for three items is a picker too many. */}
+      {/* Nowhere to go from an empty calendar unless the panel says where the
+          shifts are kept. */}
+      {templates.data !== undefined &&
+        templates.data.filter((template) => !template.archived).length === 0 && (
+          <Link
+            to="/shifts"
+            className="flex items-center gap-1.5 border-t border-border pt-3 text-sm font-medium text-accent-foreground underline-offset-4 hover:underline"
+          >
+            <Plus className="size-3.5" />
+            Сначала заведите смену
+          </Link>
+        )}
+
       {templates.data !== undefined && templates.data.length > 0 && (
         <div className="flex flex-wrap gap-1.5 border-t border-border pt-3">
           {templates.data
@@ -219,71 +226,11 @@ export function DayPanel({
           onSave={(value) => save.mutate({ tips: value === '' ? null : Number(value.replace(',', '.')) })}
         />
 
-        {/* The day's own colour. The twelve to hand cover most days; the ones
-            somebody actually keeps coming back to live in their own row, saved
-            to the account so the phone has them too. */}
-        <div className="flex flex-col gap-1.5">
-          <span className="field-label">Цвет дня</span>
-          <div className="flex flex-wrap items-center gap-1.5">
-            <button
-              type="button"
-              aria-label="Без цвета"
-              onClick={() => save.mutate({ colour: null })}
-              className={cn(
-                'size-6 rounded-full border border-dashed transition-colors',
-                day?.colour == null ? 'border-fg' : 'border-border hover:border-border-strong',
-              )}
-            />
-            {MARK_COLOURS.slice(0, 12).map((mark) => (
-              <button
-                key={mark.value}
-                type="button"
-                title={mark.label}
-                aria-label={mark.label}
-                style={{ background: mark.value }}
-                onClick={() => save.mutate({ colour: mark.value })}
-                className={cn(
-                  'size-6 rounded-full ring-offset-2 ring-offset-[var(--surface-1)] transition-all',
-                  day?.colour?.toUpperCase() === mark.value ? 'ring-2 ring-fg' : 'hover:scale-110',
-                )}
-              />
-            ))}
-            {day?.colour != null && !saved.includes(day.colour.toUpperCase()) && (
-              <button
-                type="button"
-                aria-label="Сохранить цвет"
-                title="Сохранить в свои"
-                onClick={() => keepColour(day.colour!)}
-                className="grid size-6 place-items-center rounded-full border border-border text-muted-foreground transition-colors hover:text-fg"
-              >
-                <Star className="size-3" />
-              </button>
-            )}
-          </div>
-          {saved.length > 0 && (
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="field-hint">Мои</span>
-              {saved.map((colour) => (
-                <button
-                  key={colour}
-                  type="button"
-                  aria-label={colour}
-                  title={`${colour} — правой кнопкой убрать`}
-                  style={{ background: colour }}
-                  onClick={() => save.mutate({ colour })}
-                  onContextMenu={(event) => {
-                    event.preventDefault();
-                    forgetColour(colour);
-                  }}
-                  className={cn(
-                    'size-6 rounded-full ring-offset-2 ring-offset-[var(--surface-1)] transition-all',
-                    day?.colour?.toUpperCase() === colour ? 'ring-2 ring-fg' : 'hover:scale-110',
-                  )}
-                />
-              ))}
-            </div>
-          )}
-        </div>
+        <ColourField
+          label="Цвет дня"
+          value={day?.colour}
+          onPick={(colour) => save.mutate({ colour })}
+        />
 
         <Field
           key={`note-${date}`}

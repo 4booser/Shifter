@@ -369,4 +369,4 @@ function Modals() {
   );
 }
 
-export const Route = createFileRoute('/modals')({ component: Modals });
+export const Route = createFileRoute('/kit/modals')({ component: Modals });

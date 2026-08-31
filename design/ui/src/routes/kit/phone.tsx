@@ -1,8 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router';
 
 import { Plate, Sheet } from '@/components/frame';
-import { Button, Field, Pills } from '@/components/ui/kit';
-import { MONTH } from '@/mock/data';
+import { Button, Field, Pills, Switch } from '@/components/ui/kit';
+import { MONTH, YEAR_MONTHS } from '@/mock/data';
 import { cn } from '@/lib/utils';
 
 /** Корпус телефона: рамка, чтобы ширина читалась как ладонь, а не как окно. */
@@ -163,8 +163,153 @@ function PhoneScreens() {
           </Phone>
         </div>
       </Plate>
+
+      <Plate
+        title="День, год и команда"
+        path="mobile"
+        why="Панель дня на телефоне становится отдельным экраном: сбоку её ставить некуда. Год сжимается до сетки квадратов, потому что двенадцать столбцов в ладонь не влезают."
+      >
+        <div className="flex flex-wrap gap-6">
+          <Phone tab="Месяц">
+            <div className="flex items-center gap-2">
+              <span className="text-2xs text-faint">←</span>
+              <span className="text-base font-bold">Понедельник, 31</span>
+            </div>
+
+            <div>
+              <span className="lbl">Заработано за день</span>
+              <p className="text-3xl font-extrabold text-money tabular">₴1 640</p>
+            </div>
+
+            <div className="card p-3 font-mono">
+              <div className="flex justify-between text-xs">
+                <span className="text-dim">Вечер · бар</span>
+                <span>17:00–01:00</span>
+              </div>
+              <div className="mt-1 flex justify-between text-[0.65rem] text-faint">
+                <span>по факту</span>
+                <span>17:12–01:40</span>
+              </div>
+              <div className="tear my-2.5" />
+              <div className="flex justify-between text-xs">
+                <span className="text-dim">8,0 ч × ₴200</span>
+                <span>1 600</span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-dim">Чаевые</span>
+                <span>400</span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-dim">Питание</span>
+                <span className="text-taken">−90</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <Field label="Чаевые" value="400" />
+              <Field label="Гостей" value="64" />
+            </div>
+
+            <Pills options={['зал', 'бар', 'терраса']} value="бар" />
+          </Phone>
+
+          <Phone tab="Деньги">
+            <div>
+              <span className="lbl">2026</span>
+              <p className="text-3xl font-extrabold text-money tabular">₴223 687</p>
+              <p className="hint mt-1">119 смен · 940 часов</p>
+            </div>
+
+            <div className="flex h-16 items-end gap-1">
+              {YEAR_MONTHS.map((month, i) => (
+                <span key={i} className="flex flex-1 flex-col items-center gap-1">
+                  <span
+                    className="w-full rounded-t-sm bg-brass"
+                    style={{ height: `${Math.max(4, month.v)}%`, opacity: month.v === 70 ? 1 : 0.45 }}
+                  />
+                  <span className="font-mono text-[0.5rem] text-faint">{month.m}</span>
+                </span>
+              ))}
+            </div>
+
+            <div className="card p-3">
+              <span className="lbl">Год по дням</span>
+              <div className="mt-2 grid grid-flow-col grid-rows-7 gap-[2px] overflow-hidden">
+                {Array.from({ length: 168 }, (_, i) => {
+                  const worked = i % 7 !== 0 && i % 7 !== 1 && i < 120;
+                  return (
+                    <span
+                      key={i}
+                      className="size-[7px] rounded-[1px]"
+                      style={{ background: worked ? '#e0a45b' : '#232120', opacity: worked ? 0.4 + ((i * 31) % 60) / 100 : 1 }}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="card p-3">
+              <span className="lbl">Рекорд</span>
+              <p className="mt-1 text-lg font-bold tabular">5 дней подряд</p>
+            </div>
+          </Phone>
+
+          <Phone tab="Доска">
+            <div>
+              <span className="lbl">Смена «Сова»</span>
+              <p className="text-base font-bold">31 авг — 6 сент</p>
+            </div>
+
+            <div className="card p-3">
+              {[
+                ['Аня', 'вы', '#e0a45b', 'ср чт пт'],
+                ['Ира', '', '#7fbf7a', 'пн ср чт сб'],
+                ['Костя', 'просит подмену', '#d9705f', 'пн вт чт'],
+              ].map(([name, role, colour, days]) => (
+                <span key={name} className="flex items-center gap-2 border-b border-paper/9 py-2 last:border-0">
+                  <span className="size-2 flex-none rounded-full" style={{ background: colour }} />
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-xs">{name} {role !== '' && <span className="text-faint">· {role}</span>}</span>
+                    <span className="font-mono text-[0.6rem] text-faint">{days}</span>
+                  </span>
+                </span>
+              ))}
+            </div>
+
+            <div className="card border-taken/40 p-3">
+              <span className="lbl">Просят подменить</span>
+              <p className="mt-1 text-xs">Костя · чт 3 сент · 17:00–01:00</p>
+              <Button tone="go" size="sm" className="mt-2 w-full">Подменю</Button>
+            </div>
+          </Phone>
+
+          <Phone tab="Смена">
+            <div>
+              <span className="lbl">Настройки</span>
+              <p className="text-base font-bold">Как это выглядит</p>
+            </div>
+
+            <div className="card p-3">
+              <span className="lbl">Тема</span>
+              <Pills className="mt-2" options={['система', 'ночь', 'бумага']} value="ночь" />
+            </div>
+
+            <div className="card flex flex-col gap-3 p-3">
+              <Switch on label="Заработок в клетке" />
+              <Switch label="Прятать суммы" />
+              <Switch on label="Напомнить закрыть смену" />
+            </div>
+
+            <div className="card p-3">
+              <span className="lbl">Аккаунт</span>
+              <p className="mt-1 text-sm">Аня · anya</p>
+              <Button tone="line" size="sm" className="mt-2 w-full">Выйти</Button>
+            </div>
+          </Phone>
+        </div>
+      </Plate>
     </Sheet>
   );
 }
 
-export const Route = createFileRoute('/phone')({ component: PhoneScreens });
+export const Route = createFileRoute('/kit/phone')({ component: PhoneScreens });

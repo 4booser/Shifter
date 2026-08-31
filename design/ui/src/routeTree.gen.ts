@@ -9,201 +9,441 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as AccountRouteImport } from './routes/account'
-import { Route as FoundationsRouteImport } from './routes/foundations'
-import { Route as ModalsRouteImport } from './routes/modals'
-import { Route as MoreRouteImport } from './routes/more'
-import { Route as PapersRouteImport } from './routes/papers'
-import { Route as PhoneRouteImport } from './routes/phone'
-import { Route as ScreensRouteImport } from './routes/screens'
+import { Route as AppRouteImport } from './routes/_app'
+import { Route as JoinRouteImport } from './routes/join'
+import { Route as KitRouteImport } from './routes/kit'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as AppIndexRouteImport } from './routes/_app/index'
+import { Route as AppAccountRouteImport } from './routes/_app/account'
+import { Route as AppBankRouteImport } from './routes/_app/bank'
+import { Route as AppGigsRouteImport } from './routes/_app/gigs'
+import { Route as AppPayoutsRouteImport } from './routes/_app/payouts'
+import { Route as AppPlacesRouteImport } from './routes/_app/places'
+import { Route as AppReportRouteImport } from './routes/_app/report'
+import { Route as AppScheduleRouteImport } from './routes/_app/schedule'
+import { Route as AppShiftsRouteImport } from './routes/_app/shifts'
+import { Route as AppStatsRouteImport } from './routes/_app/stats'
+import { Route as AppWrappedRouteImport } from './routes/_app/wrapped'
+import { Route as KitIndexRouteImport } from './routes/kit/index'
+import { Route as KitModalsRouteImport } from './routes/kit/modals'
+import { Route as KitPhoneRouteImport } from './routes/kit/phone'
+import { Route as KitStatesRouteImport } from './routes/kit/states'
 
-const IndexRoute = IndexRouteImport.update({
+const AppRoute = AppRouteImport.update({
+  id: '/_app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JoinRoute = JoinRouteImport.update({
+  id: '/join',
+  path: '/join',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KitRoute = KitRouteImport.update({
+  id: '/kit',
+  path: '/kit',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AppRoute,
 } as any)
-const AccountRoute = AccountRouteImport.update({
+const AppAccountRoute = AppAccountRouteImport.update({
   id: '/account',
   path: '/account',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AppRoute,
 } as any)
-const FoundationsRoute = FoundationsRouteImport.update({
-  id: '/foundations',
-  path: '/foundations',
-  getParentRoute: () => rootRouteImport,
+const AppBankRoute = AppBankRouteImport.update({
+  id: '/bank',
+  path: '/bank',
+  getParentRoute: () => AppRoute,
 } as any)
-const ModalsRoute = ModalsRouteImport.update({
+const AppGigsRoute = AppGigsRouteImport.update({
+  id: '/gigs',
+  path: '/gigs',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPayoutsRoute = AppPayoutsRouteImport.update({
+  id: '/payouts',
+  path: '/payouts',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPlacesRoute = AppPlacesRouteImport.update({
+  id: '/places',
+  path: '/places',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppReportRoute = AppReportRouteImport.update({
+  id: '/report',
+  path: '/report',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppScheduleRoute = AppScheduleRouteImport.update({
+  id: '/schedule',
+  path: '/schedule',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppShiftsRoute = AppShiftsRouteImport.update({
+  id: '/shifts',
+  path: '/shifts',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppStatsRoute = AppStatsRouteImport.update({
+  id: '/stats',
+  path: '/stats',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppWrappedRoute = AppWrappedRouteImport.update({
+  id: '/wrapped',
+  path: '/wrapped',
+  getParentRoute: () => AppRoute,
+} as any)
+const KitIndexRoute = KitIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => KitRoute,
+} as any)
+const KitModalsRoute = KitModalsRouteImport.update({
   id: '/modals',
   path: '/modals',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => KitRoute,
 } as any)
-const MoreRoute = MoreRouteImport.update({
-  id: '/more',
-  path: '/more',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PapersRoute = PapersRouteImport.update({
-  id: '/papers',
-  path: '/papers',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PhoneRoute = PhoneRouteImport.update({
+const KitPhoneRoute = KitPhoneRouteImport.update({
   id: '/phone',
   path: '/phone',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => KitRoute,
 } as any)
-const ScreensRoute = ScreensRouteImport.update({
-  id: '/screens',
-  path: '/screens',
-  getParentRoute: () => rootRouteImport,
+const KitStatesRoute = KitStatesRouteImport.update({
+  id: '/states',
+  path: '/states',
+  getParentRoute: () => KitRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/account': typeof AccountRoute
-  '/foundations': typeof FoundationsRoute
-  '/modals': typeof ModalsRoute
-  '/more': typeof MoreRoute
-  '/papers': typeof PapersRoute
-  '/phone': typeof PhoneRoute
-  '/screens': typeof ScreensRoute
+  '/': typeof AppIndexRoute
+  '/join': typeof JoinRoute
+  '/kit': typeof KitRouteWithChildren
+  '/login': typeof LoginRoute
+  '/account': typeof AppAccountRoute
+  '/bank': typeof AppBankRoute
+  '/gigs': typeof AppGigsRoute
+  '/payouts': typeof AppPayoutsRoute
+  '/places': typeof AppPlacesRoute
+  '/report': typeof AppReportRoute
+  '/schedule': typeof AppScheduleRoute
+  '/shifts': typeof AppShiftsRoute
+  '/stats': typeof AppStatsRoute
+  '/wrapped': typeof AppWrappedRoute
+  '/kit/modals': typeof KitModalsRoute
+  '/kit/phone': typeof KitPhoneRoute
+  '/kit/states': typeof KitStatesRoute
+  '/kit/': typeof KitIndexRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/account': typeof AccountRoute
-  '/foundations': typeof FoundationsRoute
-  '/modals': typeof ModalsRoute
-  '/more': typeof MoreRoute
-  '/papers': typeof PapersRoute
-  '/phone': typeof PhoneRoute
-  '/screens': typeof ScreensRoute
+  '/join': typeof JoinRoute
+  '/login': typeof LoginRoute
+  '/account': typeof AppAccountRoute
+  '/bank': typeof AppBankRoute
+  '/gigs': typeof AppGigsRoute
+  '/payouts': typeof AppPayoutsRoute
+  '/places': typeof AppPlacesRoute
+  '/report': typeof AppReportRoute
+  '/schedule': typeof AppScheduleRoute
+  '/shifts': typeof AppShiftsRoute
+  '/stats': typeof AppStatsRoute
+  '/wrapped': typeof AppWrappedRoute
+  '/kit/modals': typeof KitModalsRoute
+  '/kit/phone': typeof KitPhoneRoute
+  '/kit/states': typeof KitStatesRoute
+  '/': typeof AppIndexRoute
+  '/kit': typeof KitIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/account': typeof AccountRoute
-  '/foundations': typeof FoundationsRoute
-  '/modals': typeof ModalsRoute
-  '/more': typeof MoreRoute
-  '/papers': typeof PapersRoute
-  '/phone': typeof PhoneRoute
-  '/screens': typeof ScreensRoute
+  '/_app': typeof AppRouteWithChildren
+  '/join': typeof JoinRoute
+  '/kit': typeof KitRouteWithChildren
+  '/login': typeof LoginRoute
+  '/_app/account': typeof AppAccountRoute
+  '/_app/bank': typeof AppBankRoute
+  '/_app/gigs': typeof AppGigsRoute
+  '/_app/payouts': typeof AppPayoutsRoute
+  '/_app/places': typeof AppPlacesRoute
+  '/_app/report': typeof AppReportRoute
+  '/_app/schedule': typeof AppScheduleRoute
+  '/_app/shifts': typeof AppShiftsRoute
+  '/_app/stats': typeof AppStatsRoute
+  '/_app/wrapped': typeof AppWrappedRoute
+  '/kit/modals': typeof KitModalsRoute
+  '/kit/phone': typeof KitPhoneRoute
+  '/kit/states': typeof KitStatesRoute
+  '/_app/': typeof AppIndexRoute
+  '/kit/': typeof KitIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/join'
+    | '/kit'
+    | '/login'
     | '/account'
-    | '/foundations'
-    | '/modals'
-    | '/more'
-    | '/papers'
-    | '/phone'
-    | '/screens'
+    | '/bank'
+    | '/gigs'
+    | '/payouts'
+    | '/places'
+    | '/report'
+    | '/schedule'
+    | '/shifts'
+    | '/stats'
+    | '/wrapped'
+    | '/kit/modals'
+    | '/kit/phone'
+    | '/kit/states'
+    | '/kit/'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/'
+    | '/join'
+    | '/login'
     | '/account'
-    | '/foundations'
-    | '/modals'
-    | '/more'
-    | '/papers'
-    | '/phone'
-    | '/screens'
+    | '/bank'
+    | '/gigs'
+    | '/payouts'
+    | '/places'
+    | '/report'
+    | '/schedule'
+    | '/shifts'
+    | '/stats'
+    | '/wrapped'
+    | '/kit/modals'
+    | '/kit/phone'
+    | '/kit/states'
+    | '/'
+    | '/kit'
   id:
     | '__root__'
-    | '/'
-    | '/account'
-    | '/foundations'
-    | '/modals'
-    | '/more'
-    | '/papers'
-    | '/phone'
-    | '/screens'
+    | '/_app'
+    | '/join'
+    | '/kit'
+    | '/login'
+    | '/_app/account'
+    | '/_app/bank'
+    | '/_app/gigs'
+    | '/_app/payouts'
+    | '/_app/places'
+    | '/_app/report'
+    | '/_app/schedule'
+    | '/_app/shifts'
+    | '/_app/stats'
+    | '/_app/wrapped'
+    | '/kit/modals'
+    | '/kit/phone'
+    | '/kit/states'
+    | '/_app/'
+    | '/kit/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  AccountRoute: typeof AccountRoute
-  FoundationsRoute: typeof FoundationsRoute
-  ModalsRoute: typeof ModalsRoute
-  MoreRoute: typeof MoreRoute
-  PapersRoute: typeof PapersRoute
-  PhoneRoute: typeof PhoneRoute
-  ScreensRoute: typeof ScreensRoute
+  AppRoute: typeof AppRouteWithChildren
+  JoinRoute: typeof JoinRoute
+  KitRoute: typeof KitRouteWithChildren
+  LoginRoute: typeof LoginRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
+    '/_app': {
+      id: '/_app'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/join': {
+      id: '/join'
+      path: '/join'
+      fullPath: '/join'
+      preLoaderRoute: typeof JoinRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/kit': {
+      id: '/kit'
+      path: '/kit'
+      fullPath: '/kit'
+      preLoaderRoute: typeof KitRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_app/': {
+      id: '/_app/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRoute
     }
-    '/account': {
-      id: '/account'
+    '/_app/account': {
+      id: '/_app/account'
       path: '/account'
       fullPath: '/account'
-      preLoaderRoute: typeof AccountRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AppAccountRouteImport
+      parentRoute: typeof AppRoute
     }
-    '/foundations': {
-      id: '/foundations'
-      path: '/foundations'
-      fullPath: '/foundations'
-      preLoaderRoute: typeof FoundationsRouteImport
-      parentRoute: typeof rootRouteImport
+    '/_app/bank': {
+      id: '/_app/bank'
+      path: '/bank'
+      fullPath: '/bank'
+      preLoaderRoute: typeof AppBankRouteImport
+      parentRoute: typeof AppRoute
     }
-    '/modals': {
-      id: '/modals'
+    '/_app/gigs': {
+      id: '/_app/gigs'
+      path: '/gigs'
+      fullPath: '/gigs'
+      preLoaderRoute: typeof AppGigsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/payouts': {
+      id: '/_app/payouts'
+      path: '/payouts'
+      fullPath: '/payouts'
+      preLoaderRoute: typeof AppPayoutsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/places': {
+      id: '/_app/places'
+      path: '/places'
+      fullPath: '/places'
+      preLoaderRoute: typeof AppPlacesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/report': {
+      id: '/_app/report'
+      path: '/report'
+      fullPath: '/report'
+      preLoaderRoute: typeof AppReportRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/schedule': {
+      id: '/_app/schedule'
+      path: '/schedule'
+      fullPath: '/schedule'
+      preLoaderRoute: typeof AppScheduleRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/shifts': {
+      id: '/_app/shifts'
+      path: '/shifts'
+      fullPath: '/shifts'
+      preLoaderRoute: typeof AppShiftsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/stats': {
+      id: '/_app/stats'
+      path: '/stats'
+      fullPath: '/stats'
+      preLoaderRoute: typeof AppStatsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/wrapped': {
+      id: '/_app/wrapped'
+      path: '/wrapped'
+      fullPath: '/wrapped'
+      preLoaderRoute: typeof AppWrappedRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/kit/': {
+      id: '/kit/'
+      path: '/'
+      fullPath: '/kit/'
+      preLoaderRoute: typeof KitIndexRouteImport
+      parentRoute: typeof KitRoute
+    }
+    '/kit/modals': {
+      id: '/kit/modals'
       path: '/modals'
-      fullPath: '/modals'
-      preLoaderRoute: typeof ModalsRouteImport
-      parentRoute: typeof rootRouteImport
+      fullPath: '/kit/modals'
+      preLoaderRoute: typeof KitModalsRouteImport
+      parentRoute: typeof KitRoute
     }
-    '/more': {
-      id: '/more'
-      path: '/more'
-      fullPath: '/more'
-      preLoaderRoute: typeof MoreRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/papers': {
-      id: '/papers'
-      path: '/papers'
-      fullPath: '/papers'
-      preLoaderRoute: typeof PapersRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/phone': {
-      id: '/phone'
+    '/kit/phone': {
+      id: '/kit/phone'
       path: '/phone'
-      fullPath: '/phone'
-      preLoaderRoute: typeof PhoneRouteImport
-      parentRoute: typeof rootRouteImport
+      fullPath: '/kit/phone'
+      preLoaderRoute: typeof KitPhoneRouteImport
+      parentRoute: typeof KitRoute
     }
-    '/screens': {
-      id: '/screens'
-      path: '/screens'
-      fullPath: '/screens'
-      preLoaderRoute: typeof ScreensRouteImport
-      parentRoute: typeof rootRouteImport
+    '/kit/states': {
+      id: '/kit/states'
+      path: '/states'
+      fullPath: '/kit/states'
+      preLoaderRoute: typeof KitStatesRouteImport
+      parentRoute: typeof KitRoute
     }
   }
 }
 
+interface AppRouteChildren {
+  AppAccountRoute: typeof AppAccountRoute
+  AppBankRoute: typeof AppBankRoute
+  AppGigsRoute: typeof AppGigsRoute
+  AppPayoutsRoute: typeof AppPayoutsRoute
+  AppPlacesRoute: typeof AppPlacesRoute
+  AppReportRoute: typeof AppReportRoute
+  AppScheduleRoute: typeof AppScheduleRoute
+  AppShiftsRoute: typeof AppShiftsRoute
+  AppStatsRoute: typeof AppStatsRoute
+  AppWrappedRoute: typeof AppWrappedRoute
+  AppIndexRoute: typeof AppIndexRoute
+}
+
+const AppRouteChildren: AppRouteChildren = {
+  AppAccountRoute: AppAccountRoute,
+  AppBankRoute: AppBankRoute,
+  AppGigsRoute: AppGigsRoute,
+  AppPayoutsRoute: AppPayoutsRoute,
+  AppPlacesRoute: AppPlacesRoute,
+  AppReportRoute: AppReportRoute,
+  AppScheduleRoute: AppScheduleRoute,
+  AppShiftsRoute: AppShiftsRoute,
+  AppStatsRoute: AppStatsRoute,
+  AppWrappedRoute: AppWrappedRoute,
+  AppIndexRoute: AppIndexRoute,
+}
+
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
+
+interface KitRouteChildren {
+  KitModalsRoute: typeof KitModalsRoute
+  KitPhoneRoute: typeof KitPhoneRoute
+  KitStatesRoute: typeof KitStatesRoute
+  KitIndexRoute: typeof KitIndexRoute
+}
+
+const KitRouteChildren: KitRouteChildren = {
+  KitModalsRoute: KitModalsRoute,
+  KitPhoneRoute: KitPhoneRoute,
+  KitStatesRoute: KitStatesRoute,
+  KitIndexRoute: KitIndexRoute,
+}
+
+const KitRouteWithChildren = KitRoute._addFileChildren(KitRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  AccountRoute: AccountRoute,
-  FoundationsRoute: FoundationsRoute,
-  ModalsRoute: ModalsRoute,
-  MoreRoute: MoreRoute,
-  PapersRoute: PapersRoute,
-  PhoneRoute: PhoneRoute,
-  ScreensRoute: ScreensRoute,
+  AppRoute: AppRouteWithChildren,
+  JoinRoute: JoinRoute,
+  KitRoute: KitRouteWithChildren,
+  LoginRoute: LoginRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -173,4 +173,4 @@ function Foundations() {
   );
 }
 
-export const Route = createFileRoute('/foundations')({ component: Foundations });
+export const Route = createFileRoute('/kit/')({ component: Foundations });

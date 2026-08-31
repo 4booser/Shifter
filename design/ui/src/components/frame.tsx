@@ -1,66 +1,11 @@
 import { ReactNode } from 'react';
 
-import { ME } from '@/mock/data';
-import { cn } from '@/lib/utils';
-
 /**
- * Окно приложения, в котором показывают экран.
+ * Подпись над образцом в дизайн-системе: что это и зачем оно такое.
  *
- * Навигация нарисованная: ссылки никуда не ведут, потому что это макет. Одна
- * вкладка подсвечена, чтобы было видно, где мы находимся.
+ * Живёт только в `/kit` — на самом сайте подписывать нечего, там всё уже
+ * называет себя само.
  */
-const TABS = ['Календарь', 'Смены', 'Места', 'График', 'Подработки', 'Выплаты', 'Банк', 'Год'];
-
-export function Frame({
-  tab,
-  live,
-  children,
-}: {
-  tab: string;
-  /** Идущая смена в шапке: она есть не всегда, и это видно. */
-  live?: string;
-  children: ReactNode;
-}) {
-  return (
-    <div className="overflow-hidden rounded-[20px] border border-paper/17 bg-night">
-      <header className="flex h-15 items-center gap-5 border-b border-paper/9 px-6 py-3.5">
-        <span className="text-base font-extrabold tracking-[-0.04em] whitespace-nowrap">
-          Shifter<span className="text-brass">.</span>
-        </span>
-
-        <nav className="flex min-w-0 gap-0.5 overflow-hidden">
-          {TABS.map((one) => (
-            <span
-              key={one}
-              className={cn(
-                'flex-none rounded-lg px-3 py-1.5 text-sm whitespace-nowrap',
-                one === tab ? 'bg-brass font-semibold text-night' : 'text-faint',
-              )}
-            >
-              {one}
-            </span>
-          ))}
-        </nav>
-
-        <span className="ml-auto flex items-center gap-4">
-          {live !== undefined && (
-            <span className="flex items-center gap-2 font-mono text-xs whitespace-nowrap text-brass-lit">
-              <span className="size-1.5 flex-none rounded-full bg-brass" />
-              {live}
-            </span>
-          )}
-          <span className="grid size-8 flex-none place-items-center rounded-full border border-paper/17 text-xs text-dim">
-            {ME.initials}
-          </span>
-        </span>
-      </header>
-
-      <div className="flex flex-col gap-6 px-6 py-6">{children}</div>
-    </div>
-  );
-}
-
-/** Подпись над макетом: что это за поверхность и зачем она такая. */
 export function Plate({
   title,
   path,

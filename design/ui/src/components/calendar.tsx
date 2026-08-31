@@ -13,7 +13,7 @@ const DOW = ['ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ', 'ВС'];
 export function Month({ picked = 31 }: { picked?: number }) {
   return (
     <div>
-      <div className="grid grid-cols-7 gap-2 px-2 pb-2">
+      <div className="grid grid-cols-7 gap-1 px-1 pb-2 sm:gap-2 sm:px-2">
         {DOW.map((name, index) => (
           <span
             key={name}
@@ -24,12 +24,12 @@ export function Month({ picked = 31 }: { picked?: number }) {
         ))}
       </div>
 
-      <div className="grid grid-cols-7 gap-2">
+      <div className="grid grid-cols-7 gap-1 sm:gap-2">
         {MONTH.map((day, index) => (
           <div
             key={`${day.n}-${index}`}
             className={cn(
-              'flex min-h-24 flex-col gap-1.5 rounded-xl border p-2.5',
+              'flex min-h-16 flex-col gap-1.5 rounded-xl border p-1.5 sm:min-h-24 sm:p-2.5',
               day.blank ? 'border-transparent' : 'border-transparent bg-deep',
               day.today && 'border-brass',
               !day.blank && day.n === picked && !day.today && 'border-paper/17',
@@ -48,19 +48,28 @@ export function Month({ picked = 31 }: { picked?: number }) {
             {day.what !== undefined && (
               <span className="flex items-center gap-1.5 text-xs text-dim">
                 <span className="h-3.5 w-[3px] flex-none rounded-sm bg-brass" />
-                {day.what}
+                {/* На ширине пальца от названия остаётся «Ве…» — метка говорит
+                    то же самое, а что именно за смена, скажет панель дня. */}
+                <span className="hidden truncate sm:inline">{day.what}</span>
               </span>
             )}
 
             {day.event !== undefined && (
               <span className="flex items-center gap-1.5 text-xs text-faint">
                 <span className="h-3.5 w-[3px] flex-none rounded-sm bg-edge-firm" />
-                {day.event}
+                <span className="hidden truncate sm:inline">{day.event}</span>
               </span>
             )}
 
             {day.amount !== undefined && (
-              <span className="mt-auto font-mono text-sm text-money tabular">{day.amount}</span>
+              <span className="mt-auto font-mono text-money tabular">
+                {/* «2 470» в клетку шириной в седьмую часть телефона не влезает
+                    и переносится на две строки; «2,5К» влезает. */}
+                <span className="text-2xs sm:hidden">
+                  {`${(Number(day.amount.replace(/\s/g, '')) / 1000).toFixed(1).replace('.', ',')}К`}
+                </span>
+                <span className="hidden text-sm sm:inline">{day.amount}</span>
+              </span>
             )}
           </div>
         ))}

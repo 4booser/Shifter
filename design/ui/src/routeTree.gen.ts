@@ -16,6 +16,8 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppAccountRouteImport } from './routes/_app/account'
 import { Route as AppBankRouteImport } from './routes/_app/bank'
+import { Route as AppCompareRouteImport } from './routes/_app/compare'
+import { Route as AppCostsRouteImport } from './routes/_app/costs'
 import { Route as AppGigsRouteImport } from './routes/_app/gigs'
 import { Route as AppPayoutsRouteImport } from './routes/_app/payouts'
 import { Route as AppPlacesRouteImport } from './routes/_app/places'
@@ -23,6 +25,7 @@ import { Route as AppReportRouteImport } from './routes/_app/report'
 import { Route as AppScheduleRouteImport } from './routes/_app/schedule'
 import { Route as AppShiftsRouteImport } from './routes/_app/shifts'
 import { Route as AppStatsRouteImport } from './routes/_app/stats'
+import { Route as AppTeamRouteImport } from './routes/_app/team'
 import { Route as AppWrappedRouteImport } from './routes/_app/wrapped'
 import { Route as KitIndexRouteImport } from './routes/kit/index'
 import { Route as KitModalsRouteImport } from './routes/kit/modals'
@@ -63,6 +66,16 @@ const AppBankRoute = AppBankRouteImport.update({
   path: '/bank',
   getParentRoute: () => AppRoute,
 } as any)
+const AppCompareRoute = AppCompareRouteImport.update({
+  id: '/compare',
+  path: '/compare',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCostsRoute = AppCostsRouteImport.update({
+  id: '/costs',
+  path: '/costs',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppGigsRoute = AppGigsRouteImport.update({
   id: '/gigs',
   path: '/gigs',
@@ -98,6 +111,11 @@ const AppStatsRoute = AppStatsRouteImport.update({
   path: '/stats',
   getParentRoute: () => AppRoute,
 } as any)
+const AppTeamRoute = AppTeamRouteImport.update({
+  id: '/team',
+  path: '/team',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppWrappedRoute = AppWrappedRouteImport.update({
   id: '/wrapped',
   path: '/wrapped',
@@ -131,6 +149,8 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/account': typeof AppAccountRoute
   '/bank': typeof AppBankRoute
+  '/compare': typeof AppCompareRoute
+  '/costs': typeof AppCostsRoute
   '/gigs': typeof AppGigsRoute
   '/payouts': typeof AppPayoutsRoute
   '/places': typeof AppPlacesRoute
@@ -138,6 +158,7 @@ export interface FileRoutesByFullPath {
   '/schedule': typeof AppScheduleRoute
   '/shifts': typeof AppShiftsRoute
   '/stats': typeof AppStatsRoute
+  '/team': typeof AppTeamRoute
   '/wrapped': typeof AppWrappedRoute
   '/kit/modals': typeof KitModalsRoute
   '/kit/phone': typeof KitPhoneRoute
@@ -149,6 +170,8 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/account': typeof AppAccountRoute
   '/bank': typeof AppBankRoute
+  '/compare': typeof AppCompareRoute
+  '/costs': typeof AppCostsRoute
   '/gigs': typeof AppGigsRoute
   '/payouts': typeof AppPayoutsRoute
   '/places': typeof AppPlacesRoute
@@ -156,6 +179,7 @@ export interface FileRoutesByTo {
   '/schedule': typeof AppScheduleRoute
   '/shifts': typeof AppShiftsRoute
   '/stats': typeof AppStatsRoute
+  '/team': typeof AppTeamRoute
   '/wrapped': typeof AppWrappedRoute
   '/kit/modals': typeof KitModalsRoute
   '/kit/phone': typeof KitPhoneRoute
@@ -171,6 +195,8 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/_app/account': typeof AppAccountRoute
   '/_app/bank': typeof AppBankRoute
+  '/_app/compare': typeof AppCompareRoute
+  '/_app/costs': typeof AppCostsRoute
   '/_app/gigs': typeof AppGigsRoute
   '/_app/payouts': typeof AppPayoutsRoute
   '/_app/places': typeof AppPlacesRoute
@@ -178,6 +204,7 @@ export interface FileRoutesById {
   '/_app/schedule': typeof AppScheduleRoute
   '/_app/shifts': typeof AppShiftsRoute
   '/_app/stats': typeof AppStatsRoute
+  '/_app/team': typeof AppTeamRoute
   '/_app/wrapped': typeof AppWrappedRoute
   '/kit/modals': typeof KitModalsRoute
   '/kit/phone': typeof KitPhoneRoute
@@ -194,6 +221,8 @@ export interface FileRouteTypes {
     | '/login'
     | '/account'
     | '/bank'
+    | '/compare'
+    | '/costs'
     | '/gigs'
     | '/payouts'
     | '/places'
@@ -201,6 +230,7 @@ export interface FileRouteTypes {
     | '/schedule'
     | '/shifts'
     | '/stats'
+    | '/team'
     | '/wrapped'
     | '/kit/modals'
     | '/kit/phone'
@@ -212,6 +242,8 @@ export interface FileRouteTypes {
     | '/login'
     | '/account'
     | '/bank'
+    | '/compare'
+    | '/costs'
     | '/gigs'
     | '/payouts'
     | '/places'
@@ -219,6 +251,7 @@ export interface FileRouteTypes {
     | '/schedule'
     | '/shifts'
     | '/stats'
+    | '/team'
     | '/wrapped'
     | '/kit/modals'
     | '/kit/phone'
@@ -233,6 +266,8 @@ export interface FileRouteTypes {
     | '/login'
     | '/_app/account'
     | '/_app/bank'
+    | '/_app/compare'
+    | '/_app/costs'
     | '/_app/gigs'
     | '/_app/payouts'
     | '/_app/places'
@@ -240,6 +275,7 @@ export interface FileRouteTypes {
     | '/_app/schedule'
     | '/_app/shifts'
     | '/_app/stats'
+    | '/_app/team'
     | '/_app/wrapped'
     | '/kit/modals'
     | '/kit/phone'
@@ -306,6 +342,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppBankRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/compare': {
+      id: '/_app/compare'
+      path: '/compare'
+      fullPath: '/compare'
+      preLoaderRoute: typeof AppCompareRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/costs': {
+      id: '/_app/costs'
+      path: '/costs'
+      fullPath: '/costs'
+      preLoaderRoute: typeof AppCostsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/gigs': {
       id: '/_app/gigs'
       path: '/gigs'
@@ -355,6 +405,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppStatsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/team': {
+      id: '/_app/team'
+      path: '/team'
+      fullPath: '/team'
+      preLoaderRoute: typeof AppTeamRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/wrapped': {
       id: '/_app/wrapped'
       path: '/wrapped'
@@ -396,6 +453,8 @@ declare module '@tanstack/react-router' {
 interface AppRouteChildren {
   AppAccountRoute: typeof AppAccountRoute
   AppBankRoute: typeof AppBankRoute
+  AppCompareRoute: typeof AppCompareRoute
+  AppCostsRoute: typeof AppCostsRoute
   AppGigsRoute: typeof AppGigsRoute
   AppPayoutsRoute: typeof AppPayoutsRoute
   AppPlacesRoute: typeof AppPlacesRoute
@@ -403,6 +462,7 @@ interface AppRouteChildren {
   AppScheduleRoute: typeof AppScheduleRoute
   AppShiftsRoute: typeof AppShiftsRoute
   AppStatsRoute: typeof AppStatsRoute
+  AppTeamRoute: typeof AppTeamRoute
   AppWrappedRoute: typeof AppWrappedRoute
   AppIndexRoute: typeof AppIndexRoute
 }
@@ -410,6 +470,8 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppAccountRoute: AppAccountRoute,
   AppBankRoute: AppBankRoute,
+  AppCompareRoute: AppCompareRoute,
+  AppCostsRoute: AppCostsRoute,
   AppGigsRoute: AppGigsRoute,
   AppPayoutsRoute: AppPayoutsRoute,
   AppPlacesRoute: AppPlacesRoute,
@@ -417,6 +479,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppScheduleRoute: AppScheduleRoute,
   AppShiftsRoute: AppShiftsRoute,
   AppStatsRoute: AppStatsRoute,
+  AppTeamRoute: AppTeamRoute,
   AppWrappedRoute: AppWrappedRoute,
   AppIndexRoute: AppIndexRoute,
 }

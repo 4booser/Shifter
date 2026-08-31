@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, Outlet, createFileRoute, useRouterState } from '@tanstack/react-router';
-import { Play, Square } from 'lucide-react';
+import { MoreHorizontal, Play, Square } from 'lucide-react';
 
 import { ME } from '@/mock/data';
 import { cn } from '@/lib/utils';
@@ -24,9 +24,18 @@ const NAV = [
   { to: '/wrapped', label: 'Год' },
 ] as const;
 
+/** То, что открывают раз в месяц: в верхней строке ему места нет. */
+const MORE = [
+  { to: '/report', label: 'Отчёт за месяц' },
+  { to: '/compare', label: 'Сравнить периоды' },
+  { to: '/costs', label: 'Что работа стоила' },
+  { to: '/team', label: 'Команда' },
+] as const;
+
 function Shell() {
   const path = useRouterState({ select: (state) => state.location.pathname });
   const [live, setLive] = useState(true);
+  const [more, setMore] = useState(false);
 
   return (
     <div className="min-h-dvh">
@@ -55,17 +64,57 @@ function Shell() {
             })}
           </nav>
 
-          <Link
-            to="/account"
-            className={cn(
-              'grid size-8 flex-none place-items-center rounded-full border text-xs transition-colors',
-              path.startsWith('/account')
-                ? 'border-brass text-brass'
-                : 'border-paper/17 text-dim hover:text-paper',
+          <span className="relative flex flex-none items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setMore((was) => !was)}
+              className={cn(
+                'grid size-8 place-items-center rounded-full border transition-colors',
+                more ? 'border-brass text-brass' : 'border-paper/17 text-dim hover:text-paper',
+              )}
+              aria-label="Ещё"
+            >
+              <MoreHorizontal className="size-4" />
+            </button>
+
+            <Link
+              to="/account"
+              className={cn(
+                'grid size-8 place-items-center rounded-full border text-xs transition-colors',
+                path.startsWith('/account')
+                  ? 'border-brass text-brass'
+                  : 'border-paper/17 text-dim hover:text-paper',
+              )}
+            >
+              {ME.initials}
+            </Link>
+
+            {/* Ящик для того, что открывают раз в месяц: в верхней строке оно
+                отнимало бы место у восьми вкладок, которыми пользуются каждый день. */}
+            {more && (
+              <div className="absolute top-11 right-0 z-50 w-60 rounded-[var(--radius-card)] border border-paper/17 bg-table p-2 shadow-[0_30px_70px_-25px_rgba(0,0,0,0.9)]">
+                {MORE.map((one) => (
+                  <Link
+                    key={one.to}
+                    to={one.to}
+                    onClick={() => setMore(false)}
+                    className="block rounded-lg px-3 py-2 text-sm text-dim transition-colors hover:bg-paper/5 hover:text-paper"
+                  >
+                    {one.label}
+                  </Link>
+                ))}
+                <span className="mt-1 block border-t border-paper/9 pt-1">
+                  <Link
+                    to="/kit"
+                    onClick={() => setMore(false)}
+                    className="block rounded-lg px-3 py-2 text-sm text-faint transition-colors hover:text-paper"
+                  >
+                    Дизайн-система
+                  </Link>
+                </span>
+              </div>
             )}
-          >
-            {ME.initials}
-          </Link>
+          </span>
         </div>
 
         {/* Идущая смена: держится под навигацией на всех экранах. */}

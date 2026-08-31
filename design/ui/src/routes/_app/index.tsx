@@ -41,7 +41,13 @@ function Calendar() {
         </div>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      {/* Полосой вбок на телефоне: восемь плиток в столбик — это экран
+          прокрутки между человеком и календарём, ради которого он зашёл. */}
+      <div className={cn(
+        'flex snap-x snap-mandatory gap-3 overflow-x-auto pb-1',
+        '[&>*]:w-[62%] [&>*]:flex-none [&>*]:snap-start',
+        'sm:grid sm:grid-cols-2 sm:overflow-visible sm:pb-0 sm:[&>*]:w-auto lg:grid-cols-4',
+      )}>
         {TILES.map((tile) => (
           <div key={tile.said} className="card p-4">
             <span className="lbl">{tile.said}</span>

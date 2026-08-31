@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, useColorScheme, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Press } from '@/components/motion';
@@ -31,7 +31,8 @@ interface Range {
 
 export default function ReportScreen() {
   const router = useRouter();
-  const palette = Colors.light;
+  const scheme = useColorScheme();
+  const palette = Colors[scheme === 'dark' ? 'dark' : 'light'];
   const styles = makeStyles(palette);
   const insets = useSafeAreaInsets();
 

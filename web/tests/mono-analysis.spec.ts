@@ -232,12 +232,27 @@ describe('standing charges', () => {
     expect(rows.find((row) => row.name === 'OLD THING')?.fresh).toBe(false);
   });
 
-it('drops a rhythm that stopped instead of predicting a past date', () => {
+  it('keeps a monthly charge alive while its next beat is still ahead', () => {
+    // Viewing September on the 1st: the window's edge is a month of future.
+    // Netflix last charged August 3rd — 29 days ago, right on rhythm — and
+    // must not be declared dead against September 30th.
+    const alive = monthly('NETFLIX', 199, ['2026-06-03', '2026-07-03', '2026-08-03']);
+
+    expect(recurring(alive, '2026-09-30')).toHaveLength(1);
+  });
+
+  it('drops a rhythm that stopped instead of predicting a past date', () => {
     // Three clean weekly charges, then silence for a month: the series is
     // over, and «next around 10.08» said in September is a dead row talking.
     const stopped = monthly('OLD PASS', 70, ['2026-07-20', '2026-07-27', '2026-08-03']);
+    // The rest of the statement keeps living after the series dies — that
+    // is what makes the silence readable as an ending.
+    const life = [
+      item({ day: '2026-08-14', description: 'SILPO', amount: -31_000 }),
+      item({ day: '2026-08-29', description: 'SILPO', amount: -18_500 }),
+    ];
 
-    expect(recurring(stopped, '2026-09-01')).toEqual([]);
+    expect(recurring([...stopped, ...life], '2026-09-01')).toEqual([]);
   });
 
   it('costs a month the same however often it comes round', () => {

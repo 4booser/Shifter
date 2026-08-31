@@ -173,6 +173,10 @@ export const recurring = (
   // Netflix came round like clockwork.
   const from = addDays(to, -120);
   const groups = new Map<string, { name: string; days: string[]; amounts: number[] }>();
+  // The statement's real edge. A caller viewing the current month passes a
+  // `to` that is mostly future; measuring staleness against September 30th
+  // on September 1st declared every monthly charge dead for a month.
+  let newest = from;
 
   for (const item of items) {
     if (item.amount >= 0 || item.hold) continue;
@@ -180,6 +184,8 @@ export const recurring = (
     const day = dayOf(item);
 
     if (day < from || day > to) continue;
+
+    if (day > newest) newest = day;
 
     const key = merchantKey(item.description);
 
@@ -234,7 +240,9 @@ export const recurring = (
     // A rhythm that stopped is not a standing charge with a future: the last
     // charge more than one-and-a-half beats ago means the series ended, and
     // predicting «next around» a date already past is the tell of a dead row.
-    if (daysBetween(last, to) > step * 1.5) continue;
+    const edge = newest < to ? newest : to;
+
+    if (daysBetween(last, edge) > step * 1.5) continue;
 
     found.push({
       key,

@@ -244,24 +244,30 @@ export default function BankPage() {
             </section>
             </div>
 
-            {/* ==== Row: forward-looking ==== */}
-            <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+            {/* ==== Row: forward-looking ====
+
+                Соседи справа рисуются не всегда: зарплату видно не в каждом
+                месяце, запас — только когда есть с чего его считать. В сетке с
+                жёсткой правой колонкой она всё равно занимала треть ширины, и
+                рядом с высоким прогнозом висела пустота в пол-экрана. Здесь
+                колонки считаются по числу отрисованных карточек: осталась
+                одна — она и займёт ряд. Обёртки над ними нет намеренно, иначе
+                пустой div считался бы за карточку. */}
+            <div className="cards items-start">
               {/* ==== Дожить до зарплаты: the forward-looking chart ==== */}
               <BankForecast account={account ?? null} items={mono.items} />
 
-              <div className="flex flex-col gap-4">
-                {/* ==== The wage, if one looks to have landed ==== */}
-                {/* Never inside the example: matching fictional credits
-                    against the real reconciliation would offer to record
-                    fiction into a real calendar. */}
-                {!mono.demo && <BankWage items={mono.items} />}
-                <ReserveCard
-                  account={account ?? null}
-                  items={mono.items}
-                  from={bounds.from}
-                  to={bounds.to}
-                />
-              </div>
+              {/* ==== The wage, if one looks to have landed ==== */}
+              {/* Never inside the example: matching fictional credits
+                  against the real reconciliation would offer to record
+                  fiction into a real calendar. */}
+              {!mono.demo && <BankWage items={mono.items} />}
+              <ReserveCard
+                account={account ?? null}
+                items={mono.items}
+                from={bounds.from}
+                to={bounds.to}
+              />
             </div>
 
             {/* ==== Month picker ==== */}

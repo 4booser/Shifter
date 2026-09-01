@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 
+import { todayKey } from '@/lib/calendar/calendar-date';
 import { useI18n } from '@/lib/i18n';
 import { useMoney } from '@/lib/settings/money';
 import { MonoAccount, MonoStatementItem, dayOf } from '@/lib/mono/mono';
@@ -75,8 +76,18 @@ function useSpend(items: MonoStatementItem[], from: string, to: string) {
   // show «Переводы» as a category and a bar must sum to its own list.
   const spentAll = deltas.reduce((sum, row) => sum + row.total, 0);
   const previousAll = previous.reduce((sum, row) => sum + row.total, 0);
+
+  /*
+   * Сравнивать можно только законченный отрезок.
+   *
+   * Первого числа в этом месяце один день, а в прошлом — тридцать один, и
+   * заголовок объявлял «▼ 98% к прошлому отрезку». Тратить меньше тут не
+   * заслуга и не новость: месяц просто не прожит. Пока последний день
+   * отрезка ещё впереди, процента нет.
+   */
+  const finished = to < todayKey();
   const spentDelta =
-    previousAll > 0 ? Math.round(((spentAll - previousAll) / previousAll) * 100) : null;
+    finished && previousAll > 0 ? Math.round(((spentAll - previousAll) / previousAll) * 100) : null;
 
   return {
     rules, budgets, categories, previous, deltas, totals, days, usual,

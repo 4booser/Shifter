@@ -195,7 +195,13 @@ function Stats() {
 
     // The window immediately before, same length, so "vs previous" compares
     // like with like whatever the preset.
-    const span = keysBetween(from, to).length;
+    //
+    // Same length as the part that has happened, not as the part on the
+    // calendar: counting the days still ahead put thirty finished days against
+    // two lived ones, and every headline on this page read −100% on the second
+    // of the month.
+    const lived = to > todayKey() ? todayKey() : to;
+    const span = Math.max(1, keysBetween(from, lived).length);
     const previousTo = shiftDays(from, -1);
 
     void calendarApi

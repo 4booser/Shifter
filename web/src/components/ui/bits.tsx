@@ -46,7 +46,11 @@ export function Delta({ percent, invert = false }: { percent: number | null; inv
   const rounded = Math.round(percent);
   const up = rounded > 0 !== invert && rounded !== 0;
   const down = rounded < 0 !== invert && rounded !== 0;
-  const capped = Math.min(999, Math.abs(rounded));
+  // Past a thousand per cent the figure stops being a comparison, and the cap
+  // printed «−999%» as though somebody had measured it. It reads «>999%» now,
+  // with the arrow carrying the direction the sign gave up.
+  const size = Math.abs(rounded);
+  const offScale = size >= 1000;
 
   return (
     <span
@@ -55,8 +59,8 @@ export function Delta({ percent, invert = false }: { percent: number | null; inv
       }`}
     >
       {rounded !== 0 && <Icon name={rounded > 0 ? 'arrow-up' : 'arrow-down'} size={11} />}
-      {rounded > 0 ? '+' : rounded < 0 ? '−' : ''}
-      {capped}%
+      {offScale ? '>' : rounded > 0 ? '+' : rounded < 0 ? '−' : ''}
+      {offScale ? 999 : size}%
     </span>
   );
 }

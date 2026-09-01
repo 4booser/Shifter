@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { calendarApi } from '@/lib/api/calendar';
 import { apiErrorMessage } from '@/lib/api/http';
-import { addMonths, currentMonth, keysBetween, todayKey } from '@/lib/calendar/calendar-date';
+import { addMonths, currentMonth, formatPeriod, keysBetween, todayKey } from '@/lib/calendar/calendar-date';
 import { Payout, PayPeriodRow, Reconciliation } from '@/lib/calendar/models';
 import { useI18n } from '@/lib/i18n';
 import { Shell } from '@/components/layout/shell';
@@ -27,6 +27,31 @@ import { useMono } from '@/lib/mono/store';
 import { wageCandidates } from '@/lib/mono/mono';
 
 const MONTHS_BACK = 6;
+
+/**
+ * What a square in a reliability strip is painted, and what that paint means.
+ *
+ * Five colours carried five states with nothing but a tooltip to name them,
+ * on a screen about who owes what. The strip prints a key underneath now,
+ * listing only the states the strip actually contains.
+ */
+const STRIP_TONES: { key: string; label: string; colour: string }[] = [
+  { key: 'paid', label: 'Paid', colour: 'var(--good)' },
+  { key: 'partial', label: 'Advance paid', colour: 'var(--accent)' },
+  { key: 'overdue', label: 'Late', colour: 'var(--warn)' },
+  { key: 'short', label: 'Underpaid', colour: 'var(--danger)' },
+  { key: 'other', label: 'Being worked or written off', colour: 'var(--surface-2)' },
+];
+
+function stripTone(row: PayPeriodRow): string {
+  if (row.settled !== null) return 'other';
+  if (row.status === 'paid' || row.status === 'over') return 'paid';
+  if (row.status === 'short') return 'short';
+  if (row.status === 'overdue') return 'overdue';
+  if (row.status === 'partial') return 'partial';
+
+  return 'other';
+}
 
 const STATUS_LABEL: Record<PayPeriodRow['status'], string> = {
   open: 'Being worked',
@@ -178,6 +203,12 @@ function Payouts() {
       });
   }, [periods]);
 
+  // The key names only what the strips above it actually contain.
+  const shownTones = useMemo(
+    () => new Set(reliability.flatMap((group) => group.rows.map(stripTone))),
+    [reliability],
+  );
+
   const label = (key: string) =>
     new Intl.DateTimeFormat(lang, { day: 'numeric', month: 'short' }).format(new Date(`${key}T00:00:00`));
 
@@ -317,21 +348,10 @@ function Payouts() {
                   {group.rows.map((row) => (
                     <span
                       key={row.period_from + row.stream}
-                      title={`${row.period_from} — ${t(STATUS_LABEL[row.status])}`}
+                      title={`${formatPeriod(row.period_from, row.period_to, lang)} — ${t(STATUS_LABEL[row.status])}`}
                       className="h-3.5 w-3.5 rounded"
                       style={{
-                        background:
-                          row.settled !== null
-                            ? 'var(--surface-2)'
-                            : row.status === 'paid' || row.status === 'over'
-                              ? 'var(--good)'
-                              : row.status === 'short'
-                                ? 'var(--danger)'
-                                : row.status === 'overdue'
-                                  ? 'var(--warn)'
-                                  : row.status === 'partial'
-                                    ? 'var(--accent)'
-                                    : 'var(--surface-2)',
+                        background: STRIP_TONES.find((tone) => tone.key === stripTone(row))!.colour,
                       }}
                     />
                   ))}
@@ -339,6 +359,15 @@ function Payouts() {
               </div>
             ))}
           </div>
+
+          <p className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-border pt-2.5 text-[0.76rem] text-muted">
+            {STRIP_TONES.filter((tone) => shownTones.has(tone.key)).map((tone) => (
+              <span key={tone.key} className="flex items-center gap-1.5">
+                <span className="h-2.5 w-2.5 flex-none rounded" style={{ background: tone.colour }} />
+                {t(tone.label)}
+              </span>
+            ))}
+          </p>
         </section>
       )}
 
@@ -447,7 +476,7 @@ function PeriodRow({
   relative: (row: PayPeriodRow) => string;
   streamChip: (row: { stream: PayPeriodRow['stream'] }) => string | null;
 }) {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const [menuFor, setMenuFor] = useState<string | null>(null);
   const menuHost = useRef<HTMLSpanElement>(null);
   const rowKey = `${row.location_id}:${row.period_from}:${row.stream}`;
@@ -525,9 +554,9 @@ function PeriodRow({
               row.settled !== null
                 ? 'text-muted'
                 : row.status === 'short' || row.status === 'overdue'
-                  ? 'border-danger/40 text-danger'
+                  ? 'chip-danger'
                   : row.status === 'paid' || row.status === 'over'
-                    ? 'border-good/40 text-good'
+                    ? 'chip-good'
                     : ''
             }`}
           >
@@ -545,7 +574,7 @@ function PeriodRow({
           )}
         </span>
         <span className="field-hint tabular">
-          {row.period_from} — {row.period_to} · {relative(row)}
+          {formatPeriod(row.period_from, row.period_to, lang)} · {relative(row)}
         </span>
       </span>
 

@@ -68,6 +68,30 @@ export function formatDayLabelShort(key: string, locale = 'en'): string {
 }
 
 /**
+ * A pay period as a person says it: «1 — 15 марта», «16 марта — 2 апреля».
+ *
+ * The payout list printed «2026-03-01 — 2026-03-15», which is how a database
+ * says it. The year appears only when the period is not in this one, because
+ * on a screen about money owed this month it is four characters of noise.
+ */
+export function formatPeriod(from: string, to: string, locale = 'en'): string {
+  const start = fromKey(from);
+  const end = fromKey(to);
+  const thisYear = new Date().getFullYear();
+  const dated = start.getFullYear() !== thisYear || end.getFullYear() !== thisYear;
+
+  const day = new Intl.DateTimeFormat(locale, { day: 'numeric' });
+  const dayMonth = new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short' });
+  const whole = new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', year: 'numeric' });
+
+  if (dated) return `${whole.format(start)} — ${whole.format(end)}`;
+
+  const sameMonth = start.getFullYear() === end.getFullYear() && start.getMonth() === end.getMonth();
+
+  return `${(sameMonth ? day : dayMonth).format(start)} — ${dayMonth.format(end)}`;
+}
+
+/**
  * Always six weeks, so the grid keeps its height when the month changes and
  * the layout below it does not jump.
  */

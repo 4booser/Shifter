@@ -42,7 +42,19 @@ test('the bank example walks in, shows a living month, and leaves cleanly', asyn
       ? `${now.getFullYear()}-${pad(now.getMonth() + 1)}-05`
       : `${new Date(now.getFullYear(), now.getMonth() - 1, 20).getFullYear()}-${pad(new Date(now.getFullYear(), now.getMonth() - 1, 20).getMonth() + 1)}-20`;
 
-  await page.locator(`[data-day="${wageDay}"]`).click();
+  // Между первым и четвёртым числом ближайший день зарплаты лежит в прошлом
+  // месяце, а календарь открыт на текущем — двадцатого августа в сентябрьской
+  // сетке нет, и клик ждал сорок пять секунд. Листаем назад, если клетки на
+  // экране не оказалось: раньше это валило деплой четыре дня из каждых
+  // тридцати, и валило молча — падал только e2e.
+  const cell = page.locator(`[data-day="${wageDay}"]`);
+
+  if ((await cell.count()) === 0) {
+    await page.getByRole('button', { name: 'Previous' }).first().click();
+    await expect(cell).toBeVisible({ timeout: 15_000 });
+  }
+
+  await cell.click();
   await expect(page.getByText('The card, this day')).toBeVisible();
 
   await page.getByRole('link', { name: 'Bank' }).first().click();

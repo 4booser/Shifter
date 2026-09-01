@@ -12,6 +12,7 @@ import {
   monthBounds,
   monthLabel,
   shiftDays,
+  todayKey,
 } from '@/lib/calendar/calendar-date';
 import { averagesFor, bestDay } from '@/lib/calendar/insights';
 import { CalendarDayData, DaysResponse, EMPTY_SUMMARY, placeName } from '@/lib/calendar/models';
@@ -61,6 +62,7 @@ function Report() {
 
   const [month, setMonth] = useState<YearMonth>(currentMonth());
   const [mode, setMode] = useState<'month' | 'year'>('month');
+  const [running, setRunning] = useState(false);
   const [summary, setSummary] = useState<DaysResponse>(EMPTY_SUMMARY);
   const [previous, setPrevious] = useState<DaysResponse>(EMPTY_SUMMARY);
   const [loading, setLoading] = useState(true);
@@ -75,6 +77,16 @@ function Report() {
       mode === 'month'
         ? monthBounds(firstOf(addMonths(month, -1)))
         : { from: `${month.year - 1}-01-01`, to: `${month.year - 1}-12-31` };
+
+    /*
+     * Период, который ещё не кончился, не с чем сравнивать.
+     *
+     * Первого числа в месяце один день, а в прошлом — тридцать один, и
+     * `delta` честно выдавала «−100%» шестью плитками подряд над надписью
+     * «в этом месяце ничего не записано». Падения не было: месяц просто не
+     * начался. Пока он идёт, процент не показываем и говорим почему.
+     */
+    setRunning(bounds.to >= todayKey());
 
     setLoading(true);
     void Promise.all([
@@ -347,22 +359,22 @@ function Report() {
 
       {/* ==== Hero numbers ==== */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
-        <Hero label={t('Earned')} change={delta(summary.total_earned, previous.total_earned)}>
+        <Hero label={t('Earned')} change={running ? null : delta(summary.total_earned, previous.total_earned)}>
           <CountUp value={summary.total_earned} className="text-[1.25rem] font-bold text-good" />
         </Hero>
-        <Hero label={t('Hours')} change={delta(summary.hours, previous.hours)}>
+        <Hero label={t('Hours')} change={running ? null : delta(summary.hours, previous.hours)}>
           <CountUp value={summary.hours} format={(value) => `${Math.round(value)}`} className="text-[1.25rem] font-bold" />
         </Hero>
-        <Hero label={t('Days worked')} change={delta(summary.days_worked, previous.days_worked)}>
+        <Hero label={t('Days worked')} change={running ? null : delta(summary.days_worked, previous.days_worked)}>
           <span className="text-[1.25rem] font-bold tabular">{summary.days_worked}</span>
         </Hero>
-        <Hero label={t('Per hour')} change={delta(averages.perHour, beforeAverages.perHour)}>
+        <Hero label={t('Per hour')} change={running ? null : delta(averages.perHour, beforeAverages.perHour)}>
           <Money value={averages.perHour} className="text-[1.25rem] font-bold" />
         </Hero>
-        <Hero label={t('Tips')} change={delta(summary.tips_earned, previous.tips_earned)}>
+        <Hero label={t('Tips')} change={running ? null : delta(summary.tips_earned, previous.tips_earned)}>
           <Money value={summary.tips_earned} className="text-[1.25rem] font-bold" />
         </Hero>
-        <Hero label={t('Take-home')} change={delta(summary.net_earned, previous.net_earned)}>
+        <Hero label={t('Take-home')} change={running ? null : delta(summary.net_earned, previous.net_earned)}>
           <Money value={summary.net_earned} className="text-[1.25rem] font-bold" />
         </Hero>
       </div>

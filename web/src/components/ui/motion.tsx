@@ -33,33 +33,53 @@ export function CountUp({
   const still = useReducedMotion();
   const previous = useRef(0);
 
+  /*
+   * `format` держим в ref, а не в зависимостях.
+   *
+   * Вызывающие передают его стрелкой прямо в JSX, и на каждом рендере это
+   * новая функция — эффект перезапускался постоянно. Отменённая анимация
+   * успевала дописать своё число поверх нового, и на отчёте за август
+   * «Заработано» показывало 0 ₴ при 22 отработанных днях и ₴39 638 на руки:
+   * React передавал 47 485,9, а в узел попадал ноль от прошлого месяца.
+   */
+  const shape = useRef(format);
+
+  shape.current = format;
+
   useEffect(() => {
     const node = host.current;
 
     if (node === null) return;
 
     if (still === true) {
-      node.textContent = format(value);
+      node.textContent = shape.current(value);
       previous.current = value;
 
       return;
     }
 
+    // Остановленная анимация не имеет права писать: без этого флага
+    // последний кадр отменённого прогона выигрывает гонку у актуального.
+    let live = true;
+
     const controls = animate(previous.current, value, {
       duration,
       ease: [0.22, 1, 0.36, 1],
       onUpdate: (latest) => {
-        node.textContent = format(latest);
+        if (live) node.textContent = shape.current(latest);
       },
       onComplete: () => {
-        node.textContent = format(value);
+        if (live) node.textContent = shape.current(value);
       },
     });
 
     previous.current = value;
 
-    return () => controls.stop();
-  }, [value, format, duration, still]);
+    return () => {
+      live = false;
+      controls.stop();
+    };
+  }, [value, duration, still]);
 
   // The real value is in the DOM before any animation runs, so a crawler, a
   // screen reader or a paused tab all read the truth.

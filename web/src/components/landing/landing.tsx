@@ -171,7 +171,7 @@ export function Landing() {
       style={THEMES[theme].vars as React.CSSProperties}
     >
       {/* ==== Top bar ==== */}
-      <header className="sticky top-0 z-40 border-b border-border bg-(--bg)/85 backdrop-blur-md">
+      <header className="app-chrome sticky top-0 z-40 border-b border-border bg-(--bg)/85 backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
           <span className="flex items-center gap-2 text-[1.05rem] font-extrabold tracking-tight">
             <span className="grid h-8 w-8 place-items-center rounded-[10px] bg-(--accent) text-white">S</span>

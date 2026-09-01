@@ -132,7 +132,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-dvh">
       <LiveTitle />
-      <header className="sticky top-0 z-40 border-b border-border bg-(--surface)/85 backdrop-blur-md">
+      <header className="app-chrome sticky top-0 z-40 border-b border-border bg-(--surface)/85 backdrop-blur-md">
         <div className="mx-auto flex h-14 max-w-[1440px] items-center gap-1 px-3 sm:px-5">
           <Link href="/dashboard" className="mr-2 flex items-center gap-2 font-bold tracking-tight">
             <span

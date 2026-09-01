@@ -56,7 +56,7 @@ export default function RoadmapPage() {
 
   return (
     <div ref={revealHost} className="min-h-dvh bg-(--bg) text-ink">
-      <header className="sticky top-0 z-40 border-b border-border bg-(--bg)/85 backdrop-blur-md">
+      <header className="app-chrome sticky top-0 z-40 border-b border-border bg-(--bg)/85 backdrop-blur-md">
         <div className="mx-auto flex max-w-4xl items-center gap-3 px-4 py-3">
           <Link href="/" className="flex items-center gap-2 text-[1.05rem] font-extrabold tracking-tight">
             <span className="grid h-8 w-8 place-items-center rounded-[10px] bg-(--accent) text-white">S</span>

@@ -363,10 +363,17 @@ export function SpendPlaces({
   return (
       <section className="card reveal p-4">
         <h3 className="mb-2 text-[0.98rem] font-bold">{t('Where you actually go')}</h3>
+        {/* В подсказке было только «×3» — то есть у обрезанного «Округлення
+            балансу «М…» не оставалось способа узнать, чем оно кончается.
+            Теперь там само название. */}
         <div className="flex flex-wrap gap-1.5">
           {people.slice(0, 14).map((row) => (
-            <span key={row.key} className="chip !py-1.5 text-[0.82rem]" title={`×${row.count}`}>
-              <span className="max-w-40 truncate">{row.name}</span>
+            <span
+              key={row.key}
+              className="chip !py-1.5 text-[0.82rem]"
+              title={`${row.name} · ×${row.count}`}
+            >
+              <span className="max-w-64 truncate">{row.name}</span>
               <b className="tabular"><Money value={row.total} /></b>
               {row.count > 2 && <span className="text-faint">×{row.count}</span>}
             </span>
@@ -401,16 +408,22 @@ export function SpendStanding({
         ) : (
           <div className="flex flex-col gap-1.5">
             {standing.map((row) => (
-              <div key={row.key} className="flex items-baseline justify-between gap-2 text-[0.88rem]">
-                <span className="truncate">
+              <div key={row.key} className="@container flex items-baseline justify-between gap-2 text-[0.88rem]">
+                <span className="min-w-0 flex-1 truncate" title={row.name}>
                   {row.name}
                   {row.fresh && <span className="ml-1.5 text-[0.72rem] font-bold text-(--accent)">{t('new')}</span>}
                 </span>
                 <span className="tabular flex-none">
                   <Money value={row.amount} />
                   <span className="ml-1 text-[0.72rem] text-faint">
-                    · <Money value={yearOfStanding(row.amount)} />/{t('yr')} ·{' '}
-                    {t('next around')} {row.next.slice(8)}.{row.next.slice(5, 7)}
+                    {/* Три величины справа съедали две трети строки, и от
+                        «Регулярне поповнення «Macbook»» оставалось «Регулярне
+                        поповнення…». Годовая сумма — самая необязательная из
+                        трёх и уходит первой, когда карточка узкая. */}
+                    <span className="hidden @[26rem]:inline">
+                      · <Money value={yearOfStanding(row.amount)} />/{t('yr')}
+                    </span>{' '}
+                    · {t('next around')} {row.next.slice(8)}.{row.next.slice(5, 7)}
                   </span>
                 </span>
               </div>
@@ -459,7 +472,12 @@ export function SpendOddities({
             {odd.slice(0, 6).map((row) => (
               <div key={row.item.id} className="flex items-baseline justify-between gap-2 text-[0.86rem]">
                 <span className="truncate">{row.item.description}</span>
-                <span className="tabular flex-none text-muted">{dayOf(row.item).slice(5)}</span>
+                {/* `slice(5)` давал «09-01» — обрывок ISO, который читается
+                    как «9 января». Везде в приложении дата пишется днём и
+                    месяцем; здесь теперь так же. */}
+                <span className="tabular flex-none text-muted">
+                  {dayOf(row.item).slice(8)}.{dayOf(row.item).slice(5, 7)}
+                </span>
               </div>
             ))}
           </div>
@@ -664,8 +682,20 @@ function DayRhythm({
         <p className="field-hint mt-2">
           {t('Heaviest')} — {heaviest.day.slice(8)}.{heaviest.day.slice(5, 7)},{' '}
           <b className="tabular"><Money value={heaviest.total} /></b>
+          {/* Две покупки в одном месте за день — это «Macbook ×2», а не
+              «Macbook + Macbook»: повторённое название читается как ошибка
+              вывода, а не как два похода. */}
           {heaviestSpent.length > 0 && (
-            <>: {heaviestSpent.map((item) => item.description).join(' + ')}</>
+            <>
+              :{' '}
+              {[...heaviestSpent.reduce((seen, item) => {
+                seen.set(item.description, (seen.get(item.description) ?? 0) + 1);
+
+                return seen;
+              }, new Map<string, number>())]
+                .map(([name, times]) => (times > 1 ? `${name} ×${times}` : name))
+                .join(' + ')}
+            </>
           )}
           . {t('A fact, not a reproach.')}
         </p>

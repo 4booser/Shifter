@@ -38,7 +38,16 @@ export function MonthlyFlowsCard({ items }: { items: MonoStatementItem[] }) {
   if (shown.length < 2) return null;
 
   const peak = Math.max(1, ...shown.map((row) => Math.max(row.earned, row.spent)));
-  const width = 100 / shown.length;
+  /*
+   * Ширина месяца с потолком.
+   *
+   * `100 / shown.length` на двух месяцах отдавало каждому половину карточки,
+   * и пара столбиков в тринадцать процентов ширины повисала посреди пустого
+   * поля — график выглядел недорисованным. Потолок держит колонки одного
+   * размера независимо от того, два месяца в выписке или шесть, а ряд
+   * ставится по центру.
+   */
+  const width = Math.min(100 / shown.length, 24);
 
   return (
     <section className="card reveal p-4">
@@ -79,7 +88,7 @@ export function MonthlyFlowsCard({ items }: { items: MonoStatementItem[] }) {
           </span>
         </div>
 
-        <div className="flex h-full items-end">
+        <div className="flex h-full items-end justify-center">
           {shown.map((row, index) => {
             const latest = index === shown.length - 1;
 
@@ -90,9 +99,12 @@ export function MonthlyFlowsCard({ items }: { items: MonoStatementItem[] }) {
                     className="w-full rounded-t-[3px] bg-(--good)"
                     style={{ height: `${Math.max(2, (row.earned / peak) * 92)}%`, opacity: latest ? 1 : 0.75 }}
                   />
+                  {/* Округление до тысяч в первые дни месяца превращает
+                      подпись в «+0K», и столбик выглядит сломанным, а не
+                      маленьким. Ниже тысячи пишем сумму как есть. */}
                   {latest && (
                     <span className="absolute -top-0.5 left-1/2 -translate-x-1/2 -translate-y-full text-[0.68rem] font-semibold text-good tabular">
-                      +{Math.round(row.earned / 1000)}K
+                      {row.earned >= 1000 ? `+${Math.round(row.earned / 1000)}K` : <>+<Money value={row.earned} /></>}
                     </span>
                   )}
                 </div>
@@ -103,7 +115,7 @@ export function MonthlyFlowsCard({ items }: { items: MonoStatementItem[] }) {
                   />
                   {latest && (
                     <span className="absolute -top-0.5 left-1/2 -translate-x-1/2 -translate-y-full text-[0.68rem] font-semibold text-danger tabular">
-                      −{Math.round(row.spent / 1000)}K
+                      {row.spent >= 1000 ? `−${Math.round(row.spent / 1000)}K` : <>−<Money value={row.spent} /></>}
                     </span>
                   )}
                 </div>

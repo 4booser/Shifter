@@ -31,7 +31,7 @@ public static class WorkHistory
 
         if (placed.Length == 0)
         {
-            return new WorkHistoryDto(0, 0, 0, null, null, [], []);
+            return new WorkHistoryDto(0, 0, 0, null, null, [], [], []);
         }
 
         DateOnly first = placed.Min(pair => pair.Date);
@@ -48,8 +48,12 @@ public static class WorkHistory
 
                 return new WorkHistoryPlaceDto(
                     // A place somebody has deleted still shows the work: the
-                    // history is about the person, not about the record.
-                    place?.Name ?? "—",
+                    // history is about the person, not about the record. The
+                    // name comes back empty rather than as a dash — a bare "—"
+                    // in the place column reads as a broken row, and only the
+                    // client knows how to say "no place set" in the reader's
+                    // language.
+                    place?.Name ?? string.Empty,
                     group.Min(pair => pair.Date).ToString("yyyy-MM"),
                     group.Max(pair => pair.Date).ToString("yyyy-MM"),
                     group.Count(),
@@ -75,6 +79,30 @@ public static class WorkHistory
             .Select(group => group.Key)
             .ToArray();
 
+        // Помесячно — то, что спрашивает бухгалтер и новый работодатель:
+        // сколько дней реально отстояно, во сколько часов они сложились и
+        // сколько стоил час. Итог за три года не проверить, а строку за
+        // март — можно.
+        var byMonth = placed
+            .GroupBy(pair => pair.Date.ToString("yyyy-MM"))
+            .Select(group =>
+            {
+                double hours = group.Sum(pair => pair.Entry.PaidDuration.TotalHours);
+                decimal earned = group.Sum(pair => pair.Entry.Pay);
+
+                return new WorkHistoryMonthDto(
+                    group.Key,
+                    // Дни, а не смены: двойная смена в один день — это один
+                    // отработанный день, и путать их в табеле нельзя.
+                    group.Select(pair => pair.Date).Distinct().Count(),
+                    group.Count(),
+                    Math.Round(hours, 1),
+                    withMoney ? Math.Round(earned, 0) : null,
+                    withMoney && hours > 0 ? Math.Round(earned / (decimal)hours, 0) : null);
+            })
+            .OrderByDescending(month => month.month, StringComparer.Ordinal)
+            .ToArray();
+
         return new WorkHistoryDto(
             placed.Length,
             Math.Round(placed.Sum(pair => pair.Entry.PaidDuration.TotalHours), 0),
@@ -82,7 +110,8 @@ public static class WorkHistory
             first.ToString("yyyy-MM"),
             last.ToString("yyyy-MM"),
             places,
-            roles);
+            roles,
+            byMonth);
     }
 
     /// <summary>

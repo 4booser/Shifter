@@ -96,12 +96,17 @@ export function SpendHeadline({
 }) {
   const { t } = useI18n();
   const { deltas, totals, usual, back, spentAll, spentDelta } = useSpend(items, from, to);
-  const { hideAmounts } = useMoney();
-
-  if (items.length === 0) return null;
+  // Гривна была вбита прямо здесь, а соседние карточки печатали валюту из
+  // настроек — на одном экране выходило «₴331» и «331 $» про одно и то же.
+  const { format, hideAmounts } = useMoney();
 
   const shown = deltas.slice(0, 8);
   const tail = deltas.slice(8).reduce((sum, row) => sum + row.total, 0);
+
+  // Проверять надо то, что рисуется, а не то, что загружено. Выписка за
+  // три месяца есть, а в выбранном месяце трат нет — и карточка выходила
+  // одним заголовком над пустотой, отодвигая соседей вниз.
+  if (shown.length === 0) return null;
 
   return (
     <>
@@ -111,7 +116,7 @@ export function SpendHeadline({
           <div>
             <span className="field-hint">{t('Spent over this stretch')}</span>
             <div className="tabular text-[2rem] font-extrabold leading-tight text-danger">
-              <CountUp value={spentAll} format={(v) => (hideAmounts ? '₴•••' : `₴${Math.round(v).toLocaleString('ru')}`)} />
+              <CountUp value={spentAll} format={(v) => (hideAmounts ? '•••' : format(Math.round(v)))} />
             </div>
             {spentDelta !== null && (
               <span
@@ -146,7 +151,7 @@ export function SpendHeadline({
               key={row.name}
               className="group relative h-full min-w-[6px]"
               style={{ flexGrow: row.total, flexBasis: 0, background: categoryStyle(row.name).hue }}
-              title={`${row.name} — ${hideAmounts ? '₴•••' : `₴${Math.round(row.total).toLocaleString('ru')}`}`}
+              title={`${row.name} — ${hideAmounts ? '•••' : format(Math.round(row.total))}`}
             >
               {row.total / spentAll > 0.14 && (
                 <span className="pointer-events-none absolute inset-0 grid place-items-center text-[0.7rem] font-bold text-white/95">
@@ -209,10 +214,12 @@ export function SpendCategories({
   const [limitFor, setLimitFor] = useState<string | null>(null);
   const [limitDraft, setLimitDraft] = useState('');
 
-  if (items.length === 0) return null;
-
   const shown = deltas.slice(0, 8);
   const tail = deltas.slice(8).reduce((sum, row) => sum + row.total, 0);
+
+  // Ни одной категории за период — рисовать нечего. Заголовок над пустотой
+  // хуже отсутствующей карточки.
+  if (shown.length === 0) return null;
 
   return (
       <section className="card reveal p-4">
@@ -331,7 +338,9 @@ export function SpendRhythm({
 }) {
   const { days, usual, rules } = useSpend(items, from, to);
 
-  if (items.length === 0) return null;
+  // Тот же счёт, что и у остальных: смотрим на дни периода, а не на объём
+  // загруженной выписки.
+  if (days.every((day) => day.total === 0)) return null;
 
   return <DayRhythm days={days} usual={usual} items={items} rules={rules} />;
 }
@@ -592,7 +601,7 @@ function DayRhythm({
   rules: ReturnType<typeof useMono.getState>['rules'];
 }) {
   const { t } = useI18n();
-  const { hideAmounts } = useMoney();
+  const { format, hideAmounts } = useMoney();
 
   const peak = Math.max(1, ...days.map((day) => day.total));
   const heaviest = days.reduce((best, day) => (day.total > best.total ? day : best), days[0]);
@@ -637,7 +646,7 @@ function DayRhythm({
                         : 'var(--accent)',
                   opacity: day.total === 0 ? 0.6 : day.day === heaviest?.day ? 1 : 0.78,
                 }}
-                title={`${day.day.slice(8)}.${day.day.slice(5, 7)} — ${hideAmounts ? '₴•••' : `₴${Math.round(day.total).toLocaleString('ru')}`}`}
+                title={`${day.day.slice(8)}.${day.day.slice(5, 7)} — ${hideAmounts ? '•••' : format(Math.round(day.total))}`}
               />
             );
           })}

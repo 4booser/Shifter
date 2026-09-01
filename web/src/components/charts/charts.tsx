@@ -380,17 +380,24 @@ export function Heatmap({ values, from, to }: { values: ReadonlyMap<string, numb
   return (
     <div className="relative">
       <div className="overflow-x-auto pb-1" onPointerLeave={() => setHover(null)}>
-        {/* w-max + mx-auto: a short year sits centred; a long one scrolls. */}
-        <div className="mx-auto flex w-max gap-[3px]">
+        {/* Неделя — колонка, и колонки тянутся под ширину карточки: раньше
+            здесь стояли квадраты ровно в десять пикселей, и год из двенадцати
+            недель занимал полоску в середине карточки шириной в полторы
+            тысячи. Верхняя граница держит квадрат квадратом: на трёх неделях
+            он не должен раздуться в плитку. */}
+        <div
+          className="mx-auto grid gap-[4px]"
+          style={{ gridTemplateColumns: `repeat(${weeks.length}, 16px)` }}
+        >
         {weeks.map((week, weekIndex) => (
-          <div key={weekIndex} className="fade-in flex flex-none flex-col gap-[3px]" style={{ ['--i' as string]: weekIndex % 30 }}>
+          <div key={weekIndex} className="fade-in grid gap-[4px]" style={{ ['--i' as string]: weekIndex % 30 }}>
             {week.map((cell, dayIndex) =>
               cell === null ? (
-                <span key={dayIndex} className="h-2.5 w-2.5" />
+                <span key={dayIndex} className="h-4 w-4" />
               ) : (
                 <span
                   key={cell.key}
-                  className="h-2.5 w-2.5 rounded-[3px]"
+                  className="h-4 w-4 rounded-[3px]"
                   style={{ background: LEVELS[cell.level] }}
                   onPointerEnter={() => setHover({ key: cell.key, value: cell.value })}
                 />

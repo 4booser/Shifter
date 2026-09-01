@@ -783,7 +783,7 @@ function Stats() {
       <RecordsHealthCard />
 
       {/* ==== Earnings + twelve months ==== */}
-      <div className="grid gap-3 lg:grid-cols-2">
+      <div className="cards">
         <Card title={t(buckets.grain === 'day' ? 'By day' : buckets.grain === 'week' ? 'By week' : 'By month')}>
           <ColumnChart columns={earningsColumns} ticks={earningsTicks} labelEvery={buckets.data.length > 14 ? 7 : 1} />
         </Card>
@@ -799,7 +799,7 @@ function Stats() {
       </div>
 
       {/* ==== Mix + sources ==== */}
-      <div className="grid gap-3 lg:grid-cols-2">
+      <div className="cards">
         {trendParts.filter((month) => month.shifts + month.sales + month.tips > 0).length >= 3 && (
           <Card title={t('What each month was made of')}>
             <Plot max={mixMax} height="11rem">
@@ -949,7 +949,7 @@ function Stats() {
       </div>
 
       {/* ==== Waterfall + punchcard ==== */}
-      <div className="grid gap-3 lg:grid-cols-2">
+      <div className="cards">
         {waterfallSteps.length > 0 && (
           <Card title={t('How the money assembled')} hint={t('Every source in one bar; the cuts hang under it.')}>
             <MoneyFlow steps={waterfallSteps} />
@@ -1068,7 +1068,7 @@ function Stats() {
       </Card>
 
       {/* ==== Tips split + best day + overtime ==== */}
-      <div className="grid gap-3 md:grid-cols-3">
+      <div className="cards-tight">
         {tipsSplit !== null && (
           <Card title={t('Tips: cash against card')}>
             <div className="mb-2 flex h-4 gap-[2px] overflow-hidden rounded-full">
@@ -1241,8 +1241,11 @@ function Card({
   action?: React.ReactNode;
   children: React.ReactNode;
 }) {
+  // Колонка, а не просто блок: соседи в ряду растягивают карточку по самому
+  // высокому, и невысокий график оставлял под собой пустое поле в полкарточки.
+  // Теперь содержимое занимает остаток и стоит по центру этого остатка.
   return (
-    <section className="card reveal p-4">
+    <section className="card reveal flex flex-col p-4">
       <header className="mb-2.5 flex items-baseline justify-between gap-2">
         <div>
           <h2 className="text-[0.98rem] font-bold">{title}</h2>
@@ -1250,7 +1253,7 @@ function Card({
         </div>
         {action}
       </header>
-      {children}
+      <div className="flex flex-1 flex-col justify-center">{children}</div>
     </section>
   );
 }

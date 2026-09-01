@@ -687,6 +687,18 @@ export interface WorkHistoryPlace {
   currency: string;
 }
 
+export interface WorkHistoryMonth {
+  /** yyyy-MM. */
+  month: string;
+  /** Календарных дней, в которые была хотя бы одна отработанная смена. */
+  days: number;
+  shifts: number;
+  hours: number;
+  /** Null, пока деньги не показаны. */
+  earned: number | null;
+  per_hour: number | null;
+}
+
 export interface WorkHistory {
   shifts: number;
   hours: number;
@@ -697,6 +709,8 @@ export interface WorkHistory {
   places: WorkHistoryPlace[];
   /** The shift names worked most — the nearest thing here to a job title. */
   roles: string[];
+  /** Помесячно, свежие сверху — то, что спрашивает бухгалтер. */
+  by_month: WorkHistoryMonth[];
 }
 
 export interface Payout {

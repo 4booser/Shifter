@@ -74,29 +74,44 @@ export function YearHeat() {
         {t('Colour is the earnings quartile among the paid days. An empty cell is a day without a record — that is not a zero.')}
       </p>
 
+      {/* Клетка была ровно одиннадцать пикселей, и полсотни недель занимали
+          семьсот из тысячи девятисот — половина карточки уходила в пустоту.
+          Теперь неделя — доля ширины, с потолком, чтобы квадрат оставался
+          квадратом на коротком годе. Подписи месяцев тоже в долях: пиксельный
+          отступ разъехался бы с первой же растяжкой. */}
       <div ref={strip} className="mt-3 overflow-x-auto pb-1">
-        <div className="min-w-fit">
-          <div className="relative ml-8 h-4 text-[0.62rem] text-faint" style={{ width: grid.weeks.length * 14 }}>
+        <div>
+          <div className="relative ml-8 h-4 text-[0.62rem] text-faint">
             {grid.months.map((month) => (
               <span
                 key={`${month.index}-${month.label}`}
                 className="absolute top-0 whitespace-nowrap"
-                style={{ left: month.index * 14 }}
+                style={{ left: `${(month.index / Math.max(1, grid.weeks.length)) * 100}%` }}
               >
                 {monthName(month.label)}
               </span>
             ))}
           </div>
 
-          <div className="mt-1 flex gap-[3px]">
-            <div className="flex w-8 flex-col gap-[3px] pr-1 text-right text-[0.62rem] text-faint">
+          <div className="mt-1 flex items-start gap-[3px]">
+            <div className="flex w-8 flex-col gap-[4px] pr-1 text-right text-[0.62rem] text-faint">
               {[t('Mon'), '', t('Wed'), '', t('Fri'), '', ''].map((label, row) => (
-                <div key={row} className="h-[11px] leading-[11px]">{label}</div>
+                <div key={row} className="h-4 leading-4">{label}</div>
               ))}
             </div>
 
+            {/* Шестнадцать пикселей вместо одиннадцати: полсотни недель
+                занимают тысячу с небольшим и заполняют карточку, а не жмутся
+                в семьсот. Размер задан жёстко и обеим сторонам сразу —
+                `aspect-square` брал высоту у растянутой строки и раздувал
+                клетку до двадцати шести, так что соседние сливались в
+                сплошные полосы. Узкий экран прокручивает, как и прежде. */}
+            <div
+              className="grid gap-[4px]"
+              style={{ gridTemplateColumns: `repeat(${grid.weeks.length}, 16px)` }}
+            >
             {grid.weeks.map((week, index) => (
-              <div key={index} className="flex shrink-0 flex-col gap-[3px]">
+              <div key={index} className="grid gap-[4px]">
                 {week.map((cell) => (
                   <button
                     key={cell.date}
@@ -114,7 +129,7 @@ export function YearHeat() {
                       calendarActions.select(cell.date);
                       router.push('/dashboard');
                     }}
-                    className="h-[11px] w-[11px] rounded-[3px] border"
+                    className="h-4 w-4 rounded-[3px] border"
                     style={
                       cell.level === null
                         ? { borderColor: 'var(--border)', background: 'transparent' }
@@ -127,6 +142,7 @@ export function YearHeat() {
                 ))}
               </div>
             ))}
+            </div>
           </div>
         </div>
       </div>

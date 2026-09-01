@@ -730,7 +730,12 @@ export function MonthGrid({
                 aria-selected={picked || selected}
                 data-day={day.key}
                 tabIndex={selected ? 0 : -1}
-                className={`group cell-in relative flex min-h-[4.6rem] flex-col gap-0.5 overflow-hidden rounded-(--radius) border p-1 text-left transition-all sm:min-h-(--cell-min) sm:p-(--pad-cell) ${
+                /* @container: содержимое меряется шириной клетки, а не окна.
+                   Время пряталось по `sm:` — по ширине экрана, — и на широком
+                   мониторе лезло в клетку шириной в девяносто пикселей: там
+                   «13:00–23:00» переносилось на две строки, а название смены
+                   ужималось до «Вых…». */
+                className={`group cell-in @container relative flex min-h-[4.6rem] flex-col gap-0.5 overflow-hidden rounded-(--radius) border p-1 text-left transition-all sm:min-h-(--cell-min) sm:p-(--pad-cell) ${
                   day.inCurrentMonth ? '' : 'opacity-45'
                 } ${dragged ? 'scale-[0.97] border-(--accent) ring-2 ring-(--ring)' : picked ? 'border-(--accent) bg-(--accent-soft)' : selected ? 'ring-pulse border-(--accent)' : 'border-transparent hover:border-border-strong'} ${
                   painting ? 'cursor-crosshair' : ''
@@ -783,7 +788,7 @@ export function MonthGrid({
                   {extras(day.key) && <span className="text-[0.6rem] tracking-tighter text-faint">•••</span>}
 
                   {hours > 0 && (
-                    <span className="ml-auto hidden text-[0.66rem] font-medium text-muted tabular sm:inline">
+                    <span className="ml-auto hidden text-[0.66rem] font-medium text-muted tabular @[5rem]:inline">
                       {round1(hours)}h
                     </span>
                   )}
@@ -888,7 +893,9 @@ function CellMark({
       >
         <span>{entry.symbol}</span>
         {showName && <span className="truncate">{entry.name}</span>}
-        {entry.time && <span className="ml-auto hidden opacity-80 sm:inline">{entry.time}</span>}
+        {entry.time && (
+          <span className="ml-auto hidden flex-none whitespace-nowrap opacity-80 @[9rem]:inline">{entry.time}</span>
+        )}
       </span>
     );
   }
@@ -901,7 +908,9 @@ function CellMark({
       >
         <span className="h-1.5 w-1.5 flex-none rounded-full" style={{ background: colour }} />
         {showName && <span className="truncate">{entry.name}</span>}
-        {entry.time && <span className="hidden text-faint sm:inline">{entry.time}</span>}
+        {entry.time && (
+          <span className="hidden flex-none whitespace-nowrap text-faint @[9rem]:inline">{entry.time}</span>
+        )}
       </span>
     );
   }
@@ -925,7 +934,9 @@ function CellMark({
         {entry.symbol}
       </span>
       {showName && <span className="truncate">{entry.name}</span>}
-      {entry.time && <span className="ml-auto hidden text-faint sm:inline">{entry.time}</span>}
+      {entry.time && (
+        <span className="ml-auto hidden flex-none whitespace-nowrap text-faint @[9rem]:inline">{entry.time}</span>
+      )}
     </span>
   );
 }

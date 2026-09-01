@@ -120,7 +120,9 @@ function Cv() {
                   key={`${place.name}-${place.from}`}
                   className="flex flex-wrap items-baseline gap-x-3 gap-y-1 border-b border-border pb-2 last:border-0"
                 >
-                  <span className="text-[1rem] font-bold">{place.name}</span>
+                  <span className={`text-[1rem] font-bold ${place.name === '' ? 'text-muted' : ''}`}>
+                    {place.name === '' ? t('No place set') : place.name}
+                  </span>
                   <span className="field-hint tabular">
                     {said(place.from)} — {said(place.to)}
                   </span>
@@ -138,6 +140,79 @@ function Cv() {
               ))}
             </ul>
           </section>
+
+          {/* ==== Помесячно: то, ради чего этот лист и распечатывают ====
+
+              Четыре круглых числа за три года никто не проверит и потому
+              никто им и не верит. Табель по месяцам проверяется строкой:
+              вот март, вот двадцать один отработанный день, вот сто
+              шестьдесят часов, вот сколько стоил час. */}
+          {history.by_month.length > 0 && (
+            <section className="card reveal p-4">
+              <h2 className="mb-1 text-[0.98rem] font-bold">{t('Month by month')}</h2>
+              <p className="field-hint mb-2.5">
+                {t('Days actually stood, the hours they came to, and what an hour was worth.')}
+              </p>
+
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[34rem] border-collapse text-[0.88rem]">
+                  <thead>
+                    <tr className="text-[0.72rem] tracking-wide text-faint uppercase">
+                      <th className="py-1.5 text-left font-medium">{t('Month')}</th>
+                      <th className="py-1.5 text-right font-medium">{t('Days worked')}</th>
+                      <th className="py-1.5 text-right font-medium">{t('Shifts')}</th>
+                      <th className="py-1.5 text-right font-medium">{t('Hours')}</th>
+                      {money && <th className="py-1.5 text-right font-medium">{t('Per hour')}</th>}
+                      {money && <th className="py-1.5 text-right font-medium">{t('Earned')}</th>}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {history.by_month.map((row) => (
+                      <tr key={row.month} className="border-t border-border">
+                        <td className="py-1.5 whitespace-nowrap">{said(row.month)}</td>
+                        <td className="py-1.5 text-right tabular">{row.days}</td>
+                        <td className="py-1.5 text-right tabular">{row.shifts}</td>
+                        <td className="py-1.5 text-right tabular">{Math.round(row.hours)}</td>
+                        {money && (
+                          <td className="py-1.5 text-right tabular">
+                            {row.per_hour === null ? '—' : formatIn('', row.per_hour)}
+                          </td>
+                        )}
+                        {money && (
+                          <td className="py-1.5 text-right font-semibold tabular">
+                            {row.earned === null ? '—' : formatIn('', row.earned)}
+                          </td>
+                        )}
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr className="border-t-2 border-border-strong font-semibold">
+                      <td className="py-1.5">{t('Total')}</td>
+                      <td className="py-1.5 text-right tabular">
+                        {history.by_month.reduce((sum, row) => sum + row.days, 0)}
+                      </td>
+                      <td className="py-1.5 text-right tabular">{history.shifts}</td>
+                      <td className="py-1.5 text-right tabular">{Math.round(history.hours)}</td>
+                      {money && <td />}
+                      {money && (
+                        <td className="py-1.5 text-right tabular">
+                          {formatIn(
+                            '',
+                            history.by_month.reduce((sum, row) => sum + (row.earned ?? 0), 0),
+                          )}
+                        </td>
+                      )}
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+
+              <p className="field-hint mt-2.5">
+                {t('A double shift is one day worked, not two — the tally counts days and shifts apart.')}
+              </p>
+            </section>
+          )}
 
           {history.roles.length > 0 && (
             <section className="card reveal p-4">

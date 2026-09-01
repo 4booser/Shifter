@@ -254,36 +254,28 @@ export default function BankPage() {
             {/* ==== The headline and its bar, full width ==== */}
             <SpendHeadline items={mono.items} from={bounds.from} to={bounds.to} />
 
-            {/* ==== Row: categories beside the rhythm and the pace ==== */}
-            <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
-              <SpendCategories items={mono.items} from={bounds.from} to={bounds.to} hourWorth={hourWorth} />
-              <div className="flex flex-col gap-4">
-                <SpendRhythm items={mono.items} from={bounds.from} to={bounds.to} />
-                <SpendPaceCard items={mono.items} from={bounds.from} to={bounds.to} />
-              </div>
-            </div>
+            {/* ==== Всё, что разбирает месяц, — одной кладкой ====
 
-            {/* ==== Row: the months, in against out and the mix ==== */}
-            <div className="grid items-start gap-4 xl:grid-cols-2">
+                Рядами это не укладывается: карточки разной высоты и часть
+                из них в иные месяцы не рисуется вовсе, так что ряд из двух
+                постоянно оказывался рядом из одного, а рядом с ним — дыра
+                во всю его высоту. Кладка ставит следующую карточку туда,
+                где кончилась предыдущая. */}
+            <div className="deck">
+              <SpendCategories items={mono.items} from={bounds.from} to={bounds.to} hourWorth={hourWorth} />
+              <SpendRhythm items={mono.items} from={bounds.from} to={bounds.to} />
+              <SpendPaceCard items={mono.items} from={bounds.from} to={bounds.to} />
               <MonthlyFlowsCard items={mono.items} />
               <CategoryMonthsCard items={mono.items} rules={mono.rules} />
-            </div>
-
-            {/* ==== Row: places, standing, oddities ==== */}
-            <div className="grid items-start gap-4 xl:grid-cols-3">
               <SpendPlaces items={mono.items} from={bounds.from} to={bounds.to} />
               <SpendStanding items={mono.items} from={bounds.from} to={bounds.to} hourWorth={hourWorth} />
               <SpendOddities items={mono.items} from={bounds.from} to={bounds.to} />
+              <BankWork items={mono.items} days={days} from={bounds.from} to={bounds.to} />
+              <BankShape items={mono.items} from={bounds.from} to={bounds.to} />
             </div>
 
             {/* ==== The rows everything above is made of ==== */}
             <StatementCard items={mono.items} from={bounds.from} to={bounds.to} />
-
-            {/* ==== Row: the work crossover beside the month's shape ==== */}
-            <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
-              <BankWork items={mono.items} days={days} from={bounds.from} to={bounds.to} />
-              <BankShape items={mono.items} from={bounds.from} to={bounds.to} />
-            </div>
           </BankLock>
         )}
       </div>

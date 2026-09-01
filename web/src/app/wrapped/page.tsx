@@ -299,7 +299,10 @@ function Wrapped() {
   ].filter((card): card is Story => card !== null);
 
   return (
-    <div ref={revealHost} className="mx-auto flex max-w-3xl flex-col gap-4">
+    /* Во всю ширину оболочки, как остальные страницы. `max-w-3xl` держал
+       годовой отчёт в колонке 768 px посреди полутора тысяч: на мониторе он
+       выглядел уже и беднее статистики, хотя рассказывает про целый год. */
+    <div ref={revealHost} className="mx-auto flex max-w-[1380px] flex-col gap-4">
       {storiesOpen && (
         <Stories
           stories={stories}
@@ -448,7 +451,7 @@ function Wrapped() {
           <MadeOf summary={summary} />
 
           {/* ==== Superlatives ==== */}
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="cards-tight">
             {best !== null && (
               <Superlative emoji="🏆" title={t('Best day')}>
                 <Money value={best.value} className="text-[1.15rem] font-bold" /> · {dayLabel(best.date)}

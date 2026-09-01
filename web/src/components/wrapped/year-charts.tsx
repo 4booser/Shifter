@@ -226,7 +226,10 @@ export function CostOfWork({
                 caption: `${row.days} ${t('d.')}`,
               }))}
               format={(value) => format(value)}
-              labelWidth="7rem"
+              // Семи ремов не хватало на «Причина не записана»: подпись
+              // обрезалась до «Причина не за…», и строка про удержание
+              // переставала говорить, за что удержали.
+              labelWidth="10rem"
             />
           </div>
         )}

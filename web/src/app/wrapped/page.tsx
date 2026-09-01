@@ -506,6 +506,14 @@ function Wrapped() {
             </Superlative>
           </div>
 
+          {/* ==== Разбор года — кладкой ====
+
+              Ниже идут карточки, половина которых в конкретном году не
+              рисуется вовсе: у кого-то не было зон, у кого-то не менялась
+              ставка. Одна под другой во всю ширину они оставляли полосы
+              пустоты; кладка ставит следующую там, где кончилась
+              предыдущая. */}
+          <div className="deck">
           {/* ==== Weekday rhythm ==== */}
           <section className="card reveal p-4">
             <h2 className="mb-2 text-[0.98rem] font-bold">{t('Weekday rhythm')}</h2>
@@ -540,6 +548,7 @@ function Wrapped() {
           />
 
           <OwedLater summary={summary} />
+          </div>
 
           {/* ==== Badges ==== */}
           <BadgeWall />

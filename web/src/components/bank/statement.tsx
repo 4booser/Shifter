@@ -147,9 +147,16 @@ export function StatementCard({
                   />
                   <span className="min-w-0 flex-1 truncate text-[0.88rem]">{item.description}</span>
                   <span className="flex-none text-[0.72rem] text-faint tabular">{time(item)}</span>
+                  {/* Кешбэк тем же форматом, что и сумма рядом. Голое «+4.00»
+                      без валюты и с двумя знаками посреди строки, где всё
+                      остальное в целых гривнах, читается как непонятная
+                      добавка к покупке, а не как возврат. */}
                   {item.cashbackAmount > 0 && (
-                    <span className="flex-none text-[0.72rem] text-good tabular">
-                      +{(item.cashbackAmount / 100).toFixed(2)}
+                    <span
+                      className="flex-none text-[0.72rem] text-good tabular"
+                      title={t('Cashback returned')}
+                    >
+                      +<Money value={fromMinor(item.cashbackAmount)} />
                     </span>
                   )}
                   <span

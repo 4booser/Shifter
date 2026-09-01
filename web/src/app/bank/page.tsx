@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { calendarApi } from '@/lib/api/calendar';
 import { CalendarDayData } from '@/lib/calendar/models';
@@ -75,6 +75,33 @@ export default function BankPage() {
 
     return { from: `${monthAt}-01`, to: `${monthAt}-${String(last).padStart(2, '0')}` };
   }, [monthAt]);
+
+  /*
+   * Первого числа «этот месяц» пуст, и весь банк — пустые карточки: выписка
+   * за три месяца загружена, а операций в текущем ещё ноль. Один раз после
+   * загрузки съезжаем на последний месяц, в котором что-то было. Дальше
+   * стрелки слушаются только человека: перепрыгивать под ним, пока он листает,
+   * — худшее, что можно сделать.
+   */
+  const settled = useRef(false);
+
+  useEffect(() => {
+    if (settled.current || mono.items.length === 0) return;
+
+    settled.current = true;
+
+    const key = (item: { time: number }) => {
+      const at = new Date(item.time * 1000);
+
+      return `${at.getFullYear()}-${String(at.getMonth() + 1).padStart(2, '0')}`;
+    };
+
+    if (mono.items.some((item) => key(item) === monthAt)) return;
+
+    const newest = mono.items.map(key).sort().at(-1);
+
+    if (newest !== undefined && newest < monthAt) setMonthAt(newest);
+  }, [mono.items, monthAt]);
 
   // The calendar's half of the crossover cards. Fetched like every other page
   // fetches days; the bank never writes to it.

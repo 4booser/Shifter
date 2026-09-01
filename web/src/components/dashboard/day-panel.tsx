@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-import { formatDayLabel, fromKey, shiftDays, todayKey, weekBounds } from '@/lib/calendar/calendar-date';
+import { formatDayLabel, formatDayLabelShort, fromKey, shiftDays, todayKey, weekBounds } from '@/lib/calendar/calendar-date';
 import { holidaysInRange } from '@/lib/calendar/holidays';
 import {
   CalendarEvent,
@@ -1243,7 +1243,7 @@ function DayContext({ dayKey }: { dayKey: string }) {
         <span className="min-w-0 truncate text-right tabular text-[0.72rem] font-normal text-faint">
           {shown.earned > 0 ? format(shown.earned) : t('nothing')}
           {' · '}
-          {formatDayLabel(shown.key, lang)}
+          {formatDayLabelShort(shown.key, lang)}
         </span>
       </h3>
 

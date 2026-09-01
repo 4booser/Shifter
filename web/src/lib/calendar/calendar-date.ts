@@ -53,6 +53,21 @@ export function formatDayLabel(key: string, locale = 'en'): string {
 }
 
 /**
+ * The same day, short: «вт, 1 сент.».
+ *
+ * The long form runs to a hundred and fifty pixels, and in a panel heading
+ * beside a sum it was being cut to «пусто · вторник, 1 сентя…». A date that
+ * ends mid-word is worse than an abbreviated one.
+ */
+export function formatDayLabelShort(key: string, locale = 'en'): string {
+  return new Intl.DateTimeFormat(locale, {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+  }).format(fromKey(key));
+}
+
+/**
  * Always six weeks, so the grid keeps its height when the month changes and
  * the layout below it does not jump.
  */

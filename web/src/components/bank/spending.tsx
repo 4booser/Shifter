@@ -147,7 +147,11 @@ export function SpendHeadline({
             </div>
             {usual > 0 && (
               <div className="text-[0.85rem]">
-                <span className="text-muted">{t('A usual day costs')}</span>{' '}
+                {/* Not «a usual day» plain: the forecast and the reserve card
+                    above both say that about a two-month habit, and this one
+                    is about the stretch on screen. Three numbers under one
+                    name on one page is how a page stops being believed. */}
+                <span className="text-muted">{t('A day in this stretch costs')}</span>{' '}
                 <b className="tabular"><Money value={usual} /></b>
               </div>
             )}

@@ -324,6 +324,28 @@ export const untilPayday = (
   };
 };
 
+/**
+ * What a day usually costs, over the two months behind a given day.
+ *
+ * The one place that stretch is decided. The forecast read it over two months
+ * and the reserve card took a median of whatever the month on screen had
+ * lived, so the same row of the bank page carried «an ordinary day costs
+ * ₴588» beside «÷ ₴532/day» — two answers to one question, a finger's width
+ * apart. Long enough to even out a heavy week, short enough to still be this
+ * person.
+ */
+export const habitualDay = (items: MonoStatementItem[], today: string): number => {
+  const [year, month, day] = today.split('-').map(Number);
+  const start = new Date(year, month - 3, day);
+  const pad = (value: number) => String(value).padStart(2, '0');
+
+  return usualDay(
+    items,
+    `${start.getFullYear()}-${pad(start.getMonth() + 1)}-${pad(start.getDate())}`,
+    today,
+  );
+};
+
 /** What a day usually costs, over the days there is a record for. */
 export const usualDay = (
   items: MonoStatementItem[],

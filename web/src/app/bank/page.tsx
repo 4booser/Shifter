@@ -253,7 +253,11 @@ export default function BankPage() {
                 колонки считаются по числу отрисованных карточек: осталась
                 одна — она и займёт ряд. Обёртки над ними нет намеренно, иначе
                 пустой div считался бы за карточку. */}
-            <div className="cards items-start">
+            {/* Not items-start: the reserve card is a fifth of the forecast's
+                height, and hugging its content left a quarter of the screen
+                dark beside it. Stretched, the same emptiness is inside a card,
+                which is breathing room rather than a hole. */}
+            <div className="cards">
               {/* ==== Дожить до зарплаты: the forward-looking chart ==== */}
               <BankForecast account={account ?? null} items={mono.items} />
 

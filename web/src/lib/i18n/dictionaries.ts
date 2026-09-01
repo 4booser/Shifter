@@ -808,8 +808,8 @@ export const RU: Dictionary = {
   'runs dry around': 'кончатся примерно',
   'thinnest around': 'тоньше всего примерно',
   'an ordinary day costs': 'обычный день стоит',
-  'A forecast, and drawn like one: known payments land on their dates, the days between cost your usual median. Nothing here is a promise.':
-    'Прогноз, и нарисован как прогноз: известные платежи ложатся на свои даты, дни между ними стоят вашу обычную медиану. Ничего здесь не обещание.',
+  'A forecast, and drawn like one: known payments land on their dates, the days between cost what a day usually costs you. Nothing here is a promise.':
+    'Прогноз, и нарисован как прогноз: известные платежи ложатся на свои даты, дни между ними стоят столько, сколько у вас обычно стоит день. Ничего здесь не обещание.',
   'Set aside about': 'Откладывайте примерно',
   'evens out to an ordinary month. Your own months moved between themselves, nothing cleverer.':
     'выравнивается до обычного месяца. Ваши же месяцы, переложенные между собой, — ничего умнее.',
@@ -2484,6 +2484,7 @@ export const RU: Dictionary = {
   'Finish': 'Завершить',
   'Finish shift': 'Завершить смену',
   'Discard shift': 'Сбросить смену',
+  'A day in this stretch costs': 'День этого отрезка стоит',
   'Being worked or written off': 'В работе или закрыто',
   'late': 'просрочки',
   'of rest': 'отдыха',
@@ -3948,8 +3949,8 @@ export const UK: Dictionary = {
   'runs dry around': 'скінчаться приблизно',
   'thinnest around': 'найтонше приблизно',
   'an ordinary day costs': 'звичайний день коштує',
-  'A forecast, and drawn like one: known payments land on their dates, the days between cost your usual median. Nothing here is a promise.':
-    'Прогноз, і намальований як прогноз: відомі платежі лягають на свої дати, дні між ними коштують вашу звичну медіану. Ніщо тут не обіцянка.',
+  'A forecast, and drawn like one: known payments land on their dates, the days between cost what a day usually costs you. Nothing here is a promise.':
+    'Прогноз, і намальований як прогноз: відомі платежі лягають на свої дати, дні між ними коштують стільки, скільки у вас зазвичай коштує день. Ніщо тут не обіцянка.',
   'Set aside about': 'Відкладайте приблизно',
   'evens out to an ordinary month. Your own months moved between themselves, nothing cleverer.':
     'вирівнюється до звичайного місяця. Ваші ж місяці, перекладені між собою, — нічого розумнішого.',
@@ -5089,6 +5090,7 @@ export const UK: Dictionary = {
   'Finish': 'Завершити',
   'Finish shift': 'Завершити зміну',
   'Discard shift': 'Скинути зміну',
+  'A day in this stretch costs': 'День цього відрізка коштує',
   'Being worked or written off': 'У роботі або закрито',
   'late': 'прострочення',
   'of rest': 'відпочинку',

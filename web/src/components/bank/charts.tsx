@@ -2,17 +2,17 @@
 
 import { useMemo } from 'react';
 
+import { todayKey } from '@/lib/calendar/calendar-date';
 import { useI18n } from '@/lib/i18n';
 import { MonoAccount, MonoStatementItem, fromMinor } from '@/lib/mono/mono';
 import { CategoryRule } from '@/lib/mono/mono-rules';
+import { habitualDay } from '@/lib/mono/mono-work';
 import { balanceCurve } from '@/lib/mono/mono-shape';
 import {
   categoryMonths,
   categoryStyle,
   cumulativeSpend,
-  dailySpend,
   monthlyFlows,
-  usualDay,
 } from '@/lib/mono/spend-viz';
 import { smoothPath } from '@/lib/charts/math';
 import { ChartTip, CrossHair, useChartHover } from '@/components/charts/hover';
@@ -394,7 +394,19 @@ export function ReserveCard({
 }) {
   const { t, n } = useI18n();
 
-  const usual = useMemo(() => usualDay(dailySpend(items, from, to)), [items, from, to]);
+  /*
+   * The same habit the forecast beside it is drawn from.
+   *
+   * This card used to take a median of whatever the month on screen had
+   * lived: on the second of September it divided the whole balance by one
+   * afternoon's coffee and announced a reserve of 3 965 days — while the card
+   * next to it named a different «ordinary day» in the same row. The balance
+   * here is today's, so the rate it is divided by has to be a settled one too.
+   */
+  const usual = useMemo(
+    () => habitualDay(items, todayKey() > to ? to : todayKey()),
+    [items, to],
+  );
 
   // The same fallback the hero uses: the curve's last point is the bank's
   // own stamped figure. Two cards on one page must not disagree about the

@@ -10,7 +10,7 @@ import { MonoAccount, MonoStatementItem, dayOf, fromMinor } from '@/lib/mono/mon
 import { recurring } from '@/lib/mono/mono-insights';
 import { smoothPath } from '@/lib/charts/math';
 import { FlowMoney } from '@/components/ui/flow';
-import { usualDay } from '@/lib/mono/mono-work';
+import { habitualDay } from '@/lib/mono/mono-work';
 import { Runway, RunwayDay, buildRunway, chargesAhead } from '@/lib/mono/runway';
 import { ChartTip, CrossHair, useChartHover } from '@/components/charts/hover';
 import { Money } from '@/components/ui/bits';
@@ -64,11 +64,8 @@ export function BankForecast({
     const now = new Date();
     const today = stamp(now);
     const tomorrow = stamp(new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1));
-    const monthAgo = stamp(new Date(now.getFullYear(), now.getMonth() - 2, now.getDate()));
 
-    // The habit, from the last two months of the statement — long enough to
-    // even out a heavy week, short enough to still be this person.
-    const perDay = usualDay(items, monthAgo, today);
+    const perDay = habitualDay(items, today);
 
     const standing = recurring(items, today);
 
@@ -295,7 +292,7 @@ export function BankForecast({
       )}
 
       <p className="field-hint px-4 pb-4">
-        {t('A forecast, and drawn like one: known payments land on their dates, the days between cost your usual median. Nothing here is a promise.')}
+        {t('A forecast, and drawn like one: known payments land on their dates, the days between cost what a day usually costs you. Nothing here is a promise.')}
       </p>
     </section>
   );

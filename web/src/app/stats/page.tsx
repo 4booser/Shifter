@@ -696,7 +696,10 @@ function Stats() {
       </div>
 
       {/* ==== Goal + cumulative ==== */}
-      <div className="grid gap-3 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+      {/* items-start: цель без заданной суммы — это одна строка подсказки, и
+          растянутая под высокий график она превращалась в обведённую рамкой
+          пустоту в треть экрана. Пусть будет своего роста. */}
+      <div className="grid items-start gap-3 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <Card
           title={t('Earned over the period')}
           hint={

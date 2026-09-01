@@ -83,14 +83,18 @@ function Account() {
       : new Intl.DateTimeFormat(lang, { year: 'numeric', month: 'long' }).format(new Date(profile.created_at));
 
   return (
-    <div ref={revealHost} className="mx-auto flex max-w-xl flex-col gap-4">
+    /* Четырнадцать карточек в колонке 576 px давали три тысячи пикселей
+       прокрутки, пока по бокам простаивало по четыреста пятьдесят. Кладка в
+       две колонки складывает ту же страницу вдвое короче; шире тысячи ста не
+       растягиваем — поля ввода во весь монитор читаются хуже, а не лучше. */
+    <div ref={revealHost} className="mx-auto flex max-w-[1100px] flex-col gap-4">
       <h1 className="text-[1.3rem] font-bold tracking-tight">{t('Account')}</h1>
 
       {error && <Alert onDismiss={() => setError(null)}>{error}</Alert>}
       {saved && <Alert kind="good" onDismiss={() => setSaved(null)}>{saved}</Alert>}
 
       {profile !== null && (
-        <>
+        <div className="deck">
           {/* ==== Who you are ==== */}
           <section className="card reveal p-4">
             <h2 className="mb-1 text-[0.98rem] font-bold">{t('Who you are')}</h2>
@@ -317,7 +321,7 @@ function Account() {
               </button>
             </div>
           </section>
-        </>
+        </div>
       )}
     </div>
   );

@@ -354,7 +354,7 @@ function BankTile() {
     <>
       <Label icon="coins">{t('Bank')}</Label>
       <span className="tile-value">
-        {balance !== null ? <FlowMoney value={Math.round(balance)} mark="₴" /> : '·'}
+        {balance !== null ? <FlowMoney value={Math.round(balance)} mark="₴" /> : '—'}
       </span>
       <span className="field-hint tabular">
         −<Money value={Math.round(spent)} /> {t('this month')}
@@ -373,7 +373,7 @@ function HourlyTile({ monthDays }: { monthDays: CalendarDayData[] }) {
     <>
       <Label icon="clock">{t('Your hour')}</Label>
       <span className="tile-value">
-        {hours > 0 ? <FlowMoney value={Math.round(earned / hours)} /> : '·'}
+        {hours > 0 ? <FlowMoney value={Math.round(earned / hours)} /> : '—'}
       </span>
       <span className="field-hint">
         {hours > 0 ? `${Math.round(hours)} ${t('h this month')}` : t('No hours yet')}
@@ -450,7 +450,7 @@ function PlannedTile({ monthDays }: { monthDays: CalendarDayData[] }) {
     <>
       <Label icon="calendar">{t('Still to come')}</Label>
       <span className="tile-value">
-        {money > 0 ? <FlowMoney value={Math.round(money)} /> : '·'}
+        {money > 0 ? <FlowMoney value={Math.round(money)} /> : '—'}
       </span>
       <span className="field-hint">
         {ahead.length > 0 ? `${n(ahead.length, 'shifts')} ${t('ahead')}` : t('Nothing planned yet')}
@@ -479,7 +479,7 @@ function PlacesTile({ monthDays }: { monthDays: CalendarDayData[] }) {
   return (
     <>
       <Label icon="business">{t('Where it comes from')}</Label>
-      <span className="tile-value truncate text-[1.15rem]">{top?.[0] ?? '·'}</span>
+      <span className="tile-value truncate text-[1.15rem]">{top?.[0] ?? '—'}</span>
       <span className="field-hint">
         {top !== undefined && total > 0
           ? `${Math.round((top[1] / total) * 100)}% ${t('of the month')}`
@@ -513,7 +513,7 @@ function WeekdayTile({ monthDays }: { monthDays: CalendarDayData[] }) {
   return (
     <>
       <Label icon="chart">{t('Best weekday')}</Label>
-      <span className="tile-value">{best === undefined ? '·' : t(names[best.weekday])}</span>
+      <span className="tile-value">{best === undefined ? '—' : t(names[best.weekday])}</span>
       <span className="field-hint">
         {best === undefined ? t('this month') : <><Money value={Math.round(best.average)} /> {t('a shift')}</>}
       </span>
@@ -531,7 +531,7 @@ function DeductionsTile({ monthDays }: { monthDays: CalendarDayData[] }) {
     <>
       <Label icon="alert">{t('Taken off')}</Label>
       <span className={`tile-value ${taken > 0 ? 'text-danger' : ''}`}>
-        {taken > 0 ? <FlowMoney value={Math.round(taken)} /> : '·'}
+        {taken > 0 ? <FlowMoney value={Math.round(taken)} /> : '—'}
       </span>
       <span className="field-hint">
         {days > 0 ? `${days} ${t('days this month')}` : t('nothing withheld')}
@@ -619,7 +619,7 @@ function RestTile({ window }: { window: CalendarDayData[] }) {
     <>
       <Label icon="moon">{t('Shortest rest')}</Label>
       <span className={`tile-value ${shortest !== null && shortest < 11 ? 'text-warn' : ''}`}>
-        {shortest === null ? '·' : `${Math.round(shortest)}${t('h')}`}
+        {shortest === null ? '—' : `${Math.round(shortest)} ${t('h')}`}
       </span>
       <span className="field-hint">
         {shortest === null ? t('nothing to compare yet') : t('between two shifts')}
@@ -925,19 +925,41 @@ function BestTile({ monthDays }: { monthDays: CalendarDayData[] }) {
   );
 }
 
+/**
+ * Часы месяца целиком, и сколько из них уже отстояно.
+ *
+ * `day.hours` — это часы смен, отмеченных отработанными. Плитка показывала
+ * только их, и первого числа месяц с двадцатью поставленными сменами читался
+ * как ноль часов: всё, что впереди, для неё не существовало. Наверху теперь
+ * весь месяц — план и факт вместе, — а строкой ниже сказано, сколько из
+ * этого уже позади.
+ *
+ * Подпись раньше считала дни, а называла их сменами: день с двумя выходами
+ * шёл за один. Считаем смены.
+ */
 function HoursTile({ monthDays }: { monthDays: CalendarDayData[] }) {
   const { t, n } = useI18n();
-  const hours = monthDays.reduce((sum, day) => sum + day.hours, 0);
-  const worked = monthDays.filter((day) => day.shifts.some((entry) => entry.worked)).length;
+  const all = monthDays.reduce(
+    (sum, day) => sum + day.shifts.reduce((inner, entry) => inner + entry.hours, 0),
+    0,
+  );
+  const done = monthDays.reduce((sum, day) => sum + day.hours, 0);
+  const shifts = monthDays.reduce(
+    (sum, day) => sum + day.shifts.filter((entry) => entry.worked).length,
+    0,
+  );
+  const round = (value: number) => value.toFixed(value % 1 === 0 ? 0 : 1);
 
   return (
     <>
       <Label icon="clock">{t('Hours')}</Label>
       <span className="tile-value">
-        <CountUp value={hours} format={(value) => value.toFixed(value % 1 === 0 ? 0 : 1)} />
+        <CountUp value={all} format={round} />
       </span>
       <span className="field-hint">
-        {n(worked, 'shifts')} {t('this month')}
+        {done < all
+          ? `${t('worked')} ${round(done)} ${t('h')} · ${n(shifts, 'shifts')}`
+          : `${n(shifts, 'shifts')} ${t('this month')}`}
       </span>
     </>
   );

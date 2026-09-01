@@ -109,8 +109,24 @@ export function BankForecast({
   const height = 150;
   const pad = { top: 18, bottom: 24 };
 
-  const low = Math.min(0, ...runway.days.map((day) => day.balance));
+  const lowest = Math.min(...runway.days.map((day) => day.balance));
   const high = Math.max(1, ...runway.days.map((day) => day.balance));
+
+  /*
+   * Ноль на оси нужен тогда, когда до него можно дойти.
+   *
+   * Ось, насильно начинающаяся с нуля, при остатке в восемьдесят тысяч и
+   * просадке до шестидесяти прижимала всю линию к верхней кромке, а под ней
+   * оставляла три четверти пустого поля. Читать там нечего: кривая выглядит
+   * прямой, хотя за месяц теряет пятую часть.
+   *
+   * Если за окно прогноза остаток не подходит к нулю, растягиваем ось по
+   * данным — и тогда обязаны подписать нижнюю отметку, иначе низ графика
+   * прочитают как ноль и решат, что деньги кончились.
+   */
+  const nearZero = lowest < high * 0.25;
+  const room = Math.max((high - lowest) * 0.35, high * 0.05);
+  const low = nearZero ? Math.min(0, lowest) : lowest - room;
   const span = Math.max(1, high - low);
 
   const x = (index: number) => (index / Math.max(1, runway.days.length - 1)) * width;
@@ -244,6 +260,15 @@ export function BankForecast({
             fill="none" stroke={crossesZero ? 'var(--danger)' : 'var(--accent)'} strokeWidth="2"
           />
         </svg>
+
+        {/* Ось не с нуля — и об этом сказано. График, у которого низ не ноль,
+            но который об этом молчит, читается как «деньги кончились». */}
+        {!crossesZero && !nearZero && (
+          <div className="flex justify-between px-4 pb-1 text-[0.68rem] text-faint">
+            <span className="tabular">{t('Bottom of the axis')}: <Money value={Math.round(low)} /></span>
+            <span>{t('zero is far below')}</span>
+          </div>
+        )}
       </div>
 
       {/* The named events under the chart, in order — the part a tooltip

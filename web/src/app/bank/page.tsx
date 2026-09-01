@@ -149,7 +149,7 @@ export default function BankPage() {
               </Alert>
             )}
             {/* ==== Row: the curve, with the accounts desk beside it ==== */}
-            <div className="grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+            <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
             <BankHero
               account={account ?? null}
               items={mono.items}
@@ -245,7 +245,7 @@ export default function BankPage() {
             </div>
 
             {/* ==== Row: forward-looking ==== */}
-            <div className="grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+            <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
               {/* ==== Дожить до зарплаты: the forward-looking chart ==== */}
               <BankForecast account={account ?? null} items={mono.items} />
 

@@ -30,7 +30,21 @@ export function InsightsPanel() {
 
   const insights = useMemo(() => {
     const today = todayKey();
-    const bounds = monthBounds(today);
+
+    /*
+     * Прогноз строится по тому месяцу, чью сводку мы держим.
+     *
+     * Раньше сюда шли границы текущего месяца, а дни — показанного: листаешь
+     * календарь в август, а темп считается по сентябрьскому окну. Дни августа
+     * все оказываются «в прошлом» относительно первого сентября, будущих дней
+     * в окне нет, и прогноз выходил около нуля — отсюда «пока на 100% ниже
+     * прошлого месяца» над месяцем с двадцатью двумя сменами.
+     *
+     * Границы теперь берутся у самой сводки; `live` внутри сам решит, есть ли
+     * ещё что прогнозировать.
+     */
+    const first = summary.days[0]?.date ?? today;
+    const bounds = monthBounds(first);
     const forecast = forecastFor(summary.days, bounds.from, bounds.to);
 
     return insightsFor({

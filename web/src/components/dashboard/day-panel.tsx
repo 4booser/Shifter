@@ -385,7 +385,7 @@ export function DayPanel() {
                     <span className="min-w-0">
                       <span className="block truncate text-[0.88rem] font-semibold">{entry.name}</span>
                       <span className="field-hint">
-                        {entry.start_time}–{entry.end_time} · {entry.hours}h · <Money value={entry.earned} />
+                        {entry.start_time}–{entry.end_time} · {entry.hours} {t('h')} · <Money value={entry.earned} />
                       </span>
                     </span>
 
@@ -1038,9 +1038,14 @@ function ActualClockRow({
   return (
     <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[0.8rem]">
       <span className="field-hint flex-none">{t('Actually')}</span>
+      {/* Начало и конец — одна величина, и переносить их порознь нельзя: в
+          панели шириной в двести тридцать пикселей «16:00 –» оставалось на
+          строке с подписью, а «02:00» уезжало вниз, и промежуток переставал
+          читаться промежутком. */}
+      <span className="flex flex-none items-center gap-1.5">
       <input
         type="time"
-        className="field-input !w-[5.6rem] !px-1.5 !py-0.5 !text-[0.8rem]"
+        className="field-input !w-[5.2rem] !px-1.5 !py-0.5 !text-[0.8rem]"
         value={start ?? entry.start_time}
         onChange={(event) => {
           if (event.target.value) {
@@ -1052,7 +1057,7 @@ function ActualClockRow({
       <span className="text-faint">–</span>
       <input
         type="time"
-        className="field-input !w-[5.6rem] !px-1.5 !py-0.5 !text-[0.8rem]"
+        className="field-input !w-[5.2rem] !px-1.5 !py-0.5 !text-[0.8rem]"
         value={end ?? entry.end_time}
         onChange={(event) => {
           if (event.target.value) {
@@ -1061,6 +1066,7 @@ function ActualClockRow({
           }
         }}
       />
+      </span>
       {recorded !== null && delta !== 0 && (
         <span className={`tabular text-[0.72rem] font-semibold ${delta > 0 ? 'text-good' : 'text-warn'}`}>
           {delta > 0 ? '+' : '−'}{Math.abs(Math.round((delta / 60) * 10) / 10)} {t('h')}

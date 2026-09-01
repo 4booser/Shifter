@@ -1849,6 +1849,7 @@ export const RU: Dictionary = {
     'Зал',
   'Terrace':
     'Терраса',
+  'Banquet': 'Банкет',
   'Banquets':
     'Банкеты',
   'Takeaway':
@@ -4443,6 +4444,7 @@ export const UK: Dictionary = {
     'Зала',
   'Terrace':
     'Тераса',
+  'Banquet': 'Банкет',
   'Banquets':
     'Банкети',
   'Takeaway':

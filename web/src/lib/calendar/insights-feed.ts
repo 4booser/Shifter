@@ -82,8 +82,16 @@ export function insightsFor(input: InsightInput): Insight[] {
     }
   }
 
-  // On course to beat last month.
-  if (forecast !== null && forecast.live && previous.total_earned > 0) {
+  /*
+   * On course to beat last month — but only once there is something to
+   * project from.
+   *
+   * On the first of a month nothing has been worked yet, the projection is
+   * near zero, and the chip announced "tracking 100% below last month" over
+   * an empty calendar. Nobody is behind on a month that has not started; a
+   * forecast drawn from two days is a guess wearing a percentage.
+   */
+  if (forecast !== null && forecast.live && previous.total_earned > 0 && summary.days_worked >= 3) {
     const change = (forecast.projected / previous.total_earned - 1) * 100;
 
     if (change >= 8) {

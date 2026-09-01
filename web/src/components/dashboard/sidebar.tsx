@@ -195,7 +195,7 @@ export function Sidebar() {
                     <span className="min-w-0">
                       <span className="block truncate text-[0.86rem] font-medium">{template.name}</span>
                       <span className="field-hint tabular">
-                        {template.start_time}–{template.end_time} · {template.hours}h · {rateLabel(template)}
+                        {template.start_time}–{template.end_time} · {template.hours} {t('h')} · {rateLabel(template, t)}
                       </span>
                     </span>
                   </button>
@@ -300,7 +300,7 @@ export function Sidebar() {
                       <span className="field-hint tabular">
                         {item.start_time === null
                           ? t('all day')
-                          : `${item.start_time}–${item.end_time} · ${item.hours}h`}
+                          : `${item.start_time}–${item.end_time} · ${item.hours} ${t('h')}`}
                         {/* Money that leaves, marked as such so it can never be
                             mistaken for a line of earnings. */}
                         {item.cost !== null && <> · −{format(item.cost)}</>}
@@ -467,7 +467,7 @@ export function Sidebar() {
             <Money value={summary.shifts_earned} />
           </Row>
           {summary.overtime_hours > 0 && (
-            <Row label={`${t('Overtime')} · ${Math.round(summary.overtime_hours * 10) / 10}h`}>
+            <Row label={`${t('Overtime')} · ${Math.round(summary.overtime_hours * 10) / 10} ${t('h')}`}>
               +<Money value={summary.overtime_earned} />
             </Row>
           )}

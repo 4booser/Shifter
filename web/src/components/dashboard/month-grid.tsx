@@ -789,7 +789,7 @@ export function MonthGrid({
 
                   {hours > 0 && (
                     <span className="ml-auto hidden text-[0.66rem] font-medium text-muted tabular @[5rem]:inline">
-                      {round1(hours)}h
+                      {round1(hours)}{t('h')}
                     </span>
                   )}
                 </span>

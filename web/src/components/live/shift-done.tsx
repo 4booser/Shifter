@@ -168,7 +168,7 @@ export function ShiftDoneOverlay() {
             </span>
           )}
           <span>
-            <strong className="block tabular">{done.hours}h</strong>
+            <strong className="block tabular">{done.hours} {t('h')}</strong>
             <span className="field-hint">{t('paid')}</span>
           </span>
           {rank !== null && (

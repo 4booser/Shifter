@@ -919,7 +919,7 @@ function BulkPanel({ keys }: { keys: string[] }) {
       <p className="field-hint mb-3">
         {keys[0]?.slice(8)}.{keys[0]?.slice(5, 7)} — {keys.at(-1)?.slice(8)}.{keys.at(-1)?.slice(5, 7)}
         {earned > 0 && <> · {format(earned)}</>}
-        {hours > 0 && <> · {Math.round(hours * 10) / 10}h</>}
+        {hours > 0 && <> · {Math.round(hours * 10) / 10} {t('h')}</>}
       </p>
 
       <section className="mb-4">
@@ -1063,7 +1063,7 @@ function ActualClockRow({
       />
       {recorded !== null && delta !== 0 && (
         <span className={`tabular text-[0.72rem] font-semibold ${delta > 0 ? 'text-good' : 'text-warn'}`}>
-          {delta > 0 ? '+' : '−'}{Math.abs(Math.round((delta / 60) * 10) / 10)}h
+          {delta > 0 ? '+' : '−'}{Math.abs(Math.round((delta / 60) * 10) / 10)} {t('h')}
         </span>
       )}
       {(start !== null || entry.actual_start !== null) && (
@@ -1118,7 +1118,7 @@ function DayWeek({ dayKey }: { dayKey: string }) {
       <h3 className="panel-head">
         <span>{t('This week')}</span>
         <span className="tabular text-[0.72rem] font-normal text-faint">
-          {Math.round(hours * 10) / 10}h
+          {Math.round(hours * 10) / 10} {t('h')}
         </span>
       </h3>
 
@@ -1420,7 +1420,7 @@ function DayHistory({ dayKey }: { dayKey: string }) {
               · {SOURCES[entry.source] ?? entry.source}
               {/* What actually changed, rather than only that something did. */}
               {entry.shift_count > 0 && <> · {entry.shift_count} {t('sh.')}</>}
-              {entry.hours > 0 && <> · {entry.hours}h</>}
+              {entry.hours > 0 && <> · {entry.hours} {t('h')}</>}
             </span>
             <span className="flex-none">
               {format(entry.earned)}

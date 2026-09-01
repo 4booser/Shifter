@@ -995,9 +995,18 @@ export function toSavePayload(day: CalendarDayData | undefined): DaySave {
  * "350 / hour + 3%", or just the half that exists. A stacked deal is the
  * ordinary case in hospitality, so the label has to be able to say both.
  */
-export function rateLabel(template: ShiftTemplate): string {
+/**
+ * «180 / час» — ставка словами читателя.
+ *
+ * Период приходит с сервера как `hour` / `day` / `week` / `month`, и раньше
+ * подставлялся в строку как есть: в русском интерфейсе рядом со сменой стояло
+ * «180 / hour». Переводчик передаётся снаружи — этот файл про данные, а не
+ * про язык.
+ */
+export function rateLabel(template: ShiftTemplate, t: (key: string) => string = (key) => key): string {
   const amount = template.salary_amount;
-  const base = amount === null ? `per ${template.salary_period}` : `${amount} / ${template.salary_period}`;
+  const period = t(`per ${template.salary_period}`);
+  const base = amount === null ? period : `${amount} / ${t(template.salary_period)}`;
 
   return template.revenue_percent === null
     ? base

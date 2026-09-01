@@ -1178,7 +1178,7 @@ function Stats() {
                         <span className="mr-1.5 inline-block h-2 w-2 rounded-full" style={{ background: place.colour }} />
                         {placeName(place, t('No place set'))}
                         {place.days_worked > 0 && place.days_worked < 3 && (
-                          <span className="chip ml-1.5 border-warn/40 text-warn">{t('few shifts')}</span>
+                          <span className="chip ml-1.5 chip-warn">{t('few shifts')}</span>
                         )}
                       </td>
                       <td className="px-2 py-1.5 tabular">{place.days_worked}</td>

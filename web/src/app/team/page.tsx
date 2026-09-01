@@ -118,7 +118,7 @@ function TeamAdmin() {
               <span className="chip">
                 {n(team.member_count, 'people')}
               </span>
-              {team.is_owner && <span className="chip border-(--accent)/40 text-(--accent)">{t('owner')}</span>}
+              {team.is_owner && <span className="chip chip-accent">{t('owner')}</span>}
               <span className="ml-auto flex gap-1.5">
                 <Link href="/schedule" className="btn btn-sm">
                   <Icon name="calendar" size={13} />

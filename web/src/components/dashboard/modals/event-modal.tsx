@@ -295,7 +295,7 @@ export function EventModal({
               <button
                 key={option.id}
                 type="button"
-                className={`chip ${kind === option.id ? 'border-(--accent) bg-(--accent-soft) text-(--accent)' : ''}`}
+                className={`chip ${kind === option.id ? 'chip-accent' : ''}`}
                 onClick={() => setKind(option.id)}
               >
                 {option.emoji} {t(option.label)}

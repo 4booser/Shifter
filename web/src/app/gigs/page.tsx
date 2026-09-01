@@ -236,7 +236,7 @@ function Gigs() {
             <div className="flex flex-wrap items-center gap-1.5">
               <button
                 type="button"
-                className={`chip ${category === null ? 'border-(--accent) bg-(--accent-soft) text-(--accent)' : ''}`}
+                className={`chip ${category === null ? 'chip-accent' : ''}`}
                 onClick={() => setCategory(null)}
               >
                 {t('All trades')}
@@ -257,7 +257,7 @@ function Gigs() {
                   <button
                     key={entry.id}
                     type="button"
-                    className={`chip ${category === entry.id ? 'border-(--accent) bg-(--accent-soft) text-(--accent)' : ''}`}
+                    className={`chip ${category === entry.id ? 'chip-accent' : ''}`}
                     onClick={() => setCategory(category === entry.id ? null : entry.id)}
                   >
                     {entry.emoji} {t(entry.label)}
@@ -575,7 +575,7 @@ function GigCard({ gig, onRespond, onWithdraw }: { gig: Gig; onRespond: () => vo
               {/* Earned by shifts that happened, not claimed on a form. */}
               {gig.trusted && (
                 <span
-                  className="chip border-(--accent)/40 text-(--accent)"
+                  className="chip chip-accent"
                   title={t('Five shifts that happened and three people who came back to say it went well.')}
                 >
                   ✓ {t('Proven')}
@@ -584,7 +584,7 @@ function GigCard({ gig, onRespond, onWithdraw }: { gig: Gig; onRespond: () => vo
               {/* Your own history first. Four evenings there answers more than
                   a 4.6 averaged over strangers. */}
               {gig.worked_here > 0 && (
-                <span className="chip border-good/40 bg-(--good-soft) text-good">
+                <span className="chip chip-good">
                   {t('You have worked here')} · {gig.worked_here}
                   {gig.my_rating !== null && ` · ${t('you gave')} ${gig.my_rating}★`}
                 </span>
@@ -633,7 +633,7 @@ function GigCard({ gig, onRespond, onWithdraw }: { gig: Gig; onRespond: () => vo
       <footer className="mt-auto flex items-center gap-2 pt-1 text-[0.78rem]">
         <TimeAgo iso={gig.created_at} />
         <ShareGig gig={gig} />
-        {gig.status === 'filled' && <span className="chip border-good/40 bg-(--good-soft) text-good">{t('filled')}</span>}
+        {gig.status === 'filled' && <span className="chip chip-good">{t('filled')}</span>}
         {gig.is_mine && <span className="chip">{t('Yours')}</span>}
         {!gig.is_mine && gig.my_response === null && gig.status === 'open' && !past && (
           <button type="button" className="btn btn-primary btn-sm ml-auto" onClick={onRespond}>
@@ -642,7 +642,7 @@ function GigCard({ gig, onRespond, onWithdraw }: { gig: Gig; onRespond: () => vo
         )}
         {!gig.is_mine && gig.my_response !== null && (
           <span className="ml-auto flex items-center gap-2">
-            <span className={`chip ${gig.my_response.stage === 'open' ? 'border-good/40 bg-(--good-soft) text-good' : gig.my_response.stage === 'invited' ? 'border-(--accent)/40 text-(--accent)' : ''}`}>
+            <span className={`chip ${gig.my_response.stage === 'open' ? 'chip-good' : gig.my_response.stage === 'invited' ? 'chip-accent' : ''}`}>
               {
                 {
                   quiet: t('Asked'),
@@ -780,7 +780,7 @@ function MyListings({
             <strong className="text-[0.95rem]">{gig.title}</strong>
             <span className="field-hint">{gig.date.slice(8)}.{gig.date.slice(5, 7)} · {gig.start}–{gig.end} · {payLine(format, t, gig)}</span>
             <TimeAgo iso={gig.created_at} />
-            <span className={`chip ${gig.status === 'open' ? 'border-(--accent)/40 text-(--accent)' : gig.status === 'filled' ? 'border-good/40 text-good' : ''}`}>
+            <span className={`chip ${gig.status === 'open' ? 'chip-accent' : gig.status === 'filled' ? 'chip-good' : ''}`}>
               {t(gig.status)}
             </span>
             <span className="ml-auto flex gap-1.5">
@@ -823,7 +823,7 @@ function MyListings({
                       <span className="chip">{t('Just asking')}</span>
                     )}
                     {reply.stage === 'invited' && (
-                      <span className="chip border-(--accent)/40 text-(--accent)">
+                      <span className="chip chip-accent">
                         {t('Waiting on them')}
                       </span>
                     )}
@@ -834,7 +834,7 @@ function MyListings({
                       </a>
                     )}
                     {reply.accepted ? (
-                      <span className="chip border-good/40 bg-(--good-soft) text-good">{t('Taken')}</span>
+                      <span className="chip chip-good">{t('Taken')}</span>
                     ) : (
                       <button
                         type="button"

@@ -357,7 +357,7 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
 
         <span className="ml-auto flex items-center gap-2">
           {declined > 0 && (
-            <span className="chip border-danger/40 bg-(--danger-soft) text-danger">
+            <span className="chip chip-danger">
               {n(declined, 'declines')} — {t('replan')}
             </span>
           )}

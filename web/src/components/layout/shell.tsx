@@ -149,14 +149,14 @@ export function Shell({ children }: { children: React.ReactNode }) {
           <div className="ml-auto flex items-center gap-1">
             <LiveBar />
             {offline && (
-              <span className="chip border-warn/40 bg-(--warn-soft) text-warn" title={t('Changes will be sent when the network returns')}>
+              <span className="chip chip-warn" title={t('Changes will be sent when the network returns')}>
                 {t('offline')}
               </span>
             )}
             {pendingOffline > 0 && (
               <button
                 type="button"
-                className="chip border-warn/40 bg-(--warn-soft) text-warn"
+                className="chip chip-warn"
                 onClick={() => void flushOffline()}
                 title={t('days waiting to sync')}
               >

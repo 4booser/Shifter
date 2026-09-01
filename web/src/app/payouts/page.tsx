@@ -539,7 +539,7 @@ function PeriodRow({
             </span>
           )}
           {landed !== null && (
-            <Link href="/bank" className="chip border-good/40 text-good" title={t('A credit near this amount landed near the due day — the bank page can match it properly.')}>
+            <Link href="/bank" className="chip chip-good" title={t('A credit near this amount landed near the due day — the bank page can match it properly.')}>
               {t('on the card?')} +<Money value={landed.total} />
             </Link>
           )}

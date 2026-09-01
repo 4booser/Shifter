@@ -12,6 +12,7 @@ import { CalendarDayData, Goal, Reconciliation, ShiftTemplate } from '@/lib/cale
 import { activeGoalFor } from '@/lib/calendar/stats-math';
 import { stagger } from '@/lib/fx';
 import { useI18n } from '@/lib/i18n';
+import { useArmed } from '@/lib/live/arm';
 import {
   cancelLiveShift,
   finishLiveShift,
@@ -650,6 +651,7 @@ function TodayTile({ window, templates }: { window: CalendarDayData[]; templates
   const template = templates.find((item) => item.id === (live?.shiftId ?? planned?.shift_id));
 
   const [, force] = useState(0);
+  const discard = useArmed(cancelLiveShift);
 
   useEffect(() => {
     if (live === null) return;
@@ -668,9 +670,13 @@ function TodayTile({ window, templates }: { window: CalendarDayData[]; templates
         <span className="tile-value text-good">
           {tick.earned === null ? formatElapsed(tick.elapsed) : <FlowMoney value={tick.earned} />}
         </span>
-        <span className="field-hint flex items-center gap-1.5">
-          <span className="live-dot" />
-          {tick.earned === null ? template.name : formatElapsed(tick.elapsed)}
+        <span className={`field-hint flex items-center gap-1.5 ${discard.armed ? 'text-danger' : ''}`}>
+          {discard.armed ? '✕' : <span className="live-dot" />}
+          {discard.armed
+            ? t('Press again to discard')
+            : tick.earned === null
+              ? template.name
+              : formatElapsed(tick.elapsed)}
         </span>
         <span className="mt-auto flex gap-1">
           <button
@@ -680,12 +686,17 @@ function TodayTile({ window, templates }: { window: CalendarDayData[]; templates
           >
             {t('Finish')}
           </button>
+          {/*
+            Discarding a running shift used to be one press away from the
+            button that banks it. It arms first now, and the line above says
+            what the next press does.
+          */}
           <button
             type="button"
-            className="btn btn-quiet btn-sm flex-none !px-2"
-            aria-label={t('Cancel')}
-            title={t('Cancel')}
-            onClick={cancelLiveShift}
+            className={`btn btn-sm flex-none !px-2 ${discard.armed ? 'btn-armed' : 'btn-quiet'}`}
+            aria-label={t('Discard shift')}
+            title={t(discard.armed ? 'Press again to discard' : 'Discard shift')}
+            onClick={discard.press}
           >
             ✕
           </button>
@@ -804,33 +815,33 @@ function GoalTile({ monthDays, goals }: { monthDays: CalendarDayData[]; goals: G
     );
   }
 
+  /*
+   * Two readings, and the solid one is always the banked one. The meter shows
+   * where the shifts already on the calendar would land, the percentage counts
+   * only money that has been worked, and the line underneath names the second
+   * figure as a plan.
+   */
+  const ahead = monthDays.reduce((sum, day) => sum + day.planned, 0);
   const share = Math.min(1, earned / active.target);
-  const radius = 26;
-  const circumference = 2 * Math.PI * radius;
+  const withPlan = Math.min(1, (earned + ahead) / active.target);
 
   return (
-    <span className="flex items-center gap-2.5">
-      <svg width="64" height="64" viewBox="0 0 64 64" className="-rotate-90 flex-none">
-        <circle className="ring-track" cx="32" cy="32" r={radius} fill="none" strokeWidth="6" />
-        <circle
-          className="ring-fill"
-          cx="32"
-          cy="32"
-          r={radius}
-          fill="none"
-          strokeWidth="6"
-          strokeDasharray={circumference}
-          strokeDashoffset={circumference * (1 - share)}
-        />
-      </svg>
-      <span className="min-w-0">
-        <Label icon="target">{t('Goal')}</Label>
-        <span className="tile-value block">{Math.round(share * 100)}%</span>
-        <span className="field-hint">
-          <Money value={active.target} />
-        </span>
+    <>
+      <Label icon="target">{t('Goal')}</Label>
+      <span className="tile-value block">{Math.round(share * 100)}%</span>
+      <span className="goal-bar block" aria-hidden>
+        {ahead > 0 && <i className="booked" style={{ width: `${withPlan * 100}%` }} />}
+        <i className="banked" style={{ width: `${share * 100}%` }} />
       </span>
-    </span>
+      <span className="field-hint block">
+        <Money value={earned} /> {t('of')} <Money value={active.target} />
+      </span>
+      {ahead > 0 && (
+        <span className="field-hint block">
+          {t('booked')} {Math.round(withPlan * 100)}%
+        </span>
+      )}
+    </>
   );
 }
 

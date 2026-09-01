@@ -57,7 +57,7 @@ export function RaiseCasePanel() {
                 {t('/hour')} · {n(entry.months_here, 'months')}
               </span>
               {entry.worth_asking && (
-                <span className="chip ml-auto border-good/40 text-good">
+                <span className="chip ml-auto chip-good">
                   {t('There is a case')}
                 </span>
               )}

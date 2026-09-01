@@ -129,7 +129,7 @@ function ReviewModal({ pending, onClose, onDone }: { pending: PendingReview; onC
             <button
               key={chip}
               type="button"
-              className={`chip ${chips.includes(chip) ? 'border-(--accent) bg-(--accent-soft) text-(--accent)' : ''}`}
+              className={`chip ${chips.includes(chip) ? 'chip-accent' : ''}`}
               onClick={() =>
                 setChips((current) =>
                   current.includes(chip) ? current.filter((entry) => entry !== chip) : [...current, chip],

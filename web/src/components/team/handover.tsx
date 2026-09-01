@@ -202,7 +202,7 @@ export function HandoverPanel({ teamId }: { teamId: number }) {
                 key={item.id}
                 className="flex flex-wrap items-center gap-x-2.5 gap-y-1 rounded-(--radius) border border-border px-3 py-1.5 text-[0.86rem]"
               >
-                <span className={`chip ${item.kind === 'broken' ? 'border-warn/40 text-warn' : ''}`}>
+                <span className={`chip ${item.kind === 'broken' ? 'chip-warn' : ''}`}>
                   {t(item.kind === 'broken' ? 'Broken' : 'Out')}
                 </span>
                 <span className="min-w-0 flex-1 truncate font-medium">{item.name}</span>

@@ -109,7 +109,7 @@ export default function RoadmapPage() {
                   <b className="block text-[0.92rem] leading-tight">{item.title}</b>
                   <span className="field-hint">{item.note}</span>
                 </span>
-                <span className="chip ml-auto flex-none border-good/40 bg-(--good-soft) text-good">✓</span>
+                <span className="chip ml-auto flex-none chip-good">✓</span>
               </article>
             ))}
           </div>
@@ -127,7 +127,7 @@ export default function RoadmapPage() {
                   <b className="block text-[0.92rem] leading-tight">{item.title}</b>
                   <span className="field-hint">{item.note}</span>
                 </span>
-                <span className="chip ml-auto flex-none animate-pulse border-(--accent)/40 text-(--accent)">•••</span>
+                <span className="chip ml-auto flex-none animate-pulse chip-accent">•••</span>
               </article>
             ))}
           </div>

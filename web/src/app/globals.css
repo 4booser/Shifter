@@ -479,6 +479,37 @@ body {
   border-color: transparent;
 }
 
+/*
+ * A destructive control that has been cocked and will fire on the next press.
+ * It stops looking quiet the moment it means something, because the button
+ * that throws a running shift away shares a row with the one that banks it.
+ */
+.btn-armed {
+  background: var(--danger-soft);
+  border-color: color-mix(in srgb, var(--danger) 45%, transparent);
+  color: var(--danger);
+}
+
+.btn-armed:hover {
+  background: var(--danger-soft);
+  border-color: var(--danger);
+}
+
+/*
+ * A break running is a state, not a preference, so the button that ends it
+ * wears the same amber the header pill does.
+ */
+.btn-warn {
+  background: var(--warn-soft);
+  border-color: color-mix(in srgb, var(--warn) 50%, transparent);
+  color: var(--warn);
+}
+
+.btn-warn:hover {
+  background: var(--warn-soft);
+  border-color: var(--warn);
+}
+
 .btn-sm {
   padding: 0.3rem 0.6rem;
   font-size: 0.8rem;
@@ -558,6 +589,41 @@ body {
   font-size: 0.74rem;
   font-weight: 550;
   color: var(--muted);
+}
+
+/*
+ * Chips that carry a state: accepted and declined, online and offline, linked
+ * and not.
+ *
+ * These were written as `chip text-good` and every one of them rendered grey.
+ * This file is not in a cascade layer and Tailwind's utilities are, and a
+ * layer loses to unlayered CSS whatever its specificity — so `.chip`'s own
+ * muted ink won, the soft background came through, and each status kept its
+ * tint while losing its meaning. Anything a person reads at a glance gets a
+ * class of its own here, where it can win.
+ */
+.chip-good {
+  border-color: color-mix(in srgb, var(--good) 40%, transparent);
+  background: var(--good-soft);
+  color: var(--good);
+}
+
+.chip-warn {
+  border-color: color-mix(in srgb, var(--warn) 40%, transparent);
+  background: var(--warn-soft);
+  color: var(--warn);
+}
+
+.chip-danger {
+  border-color: color-mix(in srgb, var(--danger) 40%, transparent);
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.chip-accent {
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  background: var(--accent-soft);
+  color: var(--accent);
 }
 
 .swatch {
@@ -961,6 +1027,42 @@ body,
   stroke: var(--accent);
   stroke-linecap: round;
   transition: stroke-dashoffset calc(0.9s * var(--motion)) cubic-bezier(0.2, 0.85, 0.3, 1);
+}
+
+/*
+ * The goal meter. A ring at a tile's width left the figures a column too
+ * narrow to hold «₴0 of ₴40,000» in fewer than four lines, so the meter lies
+ * flat and takes the whole tile instead.
+ *
+ * Two lengths, and the solid one is always the banked one: what the calendar
+ * promises rides behind in the same hue at a third of the weight. A goal
+ * filled by shifts that have not happened yet says «you made it» on the first
+ * of the month, and somebody plans rent around it.
+ */
+.goal-bar {
+  position: relative;
+  height: 0.4rem;
+  margin: 0.1rem 0 0.15rem;
+  border-radius: 999px;
+  background: var(--border);
+  overflow: hidden;
+}
+
+.goal-bar > i {
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  display: block;
+  border-radius: 999px;
+  transition: width calc(0.9s * var(--motion)) cubic-bezier(0.2, 0.85, 0.3, 1);
+}
+
+.goal-bar > .booked {
+  background: color-mix(in srgb, var(--accent) 32%, transparent);
+}
+
+.goal-bar > .banked {
+  background: var(--accent);
 }
 
 /* ==== Command palette ==== */

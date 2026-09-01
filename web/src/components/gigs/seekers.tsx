@@ -200,7 +200,7 @@ function SeekerModal({ mine, onClose, onDone }: { mine: Seeker | null; onClose: 
               <button
                 key={trade.id}
                 type="button"
-                className={`chip ${form.categories.includes(trade.id) ? 'border-(--accent) bg-(--accent-soft) text-(--accent)' : ''}`}
+                className={`chip ${form.categories.includes(trade.id) ? 'chip-accent' : ''}`}
                 onClick={() => toggleCategory(trade.id)}
               >
                 {trade.emoji} {t(trade.label)}

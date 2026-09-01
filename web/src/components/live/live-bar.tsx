@@ -14,6 +14,7 @@ import {
   startTimedBreak,
   useLive,
 } from '@/lib/live/live-shift';
+import { useArmed } from '@/lib/live/arm';
 import { pushToast } from '@/lib/toast';
 import { useCalendar } from '@/lib/store/calendar';
 import { Money } from '@/components/ui/bits';
@@ -29,6 +30,10 @@ export function LiveBar() {
   const templates = useCalendar((state) => state.templates);
   const [open, setOpen] = useState(false);
   const [, force] = useState(0);
+  const discard = useArmed(() => {
+    cancelLiveShift();
+    setOpen(false);
+  });
 
   useEffect(() => {
     if (live === null) return;
@@ -124,7 +129,7 @@ export function LiveBar() {
     <div className="relative">
       <button
         type="button"
-        className={`chip tabular ${live.pausedAt !== null ? 'border-warn/40 bg-(--warn-soft) text-warn' : 'border-good/40 bg-(--good-soft) text-good'}`}
+        className={`chip tabular ${live.pausedAt !== null ? 'chip-warn' : 'chip-good'}`}
         onClick={() => setOpen((state) => !state)}
       >
         {live.pausedAt !== null ? '⏸' : <span className="live-dot" />}
@@ -133,7 +138,13 @@ export function LiveBar() {
 
       {open && (
         <>
-          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div
+            className="fixed inset-0 z-40"
+            onClick={() => {
+              discard.disarm();
+              setOpen(false);
+            }}
+          />
           <div className="card absolute right-0 z-50 mt-1.5 w-64 p-4 shadow-(--shadow-lg) rise">
             <div className="flex items-center gap-3">
               <svg width="80" height="80" viewBox="0 0 80 80" className="-rotate-90 flex-none">
@@ -198,29 +209,33 @@ export function LiveBar() {
               </div>
             )}
 
+            {/*
+              Three controls abreast never fitted the panel: the word on the
+              primary button was clipped by its own border. Finishing the shift
+              is what this panel is for, so it gets the width, and throwing the
+              shift away drops to a row of its own where a thumb aiming for
+              «finish» cannot land on it.
+            */}
             <div className="mt-3 flex gap-1.5">
               <button
                 type="button"
-                className={`btn btn-sm ${live.pausedAt !== null ? 'border-warn/50 bg-(--warn-soft) text-warn' : ''}`}
+                className={`btn btn-sm flex-none ${live.pausedAt !== null ? 'btn-warn' : ''}`}
                 title={t(live.pausedAt !== null ? 'Resume' : 'Break')}
                 onClick={() => (live.pausedAt !== null ? resumeLiveShift() : pauseLiveShift())}
               >
                 {live.pausedAt !== null ? '▶' : '⏸'}
               </button>
-              <button type="button" className="btn btn-primary btn-sm flex-1" onClick={finish}>
+              <button type="button" className="btn btn-primary btn-sm min-w-0 flex-1" onClick={finish}>
                 {t('Finish shift')}
               </button>
-              <button
-                type="button"
-                className="btn btn-quiet btn-sm"
-                onClick={() => {
-                  cancelLiveShift();
-                  setOpen(false);
-                }}
-              >
-                {t('Cancel')}
-              </button>
             </div>
+            <button
+              type="button"
+              className={`btn btn-sm mt-1.5 w-full ${discard.armed ? 'btn-armed' : 'btn-quiet'}`}
+              onClick={discard.press}
+            >
+              {discard.armed ? t('Press again to discard') : t('Discard shift')}
+            </button>
           </div>
         </>
       )}

@@ -552,7 +552,7 @@ export function DayPanel() {
                       )}
                       <button
                         type="button"
-                        className={`btn btn-sm flex-1 ${wantsCover ? 'border-warn/50 bg-(--warn-soft) text-warn' : 'btn-quiet'}`}
+                        className={`btn btn-sm flex-1 ${wantsCover ? 'btn-warn' : 'btn-quiet'}`}
                         title={t('Ask the team to take this shift')}
                         onClick={() => setCover((current) => ({ ...current, [entry.shift_id]: !wantsCover }))}
                       >

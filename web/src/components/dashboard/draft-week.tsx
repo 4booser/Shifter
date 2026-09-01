@@ -93,7 +93,7 @@ export function DraftWeek() {
               <button
                 key={template.id}
                 type="button"
-                className={`chip ${template.id === templateId ? 'border-(--accent) bg-(--accent-soft) text-(--accent)' : ''}`}
+                className={`chip ${template.id === templateId ? 'chip-accent' : ''}`}
                 onClick={() => setTemplateId(template.id === templateId ? null : template.id)}
               >
                 {template.symbol ?? ''} {template.name}

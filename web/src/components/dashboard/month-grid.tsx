@@ -489,7 +489,7 @@ export function MonthGrid({
         </h2>
 
         {weekEarned > 0 && (
-          <span className="chip border-good/30 bg-(--good-soft) text-good">
+          <span className="chip chip-good">
             {t('This week')}: {format(weekEarned)}
           </span>
         )}

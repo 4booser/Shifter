@@ -207,7 +207,7 @@ function Account() {
               <span className="text-muted">Google:</span>
               {profile.google_linked ? (
                 <>
-                  <span className="chip border-good/40 text-good">{t('Connected')}</span>
+                  <span className="chip chip-good">{t('Connected')}</span>
                   <button
                     type="button"
                     className="btn btn-quiet btn-sm"
@@ -600,7 +600,7 @@ function TwoFactorSection({ hasPassword, on }: { hasPassword: boolean; on: boole
 
       {enabled === true && stage === 'idle' && (
         <div className="flex flex-wrap items-center gap-2">
-          <span className="chip border-good/40 bg-(--good-soft) text-good">{t('On')}</span>
+          <span className="chip chip-good">{t('On')}</span>
           <input
             className="field-input !w-32 text-center tabular"
             inputMode="numeric"
@@ -701,7 +701,7 @@ function TelegramSection() {
 
       {state.linked ? (
         <div className="flex items-center gap-2">
-          <span className="chip border-good/40 bg-(--good-soft) text-good">{t('Linked')}</span>
+          <span className="chip chip-good">{t('Linked')}</span>
           <button
             type="button"
             className="btn btn-sm text-danger"

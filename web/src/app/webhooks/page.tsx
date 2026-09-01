@@ -364,7 +364,7 @@ function Webhooks() {
               <Icon name={hook.kind === 'hours' ? 'clock' : hook.kind === 'both' ? 'swap' : 'coins'} size={16} className="text-(--accent)" />
               <h2 className="text-[1rem] font-bold">{hook.name}</h2>
               <span className="chip">{t(KIND_LABEL[hook.kind])}</span>
-              {!hook.active && <span className="chip border-danger/40 text-danger">{t('Switched off')}</span>}
+              {!hook.active && <span className="chip chip-danger">{t('Switched off')}</span>}
             </div>
 
             <div className="mt-2.5 flex flex-col gap-1.5">

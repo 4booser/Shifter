@@ -183,7 +183,7 @@ export default function BankPage() {
                   <button
                     key={entry.id}
                     type="button"
-                    className={`chip ${entry.id === mono.accountId ? 'border-(--accent) bg-(--accent-soft) text-(--accent)' : ''}`}
+                    className={`chip ${entry.id === mono.accountId ? 'chip-accent' : ''}`}
                     onClick={() => mono.chooseAccount(entry.id)}
                   >
                     •••{entry.maskedPan[0]?.slice(-4) ?? entry.iban.slice(-4)}

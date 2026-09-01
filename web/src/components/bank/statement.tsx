@@ -78,7 +78,9 @@ export function StatementCard({
     <section className="card reveal p-4">
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
         <h3 className="text-[0.98rem] font-bold">{t('The operations themselves')}</h3>
-        <div className="flex items-center gap-1.5">
+        {/* Три кнопки и поиск на 176 px не влезают в телефон: строка уезжала
+            за край и тянула за собой горизонтальную прокрутку всей страницы. */}
+        <div className="flex flex-wrap items-center gap-1.5">
           {(
             [
               ['all', t('all of it')],
@@ -97,7 +99,7 @@ export function StatementCard({
           ))}
           <span className="relative">
             <input
-              className="field-input !w-44 !py-1.5 pr-7 text-[0.85rem]"
+              className="field-input !w-40 max-w-full !py-1.5 pr-7 text-[0.85rem]"
               value={needle}
               placeholder={t('Find by name…')}
               onChange={(event) => {

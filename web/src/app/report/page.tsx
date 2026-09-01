@@ -294,7 +294,10 @@ function Report() {
           ))}
         </div>
 
-        <div className="ml-auto flex items-center gap-1 no-print">
+        {/* flex-wrap: месяц, стрелки, печать, XLSX и «поделиться» одной
+            строкой не влезают в телефон — панель уезжала за край и тянула
+            за собой горизонтальную прокрутку всей страницы. */}
+        <div className="ml-auto flex flex-wrap items-center gap-1 no-print">
           <button
             type="button"
             className="btn btn-quiet btn-sm"

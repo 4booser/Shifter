@@ -633,7 +633,10 @@ function Stats() {
             setPreset('custom');
           }}
         />
-        <span className="ml-auto flex gap-1.5">
+        {/* flex-wrap: пять кнопок в ряд не помещаются в телефон, и панель
+            уезжала за правый край — страница получала горизонтальную
+            прокрутку от одной строки инструментов. */}
+        <span className="ml-auto flex flex-wrap gap-1.5">
           <Link href="/report" className="btn btn-sm">
             <Icon name="note" size={13} />
             {t('Report')}

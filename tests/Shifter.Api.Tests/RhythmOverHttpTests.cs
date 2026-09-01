@@ -2,6 +2,8 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 
+using Shifter.Application.Common.Time;
+
 using Xunit;
 
 namespace Shifter.Api.Tests;
@@ -128,7 +130,7 @@ public sealed class RhythmOverHttpTests(Api api)
         var (client, _) = await api.SignInAsync("fatigue");
         var shift = await ShiftAsync(client, "Смена", "10:00", "18:00");
 
-        var start = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-200);
+        var start = new AppClock().Today.AddDays(-200);
 
         // Four seven-day runs, ten days apart: tips 200 while fresh, 160 by
         // days six and seven. Fresh days 1-2 of each run: eight of them at
@@ -163,7 +165,7 @@ public sealed class RhythmOverHttpTests(Api api)
         var (client, _) = await api.SignInAsync("streak");
         var shift = await ShiftAsync(client, "Смена", "10:00", "18:00");
 
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var today = new AppClock().Today;
 
         for (var back = 6; back >= 0; back--)
         {

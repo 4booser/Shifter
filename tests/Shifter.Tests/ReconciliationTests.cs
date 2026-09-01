@@ -1,3 +1,4 @@
+using Shifter.Application.Common.Time;
 using Shifter.Application.Features.business.DTOs;
 using Shifter.Application.Features.business.Services;
 using Shifter.Domain.Entities;
@@ -245,7 +246,10 @@ public class ReconciliationTests
     [Fact]
     public async Task APeriodStillBeingWorkedIsNotChased()
     {
-        DateOnly today = DateOnly.FromDateTime(DateTime.UtcNow);
+        // The handler answers «what is today» in Kyiv; asking UTC here made
+        // this test disagree with it for the three hours before midnight —
+        // exactly when this trade is at work, and when CI ran.
+        DateOnly today = new AppClock().Today;
 
         // Payday deliberately after today, so the period around today is
         // unambiguously still running. Pinned at 1, this test asserted the

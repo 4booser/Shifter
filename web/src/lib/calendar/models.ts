@@ -1006,7 +1006,9 @@ export function toSavePayload(day: CalendarDayData | undefined): DaySave {
 export function rateLabel(template: ShiftTemplate, t: (key: string) => string = (key) => key): string {
   const amount = template.salary_amount;
   const period = t(`per ${template.salary_period}`);
-  const base = amount === null ? period : `${amount} / ${t(template.salary_period)}`;
+  // Non-breaking throughout: «180 / час» is one fact, and a sidebar narrow
+  // enough to split it leaves a line reading «180 /».
+  const base = amount === null ? period : `${amount}\u00A0/\u00A0${t(template.salary_period)}`;
 
   return template.revenue_percent === null
     ? base

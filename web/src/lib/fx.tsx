@@ -104,6 +104,10 @@ interface ConfettiOptions {
 export function fireConfetti({ x = 0.5, y = 0.4, count = 140 }: ConfettiOptions = {}): void {
   if (typeof document === 'undefined') return;
   if (document.documentElement.dataset['motion'] === 'reduced') return;
+  // A hidden tab gets no frames, so a burst fired into one hangs in mid-air
+  // until somebody comes back — and if nobody does, a full-screen canvas sits
+  // over the page for the rest of the session.
+  if (document.visibilityState === 'hidden') return;
 
   const canvas = document.createElement('canvas');
   const scale = Math.min(2, devicePixelRatio || 1);
@@ -185,8 +189,21 @@ export function fireConfetti({ x = 0.5, y = 0.4, count = 140 }: ConfettiOptions 
     }
 
     if (alive > 0) requestAnimationFrame(tick);
-    else canvas.remove();
+    else stop();
   };
+
+  // Leaving mid-burst freezes the animation where it stands; the paper is not
+  // worth keeping, so it goes with the tab's attention.
+  const stop = () => {
+    document.removeEventListener('visibilitychange', hide);
+    canvas.remove();
+  };
+
+  const hide = () => {
+    if (document.visibilityState === 'hidden') stop();
+  };
+
+  document.addEventListener('visibilitychange', hide);
 
   requestAnimationFrame(tick);
 }

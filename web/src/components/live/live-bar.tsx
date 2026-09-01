@@ -194,18 +194,22 @@ export function LiveBar() {
             )}
 
             {live.pausedAt === null && (
-              <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                <span className="field-hint">{t('Break for')}</span>
-                {[15, 30, 45].map((minutes) => (
-                  <button
-                    key={minutes}
-                    type="button"
-                    className="btn btn-sm"
-                    onClick={() => startTimedBreak(minutes)}
-                  >
-                    {minutes} {t('min')}
-                  </button>
-                ))}
+              <div className="mt-2.5">
+                {/* Three equal buttons on one row: wrapped inline they left
+                    the third stranded on a line of its own. */}
+                <span className="field-hint block">{t('Break for')}</span>
+                <div className="mt-1 grid grid-cols-3 gap-1.5">
+                  {[15, 30, 45].map((minutes) => (
+                    <button
+                      key={minutes}
+                      type="button"
+                      className="btn btn-sm !px-0"
+                      onClick={() => startTimedBreak(minutes)}
+                    >
+                      {minutes} {t('min')}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
 

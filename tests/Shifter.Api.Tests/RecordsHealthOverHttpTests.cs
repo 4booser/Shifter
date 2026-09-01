@@ -1,6 +1,8 @@
 using System.Net.Http.Json;
 using System.Text.Json;
 
+using Shifter.Application.Common.Time;
+
 using Xunit;
 
 namespace Shifter.Api.Tests;
@@ -72,7 +74,7 @@ public sealed class RecordsHealthOverHttpTests(Api api)
             .GetProperty("id").GetInt32();
 
         // Worked two days ago, no tips said, no actual times.
-        var day = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-2).ToString("yyyy-MM-dd");
+        var day = new AppClock().Today.AddDays(-2).ToString("yyyy-MM-dd");
 
         (await client.PutAsJsonAsync($"/shifter/v1/days/{day}", new
         {

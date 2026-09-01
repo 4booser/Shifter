@@ -507,8 +507,12 @@ function WeekdayTile({ monthDays }: { monthDays: CalendarDayData[] }) {
     byDay.set(weekday, bucket);
   }
 
+  // A day that cost more in deductions than it paid is not the best day of
+  // anybody's week. The tile said «Tue · −77 ₴ a shift» after one short shift
+  // went negative; nothing beats nothing, so it says nothing.
   const best = [...byDay.entries()]
     .map(([weekday, bucket]) => ({ weekday, average: bucket.total / bucket.count }))
+    .filter((entry) => entry.average > 0)
     .sort((one, two) => two.average - one.average)[0];
 
   return (

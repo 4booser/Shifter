@@ -194,8 +194,14 @@ export function Sidebar() {
                     </span>
                     <span className="min-w-0">
                       <span className="block truncate text-[0.86rem] font-medium">{template.name}</span>
+                      {/* Each dot rides with the figure before it, so a
+                          wrapped line never opens on a separator. */}
                       <span className="field-hint tabular">
-                        {template.start_time}–{template.end_time} · {template.hours} {t('h')} · {rateLabel(template, t)}
+                        {template.start_time}–{template.end_time}
+                        {'\u00A0· '}
+                        {template.hours} {t('h')}
+                        {'\u00A0· '}
+                        {rateLabel(template, t)}
                       </span>
                     </span>
                   </button>

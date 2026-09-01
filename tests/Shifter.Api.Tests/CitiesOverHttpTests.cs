@@ -1,6 +1,8 @@
 using System.Net.Http.Json;
 using System.Text.Json;
 
+using Shifter.Application.Common.Time;
+
 using Xunit;
 
 namespace Shifter.Api.Tests;
@@ -140,7 +142,7 @@ public sealed class CitiesOverHttpTests(Api api)
                     schedule = (string?)null,
                     title = "Бармен",
                     details = (string?)null,
-                    date = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(7 + i).ToString("yyyy-MM-dd"),
+                    date = new AppClock().Today.AddDays(7 + i).ToString("yyyy-MM-dd"),
                     start = "18:00",
                     end = "23:00",
                     pay_amount = 180m + venue * 20m,

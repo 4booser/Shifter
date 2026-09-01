@@ -215,6 +215,15 @@ export function shrinkPhoto(file: File): Promise<string> {
 
       image.onerror = () => reject(new Error('decode'));
       image.onload = () => {
+        // A photo has to have a photo in it. A tracking pixel or a broken
+        // export decodes fine and shrinks fine, and then a listing carries a
+        // 128-pixel band of one flat colour where a room should be.
+        if (Math.min(image.width, image.height) < 64) {
+          reject(new Error('tiny'));
+
+          return;
+        }
+
         const scale = Math.min(1, 900 / Math.max(image.width, image.height));
         const canvas = document.createElement('canvas');
 

@@ -382,12 +382,7 @@ export function DayPanel() {
               return (
                 <li key={entry.shift_id} className="rounded-(--radius) border border-border p-2">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="min-w-0">
-                      <span className="block truncate text-[0.88rem] font-semibold">{entry.name}</span>
-                      <span className="field-hint">
-                        {entry.start_time}–{entry.end_time} · {entry.hours} {t('h')} · <Money value={entry.earned} />
-                      </span>
-                    </span>
+                    <span className="min-w-0 flex-1 truncate text-[0.88rem] font-semibold">{entry.name}</span>
 
                     <button
                       type="button"
@@ -398,6 +393,20 @@ export function DayPanel() {
                       {t(isWorked ? 'Worked' : 'Planned')}
                     </button>
                   </div>
+                  {/*
+                    Beside the button this line had 106 of the 240 pixels and
+                    broke in the middle, leaving a row that opened «· 1 710 ₴».
+                    It gets the width under the name instead, and each dot is
+                    tied to the figure in front of it so a line can never start
+                    with a separator.
+                  */}
+                  <span className="field-hint block">
+                    {entry.start_time}–{entry.end_time}
+                    {'\u00A0· '}
+                    {entry.hours} {t('h')}
+                    {'\u00A0· '}
+                    <Money value={entry.earned} />
+                  </span>
 
                   {/* Only a shift that is actually paid a share asks what it
                       took: everybody else would be typing a number nothing

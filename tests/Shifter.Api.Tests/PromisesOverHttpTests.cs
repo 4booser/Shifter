@@ -2,6 +2,8 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 
+using Shifter.Application.Common.Time;
+
 using Xunit;
 
 namespace Shifter.Api.Tests;
@@ -565,7 +567,7 @@ public sealed class PromisesOverHttpTests(Api api)
             note = (string?)null,
         })).EnsureSuccessStatusCode();
 
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var today = new AppClock().Today;
 
         (await WorkAsync(client, today.ToString("yyyy-MM-dd"), shift)).EnsureSuccessStatusCode();
 

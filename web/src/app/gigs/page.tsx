@@ -314,7 +314,7 @@ function Gigs() {
                 <h2 className="mb-1.5 text-[0.8rem] font-semibold uppercase tracking-wide text-faint">
                   {new Intl.DateTimeFormat(lang, { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date(`${date}T00:00:00`))}
                 </h2>
-                <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+                <div className="grid items-start gap-2 md:grid-cols-2 xl:grid-cols-3">
                   {gigs.map((gig) => (
                     <GigCard key={gig.id} gig={gig} onRespond={() => setResponding(gig)} onWithdraw={() => {
                       void gigApi.withdraw(gig.id).then(refresh).catch((caught) => setError(apiErrorMessage(caught)));
@@ -365,7 +365,7 @@ function Gigs() {
       )}
 
       {view === 'replies' && (
-        <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid items-start gap-2 md:grid-cols-2 xl:grid-cols-3">
           {replies.length === 0 && (
             <p className="field-hint col-span-full">{t('Answer a gig on the board and it lands here.')}</p>
           )}
@@ -515,7 +515,7 @@ function GigCalendar({
       </div>
 
       {focusDay !== null && (
-        <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid items-start gap-2 md:grid-cols-2 xl:grid-cols-3">
           {focused.map((gig) => (
             <GigCard key={gig.id} gig={gig} onRespond={() => onRespond(gig)} onWithdraw={() => onWithdraw(gig)} />
           ))}
@@ -543,22 +543,51 @@ function GigCard({ gig, onRespond, onWithdraw }: { gig: Gig; onRespond: () => vo
 
   const [photo, setPhoto] = useState(0);
 
+  /*
+   * A picture that will not load is worse than no picture.
+   *
+   * The strip is 128 pixels tall whatever arrives in it, so a photo that 404s
+   * — or one that was a tracking pixel before the uploader learned to refuse
+   * them — leaves a black band across the top of the card and the listing
+   * reads as broken. Anything that fails to paint drops out; when the last one
+   * does, the card closes up as though it never had photos.
+   */
+  const [dead, setDead] = useState<readonly string[]>([]);
+  const photos = gig.photos.filter((url) => !dead.includes(url));
+  const current = photos.length === 0 ? undefined : photos[photo % photos.length];
+
   return (
     <article className={`card lift relative flex flex-col gap-1.5 overflow-hidden p-3 ${dimmed ? 'opacity-60' : ''}`}>
-      {gig.photos.length > 0 && (
+      {current !== undefined && (
         <button
           type="button"
-          className="relative -m-3 mb-0 block h-32 overflow-hidden"
-          onClick={() => setPhoto((current) => (current + 1) % gig.photos.length)}
+          className="relative -m-3 mb-0 block h-32 overflow-hidden bg-surface-2"
+          onClick={() => setPhoto((step) => step + 1)}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={gig.photos[photo]} alt="" className="h-full w-full object-cover" />
-          {gig.photos.length > 1 && (
+          <img
+            src={current}
+            alt=""
+            className="h-full w-full object-cover"
+            onError={() => setDead((was) => [...was, current])}
+            /* Already-posted listings carry pixels the uploader would refuse
+               today; a 1×1 loads without error and paints a flat black band. */
+            onLoad={(event) => {
+              const image = event.currentTarget;
+
+              if (Math.min(image.naturalWidth, image.naturalHeight) < 64) {
+                setDead((was) => [...was, current]);
+              }
+            }}
+          />
+          {photos.length > 1 && (
             <span className="absolute bottom-1.5 right-2 flex items-center gap-1">
-              {gig.photos.map((_, index) => (
+              {photos.map((url, index) => (
                 <span
-                  key={index}
-                  className={`h-1.5 rounded-full transition-all ${index === photo ? 'w-4 bg-white' : 'w-1.5 bg-white/60'}`}
+                  key={url}
+                  className={`h-1.5 rounded-full transition-all ${
+                    index === photo % photos.length ? 'w-4 bg-white' : 'w-1.5 bg-white/60'
+                  }`}
                 />
               ))}
             </span>
@@ -1077,9 +1106,18 @@ function EditModal({
                     if (files.length === 0) return;
 
                     setShrinking(true);
-                    void Promise.all(files.map(shrinkPhoto))
-                      .then((shrunk) => setForm((current) => ({ ...current, photos: [...current.photos, ...shrunk] })))
-                      .catch(() => setError(t('Could not read a photo.')))
+                    // One unreadable file used to discard the four good ones
+                    // picked with it.
+                    void Promise.allSettled(files.map(shrinkPhoto))
+                      .then((results) => {
+                        const good = results.flatMap((row) => (row.status === 'fulfilled' ? [row.value] : []));
+
+                        if (good.length > 0) {
+                          setForm((current) => ({ ...current, photos: [...current.photos, ...good] }));
+                        }
+
+                        if (good.length < results.length) setError(t('Could not read a photo.'));
+                      })
                       .finally(() => setShrinking(false));
                   }}
                 />

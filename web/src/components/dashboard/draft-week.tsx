@@ -29,7 +29,7 @@ interface Priced {
 }
 
 export function DraftWeek() {
-  const { t, lang } = useI18n();
+  const { t, n, lang } = useI18n();
 
   const templates = useCalendar((state) => state.templates);
   const live = templates.filter((template) => !template.archived);
@@ -146,7 +146,7 @@ export function DraftWeek() {
                     +<CountUp value={priced.total} format={(v) => `₴${Math.round(v).toLocaleString('ru')}`} />
                   </span>
                   <span className="text-[0.86rem] text-muted tabular">
-                    {picked.size} {t('shifts')} · {Math.round(priced.hours)} {t('h')}
+                    {n(picked.size, 'shifts')} · {Math.round(priced.hours)} {t('h')}
                   </span>
                 </div>
 

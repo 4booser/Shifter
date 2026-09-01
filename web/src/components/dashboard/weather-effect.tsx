@@ -21,7 +21,7 @@ import { Money } from '@/components/ui/bits';
  * this data cannot support however much it looks like it can.
  */
 export function WeatherEffectCard() {
-  const { t } = useI18n();
+  const { t, n } = useI18n();
 
   const [places, setPlaces] = useState<WeatherEffect[] | null>(null);
 
@@ -66,10 +66,10 @@ export function WeatherEffectCard() {
                 checkable by somebody who does not trust the headline. */}
             <div className="flex gap-4 text-[0.82rem] text-muted">
               <span>
-                🌧 <Money value={place.wet_per_hour} />/{t('h')} · {place.wet_days} {t('days')}
+                🌧 <Money value={place.wet_per_hour} />/{t('h')} · {n(place.wet_days, 'days')}
               </span>
               <span>
-                ☀️ <Money value={place.dry_per_hour} />/{t('h')} · {place.dry_days} {t('days')}
+                ☀️ <Money value={place.dry_per_hour} />/{t('h')} · {n(place.dry_days, 'days')}
               </span>
             </div>
           </div>

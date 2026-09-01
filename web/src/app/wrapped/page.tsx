@@ -384,7 +384,7 @@ function Wrapped() {
             </p>
             {live && (
               <p className="pop chip mt-4 !border-(--accent)/40 !bg-(--accent-soft) !text-(--accent)" style={{ ['--i' as string]: 5 }}>
-                {t('On pace for')} {Math.round(projectedHours)} {t('hours this year')}
+                {t('On pace for')} {n(Math.round(projectedHours), 'hours')} {t('this year')}
               </p>
             )}
             <span aria-hidden className="absolute bottom-4 animate-bounce text-faint">↓</span>
@@ -502,7 +502,7 @@ function Wrapped() {
               {Math.round(nightShare)}% {t('of shifts started after 20:00')}
             </Superlative>
             <Superlative emoji="🛌" title={t('Rest')}>
-              {rest} {t('days off')}
+              {n(rest, 'days')} {t('of rest')}
             </Superlative>
           </div>
 

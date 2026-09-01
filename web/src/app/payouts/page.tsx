@@ -183,7 +183,7 @@ function Payouts() {
 
   /** "in 3 days" / "5 days late" — a bare date needs mental arithmetic. */
   const relative = (row: PayPeriodRow) => {
-    if (row.days_late > 0) return `${row.days_late} ${t('days late')}`;
+    if (row.days_late > 0) return `${n(row.days_late, 'days')} ${t('late')}`;
 
     const days = Math.round(
       (new Date(`${row.due_on}T00:00:00`).getTime() - new Date(`${todayKey()}T00:00:00`).getTime()) / 86_400_000,

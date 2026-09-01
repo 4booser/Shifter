@@ -65,7 +65,7 @@ export function MonthGrid({
   onSearch?: () => void;
   onSettings?: () => void;
 }) {
-  const { t, lang } = useI18n();
+  const { t, n, lang } = useI18n();
   const { format } = useMoney();
   const settings = useSettings((state) => state.settings);
   const update = useSettings((state) => state.update);
@@ -260,7 +260,7 @@ export function MonthGrid({
               ? t('the weekly pattern')
               : `"${brush.name}"`;
 
-      if (!window.confirm(`${t('Apply')} ${what} → ${keys.length} ${t('days')}?`)) return;
+      if (!window.confirm(`${t('Apply')} ${what} → ${n(keys.length, 'days')}?`)) return;
     }
 
     // The eraser is armed as an empty string so "no brush" and "the brush that
@@ -414,7 +414,7 @@ export function MonthGrid({
 
         event.preventDefault();
 
-        if (window.confirm(`${t('Clear shifts on')} ${filled.length} ${t('days')}?`)) {
+        if (window.confirm(`${t('Clear shifts on')} ${n(filled.length, 'days')}?`)) {
           void clearShifts(filled);
         }
 
@@ -860,7 +860,7 @@ export function MonthGrid({
       {state.multiSelected.size > 1 && (
         <p className="rise mt-2 flex items-center gap-2 rounded-(--radius) border border-(--accent)/40 bg-(--accent-soft) px-3 py-1.5 text-[0.82rem]">
           <Icon name="check" size={13} />
-          {state.multiSelected.size} {t('days selected')} — {t('actions moved to the panel on the right')}
+          {n(state.multiSelected.size, 'days')} {t('selected')} — {t('actions moved to the panel on the right')}
           <button type="button" className="btn btn-quiet btn-sm ml-auto" onClick={calendarActions.clearMultiSelect}>
             {t('Clear')}
           </button>

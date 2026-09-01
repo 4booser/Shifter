@@ -222,7 +222,7 @@ export function PhotoImportModal({ open, onClose }: { open: boolean; onClose: ()
               ))}
             </ul>
             <button type="button" className="btn btn-primary" disabled={chosen.length === 0} onClick={() => void apply()}>
-              {t('Apply')} · {chosen.length} {t('days')}
+              {t('Apply')} · {n(chosen.length, 'days')}
             </button>
           </>
         )}

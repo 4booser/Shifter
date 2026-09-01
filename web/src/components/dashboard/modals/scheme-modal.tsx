@@ -33,7 +33,7 @@ const WEEKDAYS = [
 
 /** Saved ways of colouring a calendar: by weekday, or on a rotation. */
 export function SchemeModal({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { t } = useI18n();
+  const { t, n } = useI18n();
   const month = useCalendar((state) => state.month);
   const settings = useSettings((state) => state.settings);
   const saveScheme = useSettings((state) => state.saveScheme);
@@ -310,7 +310,7 @@ export function SchemeModal({ open, onClose }: { open: boolean; onClose: () => v
         <p className="field-hint">
           {willPaint > 0 ? (
             <>
-              {t('Colours')} <strong>{willPaint}</strong> / {dates.length} {t('days')}.
+              {t('Colours')} <strong>{willPaint}</strong> / {n(dates.length, 'days')}.
             </>
           ) : (
             t('Nothing to colour over those dates.')

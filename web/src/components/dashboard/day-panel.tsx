@@ -67,7 +67,7 @@ const TIP_STEPS = [50, 100, 200, 500];
  * on it, filling only what the draft has no answer for.
  */
 export function DayPanel() {
-  const { t, lang } = useI18n();
+  const { t, n, lang } = useI18n();
   const { format } = useMoney();
   const settings = useSettings((state) => state.settings);
   const key = useCalendar((state) => state.selectedDate);
@@ -350,7 +350,7 @@ export function DayPanel() {
                     </span>
                   )}
                   {event.days > 1 && (
-                    <span className="chip flex-none">{event.days} {t('days')}</span>
+                    <span className="chip flex-none">{n(event.days, 'days')}</span>
                   )}
                 </button>
                 <button
@@ -997,7 +997,7 @@ function BulkPanel({ keys }: { keys: string[] }) {
           className="btn w-full border-danger/40 text-danger"
           disabled={saving}
           onClick={() => {
-            if (window.confirm(`${t('Clear shifts on')} ${withShifts} ${t('days')}?`)) {
+            if (window.confirm(`${t('Clear shifts on')} ${n(withShifts, 'days')}?`)) {
               void clearShifts(keys);
             }
           }}

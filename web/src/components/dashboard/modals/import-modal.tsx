@@ -13,7 +13,7 @@ import { Modal } from '@/components/ui/modal';
  * looked at: an import that half-succeeds is worse than one that never ran.
  */
 export function ImportModal({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { t } = useI18n();
+  const { t, n } = useI18n();
   const templates = useCalendar((state) => state.templates);
 
   const [preview, setPreview] = useState<ImportPreview | null>(null);
@@ -84,7 +84,7 @@ export function ImportModal({ open, onClose }: { open: boolean; onClose: () => v
         {error && <Alert>{t(error)}</Alert>}
         {done !== null && (
           <Alert kind="good">
-            {done} {t('days imported')}
+            {n(done, 'days')} {t('imported')}
           </Alert>
         )}
 

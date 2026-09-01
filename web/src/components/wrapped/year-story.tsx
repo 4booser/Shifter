@@ -59,7 +59,7 @@ export function YearStory({
   const lines: string[] = [];
 
   lines.push(
-    `${t('In')} ${year} ${t('you worked')} ${n(shifts, 'shifts')} ${t('across')} ${n(days, 'days')} — ${Math.round(summary.hours)} ${t('hours in all')}, ${t('and they came to')} ${format(summary.total_earned)}.`,
+    `${t('In')} ${year} ${t('you worked')} ${n(shifts, 'shifts')} ${t('across')} ${n(days, 'days')} — ${n(Math.round(summary.hours), 'hours')} ${t('in all')}, ${t('and they came to')} ${format(summary.total_earned)}.`,
   );
 
   lines.push(
@@ -82,13 +82,13 @@ export function YearStory({
 
   if (summary.night_hours > 0) {
     lines.push(
-      `${nightShare}% ${t('of those hours were night ones')} — ${Math.round(summary.night_hours)} ${t('hours after the city went quiet')}.`,
+      `${nightShare}% ${t('of those hours were night ones')} — ${n(Math.round(summary.night_hours), 'hours')} ${t('after the city went quiet')}.`,
     );
   }
 
   if (summary.overtime_hours > 0) {
     lines.push(
-      `${Math.round(summary.overtime_hours)} ${t('hours went past the week’s ceiling')}${
+      `${n(Math.round(summary.overtime_hours), 'hours')} ${t('went past the week’s ceiling')}${
         summary.overtime_earned > 0 ? `, ${t('and the premium for them was')} ${format(summary.overtime_earned)}` : ''
       }.`,
     );

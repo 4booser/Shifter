@@ -528,7 +528,7 @@ function WeekdayTile({ monthDays }: { monthDays: CalendarDayData[] }) {
 
 /** Fines, breakages and meals: money that left before it arrived. */
 function DeductionsTile({ monthDays }: { monthDays: CalendarDayData[] }) {
-  const { t } = useI18n();
+  const { t, n } = useI18n();
   const taken = monthDays.reduce((sum, day) => sum + day.deductions, 0);
   const days = monthDays.filter((day) => day.deductions > 0).length;
 
@@ -539,7 +539,8 @@ function DeductionsTile({ monthDays }: { monthDays: CalendarDayData[] }) {
         {taken > 0 ? <FlowMoney value={Math.round(taken)} /> : '—'}
       </span>
       <span className="field-hint">
-        {days > 0 ? `${days} ${t('days this month')}` : t('nothing withheld')}
+        {/* «1 дней» — the count and the noun have to bend together. */}
+        {days > 0 ? `${n(days, 'days')} ${t('this month')}` : t('nothing withheld')}
       </span>
     </>
   );
@@ -963,7 +964,13 @@ function HoursTile({ monthDays }: { monthDays: CalendarDayData[] }) {
     (sum, day) => sum + day.shifts.filter((entry) => entry.worked).length,
     0,
   );
-  const round = (value: number) => value.toFixed(value % 1 === 0 ? 0 : 1);
+  // Rounded before the whole-number test: a month of 9.5s and 7.5s adds up to
+  // 113.99999999999999, which is not a whole number and printed «114.0».
+  const round = (value: number) => {
+    const tenth = Math.round(value * 10) / 10;
+
+    return tenth.toFixed(tenth % 1 === 0 ? 0 : 1);
+  };
 
   return (
     <>

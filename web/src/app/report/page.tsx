@@ -57,7 +57,7 @@ const firstOf = ({ year, month }: YearMonth) => `${year}-${`${month}`.padStart(2
  * as an accountant. Prints clean: the shell chrome stays on screen.
  */
 function Report() {
-  const { t, lang } = useI18n();
+  const { t, n, lang } = useI18n();
   const { format, formatIn } = useMoney();
 
   const [month, setMonth] = useState<YearMonth>(currentMonth());
@@ -217,7 +217,7 @@ function Report() {
     ctx.fillStyle = 'rgba(255,255,255,0.6)';
     ctx.font = '44px system-ui, -apple-system, sans-serif';
     ctx.fillText(
-      `${summary.days_worked} ${t('days')} · ${Math.round(summary.hours)} h · ${format(averages.perHour)}/h`,
+      `${n(summary.days_worked, 'days')} · ${Math.round(summary.hours)} h · ${format(averages.perHour)}/h`,
       W / 2,
       450,
     );

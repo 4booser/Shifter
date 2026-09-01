@@ -27,7 +27,7 @@ export function BankWork({
   from: string;
   to: string;
 }) {
-  const { t } = useI18n();
+  const { t, n } = useI18n();
 
   // The web's day model carries everything the crossover functions read; the
   // cast is structural, not a coercion.
@@ -99,7 +99,7 @@ export function BankWork({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <span className="field-hint">
-                {t('a worked day costs')} · {byKind.onShiftDays} {t('days')}
+                {t('a worked day costs')} · {n(byKind.onShiftDays, 'days')}
               </span>
               <div className="tabular text-[1.1rem] font-bold">
                 <Money value={Math.round(byKind.onShift)} />
@@ -107,7 +107,7 @@ export function BankWork({
             </div>
             <div>
               <span className="field-hint">
-                {t('a day off costs')} · {byKind.offDays} {t('days')}
+                {t('a day off costs')} · {n(byKind.offDays, 'days')}
               </span>
               <div className="tabular text-[1.1rem] font-bold">
                 <Money value={Math.round(byKind.off)} />

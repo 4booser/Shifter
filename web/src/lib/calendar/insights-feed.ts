@@ -158,7 +158,11 @@ export function insightsFor(input: InsightInput): Insight[] {
       tone: 'info',
       key: '{hours} h of overtime brought {amount} extra',
       vars: {
-        hours: summary.overtime_hours.toFixed(summary.overtime_hours % 1 === 0 ? 0 : 1),
+        // Rounded before the whole-number test: a sum of halves lands on
+        // 113.99999999999999, which is not whole and prints «114.0».
+        hours: (Math.round(summary.overtime_hours * 10) / 10).toFixed(
+          Math.round(summary.overtime_hours * 10) % 10 === 0 ? 0 : 1,
+        ),
         amount: formatMoney(summary.overtime_earned),
       },
       weight: 45,

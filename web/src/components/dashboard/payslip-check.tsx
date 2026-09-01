@@ -44,7 +44,7 @@ export function PayslipCheckModal({
   on: string;
   onClose: () => void;
 }) {
-  const { t } = useI18n();
+  const { t, n } = useI18n();
   const { formatIn } = useMoney();
 
   const [check, setCheck] = useState<PayslipCheck | null>(null);
@@ -109,7 +109,7 @@ export function PayslipCheckModal({
           <>
             <p className="field-hint">
               {check.location_name} · {check.period_from} — {check.period_to} ·{' '}
-              {Math.round(check.hours)} {t('hours')} · {check.days_worked} {t('shifts')}
+              {n(Math.round(check.hours), 'hours')} · {n(check.days_worked, 'shifts')}
             </p>
 
             <p className="field-hint">

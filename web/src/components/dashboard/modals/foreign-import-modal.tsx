@@ -39,7 +39,7 @@ const FIELDS: { id: string; label: string }[] = [
 ];
 
 export function ForeignImportModal({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { t } = useI18n();
+  const { t, n } = useI18n();
 
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<Preview | null>(null);
@@ -133,7 +133,7 @@ export function ForeignImportModal({ open, onClose }: { open: boolean; onClose: 
 
       {done !== null && (
         <Alert kind="good">
-          {t('Written')}: {done.days} {t('days')}
+          {t('Written')}: {n(done.days, 'days')}
           {done.places > 0 && <>, {t('new places')}: {done.places}</>}
           {done.skipped > 0 && <>, {t('skipped')}: {done.skipped}</>}
         </Alert>

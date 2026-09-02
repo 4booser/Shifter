@@ -127,8 +127,13 @@ export function ForeignImportModal({ open, onClose }: { open: boolean; onClose: 
         {t('A CSV from anywhere. Nothing is written until you have looked at the columns below.')}
       </p>
 
-      <input type="file" accept=".csv,text/csv" className="field-input mb-3" onChange={pick} />
+      <input
+        type="file"
+        accept=".csv,text/csv"
+        className="field-input mb-3"
         aria-label={t('Choose a file')}
+        onChange={pick}
+      />
 
       {error !== null && <Alert kind="error">{error}</Alert>}
 

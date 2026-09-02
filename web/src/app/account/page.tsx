@@ -368,8 +368,13 @@ function FeedSection() {
       ) : (
         <>
           <div className="flex items-center gap-1.5">
-            <input readOnly className="field-input flex-1 !text-[0.78rem] tabular" value={url} onFocus={(e) => e.target.select()} />
+            <input
+              readOnly
+              className="field-input flex-1 !text-[0.78rem] tabular"
               aria-label={t('Your link')}
+              value={url}
+              onFocus={(e) => e.target.select()}
+            />
             <button
               type="button"
               aria-label={t('Copy the link')}

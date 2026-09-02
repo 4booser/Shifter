@@ -703,7 +703,6 @@ function Schedule() {
 
             <div className="mb-3 flex gap-2">
               <input
-                aria-label={t('Name the crew sees')}
                 className="field-input"
                 defaultValue={you.display_name}
                 maxLength={40}

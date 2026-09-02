@@ -79,8 +79,13 @@ export function ImportModal({ open, onClose }: { open: boolean; onClose: () => v
       <div className="flex flex-col gap-3.5">
         <p className="field-hint">{t('CSV or XLSX. One row per day; a column named date is the only one required.')}</p>
 
-        <input type="file" accept=".csv,.xlsx,text/csv" className="field-input" onChange={(event) => void pick(event)} />
+        <input
+          type="file"
+          accept=".csv,.xlsx,text/csv"
+          className="field-input"
           aria-label={t('Choose a file')}
+          onChange={(event) => void pick(event)}
+        />
 
         {error && <Alert>{t(error)}</Alert>}
         {done !== null && (

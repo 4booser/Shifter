@@ -564,11 +564,6 @@ export const RU: Dictionary = {
   'Any': 'Любая',
   'At least the same': 'Не ниже',
   'Post again': 'Выставить снова',
-  'What this week costs': 'Во что обходится эта неделя',
-  'What this month costs': 'Во что обходится этот месяц',
-  'Only the': 'Только',
-  'who share their rate. The rest are not estimated.':
-    'кто делится ставкой. Остальных не оцениваем.',
   'Looks like a short turnaround': 'Похоже на короткий отдых между сменами',
   'The crew’s earnings are hidden until you turn on two-factor. You see the rota; their money waits.':
     'Заработок команды скрыт, пока не включена двухфакторка. График виден, чужие деньги — нет.',
@@ -3745,11 +3740,6 @@ export const UK: Dictionary = {
   'Any': 'Будь-яка',
   'At least the same': 'Не нижче',
   'Post again': 'Виставити знову',
-  'What this week costs': 'У що обходиться цей тиждень',
-  'What this month costs': 'У що обходиться цей місяць',
-  'Only the': 'Тільки',
-  'who share their rate. The rest are not estimated.':
-    'хто ділиться ставкою. Решту не оцінюємо.',
   'Looks like a short turnaround': 'Схоже на короткий відпочинок між змінами',
   'The crew’s earnings are hidden until you turn on two-factor. You see the rota; their money waits.':
     'Заробіток команди прихований, доки не увімкнена двофакторка. Графік видно, чужі гроші — ні.',

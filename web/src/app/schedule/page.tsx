@@ -852,31 +852,17 @@ function Schedule() {
           <section className="card reveal p-4">
             {/* The card prices whatever span is on screen, and said «эта
                 неделя» over a month's total whenever the month was chosen. */}
-            <h2 className="mb-1 text-[0.98rem] font-bold">
-              {t(span === 'month' ? 'What this month costs' : 'What this week costs')}
-            </h2>
-            <p className="text-[1.5rem] font-extrabold tracking-tight">
-              <Money value={sharers.reduce((sum, member) => sum + (member.earned ?? 0), 0)} />
-            </p>
-            <p className="field-hint mb-3">
-              {t('Only the')} {sharers.length} {t('of')} {rota?.members.length}{' '}
-              {t('who share their rate. The rest are not estimated.')}
-              {sharers.reduce((sum, member) => sum + member.hours, 0) > 0 && (
-                <>
-                  {' · '}
-                  <Money
-                    value={
-                      sharers.reduce((sum, member) => sum + (member.earned ?? 0), 0)
-                      / sharers.reduce((sum, member) => sum + member.hours, 0)
-                    }
-                  />
-                  /{t('h')}
-                </>
-              )}
-            </p>
+            {/*
+              The total lives once, in the panel above that computes it.
 
-            <h3 className="mb-1 text-[0.9rem] font-bold">{t('Who shares their earnings')}</h3>
-            <p className="field-hint mb-2">
+              This card printed its own — summed from a different source than
+              the panel's — so one screen carried the same figure twice under
+              two names, and two independent sums that have to agree are a
+              disagreement waiting for a month odd enough to cause one. What
+              is only here is the breakdown, so that is what it is.
+            */}
+            <h2 className="mb-1 text-[0.98rem] font-bold">{t('Who shares their earnings')}</h2>
+            <p className="field-hint mb-3">
               {(rota?.members ?? []).filter((member) => member.shares_earnings).length} / {rota?.members.length}{' '}
               {t('of the crew share')}
             </p>

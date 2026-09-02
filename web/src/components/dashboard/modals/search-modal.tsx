@@ -16,7 +16,7 @@ import { Modal } from '@/components/ui/modal';
  * scrolling the calendar.
  */
 export function SearchModal({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { t, lang } = useI18n();
+  const { t, n, lang } = useI18n();
 
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(true);
@@ -73,6 +73,12 @@ export function SearchModal({ open, onClose }: { open: boolean; onClose: () => v
           placeholder={t('covered for Ann, 2026-03…')}
           onChange={(event) => setQuery(event.target.value)}
         />
+
+        {/* The one thing a person typing cannot see is how many days came
+            back. Said politely, so it waits for a pause in the typing. */}
+        <p className="sr-only" role="status">
+          {query.trim().length < 2 || loading ? '' : n(hits.length, 'days')}
+        </p>
 
         {loading ? (
           <p className="field-hint">{t('Loading…')}</p>

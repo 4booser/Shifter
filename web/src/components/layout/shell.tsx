@@ -150,6 +150,11 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
           <div className="ml-auto flex items-center gap-1">
             <LiveBar />
+            {/* Losing the network and getting it back changes nothing a
+                screen reader would notice: no focus moves, no page loads. */}
+            <span className="sr-only" role="status">
+              {offline ? t('offline') : ''}
+            </span>
             {offline && (
               <span className="chip chip-warn" title={t('Changes will be sent when the network returns')}>
                 {t('offline')}

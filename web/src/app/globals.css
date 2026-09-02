@@ -487,7 +487,7 @@ body {
 .btn-armed {
   background: var(--danger-soft);
   border-color: color-mix(in srgb, var(--danger) 45%, transparent);
-  color: var(--danger);
+  color: color-mix(in srgb, var(--danger) 80%, var(--text));
 }
 
 .btn-armed:hover {
@@ -502,7 +502,7 @@ body {
 .btn-warn {
   background: var(--warn-soft);
   border-color: color-mix(in srgb, var(--warn) 50%, transparent);
-  color: var(--warn);
+  color: color-mix(in srgb, var(--warn) 80%, var(--text));
 }
 
 .btn-warn:hover {
@@ -610,28 +610,48 @@ body {
  * tint while losing its meaning. Anything a person reads at a glance gets a
  * class of its own here, where it can win.
  */
+/*
+ * Each state's ink is pulled a fifth of the way toward the page's own.
+ *
+ * The tones are picked to be read on the page's ground, not on a tenth of
+ * themselves: on the five light themes «paid», «late» and «underpaid» came out
+ * at 4.1–4.3 against their own tint, under the 4.5 a chip's text size needs.
+ * Mixing toward the ink darkens them on a light ground and lightens them on a
+ * dark one, and the same declaration does both — 5.3 and up either way, with
+ * the hue still saying which state it is.
+ */
 .chip-good {
   border-color: color-mix(in srgb, var(--good) 40%, transparent);
   background: var(--good-soft);
-  color: var(--good);
+  color: color-mix(in srgb, var(--good) 80%, var(--text));
 }
 
 .chip-warn {
   border-color: color-mix(in srgb, var(--warn) 40%, transparent);
   background: var(--warn-soft);
-  color: var(--warn);
+  color: color-mix(in srgb, var(--warn) 80%, var(--text));
 }
 
 .chip-danger {
   border-color: color-mix(in srgb, var(--danger) 40%, transparent);
   background: var(--danger-soft);
-  color: var(--danger);
+  color: color-mix(in srgb, var(--danger) 80%, var(--text));
 }
 
+/*
+ * The accent chip's ink is pulled toward the page's own, not left as the
+ * accent itself.
+ *
+ * The brand colour is picked to carry white on top of it, which is the
+ * opposite of what a 12% tint of it needs underneath: «открыто», «приглашён»
+ * and every selected filter came out at 2.7 against their own background,
+ * where 4.5 is the floor for text this size. Mixed toward the ink they sit
+ * on, they keep the hue and become readable.
+ */
 .chip-accent {
   border-color: color-mix(in srgb, var(--accent) 40%, transparent);
   background: var(--accent-soft);
-  color: var(--accent);
+  color: color-mix(in srgb, var(--accent) 45%, var(--text));
 }
 
 .swatch {

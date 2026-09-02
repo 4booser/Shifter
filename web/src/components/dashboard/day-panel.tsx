@@ -1340,14 +1340,20 @@ function DayContext({ dayKey }: { dayKey: string }) {
             <dd className="tabular"><Money value={Math.round(average)} /></dd>
           </div>
         )}
-        {weekdayAverage !== null && (
+        {/* «В среднем по вторникам ₴0» is not an average anybody wants to
+            read; it means no Tuesday has paid yet, which the row above
+            already says. */}
+        {weekdayAverage !== null && weekdayAverage > 0 && (
           <div className="flex justify-between gap-2">
             <dt className="text-muted">
               {t('Same weekday, on average')}
             </dt>
             <dd className="tabular">
               <Money value={Math.round(weekdayAverage)} />
-              {here.earned > 0 && (
+              {/* The average has to be something before a day can be a
+                  percentage of it: past Tuesdays that all earned nothing gave
+                  this day «+Infinity%». */}
+              {here.earned > 0 && weekdayAverage > 0 && (
                 <span
                   className={`ml-1.5 text-[0.72rem] ${here.earned >= weekdayAverage ? 'text-good' : 'text-danger'}`}
                 >

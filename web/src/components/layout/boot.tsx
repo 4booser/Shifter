@@ -54,6 +54,32 @@ export function Boot({ children }: { children: React.ReactNode }) {
     void navigator.serviceWorker.register('/sw.js').catch(() => {
       // A refused registration leaves the site exactly as it was: online-only.
     });
+
+    /*
+     * A deploy landing under an open tab.
+     *
+     * The worker skips waiting and claims its clients, so the new build takes
+     * over a page whose JavaScript came from the old one. Next's chunks are
+     * hashed, so the first lazy import after that asks for a file the new
+     * build no longer has, and the screen it was opening never arrives. One
+     * reload, once, the moment the controller changes.
+     */
+    // Only where one was already in charge: the first registration of a
+    // person's first visit also fires this, and reloading them mid-first-page
+    // would be the app blinking at somebody for no reason.
+    const hadController = navigator.serviceWorker.controller !== null;
+    let swapped = false;
+
+    const onSwap = () => {
+      if (swapped || !hadController) return;
+
+      swapped = true;
+      window.location.reload();
+    };
+
+    navigator.serviceWorker.addEventListener('controllerchange', onSwap);
+
+    return () => navigator.serviceWorker.removeEventListener('controllerchange', onSwap);
   }, []);
 
   if (!mounted) return null;

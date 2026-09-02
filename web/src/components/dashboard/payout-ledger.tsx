@@ -148,7 +148,7 @@ export function PayoutLedger({
               ) : (
                 <div className="mt-2 flex flex-wrap items-center gap-2">
                   <input
-                    className="field-input w-40"
+                    className="field-input !w-40"
                     value={word}
                     placeholder={requiredWord}
                     aria-label={t('Type the word to confirm')}

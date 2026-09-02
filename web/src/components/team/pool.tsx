@@ -69,7 +69,7 @@ export function PoolPanel({ teamId }: { teamId: number }) {
         </div>
         <input
           type="date"
-          className="field-input w-auto"
+          className="field-input !w-auto"
           aria-label={t('Which day')}
           value={date}
           onChange={(event) => setDate(event.target.value)}

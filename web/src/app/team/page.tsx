@@ -173,7 +173,7 @@ function TeamAdmin() {
         <h2 className="mb-2 text-[0.98rem] font-bold">{t('Join a crew')}</h2>
         <div className="flex flex-wrap gap-2">
           <input
-            className="field-input w-40 uppercase tracking-[0.15em]"
+            className="field-input !w-40 uppercase tracking-[0.15em]"
             maxLength={6}
             placeholder="ABC123"
             value={joinCode}

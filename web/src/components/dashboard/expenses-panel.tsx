@@ -509,14 +509,14 @@ function StandingCosts({
                   inputMode="decimal"
                   min={1}
                   max={28}
-                  className="field-input w-16"
+                  className="field-input !w-16"
                   value={day}
                   onChange={(event) => setDay(Number(event.target.value))}
                 />
               </label>
             ) : (
               <select
-                className="field-input w-auto"
+                className="field-input !w-auto"
                 value={weekday}
                 onChange={(event) => setWeekday(Number(event.target.value))}
               >
@@ -529,7 +529,7 @@ function StandingCosts({
             )}
 
             <select
-              className="field-input w-auto"
+              className="field-input !w-auto"
               value={kind}
               onChange={(event) => setKind(event.target.value as ExpenseKind)}
             >
@@ -541,7 +541,7 @@ function StandingCosts({
             </select>
 
             <select
-              className="field-input w-auto"
+              className="field-input !w-auto"
               value={placeId ?? ''}
               onChange={(event) =>
                 setPlaceId(event.target.value === '' ? null : Number(event.target.value))

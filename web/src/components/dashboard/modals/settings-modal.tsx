@@ -149,7 +149,7 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
               </button>
             ))}
             <input
-              className="field-input w-16"
+              className="field-input !w-16"
               maxLength={4}
               value={settings.currency}
               onChange={(event) => update('currency', event.target.value)}

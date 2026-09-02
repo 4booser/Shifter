@@ -524,6 +524,14 @@ body {
   margin-bottom: 0.3rem;
 }
 
+/*
+ * The width here is a default, and beating it needs `!`.
+ *
+ * This file is not in a cascade layer and Tailwind's utilities are, so a
+ * `w-40` written beside `field-input` silently loses: a six-character crew
+ * code was given a 598-pixel box and pushed the field beside it onto a line
+ * of its own. Every narrow field in the app carries the bang for this reason.
+ */
 .field-input {
   width: 100%;
   padding: 0.5rem 0.7rem;

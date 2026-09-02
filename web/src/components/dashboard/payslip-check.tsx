@@ -141,7 +141,7 @@ export function PayslipCheckModal({
                         <input
                           type="number"
                           inputMode="decimal"
-                          className="field-input w-28 text-right"
+                          className="field-input !w-28 text-right"
                           aria-label={`${t(LABEL[line.kind])} — ${t('The payslip')}`}
                           value={said[`${index}`] ?? ''}
                           onChange={(event) =>

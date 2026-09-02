@@ -373,11 +373,14 @@ function HourlyTile({ monthDays }: { monthDays: CalendarDayData[] }) {
   return (
     <>
       <Label icon="clock">{t('Your hour')}</Label>
+      {/* A whole hour before quoting one: a shift closed after fifty seconds
+          divided the month by a fraction and read «−₴3 850» over a hint that
+          said «0 ч». */}
       <span className="tile-value">
-        {hours > 0 ? <FlowMoney value={Math.round(earned / hours)} /> : '—'}
+        {hours >= 1 ? <FlowMoney value={Math.round(earned / hours)} /> : '—'}
       </span>
       <span className="field-hint">
-        {hours > 0 ? `${Math.round(hours)} ${t('h this month')}` : t('No hours yet')}
+        {hours >= 1 ? `${Math.round(hours)} ${t('h this month')}` : t('No hours yet')}
       </span>
     </>
   );

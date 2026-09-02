@@ -60,8 +60,12 @@ export function averagesFor(summary: DaysResponse): Averages {
     hoursPerDay: per(summary.hours, worked),
     tipsPerDay: per(summary.tips_earned, worked),
     salesPerDay: per(summary.sales_earned, worked),
-    perHour: per(summary.total_earned, summary.hours),
-    tipsPerHour: per(summary.tips_earned, summary.hours),
+    // An hourly rate divided out of minutes is not a rate. A shift closed
+    // after fifty seconds priced the hour at −₴3 805 on the statistics page,
+    // beside a card that said nought hours had been worked. Under an hour
+    // there is nothing to quote.
+    perHour: summary.hours < 1 ? 0 : per(summary.total_earned, summary.hours),
+    tipsPerHour: summary.hours < 1 ? 0 : per(summary.tips_earned, summary.hours),
     perShift: per(summary.total_earned, shifts),
     hoursPerShift: per(summary.hours, shifts),
     tipShare: per(summary.tips_earned, summary.total_earned) * 100,

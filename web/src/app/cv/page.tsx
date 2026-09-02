@@ -9,6 +9,7 @@ import { useI18n } from '@/lib/i18n';
 import { useMoney } from '@/lib/settings/money';
 import { useReveal } from '@/lib/fx';
 import { Chronicle } from '@/components/dashboard/chronicle';
+import { Empty } from '@/components/ui/empty';
 import { Alert } from '@/components/ui/bits';
 import { Shell } from '@/components/layout/shell';
 
@@ -90,12 +91,16 @@ function Cv() {
 
       {error && <Alert onDismiss={() => setError(null)}>{error}</Alert>}
 
+      {/* The page somebody opens to show an employer what they have done.
+          Empty, it was one grey sentence in a card with nowhere to go. */}
       {history !== null && history.shifts === 0 && (
-        <section className="card reveal p-4">
-          <p className="field-hint">
-            {t('Nothing recorded yet. A month of shifts is already worth showing.')}
-          </p>
-        </section>
+        <Empty
+          icon="user"
+          title={t('Nothing to show yet')}
+          action={{ label: t('Open the calendar'), href: '/dashboard' }}
+        >
+          {t('Nothing recorded yet. A month of shifts is already worth showing.')}
+        </Empty>
       )}
 
       {history !== null && history.shifts > 0 && (

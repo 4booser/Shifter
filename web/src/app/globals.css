@@ -1436,8 +1436,33 @@ body,
     display: inline;
   }
 
+  /*
+   * Paper is light, whatever the screen was.
+   *
+   * The body was painted white and nothing else was: on any of the five dark
+   * themes the ink stayed near-white, the cards kept a dark background most
+   * printers drop, and the payslip somebody hands to an accountant came out
+   * of the tray blank. The palette is pinned to the light one here so the
+   * page prints as the same document from every theme.
+   */
+  :root {
+    --bg: #ffffff;
+    --bg-veil: none;
+    --surface: #ffffff;
+    --surface-2: #f4f4f2;
+    --border: #d8d5cd;
+    --border-strong: #b6b2a8;
+    --text: #14130f;
+    --muted: #55524a;
+    --faint: #6b675b;
+    --good: #14663d;
+    --warn: #7d4d05;
+    --danger: #a32e3c;
+  }
+
   body {
     background: white;
+    color: var(--text);
   }
 
   .print-report .card {

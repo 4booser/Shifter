@@ -2,7 +2,7 @@
 
 import { useId, useMemo, useState } from 'react';
 
-import { formatDayLabel, fromKey, keysBetween, todayKey } from '@/lib/calendar/calendar-date';
+import { formatDayLabel, fromKey, keysBetween, todayKey, formatDayLabelShort } from '@/lib/calendar/calendar-date';
 import { TipDay, WaterfallStep, WeekBand } from '@/lib/charts/report-math';
 import { stagger } from '@/lib/fx';
 import { useI18n } from '@/lib/i18n';
@@ -696,11 +696,15 @@ export function DaysAtGlance({
               </span>
               <span className="grid gap-[2px]" style={{ gridTemplateColumns: 'repeat(31, minmax(0, 1fr))' }}>
                 {days.map((key) => (
+                  /* Three hundred and sixty-five buttons with nothing in
+                     them: a screen reader read «button» once a day for a
+                     year. Each one says its date and its figure. */
                   <button
                     type="button"
                     key={key}
                     className={`h-5 rounded-[3px] ${key === today ? 'ring-1 ring-(--accent)' : ''}`}
                     style={{ background: fill(values.get(key) ?? 0), gridColumnStart: Number(key.slice(8)) }}
+                    aria-label={`${formatDayLabelShort(key, lang)} · ${format(values.get(key) ?? 0)}`}
                     onPointerEnter={() => setHover(key)}
                     onFocus={() => setHover(key)}
                   />

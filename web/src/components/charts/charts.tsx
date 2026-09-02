@@ -2,8 +2,9 @@
 
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 
-import { fromKey, keysBetween } from '@/lib/calendar/calendar-date';
+import { formatDayLabelShort, fromKey, keysBetween } from '@/lib/calendar/calendar-date';
 import { CHART_H, CHART_W, Column, PAD, PLOT_H, PLOT_W, Tick, niceCeiling, niceFloor, smoothPath } from '@/lib/charts/math';
+import { useI18n } from '@/lib/i18n';
 import { useMoney } from '@/lib/settings/money';
 
 /*
@@ -402,6 +403,7 @@ export function ColumnChart({
 /** A year of work at a glance: sequential ramp of the accent, one hue. */
 export function Heatmap({ values, from, to }: { values: ReadonlyMap<string, number>; from: string; to: string }) {
   const { format } = useMoney();
+  const { lang } = useI18n();
   const [hover, setHover] = useState<{ key: string; value: number } | null>(null);
 
   const weeks = useMemo(() => {
@@ -450,11 +452,17 @@ export function Heatmap({ values, from, to }: { values: ReadonlyMap<string, numb
               cell === null ? (
                 <span key={dayIndex} className="h-4 w-4" />
               ) : (
-                <span
+                /* A span cannot be tabbed to and has nothing to announce, so
+                   the whole year was mouse-only and silent. Each day is a
+                   button that says its own date and figure. */
+                <button
+                  type="button"
                   key={cell.key}
                   className="h-4 w-4 rounded-[3px]"
                   style={{ background: LEVELS[cell.level] }}
+                  aria-label={`${formatDayLabelShort(cell.key, lang)} · ${format(cell.value)}`}
                   onPointerEnter={() => setHover({ key: cell.key, value: cell.value })}
+                  onFocus={() => setHover({ key: cell.key, value: cell.value })}
                 />
               ),
             )}

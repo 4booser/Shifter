@@ -120,8 +120,8 @@ public sealed class AssistantService
             prose,
             [
                 new AssistantStatDto("Заработано", AssistantWriter.Money(facts.Earned), null),
-                new AssistantStatDto("Смен", $"{facts.Shifts}", null),
-                new AssistantStatDto("Часов", $"{Math.Round(facts.Hours)}", null),
+                new AssistantStatDto("Смен", AssistantWriter.Count(facts.Shifts), null),
+                new AssistantStatDto("Часов", AssistantWriter.Count(facts.Hours), null),
                 new AssistantStatDto("В час", AssistantWriter.Money(facts.PerHour), null),
                 .. facts.TipsEarned > 0
                     ? new[] { new AssistantStatDto("Чаевые", AssistantWriter.Money(facts.TipsEarned), null) }

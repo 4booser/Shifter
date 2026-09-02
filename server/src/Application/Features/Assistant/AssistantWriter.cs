@@ -17,7 +17,16 @@ public static class AssistantWriter
         $"{Math.Round(value).ToString("N0", Ru).Replace(',', ' ')} ₴";
 
     private static string Hours(double value) =>
-        $"{Math.Round(value, value < 10 ? 1 : 0).ToString(Ru)} ч";
+        $"{Math.Round(value, value < 10 ? 1 : 0).ToString(value < 10 ? "N1" : "N0", Ru).Replace(',', ' ')} ч";
+
+    /// <summary>
+    /// A plain count, grouped the way the money beside it is.
+    ///
+    /// The assistant's card put «Заработано 359 396 ₴» next to «Часов 2512»,
+    /// two spellings of a thousand a finger apart.
+    /// </summary>
+    public static string Count(double value) =>
+        Math.Round(value).ToString("N0", Ru).Replace(',', ' ');
 
     /// <summary>
     /// "1 смена", "2 смены", "5 смен". Russian declines after a number and

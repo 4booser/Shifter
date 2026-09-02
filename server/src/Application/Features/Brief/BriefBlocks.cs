@@ -191,7 +191,7 @@ public static class BriefBlocks
             var wording = Math.Abs(change) < 3
                 ? say.Of("Ровно столько же, сколько к этому дню прошлого месяца.", "Рівно стільки ж, скільки до цього дня минулого місяця.")
                 : change > 200
-                    ? say.Of($"В {Math.Round(month.total_earned / sameSpan, 1).ToString(Ru)} раза больше, чем к этому дню прошлого месяца", $"У {Math.Round(month.total_earned / sameSpan, 1).ToString(Ru)} рази більше, ніж до цього дня минулого місяця")
+                    ? Multiple(month.total_earned / sameSpan, say)
                     : change > 0
                         ? say.Of($"На {Math.Round(change)}% больше, чем к этому дню прошлого месяца", $"На {Math.Round(change)}% більше, ніж до цього дня минулого місяця")
                         : say.Of($"На {Math.Round(-change)}% меньше, чем к этому дню прошлого месяца", $"На {Math.Round(-change)}% менше, ніж до цього дня минулого місяця");
@@ -360,6 +360,29 @@ public static class BriefBlocks
     /// ending at 04:00 and a morning starting at 09:00 is five hours apart
     /// rather than nineteen.
     /// </summary>
+    /// <summary>
+    /// «В 14 раз больше», never «в 14 раза».
+    ///
+    /// The multiple only appears past three, which is exactly where the word
+    /// stops taking the two-to-four form for whole numbers — and the comment
+    /// above this branch already said «в 14 раз» is what a person would
+    /// actually say, while the code wrote «раза». A fraction keeps «раза»:
+    /// «в 3,5 раза больше» is right and «в 3,5 раз» is not.
+    /// </summary>
+    private static string Multiple(decimal ratio, Say say)
+    {
+        var shown = Math.Round(ratio, 1);
+        var whole = shown == Math.Truncate(shown);
+        var count = (int)Math.Truncate(shown);
+
+        var ru = whole ? Telegram.TelegramCommands.Plural(count, "раз", "раза", "раз") : "раза";
+        var ua = whole ? Telegram.TelegramCommands.Plural(count, "раз", "рази", "разів") : "раза";
+
+        return say.Of(
+            $"В {shown.ToString(Ru)} {ru} больше, чем к этому дню прошлого месяца",
+            $"У {shown.ToString(Ru)} {ua} більше, ніж до цього дня минулого місяця");
+    }
+
     /// <summary>«Седьмой» / «Сьомий»: the streak said the way a person says it.</summary>
     private static string Nth(int day, bool uk)
     {

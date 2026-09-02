@@ -3,6 +3,7 @@
 import { create } from 'zustand';
 
 import { DEFAULT_SETTINGS, Settings, ColourScheme } from './settings';
+import { remember } from '@/lib/api/http';
 
 const STORAGE_KEY = 'shifter.settings';
 
@@ -85,7 +86,7 @@ export const useSettings = create<SettingsState>((set) => ({
  */
 export function bindSettingsToDocument(): () => void {
   const apply = (settings: Settings) => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+    remember(STORAGE_KEY, JSON.stringify(settings));
 
     const root = document.documentElement;
 

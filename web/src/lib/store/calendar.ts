@@ -478,8 +478,17 @@ export async function saveDay(key: string, request: DaySave): Promise<void> {
     // A connection failure is not the user's mistake, and their day is not
     // theirs to lose: it goes to the queue and the cell keeps what they typed.
     if (isOffline(error)) {
-      await offlineQueue.put({ date: key, body: request, queuedAt: Date.now() });
-      set((state) => ({ pendingOffline: state.pendingOffline + 1 }));
+      const queued = await offlineQueue.put({ date: key, body: request, queuedAt: Date.now() });
+
+      if (queued) {
+        set((state) => ({ pendingOffline: state.pendingOffline + 1 }));
+
+        return;
+      }
+
+      // The browser refused to hold it — private browsing does. Say so and
+      // put the cell back, rather than leave the day looking saved.
+      set({ days: rollback, error: apiErrorMessage(error) });
 
       return;
     }

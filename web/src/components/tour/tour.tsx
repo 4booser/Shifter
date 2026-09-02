@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useDialogKeys } from '@/lib/a11y';
 import { useCalendar } from '@/lib/store/calendar';
 import { useI18n } from '@/lib/i18n';
+import { remember } from '@/lib/api/http';
 
 /**
  * A one-time spotlight walk over what is new: shade everything, ring one
@@ -138,7 +139,7 @@ export function FeatureTour() {
   // Above the early return, because hooks cannot be conditional — and because
   // a tour with no way out is the worst overlay to be stuck behind.
   const finish = useCallback(() => {
-    localStorage.setItem(SEEN_KEY, 'seen');
+    remember(SEEN_KEY, 'seen');
     setSteps([]);
   }, []);
 

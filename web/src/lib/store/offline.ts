@@ -56,15 +56,35 @@ export const offlineQueue = {
     }
   },
 
-  async put(entry: PendingDay): Promise<void> {
-    const database = await open();
+  /**
+   * True where the day is safely queued, false where the browser refused to
+   * hold it.
+   *
+   * The refusal is the whole point of the answer. Private browsing declines
+   * IndexedDB outright, and this throw used to escape the catch block it was
+   * called from: the counter never rose, no error was shown, and the cell
+   * kept showing what somebody had typed as though it were saved. A day lost
+   * quietly is worse than a day that failed loudly.
+   */
+  async put(entry: PendingDay): Promise<boolean> {
+    try {
+      const database = await open();
 
-    await run(database.transaction(STORE, 'readwrite').objectStore(STORE).put(entry));
+      await run(database.transaction(STORE, 'readwrite').objectStore(STORE).put(entry));
+
+      return true;
+    } catch {
+      return false;
+    }
   },
 
   async remove(date: string): Promise<void> {
-    const database = await open();
+    try {
+      const database = await open();
 
-    await run(database.transaction(STORE, 'readwrite').objectStore(STORE).delete(date));
+      await run(database.transaction(STORE, 'readwrite').objectStore(STORE).delete(date));
+    } catch {
+      // Nothing to remove where nothing could be stored.
+    }
   },
 };

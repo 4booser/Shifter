@@ -1,5 +1,6 @@
 import { CalendarDayData } from './models';
 import { shiftDays } from './calendar-date';
+import { remember } from '@/lib/api/http';
 
 /**
  * Achievements are computed, never stored: the calendar is the source of
@@ -152,7 +153,7 @@ export function claimNewUnlocks(stats: AchievementStats): AchievementDef[] {
   // First ever visit with history already behind it: celebrate nothing, or a
   // veteran gets a wall of confetti for years of old work.
   if (seen.length === 0 && fresh.length > 3) {
-    localStorage.setItem(SEEN_KEY, JSON.stringify(unlocked));
+    remember(SEEN_KEY, JSON.stringify(unlocked));
 
     return [];
   }

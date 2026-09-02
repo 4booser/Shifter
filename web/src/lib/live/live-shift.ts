@@ -5,6 +5,7 @@ import { create } from 'zustand';
 import { todayKey } from '../calendar/calendar-date';
 import { ShiftTemplate, toSavePayload } from '../calendar/models';
 import { saveDay, useCalendar } from '../store/calendar';
+import { remember } from '@/lib/api/http';
 
 /**
  * A shift being worked right now. It lives in the browser, not on the server:
@@ -77,7 +78,7 @@ export const useLive = create<LiveState>(() => ({ live: read() }));
 
 function write(live: LiveShift | null): void {
   if (live === null) localStorage.removeItem(STORAGE_KEY);
-  else localStorage.setItem(STORAGE_KEY, JSON.stringify(live));
+  else remember(STORAGE_KEY, JSON.stringify(live));
 
   useLive.setState({ live });
 }

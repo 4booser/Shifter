@@ -54,8 +54,25 @@ export function readSession(): AuthResponse | null {
   }
 }
 
+/**
+ * Write to storage, or carry on without it.
+ *
+ * Safari in private browsing throws on every setItem, and these throws sat in
+ * the middle of signing in, clocking on and changing a setting. Losing the
+ * write costs a person their session when the tab closes; letting the throw
+ * escape costs them the action they were taking, right now, with no message.
+ */
+export function remember(key: string, value: string): void {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    // Private browsing and a full quota both land here. The app runs on;
+    // what it cannot persist it simply forgets at the end of the session.
+  }
+}
+
 export function saveSession(response: AuthResponse): void {
-  localStorage.setItem(SESSION_KEY, JSON.stringify(response));
+  remember(SESSION_KEY, JSON.stringify(response));
   notifySession();
 }
 

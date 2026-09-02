@@ -144,8 +144,16 @@ public static class RaiseCase
     private static int Months(DateOnly from, DateOnly to)
         => ((to.Year - from.Year) * 12) + to.Month - from.Month;
 
+    /// <summary>
+    /// Hours, declined and grouped — this line is copied into a message and
+    /// read out to a manager.
+    ///
+    /// It said «2304 часов»: the word never bent, and the number never got its
+    /// space because the default format for a double does not group. Both
+    /// wrong in the one sentence somebody rehearses before asking for money.
+    /// </summary>
     private static string Hours(double value)
-        => $"{Math.Round(value).ToString(CultureInfo.GetCultureInfo("ru-RU"))} часов";
+        => Plural((int)Math.Round(value), "час", "часа", "часов");
 
     /// <summary>Russian declines after a number, and here it is read aloud.</summary>
     private static string Plural(int count, string one, string few, string many)
@@ -158,6 +166,6 @@ public static class RaiseCase
             : mod10 is >= 2 and <= 4 ? few
             : many;
 
-        return $"{count} {word}";
+        return $"{count.ToString("N0", CultureInfo.GetCultureInfo("ru-RU"))} {word}";
     }
 }

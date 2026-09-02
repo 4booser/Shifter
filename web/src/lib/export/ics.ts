@@ -33,17 +33,37 @@ function escapeText(value: string): string {
  * an edge case — an unfolded file is simply rejected by some calendars.
  */
 function fold(line: string): string {
-  if (line.length <= 75) return line;
+  /*
+   * Octets, not characters — and never through the middle of one.
+   *
+   * The limit in RFC 5545 is bytes, and this counted string length: «Вечер в
+   * баре» is two bytes a letter and a shift symbol is four, so a line this
+   * called seventy-five could leave as a hundred and fifty and be refused by
+   * a strict reader. Slicing by code unit could also cut an emoji in half and
+   * emit broken UTF-8 — so the walk is over whole code points.
+   */
+  const bytes = (text: string) => new TextEncoder().encode(text).length;
 
-  const parts: string[] = [line.slice(0, 75)];
-  let rest = line.slice(75);
+  if (bytes(line) <= 75) return line;
 
-  while (rest.length > 74) {
-    parts.push(` ${rest.slice(0, 74)}`);
-    rest = rest.slice(74);
+  const parts: string[] = [];
+  let current = '';
+  let limit = 75;
+
+  for (const point of line) {
+    if (bytes(current) + bytes(point) > limit) {
+      parts.push(parts.length === 0 ? current : ` ${current}`);
+      current = point;
+      // Continuation lines carry a leading space, which is an octet too.
+      limit = 74;
+
+      continue;
+    }
+
+    current += point;
   }
 
-  if (rest.length > 0) parts.push(` ${rest}`);
+  if (current !== '') parts.push(parts.length === 0 ? current : ` ${current}`);
 
   return parts.join('\r\n');
 }

@@ -49,6 +49,37 @@ import { SkeletonRows } from '@/components/ui/skeleton';
 
 type Span = 'week' | 'month';
 
+/**
+ * «6–8, 13–15, 20–30» rather than seventeen numbers in a row.
+ *
+ * A month with a thin second half listed every bare day, and the eye has to
+ * count a comma-separated run to see that it is a run. Consecutive days are
+ * a stretch, and a stretch is what a person is actually looking at.
+ */
+function runsOf(days: number[]): string {
+  const sorted = [...days].sort((one, two) => one - two);
+  const runs: string[] = [];
+
+  let from = sorted[0];
+  let previous = sorted[0];
+
+  for (const day of sorted.slice(1)) {
+    if (day === previous + 1) {
+      previous = day;
+
+      continue;
+    }
+
+    runs.push(from === previous ? `${from}` : `${from}–${previous}`);
+    from = day;
+    previous = day;
+  }
+
+  if (sorted.length > 0) runs.push(from === previous ? `${from}` : `${from}–${previous}`);
+
+  return runs.join(', ');
+}
+
 export default function SchedulePage() {
   return (
     <Shell>
@@ -571,7 +602,7 @@ function Schedule() {
       {/* ==== Gaps ==== */}
       {uncovered.length > 0 && (
         <p className="field-hint">
-          {t('Days nobody is on')}: {uncovered.map((day) => day.date.slice(8)).join(', ')}
+          {t('Days nobody is on')}: {runsOf(uncovered.map((day) => Number(day.date.slice(8))))}
         </p>
       )}
 

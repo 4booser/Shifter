@@ -53,7 +53,7 @@ export function WeatherEffectCard() {
               <span className="text-[0.9rem] font-semibold">{place.place}</span>
               <span
                 className={`tabular text-[1.05rem] font-bold ${
-                  place.percent < 0 ? 'text-danger' : 'text-good'
+                  place.percent < 0 ? 'text-danger-read' : 'text-good-read'
                 }`}
               >
                 {place.percent > 0 ? '+' : '−'}

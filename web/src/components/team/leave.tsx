@@ -149,9 +149,9 @@ export function LeavePanel({ teamId, onChanged }: { teamId: number; onChanged?: 
                 <span
                   className={`chip ${
                     entry.status === 'pending'
-                      ? 'border-warn/40 text-warn'
+                      ? 'border-warn/40 text-warn-read'
                       : entry.status === 'approved'
-                        ? 'border-good/40 text-good'
+                        ? 'border-good/40 text-good-read'
                         : 'text-muted'
                   }`}
                 >

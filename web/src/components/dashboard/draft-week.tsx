@@ -153,7 +153,7 @@ export function DraftWeek() {
                 {/* The whole reason this card exists: the hours past the line
                     are named, with the premium they carry. */}
                 {priced.overtime_extra > 0 && (
-                  <p className="mt-1 text-[0.86rem] text-warn">
+                  <p className="mt-1 text-[0.86rem] text-warn-read">
                     {Math.round(priced.overtime_hours)} {t('h')}{' '}
                     {t('of this crosses the overtime line')} — +
                     <Money value={priced.overtime_extra} /> {t('on top of the base.')}
@@ -197,7 +197,7 @@ export function DraftWeek() {
           </AnimatePresence>
 
           {placed && (
-            <p className="mt-2 text-[0.86rem] text-good">
+            <p className="mt-2 text-[0.86rem] text-good-read">
               {t('Placed as planned shifts — the calendar has them now.')}
             </p>
           )}

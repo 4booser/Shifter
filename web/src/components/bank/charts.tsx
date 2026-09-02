@@ -73,9 +73,9 @@ export function MonthlyFlowsCard({ items }: { items: MonoStatementItem[] }) {
         {hover !== null && (
           <ChartTip x={hover.x}>
             <b>{monthName(hover.datum.month, lang)}</b>
-            <div className="text-good tabular">+<Money value={hover.datum.earned} /></div>
-            <div className="text-danger tabular">−<Money value={hover.datum.spent} /></div>
-            <div className={`tabular ${hover.datum.earned - hover.datum.spent >= 0 ? 'text-good' : 'text-danger'}`}>
+            <div className="text-good-read tabular">+<Money value={hover.datum.earned} /></div>
+            <div className="text-danger-read tabular">−<Money value={hover.datum.spent} /></div>
+            <div className={`tabular ${hover.datum.earned - hover.datum.spent >= 0 ? 'text-good-read' : 'text-danger-read'}`}>
               = <Money value={hover.datum.earned - hover.datum.spent} />
             </div>
           </ChartTip>
@@ -103,7 +103,7 @@ export function MonthlyFlowsCard({ items }: { items: MonoStatementItem[] }) {
                       подпись в «+0K», и столбик выглядит сломанным, а не
                       маленьким. Ниже тысячи пишем сумму как есть. */}
                   {latest && (
-                    <span className="absolute -top-0.5 left-1/2 -translate-x-1/2 -translate-y-full text-[0.68rem] font-semibold text-good tabular">
+                    <span className="absolute -top-0.5 left-1/2 -translate-x-1/2 -translate-y-full text-[0.68rem] font-semibold text-good-read tabular">
                       {row.earned >= 1000 ? `+${Math.round(row.earned / 1000)}K` : <>+<Money value={row.earned} /></>}
                     </span>
                   )}
@@ -114,7 +114,7 @@ export function MonthlyFlowsCard({ items }: { items: MonoStatementItem[] }) {
                     style={{ height: `${Math.max(2, (row.spent / peak) * 92)}%`, opacity: latest ? 0.95 : 0.7 }}
                   />
                   {latest && (
-                    <span className="absolute -top-0.5 left-1/2 -translate-x-1/2 -translate-y-full text-[0.68rem] font-semibold text-danger tabular">
+                    <span className="absolute -top-0.5 left-1/2 -translate-x-1/2 -translate-y-full text-[0.68rem] font-semibold text-danger-read tabular">
                       {row.spent >= 1000 ? `−${Math.round(row.spent / 1000)}K` : <>−<Money value={row.spent} /></>}
                     </span>
                   )}

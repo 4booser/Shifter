@@ -122,8 +122,8 @@ export function DocumentsPanel() {
         <p
           className={`mb-2.5 rounded-(--radius) border px-3 py-2 text-[0.87rem] ${
             pressing.some((row) => row.state === 'expired')
-              ? 'border-danger/40 bg-(--danger-soft) text-danger'
-              : 'border-warn/40 text-warn'
+              ? 'border-danger/40 bg-(--danger-soft) text-danger-read'
+              : 'border-warn/40 text-warn-read'
           }`}
         >
           {pressing[0].state === 'expired'
@@ -218,11 +218,11 @@ export function DocumentsPanel() {
               <span
                 className={`chip ${
                   row.state === 'expired'
-                    ? 'border-danger/40 text-danger'
+                    ? 'border-danger/40 text-danger-read'
                     : row.state === 'urgent'
-                      ? 'border-warn/40 text-warn'
+                      ? 'border-warn/40 text-warn-read'
                       : row.state === 'soon'
-                        ? 'text-warn'
+                        ? 'text-warn-read'
                         : 'text-muted'
                 }`}
               >

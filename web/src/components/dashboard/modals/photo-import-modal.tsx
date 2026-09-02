@@ -166,7 +166,7 @@ export function PhotoImportModal({ open, onClose }: { open: boolean; onClose: ()
           )}
         </button>
 
-        {error !== null && <p className="text-[0.85rem] text-danger">{error}</p>}
+        {error !== null && <p className="text-[0.85rem] text-danger-read">{error}</p>}
 
         {drafts === null ? (
           <button
@@ -196,7 +196,7 @@ export function PhotoImportModal({ open, onClose }: { open: boolean; onClose: ()
                     {row.name} · {row.start}–{row.end}
                   </span>
                   {row.conflict ? (
-                    <span className="text-[0.72rem] font-semibold text-warn">{t('day is taken')}</span>
+                    <span className="text-[0.72rem] font-semibold text-warn-read">{t('day is taken')}</span>
                   ) : (
                     <select
                       aria-label={t('Which shift')}

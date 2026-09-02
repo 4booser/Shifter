@@ -153,7 +153,7 @@ export function BankForecast({
           <span className="field-hint">{t('Until the next money')}</span>
           <div className="tabular text-[1.5rem] font-bold leading-tight">
             {runway.dry !== null ? (
-              <span className="text-danger">
+              <span className="text-danger-read">
                 {t('runs dry around')} {spellDay(runway.dry)}
               </span>
             ) : (
@@ -192,11 +192,11 @@ export function BankForecast({
         {hoverKit.hover !== null && (
           <ChartTip x={hoverKit.hover.x}>
             <b>{spellDay(hoverKit.hover.datum.day)}</b>
-            <div className={`tabular ${hoverKit.hover.datum.balance < 0 ? 'text-danger' : ''}`}>
+            <div className={`tabular ${hoverKit.hover.datum.balance < 0 ? 'text-danger-read' : ''}`}>
               ≈<Money value={Math.round(hoverKit.hover.datum.balance)} />
             </div>
             {hoverKit.hover.datum.events.map((event) => (
-              <div key={event.name} className={`tabular text-[0.72rem] ${event.amount > 0 ? 'text-good' : 'text-warn'}`}>
+              <div key={event.name} className={`tabular text-[0.72rem] ${event.amount > 0 ? 'text-good-read' : 'text-warn-read'}`}>
                 {event.amount > 0 ? '+' : ''}<Money value={event.amount} /> {event.name}
               </div>
             ))}
@@ -281,7 +281,7 @@ export function BankForecast({
                 <span className="text-muted">
                   {spellDay(day.day)} · {event.name}
                 </span>
-                <span className={`tabular font-semibold ${event.amount > 0 ? 'text-good' : 'text-warn'}`}>
+                <span className={`tabular font-semibold ${event.amount > 0 ? 'text-good-read' : 'text-warn-read'}`}>
                   {event.amount > 0 ? '+' : '−'}
                   <Money value={Math.abs(event.amount)} />
                 </span>

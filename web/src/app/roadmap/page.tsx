@@ -99,7 +99,7 @@ export default function RoadmapPage() {
 
         <section className="reveal mb-10">
           <h2 className="mb-3 text-[1.2rem] font-extrabold tracking-tight">
-            <span className="mr-1.5 text-good">✓</span>На проде
+            <span className="mr-1.5 text-good-read">✓</span>На проде
           </h2>
           <div className="grid gap-2 sm:grid-cols-2">
             {SHIPPED.map((item) => (

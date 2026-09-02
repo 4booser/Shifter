@@ -62,7 +62,7 @@ export function CallBack({ gig, onClose }: { gig: Gig; onClose: () => void }) {
             </span>
             <button
               type="button"
-              className={`btn btn-sm whitespace-nowrap ${invited.has(worker.user_id) ? '!border-good !text-good' : 'btn-primary'}`}
+              className={`btn btn-sm whitespace-nowrap ${invited.has(worker.user_id) ? '!border-good !text-good-read' : 'btn-primary'}`}
               disabled={invited.has(worker.user_id)}
               onClick={() => call(worker)}
             >

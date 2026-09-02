@@ -681,9 +681,9 @@ function Stats() {
             converted figure is the only honest headline. */}
         <Kpi label={t('Earned')} delta={summary.conversion === null ? delta(summary.total_earned, previous.total_earned) : null}>
           {summary.conversion === null ? (
-            <CountUp value={summary.total_earned} className="text-[1.25rem] font-bold text-good" />
+            <CountUp value={summary.total_earned} className="text-[1.25rem] font-bold text-good-read" />
           ) : (
-            <span className="text-[1.25rem] font-bold text-good tabular">
+            <span className="text-[1.25rem] font-bold text-good-read tabular">
               ≈ {formatWith(summary.conversion.base_currency, summary.conversion.total_earned)}
             </span>
           )}
@@ -771,12 +771,12 @@ function Stats() {
                   <Money value={summary.total_earned} className="font-bold" /> / <Money value={goalProgress.target} />
                 </p>
                 {goalProgress.reached ? (
-                  <p className="text-[0.85rem] font-semibold text-good">{t('Reached')} 🎉</p>
+                  <p className="text-[0.85rem] font-semibold text-good-read">{t('Reached')} 🎉</p>
                 ) : (
                   <p className="field-hint">
                     <Money value={goalProgress.remaining} /> {t('to go')}
                     {pace !== null && !pace.ahead && (
-                      <span className="block text-warn">
+                      <span className="block text-warn-read">
                         {t('Needs')} <Money value={pace.perDay} /> {t('a day from here')}
                       </span>
                     )}
@@ -893,7 +893,7 @@ function Stats() {
                   </span>
                   <span
                     className={`tabular w-full text-right text-[0.78rem] ${
-                      raise.worth_since < 0 ? 'text-danger' : 'text-good'
+                      raise.worth_since < 0 ? 'text-danger-read' : 'text-good-read'
                     }`}
                   >
                     {raise.worth_since < 0 ? '−' : '+'}
@@ -910,7 +910,7 @@ function Stats() {
             title={t('All of it in one currency')}
             hint={t('At the National Bank’s published rate, so you can check it against your own.')}
           >
-            <p className="text-[1.6rem] font-extrabold tracking-tight text-good">
+            <p className="text-[1.6rem] font-extrabold tracking-tight text-good-read">
               ≈ {formatWith(summary.conversion.base_currency, summary.conversion.total_earned)}
             </p>
             {summary.conversion.net_earned !== summary.conversion.total_earned && (
@@ -962,7 +962,7 @@ function Stats() {
             </ul>
 
             {summary.conversion.unconverted.length > 0 && (
-              <p className="mt-1 text-[0.82rem] text-warn">
+              <p className="mt-1 text-[0.82rem] text-warn-read">
                 {t('No rate for')} {summary.conversion.unconverted.join(', ')} —{' '}
                 {t('that money is not in the total above.')}
               </p>
@@ -982,13 +982,13 @@ function Stats() {
                 {summary.tip_out > 0 && (
                   <div className="flex justify-between">
                     <dt className="text-muted">{t('Tip-out')}</dt>
-                    <dd className="text-danger">−<Money value={summary.tip_out} /></dd>
+                    <dd className="text-danger-read">−<Money value={summary.tip_out} /></dd>
                   </div>
                 )}
                 {summary.deductions > 0 && (
                   <div className="flex justify-between">
                     <dt className="text-muted">{t('Meals and fines')}</dt>
-                    <dd className="text-danger">−<Money value={summary.deductions} /></dd>
+                    <dd className="text-danger-read">−<Money value={summary.deductions} /></dd>
                   </div>
                 )}
                 {/* What the fines were actually for. The total above says how
@@ -1008,7 +1008,7 @@ function Stats() {
                   <>
                     <div className="flex justify-between">
                       <dt className="text-muted">{t('Tax withheld')}</dt>
-                      <dd className="text-danger">−<Money value={summary.tax} /></dd>
+                      <dd className="text-danger-read">−<Money value={summary.tax} /></dd>
                     </div>
                     <div className="flex justify-between font-bold">
                       <dt>{t('Take-home')}</dt>
@@ -1114,7 +1114,7 @@ function Stats() {
 
         {bestDay !== null && (
           <Card title={t('Best day')}>
-            <p className="text-[1.3rem] font-bold text-good">
+            <p className="text-[1.3rem] font-bold text-good-read">
               <Money value={bestDay.earned} />
             </p>
             <p className="field-hint">
@@ -1130,7 +1130,7 @@ function Stats() {
 
         {summary.revenue_earned > 0 && (
           <Card title={t('Percentage')}>
-            <p className="text-[1.5rem] font-extrabold text-good">
+            <p className="text-[1.5rem] font-extrabold text-good-read">
               +<Money value={summary.revenue_earned} />
             </p>
             <p className="field-hint">
@@ -1141,7 +1141,7 @@ function Stats() {
 
         {summary.premium_earned > 0 && (
           <Card title={t('Premiums')}>
-            <p className="text-[1.3rem] font-bold text-good">
+            <p className="text-[1.3rem] font-bold text-good-read">
               +<Money value={summary.premium_earned} />
             </p>
             <p className="field-hint">

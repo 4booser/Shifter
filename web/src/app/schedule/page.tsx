@@ -500,7 +500,7 @@ function Schedule() {
       {/* ==== Cover requests ==== */}
       {coverRequests.length > 0 && (
         <section className="card reveal !border-warn/40 p-4">
-          <h2 className="mb-2 flex items-center gap-2 text-[0.98rem] font-bold text-warn">
+          <h2 className="mb-2 flex items-center gap-2 text-[0.98rem] font-bold text-warn-read">
             <Icon name="swap" size={15} />
             {t('Looking for cover')}
           </h2>
@@ -520,7 +520,7 @@ function Schedule() {
                           {offer.display_name}
                           <button
                             type="button"
-                            className="ml-1 font-semibold text-good"
+                            className="ml-1 font-semibold text-good-read"
                             disabled={busy}
                             onClick={() =>
                               void run(teamApi.acceptCover(selected!, offer.offer_id).then(setHandedOver))
@@ -582,7 +582,7 @@ function Schedule() {
                   <th
                     key={key}
                     className={`min-w-7 px-0.5 py-1 text-center text-[0.68rem] font-medium ${
-                      key === todayKey() ? 'text-(--accent-read)' : weekendDay ? 'text-warn' : 'text-faint'
+                      key === todayKey() ? 'text-(--accent-read)' : weekendDay ? 'text-warn-read' : 'text-faint'
                     }`}
                   >
                     <button type="button" onClick={() => setFocusDay((current) => (current === key ? null : key))}>

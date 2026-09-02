@@ -144,9 +144,9 @@ export function BankWage({
                     <span
                       className={`ml-2 tabular text-[0.78rem] ${
                         Math.abs(match.difference) <= 0.02
-                          ? 'text-good'
+                          ? 'text-good-read'
                           : match.difference < 0
-                            ? 'text-warn'
+                            ? 'text-warn-read'
                             : 'text-muted'
                       }`}
                     >

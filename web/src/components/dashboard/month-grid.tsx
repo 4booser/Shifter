@@ -694,7 +694,7 @@ export function MonthGrid({
             <div
               key={name}
               className={`px-1 pb-1 text-center text-[0.7rem] font-semibold uppercase tracking-wide ${
-                settings.highlightWeekends && (name === 'Sat' || name === 'Sun') ? 'text-warn' : 'text-faint'
+                settings.highlightWeekends && (name === 'Sat' || name === 'Sun') ? 'text-warn-read' : 'text-faint'
               }`}
             >
               {t(name)}
@@ -797,7 +797,7 @@ export function MonthGrid({
                     {day.dayOfMonth}
                   </span>
 
-                  {holiday && <Icon name="spark" size={10} className="flex-none text-warn" />}
+                  {holiday && <Icon name="spark" size={10} className="flex-none text-warn-read" />}
                   {extras(day.key) && <span className="text-[0.6rem] tracking-tighter text-faint">•••</span>}
 
                   {hours > 0 && (
@@ -834,7 +834,7 @@ export function MonthGrid({
 
                 {paymentDays.has(day.key) && (
                   <span
-                    className="text-[0.6rem] leading-none text-warn"
+                    className="text-[0.6rem] leading-none text-warn-read"
                     title={paymentDays
                       .get(day.key)!
                       .map((charge) => `${charge.name} · ${Math.round(charge.amount)}`)
@@ -846,7 +846,7 @@ export function MonthGrid({
                   </span>
                 )}
                 {settings.showEarningsInCells && (state.days.get(day.key)?.earned ?? 0) > 0 && (
-                  <span className="text-[0.66rem] font-semibold text-good tabular">
+                  <span className="text-[0.66rem] font-semibold text-good-read tabular">
                     {format(state.days.get(day.key)!.earned)}
                   </span>
                 )}

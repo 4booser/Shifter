@@ -209,7 +209,7 @@ export function EventTemplateModal({
           {editing !== null && (
             <button
               type="button"
-              className="btn btn-quiet !text-danger"
+              className="btn btn-quiet !text-danger-read"
               onClick={async () => {
                 try {
                   await catalogueActions.deleteEventTemplate(editing.id);

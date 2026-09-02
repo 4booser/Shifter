@@ -385,7 +385,7 @@ function Webhooks() {
                   {' '}· {hook.recent_applied} {t('applied')}
                   {hook.recent_failed > 0 && (
                     <>
-                      {' '}· <span className="text-danger">{hook.recent_failed} {t('failed')}</span>
+                      {' '}· <span className="text-danger-read">{hook.recent_failed} {t('failed')}</span>
                     </>
                   )}{' '}
                   {t('in the last week')}
@@ -536,9 +536,9 @@ function Webhooks() {
                         <span
                           className={`chip ${
                             delivery.status === 'applied'
-                              ? 'border-good/40 text-good'
+                              ? 'border-good/40 text-good-read'
                               : delivery.status === 'rejected' || delivery.status === 'failed'
-                                ? 'border-danger/40 text-danger'
+                                ? 'border-danger/40 text-danger-read'
                                 : ''
                           }`}
                         >
@@ -571,7 +571,7 @@ function Webhooks() {
                           </button>
                         </span>
                       </div>
-                      {delivery.error && <p className="mt-1 text-[0.8rem] text-danger">{delivery.error}</p>}
+                      {delivery.error && <p className="mt-1 text-[0.8rem] text-danger-read">{delivery.error}</p>}
                       <details className="mt-1">
                         <summary className="field-hint cursor-pointer">{t('What was sent')}</summary>
                         <pre className="mt-1 max-h-56 overflow-auto whitespace-pre-wrap break-all rounded border border-border bg-surface-2 p-2 text-[0.7rem]">

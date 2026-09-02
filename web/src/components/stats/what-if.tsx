@@ -156,7 +156,7 @@ export function WhatIfCard({ suggestedTarget }: { suggestedTarget: number | null
           </p>
 
           {touched && paceNow !== null && Math.abs(monthlyDelta) >= 1 && (
-            <p className={`text-[0.85rem] font-semibold ${monthlyDelta > 0 ? 'text-good' : 'text-danger'}`}>
+            <p className={`text-[0.85rem] font-semibold ${monthlyDelta > 0 ? 'text-good-read' : 'text-danger-read'}`}>
               {monthlyDelta > 0 ? '+' : '−'}
               {formatMoney(settings, Math.round(Math.abs(monthlyDelta)))} {t('vs your real pace')}
             </p>
@@ -172,7 +172,7 @@ export function WhatIfCard({ suggestedTarget }: { suggestedTarget: number | null
             </p>
           )}
           {target > 0 && result.reached && (
-            <p className="mt-1 border-t border-line pt-2 text-[0.85rem] font-semibold text-good">
+            <p className="mt-1 border-t border-line pt-2 text-[0.85rem] font-semibold text-good-read">
               {t('Reached')} 🎉
             </p>
           )}

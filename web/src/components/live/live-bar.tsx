@@ -166,7 +166,7 @@ export function LiveBar() {
                 <strong className="block truncate text-[0.95rem]">{template.name}</strong>
                 <span className="field-hint block tabular">{formatElapsed(tick.elapsed)}</span>
                 {tick.earned !== null && (
-                  <span className="block text-[1.15rem] font-bold text-good tabular">
+                  <span className="block text-[1.15rem] font-bold text-good-read tabular">
                     <Money value={tick.earned} />
                   </span>
                 )}
@@ -186,7 +186,7 @@ export function LiveBar() {
             {left !== null && (
               <p
                 className={`mt-1.5 text-[0.92rem] font-semibold tabular ${
-                  left <= 0 ? 'text-warn' : ''
+                  left <= 0 ? 'text-warn-read' : ''
                 }`}
               >
                 {left <= 0

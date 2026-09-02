@@ -209,7 +209,7 @@ export function PayoutModal({
         </div>
 
         {difference !== null && kind !== 'advance' && (
-          <p className={`field-hint ${difference < 0 ? 'text-danger' : ''}`}>
+          <p className={`field-hint ${difference < 0 ? 'text-danger-read' : ''}`}>
             {t('Calculation for the period on screen:')} <Money value={summary.total_earned} />.{' '}
             {difference < 0 ? (
               <>

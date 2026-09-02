@@ -223,7 +223,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
                     ))}
                     <button
                       type="button"
-                      className="flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-[0.88rem] text-danger hover:bg-surface-2"
+                      className="flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-[0.88rem] text-danger-read hover:bg-surface-2"
                       onClick={logout}
                     >
                       <Icon name="logout" size={15} />

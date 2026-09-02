@@ -156,7 +156,7 @@ export function ShiftDoneOverlay() {
           {done.name} · {formatElapsed(done.elapsed)}
         </p>
 
-        <div className="my-4 text-[2.6rem] font-bold tracking-tight text-good tabular">
+        <div className="my-4 text-[2.6rem] font-bold tracking-tight text-good-read tabular">
           <CountUp value={done.earned} />
         </div>
 
@@ -182,7 +182,7 @@ export function ShiftDoneOverlay() {
         {/* Tips, while they are still in the pocket and the number is known. */}
         <div className="mt-5 border-t border-border pt-4">
           {tipsSaved ? (
-            <p className="text-[0.9rem] font-semibold text-good">
+            <p className="text-[0.9rem] font-semibold text-good-read">
               ✓ {t('Tips added')}: <Money value={Number(tips.replace(',', '.'))} />
             </p>
           ) : (

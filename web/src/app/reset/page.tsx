@@ -70,7 +70,7 @@ function Reset() {
           Shifter
         </p>
 
-        {error !== null && <p className="mb-3 text-[0.88rem] text-danger">{error}</p>}
+        {error !== null && <p className="mb-3 text-[0.88rem] text-danger-read">{error}</p>}
 
         {done ? (
           <>

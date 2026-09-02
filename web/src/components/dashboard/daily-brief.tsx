@@ -113,7 +113,7 @@ export function DailyBrief() {
                   <li key={index} className="flex items-baseline justify-between gap-2 text-[0.84rem]">
                     <span
                       className={
-                        line.tone === 'warn' ? 'text-warn' : line.tone === 'good' ? '' : 'text-muted'
+                        line.tone === 'warn' ? 'text-warn-read' : line.tone === 'good' ? '' : 'text-muted'
                       }
                     >
                       {line.text}
@@ -121,7 +121,7 @@ export function DailyBrief() {
                     {line.value !== null && (
                       <span
                         className={`flex-none font-bold tabular ${
-                          line.tone === 'good' ? 'text-good' : line.tone === 'warn' ? 'text-warn' : ''
+                          line.tone === 'good' ? 'text-good-read' : line.tone === 'warn' ? 'text-warn-read' : ''
                         }`}
                       >
                         {line.value}

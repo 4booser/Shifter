@@ -501,7 +501,7 @@ function GigCalendar({
                 {dayGigs.length > 0 && (
                   <span className="mt-3.5 block px-0.5">
                     <span className="block text-[1.02rem] font-bold leading-tight tabular">{dayGigs.length}</span>
-                    <span className="block truncate text-[0.66rem] font-semibold text-good tabular">
+                    <span className="block truncate text-[0.66rem] font-semibold text-good-read tabular">
                       {format(Math.round(worth))}
                     </span>
                   </span>
@@ -634,7 +634,7 @@ function GigCard({ gig, onRespond, onWithdraw }: { gig: Gig; onRespond: () => vo
         {gig.responses > 0 && <span> · {gig.responses} 🙋</span>}
       </p>
       {gig.urgent && (
-        <p className="text-[0.82rem] font-bold text-danger">
+        <p className="text-[0.82rem] font-bold text-danger-read">
           🔴 {t('Needed today')}
         </p>
       )}
@@ -649,9 +649,9 @@ function GigCard({ gig, onRespond, onWithdraw }: { gig: Gig; onRespond: () => vo
         <p
           className={`text-[0.82rem] ${
             gig.worth.difference_percent > 0
-              ? 'text-good'
+              ? 'text-good-read'
               : gig.worth.difference_percent < 0
-                ? 'text-danger'
+                ? 'text-danger-read'
                 : 'text-muted'
           }`}
         >
@@ -833,7 +833,7 @@ function MyListings({
                 {t('Post again')}
               </button>
               {gig.status !== 'closed' ? (
-                <button type="button" className="btn btn-quiet btn-sm !text-danger" onClick={() => void gigApi.setStatus(gig.id, 'closed').then(onChanged).catch((c) => onError(apiErrorMessage(c)))}>
+                <button type="button" className="btn btn-quiet btn-sm !text-danger-read" onClick={() => void gigApi.setStatus(gig.id, 'closed').then(onChanged).catch((c) => onError(apiErrorMessage(c)))}>
                   {t('Close')}
                 </button>
               ) : (
@@ -1212,7 +1212,7 @@ function EditModal({
                   <button
                     type="button"
                     aria-label={t('Remove')}
-                    className="grid h-5 w-5 place-items-center rounded-full bg-surface-2 text-[0.7rem] text-muted hover:text-danger"
+                    className="grid h-5 w-5 place-items-center rounded-full bg-surface-2 text-[0.7rem] text-muted hover:text-danger-read"
                     onClick={() => set('pay_percent', null)}
                   >
                     ×

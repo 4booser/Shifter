@@ -136,7 +136,7 @@ export function TaxCard() {
                 <span className="text-muted">{t('Of your stated ceiling')}</span>
                 <span
                   className={`tabular font-semibold ${
-                    reading.limit_used >= 0.9 ? 'text-danger' : reading.limit_used >= 0.7 ? 'text-warn' : ''
+                    reading.limit_used >= 0.9 ? 'text-danger-read' : reading.limit_used >= 0.7 ? 'text-warn-read' : ''
                   }`}
                 >
                   {Math.round(reading.limit_used * 100)}%
@@ -171,7 +171,7 @@ export function TaxCard() {
           )}
 
           {reading.fell_back_to_earned === true && (
-            <p className="field-hint mt-2 !text-warn">
+            <p className="field-hint mt-2 !text-warn-read">
               {t('You asked to count money received, and no payments are recorded for this year — this is what the shifts came to instead.')}
             </p>
           )}

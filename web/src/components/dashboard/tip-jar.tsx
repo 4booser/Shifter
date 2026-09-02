@@ -95,7 +95,7 @@ export function TipJar() {
       {on && (
         <>
           <div className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <span className="text-[1.5rem] font-extrabold tracking-tight text-good">
+            <span className="text-[1.5rem] font-extrabold tracking-tight text-good-read">
               <Money value={state.saved} />
             </span>
             <span className="field-hint">

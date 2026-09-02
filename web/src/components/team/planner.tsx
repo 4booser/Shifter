@@ -344,8 +344,8 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
   const STATUS_LOOK: Record<Assignment['status'], string> = {
     draft: 'border-dashed border-border-strong text-muted',
     published: 'border-(--accent)/50 bg-(--accent-soft)',
-    accepted: 'border-good/50 bg-(--good-soft) text-good',
-    declined: 'border-danger/50 bg-(--danger-soft) text-danger line-through',
+    accepted: 'border-good/50 bg-(--good-soft) text-good-read',
+    declined: 'border-danger/50 bg-(--danger-soft) text-danger-read line-through',
   };
 
   return (
@@ -426,7 +426,7 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
                       {new Date(`${day}T00:00:00`).toLocaleDateString(lang, { weekday: 'short' })}
                     </span>
                     <span className={`text-[0.82rem] font-bold tabular ${isToday ? 'text-(--accent-read)' : ''}`}>{day.slice(8)}</span>
-                    <span className={`block text-[0.64rem] tabular ${covered === 0 ? 'text-danger' : 'text-faint'}`}>
+                    <span className={`block text-[0.64rem] tabular ${covered === 0 ? 'text-danger-read' : 'text-faint'}`}>
                       {covered === 0 ? t('empty') : `×${covered}`}
                     </span>
                     </button>
@@ -583,7 +583,7 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
             </p>
             <div className="flex flex-col gap-1 text-[0.85rem]">
               <div className="flex flex-wrap items-center gap-1.5">
-                <span className="w-20 text-[0.72rem] uppercase tracking-wide text-good">{t('free')}</span>
+                <span className="w-20 text-[0.72rem] uppercase tracking-wide text-good-read">{t('free')}</span>
                 {who.read.free.length === 0 && <span className="text-muted">{t('nobody left')}</span>}
                 {who.read.free.map((row) => (
                   <span key={row.user_id} className="chip !py-1">
@@ -617,7 +617,7 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
               )}
               {who.read.away.length > 0 && (
                 <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="w-20 text-[0.72rem] uppercase tracking-wide text-warn">{t('said no')}</span>
+                  <span className="w-20 text-[0.72rem] uppercase tracking-wide text-warn-read">{t('said no')}</span>
                   {who.read.away.map((row) => (
                     <span key={row.user_id} className="chip !py-1 opacity-75">
                       <i className="h-2 w-2 rounded-full" style={{ background: row.colour }} />
@@ -814,7 +814,7 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
               {editing.id !== null && (
                 <button
                   type="button"
-                  className="btn btn-quiet !text-danger"
+                  className="btn btn-quiet !text-danger-read"
                   aria-label={t('Delete')}
                   onClick={() => {
                     const entry = (board.assignments ?? []).find((item) => item.id === editing.id);

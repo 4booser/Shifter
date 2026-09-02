@@ -286,7 +286,7 @@ export function ExpensesPanel({
         !open && <p className="field-hint">{t('Nothing recorded for this stretch.')}</p>
       ) : (
         <>
-          <p className="mb-2 text-[1.3rem] font-extrabold tracking-tight text-danger">
+          <p className="mb-2 text-[1.3rem] font-extrabold tracking-tight text-danger-read">
             −<Money value={total} />
             <span className="field-hint ml-2 font-normal">
               {n(rows.filter((row) => !row.expected).length, 'expenses')}
@@ -450,7 +450,7 @@ function StandingCosts({
               <Money value={rule.amount} className="font-semibold" />
               <button
                 type="button"
-                className="btn btn-quiet btn-sm !text-danger"
+                className="btn btn-quiet btn-sm !text-danger-read"
                 aria-label={t('Stop it')}
                 onClick={() => {
                   void calendarApi

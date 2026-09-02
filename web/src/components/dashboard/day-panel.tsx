@@ -284,13 +284,13 @@ export function DayPanel() {
           {formatDayLabel(key, lang)}
         </h2>
         {belowFloor && (
-          <p className="mt-0.5 flex items-center gap-1 text-[0.78rem] text-danger">
+          <p className="mt-0.5 flex items-center gap-1 text-[0.78rem] text-danger-read">
             <Icon name="flame" size={12} />
             {t('An hour here paid under your floor')}
           </p>
         )}
         {holiday && (
-          <p className="mt-0.5 flex items-center gap-1 text-[0.78rem] text-warn">
+          <p className="mt-0.5 flex items-center gap-1 text-[0.78rem] text-warn-read">
             <Icon name="spark" size={12} />
             {holiday}
           </p>
@@ -347,7 +347,7 @@ export function DayPanel() {
                     </span>
                   )}
                   {event.cost > 0 && (
-                    <span className="flex-none text-[0.72rem] text-danger tabular">
+                    <span className="flex-none text-[0.72rem] text-danger-read tabular">
                       −<Money value={event.cost} />
                     </span>
                   )}
@@ -615,7 +615,7 @@ export function DayPanel() {
                       <span className="field-hint whitespace-nowrap tabular">
                         {position.price} × {position.percentage ?? 0}%
                         {quantity > 0 && (
-                          <span className="font-semibold text-good">
+                          <span className="font-semibold text-good-read">
                             {' '}= <Money value={quantity * position.price * ((position.percentage ?? 0) / 100)} />
                           </span>
                         )}
@@ -663,7 +663,7 @@ export function DayPanel() {
                     {quantity > 0 && (
                       <button
                         type="button"
-                        className="btn btn-quiet btn-sm flex-1 !text-danger"
+                        className="btn btn-quiet btn-sm flex-1 !text-danger-read"
                         onClick={() => setQuantities((current) => ({ ...current, [position.id]: 0 }))}
                       >
                         {t('Clear')}
@@ -743,7 +743,7 @@ export function DayPanel() {
             </button>
           ))}
           {(tips ?? 0) > 0 && (
-            <button type="button" className="btn btn-quiet btn-sm !text-danger" onClick={() => { setTips(null); setTipsCash(null); }}>
+            <button type="button" className="btn btn-quiet btn-sm !text-danger-read" onClick={() => { setTips(null); setTipsCash(null); }}>
               {t('Clear')}
             </button>
           )}
@@ -847,18 +847,18 @@ export function DayPanel() {
           {day.tip_out > 0 && (
             <div className="flex justify-between gap-2">
               <dt className="text-muted">{t('Tip-out')}</dt>
-              <dd className="text-danger">−<Money value={day.tip_out} /></dd>
+              <dd className="text-danger-read">−<Money value={day.tip_out} /></dd>
             </div>
           )}
           {day.deductions > 0 && (
             <div className="flex justify-between gap-2">
               <dt className="text-muted">{t('Deductions')}</dt>
-              <dd className="text-danger">−<Money value={day.deductions} /></dd>
+              <dd className="text-danger-read">−<Money value={day.deductions} /></dd>
             </div>
           )}
           <div className="flex justify-between gap-2 border-t border-border pt-1 text-[0.95rem] font-bold">
             <dt>{t('Earned')}</dt>
-            <dd className="text-good"><Money value={day.earned} /></dd>
+            <dd className="text-good-read"><Money value={day.earned} /></dd>
           </div>
           {/*
             What the day cost, kept beside what it earned rather than inside
@@ -869,11 +869,11 @@ export function DayPanel() {
             <>
               <div className="flex justify-between gap-2">
                 <dt className="text-muted">{t('Spent')}</dt>
-                <dd className="text-danger">−<Money value={spent} /></dd>
+                <dd className="text-danger-read">−<Money value={spent} /></dd>
               </div>
               <div className="flex justify-between gap-2">
                 <dt className="text-muted">{t('Left over')}</dt>
-                <dd className={day.earned - spent < 0 ? 'text-danger' : ''}>
+                <dd className={day.earned - spent < 0 ? 'text-danger-read' : ''}>
                   <Money value={day.earned - spent} />
                 </dd>
               </div>
@@ -1000,7 +1000,7 @@ function BulkPanel({ keys }: { keys: string[] }) {
       {withShifts > 0 && (
         <button
           type="button"
-          className="btn w-full !border-danger/40 !text-danger"
+          className="btn w-full !border-danger/40 !text-danger-read"
           disabled={saving}
           onClick={() => {
             if (window.confirm(`${t('Clear shifts on')} ${n(withShifts, 'days')}?`)) {
@@ -1085,7 +1085,7 @@ function ActualClockRow({
       />
       </span>
       {recorded !== null && delta !== 0 && (
-        <span className={`tabular text-[0.72rem] font-semibold ${delta > 0 ? 'text-good' : 'text-warn'}`}>
+        <span className={`tabular text-[0.72rem] font-semibold ${delta > 0 ? 'text-good-read' : 'text-warn-read'}`}>
           {delta > 0 ? '+' : '−'}{Math.abs(Math.round((delta / 60) * 10) / 10)} {t('h')}
         </span>
       )}
@@ -1187,7 +1187,7 @@ function DayWeek({ dayKey }: { dayKey: string }) {
       <dl className="flex flex-col gap-1 border-t border-border pt-1.5 text-[0.8rem]">
         <div className="flex justify-between gap-2">
           <dt className="text-muted">{t('Earned this week')}</dt>
-          <dd className="tabular font-semibold text-good"><Money value={earned} /></dd>
+          <dd className="tabular font-semibold text-good-read"><Money value={earned} /></dd>
         </div>
         {planned > 0 && (
           <div className="flex justify-between gap-2">
@@ -1361,7 +1361,7 @@ function DayContext({ dayKey }: { dayKey: string }) {
                   this day «+Infinity%». */}
               {here.earned > 0 && weekdayAverage > 0 && (
                 <span
-                  className={`ml-1.5 text-[0.72rem] ${here.earned >= weekdayAverage ? 'text-good' : 'text-danger'}`}
+                  className={`ml-1.5 text-[0.72rem] ${here.earned >= weekdayAverage ? 'text-good-read' : 'text-danger-read'}`}
                 >
                   {here.earned >= weekdayAverage ? '+' : '−'}
                   {Math.round(Math.abs((here.earned / weekdayAverage - 1) * 100))}%

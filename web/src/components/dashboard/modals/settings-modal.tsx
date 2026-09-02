@@ -401,7 +401,7 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
         </section>
 
         <div className="flex justify-between">
-          <button type="button" className="btn btn-quiet !text-danger" onClick={reset}>
+          <button type="button" className="btn btn-quiet !text-danger-read" onClick={reset}>
             {t('Reset to defaults')}
           </button>
           <button type="button" className="btn btn-primary" onClick={onClose}>

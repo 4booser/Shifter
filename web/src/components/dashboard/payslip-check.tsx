@@ -172,7 +172,7 @@ export function PayslipCheckModal({
 
             {gaps.length > 0 && (
               <div className="rounded-(--radius) border border-danger/40 bg-(--danger-soft) p-3">
-                <p className="mb-1.5 text-[0.9rem] font-bold text-danger">
+                <p className="mb-1.5 text-[0.9rem] font-bold text-danger-read">
                   {t('What does not match')}
                 </p>
                 <ul className="flex flex-col gap-1 text-[0.85rem]">

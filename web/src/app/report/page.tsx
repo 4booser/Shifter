@@ -360,7 +360,7 @@ function Report() {
       {/* ==== Hero numbers ==== */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
         <Hero label={t('Earned')} change={running ? null : delta(summary.total_earned, previous.total_earned)}>
-          <CountUp value={summary.total_earned} className="text-[1.25rem] font-bold text-good" />
+          <CountUp value={summary.total_earned} className="text-[1.25rem] font-bold text-good-read" />
         </Hero>
         <Hero label={t('Hours')} change={running ? null : delta(summary.hours, previous.hours)}>
           <CountUp value={summary.hours} format={(value) => num(Math.round(value))} className="text-[1.25rem] font-bold" />
@@ -578,7 +578,7 @@ function Report() {
                   <td className="py-2 pr-2 text-right tabular">
                     {rows.reduce((sum, day) => sum + salesUnits(day), 0) || '—'}
                   </td>
-                  <td className="py-2 pr-2 text-right tabular text-good">{format(summary.total_earned)}</td>
+                  <td className="py-2 pr-2 text-right tabular text-good-read">{format(summary.total_earned)}</td>
                   <td />
                 </tr>
               </tfoot>

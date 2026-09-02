@@ -91,7 +91,7 @@ export function BankForecastDemo() {
         <circle cx={x(past.length - 1)} cy={y(past[past.length - 1])} r="4" fill="var(--accent)" />
       </svg>
 
-      <p className={`mt-2 text-[0.9rem] font-semibold tabular ${crosses ? 'text-danger' : ''}`}>
+      <p className={`mt-2 text-[0.9rem] font-semibold tabular ${crosses ? 'text-danger-read' : ''}`}>
         {crosses
           ? `Так не дотянуть: минимум ${UAH(thinnest.value)} — подвиньте зарплату ближе`
           : `Самое тонкое место — ${UAH(thinnest.value)}, дотягиваете`}

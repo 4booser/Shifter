@@ -126,13 +126,13 @@ export function SpendHeadline({
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <span className="field-hint">{t('Spent over this stretch')}</span>
-            <div className="tabular text-[2rem] font-extrabold leading-tight text-danger">
+            <div className="tabular text-[2rem] font-extrabold leading-tight text-danger-read">
               <CountUp value={spentAll} format={(v) => (hideAmounts ? '•••' : format(Math.round(v)))} />
             </div>
             {spentDelta !== null && (
               <span
                 className={`tabular text-[0.82rem] font-semibold ${
-                  spentDelta > 8 ? 'text-danger' : spentDelta < -8 ? 'text-good' : 'text-muted'
+                  spentDelta > 8 ? 'text-danger-read' : spentDelta < -8 ? 'text-good-read' : 'text-muted'
                 }`}
               >
                 {spentDelta > 0 ? '▲' : spentDelta < 0 ? '▼' : '='} {Math.abs(spentDelta)}%{' '}
@@ -143,7 +143,7 @@ export function SpendHeadline({
           <div className="text-right">
             <div className="text-[0.85rem]">
               <span className="text-muted">{t('Came in')}</span>{' '}
-              <b className="tabular text-good"><Money value={totals.earned} /></b>
+              <b className="tabular text-good-read"><Money value={totals.earned} /></b>
             </div>
             {usual > 0 && (
               <div className="text-[0.85rem]">
@@ -285,12 +285,12 @@ export function SpendCategories({
                       <span className="tabular flex-none text-[0.72rem] text-faint">
                         ×{row.count}
                         {row.percent !== null && (
-                          <span className={row.percent > 10 ? 'text-danger' : row.percent < -10 ? 'text-good' : ''}>
+                          <span className={row.percent > 10 ? 'text-danger-read' : row.percent < -10 ? 'text-good-read' : ''}>
                             {' '}· {row.percent > 0 ? '+' : ''}{row.percent}%
                           </span>
                         )}
                         {row.percent === null && row.previous === 0 && (
-                          <span className="text-warn"> · {t('new')}</span>
+                          <span className="text-warn-read"> · {t('new')}</span>
                         )}
                       </span>
                     </span>
@@ -605,7 +605,7 @@ function CategoryInside({
               : (
                 <>
                   {t('Limit')}: <Money value={limit} />
-                  {limitOver && <span className="text-danger"> · {t('over the limit')}</span>}
+                  {limitOver && <span className="text-danger-read"> · {t('over the limit')}</span>}
                 </>
               )}
           </button>

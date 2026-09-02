@@ -490,7 +490,7 @@ export function Sidebar() {
           </Row>
           <div className="flex items-center justify-between gap-2 border-t border-border pt-1.5 text-[0.95rem] font-bold">
             <dt>{t('Earned')}</dt>
-            <dd className="text-good">
+            <dd className="text-good-read">
               <Money value={summary.total_earned} />{' '}
               <Delta percent={change(summary.total_earned, previous.total_earned)} />
             </dd>
@@ -516,7 +516,7 @@ export function Sidebar() {
                 <Money value={summary.paid} />
               </Row>
               <Row label={t('Difference')}>
-                <span className={summary.difference < 0 ? 'text-danger' : 'text-good'}>
+                <span className={summary.difference < 0 ? 'text-danger-read' : 'text-good-read'}>
                   <Money value={summary.difference} />
                 </span>
               </Row>
@@ -525,7 +525,7 @@ export function Sidebar() {
         </dl>
 
         {summary.currencies.length > 1 && (
-          <p className="field-hint mt-2 !text-warn">
+          <p className="field-hint mt-2 !text-warn-read">
             {t('This range mixes currencies')}: {summary.currencies.join(', ')}. {t('Read the per-place figures instead of the totals.')}
           </p>
         )}
@@ -690,7 +690,7 @@ function TeamCard() {
           </div>
 
           {(day?.cover_requests ?? 0) > 0 && (
-            <Link href="/schedule" className="mb-2 flex items-center gap-1.5 text-[0.82rem] font-medium text-warn">
+            <Link href="/schedule" className="mb-2 flex items-center gap-1.5 text-[0.82rem] font-medium text-warn-read">
               <Icon name="swap" size={13} />
               {day!.cover_requests} {t('looking for cover')}
             </Link>

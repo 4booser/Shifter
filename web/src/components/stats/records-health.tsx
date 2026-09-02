@@ -67,7 +67,7 @@ export function RecordsHealthCard() {
 
           return (
             <div key={gap.kind} className="flex items-start gap-2.5">
-              <span className="mt-0.5 grid h-6 w-6 flex-none place-items-center rounded-full bg-(--warn-soft) text-[0.78rem] font-bold text-warn tabular">
+              <span className="mt-0.5 grid h-6 w-6 flex-none place-items-center rounded-full bg-(--warn-soft) text-[0.78rem] font-bold text-warn-read tabular">
                 {gap.count}
               </span>
               <div className="min-w-0">

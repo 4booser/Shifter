@@ -97,11 +97,11 @@ export function ImportModal({ open, onClose }: { open: boolean; onClose: () => v
         {preview !== null && (
           <>
             <p className="flex gap-3 text-[0.85rem]">
-              <span className="font-semibold text-good">
+              <span className="font-semibold text-good-read">
                 {usable.length} {t('ready')}
               </span>
               {rows.length - usable.length > 0 && (
-                <span className="font-semibold text-danger">
+                <span className="font-semibold text-danger-read">
                   {rows.length - usable.length} {t('skipped')}
                 </span>
               )}

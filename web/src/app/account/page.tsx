@@ -274,7 +274,7 @@ function Account() {
 
           {/* ==== Danger ==== */}
           <section className="card reveal !border-danger/40 p-4">
-            <h2 className="mb-1 text-[0.98rem] font-bold text-danger">{t('Delete the account')}</h2>
+            <h2 className="mb-1 text-[0.98rem] font-bold text-danger-read">{t('Delete the account')}</h2>
             <p className="field-hint mb-3">{t('Everything goes: days, shifts, places, history. There is no way back.')}</p>
 
             <div className="grid gap-3 sm:grid-cols-2">
@@ -400,7 +400,7 @@ function FeedSection() {
             </button>
             <button
               type="button"
-              className="btn btn-sm !text-danger"
+              className="btn btn-sm !text-danger-read"
               onClick={() => {
                 if (window.confirm(t('Turn the feed off? Subscribed calendars go stale.'))) {
                   void api('/shifter/v1/feed', { method: 'DELETE' }).then(() => setToken(null));
@@ -596,7 +596,7 @@ function TwoFactorSection({ hasPassword, on }: { hasPassword: boolean; on: boole
         {t('A rotating code from your phone on top of the password. Backup codes cover a lost phone.')}
       </p>
 
-      {error !== null && <p className="mb-2 text-[0.85rem] text-danger">{error}</p>}
+      {error !== null && <p className="mb-2 text-[0.85rem] text-danger-read">{error}</p>}
 
       {stage === 'idle' && enabled !== true && (
         <button type="button" className="btn" disabled={busy} onClick={() => void begin()}>
@@ -615,7 +615,7 @@ function TwoFactorSection({ hasPassword, on }: { hasPassword: boolean; on: boole
             value={code}
             onChange={(event) => setCode(event.target.value.replace(/\D/g, ''))}
           />
-          <button type="button" className="btn btn-sm !text-danger" disabled={busy || code.length < 6} onClick={() => void disable()}>
+          <button type="button" className="btn btn-sm !text-danger-read" disabled={busy || code.length < 6} onClick={() => void disable()}>
             {t('Turn off')}
           </button>
         </div>
@@ -651,7 +651,7 @@ function TwoFactorSection({ hasPassword, on }: { hasPassword: boolean; on: boole
 
       {stage === 'backup' && (
         <div>
-          <p className="mb-2 text-[0.9rem] font-semibold text-good">✓ {t('Two-factor is on. Keep these backup codes somewhere safe:')}</p>
+          <p className="mb-2 text-[0.9rem] font-semibold text-good-read">✓ {t('Two-factor is on. Keep these backup codes somewhere safe:')}</p>
           <div className="mb-2 grid grid-cols-2 gap-1.5 sm:grid-cols-4">
             {backups.map((backup) => (
               <code key={backup} className="rounded-(--radius) border border-border bg-surface-2 px-2 py-1 text-center text-[0.85rem] tabular">
@@ -710,7 +710,7 @@ function TelegramSection() {
           <span className="chip chip-good">{t('Linked')}</span>
           <button
             type="button"
-            className="btn btn-sm !text-danger"
+            className="btn btn-sm !text-danger-read"
             onClick={() =>
               void api('/shifter/v1/telegram', { method: 'DELETE' }).then(() =>
                 setState({ ...state, linked: false }),
@@ -852,7 +852,7 @@ function SessionsSection() {
             </span>
             <button
               type="button"
-              className="btn btn-quiet btn-sm !text-danger"
+              className="btn btn-quiet btn-sm !text-danger-read"
               disabled={clearing !== null}
               onClick={() => void throwOut(group)}
             >
@@ -926,7 +926,7 @@ function RestSection({ hours }: { hours: number }) {
             {option} {t('h')}
           </button>
         ))}
-        {saved && <span className="field-hint !text-good">{t('Saved')}</span>}
+        {saved && <span className="field-hint !text-good-read">{t('Saved')}</span>}
       </div>
 
       <p className="field-hint mt-2">

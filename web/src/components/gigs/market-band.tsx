@@ -67,11 +67,11 @@ export function MarketBandCard({ city, category }: { city: string; category: str
         <p className="mt-2 text-[0.88rem]">
           {t('Your hourly rate')}: <strong className="tabular"><Money value={band.mine} /></strong>/{t('h')} —{' '}
           {standing === 'below' && (
-            <span className="text-warn">{t('below what this city usually posts')}</span>
+            <span className="text-warn-read">{t('below what this city usually posts')}</span>
           )}
           {standing === 'usual' && <span className="text-muted">{t('in the usual range')}</span>}
           {standing === 'above' && (
-            <span className="text-good">{t('above what this city usually posts')}</span>
+            <span className="text-good-read">{t('above what this city usually posts')}</span>
           )}
         </p>
       )}

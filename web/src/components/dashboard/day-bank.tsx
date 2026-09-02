@@ -49,9 +49,9 @@ export function DayBank({ dayKey }: { dayKey: string }) {
       >
         <h3 className="field-label">{t('The card, this day')}</h3>
         <span className="text-[0.78rem] tabular">
-          {day.spent > 0 && <span className="text-danger">−<Money value={day.spent} /></span>}
+          {day.spent > 0 && <span className="text-danger-read">−<Money value={day.spent} /></span>}
           {day.spent > 0 && day.came > 0 && ' · '}
-          {day.came > 0 && <span className="text-good">+<Money value={day.came} /></span>}
+          {day.came > 0 && <span className="text-good-read">+<Money value={day.came} /></span>}
         </span>
       </button>
 
@@ -61,7 +61,7 @@ export function DayBank({ dayKey }: { dayKey: string }) {
             {day.rows.slice(0, 8).map((item) => (
               <li key={item.id} className="flex items-baseline justify-between gap-2 text-[0.78rem]">
                 <span className="truncate text-muted">{item.description}</span>
-                <span className={`flex-none tabular ${item.amount > 0 ? 'text-good' : ''}`}>
+                <span className={`flex-none tabular ${item.amount > 0 ? 'text-good-read' : ''}`}>
                   {item.amount > 0 ? '+' : ''}
                   <Money value={fromMinor(item.amount)} />
                 </span>

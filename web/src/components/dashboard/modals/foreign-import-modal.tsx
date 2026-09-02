@@ -216,7 +216,7 @@ export function ForeignImportModal({ open, onClose }: { open: boolean; onClose: 
             {undated !== undefined && (
               <>
                 {' · '}
-                <span className="text-warn">
+                <span className="text-warn-read">
                   {t('without a readable date')}: {undated.split(':')[1]}
                 </span>
               </>

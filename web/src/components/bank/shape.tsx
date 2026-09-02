@@ -141,7 +141,7 @@ export function BankShape({
             <span>{t('Against last month')}</span>
             <span
               className={`tabular font-semibold ${
-                delta.now > delta.before ? 'text-danger' : 'text-good'
+                delta.now > delta.before ? 'text-danger-read' : 'text-good-read'
               }`}
             >
               {delta.now > delta.before ? '+' : '−'}
@@ -159,7 +159,7 @@ export function BankShape({
                   <span className="tabular flex-none">
                     <span className="text-faint"><Money value={Math.round(move.before)} /></span>
                     {' → '}
-                    <span className={grew ? 'text-danger' : 'text-good'}>
+                    <span className={grew ? 'text-danger-read' : 'text-good-read'}>
                       <Money value={Math.round(move.now)} />
                     </span>
                   </span>

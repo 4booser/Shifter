@@ -66,7 +66,7 @@ export function LiveShiftDemo() {
         {pad(Math.floor(demoSeconds / 3600))}:{pad(Math.floor((demoSeconds % 3600) / 60))}
         <span className="text-[1.4rem] text-faint">:{pad(demoSeconds % 60)}</span>
       </p>
-      <p className="mt-1 text-[1.05rem] font-bold text-good tabular">
+      <p className="mt-1 text-[1.05rem] font-bold text-good-read tabular">
         {UAH(done?.earned ?? earned)} <span className="text-[0.8rem] font-semibold text-muted">уже ваши · {UAH(rate)}/ч</span>
       </p>
       {startedAt === null ? (
@@ -297,7 +297,7 @@ export function GigsDemo() {
             <b className="whitespace-nowrap text-[0.85rem] tabular text-(--accent-read)">{gig.pay}</b>
             <button
               type="button"
-              className={`btn btn-sm whitespace-nowrap ${isSent ? '!border-good !text-good' : 'btn-primary'}`}
+              className={`btn btn-sm whitespace-nowrap ${isSent ? '!border-good !text-good-read' : 'btn-primary'}`}
               onClick={() =>
                 setSent((current) => {
                   const next = new Set(current);

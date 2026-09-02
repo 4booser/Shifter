@@ -194,12 +194,12 @@ function Compare() {
           {b.total_earned >= a.total_earned ? (
             <>
               {t('is ahead of')} <strong>{ranges.a.label}</strong> {t('by')}{' '}
-              <Money value={b.total_earned - a.total_earned} className="font-bold text-good" />
+              <Money value={b.total_earned - a.total_earned} className="font-bold text-good-read" />
             </>
           ) : (
             <>
               {t('is behind')} <strong>{ranges.a.label}</strong> {t('by')}{' '}
-              <Money value={a.total_earned - b.total_earned} className="font-bold text-danger" />
+              <Money value={a.total_earned - b.total_earned} className="font-bold text-danger-read" />
             </>
           )}
           {avgA.perHour > 0 && avgB.perHour > 0 && (

@@ -129,7 +129,7 @@ export function RaiseTrail({ summary }: { summary: DaysResponse }) {
                 <Money value={raise.before} /> → <Money value={raise.after} />
               </span>
               {percent !== null && percent !== 0 && (
-                <span className={`tabular font-semibold ${up ? 'text-good' : 'text-danger'}`}>
+                <span className={`tabular font-semibold ${up ? 'text-good-read' : 'text-danger-read'}`}>
                   {up ? '+' : '−'}
                   {Math.abs(percent)}%
                 </span>
@@ -259,7 +259,7 @@ export function RoomCounted({ summary }: { summary: DaysResponse }) {
           <span className="field-hint">{t('guests served')}</span>
         </div>
         <div>
-          <span className="block text-[1.35rem] font-bold tabular text-good">
+          <span className="block text-[1.35rem] font-bold tabular text-good-read">
             <Money value={Math.round(perGuest * 100) / 100} />
           </span>
           <span className="field-hint">{t('a guest in tips')}</span>
@@ -297,7 +297,7 @@ export function OwedLater({ summary }: { summary: DaysResponse }) {
         {summary.net_earned > 0 && (
           <div className="flex items-baseline justify-between gap-2">
             <dt className="field-hint">{t('Take-home after it')}</dt>
-            <dd className="tabular font-semibold text-good">
+            <dd className="tabular font-semibold text-good-read">
               <Money value={summary.net_earned} />
             </dd>
           </div>

@@ -85,7 +85,7 @@ export function MyAssignments({ teamId, onAnswered }: { teamId: number; onAnswer
       </h2>
       <p className="field-hint mb-3">{t('Accepting places the shift on your calendar with your own rate.')}</p>
 
-      {error !== null && <p className="mb-2 text-[0.85rem] text-danger">{error}</p>}
+      {error !== null && <p className="mb-2 text-[0.85rem] text-danger-read">{error}</p>}
 
       <ul className="flex flex-col gap-2">
         {rows.map((row) => (
@@ -118,7 +118,7 @@ export function MyAssignments({ teamId, onAnswered }: { teamId: number; onAnswer
               <Icon name="check" size={13} />
               {t('Accept')}
             </button>
-            <button type="button" className="btn btn-quiet btn-sm !text-danger" disabled={busy === row.id} onClick={() => void answer(row, false)}>
+            <button type="button" className="btn btn-quiet btn-sm !text-danger-read" disabled={busy === row.id} onClick={() => void answer(row, false)}>
               {t('Decline')}
             </button>
           </li>

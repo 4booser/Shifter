@@ -184,7 +184,7 @@ export function MoneyFlow({ steps }: { steps: WaterfallStep[] }) {
         {cuts.map((step) => (
           <span
             key={step.key}
-            className="rounded-full border border-warn/35 bg-(--warn-soft) px-2.5 py-1 text-[0.8rem] font-semibold text-warn tabular"
+            className="rounded-full border border-warn/35 bg-(--warn-soft) px-2.5 py-1 text-[0.8rem] font-semibold text-warn-read tabular"
           >
             − {format(step.value)} <span className="font-normal opacity-80">{t(step.key)}</span>
           </span>
@@ -195,7 +195,7 @@ export function MoneyFlow({ steps }: { steps: WaterfallStep[] }) {
             <span className="text-faint">→</span>
             <span>
               <span className="field-hint block">{t('Net')}</span>
-              <span className="text-[1.35rem] font-bold tracking-tight text-good tabular">{format(net.value)}</span>
+              <span className="text-[1.35rem] font-bold tracking-tight text-good-read tabular">{format(net.value)}</span>
             </span>
           </>
         )}

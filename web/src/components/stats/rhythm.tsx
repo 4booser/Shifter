@@ -77,7 +77,7 @@ export function RhythmCard() {
                     style={{ left: `${(11 / 24) * 100}%` }}
                   />
                 </div>
-                <span className={`w-14 flex-none text-right text-[0.8rem] font-semibold tabular ${window.short ? 'text-danger' : ''}`}>
+                <span className={`w-14 flex-none text-right text-[0.8rem] font-semibold tabular ${window.short ? 'text-danger-read' : ''}`}>
                   {window.hours} {t('h')}
                 </span>
               </div>
@@ -87,7 +87,7 @@ export function RhythmCard() {
           <p className="mt-3 text-[0.88rem]">
             {rest.short_count > 0 ? (
               <>
-                <b className={rest.short_count >= 3 ? 'text-danger' : ''}>
+                <b className={rest.short_count >= 3 ? 'text-danger-read' : ''}>
                   {t('Nights shorter than')} {rest.threshold} {t('h')}: {rest.short_count}
                 </b>{' '}
                 <span className="text-muted">
@@ -111,7 +111,7 @@ export function RhythmCard() {
               {t('days one-two of a run pay')} {format(fatigue.fresh_per_hour)}/{t('h')}{' '}
               {t('in tips; by day six —')} {format(fatigue.deep_per_hour)}/{t('h')}
             </span>{' '}
-            <b className={fatigue.percent < 0 ? 'text-danger' : 'text-good'}>
+            <b className={fatigue.percent < 0 ? 'text-danger-read' : 'text-good-read'}>
               {fatigue.percent > 0 ? '+' : '−'}
               {Math.abs(fatigue.percent)}%
             </b>

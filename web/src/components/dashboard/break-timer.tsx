@@ -148,7 +148,7 @@ export function BreakTimer({
   return (
     <span className="flex items-center gap-1.5">
       <span
-        className={`tabular text-[0.82rem] font-semibold ${over ? 'text-warn' : 'text-accent'}`}
+        className={`tabular text-[0.82rem] font-semibold ${over ? 'text-warn-read' : 'text-accent'}`}
         title={t('Time on break')}
       >
         ☕ {clock(left)}

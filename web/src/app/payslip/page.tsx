@@ -244,7 +244,7 @@ function Row({ label, value, money }: { label: string; value?: string; money?: n
       <dt className="min-w-0 truncate text-muted">{label}</dt>
       <dd className="flex-none tabular">
         {money !== undefined ? (
-          <span className={money < 0 ? 'text-danger' : ''}>
+          <span className={money < 0 ? 'text-danger-read' : ''}>
             {money < 0 && '−'}
             <Money value={Math.abs(money)} />
           </span>

@@ -55,7 +55,7 @@ export function Delta({ percent, invert = false }: { percent: number | null; inv
   return (
     <span
       className={`inline-flex items-center gap-0.5 text-[0.72rem] font-semibold tabular ${
-        up ? 'text-good' : down ? 'text-danger' : 'text-faint'
+        up ? 'text-good-read' : down ? 'text-danger-read' : 'text-faint'
       }`}
     >
       {rounded !== 0 && <Icon name={rounded > 0 ? 'arrow-up' : 'arrow-down'} size={11} />}
@@ -297,9 +297,9 @@ export function Alert({
 
   const tone =
     kind === 'error'
-      ? 'border-danger/30 bg-(--danger-soft) text-danger'
+      ? 'border-danger/30 bg-(--danger-soft) text-danger-read'
       : kind === 'good'
-        ? 'border-good/30 bg-(--good-soft) text-good'
+        ? 'border-good/30 bg-(--good-soft) text-good-read'
         : 'border-border bg-surface-2 text-muted';
 
   return (

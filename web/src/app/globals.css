@@ -36,11 +36,12 @@
    * card behind it, where text this size needs 4.5. Faint is a rank in the
    * hierarchy, not permission to be unreadable.
    *
-   * Chosen against the secondary surface, not the card: hints sit inside
-   * inset panels as often as on a plain one, and the darker ground is the
-   * one that decides.
+   * Chosen against the secondary surface of the warmest palette, not the
+   * card of the coolest: hints sit inside inset panels as often as on a plain
+   * one, and «sand» insets are the lightest ground in the app. Everything
+   * else has room to spare from the same value.
    */
-  --faint: #6f6b5f;
+  --faint: #6b675b;
   --shadow: 0 1px 2px rgb(28 27 24 / 5%), 0 8px 24px -12px rgb(28 27 24 / 12%);
   --shadow-lg: 0 2px 6px rgb(28 27 24 / 7%), 0 24px 48px -16px rgb(28 27 24 / 22%);
 
@@ -230,6 +231,21 @@
    */
   --accent-read: color-mix(in srgb, var(--accent) 45%, var(--text));
   --color-accent-read: var(--accent-read);
+
+  /*
+   * The states as ink, rather than as a tint under one.
+   *
+   * Same reasoning as the accent: «−100%» in red read 4.18 on a light card,
+   * and the arrow beside a figure is text, not decoration. Mixed a fifth of
+   * the way toward the page's ink, they darken on a light ground and lighten
+   * on a dark one from one declaration.
+   */
+  --good-read: color-mix(in srgb, var(--good) 80%, var(--text));
+  --warn-read: color-mix(in srgb, var(--warn) 80%, var(--text));
+  --danger-read: color-mix(in srgb, var(--danger) 80%, var(--text));
+  --color-good-read: var(--good-read);
+  --color-warn-read: var(--warn-read);
+  --color-danger-read: var(--danger-read);
   --color-accent: var(--accent);
   --color-accent-ink: var(--accent-ink);
   --color-danger: var(--danger);
@@ -495,7 +511,7 @@ body {
 }
 
 .btn-danger {
-  color: var(--danger);
+  color: var(--danger-read);
 }
 
 .btn-danger:hover {

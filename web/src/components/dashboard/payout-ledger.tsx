@@ -124,7 +124,7 @@ export function PayoutLedger({
                 </button>
                 <button
                   type="button"
-                  className="btn btn-quiet btn-sm !text-danger"
+                  className="btn btn-quiet btn-sm !text-danger-read"
                   aria-label={t('Remove this payment')}
                   onClick={() => remove(payout.id)}
                 >
@@ -136,7 +136,7 @@ export function PayoutLedger({
 
           {rows.length > 0 && (
             <div className="rounded-lg border border-danger/40 p-3">
-              <p className="text-[0.85rem] font-semibold text-danger">{t('Start the ledger over')}</p>
+              <p className="text-[0.85rem] font-semibold text-danger-read">{t('Start the ledger over')}</p>
               <p className="field-hint mt-0.5">
                 {t('Removes every recorded payment and every period verdict, everywhere — not just this stretch. Shifts and earnings stay. There is no undo.')}
               </p>
@@ -159,7 +159,7 @@ export function PayoutLedger({
                   />
                   <button
                     type="button"
-                    className="btn btn-sm !text-danger"
+                    className="btn btn-sm !text-danger-read"
                     disabled={busy || word.trim().toUpperCase() !== requiredWord}
                     onClick={wipe}
                   >

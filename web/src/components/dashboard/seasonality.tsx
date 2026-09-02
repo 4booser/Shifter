@@ -64,14 +64,14 @@ export function Seasonality() {
           {index >= 1.1 && (
             <>
               {t('This month is usually')}{' '}
-              <strong className="text-good">+{Math.round((index - 1) * 100)}%</strong>{' '}
+              <strong className="text-good-read">+{Math.round((index - 1) * 100)}%</strong>{' '}
               {t('on a typical one.')}
             </>
           )}
           {index <= 0.9 && (
             <>
               {t('This month is usually')}{' '}
-              <strong className="text-danger">−{Math.round((1 - index) * 100)}%</strong>{' '}
+              <strong className="text-danger-read">−{Math.round((1 - index) * 100)}%</strong>{' '}
               {t('on a typical one.')}
             </>
           )}

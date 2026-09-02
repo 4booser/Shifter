@@ -240,7 +240,7 @@ function EmailRow({ email, onSaved }: { email: string | null; onSaved: () => voi
           {t('Save')}
         </button>
       </div>
-      {error !== null && <p className="mt-1 text-[0.85rem] text-danger">{error}</p>}
+      {error !== null && <p className="mt-1 text-[0.85rem] text-danger-read">{error}</p>}
       <p className="field-hint mt-1">
         {email === null
           ? t('Without it a forgotten password cannot be recovered. Nobody else ever sees this address.')

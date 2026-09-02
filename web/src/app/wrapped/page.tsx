@@ -376,7 +376,7 @@ function Wrapped() {
               className="pop mt-4 block"
               style={{ fontSize: 'clamp(3rem, 9vw, 5.5rem)', lineHeight: 1, ['--i' as string]: 3 } as React.CSSProperties}
             >
-              <CountUp value={summary.total_earned} className="font-extrabold tabular tracking-tight text-good" />
+              <CountUp value={summary.total_earned} className="font-extrabold tabular tracking-tight text-good-read" />
             </span>
             <p className="pop mt-3 text-[1.05rem] text-muted" style={{ ['--i' as string]: 4 }}>
               {n(totalShifts, 'shifts')} · {n(Math.round(summary.hours), 'hours')} ·{' '}
@@ -393,7 +393,7 @@ function Wrapped() {
           {/* ==== Headline numbers, poster-sized ==== */}
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
             <Big label={t('Earned')} delta={change(summary.total_earned, previous.total_earned)}>
-              <CountUp value={summary.total_earned} className="text-[1.9rem] font-extrabold tracking-tight text-good" />
+              <CountUp value={summary.total_earned} className="text-[1.9rem] font-extrabold tracking-tight text-good-read" />
             </Big>
             <Big label={t('Hours worked')} delta={change(summary.hours, previous.hours)}>
               <CountUp value={Math.round(summary.hours)} format={(value) => `${Math.round(value).toLocaleString(lang)}`} className="text-[1.9rem] font-extrabold tracking-tight" />
@@ -559,7 +559,7 @@ function Wrapped() {
             <section className="card !border-(--accent)/40 p-4">
               <h2 className="mb-1 text-[0.98rem] font-bold">{t('Where the year is heading')}</h2>
               <p className="text-[0.9rem]">
-                {t('At today’s pace the year ends at')} <Money value={forecast.projected} className="font-bold text-good" />{' '}
+                {t('At today’s pace the year ends at')} <Money value={forecast.projected} className="font-bold text-good-read" />{' '}
                 {t('and')} <strong className="tabular">{n(Math.round(projectedHours), 'hours')}</strong> —{' '}
                 <Money value={Math.max(0, forecast.projected - forecast.earnedSoFar)} /> {t('still ahead')}.
               </p>

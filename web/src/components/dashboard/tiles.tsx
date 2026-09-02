@@ -435,7 +435,7 @@ function OvertimeTile({ monthDays }: { monthDays: CalendarDayData[] }) {
   return (
     <>
       <Label icon="spark">{t('Overtime')}</Label>
-      <span className={`tile-value ${over > 0 ? 'text-warn' : ''}`}>
+      <span className={`tile-value ${over > 0 ? 'text-warn-read' : ''}`}>
         <CountUp value={over} format={(value) => `${Math.round(value)}`} />
       </span>
       <span className="field-hint">
@@ -542,7 +542,7 @@ function DeductionsTile({ monthDays }: { monthDays: CalendarDayData[] }) {
   return (
     <>
       <Label icon="alert">{t('Taken off')}</Label>
-      <span className={`tile-value ${taken > 0 ? 'text-danger' : ''}`}>
+      <span className={`tile-value ${taken > 0 ? 'text-danger-read' : ''}`}>
         {taken > 0 ? <FlowMoney value={Math.round(taken)} /> : '—'}
       </span>
       <span className="field-hint">
@@ -631,7 +631,7 @@ function RestTile({ window }: { window: CalendarDayData[] }) {
   return (
     <>
       <Label icon="moon">{t('Shortest rest')}</Label>
-      <span className={`tile-value ${shortest !== null && shortest < 11 ? 'text-warn' : ''}`}>
+      <span className={`tile-value ${shortest !== null && shortest < 11 ? 'text-warn-read' : ''}`}>
         {shortest === null ? '—' : `${Math.round(shortest)} ${t('h')}`}
       </span>
       <span className="field-hint">
@@ -679,10 +679,10 @@ function TodayTile({ window, templates }: { window: CalendarDayData[]; templates
     return (
       <>
         <Label icon="spark">{t('On shift')}</Label>
-        <span className="tile-value text-good">
+        <span className="tile-value text-good-read">
           {tick.earned === null ? formatElapsed(tick.elapsed) : <FlowMoney value={tick.earned} />}
         </span>
-        <span className={`field-hint flex items-center gap-1.5 ${discard.armed ? 'text-danger' : ''}`}>
+        <span className={`field-hint flex items-center gap-1.5 ${discard.armed ? 'text-danger-read' : ''}`}>
           {discard.armed ? '✕' : <span className="live-dot" />}
           {discard.armed
             ? t('Press again to discard')
@@ -920,7 +920,7 @@ function StreakTile({ window }: { window: CalendarDayData[] }) {
   return (
     <>
       <Label icon="flame">{t('Streak')}</Label>
-      <span className={`tile-value ${run >= 3 ? 'text-warn' : ''}`}>
+      <span className={`tile-value ${run >= 3 ? 'text-warn-read' : ''}`}>
         {run} {run >= 3 && '🔥'}
       </span>
       <span className="field-hint">

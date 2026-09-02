@@ -131,7 +131,7 @@ export function StatementCard({
           <div key={day} className="border-b border-border py-1.5 last:border-0">
             <div className="flex items-baseline justify-between gap-2 py-0.5">
               <span className="text-[0.78rem] font-bold uppercase tracking-wide text-faint">{said(day)}</span>
-              <span className={`tabular text-[0.78rem] font-semibold ${group.total >= 0 ? 'text-good' : 'text-muted'}`}>
+              <span className={`tabular text-[0.78rem] font-semibold ${group.total >= 0 ? 'text-good-read' : 'text-muted'}`}>
                 {group.total > 0 ? '+' : ''}
                 <Money value={group.total} />
               </span>
@@ -155,7 +155,7 @@ export function StatementCard({
                       добавка к покупке, а не как возврат. */}
                   {item.cashbackAmount > 0 && (
                     <span
-                      className="flex-none text-[0.72rem] text-good tabular"
+                      className="flex-none text-[0.72rem] text-good-read tabular"
                       title={t('Cashback returned')}
                     >
                       +<Money value={fromMinor(item.cashbackAmount)} />
@@ -163,7 +163,7 @@ export function StatementCard({
                   )}
                   <span
                     className={`w-24 flex-none text-right text-[0.9rem] font-semibold tabular ${
-                      item.amount > 0 ? 'text-good' : ''
+                      item.amount > 0 ? 'text-good-read' : ''
                     }`}
                   >
                     {item.amount > 0 ? '+' : ''}

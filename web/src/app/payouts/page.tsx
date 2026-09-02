@@ -268,7 +268,7 @@ function Payouts() {
         <section className="card reveal flex flex-wrap items-center gap-x-6 gap-y-1 p-4">
           <div>
             <span className="field-hint block">{t('Next money in')}</span>
-            <FlowMoney value={nextDue.amount} className="text-[1.6rem] font-bold text-good" />
+            <FlowMoney value={nextDue.amount} className="text-[1.6rem] font-bold text-good-read" />
           </div>
           <p className="text-[0.9rem] text-muted">
             {nextDue.days === 0 ? t('today') : nextDue.days === 1 ? t('tomorrow') : `${t('in')} ${n(nextDue.days, 'days')}`} ·{' '}
@@ -281,7 +281,7 @@ function Payouts() {
       {/* ==== Shortfall detector, first: the only thing worth acting on today ==== */}
       {shortfalls.map((shortfall) => (
         <section key={`${shortfall.location_id}-${shortfall.stream}`} className="card reveal !border-danger/40 !bg-(--danger-soft) p-4">
-          <h2 className="mb-1 flex items-center gap-2 font-bold text-danger">
+          <h2 className="mb-1 flex items-center gap-2 font-bold text-danger-read">
             <Icon name="flame" size={16} />
             {t('Underpaid repeatedly')}
           </h2>
@@ -290,7 +290,7 @@ function Payouts() {
             {streamChip(shortfall) && <span className="chip mx-1.5">{streamChip(shortfall)}</span>} {t('has paid short')}{' '}
             <strong>{shortfall.periods}</strong> {t('periods running')}, {t('since')} {label(shortfall.since)}.
           </p>
-          <p className="mt-1 text-[1.2rem] font-bold text-danger">
+          <p className="mt-1 text-[1.2rem] font-bold text-danger-read">
             {t('You are owed')} <Money value={shortfall.total_short} />
           </p>
           <p className="field-hint">{t('Broken down by period below. Take the dates and amounts to whoever does the payroll.')}</p>
@@ -308,7 +308,7 @@ function Payouts() {
           <FlowMoney
             value={data?.awaited ?? 0}
             className={`text-[1.25rem] font-bold ${
-              (data?.overdue ?? 0) === (data?.awaited ?? 0) && (data?.awaited ?? 0) > 0 ? 'text-danger' : ''
+              (data?.overdue ?? 0) === (data?.awaited ?? 0) && (data?.awaited ?? 0) > 0 ? 'text-danger-read' : ''
             }`}
           />
         </div>
@@ -316,7 +316,7 @@ function Payouts() {
         {(data?.overdue ?? 0) !== (data?.awaited ?? 0) && (
           <div className="card reveal p-3">
             <span className="field-hint block">{t('Of that, late')}</span>
-            <FlowMoney value={data?.overdue ?? 0} className={`text-[1.25rem] font-bold ${(data?.overdue ?? 0) > 0 ? 'text-danger' : ''}`} />
+            <FlowMoney value={data?.overdue ?? 0} className={`text-[1.25rem] font-bold ${(data?.overdue ?? 0) > 0 ? 'text-danger-read' : ''}`} />
           </div>
         )}
         <div className="card reveal p-3">
@@ -588,7 +588,7 @@ function PeriodRow({
         ) : (
           row.paid > 0 &&
           row.difference !== 0 && (
-            <span className={`text-[0.78rem] tabular ${row.difference < 0 ? 'text-danger' : 'text-good'}`}>
+            <span className={`text-[0.78rem] tabular ${row.difference < 0 ? 'text-danger-read' : 'text-good-read'}`}>
               {row.difference < 0 ? '−' : '+'}
               <Money value={Math.abs(row.difference)} />
             </span>
@@ -630,7 +630,7 @@ function PeriodRow({
                   <button type="button" className="btn btn-quiet btn-sm justify-start" onClick={() => { setMenuFor(null); onSettle(row, 'paid'); }}>
                     {t('Got it in cash')}
                   </button>
-                  <button type="button" className="btn btn-quiet btn-sm justify-start !text-danger" onClick={() => { setMenuFor(null); onSettle(row, 'written-off'); }}>
+                  <button type="button" className="btn btn-quiet btn-sm justify-start !text-danger-read" onClick={() => { setMenuFor(null); onSettle(row, 'written-off'); }}>
                     {t('Let it go')}
                   </button>
                 </>

@@ -77,7 +77,7 @@ function Join() {
           />
         </label>
 
-        {error !== null && <p className="mb-2 text-[0.85rem] text-danger">{error}</p>}
+        {error !== null && <p className="mb-2 text-[0.85rem] text-danger-read">{error}</p>}
 
         <button type="button" className="btn btn-primary w-full" disabled={busy || code.length < 4} onClick={join}>
           {busy ? '…' : t('Join the crew')}

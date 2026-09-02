@@ -18,7 +18,7 @@ export function Stars({ rating, count, small = false }: { rating: number | null;
       className={`inline-flex items-center gap-0.5 whitespace-nowrap font-semibold tabular ${small ? 'text-[0.72rem]' : 'text-[0.8rem]'}`}
       title={`${rating} / 5`}
     >
-      <span className="text-warn" aria-hidden>
+      <span className="text-warn-read" aria-hidden>
         {'★'.repeat(Math.round(rating))}
         <span className="opacity-30">{'★'.repeat(5 - Math.round(rating))}</span>
       </span>
@@ -116,7 +116,7 @@ function ReviewModal({ pending, onClose, onDone }: { pending: PendingReview; onC
               key={star}
               type="button"
               aria-label={`${star} / 5`}
-              className={`text-[2.1rem] leading-none transition-transform hover:scale-110 ${star <= rating ? 'text-warn' : 'text-faint opacity-40'}`}
+              className={`text-[2.1rem] leading-none transition-transform hover:scale-110 ${star <= rating ? 'text-warn-read' : 'text-faint opacity-40'}`}
               onClick={() => setRating(star)}
             >
               ★

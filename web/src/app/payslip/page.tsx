@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { accountApi } from '@/lib/api/auth';
 import { calendarApi } from '@/lib/api/calendar';
 import { apiErrorMessage } from '@/lib/api/http';
-import { monthBounds, todayKey } from '@/lib/calendar/calendar-date';
+import { formatDayLabelShort, formatPeriod, monthBounds, todayKey } from '@/lib/calendar/calendar-date';
 import { DaysResponse, Reconciliation } from '@/lib/calendar/models';
 import { useI18n } from '@/lib/i18n';
 import { Alert, Money } from '@/components/ui/bits';
@@ -33,7 +33,7 @@ export default function PayslipPage() {
 }
 
 function Payslip() {
-  const { t, num } = useI18n();
+  const { t, num, lang } = useI18n();
 
   const [from, setFrom] = useState(monthBounds(todayKey()).from);
   const [to, setTo] = useState(monthBounds(todayKey()).to);
@@ -115,7 +115,7 @@ function Payslip() {
                 setTo(period.to);
               }}
             >
-              {period.name} · {period.from.slice(5)}–{period.to.slice(5)}
+              {period.name} · {formatPeriod(period.from, period.to, lang)}
             </button>
           ))}
         </div>
@@ -130,9 +130,7 @@ function Payslip() {
               <h1 className="text-[1.2rem] font-extrabold tracking-tight">{t('Payslip')}</h1>
               {who !== '' && <p className="field-hint">{who}</p>}
             </div>
-            <p className="field-hint tabular">
-              {from} — {to}
-            </p>
+            <p className="field-hint tabular">{formatPeriod(from, to, lang)}</p>
           </header>
 
           <Section title={t('Hours')}>
@@ -210,7 +208,7 @@ function Payslip() {
               {t('Counted by the app from days that were recorded in it. Not a payroll document.')}
             </p>
             <p className="field-hint tabular">
-              {t('Printed')} {todayKey()}
+              {t('Printed')} {formatDayLabelShort(todayKey(), lang)}
               {range.currencies.length > 1 && ` · ${t('mixes')} ${range.currencies.join(', ')}`}
             </p>
           </footer>

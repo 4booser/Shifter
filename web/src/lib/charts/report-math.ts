@@ -57,13 +57,27 @@ export function waterfall(summary: DaysResponse): WaterfallStep[] {
 
   if (steps.length === 0) return [];
 
-  push('Earned', summary.total_earned, 'total');
+  /*
+   * The figure the cuts hang off has to be the one before them.
+   *
+   * This was `total_earned`, which already has the tip-out and the
+   * deductions taken out of it — so a month of ₴4 in shifts and ₴80 in meal
+   * withholding printed «Earned −₴76», then a chip saying «− ₴80
+   * deductions», then «Net −₴77». Three figures that cannot all be true at
+   * once, in the one card whose whole job is showing where the money went.
+   *
+   * The gross is the sum of the sources above it — the same sum the bar is
+   * drawn from — so the bar, the figure, the cuts and the net all reconcile.
+   */
+  const gross = steps.reduce((sum, step) => (step.kind === 'plus' ? sum + step.value : sum), 0);
 
-  if (summary.tax > 0) {
-    running = summary.total_earned;
-    push('Tax', summary.tax, 'minus');
-    push('Net', summary.net_earned, 'total');
-  }
+  push('Gross', gross, 'total');
+
+  running = summary.total_earned;
+
+  if (summary.tax > 0) push('Tax', summary.tax, 'minus');
+
+  push('Net', summary.net_earned, 'total');
 
   return steps;
 }

@@ -125,7 +125,7 @@ export function MoneyFlow({ steps }: { steps: WaterfallStep[] }) {
 
   const sources = steps.filter((step) => step.kind === 'plus');
   const cuts = steps.filter((step) => step.kind === 'minus');
-  const gross = steps.find((step) => step.kind === 'total' && step.key === 'Earned');
+  const gross = steps.find((step) => step.kind === 'total' && step.key === 'Gross');
   const net = steps.find((step) => step.kind === 'total' && step.key === 'Net');
 
   if (sources.length === 0 || gross === undefined) return null;
@@ -174,7 +174,10 @@ export function MoneyFlow({ steps }: { steps: WaterfallStep[] }) {
       {/* Gross, the cuts, net — the sentence itself. */}
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-border pt-3">
         <span>
-          <span className="field-hint block">{t('Earned')}</span>
+          {/* Not «Earned»: the page's own headline uses that word for the
+              figure with the cuts already taken out, and this one is the
+              figure they come out of. */}
+          <span className="field-hint block">{t('Before cuts')}</span>
           <span className="text-[1.35rem] font-bold tracking-tight tabular">{format(gross.value)}</span>
         </span>
 

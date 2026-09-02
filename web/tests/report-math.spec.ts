@@ -15,7 +15,39 @@ describe('waterfall', () => {
   it('walks from the sources through the deductions to the totals', () => {
     const steps = waterfall(summary);
 
-    expect(steps.map((step) => step.key)).toEqual(['Shifts', 'Tips', 'Tip-out', 'Earned', 'Tax', 'Net']);
+    expect(steps.map((step) => step.key)).toEqual(['Shifts', 'Tips', 'Tip-out', 'Gross', 'Tax', 'Net']);
+  });
+
+  /*
+   * The landing the cuts hang off is the sum of the sources, not the figure
+   * that already has them taken out. Hung off `total_earned`, a month of
+   * ₴4 in shifts and ₴80 of withholding read «earned −₴76, minus ₴80,
+   * net −₴77» — three numbers that cannot all be true.
+   */
+  it('lands on the gross, so the cuts have something to come out of', () => {
+    const steps = waterfall(summary);
+    const gross = steps.find((step) => step.key === 'Gross');
+    const cuts = steps
+      .filter((step) => step.kind === 'minus')
+      .reduce((sum, step) => sum + step.value, 0);
+
+    expect(gross?.value).toBe(12_000);
+    expect((gross?.value ?? 0) - cuts).toBe(summary.net_earned);
+  });
+
+  it('reaches the net even where nothing was withheld', () => {
+    const shortfall: DaysResponse = {
+      ...EMPTY_SUMMARY,
+      shifts_earned: 4,
+      deductions: 80,
+      total_earned: -76,
+      tax: 1,
+      net_earned: -77,
+    };
+    const steps = waterfall(shortfall);
+
+    expect(steps.find((step) => step.key === 'Gross')?.value).toBe(4);
+    expect(steps.at(-1)).toMatchObject({ key: 'Net', value: -77 });
   });
 
   it('lands each step where the previous one ended', () => {
@@ -28,11 +60,12 @@ describe('waterfall', () => {
     expect(tipOut).toMatchObject({ from: 11_500, to: 12_000 });
   });
 
-  it('skips the tax landing when nothing was withheld', () => {
+  it('skips the tax step when nothing was withheld, and still lands on net', () => {
     const untaxed = { ...summary, tax: 0, net_earned: summary.total_earned };
     const steps = waterfall(untaxed);
 
-    expect(steps.at(-1)?.key).toBe('Earned');
+    expect(steps.some((step) => step.key === 'Tax')).toBe(false);
+    expect(steps.at(-1)).toMatchObject({ key: 'Net', value: summary.total_earned });
   });
 
   it('is empty on an empty period', () => {
@@ -60,14 +93,15 @@ describe('waterfall', () => {
     });
 
     // Only the steps before the first landing: tax hangs off it afterwards.
-    const earned = steps.findIndex((step) => step.kind === 'total');
+    const landing = steps.findIndex((step) => step.kind === 'total');
     const walked = steps
-      .slice(0, earned)
+      .slice(0, landing)
       .reduce((sum, step) => sum + (step.kind === 'plus' ? step.value : -step.value), 0);
 
     // What the pieces add up to is what the total says.
     expect(walked).toBe(13_500);
-    expect(steps[earned]).toMatchObject({ key: 'Earned', value: 13_500 });
+    // The landing is the gross; the tip-out already walked out of it above.
+    expect(steps[landing]).toMatchObject({ key: 'Gross', value: 14_000 });
   });
 });
 

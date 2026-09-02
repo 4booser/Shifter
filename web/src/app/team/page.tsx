@@ -125,7 +125,7 @@ function TeamAdmin() {
                   {t('Open the rota')}
                 </Link>
                 <button type="button" className="btn btn-quiet btn-sm btn-danger" disabled={busy} onClick={() => leave(team)}>
-                  {t(team.is_owner ? 'Delete team' : 'Leave')}
+                  {t(team.is_owner ? 'Delete team' : 'Leave the team')}
                 </button>
               </span>
             </div>

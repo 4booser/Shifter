@@ -220,7 +220,7 @@ export function ShiftModal({
         )}
 
         <div>
-          <span className="field-label flex items-center gap-2">
+          <span className="field-label !flex items-center gap-2">
             {t('Colour')}
             {preview && <span className="h-3.5 w-3.5 rounded-full" style={{ background: preview }} />}
           </span>

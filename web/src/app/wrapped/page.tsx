@@ -556,7 +556,7 @@ function Wrapped() {
           {/* ==== Where the year is heading ==== */}
           {live && (
 
-            <section className="card border-(--accent)/40 p-4">
+            <section className="card !border-(--accent)/40 p-4">
               <h2 className="mb-1 text-[0.98rem] font-bold">{t('Where the year is heading')}</h2>
               <p className="text-[0.9rem]">
                 {t('At today’s pace the year ends at')} <Money value={forecast.projected} className="font-bold text-good" />{' '}

@@ -78,7 +78,7 @@ export function MyAssignments({ teamId, onAnswered }: { teamId: number; onAnswer
   };
 
   return (
-    <section className="card reveal border-(--accent)/40 p-4">
+    <section className="card reveal !border-(--accent)/40 p-4">
       <h2 className="mb-1 flex items-center gap-2 text-[0.98rem] font-bold">
         📋 {t('Shifts proposed to you')}
         <span className="chip chip-accent">{rows.length}</span>

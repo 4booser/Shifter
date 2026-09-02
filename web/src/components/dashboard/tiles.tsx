@@ -330,7 +330,7 @@ function BankTile() {
     return (
       <>
         <Label icon="coins">{t('Bank')}</Label>
-        <span className="tile-value !text-[0.95rem] font-semibold text-muted">
+        <span className="tile-value !text-[0.95rem] !font-semibold text-muted">
           {t('Connect the statement')} →
         </span>
         <span className="field-hint">{t('It stays in this browser')}</span>

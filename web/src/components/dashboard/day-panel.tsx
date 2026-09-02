@@ -588,7 +588,7 @@ export function DayPanel() {
       {/* Sales */}
       {positions.length > 0 && (
         <section>
-          <h3 className="field-label flex items-center gap-1">
+          <h3 className="field-label !flex items-center gap-1">
             <Icon name="bag" size={12} />
             {t('Sold today')}
           </h3>
@@ -685,7 +685,7 @@ export function DayPanel() {
 
       {/* Tips */}
       <section>
-        <h3 className="field-label flex items-center gap-1">
+        <h3 className="field-label !flex items-center gap-1">
           <Icon name="coins" size={12} />
           {t(pooled === null ? 'Tips' : 'Tip pool today')}
         </h3>
@@ -773,7 +773,7 @@ export function DayPanel() {
 
       {/* Deductions */}
       <section>
-        <h3 className="field-label flex items-center gap-1">
+        <h3 className="field-label !flex items-center gap-1">
           <Icon name="wallet" size={12} />
           {t('Fines and shortfalls')}
         </h3>
@@ -808,7 +808,7 @@ export function DayPanel() {
 
       {/* Note */}
       <section>
-        <h3 className="field-label flex items-center gap-1">
+        <h3 className="field-label !flex items-center gap-1">
           <Icon name="note" size={12} />
           {t('Note')}
         </h3>
@@ -974,7 +974,7 @@ function BulkPanel({ keys }: { keys: string[] }) {
           {!showAllColours && MARK_COLOURS.length > 8 && (
             <button
               type="button"
-              className="swatch grid place-items-center border border-border-strong bg-surface text-[0.62rem] font-bold text-muted"
+              className="swatch grid place-items-center border !border-border-strong bg-surface text-[0.62rem] font-bold text-muted"
               title={t('More colours')}
               onClick={() => setShowAllColours(true)}
             >
@@ -983,7 +983,7 @@ function BulkPanel({ keys }: { keys: string[] }) {
           )}
           <button
             type="button"
-            className="swatch grid place-items-center border border-border-strong bg-surface text-muted"
+            className="swatch grid place-items-center border !border-border-strong bg-surface text-muted"
             title={t('Erase')}
             disabled={saving}
             onClick={() => void paintColour(keys, null)}
@@ -996,7 +996,7 @@ function BulkPanel({ keys }: { keys: string[] }) {
       {withShifts > 0 && (
         <button
           type="button"
-          className="btn w-full border-danger/40 !text-danger"
+          className="btn w-full !border-danger/40 !text-danger"
           disabled={saving}
           onClick={() => {
             if (window.confirm(`${t('Clear shifts on')} ${n(withShifts, 'days')}?`)) {

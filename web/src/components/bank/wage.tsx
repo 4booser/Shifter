@@ -103,7 +103,7 @@ export function BankWage({
   };
 
   return (
-    <section className="card reveal border-(--accent)/30 p-4">
+    <section className="card reveal !border-(--accent)/30 p-4">
       <div className="panel-head mb-2">
         <span>{t('Looks like a wage arrived')}</span>
       </div>

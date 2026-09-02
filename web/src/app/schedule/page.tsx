@@ -499,7 +499,7 @@ function Schedule() {
 
       {/* ==== Cover requests ==== */}
       {coverRequests.length > 0 && (
-        <section className="card reveal border-warn/40 p-4">
+        <section className="card reveal !border-warn/40 p-4">
           <h2 className="mb-2 flex items-center gap-2 text-[0.98rem] font-bold text-warn">
             <Icon name="swap" size={15} />
             {t('Looking for cover')}

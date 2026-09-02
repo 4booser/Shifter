@@ -126,7 +126,7 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
             ))}
             <input
               type="color"
-              className="swatch cursor-pointer border border-border"
+              className="swatch cursor-pointer border !border-border"
               value={settings.accent}
               onChange={(event) => update('accent', event.target.value)}
               aria-label={t('Custom colour')}

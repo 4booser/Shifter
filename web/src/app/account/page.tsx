@@ -273,7 +273,7 @@ function Account() {
           <ExportSection />
 
           {/* ==== Danger ==== */}
-          <section className="card reveal border-danger/40 p-4">
+          <section className="card reveal !border-danger/40 p-4">
             <h2 className="mb-1 text-[0.98rem] font-bold text-danger">{t('Delete the account')}</h2>
             <p className="field-hint mb-3">{t('Everything goes: days, shifts, places, history. There is no way back.')}</p>
 
@@ -298,7 +298,7 @@ function Account() {
             <div className="mt-3 flex justify-end">
               <button
                 type="button"
-                className="btn btn-danger border-danger/40"
+                className="btn btn-danger !border-danger/40"
                 disabled={busy || !canDelete}
                 onClick={() => {
                   setBusy(true);

@@ -280,7 +280,7 @@ function Payouts() {
 
       {/* ==== Shortfall detector, first: the only thing worth acting on today ==== */}
       {shortfalls.map((shortfall) => (
-        <section key={`${shortfall.location_id}-${shortfall.stream}`} className="card reveal border-danger/40 !bg-(--danger-soft) p-4">
+        <section key={`${shortfall.location_id}-${shortfall.stream}`} className="card reveal !border-danger/40 !bg-(--danger-soft) p-4">
           <h2 className="mb-1 flex items-center gap-2 font-bold text-danger">
             <Icon name="flame" size={16} />
             {t('Underpaid repeatedly')}

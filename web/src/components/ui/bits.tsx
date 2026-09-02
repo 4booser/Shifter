@@ -246,7 +246,7 @@ export function SwatchRow({
       {shown.length < colours.length && (
         <button
           type="button"
-          className="swatch grid place-items-center border border-border-strong bg-surface text-[0.6rem] font-bold text-muted"
+          className="swatch grid place-items-center border !border-border-strong bg-surface text-[0.6rem] font-bold text-muted"
           title="More"
           onClick={() => setUnfolded(true)}
         >
@@ -271,7 +271,7 @@ export function SwatchRow({
       {saveable && value !== null && value !== '' && !kept && (
         <button
           type="button"
-          className="swatch grid place-items-center border border-border-strong bg-surface text-muted"
+          className="swatch grid place-items-center border !border-border-strong bg-surface text-muted"
           title={t('Save this colour')}
           onClick={() => savePalette(value)}
         >

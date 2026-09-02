@@ -121,7 +121,7 @@ export default function RoadmapPage() {
           </h2>
           <div className="grid gap-2 sm:grid-cols-2">
             {BUILDING.map((item) => (
-              <article key={item.title} className="card flex items-start gap-2.5 border-(--accent)/40 p-3">
+              <article key={item.title} className="card flex items-start gap-2.5 !border-(--accent)/40 p-3">
                 <span className="text-[1.2rem]" aria-hidden>{item.icon}</span>
                 <span className="min-w-0">
                   <b className="block text-[0.92rem] leading-tight">{item.title}</b>

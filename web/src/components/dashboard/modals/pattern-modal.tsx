@@ -86,6 +86,7 @@ export function PatternModal({ open, onClose }: { open: boolean; onClose: () => 
               <li key={weekday.day} className="grid grid-cols-[6.5rem_1fr] items-center gap-2">
                 <span className="text-[0.85rem] font-medium">{t(weekday.label)}</span>
                 <select
+                  aria-label={t(weekday.label)}
                   className="field-input"
                   value={settings.weekdayShifts[weekday.day] ?? ''}
                   onChange={(event) =>

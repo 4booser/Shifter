@@ -125,6 +125,7 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
               />
             ))}
             <input
+              aria-label={t('Pick your own')}
               type="color"
               className="swatch cursor-pointer border !border-border"
               value={settings.accent}
@@ -149,6 +150,7 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
               </button>
             ))}
             <input
+              aria-label={t('Currency mark')}
               className="field-input !w-16"
               maxLength={4}
               value={settings.currency}

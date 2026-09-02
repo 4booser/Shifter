@@ -516,6 +516,7 @@ function StandingCosts({
               </label>
             ) : (
               <select
+                aria-label={t('Day of the week')}
                 className="field-input !w-auto"
                 value={weekday}
                 onChange={(event) => setWeekday(Number(event.target.value))}
@@ -529,6 +530,7 @@ function StandingCosts({
             )}
 
             <select
+              aria-label={t('Day of the month')}
               className="field-input !w-auto"
               value={kind}
               onChange={(event) => setKind(event.target.value as ExpenseKind)}
@@ -541,6 +543,7 @@ function StandingCosts({
             </select>
 
             <select
+              aria-label={t('Every N months')}
               className="field-input !w-auto"
               value={placeId ?? ''}
               onChange={(event) =>

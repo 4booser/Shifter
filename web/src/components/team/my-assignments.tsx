@@ -101,6 +101,7 @@ export function MyAssignments({ teamId, onAnswered }: { teamId: number; onAnswer
 
             {active.length > 1 && (
               <select
+                aria-label={t('Which shift')}
                 className="field-input !w-36 !py-1 !text-[0.82rem]"
                 value={choice[row.id] ?? matchFor(row)}
                 onChange={(event) => setChoice((current) => ({ ...current, [row.id]: Number(event.target.value) }))}

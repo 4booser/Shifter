@@ -134,6 +134,7 @@ export function PhotoImportModal({ open, onClose }: { open: boolean; onClose: ()
         </label>
 
         <input
+          aria-label={t('Choose a photo')}
           ref={input}
           type="file"
           accept="image/jpeg,image/png,image/webp,image/gif"
@@ -198,6 +199,7 @@ export function PhotoImportModal({ open, onClose }: { open: boolean; onClose: ()
                     <span className="text-[0.72rem] font-semibold text-warn">{t('day is taken')}</span>
                   ) : (
                     <select
+                      aria-label={t('Which shift')}
                       className="field-input !w-32 !px-1.5 !py-0.5 !text-[0.8rem]"
                       value={row.templateId ?? ''}
                       onChange={(event) =>

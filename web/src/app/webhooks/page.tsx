@@ -476,6 +476,7 @@ function Webhooks() {
               <div className="rise mt-3 flex flex-col gap-2 border-t border-border pt-3">
                 <span className="field-label">{t('Paste a payload as the sender would send it')}</span>
                 <textarea
+                  aria-label={t('Paste a payload as the sender would send it')}
                   rows={9}
                   spellCheck={false}
                   className="field-input font-mono !text-[0.78rem]"

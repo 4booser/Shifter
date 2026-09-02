@@ -697,6 +697,7 @@ export function DayPanel() {
               inputMode="decimal"
               min={0}
               className="field-input"
+              aria-label={t('Tip pool today')}
               value={tipPool ?? ''}
               placeholder="0"
               onChange={(event) =>
@@ -715,6 +716,7 @@ export function DayPanel() {
           inputMode="decimal"
           min={0}
           className="field-input"
+          aria-label={t('Tips')}
           value={tips ?? ''}
           placeholder="0"
           onChange={(event) => setTips(event.target.value === '' ? null : Number(event.target.value))}
@@ -782,6 +784,7 @@ export function DayPanel() {
           inputMode="decimal"
           min={0}
           className="field-input"
+          aria-label={t('Fines and shortfalls')}
           value={deductions ?? ''}
           placeholder="0"
           onChange={(event) => setDeductions(event.target.value === '' ? null : Number(event.target.value))}
@@ -816,6 +819,7 @@ export function DayPanel() {
           rows={3}
           maxLength={NOTE_MAX_LENGTH}
           className="field-input resize-y"
+          aria-label={t('Note')}
           value={note}
           onChange={(event) => setNote(event.target.value)}
         />
@@ -1057,6 +1061,7 @@ function ActualClockRow({
       <input
         type="time"
         className="field-input !w-[5.2rem] !px-1.5 !py-0.5 !text-[0.8rem]"
+        aria-label={t('Actually started')}
         value={start ?? entry.start_time}
         onChange={(event) => {
           if (event.target.value) {
@@ -1069,6 +1074,7 @@ function ActualClockRow({
       <input
         type="time"
         className="field-input !w-[5.2rem] !px-1.5 !py-0.5 !text-[0.8rem]"
+        aria-label={t('Actually finished')}
         value={end ?? entry.end_time}
         onChange={(event) => {
           if (event.target.value) {

@@ -80,6 +80,7 @@ export function ImportModal({ open, onClose }: { open: boolean; onClose: () => v
         <p className="field-hint">{t('CSV or XLSX. One row per day; a column named date is the only one required.')}</p>
 
         <input type="file" accept=".csv,.xlsx,text/csv" className="field-input" onChange={(event) => void pick(event)} />
+          aria-label={t('Choose a file')}
 
         {error && <Alert>{t(error)}</Alert>}
         {done !== null && (

@@ -128,6 +128,7 @@ export function ForeignImportModal({ open, onClose }: { open: boolean; onClose: 
       </p>
 
       <input type="file" accept=".csv,text/csv" className="field-input mb-3" onChange={pick} />
+        aria-label={t('Choose a file')}
 
       {error !== null && <Alert kind="error">{error}</Alert>}
 

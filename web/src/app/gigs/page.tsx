@@ -1220,6 +1220,7 @@ function EditModal({
                 </span>
               </span>
               <input
+                aria-label={t('How much of an hour')}
                 type="range"
                 min={0.5}
                 max={30}

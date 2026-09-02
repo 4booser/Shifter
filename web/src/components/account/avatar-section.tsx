@@ -133,6 +133,7 @@ export function AvatarSection({
         <div className="rounded-(--radius) border border-border p-3">
           <p className="mb-2 text-[0.85rem] font-semibold">{t('A photo')}</p>
           <input
+            aria-label={t('Choose a photo')}
             ref={file}
             type="file"
             accept="image/*"

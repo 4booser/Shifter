@@ -662,6 +662,7 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
 
             <div className="mb-2 flex items-center gap-1.5">
               <input
+                aria-label={t('Starts')}
                 type="time"
                 className="field-input"
                 value={filling.start}
@@ -669,6 +670,7 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
               />
               <span className="text-faint">—</span>
               <input
+                aria-label={t('Ends')}
                 type="time"
                 className="field-input"
                 value={filling.end}
@@ -779,6 +781,7 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
 
             <div className="mb-3 flex items-center gap-1.5">
               <input
+                aria-label={t('Starts')}
                 type="time"
                 className="field-input"
                 value={editing.start}
@@ -786,6 +789,7 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
               />
               <span className="text-faint">–</span>
               <input
+                aria-label={t('Ends')}
                 type="time"
                 className="field-input"
                 value={editing.end}

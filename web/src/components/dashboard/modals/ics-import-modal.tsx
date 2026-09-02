@@ -135,6 +135,7 @@ export function IcsImportModal({ open, onClose }: { open: boolean; onClose: () =
         </p>
 
         <input
+          aria-label={t('Choose a file')}
           type="file"
           accept=".ics,text/calendar"
           className="field-input"
@@ -171,6 +172,7 @@ export function IcsImportModal({ open, onClose }: { open: boolean; onClose: () =
                     </span>
                   </div>
                   <select
+                    aria-label={t('What to do with these days')}
                     className="field-input mt-1.5 !py-1.5 !text-[0.85rem]"
                     value={fate.kind === 'shift' ? `shift:${fate.templateId}` : fate.kind}
                     onChange={(event) => {

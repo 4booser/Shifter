@@ -2484,6 +2484,22 @@ export const RU: Dictionary = {
   'Finish': 'Завершить',
   'Finish shift': 'Завершить смену',
   'Discard shift': 'Сбросить смену',
+  'The pass over everything':
+    'Проход по всему',
+  'Every hint, link and state colour is readable now — measured against the ground it sits on, not guessed at':
+    'Каждая подсказка, ссылка и цветная метка теперь читаются — контраст замерен по фону, на котором они стоят, а не на глаз',
+  'The report and the payslip print on paper rather than on your theme: a dark screen used to hand you a blank page':
+    'Отчёт и расчётный лист печатаются на бумагу, а не на вашу тему: с тёмного экрана из принтера выходил чистый лист',
+  'A day cannot be lost in silence any more: where the browser refuses to hold it, the app says so instead of looking saved':
+    'День больше не теряется молча: если браузер отказался его хранить, приложение так и скажет, а не сделает вид, что сохранило',
+  'Words bend after numbers everywhere — «1 день», «2 смены», «2 304 часа» — including in the letters and notifications the server writes':
+    'Слова после чисел склоняются везде — «1 день», «2 смены», «2 304 часа», — в том числе в письмах и уведомлениях, которые пишет сервер',
+  'A shift can no longer be discarded by one stray press, and the panel says what the next press will do':
+    'Смену больше нельзя стереть одним случайным нажатием, и панель говорит, что сделает следующее',
+  'Every field, button and day of the year can be reached and heard without a mouse':
+    'До каждого поля, кнопки и дня в году можно добраться и услышать их без мыши',
+  'A deploy landing under an open tab reloads it instead of leaving it half-broken':
+    'Новая сборка под открытой вкладкой перезагружает её, а не оставляет наполовину сломанной',
   'Nothing to show yet': 'Пока нечего показать',
   'The statement stays in this browser': 'Выписка останется в этом браузере',
   'Choose a file': 'Выберите файл',
@@ -5113,6 +5129,22 @@ export const UK: Dictionary = {
   'Finish': 'Завершити',
   'Finish shift': 'Завершити зміну',
   'Discard shift': 'Скинути зміну',
+  'The pass over everything':
+    'Прохід по всьому',
+  'Every hint, link and state colour is readable now — measured against the ground it sits on, not guessed at':
+    'Кожна підказка, посилання й кольорова позначка тепер читаються — контраст виміряно на тлі, де вони стоять, а не на око',
+  'The report and the payslip print on paper rather than on your theme: a dark screen used to hand you a blank page':
+    'Звіт і розрахунковий лист друкуються на папір, а не на вашу тему: з темного екрана принтер видавав чистий аркуш',
+  'A day cannot be lost in silence any more: where the browser refuses to hold it, the app says so instead of looking saved':
+    'День більше не губиться мовчки: якщо браузер відмовився його тримати, застосунок так і скаже, а не вдаватиме, що зберіг',
+  'Words bend after numbers everywhere — «1 день», «2 смены», «2 304 часа» — including in the letters and notifications the server writes':
+    'Слова після чисел відмінюються всюди — «1 день», «2 зміни», «2 304 години», — зокрема в листах і сповіщеннях, які пише сервер',
+  'A shift can no longer be discarded by one stray press, and the panel says what the next press will do':
+    'Зміну більше не можна стерти одним випадковим натисканням, і панель каже, що зробить наступне',
+  'Every field, button and day of the year can be reached and heard without a mouse':
+    'До кожного поля, кнопки і дня в році можна дістатися й почути їх без миші',
+  'A deploy landing under an open tab reloads it instead of leaving it half-broken':
+    'Нова збірка під відкритою вкладкою перезавантажує її, а не лишає наполовину зламаною',
   'Nothing to show yet': 'Поки нема чого показати',
   'The statement stays in this browser': 'Виписка залишиться в цьому браузері',
   'Choose a file': 'Виберіть файл',

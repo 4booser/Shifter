@@ -22,6 +22,20 @@ interface Release {
 /** Newest first; hand-written because a changelog is an editorial act. */
 const RELEASES: Release[] = [
   {
+    date: '2026-09-03',
+    icon: '🔎',
+    title: 'The pass over everything',
+    points: [
+      'Every hint, link and state colour is readable now — measured against the ground it sits on, not guessed at',
+      'The report and the payslip print on paper rather than on your theme: a dark screen used to hand you a blank page',
+      'A day cannot be lost in silence any more: where the browser refuses to hold it, the app says so instead of looking saved',
+      'Words bend after numbers everywhere — «1 день», «2 смены», «2 304 часа» — including in the letters and notifications the server writes',
+      'A shift can no longer be discarded by one stray press, and the panel says what the next press will do',
+      'Every field, button and day of the year can be reached and heard without a mouse',
+      'A deploy landing under an open tab reloads it instead of leaving it half-broken',
+    ],
+  },
+  {
     date: '2026-08-30',
     icon: '🌙',
     title: 'The night of locks',

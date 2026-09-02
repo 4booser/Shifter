@@ -47,8 +47,19 @@ export function downloadCsv(name: string, contents: string): void {
 }
 
 /** Quotes anything containing a separator, a quote or a newline. */
+/**
+ * A note is text, and a spreadsheet must not read it as anything else.
+ *
+ * A day note beginning «=», «+», «-» or «@» is a formula to Excel and to
+ * LibreOffice, evaluated the moment the file opens — «=1+1» becomes 2, and
+ * worse things than that are one HYPERLINK away. Notes are where people put
+ * what the schema has no column for, so they are exactly the field this
+ * happens in. A leading apostrophe keeps it text; every reader strips it back
+ * out on display.
+ */
 function escape(value: string | number): string {
   const text = `${value}`;
+  const safe = /^[=+\-@\t\r]/.test(text) ? `'${text}` : text;
 
-  return /[",\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
+  return /[",\n]/.test(safe) ? `"${safe.replaceAll('"', '""')}"` : safe;
 }

@@ -264,8 +264,11 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
   const exportTimesheet = () => {
     if (board === null) return;
 
+    // The three words this file writes itself, in the language of whoever
+    // pressed the button — «Итого», «Всего» and the sheet's own name were
+    // Russian for everybody, in the one export a manager forwards onward.
     const header = ['', ...days.map((day) => day.slice(8))];
-    const rows: (string | number)[][] = [[...header, 'Итого']];
+    const rows: (string | number)[][] = [[...header, t('Total')]];
 
     for (const member of board.members) {
       const cells = days.map((day) => {
@@ -293,7 +296,7 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
 
     // The column of daily totals: how many hands the venue bought each day.
     rows.push([
-      'Всего',
+      t('All'),
       ...days.map((_, index) =>
         Math.round(
           rows.slice(1).reduce((sum, row) => sum + (Number(row[index + 1]) || 0), 0) * 10,
@@ -302,7 +305,7 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
       Math.round(rows.slice(1).reduce((sum, row) => sum + (Number(row.at(-1)) || 0), 0) * 10) / 10,
     ]);
 
-    const sheet: Sheet = { name: 'Табель', rows };
+    const sheet: Sheet = { name: t('Timesheet').slice(0, 28), rows };
 
     downloadBlob(`timesheet-${range.from}.xlsx`, buildXlsx([sheet]));
     pushToast({ icon: '📄', title: t('Timesheet saved'), text: `${range.from} — ${range.to}` });

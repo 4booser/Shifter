@@ -2485,6 +2485,7 @@ export const RU: Dictionary = {
   'Finish': 'Завершить',
   'Finish shift': 'Завершить смену',
   'Discard shift': 'Сбросить смену',
+  'All': 'Всего',
   'The pass over everything':
     'Проход по всему',
   'Every hint, link and state colour is readable now — measured against the ground it sits on, not guessed at':
@@ -5131,6 +5132,7 @@ export const UK: Dictionary = {
   'Finish': 'Завершити',
   'Finish shift': 'Завершити зміну',
   'Discard shift': 'Скинути зміну',
+  'All': 'Усього',
   'The pass over everything':
     'Прохід по всьому',
   'Every hint, link and state colour is readable now — measured against the ground it sits on, not guessed at':

@@ -140,7 +140,8 @@ export function drawShareCard(data: CardData, theme: CardTheme): Promise<Blob> {
 
   // ==== Tiles ====
 
-  const perHour = summary.hours === 0 ? 0 : summary.shifts_earned / summary.hours;
+  // Under a whole hour there is no rate to put on a card somebody posts.
+  const perHour = summary.hours < 1 ? 0 : summary.shifts_earned / summary.hours;
 
   const tiles: [string, string][] = [
     [`${round(summary.hours)}`, data.labels.hours],

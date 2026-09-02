@@ -35,12 +35,12 @@ export function YearStory({
 
   if (shifts === 0) return null;
 
-  const perHour = summary.hours > 0 ? summary.total_earned / summary.hours : 0;
+  const perHour = summary.hours >= 1 ? summary.total_earned / summary.hours : 0;
   const beforeHour = previous.hours > 0 ? previous.total_earned / previous.hours : 0;
   const tipShare =
     summary.total_earned > 0 ? Math.round((summary.tips_earned / summary.total_earned) * 100) : 0;
   const nightShare =
-    summary.hours > 0 ? Math.round((summary.night_hours / summary.hours) * 100) : 0;
+    summary.hours >= 1 ? Math.round((summary.night_hours / summary.hours) * 100) : 0;
   const grew = beforeHour > 0 ? Math.round((perHour / beforeHour - 1) * 100) : null;
   // Only a place somebody actually named: «came from No location» is the app
   // reading its own placeholder out loud.

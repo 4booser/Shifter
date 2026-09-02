@@ -175,7 +175,10 @@ export const realHourly = (
     0,
   );
 
-  if (hours <= 0) return null;
+  // A whole hour before an hourly figure: a shift closed inside a minute
+  // leaves a hundredth of one, and dividing a day's spending by that prices
+  // the hour in the thousands.
+  if (hours < 1) return null;
 
   const earned = within.reduce((sum, day) => sum + day.earned, 0);
 

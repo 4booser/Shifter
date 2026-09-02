@@ -406,7 +406,9 @@ function NightsTile({ monthDays }: { monthDays: CalendarDayData[] }) {
         <CountUp value={nights} format={(value) => `${Math.round(value)}`} />
       </span>
       <span className="field-hint">
-        {hours > 0 ? `${Math.round((nights / hours) * 100)}% ${t('of all hours')}` : t('this month')}
+        {/* A share of a fraction of an hour is not a share: «0 ночных часов»
+            sat over «100% от всех часов» after one fifty-second shift. */}
+        {hours >= 1 ? `${Math.round((nights / hours) * 100)}% ${t('of all hours')}` : t('this month')}
       </span>
     </>
   );

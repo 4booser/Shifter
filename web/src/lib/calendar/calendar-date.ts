@@ -293,7 +293,9 @@ export function buildYearGrid(year: number, mondayFirst = true, locale = 'en'): 
 
   return Array.from({ length: 12 }, (_, index) => ({
     month: index + 1,
-    label: months.format(new Date(year, index, 1)),
+    // Capitalised here rather than by CSS: the year cards lost their capital
+    // when the month name stopped being wrapped in a `capitalize` class.
+    label: sentenceCase(months.format(new Date(year, index, 1)), locale),
     weeks: buildMonthGrid({ year, month: index + 1 }, mondayFirst),
   }));
 }

@@ -28,7 +28,15 @@
   --border-strong: #c9c4b6;
   --text: #1c1b18;
   --muted: #6d6a61;
-  --faint: #9c988c;
+  /*
+   * Faint, not invisible.
+   *
+   * This is the colour of every hint in the app — a shift's times, a day's
+   * figure, the line under a heading — and at #9c988c it read 2.8 against the
+   * card behind it, where text this size needs 4.5. Faint is a rank in the
+   * hierarchy, not permission to be unreadable.
+   */
+  --faint: #777367;
   --shadow: 0 1px 2px rgb(28 27 24 / 5%), 0 8px 24px -12px rgb(28 27 24 / 12%);
   --shadow-lg: 0 2px 6px rgb(28 27 24 / 7%), 0 24px 48px -16px rgb(28 27 24 / 22%);
 
@@ -72,7 +80,8 @@
 
   --text: #eceef2;
   --muted: #9aa0ac;
-  --faint: #676d78;
+  /* 3.3 against the dark card; see the note on the light one. */
+  --faint: #808691;
   --shadow: 0 1px 2px rgb(0 0 0 / 40%), 0 8px 24px -12px rgb(0 0 0 / 50%);
   --shadow-lg: 0 2px 6px rgb(0 0 0 / 45%), 0 24px 56px -16px rgb(0 0 0 / 65%);
   --danger: #f07884;
@@ -178,7 +187,7 @@
     --border-strong: #454955;
     --text: #eceef2;
     --muted: #9aa0ac;
-    --faint: #676d78;
+    --faint: #808691;
     --shadow: 0 1px 2px rgb(0 0 0 / 40%), 0 8px 24px -12px rgb(0 0 0 / 50%);
     --shadow-lg: 0 2px 6px rgb(0 0 0 / 45%), 0 24px 56px -16px rgb(0 0 0 / 65%);
     --danger: #f07884;

@@ -295,8 +295,8 @@ public static class BriefBlocks
                         $"{Nth(streak, false)} день подряд — длиннее серии у вас не было",
                         $"{Nth(streak, true)} день поспіль — довшої серії у вас не було")
                     : say.Of(
-                        $"{Nth(streak, false)} день подряд; самая длинная серия была {record} дней",
-                        $"{Nth(streak, true)} день поспіль; найдовша серія була {record} днів"),
+                        $"{Nth(streak, false)} день подряд; самая длинная серия была {record} {Telegram.TelegramCommands.Plural(record, "день", "дня", "дней")}",
+                        $"{Nth(streak, true)} день поспіль; найдовша серія була {record} {Telegram.TelegramCommands.Plural(record, "день", "дні", "днів")}"),
                 null,
                 streak >= 7 ? "warn" : null));
         }

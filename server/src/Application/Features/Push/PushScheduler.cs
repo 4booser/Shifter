@@ -401,8 +401,9 @@ public sealed class PushScheduler : BackgroundService
 
         var (title, body) = subscription.Language switch
         {
-            "ru" => ("Итог недели", $"{week.days_worked} смен · {hours} ч · {earned}{trend}"),
-            "uk" => ("Підсумок тижня", $"{week.days_worked} змін · {hours} год · {earned}{trend}"),
+            // A week with one shift in it said «1 смен» in a notification.
+            "ru" => ("Итог недели", $"{week.days_worked} {Telegram.TelegramCommands.Plural(week.days_worked, "смена", "смены", "смен")} · {hours} ч · {earned}{trend}"),
+            "uk" => ("Підсумок тижня", $"{week.days_worked} {Telegram.TelegramCommands.Plural(week.days_worked, "зміна", "зміни", "змін")} · {hours} год · {earned}{trend}"),
             _ => ("Your week", $"{week.days_worked} shifts · {hours} h · {earned}{trend}"),
         };
 

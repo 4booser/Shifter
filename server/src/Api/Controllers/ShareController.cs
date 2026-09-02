@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 using Shifter.Application.Features.Gigs;
+using Shifter.Application.Features.Telegram;
 using Shifter.Domain.Entities;
 using Shifter.Infrastructure.Persistence.DbContexts;
 
@@ -174,12 +175,14 @@ public class ShareController : ControllerBase
         string name = $"{user.FirstName} {user.LastName}".Trim();
         string headline = history.shifts == 0
             ? "Пока без записей"
-            : $"{history.months} мес · {history.shifts} смен · {Math.Round(history.hours)} ч";
+            // Declined: this page is the one a stranger reads, and it said
+            // «1 смен» to anyone with a first month behind them.
+            : $"{history.months} мес · {history.shifts} {TelegramCommands.Plural(history.shifts, "смена", "смены", "смен")} · {Math.Round(history.hours)} ч";
 
         var rows = history.places
             .Select(place => user.CardShowsPlaces
-                ? $"{Escape(place.name)} · {place.from} — {place.to} · {place.shifts} смен"
-                : $"{place.from} — {place.to} · {place.shifts} смен")
+                ? $"{Escape(place.name)} · {place.from} — {place.to} · {place.shifts} {TelegramCommands.Plural(place.shifts, "смена", "смены", "смен")}"
+                : $"{place.from} — {place.to} · {place.shifts} {TelegramCommands.Plural(place.shifts, "смена", "смены", "смен")}")
             .ToArray();
 
         string body = string.Join("", rows.Select(row => $"<li>{row}</li>"));

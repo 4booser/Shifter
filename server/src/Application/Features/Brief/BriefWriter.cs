@@ -34,8 +34,8 @@ public static class BriefWriter
                     "В этом месяце пока ни одной отмеченной смены.",
                     "Цього місяця поки жодної позначеної зміни.")
                 : say.Of(
-                    $"В этом месяце {facts.MonthShifts} смен, {Math.Round(facts.MonthHours)} ч и {money(facts.MonthEarned)} ₴.",
-                    $"Цього місяця {facts.MonthShifts} змін, {Math.Round(facts.MonthHours)} год і {money(facts.MonthEarned)} ₴."),
+                    $"В этом месяце {facts.MonthShifts} {Telegram.TelegramCommands.Plural(facts.MonthShifts, "смена", "смены", "смен")}, {Math.Round(facts.MonthHours)} ч и {money(facts.MonthEarned)} ₴.",
+                    $"Цього місяця {facts.MonthShifts} {Telegram.TelegramCommands.Plural(facts.MonthShifts, "зміна", "зміни", "змін")}, {Math.Round(facts.MonthHours)} год і {money(facts.MonthEarned)} ₴."),
         };
 
         if (facts.GoalProgress is double progress && facts.Goal is decimal goal)

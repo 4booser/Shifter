@@ -344,11 +344,11 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
 
       {/* ==== Week toolbar ==== */}
       <div className="flex flex-wrap items-center gap-2">
-        <button type="button" className="btn btn-sm px-2" aria-label={t('Previous')} onClick={() => setAnchor((a) => shiftDays(a, -7))}>
+        <button type="button" className="btn btn-sm !px-2" aria-label={t('Previous')} onClick={() => setAnchor((a) => shiftDays(a, -7))}>
           <Icon name="chevron-left" size={15} />
         </button>
         <strong className="w-32 text-center text-[0.92rem] tabular">{weekLabel}</strong>
-        <button type="button" className="btn btn-sm px-2" aria-label={t('Next')} onClick={() => setAnchor((a) => shiftDays(a, 7))}>
+        <button type="button" className="btn btn-sm !px-2" aria-label={t('Next')} onClick={() => setAnchor((a) => shiftDays(a, 7))}>
           <Icon name="chevron-right" size={15} />
         </button>
         <button type="button" className="btn btn-sm" onClick={() => setAnchor(todayKey())}>
@@ -800,7 +800,7 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
               {editing.id !== null && (
                 <button
                   type="button"
-                  className="btn btn-quiet text-danger"
+                  className="btn btn-quiet !text-danger"
                   aria-label={t('Delete')}
                   onClick={() => {
                     const entry = (board.assignments ?? []).find((item) => item.id === editing.id);

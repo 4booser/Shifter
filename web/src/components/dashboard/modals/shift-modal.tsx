@@ -124,7 +124,7 @@ export function ShiftModal({
               {t('Paste the advert and fill this in')}
             </summary>
             <textarea
-              className="field-input mt-2 min-h-[5rem] text-[0.82rem]"
+              className="field-input mt-2 min-h-[5rem] !text-[0.82rem]"
               placeholder={t('Бармен, зміни 10:00–22:00, 250 грн/годину, 5% з бару')}
               value={advert}
               onChange={(event) => setAdvert(event.target.value)}

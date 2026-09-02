@@ -399,10 +399,10 @@ function Schedule() {
           <button type="button" className="btn btn-sm" onClick={() => { setAnchor(todayKey()); setMonth(currentMonth()); }}>
             {t('Today')}
           </button>
-          <button type="button" className="btn btn-sm px-2" aria-label={t('Previous')} onClick={() => step(-1)}>
+          <button type="button" className="btn btn-sm !px-2" aria-label={t('Previous')} onClick={() => step(-1)}>
             <Icon name="chevron-left" size={16} />
           </button>
-          <button type="button" className="btn btn-sm px-2" aria-label={t('Next')} onClick={() => step(1)}>
+          <button type="button" className="btn btn-sm !px-2" aria-label={t('Next')} onClick={() => step(1)}>
             <Icon name="chevron-right" size={16} />
           </button>
         </div>

@@ -385,7 +385,7 @@ export function SpendPlaces({
           {people.slice(0, 14).map((row) => (
             <span
               key={row.key}
-              className="chip !py-1.5 text-[0.82rem]"
+              className="chip !py-1.5 !text-[0.82rem]"
               title={`${row.name} · ×${row.count}`}
             >
               <span className="max-w-64 truncate">{row.name}</span>
@@ -585,7 +585,7 @@ function CategoryInside({
         {editingLimit ? (
           <>
             <input
-              className="field-input !w-28 !py-1 text-[0.85rem]"
+              className="field-input !w-28 !py-1 !text-[0.85rem]"
               inputMode="numeric"
               value={limitDraft}
               placeholder="5000"

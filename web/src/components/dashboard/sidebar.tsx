@@ -455,7 +455,7 @@ export function Sidebar() {
             <button
               key={period.value}
               type="button"
-              className={`seg-btn justify-center text-center text-[0.76rem] ${state.summaryPeriod === period.value ? 'is-active' : ''}`}
+              className={`seg-btn justify-center text-center !text-[0.76rem] ${state.summaryPeriod === period.value ? 'is-active' : ''}`}
               onClick={() => calendarActions.setSummaryPeriod(period.value)}
             >
               {t(period.label)}
@@ -525,7 +525,7 @@ export function Sidebar() {
         </dl>
 
         {summary.currencies.length > 1 && (
-          <p className="field-hint mt-2 text-warn">
+          <p className="field-hint mt-2 !text-warn">
             {t('This range mixes currencies')}: {summary.currencies.join(', ')}. {t('Read the per-place figures instead of the totals.')}
           </p>
         )}

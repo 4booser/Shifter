@@ -394,7 +394,7 @@ function FeedSection() {
             </button>
             <button
               type="button"
-              className="btn btn-sm text-danger"
+              className="btn btn-sm !text-danger"
               onClick={() => {
                 if (window.confirm(t('Turn the feed off? Subscribed calendars go stale.'))) {
                   void api('/shifter/v1/feed', { method: 'DELETE' }).then(() => setToken(null));
@@ -609,7 +609,7 @@ function TwoFactorSection({ hasPassword, on }: { hasPassword: boolean; on: boole
             value={code}
             onChange={(event) => setCode(event.target.value.replace(/\D/g, ''))}
           />
-          <button type="button" className="btn btn-sm text-danger" disabled={busy || code.length < 6} onClick={() => void disable()}>
+          <button type="button" className="btn btn-sm !text-danger" disabled={busy || code.length < 6} onClick={() => void disable()}>
             {t('Turn off')}
           </button>
         </div>
@@ -628,7 +628,7 @@ function TwoFactorSection({ hasPassword, on }: { hasPassword: boolean; on: boole
             </code>
             <div className="flex items-center gap-1.5">
               <input
-                className="field-input !w-36 text-center text-[1.05rem] tracking-[0.3em] tabular"
+                className="field-input !w-36 text-center !text-[1.05rem] tracking-[0.3em] tabular"
                 inputMode="numeric"
                 placeholder="000000"
                 maxLength={6}
@@ -704,7 +704,7 @@ function TelegramSection() {
           <span className="chip chip-good">{t('Linked')}</span>
           <button
             type="button"
-            className="btn btn-sm text-danger"
+            className="btn btn-sm !text-danger"
             onClick={() =>
               void api('/shifter/v1/telegram', { method: 'DELETE' }).then(() =>
                 setState({ ...state, linked: false }),
@@ -846,7 +846,7 @@ function SessionsSection() {
             </span>
             <button
               type="button"
-              className="btn btn-quiet btn-sm text-danger"
+              className="btn btn-quiet btn-sm !text-danger"
               disabled={clearing !== null}
               onClick={() => void throwOut(group)}
             >
@@ -920,7 +920,7 @@ function RestSection({ hours }: { hours: number }) {
             {option} {t('h')}
           </button>
         ))}
-        {saved && <span className="field-hint text-good">{t('Saved')}</span>}
+        {saved && <span className="field-hint !text-good">{t('Saved')}</span>}
       </div>
 
       <p className="field-hint mt-2">

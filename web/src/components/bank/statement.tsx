@@ -99,7 +99,7 @@ export function StatementCard({
           ))}
           <span className="relative">
             <input
-              className="field-input !w-40 max-w-full !py-1.5 pr-7 text-[0.85rem]"
+              className="field-input !w-40 max-w-full !py-1.5 !pr-7 !text-[0.85rem]"
               value={needle}
               placeholder={t('Find by name…')}
               onChange={(event) => {

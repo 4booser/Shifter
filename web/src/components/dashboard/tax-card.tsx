@@ -171,7 +171,7 @@ export function TaxCard() {
           )}
 
           {reading.fell_back_to_earned === true && (
-            <p className="field-hint mt-2 text-warn">
+            <p className="field-hint mt-2 !text-warn">
               {t('You asked to count money received, and no payments are recorded for this year — this is what the shifts came to instead.')}
             </p>
           )}

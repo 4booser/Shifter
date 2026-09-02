@@ -330,7 +330,7 @@ function BankTile() {
     return (
       <>
         <Label icon="coins">{t('Bank')}</Label>
-        <span className="tile-value text-[0.95rem] font-semibold text-muted">
+        <span className="tile-value !text-[0.95rem] font-semibold text-muted">
           {t('Connect the statement')} →
         </span>
         <span className="field-hint">{t('It stays in this browser')}</span>
@@ -485,7 +485,7 @@ function PlacesTile({ monthDays }: { monthDays: CalendarDayData[] }) {
   return (
     <>
       <Label icon="business">{t('Where it comes from')}</Label>
-      <span className="tile-value truncate text-[1.15rem]">{top?.[0] ?? '—'}</span>
+      <span className="tile-value truncate !text-[1.15rem]">{top?.[0] ?? '—'}</span>
       <span className="field-hint">
         {top !== undefined && total > 0
           ? `${Math.round((top[1] / total) * 100)}% ${t('of the month')}`

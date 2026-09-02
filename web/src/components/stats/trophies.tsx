@@ -54,7 +54,7 @@ export function TrophyShelf() {
       <div className="mb-2 flex items-baseline justify-between gap-2">
         <h2 className="text-[0.98rem] font-bold">{t('The shelf')}</h2>
         {shelf.weekly_streak >= 2 && (
-          <span className="chip !border-transparent !bg-(--good-soft) text-[0.78rem] font-semibold chip-good">
+          <span className="chip !border-transparent !bg-(--good-soft) !text-[0.78rem] font-semibold chip-good">
             {n(shelf.weekly_streak, 'weeks')} {t('in a row')}
           </span>
         )}
@@ -67,7 +67,7 @@ export function TrophyShelf() {
         {shelf.cheers.slice(0, 18).map((cheer) => (
           <span
             key={`${cheer.period}-${cheer.period_from}`}
-            className="chip !py-1.5 text-[0.82rem]"
+            className="chip !py-1.5 !text-[0.82rem]"
             title={cheer.period_from}
           >
             🏆 <b className="tabular">{format(cheer.amount)}</b>

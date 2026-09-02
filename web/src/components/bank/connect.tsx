@@ -44,7 +44,7 @@ export function BankConnect() {
 
       <div className="flex gap-2">
         <input
-          className="field-input flex-1 font-mono text-[0.82rem]"
+          className="field-input flex-1 font-mono !text-[0.82rem]"
           placeholder="u…"
           value={token}
           onChange={(event) => setToken(event.target.value)}

@@ -100,7 +100,7 @@ export function CardSection() {
       {state.on && (
         <>
           <div className="mt-3 flex flex-wrap items-center gap-2">
-            <code className="field-input min-w-0 flex-1 truncate !py-2 text-[0.85rem]">{link}</code>
+            <code className="field-input min-w-0 flex-1 truncate !py-2 !text-[0.85rem]">{link}</code>
             <button type="button" className="btn btn-primary" onClick={() => void share()}>
               {copied ? `✓ ${t('copied')}` : t('Share')}
             </button>

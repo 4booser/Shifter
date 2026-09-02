@@ -259,7 +259,7 @@ export function Landing() {
       <section className="reveal -mt-6 mb-14 overflow-hidden border-y border-border bg-surface py-3">
         <div className="landing-marquee flex w-max gap-2 whitespace-nowrap">
           {[...GIG_CATEGORIES, ...GIG_CATEGORIES].map((trade, index) => (
-            <span key={`${trade.id}-${index}`} className="chip !border-transparent !bg-transparent text-[0.85rem] text-muted">
+            <span key={`${trade.id}-${index}`} className="chip !border-transparent !bg-transparent !text-[0.85rem] text-muted">
               {trade.emoji} {TRADE_RU[trade.id] ?? trade.label}
             </span>
           ))}

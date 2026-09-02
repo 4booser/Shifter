@@ -72,7 +72,7 @@ export default function ContractPage() {
           </p>
 
           <textarea
-            className="field-input min-h-[10rem] font-mono text-[0.82rem]"
+            className="field-input min-h-[10rem] font-mono !text-[0.82rem]"
             placeholder={t('The text of the contract')}
             value={text}
             onChange={(event) => setText(event.target.value)}

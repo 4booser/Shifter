@@ -539,10 +539,10 @@ export function MonthGrid({
             </button>
           )}
 
-          <button type="button" className="btn btn-sm px-2" aria-label={t('Previous')} onClick={calendarActions.previous}>
+          <button type="button" className="btn btn-sm !px-2" aria-label={t('Previous')} onClick={calendarActions.previous}>
             <Icon name="chevron-left" size={16} />
           </button>
-          <button type="button" className="btn btn-sm px-2" aria-label={t('Next')} onClick={calendarActions.next}>
+          <button type="button" className="btn btn-sm !px-2" aria-label={t('Next')} onClick={calendarActions.next}>
             <Icon name="chevron-right" size={16} />
           </button>
         </div>

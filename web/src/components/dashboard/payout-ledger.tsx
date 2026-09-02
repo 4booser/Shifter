@@ -107,7 +107,7 @@ export function PayoutLedger({
                       {payout.location_name ?? t('No place given')}
                     </span>
                     {payout.kind !== 'settlement' && (
-                      <span className="chip text-[0.72rem]">{t(payout.kind)}</span>
+                      <span className="chip !text-[0.72rem]">{t(payout.kind)}</span>
                     )}
                   </div>
                   <div className="text-[0.78rem] text-muted">
@@ -124,7 +124,7 @@ export function PayoutLedger({
                 </button>
                 <button
                   type="button"
-                  className="btn btn-quiet btn-sm text-danger"
+                  className="btn btn-quiet btn-sm !text-danger"
                   aria-label={t('Remove this payment')}
                   onClick={() => remove(payout.id)}
                 >
@@ -159,7 +159,7 @@ export function PayoutLedger({
                   />
                   <button
                     type="button"
-                    className="btn btn-sm text-danger"
+                    className="btn btn-sm !text-danger"
                     disabled={busy || word.trim().toUpperCase() !== requiredWord}
                     onClick={wipe}
                   >

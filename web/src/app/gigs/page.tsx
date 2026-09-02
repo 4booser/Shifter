@@ -213,11 +213,11 @@ function Gigs() {
                 ]}
                 onChange={setSpan}
               />
-              <button type="button" className="btn btn-sm px-2" aria-label={t('Previous')} onClick={() => step(-1)}>
+              <button type="button" className="btn btn-sm !px-2" aria-label={t('Previous')} onClick={() => step(-1)}>
                 <Icon name="chevron-left" size={16} />
               </button>
               <strong className="min-w-28 text-center text-[0.9rem] tabular">{rangeLabel}</strong>
-              <button type="button" className="btn btn-sm px-2" aria-label={t('Next')} onClick={() => step(1)}>
+              <button type="button" className="btn btn-sm !px-2" aria-label={t('Next')} onClick={() => step(1)}>
                 <Icon name="chevron-right" size={16} />
               </button>
             </>
@@ -245,7 +245,7 @@ function Gigs() {
                 {t('All trades')}
               </button>
               <input
-                className="field-input ml-auto !w-36 !py-1 text-[0.85rem]"
+                className="field-input ml-auto !w-36 !py-1 !text-[0.85rem]"
                 placeholder={t('City')}
                 value={city}
                 onChange={(event) => setCity(event.target.value)}
@@ -833,7 +833,7 @@ function MyListings({
                 {t('Post again')}
               </button>
               {gig.status !== 'closed' ? (
-                <button type="button" className="btn btn-quiet btn-sm text-danger" onClick={() => void gigApi.setStatus(gig.id, 'closed').then(onChanged).catch((c) => onError(apiErrorMessage(c)))}>
+                <button type="button" className="btn btn-quiet btn-sm !text-danger" onClick={() => void gigApi.setStatus(gig.id, 'closed').then(onChanged).catch((c) => onError(apiErrorMessage(c)))}>
                   {t('Close')}
                 </button>
               ) : (

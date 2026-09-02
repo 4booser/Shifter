@@ -45,7 +45,7 @@ export function PendingReviews({ onChanged }: { onChanged?: () => void }) {
 
   return (
     <>
-      <div className="card reveal flex flex-wrap items-center gap-2 border-warn/40 bg-(--warn-soft) p-3">
+      <div className="card reveal flex flex-wrap items-center gap-2 border-warn/40 !bg-(--warn-soft) p-3">
         <span className="text-[1.2rem]" aria-hidden>⭐</span>
         <p className="min-w-0 flex-1 text-[0.9rem]">
           <b>{t('A shift happened — rate it.')}</b>{' '}

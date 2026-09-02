@@ -297,7 +297,7 @@ function Webhooks() {
               <textarea
                 rows={7}
                 spellCheck={false}
-                className="field-input font-mono text-[0.78rem]"
+                className="field-input font-mono !text-[0.78rem]"
                 value={mapping}
                 placeholder={MAPPING_EXAMPLE}
                 onChange={(event) => setMapping(event.target.value)}
@@ -478,7 +478,7 @@ function Webhooks() {
                 <textarea
                   rows={9}
                   spellCheck={false}
-                  className="field-input font-mono text-[0.78rem]"
+                  className="field-input font-mono !text-[0.78rem]"
                   value={testBody}
                   onChange={(event) => setTestBody(event.target.value)}
                 />

@@ -280,7 +280,7 @@ function Payouts() {
 
       {/* ==== Shortfall detector, first: the only thing worth acting on today ==== */}
       {shortfalls.map((shortfall) => (
-        <section key={`${shortfall.location_id}-${shortfall.stream}`} className="card reveal border-danger/40 bg-(--danger-soft) p-4">
+        <section key={`${shortfall.location_id}-${shortfall.stream}`} className="card reveal border-danger/40 !bg-(--danger-soft) p-4">
           <h2 className="mb-1 flex items-center gap-2 font-bold text-danger">
             <Icon name="flame" size={16} />
             {t('Underpaid repeatedly')}
@@ -617,7 +617,7 @@ function PeriodRow({
         <span ref={menuHost} className="relative">
           <button
             type="button"
-            className="btn btn-quiet btn-sm px-2"
+            className="btn btn-quiet btn-sm !px-2"
             aria-label={t('Close the question')}
             onClick={() => setMenuFor(menuFor === rowKey ? null : rowKey)}
           >
@@ -630,7 +630,7 @@ function PeriodRow({
                   <button type="button" className="btn btn-quiet btn-sm justify-start" onClick={() => { setMenuFor(null); onSettle(row, 'paid'); }}>
                     {t('Got it in cash')}
                   </button>
-                  <button type="button" className="btn btn-quiet btn-sm justify-start text-danger" onClick={() => { setMenuFor(null); onSettle(row, 'written-off'); }}>
+                  <button type="button" className="btn btn-quiet btn-sm justify-start !text-danger" onClick={() => { setMenuFor(null); onSettle(row, 'written-off'); }}>
                     {t('Let it go')}
                   </button>
                 </>

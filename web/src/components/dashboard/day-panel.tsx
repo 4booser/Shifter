@@ -663,7 +663,7 @@ export function DayPanel() {
                     {quantity > 0 && (
                       <button
                         type="button"
-                        className="btn btn-quiet btn-sm flex-1 text-danger"
+                        className="btn btn-quiet btn-sm flex-1 !text-danger"
                         onClick={() => setQuantities((current) => ({ ...current, [position.id]: 0 }))}
                       >
                         {t('Clear')}
@@ -741,7 +741,7 @@ export function DayPanel() {
             </button>
           ))}
           {(tips ?? 0) > 0 && (
-            <button type="button" className="btn btn-quiet btn-sm text-danger" onClick={() => { setTips(null); setTipsCash(null); }}>
+            <button type="button" className="btn btn-quiet btn-sm !text-danger" onClick={() => { setTips(null); setTipsCash(null); }}>
               {t('Clear')}
             </button>
           )}
@@ -996,7 +996,7 @@ function BulkPanel({ keys }: { keys: string[] }) {
       {withShifts > 0 && (
         <button
           type="button"
-          className="btn w-full border-danger/40 text-danger"
+          className="btn w-full border-danger/40 !text-danger"
           disabled={saving}
           onClick={() => {
             if (window.confirm(`${t('Clear shifts on')} ${n(withShifts, 'days')}?`)) {

@@ -450,7 +450,7 @@ function StandingCosts({
               <Money value={rule.amount} className="font-semibold" />
               <button
                 type="button"
-                className="btn btn-quiet btn-sm text-danger"
+                className="btn btn-quiet btn-sm !text-danger"
                 aria-label={t('Stop it')}
                 onClick={() => {
                   void calendarApi

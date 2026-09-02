@@ -314,13 +314,13 @@ function Wrapped() {
       <div className="flex items-center gap-2">
         <h1 className="text-[1.3rem] font-bold tracking-tight">{t('Your year')}</h1>
         <span className="ml-auto flex items-center gap-1">
-          <button type="button" className="btn btn-sm px-2" onClick={() => setYear((value) => value - 1)} aria-label={t('Previous')}>
+          <button type="button" className="btn btn-sm !px-2" onClick={() => setYear((value) => value - 1)} aria-label={t('Previous')}>
             <Icon name="chevron-left" size={15} />
           </button>
           <span className="w-14 text-center text-[1.05rem] font-bold tabular">{year}</span>
           <button
             type="button"
-            className="btn btn-sm px-2"
+            className="btn btn-sm !px-2"
             disabled={isCurrentYear}
             onClick={() => setYear((value) => value + 1)}
             aria-label={t('Next')}

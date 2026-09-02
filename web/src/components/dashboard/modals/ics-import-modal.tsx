@@ -171,7 +171,7 @@ export function IcsImportModal({ open, onClose }: { open: boolean; onClose: () =
                     </span>
                   </div>
                   <select
-                    className="field-input mt-1.5 !py-1.5 text-[0.85rem]"
+                    className="field-input mt-1.5 !py-1.5 !text-[0.85rem]"
                     value={fate.kind === 'shift' ? `shift:${fate.templateId}` : fate.kind}
                     onChange={(event) => {
                       const value = event.target.value;

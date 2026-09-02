@@ -95,7 +95,7 @@ function LoginForm() {
           <p className="field-hint">{t('Enter the six digits from your authenticator, or an eight-digit backup code.')}</p>
 
           <input
-            className="field-input text-center text-[1.3rem] tracking-[0.4em] tabular"
+            className="field-input text-center !text-[1.3rem] tracking-[0.4em] tabular"
             inputMode="numeric"
             autoFocus
             aria-label={t('Two-factor code')}
@@ -131,7 +131,7 @@ function LoginForm() {
           <span className="field-label">{t('Password')}</span>
           <span className="relative block">
             <input
-              className="field-input pr-16"
+              className="field-input !pr-16"
               type={peeking ? 'text' : 'password'}
               autoComplete="current-password"
               value={password}

@@ -7,7 +7,7 @@ import { MarketBandCard } from '@/components/gigs/market-band';
 import { ContactAudit } from '@/components/gigs/contact-audit';
 import { Gig, GigEmployment, GigReply, GigSave, GIG_CATEGORIES, GIG_GROUPS, categoryOf, gigApi, shrinkPhoto } from '@/lib/api/gigs';
 import { accountApi } from '@/lib/api/auth';
-import { fromKey, keysBetween, monthBounds, shiftDays, todayKey, weekBounds, keyOf } from '@/lib/calendar/calendar-date';
+import { fromKey, keysBetween, monthBounds, sentenceCase, shiftDays, todayKey, weekBounds, keyOf } from '@/lib/calendar/calendar-date';
 import { useI18n } from '@/lib/i18n';
 import { useMoney } from '@/lib/settings/money';
 import { pushToast } from '@/lib/toast';
@@ -101,7 +101,10 @@ function Gigs() {
     span === 'year'
       ? anchor.slice(0, 4)
       : span === 'month'
-        ? new Intl.DateTimeFormat(lang, { month: 'long', year: 'numeric' }).format(new Date(`${anchor}T00:00:00`))
+        ? sentenceCase(
+            new Intl.DateTimeFormat(lang, { month: 'long', year: 'numeric' }).format(new Date(`${anchor}T00:00:00`)),
+            lang,
+          )
         : `${range.from.slice(8)}–${range.to.slice(8)} ${new Intl.DateTimeFormat(lang, { month: 'short' }).format(new Date(`${range.from}T00:00:00`))}`;
 
   // The board groups by date so a busy Friday reads as one block.
@@ -213,7 +216,7 @@ function Gigs() {
               <button type="button" className="btn btn-sm px-2" aria-label={t('Previous')} onClick={() => step(-1)}>
                 <Icon name="chevron-left" size={16} />
               </button>
-              <strong className="min-w-28 text-center text-[0.9rem] capitalize tabular">{rangeLabel}</strong>
+              <strong className="min-w-28 text-center text-[0.9rem] tabular">{rangeLabel}</strong>
               <button type="button" className="btn btn-sm px-2" aria-label={t('Next')} onClick={() => step(1)}>
                 <Icon name="chevron-right" size={16} />
               </button>

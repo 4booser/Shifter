@@ -190,15 +190,15 @@ function Compare() {
       {/* ==== The verdict ==== */}
       <section className="card reveal glow p-4">
         <p className="text-[1.05rem]">
-          <strong className="capitalize">{ranges.b.label}</strong>{' '}
+          <strong>{ranges.b.label}</strong>{' '}
           {b.total_earned >= a.total_earned ? (
             <>
-              {t('is ahead of')} <strong className="capitalize">{ranges.a.label}</strong> {t('by')}{' '}
+              {t('is ahead of')} <strong>{ranges.a.label}</strong> {t('by')}{' '}
               <Money value={b.total_earned - a.total_earned} className="font-bold text-good" />
             </>
           ) : (
             <>
-              {t('is behind')} <strong className="capitalize">{ranges.a.label}</strong> {t('by')}{' '}
+              {t('is behind')} <strong>{ranges.a.label}</strong> {t('by')}{' '}
               <Money value={a.total_earned - b.total_earned} className="font-bold text-danger" />
             </>
           )}
@@ -232,8 +232,8 @@ function Compare() {
           <thead>
             <tr className="border-b border-border text-left text-[0.72rem] uppercase tracking-wide text-muted">
               <th className="py-1.5 pr-2 font-semibold" />
-              <th className="py-1.5 pr-2 text-right font-semibold capitalize">{ranges.a.label}</th>
-              <th className="py-1.5 pr-2 text-right font-semibold capitalize">{ranges.b.label}</th>
+              <th className="py-1.5 pr-2 text-right font-semibold">{ranges.a.label}</th>
+              <th className="py-1.5 pr-2 text-right font-semibold">{ranges.b.label}</th>
               <th className="py-1.5 text-right font-semibold">Δ</th>
             </tr>
           </thead>

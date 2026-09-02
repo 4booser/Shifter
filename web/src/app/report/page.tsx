@@ -322,7 +322,7 @@ function Report() {
           >
             <Icon name="chevron-left" size={15} />
           </button>
-          <strong className="w-36 text-center text-[0.95rem] capitalize">
+          <strong className="w-36 text-center text-[0.95rem]">
             {mode === 'month' ? monthLabel(month, lang) : month.year}
           </strong>
           <button
@@ -352,7 +352,7 @@ function Report() {
             {t('Statistics')}
           </Link>
         </div>
-        <strong className="hidden text-[0.95rem] capitalize print-only">{mode === 'month' ? monthLabel(month, lang) : month.year}</strong>
+        <strong className="hidden text-[0.95rem] print-only">{mode === 'month' ? monthLabel(month, lang) : month.year}</strong>
       </div>
 
       {error !== null && <Alert onDismiss={() => setError(null)}>{error}</Alert>}

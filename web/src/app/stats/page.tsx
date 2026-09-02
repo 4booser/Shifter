@@ -13,6 +13,7 @@ import {
   shiftDays,
   todayKey,
   fromKey,
+  sentenceCase,
 } from '@/lib/calendar/calendar-date';
 import { seasonalIndex, yearShape } from '@/lib/calendar/seasonality';
 import { forecastFor, paceToGoal, projectionSeries } from '@/lib/calendar/forecast';
@@ -1116,9 +1117,12 @@ function Stats() {
             <p className="text-[1.3rem] font-bold text-good">
               <Money value={bestDay.earned} />
             </p>
-            <p className="field-hint capitalize">
-              {new Intl.DateTimeFormat(lang, { weekday: 'long', day: 'numeric', month: 'long' }).format(
-                new Date(`${bestDay.date}T00:00:00`),
+            <p className="field-hint">
+              {sentenceCase(
+                new Intl.DateTimeFormat(lang, { weekday: 'long', day: 'numeric', month: 'long' }).format(
+                  new Date(`${bestDay.date}T00:00:00`),
+                ),
+                lang,
               )}
             </p>
           </Card>

@@ -35,9 +35,31 @@ export function addMonths({ year, month }: YearMonth, delta: number): YearMonth 
    default because it is the app's own fallback language, and because the tests
    call these directly. */
 
+/**
+ * A locale string with its first letter lifted, and only its first.
+ *
+ * `text-transform: capitalize` lifts every word, which in Russian and
+ * Ukrainian turns «сентябрь 2026 г.» into «Сентябрь 2026 Г.» and «вторник,
+ * 1 сентября» into «Вторник, 1 Сентября». A sentence starts once.
+ */
+export function sentenceCase(text: string, locale = 'en'): string {
+  return text.charAt(0).toLocaleUpperCase(locale) + text.slice(1);
+}
+
+/**
+ * «Сентябрь 2026 г.» — capitalised here, not by CSS.
+ *
+ * Russian and Ukrainian name a month in lower case and abbreviate the year to
+ * «г.», and every heading in the app used `text-transform: capitalize` to
+ * lift the first letter. That rule lifts every word: eleven headings across
+ * the app read «Сентябрь 2026 Г.», with a capital on an abbreviation that
+ * has no business carrying one. A sentence starts once.
+ */
 export function monthLabel({ year, month }: YearMonth, locale = 'en'): string {
-  return new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' })
+  const said = new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' })
     .format(new Date(year, month - 1, 1));
+
+  return sentenceCase(said, locale);
 }
 
 export function todayKey(): string {

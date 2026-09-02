@@ -484,7 +484,7 @@ export function MonthGrid({
     >
       {/* ==== Toolbar ==== */}
       <header className="mb-3 flex flex-wrap items-center gap-2">
-        <h2 className="mr-1 text-[1.15rem] font-bold capitalize tracking-tight">
+        <h2 className="mr-1 text-[1.15rem] font-bold tracking-tight">
           {monthLabel(state.month, lang)}
         </h2>
 

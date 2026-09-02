@@ -12,6 +12,7 @@ import {
   shiftDays,
   todayKey,
   weekBounds,
+  sentenceCase,
 } from '@/lib/calendar/calendar-date';
 import { readableInk } from '@/lib/calendar/contrast';
 import { apiErrorMessage } from '@/lib/api/http';
@@ -258,7 +259,10 @@ function Schedule() {
 
   const rangeLabel =
     span === 'month'
-      ? new Intl.DateTimeFormat(lang, { month: 'long', year: 'numeric' }).format(new Date(month.year, month.month - 1, 1))
+      ? sentenceCase(
+          new Intl.DateTimeFormat(lang, { month: 'long', year: 'numeric' }).format(new Date(month.year, month.month - 1, 1)),
+          lang,
+        )
       : `${range.from.slice(8)}–${range.to.slice(8)} ${new Intl.DateTimeFormat(lang, { month: 'short' }).format(new Date(`${range.from}T00:00:00`))}`;
 
   const shareWeek = () => {
@@ -332,7 +336,7 @@ function Schedule() {
     <div ref={revealHost} className="flex flex-col gap-4">
       {/* ==== Toolbar ==== */}
       <div className="flex flex-wrap items-center gap-2">
-        <h1 className="text-[1.3rem] font-bold capitalize tracking-tight">
+        <h1 className="text-[1.3rem] font-bold tracking-tight">
           {mode === 'planner' ? t('Planning') : rangeLabel}
         </h1>
 

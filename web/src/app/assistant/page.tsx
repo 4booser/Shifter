@@ -292,7 +292,7 @@ function Assistant() {
               >
                 ‹
               </button>
-              <span className="flex-1 text-center text-[0.9rem] font-semibold capitalize tabular">
+              <span className="flex-1 text-center text-[0.9rem] font-semibold tabular">
                 {monthLabel(month, lang)}
               </span>
               <button

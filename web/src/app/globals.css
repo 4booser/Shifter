@@ -35,8 +35,12 @@
    * figure, the line under a heading — and at #9c988c it read 2.8 against the
    * card behind it, where text this size needs 4.5. Faint is a rank in the
    * hierarchy, not permission to be unreadable.
+   *
+   * Chosen against the secondary surface, not the card: hints sit inside
+   * inset panels as often as on a plain one, and the darker ground is the
+   * one that decides.
    */
-  --faint: #777367;
+  --faint: #6f6b5f;
   --shadow: 0 1px 2px rgb(28 27 24 / 5%), 0 8px 24px -12px rgb(28 27 24 / 12%);
   --shadow-lg: 0 2px 6px rgb(28 27 24 / 7%), 0 24px 48px -16px rgb(28 27 24 / 22%);
 
@@ -81,7 +85,7 @@
   --text: #eceef2;
   --muted: #9aa0ac;
   /* 3.3 against the dark card; see the note on the light one. */
-  --faint: #808691;
+  --faint: #888e99;
   --shadow: 0 1px 2px rgb(0 0 0 / 40%), 0 8px 24px -12px rgb(0 0 0 / 50%);
   --shadow-lg: 0 2px 6px rgb(0 0 0 / 45%), 0 24px 56px -16px rgb(0 0 0 / 65%);
   --danger: #f07884;
@@ -187,7 +191,7 @@
     --border-strong: #454955;
     --text: #eceef2;
     --muted: #9aa0ac;
-    --faint: #808691;
+    --faint: #888e99;
     --shadow: 0 1px 2px rgb(0 0 0 / 40%), 0 8px 24px -12px rgb(0 0 0 / 50%);
     --shadow-lg: 0 2px 6px rgb(0 0 0 / 45%), 0 24px 56px -16px rgb(0 0 0 / 65%);
     --danger: #f07884;

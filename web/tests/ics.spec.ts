@@ -155,4 +155,19 @@ describe('ics export', () => {
 
     expect(uid(first)).toBe(uid(second));
   });
+
+  /*
+   * The limit in the spec is octets. Cyrillic is two bytes a letter, a shift
+   * symbol four, and folding by string length let a line leave at twice the
+   * size it was meant to be — and could cut an emoji in half on the way.
+   */
+  it('folds on bytes, not characters, and never through a code point', () => {
+    const text = build([day({ shifts: [shift({ name: 'Вечер 🍸'.repeat(20) })] })]);
+
+    for (const line of text.split('\r\n')) {
+      expect(new TextEncoder().encode(line).length).toBeLessThanOrEqual(75);
+    }
+
+    expect(text).not.toContain('\uFFFD');
+  });
 });

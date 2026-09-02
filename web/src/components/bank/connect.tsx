@@ -77,11 +77,17 @@ export function BankConnect() {
         <Alert kind="error">{t('Could not reach the bank. Try again in a minute.')}</Alert>
       )}
 
-      {/* Looking costs nothing: the demo draws a statement in this browser
-          and involves no bank, which is the whole pitch of it. */}
+      {/*
+        Looking costs nothing: the demo draws a statement in this browser and
+        involves no bank, which is the whole pitch of it — and it is the only
+        way to see any of this without handing over a token. As a quiet
+        button it had no background, no border and muted ink, so on the one
+        screen that asks for a bank credential the safe path read as a
+        caption. It is an outlined button now.
+      */}
       <button
         type="button"
-        className="btn btn-quiet mt-3"
+        className="btn mt-3"
         onClick={() => useMono.getState().enterDemo()}
       >
         {t('Look around on an example')}

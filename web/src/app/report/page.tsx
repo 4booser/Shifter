@@ -362,7 +362,7 @@ function Report() {
         <Hero label={t('Earned')} change={running ? null : delta(summary.total_earned, previous.total_earned)}>
           <CountUp value={summary.total_earned} className="text-[1.25rem] font-bold text-good-read" />
         </Hero>
-        <Hero label={t('Hours')} change={running ? null : delta(summary.hours, previous.hours)}>
+        <Hero label={t('Hours worked')} change={running ? null : delta(summary.hours, previous.hours)}>
           <CountUp value={summary.hours} format={(value) => num(Math.round(value))} className="text-[1.25rem] font-bold" />
         </Hero>
         <Hero label={t('Days worked')} change={running ? null : delta(summary.days_worked, previous.days_worked)}>

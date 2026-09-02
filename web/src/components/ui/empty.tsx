@@ -24,7 +24,7 @@ export function Empty({
 }) {
   return (
     <div className="card reveal flex flex-col items-center gap-2 p-8 text-center">
-      <span className="grid size-11 place-items-center rounded-full bg-(--accent-soft) text-(--accent)">
+      <span className="grid size-11 place-items-center rounded-full bg-(--accent-soft) text-(--accent-read)">
         <Icon name={icon} size={20} />
       </span>
 

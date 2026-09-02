@@ -164,7 +164,7 @@ function Assistant() {
       <section className={`card flex flex-col gap-3 p-4 ${thread.length > 0 ? 'min-h-[26rem]' : ''}`}>
         <header className="flex items-center justify-between gap-2">
           <h1 className="flex items-center gap-2 text-[1.05rem] font-bold">
-            <Icon name="spark" size={16} className="text-(--accent)" />
+            <Icon name="spark" size={16} className="text-(--accent-read)" />
             {t('Ask about your own months')}
           </h1>
           {thread.length > 0 && (
@@ -268,7 +268,7 @@ function Assistant() {
       <RaiseCasePanel />
         <section className="card flex flex-col gap-3 p-4">
           <h2 className="flex items-center gap-2 text-[1rem] font-bold">
-            <Icon name="note" size={15} className="text-(--accent)" />
+            <Icon name="note" size={15} className="text-(--accent-read)" />
             {t('A period, written out')}
           </h2>
 
@@ -378,7 +378,7 @@ function GapCards({ gaps, onAnswered }: { gaps: AssistantGap[]; onAnswered: (id:
   return (
     <section className="card flex flex-col gap-3 p-4">
       <h2 className="flex items-center gap-2 text-[1rem] font-bold">
-        <Icon name="target" size={15} className="text-(--accent)" />
+        <Icon name="target" size={15} className="text-(--accent-read)" />
         {t('Fill in the blanks')}
       </h2>
       <p className="field-hint">

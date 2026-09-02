@@ -361,7 +361,7 @@ function Webhooks() {
         hooks.map((hook) => (
           <section key={hook.id} className={`card p-4 ${hook.active ? '' : 'opacity-70'}`}>
             <div className="flex flex-wrap items-center gap-2">
-              <Icon name={hook.kind === 'hours' ? 'clock' : hook.kind === 'both' ? 'swap' : 'coins'} size={16} className="text-(--accent)" />
+              <Icon name={hook.kind === 'hours' ? 'clock' : hook.kind === 'both' ? 'swap' : 'coins'} size={16} className="text-(--accent-read)" />
               <h2 className="text-[1rem] font-bold">{hook.name}</h2>
               <span className="chip">{t(KIND_LABEL[hook.kind])}</span>
               {!hook.active && <span className="chip chip-danger">{t('Switched off')}</span>}

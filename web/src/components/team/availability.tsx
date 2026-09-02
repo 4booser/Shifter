@@ -82,7 +82,7 @@ export function AvailabilityStrip({
                   className={`rounded-(--radius) border px-2 py-1 text-[0.78rem] tabular transition-colors ${
                     off
                       ? 'border-danger/50 bg-(--danger-soft) text-danger'
-                      : 'border-border hover:border-(--accent) hover:text-(--accent)'
+                      : 'border-border hover:border-(--accent) hover:text-(--accent-read)'
                   }`}
                   onClick={() => toggle(key)}
                 >

@@ -68,7 +68,7 @@ export function DayBank({ dayKey }: { dayKey: string }) {
               </li>
             ))}
           </ul>
-          <Link href="/bank" className="text-[0.78rem] font-semibold text-(--accent) hover:underline">
+          <Link href="/bank" className="text-[0.78rem] font-semibold text-(--accent-read) hover:underline">
             {t('The whole statement')} ›
           </Link>
         </>

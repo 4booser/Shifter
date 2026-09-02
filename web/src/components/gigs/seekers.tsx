@@ -130,9 +130,9 @@ function SeekerCard({ seeker }: { seeker: Seeker }) {
         )}
       </p>
       <footer className="mt-auto flex items-center gap-2 pt-1 text-[0.85rem] tabular">
-        {seeker.phone !== null && <a className="text-(--accent)" href={`tel:${seeker.phone}`}>{seeker.phone}</a>}
+        {seeker.phone !== null && <a className="text-(--accent-read)" href={`tel:${seeker.phone}`}>{seeker.phone}</a>}
         {seeker.telegram !== null && (
-          <a className="text-(--accent)" href={`https://t.me/${seeker.telegram.replace(/^@/, '')}`} target="_blank" rel="noreferrer">
+          <a className="text-(--accent-read)" href={`https://t.me/${seeker.telegram.replace(/^@/, '')}`} target="_blank" rel="noreferrer">
             {seeker.telegram}
           </a>
         )}

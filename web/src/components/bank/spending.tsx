@@ -426,7 +426,7 @@ export function SpendStanding({
               <div key={row.key} className="@container flex items-baseline justify-between gap-2 text-[0.88rem]">
                 <span className="min-w-0 flex-1 truncate" title={row.name}>
                   {row.name}
-                  {row.fresh && <span className="ml-1.5 text-[0.72rem] font-bold text-(--accent)">{t('new')}</span>}
+                  {row.fresh && <span className="ml-1.5 text-[0.72rem] font-bold text-(--accent-read)">{t('new')}</span>}
                 </span>
                 <span className="tabular flex-none">
                   <Money value={row.amount} />

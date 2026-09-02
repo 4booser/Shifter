@@ -215,6 +215,17 @@
   --color-ink: var(--text);
   --color-muted: var(--muted);
   --color-faint: var(--faint);
+  /*
+   * The accent as text, rather than as a surface.
+   *
+   * The brand colour is chosen to carry white on top of it, which makes it a
+   * poor ink on the page's own ground: every «Сегодня», «Спросить об этом»
+   * and «Весь месяц в графиках» read 2.7 against the card behind it. Mixed
+   * toward the page's ink it keeps the hue and clears the bar on both
+   * palettes, and the solid accent — buttons, fills, rings — is untouched.
+   */
+  --accent-read: color-mix(in srgb, var(--accent) 45%, var(--text));
+  --color-accent-read: var(--accent-read);
   --color-accent: var(--accent);
   --color-accent-ink: var(--accent-ink);
   --color-danger: var(--danger);

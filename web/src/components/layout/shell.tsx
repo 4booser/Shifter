@@ -257,7 +257,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
               key={item.href}
               href={item.href}
               className={`flex flex-1 flex-col items-center gap-0.5 py-2 text-[0.62rem] font-medium ${
-                active ? 'text-(--accent)' : 'text-muted'
+                active ? 'text-(--accent-read)' : 'text-muted'
               }`}
             >
               <Icon name={item.icon} size={19} />

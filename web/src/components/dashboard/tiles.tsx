@@ -821,7 +821,7 @@ function GoalTile({ monthDays, goals }: { monthDays: CalendarDayData[]; goals: G
     return (
       <>
         <Label icon="target">{t('Goal')}</Label>
-        <span className="mt-1 text-[0.86rem] font-semibold text-(--accent)">{t('Set one in statistics')} →</span>
+        <span className="mt-1 text-[0.86rem] font-semibold text-(--accent-read)">{t('Set one in statistics')} →</span>
         <span className="field-hint">{t('The period fills this meter.')}</span>
       </>
     );

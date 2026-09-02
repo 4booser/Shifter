@@ -582,7 +582,7 @@ function Schedule() {
                   <th
                     key={key}
                     className={`min-w-7 px-0.5 py-1 text-center text-[0.68rem] font-medium ${
-                      key === todayKey() ? 'text-(--accent)' : weekendDay ? 'text-warn' : 'text-faint'
+                      key === todayKey() ? 'text-(--accent-read)' : weekendDay ? 'text-warn' : 'text-faint'
                     }`}
                   >
                     <button type="button" onClick={() => setFocusDay((current) => (current === key ? null : key))}>

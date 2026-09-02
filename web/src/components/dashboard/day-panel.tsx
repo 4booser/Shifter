@@ -280,7 +280,7 @@ export function DayPanel() {
         {/* Not capitalize: it lifts «сентября» too, and the panel headed
             «Среда, 2 Сентября». The formatter puts the one capital on. */}
         <h2 className="flex items-center gap-2 text-[1rem] font-bold">
-          <Icon name="calendar" size={16} className="text-(--accent)" />
+          <Icon name="calendar" size={16} className="text-(--accent-read)" />
           {formatDayLabel(key, lang)}
         </h2>
         {belowFloor && (
@@ -1155,7 +1155,7 @@ function DayWeek({ dayKey }: { dayKey: string }) {
               <button
                 type="button"
                 className={`flex w-full items-baseline gap-2 rounded-(--radius) px-1.5 py-1 text-left text-[0.8rem] transition-colors ${
-                  here ? 'bg-(--accent-soft) text-(--accent)' : 'hover:bg-surface-2'
+                  here ? 'bg-(--accent-soft) text-(--accent-read)' : 'hover:bg-surface-2'
                 }`}
                 onClick={() => calendarActions.select(entry.key)}
               >

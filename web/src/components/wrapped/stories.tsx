@@ -166,7 +166,7 @@ export function Stories({
         aria-label={t('Next')}
         onClick={() => step(1)}
       >
-        <span className="text-[0.8rem] font-bold uppercase tracking-[0.14em] text-(--accent)">
+        <span className="text-[0.8rem] font-bold uppercase tracking-[0.14em] text-(--accent-read)">
           {story.label}
         </span>
         <span className="text-[clamp(2.6rem,14vw,5.5rem)] font-extrabold leading-none tracking-tight tabular">

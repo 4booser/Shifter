@@ -363,7 +363,7 @@ function Wrapped() {
             {/* The year itself is the wallpaper — enormous and half-there. */}
             <span
               aria-hidden
-              className="pointer-events-none absolute inset-0 grid select-none place-items-center font-extrabold leading-none tracking-tighter text-(--accent)"
+              className="pointer-events-none absolute inset-0 grid select-none place-items-center font-extrabold leading-none tracking-tighter text-(--accent-read)"
               style={{ fontSize: 'clamp(9rem, 32vw, 24rem)', opacity: 0.07 }}
             >
               {year}
@@ -383,7 +383,7 @@ function Wrapped() {
               <Money value={averages.perHour} className="font-semibold text-ink" />/{t('hour')}
             </p>
             {live && (
-              <p className="pop chip mt-4 !border-(--accent)/40 !bg-(--accent-soft) !text-(--accent)" style={{ ['--i' as string]: 5 }}>
+              <p className="pop chip mt-4 !border-(--accent)/40 !bg-(--accent-soft) !text-(--accent-read)" style={{ ['--i' as string]: 5 }}>
                 {t('On pace for')} {n(Math.round(projectedHours), 'hours')} {t('this year')}
               </p>
             )}

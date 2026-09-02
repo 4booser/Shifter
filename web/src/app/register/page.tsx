@@ -132,7 +132,7 @@ export default function RegisterPage() {
 
         <p className="text-center text-[0.85rem] text-muted">
           {t('Already have an account?')}{' '}
-          <Link href="/login" className="font-semibold text-(--accent) hover:underline">
+          <Link href="/login" className="font-semibold text-(--accent-read) hover:underline">
             {t('Sign in')}
           </Link>
         </p>

@@ -158,12 +158,12 @@ function LoginForm() {
 
         <p className="text-center text-[0.85rem] text-muted">
           {t('No account yet?')}{' '}
-          <Link href="/register" className="font-semibold text-(--accent) hover:underline">
+          <Link href="/register" className="font-semibold text-(--accent-read) hover:underline">
             {t('Create one')}
           </Link>
         </p>
         <p className="text-center text-[0.82rem]">
-          <Link href="/reset" className="text-muted hover:text-(--accent) hover:underline">
+          <Link href="/reset" className="text-muted hover:text-(--accent-read) hover:underline">
             {t('Forgot the password?')}
           </Link>
         </p>

@@ -76,7 +76,7 @@ export function MonthBars({ rows }: { rows: MonthBarRow[] }) {
           >
             <span
               className={`w-9 flex-none text-right text-[0.72rem] capitalize tabular ${
-                row.current ? 'font-bold text-(--accent)' : 'text-faint'
+                row.current ? 'font-bold text-(--accent-read)' : 'text-faint'
               }`}
             >
               {row.label}

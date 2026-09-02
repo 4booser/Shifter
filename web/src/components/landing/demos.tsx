@@ -294,7 +294,7 @@ export function GigsDemo() {
               <b className="block truncate text-[0.88rem] leading-tight">{gig.title}</b>
               <span className="field-hint block truncate">{gig.venue} · {gig.slot}</span>
             </span>
-            <b className="whitespace-nowrap text-[0.85rem] tabular text-(--accent)">{gig.pay}</b>
+            <b className="whitespace-nowrap text-[0.85rem] tabular text-(--accent-read)">{gig.pay}</b>
             <button
               type="button"
               className={`btn btn-sm whitespace-nowrap ${isSent ? '!border-good !text-good' : 'btn-primary'}`}

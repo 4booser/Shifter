@@ -84,7 +84,7 @@ const NIGHT = {
 function Hour({ time, children }: { time: string; children: React.ReactNode }) {
   return (
     <div className="reveal mb-5 flex items-center gap-3">
-      <span className="rounded-full border border-border bg-surface px-3 py-1 font-mono text-[0.82rem] font-bold tabular text-(--accent)">
+      <span className="rounded-full border border-border bg-surface px-3 py-1 font-mono text-[0.82rem] font-bold tabular text-(--accent-read)">
         {time}
       </span>
       <span className="h-px flex-1 bg-border" aria-hidden />
@@ -285,7 +285,7 @@ export function Landing() {
               { icon: 'mic', title: 'Голосом с планшета', text: '«Тридцать четыре тысячи выручка, чай две» — диктовка на телефоне разберёт и разложит по полям.', span: 'md:col-span-2' },
             ].map((cell) => (
               <article key={cell.title} className={`card lift reveal p-4 ${cell.span}`}>
-                <span className="mb-2 grid h-9 w-9 place-items-center rounded-(--radius) bg-(--accent-soft) text-(--accent)">
+                <span className="mb-2 grid h-9 w-9 place-items-center rounded-(--radius) bg-(--accent-soft) text-(--accent-read)">
                   <Icon name={cell.icon} size={18} />
                 </span>
                 <h3 className="mb-1 text-[1rem] font-bold">{cell.title}</h3>
@@ -330,7 +330,7 @@ export function Landing() {
               { icon: 'doc', title: 'Бумаги за минуту', text: 'Справка о доходе PDF, CSV бухгалтеру, полный экспорт аккаунта — из тех же записей, что и календарь.' },
             ].map((cell) => (
               <article key={cell.title} className="card lift reveal p-4">
-                <span className="mb-2 grid h-9 w-9 place-items-center rounded-(--radius) bg-(--accent-soft) text-(--accent)">
+                <span className="mb-2 grid h-9 w-9 place-items-center rounded-(--radius) bg-(--accent-soft) text-(--accent-read)">
                   <Icon name={cell.icon} size={18} />
                 </span>
                 <h3 className="mb-1 text-[1rem] font-bold">{cell.title}</h3>
@@ -350,7 +350,7 @@ export function Landing() {
               { icon: 'spark', title: 'Биржа подработок', text: '29 ролей общепита, разовые смены и постоянка, фото заведений. «Я выйду» — и работодатель получает ровно те контакты, что вы вписали.' },
             ].map((cell) => (
               <article key={cell.title} className="card lift reveal p-4">
-                <span className="mb-2 grid h-9 w-9 place-items-center rounded-(--radius) bg-(--accent-soft) text-(--accent)">
+                <span className="mb-2 grid h-9 w-9 place-items-center rounded-(--radius) bg-(--accent-soft) text-(--accent-read)">
                   <Icon name={cell.icon} size={18} />
                 </span>
                 <h3 className="mb-1 text-[1rem] font-bold">{cell.title}</h3>
@@ -371,7 +371,7 @@ export function Landing() {
               { icon: 'sun', title: 'Погода и сезоны', text: 'Дождливые пятницы против солнечных, толстые и тонкие месяцы — и сколько откладывать в жирный, чтобы выровнять тощий.' },
             ].map((cell) => (
               <article key={cell.title} className="card lift reveal p-4">
-                <span className="mb-2 grid h-9 w-9 place-items-center rounded-(--radius) bg-(--accent-soft) text-(--accent)">
+                <span className="mb-2 grid h-9 w-9 place-items-center rounded-(--radius) bg-(--accent-soft) text-(--accent-read)">
                   <Icon name={cell.icon} size={18} />
                 </span>
                 <h3 className="mb-1 text-[0.98rem] font-bold">{cell.title}</h3>
@@ -398,7 +398,7 @@ export function Landing() {
                 ['Всё можно забрать', 'полный экспорт в один клик: JSON, CSV, zip. Что нельзя унести — тем не владеешь.'],
               ].map(([title, text]) => (
                 <li key={title} className="flex gap-3 border-b border-border py-3 last:border-0 [counter-increment:rule]">
-                  <span className="font-mono text-[0.85rem] font-bold tabular text-(--accent) before:content-[counter(rule,decimal-leading-zero)]" />
+                  <span className="font-mono text-[0.85rem] font-bold tabular text-(--accent-read) before:content-[counter(rule,decimal-leading-zero)]" />
                   <p className="text-[0.92rem]">
                     <b>{title}</b> <span className="text-muted">— {text}</span>
                   </p>
@@ -417,14 +417,14 @@ export function Landing() {
             { value: '3', label: 'языка: русский, українська, English' },
           ].map((stat) => (
             <div key={stat.label} className="card !p-4">
-              <p className="text-[1.7rem] font-extrabold tabular text-(--accent)">{stat.value}</p>
+              <p className="text-[1.7rem] font-extrabold tabular text-(--accent-read)">{stat.value}</p>
               <p className="text-[0.82rem] text-muted">{stat.label}</p>
             </div>
           ))}
         </section>
 
         <p className="reveal -mt-10 mb-16 text-center">
-          <Link href="/roadmap" className="text-[0.88rem] font-semibold text-(--accent)">
+          <Link href="/roadmap" className="text-[0.88rem] font-semibold text-(--accent-read)">
             Открытая разработка: смотреть прогресс по задачам →
           </Link>
         </p>
@@ -452,7 +452,7 @@ export function Landing() {
         <section className="reveal mb-16 overflow-hidden rounded-[calc(var(--radius)*1.6)] border border-border bg-surface">
           <div className="grid items-center gap-6 p-6 md:grid-cols-[1fr_auto] md:p-10">
             <div>
-              <p className="mb-1 text-[0.78rem] font-bold uppercase tracking-wide text-(--accent)">iOS и Android</p>
+              <p className="mb-1 text-[0.78rem] font-bold uppercase tracking-wide text-(--accent-read)">iOS и Android</p>
               <h2 className="mb-2 text-balance text-[1.6rem] font-extrabold leading-tight">
                 Приложение уже в разработке — полный паритет с вебом
               </h2>
@@ -478,7 +478,7 @@ export function Landing() {
         <section className="reveal mb-16">
           <div className="mb-3 flex items-baseline justify-between">
             <h2 className="text-[1.4rem] font-extrabold tracking-tight">Что нового</h2>
-            <Link href="/whats-new" className="text-[0.85rem] font-semibold text-(--accent)">
+            <Link href="/whats-new" className="text-[0.85rem] font-semibold text-(--accent-read)">
               вся история →
             </Link>
           </div>
@@ -534,7 +534,7 @@ export function Landing() {
           </p>
           <Link
             href="/login"
-            className="mt-6 inline-block rounded-(--radius) bg-white px-7 py-3 font-bold text-(--accent) transition-transform hover:scale-[1.03]"
+            className="mt-6 inline-block rounded-(--radius) bg-white px-7 py-3 font-bold text-(--accent-read) transition-transform hover:scale-[1.03]"
           >
             Создать аккаунт
           </Link>
@@ -565,12 +565,12 @@ export function Landing() {
 
       <footer className="border-t border-border py-8 text-center text-[0.8rem] text-muted">
         <p className="mb-2 flex flex-wrap items-center justify-center gap-4">
-          <Link href="/login" className="font-semibold text-(--accent)">Войти</Link>
-          <Link href="/whats-new" className="font-semibold text-(--accent)">Что нового</Link>
-          <Link href="/roadmap" className="font-semibold text-(--accent)">Дорожная карта</Link>
-          <Link href="/status" className="font-semibold text-(--accent)">Статус</Link>
-          <a href="#contacts" className="font-semibold text-(--accent)">Контакты</a>
-          <a href="#top" className="font-semibold text-(--accent)">Наверх ↑</a>
+          <Link href="/login" className="font-semibold text-(--accent-read)">Войти</Link>
+          <Link href="/whats-new" className="font-semibold text-(--accent-read)">Что нового</Link>
+          <Link href="/roadmap" className="font-semibold text-(--accent-read)">Дорожная карта</Link>
+          <Link href="/status" className="font-semibold text-(--accent-read)">Статус</Link>
+          <a href="#contacts" className="font-semibold text-(--accent-read)">Контакты</a>
+          <a href="#top" className="font-semibold text-(--accent-read)">Наверх ↑</a>
         </p>
         <span className="font-bold text-ink">Shifter</span> · смены, деньги и команда — под контролем · www.shifter.ink
       </footer>

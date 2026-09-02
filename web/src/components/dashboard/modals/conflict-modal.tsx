@@ -49,7 +49,7 @@ export function ConflictModal() {
             </p>
           </div>
           <div className="rounded-lg border border-(--accent) p-3">
-            <p className="mb-1 text-[0.78rem] font-bold uppercase tracking-wide text-(--accent)">
+            <p className="mb-1 text-[0.78rem] font-bold uppercase tracking-wide text-(--accent-read)">
               {t('Typed here')}
             </p>
             <p className="text-[0.9rem]">

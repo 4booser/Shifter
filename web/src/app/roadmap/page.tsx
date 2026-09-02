@@ -83,7 +83,7 @@ export default function RoadmapPage() {
           <div className="mx-auto mt-6 max-w-md">
             <div className="mb-1.5 flex items-baseline justify-between text-[0.85rem] font-semibold">
               <span>{SHIPPED.length} из {total} задач на проде</span>
-              <span className="tabular text-(--accent)">{percent}%</span>
+              <span className="tabular text-(--accent-read)">{percent}%</span>
             </div>
             <div className="h-3 overflow-hidden rounded-full bg-surface-2">
               <div
@@ -117,7 +117,7 @@ export default function RoadmapPage() {
 
         <section className="reveal mb-10">
           <h2 className="mb-3 text-[1.2rem] font-extrabold tracking-tight">
-            <span className="mr-1.5 text-(--accent)">◐</span>Собирается сейчас
+            <span className="mr-1.5 text-(--accent-read)">◐</span>Собирается сейчас
           </h2>
           <div className="grid gap-2 sm:grid-cols-2">
             {BUILDING.map((item) => (
@@ -149,14 +149,14 @@ export default function RoadmapPage() {
           <p className="mx-auto mt-1 max-w-sm text-white/85">
             План растёт из настоящих болей смены. Напишите нам — и пункт появится здесь.
           </p>
-          <Link href="/login" className="mt-4 inline-block rounded-(--radius) bg-white px-6 py-2.5 font-bold text-(--accent)">
+          <Link href="/login" className="mt-4 inline-block rounded-(--radius) bg-white px-6 py-2.5 font-bold text-(--accent-read)">
             Попробовать Shifter
           </Link>
         </section>
       </main>
 
       <footer className="border-t border-border py-6 text-center text-[0.8rem] text-muted">
-        <Link href="/" className="font-semibold text-(--accent)">← на главную</Link> · обновлено 27.08.2026
+        <Link href="/" className="font-semibold text-(--accent-read)">← на главную</Link> · обновлено 27.08.2026
       </footer>
     </div>
   );

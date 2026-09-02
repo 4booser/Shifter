@@ -123,7 +123,7 @@ function Reset() {
             <button type="button" className="btn btn-primary w-full" disabled={busy || !email.includes('@')} onClick={() => void ask()}>
               {t('Send the link')}
             </button>
-            <Link href="/login" className="mt-3 block text-center text-[0.85rem] font-semibold text-(--accent)">
+            <Link href="/login" className="mt-3 block text-center text-[0.85rem] font-semibold text-(--accent-read)">
               {t('Back to sign in')}
             </Link>
           </>

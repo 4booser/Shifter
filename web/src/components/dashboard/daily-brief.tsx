@@ -90,7 +90,7 @@ export function DailyBrief() {
 
       {brief.tip !== null && (
         <p className="relative mt-2.5 rounded-(--radius) bg-surface-2/70 px-3 py-2 text-[0.88rem]">
-          <b className="text-(--accent)">{t('Today')}: </b>
+          <b className="text-(--accent-read)">{t('Today')}: </b>
           {brief.tip}
         </p>
       )}
@@ -136,7 +136,7 @@ export function DailyBrief() {
               {(block.kind === 'observations' || block.kind === 'month') && (
                 <Link
                   href="/stats"
-                  className="mt-1.5 inline-flex items-center gap-1 text-[0.78rem] font-semibold text-(--accent) hover:underline"
+                  className="mt-1.5 inline-flex items-center gap-1 text-[0.78rem] font-semibold text-(--accent-read) hover:underline"
                 >
                   {t(block.kind === 'month' ? 'The whole month, charted' : 'All the numbers behind this')}
                   <span aria-hidden>›</span>
@@ -149,7 +149,7 @@ export function DailyBrief() {
 
       <Link
         href="/assistant"
-        className="relative mt-3 inline-flex items-center gap-1 text-[0.85rem] font-semibold text-(--accent) hover:underline"
+        className="relative mt-3 inline-flex items-center gap-1 text-[0.85rem] font-semibold text-(--accent-read) hover:underline"
       >
         {t('Ask about this')}
         <span aria-hidden>›</span>

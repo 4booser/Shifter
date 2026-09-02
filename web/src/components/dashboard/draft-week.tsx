@@ -113,7 +113,7 @@ export function DraftWeek() {
                   disabled={templateId === null}
                   className={`flex flex-col items-center rounded-(--radius) border px-1 py-1.5 text-[0.72rem] transition-colors ${
                     ghost
-                      ? 'border-(--accent) bg-(--accent-soft) text-(--accent)'
+                      ? 'border-(--accent) bg-(--accent-soft) text-(--accent-read)'
                       : 'border-border text-muted hover:border-border-strong'
                   } ${templateId === null ? 'opacity-40' : ''}`}
                   onClick={() => {

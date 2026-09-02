@@ -624,7 +624,7 @@ function GigCard({ gig, onRespond, onWithdraw }: { gig: Gig; onRespond: () => vo
             </span>
           </span>
         </span>
-        <b className="whitespace-nowrap text-[0.95rem] tabular text-(--accent)">{payLine(format, t, gig)}</b>
+        <b className="whitespace-nowrap text-[0.95rem] tabular text-(--accent-read)">{payLine(format, t, gig)}</b>
       </header>
       <p className="text-[0.85rem] tabular text-muted">
         {gig.employment === 'permanent'
@@ -686,13 +686,13 @@ function GigCard({ gig, onRespond, onWithdraw }: { gig: Gig; onRespond: () => vo
             </span>
             {/* The venue's side of it, once it has picked you. */}
             {gig.my_response.venue_phone !== null && (
-              <a className="text-(--accent)" href={`tel:${gig.my_response.venue_phone}`}>
+              <a className="text-(--accent-read)" href={`tel:${gig.my_response.venue_phone}`}>
                 {gig.my_response.venue_phone}
               </a>
             )}
             {gig.my_response.venue_telegram !== null && (
               <a
-                className="text-(--accent)"
+                className="text-(--accent-read)"
                 href={`https://t.me/${gig.my_response.venue_telegram.replace(/^@/, '')}`}
                 target="_blank"
                 rel="noreferrer"
@@ -757,7 +757,7 @@ function ShareGig({ gig }: { gig: Gig }) {
   return (
     <button
       type="button"
-      className="text-faint transition-colors hover:text-(--accent)"
+      className="text-faint transition-colors hover:text-(--accent-read)"
       title={t('Copy a link for the work chat')}
       onClick={() => void share()}
     >
@@ -859,9 +859,9 @@ function MyListings({
                         {t('Waiting on them')}
                       </span>
                     )}
-                    {reply.phone !== null && <a className="text-(--accent)" href={`tel:${reply.phone}`}>{reply.phone}</a>}
+                    {reply.phone !== null && <a className="text-(--accent-read)" href={`tel:${reply.phone}`}>{reply.phone}</a>}
                     {reply.telegram !== null && (
-                      <a className="text-(--accent)" href={`https://t.me/${reply.telegram.replace(/^@/, '')}`} target="_blank" rel="noreferrer">
+                      <a className="text-(--accent-read)" href={`https://t.me/${reply.telegram.replace(/^@/, '')}`} target="_blank" rel="noreferrer">
                         {reply.telegram}
                       </a>
                     )}
@@ -1094,7 +1094,7 @@ function EditModal({
               </span>
             ))}
             {form.photos.length < 6 && (
-              <label className="grid h-16 w-16 cursor-pointer place-items-center rounded-(--radius) border border-dashed border-border-strong text-[1.3rem] text-faint hover:border-(--accent) hover:text-(--accent)">
+              <label className="grid h-16 w-16 cursor-pointer place-items-center rounded-(--radius) border border-dashed border-border-strong text-[1.3rem] text-faint hover:border-(--accent) hover:text-(--accent-read)">
                 {shrinking ? '…' : '+'}
                 <input
                   type="file"
@@ -1233,7 +1233,7 @@ function EditModal({
           )}
 
           {(form.pay_amount > 0 || form.pay_percent !== null) && (
-            <p className="mt-2 rounded-(--radius) bg-(--accent-soft) px-2.5 py-1.5 text-[0.85rem] font-semibold text-(--accent)">
+            <p className="mt-2 rounded-(--radius) bg-(--accent-soft) px-2.5 py-1.5 text-[0.85rem] font-semibold text-(--accent-read)">
               {t('The card will say')}:{' '}
               {[
                 form.pay_amount > 0

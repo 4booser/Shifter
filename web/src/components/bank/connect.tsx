@@ -31,7 +31,7 @@ export function BankConnect() {
       <p className="mb-3 text-[0.9rem] text-muted">
         {t('A read-only token from')}{' '}
         <a
-          className="text-(--accent)"
+          className="text-(--accent-read)"
           href="https://api.monobank.ua/"
           target="_blank"
           rel="noreferrer noopener"

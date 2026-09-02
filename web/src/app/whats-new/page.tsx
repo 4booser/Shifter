@@ -145,7 +145,7 @@ function WhatsNew() {
               <ul className="flex flex-col gap-1 text-[0.88rem] text-muted">
                 {release.points.map((point) => (
                   <li key={point} className="flex gap-1.5">
-                    <span className="text-(--accent)">·</span>
+                    <span className="text-(--accent-read)">·</span>
                     {t(point)}
                   </li>
                 ))}

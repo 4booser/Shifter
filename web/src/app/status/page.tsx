@@ -70,7 +70,7 @@ export default function StatusPage() {
             <span className="grid h-8 w-8 place-items-center rounded-[10px] bg-(--accent) text-white">S</span>
             Shifter
           </Link>
-          <Link href="/roadmap" className="ml-auto text-[0.85rem] font-semibold text-(--accent)">
+          <Link href="/roadmap" className="ml-auto text-[0.85rem] font-semibold text-(--accent-read)">
             {t('Roadmap')} →
           </Link>
         </div>

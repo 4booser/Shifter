@@ -422,10 +422,10 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
                       title={t('Who can, that day')}
                       onClick={() => askWho(day)}
                     >
-                    <span className={`block text-[0.72rem] font-semibold uppercase ${isToday ? 'text-(--accent)' : 'text-faint'}`}>
+                    <span className={`block text-[0.72rem] font-semibold uppercase ${isToday ? 'text-(--accent-read)' : 'text-faint'}`}>
                       {new Date(`${day}T00:00:00`).toLocaleDateString(lang, { weekday: 'short' })}
                     </span>
-                    <span className={`text-[0.82rem] font-bold tabular ${isToday ? 'text-(--accent)' : ''}`}>{day.slice(8)}</span>
+                    <span className={`text-[0.82rem] font-bold tabular ${isToday ? 'text-(--accent-read)' : ''}`}>{day.slice(8)}</span>
                     <span className={`block text-[0.64rem] tabular ${covered === 0 ? 'text-danger' : 'text-faint'}`}>
                       {covered === 0 ? t('empty') : `×${covered}`}
                     </span>
@@ -540,7 +540,7 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
                           // the page: `hidden` is display:none, so this was not
                           // focusable at all — assigning a shift to a person on
                           // a day was unreachable without a pointer.
-                          className="rounded-(--radius) border border-dashed border-border-strong px-1.5 py-0.5 text-[0.72rem] text-faint opacity-0 transition-opacity hover:border-(--accent) hover:text-(--accent) focus-visible:opacity-100 group-hover:opacity-100"
+                          className="rounded-(--radius) border border-dashed border-border-strong px-1.5 py-0.5 text-[0.72rem] text-faint opacity-0 transition-opacity hover:border-(--accent) hover:text-(--accent-read) focus-visible:opacity-100 group-hover:opacity-100"
                           onClick={() =>
                             setEditing({
                               userId: member.user_id,

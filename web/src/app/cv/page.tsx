@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
+import { accountApi } from '@/lib/api/auth';
 import { calendarApi } from '@/lib/api/calendar';
 import { apiErrorMessage } from '@/lib/api/http';
 import { WorkHistory } from '@/lib/calendar/models';
@@ -43,6 +44,23 @@ function Cv() {
   const [money, setMoney] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  /*
+   * Whose record this is.
+   *
+   * The page exists to be handed to somebody with no reason to believe you,
+   * and it never said a name — twelve months, two hundred and seventy-seven
+   * shifts and no clue whose. The payslip has carried one since it was
+   * written; this one simply never asked.
+   */
+  const [who, setWho] = useState('');
+
+  useEffect(() => {
+    void accountApi
+      .get()
+      .then((profile) => setWho(`${profile.first_name} ${profile.last_name ?? ''}`.trim()))
+      .catch(() => setWho(''));
+  }, []);
+
   const load = useCallback(() => {
     void calendarApi
       .history(money)
@@ -68,7 +86,10 @@ function Cv() {
       <header className="card reveal p-4 print:border-0 print:p-0">
         <div className="flex flex-wrap items-start justify-between gap-2">
           <div>
-            <h1 className="text-[1.35rem] font-extrabold tracking-tight">{t('Your record')}</h1>
+            <h1 className="text-[1.35rem] font-extrabold tracking-tight">
+              {who === '' ? t('Your record') : who}
+            </h1>
+            {who !== '' && <p className="field-hint">{t('Your record')}</p>}
             <p className="field-hint max-w-prose">
               {t('Everything here comes from shifts you actually recorded. That is what makes it worth showing to somebody who has no reason to believe you.')}
             </p>

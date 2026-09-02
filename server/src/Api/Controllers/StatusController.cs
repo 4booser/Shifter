@@ -186,9 +186,12 @@ public class StatusController : ControllerBase
             build = Environment.GetEnvironmentVariable("BUILD_REF") ?? "dev",
             services = new object[]
             {
-                new { name = "api", ok = true, latency_ms = 0 },
-                new { name = "calendar-database", ok = calendarUp, latency_ms = calendarMs },
-                new { name = "accounts-database", ok = tokensUp, latency_ms = tokensMs },
+                // No figure for the app itself: this response is the
+                // measurement, and «0 мс» beside «17 мс» read as a reading
+                // nobody took rather than a round trip nobody made.
+                new { name = "api", ok = true, latency_ms = (long?)null },
+                new { name = "calendar-database", ok = calendarUp, latency_ms = (long?)calendarMs },
+                new { name = "accounts-database", ok = tokensUp, latency_ms = (long?)tokensMs },
             },
         });
     }

@@ -12,7 +12,7 @@ interface Status {
   checked_at: string;
   uptime_seconds: number;
   version: string;
-  services: { name: string; ok: boolean; latency_ms: number }[];
+  services: { name: string; ok: boolean; latency_ms: number | null }[];
 }
 
 const NAMES: Record<string, string> = {
@@ -103,7 +103,11 @@ export default function StatusPage() {
                   <span className={`h-2.5 w-2.5 flex-none rounded-full ${service.ok ? 'bg-good' : 'bg-danger'}`} />
                   <b className="text-[0.95rem]">{t(NAMES[service.name] ?? service.name)}</b>
                   <span className="ml-auto text-[0.85rem] tabular text-muted">
-                    {service.ok ? `${service.latency_ms} ${t('ms')}` : t('not responding')}
+                    {!service.ok
+                      ? t('not responding')
+                      : service.latency_ms === null
+                        ? t('answering')
+                        : `${service.latency_ms} ${t('ms')}`}
                   </span>
                 </div>
               ))}

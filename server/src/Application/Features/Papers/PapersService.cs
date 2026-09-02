@@ -101,20 +101,38 @@ public sealed class PapersService
     /// semicolons for the Excel this part of the world runs.
     /// </summary>
     public async Task<string> AccountantCsvAsync(
-        int userId, DateOnly from, DateOnly to, CancellationToken ct)
+        int userId, DateOnly from, DateOnly to, string lang, CancellationToken ct)
     {
         var (_, months, paid) = await GatherAsync(userId, from, to, ct);
-        var sheet = new StringBuilder("Місяць;Днів;Годин;Нараховано;З них чайові;Надійшло\r\n");
+
+        var uk = lang == "uk";
+        string T(string ru, string ua) => uk ? ua : ru;
+
+        /*
+         * The separator and the decimal mark have to agree.
+         *
+         * Semicolons are here because that is the Excel this part of the world
+         * runs — and that Excel reads «1234.50» as text, not money, because
+         * its decimal mark is a comma. Every amount in the file arrived
+         * unsummable. The header was written in Ukrainian for everybody, in
+         * an app that asks which language you read.
+         */
+        var culture = CultureInfo.GetCultureInfo(uk ? "uk-UA" : "ru-RU");
+        string Number(decimal value) => value.ToString("0.##", culture);
+
+        var sheet = new StringBuilder(
+            T("Месяц;Дней;Часов;Начислено;Из них чаевые;Поступило\r\n",
+              "Місяць;Днів;Годин;Нараховано;З них чайові;Надійшло\r\n"));
 
         foreach (var row in months)
         {
             sheet
                 .Append(row.Month).Append(';')
                 .Append(row.Days).Append(';')
-                .Append(row.Hours.ToString(CultureInfo.InvariantCulture)).Append(';')
-                .Append(row.Earned.ToString(CultureInfo.InvariantCulture)).Append(';')
-                .Append(row.Tips.ToString(CultureInfo.InvariantCulture)).Append(';')
-                .Append(paid.GetValueOrDefault(row.Month).ToString(CultureInfo.InvariantCulture))
+                .Append(Number((decimal)row.Hours)).Append(';')
+                .Append(Number(row.Earned)).Append(';')
+                .Append(Number(row.Tips)).Append(';')
+                .Append(Number(paid.GetValueOrDefault(row.Month)))
                 .Append("\r\n");
         }
 

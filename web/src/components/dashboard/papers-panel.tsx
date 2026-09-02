@@ -34,7 +34,9 @@ export function PapersPanel() {
           // English UI still hands over a Ukrainian paper, because the bank
           // clerk it is for reads Ukrainian, not the UI.
           papersApi.incomePdf(from, to, lang === 'ru' ? 'ru' : 'ua')
-        : papersApi.accountantCsv(from, to);
+        : // Same rule as the statement above: the spreadsheet is read by an
+          // accountant here, not by the interface.
+          papersApi.accountantCsv(from, to, lang === 'ru' ? 'ru' : 'ua');
 
     void call
       .then((blob) =>

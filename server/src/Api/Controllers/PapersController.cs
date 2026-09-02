@@ -75,9 +75,13 @@ public class PapersController : ControllerBase
 
     [HttpGet("accountant.csv")]
     public async Task<IActionResult> Accountant(
-        [FromQuery] DateOnly from, [FromQuery] DateOnly to, CancellationToken ct)
+        [FromQuery] DateOnly from,
+        [FromQuery] DateOnly to,
+        [FromQuery] string? lang,
+        CancellationToken ct)
     {
-        var csv = await _papers.AccountantCsvAsync(UserId(), from, to, ct);
+        var csv = await _papers.AccountantCsvAsync(
+            UserId(), from, to, lang == "uk" ? "uk" : "ru", ct);
 
         return File(
             System.Text.Encoding.UTF8.GetBytes(csv),

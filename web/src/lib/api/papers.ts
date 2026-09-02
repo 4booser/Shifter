@@ -23,8 +23,8 @@ export const papersApi = {
     apiBlob(`/shifter/v1/papers/income.pdf?from=${from}&to=${to}&lang=${lang}`),
 
   /** The deliberately boring CSV an accountant actually wants. */
-  accountantCsv: (from: string, to: string) =>
-    apiBlob(`/shifter/v1/papers/accountant.csv?from=${from}&to=${to}`),
+  accountantCsv: (from: string, to: string, lang: 'ru' | 'ua') =>
+    apiBlob(`/shifter/v1/papers/accountant.csv?from=${from}&to=${to}&lang=${lang}`),
 
   /** Everything the account holds, as a zip that opens without this app. */
   takeout: () => apiBlob('/shifter/v1/papers/takeout.zip'),

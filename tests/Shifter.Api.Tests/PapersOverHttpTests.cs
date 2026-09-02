@@ -111,9 +111,17 @@ public sealed class PapersOverHttpTests(Api api)
 
         var lines = csv.TrimStart('﻿').Trim().Split("\r\n");
 
-        Assert.Equal("Місяць;Днів;Годин;Нараховано;З них чайові;Надійшло", lines[0]);
+        // The header follows the reader. It was Ukrainian for everybody, in an
+        // app that asks which language you read.
+        Assert.Equal("Месяц;Дней;Часов;Начислено;Из них чаевые;Поступило", lines[0]);
         // Four eight-hour shifts at 200 plus four days of 600 in tips.
         Assert.Equal("2026-07;4;32;8800;2400;0", lines[1]);
+
+        var ua = await client.GetStringAsync(
+            $"/shifter/v1/papers/accountant.csv?from={Day(1)}&to={Day(31)}&lang=uk");
+
+        Assert.StartsWith(
+            "Місяць;Днів;Годин;Нараховано;З них чайові;Надійшло", ua.TrimStart('﻿'));
     }
 
     [Fact]

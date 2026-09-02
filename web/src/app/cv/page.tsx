@@ -102,9 +102,13 @@ function Cv() {
         <>
           <section className="card reveal p-4">
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <Figure value={`${history.months}`} label={t('months in the trade')} />
-              <Figure value={`${history.shifts}`} label={t('shifts worked')} />
-              <Figure value={`${Math.round(history.hours)}`} label={t('hours')} />
+              {/* Grouped like every other four-figure number in the app: this
+                  page printed «2512 часов» over a table whose own total said
+                  the same thing, and a CV is the one screen shown to someone
+                  who has no reason to be forgiving about it. */}
+              <Figure value={history.months.toLocaleString(lang)} label={t('months in the trade')} />
+              <Figure value={history.shifts.toLocaleString(lang)} label={t('shifts worked')} />
+              <Figure value={Math.round(history.hours).toLocaleString(lang)} label={t('hours')} />
               <Figure value={`${history.places.length}`} label={t('places')} />
             </div>
             <p className="field-hint mt-2.5">
@@ -170,9 +174,9 @@ function Cv() {
                     {history.by_month.map((row) => (
                       <tr key={row.month} className="border-t border-border">
                         <td className="py-1.5 whitespace-nowrap">{said(row.month)}</td>
-                        <td className="py-1.5 text-right tabular">{row.days}</td>
-                        <td className="py-1.5 text-right tabular">{row.shifts}</td>
-                        <td className="py-1.5 text-right tabular">{Math.round(row.hours)}</td>
+                        <td className="py-1.5 text-right tabular">{row.days.toLocaleString(lang)}</td>
+                        <td className="py-1.5 text-right tabular">{row.shifts.toLocaleString(lang)}</td>
+                        <td className="py-1.5 text-right tabular">{Math.round(row.hours).toLocaleString(lang)}</td>
                         {money && (
                           <td className="py-1.5 text-right tabular">
                             {row.per_hour === null ? '—' : formatIn('', row.per_hour)}
@@ -190,10 +194,10 @@ function Cv() {
                     <tr className="border-t-2 border-border-strong font-semibold">
                       <td className="py-1.5">{t('Total')}</td>
                       <td className="py-1.5 text-right tabular">
-                        {history.by_month.reduce((sum, row) => sum + row.days, 0)}
+                        {history.by_month.reduce((sum, row) => sum + row.days, 0).toLocaleString(lang)}
                       </td>
-                      <td className="py-1.5 text-right tabular">{history.shifts}</td>
-                      <td className="py-1.5 text-right tabular">{Math.round(history.hours)}</td>
+                      <td className="py-1.5 text-right tabular">{history.shifts.toLocaleString(lang)}</td>
+                      <td className="py-1.5 text-right tabular">{Math.round(history.hours).toLocaleString(lang)}</td>
                       {money && <td />}
                       {money && (
                         <td className="py-1.5 text-right tabular">

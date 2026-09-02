@@ -29,5 +29,13 @@ export function useI18n() {
     t: (key: string) => translate(lang, key),
     /** "5 смен": a count glued to its correctly declined word. */
     n: (count: number, key: string) => nWord(lang, count, key),
+    /**
+     * A bare count, grouped: «2 512», never «2512».
+     *
+     * Money has had a formatter since the first week; plain counts did not,
+     * so a year of hours printed one way in a tile and another in the table
+     * under it.
+     */
+    num: (value: number) => value.toLocaleString(lang),
   };
 }

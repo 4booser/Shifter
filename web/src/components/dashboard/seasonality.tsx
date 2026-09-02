@@ -3,16 +3,11 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import { calendarApi } from '@/lib/api/calendar';
-import { todayKey } from '@/lib/calendar/calendar-date';
+import { monthShort, todayKey } from '@/lib/calendar/calendar-date';
 import { CalendarDayData } from '@/lib/calendar/models';
 import { sameMonthLastYear, seasonalCushion, seasonalIndex, yearShape } from '@/lib/calendar/seasonality';
 import { useI18n } from '@/lib/i18n';
 import { Money } from '@/components/ui/bits';
-
-const MONTHS = [
-  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-];
 
 /**
  * The shape of somebody's own year.
@@ -25,7 +20,7 @@ const MONTHS = [
  * have opposite Decembers, and no industry average knows which is which.
  */
 export function Seasonality() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
 
   const [days, setDays] = useState<CalendarDayData[] | null>(null);
 
@@ -111,7 +106,7 @@ export function Seasonality() {
                     title={row === undefined ? t('not enough years') : `${Math.round(row.average)}`}
                   />
                 </div>
-                <span className="text-[0.6rem] text-faint">{t(MONTHS[month - 1])}</span>
+                <span className="text-[0.6rem] text-faint">{monthShort(month, lang)}</span>
               </div>
             );
           })}
@@ -127,7 +122,7 @@ export function Seasonality() {
         if (cushion === null || cushion.saveShare === null || cushion.saveShare <= 0) return null;
 
         const spellMonths = (rows: { month: number }[]) =>
-          rows.map((row) => t(MONTHS[row.month - 1])).join(', ');
+          rows.map((row) => monthShort(row.month, lang)).join(', ');
 
         return (
           <p className="mt-3 rounded-(--radius) bg-(--accent-soft) px-3 py-2 text-[0.86rem]">

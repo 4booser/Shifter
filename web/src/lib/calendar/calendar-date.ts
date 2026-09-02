@@ -68,6 +68,18 @@ export function formatDayLabelShort(key: string, locale = 'en'): string {
 }
 
 /**
+ * A month's short name in the reader's language, from its number.
+ *
+ * The seasonality chart carried its own list of «Jan, Feb, Mar» and passed
+ * them through the dictionary, which had never been given translations for
+ * them — so a year's shape was labelled in English under a Russian heading.
+ * The platform knows the twelve names in every language it has.
+ */
+export function monthShort(month: number, locale = 'en'): string {
+  return new Intl.DateTimeFormat(locale, { month: 'short' }).format(new Date(2000, month - 1, 1));
+}
+
+/**
  * A pay period as a person says it: «1 — 15 марта», «16 марта — 2 апреля».
  *
  * The payout list printed «2026-03-01 — 2026-03-15», which is how a database

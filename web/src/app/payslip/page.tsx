@@ -33,7 +33,7 @@ export default function PayslipPage() {
 }
 
 function Payslip() {
-  const { t } = useI18n();
+  const { t, num } = useI18n();
 
   const [from, setFrom] = useState(monthBounds(todayKey()).from);
   const [to, setTo] = useState(monthBounds(todayKey()).to);
@@ -136,10 +136,10 @@ function Payslip() {
           </header>
 
           <Section title={t('Hours')}>
-            <Row label={t('Worked')} value={`${range.hours} ${t('h')}`} />
-            <Row label={t('Days worked')} value={`${range.days_worked}`} />
+            <Row label={t('Worked')} value={`${num(range.hours)} ${t('h')}`} />
+            <Row label={t('Days worked')} value={num(range.days_worked)} />
             {range.overtime_hours > 0 && (
-              <Row label={t('Of which overtime')} value={`${range.overtime_hours} ${t('h')}`} />
+              <Row label={t('Of which overtime')} value={`${num(range.overtime_hours)} ${t('h')}`} />
             )}
             {range.night_hours > 0 && (
               <Row label={t('Of which night')} value={`${range.night_hours} ${t('h')}`} />

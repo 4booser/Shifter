@@ -57,7 +57,7 @@ const firstOf = ({ year, month }: YearMonth) => `${year}-${`${month}`.padStart(2
  * as an accountant. Prints clean: the shell chrome stays on screen.
  */
 function Report() {
-  const { t, n, lang } = useI18n();
+  const { t, n, num, lang } = useI18n();
   const { format, formatIn } = useMoney();
 
   const [month, setMonth] = useState<YearMonth>(currentMonth());
@@ -363,10 +363,10 @@ function Report() {
           <CountUp value={summary.total_earned} className="text-[1.25rem] font-bold text-good" />
         </Hero>
         <Hero label={t('Hours')} change={running ? null : delta(summary.hours, previous.hours)}>
-          <CountUp value={summary.hours} format={(value) => `${Math.round(value)}`} className="text-[1.25rem] font-bold" />
+          <CountUp value={summary.hours} format={(value) => num(Math.round(value))} className="text-[1.25rem] font-bold" />
         </Hero>
         <Hero label={t('Days worked')} change={running ? null : delta(summary.days_worked, previous.days_worked)}>
-          <span className="text-[1.25rem] font-bold tabular">{summary.days_worked}</span>
+          <span className="text-[1.25rem] font-bold tabular">{num(summary.days_worked)}</span>
         </Hero>
         <Hero label={t('Per hour')} change={running ? null : delta(averages.perHour, beforeAverages.perHour)}>
           <Money value={averages.perHour} className="text-[1.25rem] font-bold" />
@@ -429,7 +429,7 @@ function Report() {
                   <li key={row.zone} className="flex flex-wrap items-baseline gap-x-2.5 text-[0.88rem]">
                     <strong className="min-w-20">{t(ZONE_NAMES[row.zone] ?? row.zone)}</strong>
                     <span className="field-hint tabular">
-                      {row.hours} {t('h')} · {row.shifts} {t('sh.')}
+                      {num(row.hours)} {t('h')} · {num(row.shifts)} {t('sh.')}
                     </span>
                     <span className="ml-auto tabular">
                       <Money value={row.tips} />
@@ -507,8 +507,8 @@ function Report() {
                       <td className="py-1.5 pr-2 capitalize">
                         {new Date(`${key}-01T00:00:00`).toLocaleDateString(lang, { month: 'long' })}
                       </td>
-                      <td className="py-1.5 pr-2 text-right tabular">{bucket.days}</td>
-                      <td className="py-1.5 pr-2 text-right tabular">{Math.round(bucket.hours)}</td>
+                      <td className="py-1.5 pr-2 text-right tabular">{num(bucket.days)}</td>
+                      <td className="py-1.5 pr-2 text-right tabular">{num(Math.round(bucket.hours))}</td>
                       <td className="py-1.5 pr-2 text-right tabular">{bucket.tips > 0 ? format(bucket.tips) : '—'}</td>
                       <td className="py-1.5 pr-2 text-right font-semibold tabular">{format(bucket.earned)}</td>
                       <td className="py-1.5">

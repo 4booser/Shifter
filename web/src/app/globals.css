@@ -648,6 +648,33 @@ body {
   transform: scale(1.14);
 }
 
+/*
+ * The «pick your own» swatch is a native colour input, and WebKit paints its
+ * colour as a square inside whatever box it is given. Sitting last in a row of
+ * twenty-six circles, it read as a rendering fault rather than a control.
+ */
+input.swatch {
+  appearance: none;
+  -webkit-appearance: none;
+  padding: 0;
+  background: none;
+  overflow: hidden;
+}
+
+input.swatch::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+input.swatch::-webkit-color-swatch {
+  border: none;
+  border-radius: 999px;
+}
+
+input.swatch::-moz-color-swatch {
+  border: none;
+  border-radius: 999px;
+}
+
 .swatch.is-active {
   border-color: var(--text);
   box-shadow: 0 0 0 2px var(--surface);

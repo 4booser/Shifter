@@ -77,7 +77,7 @@ export const RU: Dictionary = {
   'What is broken': 'Что сломалось',
   'Martini': 'Мартини',
   'Coffee grinder': 'Кофемолка',
-  'Nothing missing. Long may it last.': 'Ничего не не хватает. Пусть так и будет.',
+  'Nothing missing. Long may it last.': 'Ничего не пропало. Пусть так и будет.',
   'Fixed': 'Починили',
   'Back in stock': 'Привезли',
   'Papers': 'Документы',
@@ -565,6 +565,7 @@ export const RU: Dictionary = {
   'At least the same': 'Не ниже',
   'Post again': 'Выставить снова',
   'What this week costs': 'Во что обходится эта неделя',
+  'What this month costs': 'Во что обходится этот месяц',
   'Only the': 'Только',
   'who share their rate. The rest are not estimated.':
     'кто делится ставкой. Остальных не оцениваем.',
@@ -3744,6 +3745,7 @@ export const UK: Dictionary = {
   'At least the same': 'Не нижче',
   'Post again': 'Виставити знову',
   'What this week costs': 'У що обходиться цей тиждень',
+  'What this month costs': 'У що обходиться цей місяць',
   'Only the': 'Тільки',
   'who share their rate. The rest are not estimated.':
     'хто ділиться ставкою. Решту не оцінюємо.',

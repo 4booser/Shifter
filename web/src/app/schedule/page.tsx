@@ -811,7 +811,11 @@ function Schedule() {
         */}
         {sharers.length > 0 && (
           <section className="card reveal p-4">
-            <h2 className="mb-1 text-[0.98rem] font-bold">{t('What this week costs')}</h2>
+            {/* The card prices whatever span is on screen, and said «эта
+                неделя» over a month's total whenever the month was chosen. */}
+            <h2 className="mb-1 text-[0.98rem] font-bold">
+              {t(span === 'month' ? 'What this month costs' : 'What this week costs')}
+            </h2>
             <p className="text-[1.5rem] font-extrabold tracking-tight">
               <Money value={sharers.reduce((sum, member) => sum + (member.earned ?? 0), 0)} />
             </p>

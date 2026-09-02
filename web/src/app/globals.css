@@ -456,11 +456,19 @@ body {
  * were ordered — those headings rendered with the second half glued to the
  * text instead of pushed to the other end.
  */
+/*
+ * A heading and the figure beside it, which wrap rather than truncate.
+ *
+ * In a panel two hundred and ninety pixels wide the right half had a
+ * hundred and twenty-one, and a date was cut to «пусто · четверг, 3 сентя…».
+ * A date that ends mid-word is worse than one on its own line.
+ */
 .panel-head {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
   justify-content: space-between;
-  gap: 0.5rem;
+  gap: 0.15rem 0.5rem;
   font-size: 0.78rem;
   font-weight: 600;
   letter-spacing: 0.01em;

@@ -1263,7 +1263,7 @@ function DayContext({ dayKey }: { dayKey: string }) {
     <section className="card flex flex-col gap-2 p-4">
       <h3 className="panel-head">
         <span className="flex-none">{t('Last two weeks')}</span>
-        <span className="min-w-0 truncate text-right tabular text-[0.72rem] font-normal text-faint">
+        <span className="min-w-0 text-right tabular text-[0.72rem] font-normal text-faint">
           {shown.earned > 0 ? format(shown.earned) : t('nothing')}
           {' · '}
           {formatDayLabelShort(shown.key, lang)}

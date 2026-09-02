@@ -332,10 +332,13 @@ function BankTile() {
     return (
       <>
         <Label icon="coins">{t('Bank')}</Label>
+        {/* «Подключить выписку» is one word too many for a tile: «Подключить»
+            alone is 125 pixels against 119 of box, and the line under it
+            already says what is being connected. */}
         <span className="tile-value !text-[0.95rem] !font-semibold text-muted">
-          {t('Connect the statement')} →
+          {t('Connect')} →
         </span>
-        <span className="field-hint">{t('It stays in this browser')}</span>
+        <span className="field-hint">{t('The statement stays in this browser')}</span>
       </>
     );
   }

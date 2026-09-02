@@ -214,7 +214,7 @@ function Compare() {
       {(seriesA.length > 1 || seriesB.length > 1) && (
         <section className="card reveal p-4">
           <h2 className="mb-1 text-[0.98rem] font-bold">{t('Cumulative, day by working day')}</h2>
-          <AreaChart points={seriesB} comparison={seriesA} />
+          <AreaChart points={seriesB} comparison={seriesA} emptyNote={t('Neither stretch has anything in it yet.')} />
           <p className="field-hint mt-1 flex gap-3">
             <span className="flex items-center gap-1.5">
               <span className="h-0.5 w-4 rounded bg-(--accent)" /> {ranges.b.label}

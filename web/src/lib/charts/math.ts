@@ -89,6 +89,20 @@ export function buildTicks(data: ColumnDatum[]): Tick[] {
   }));
 }
 
+/**
+ * The same rounding, downwards, for a scale that has to reach below zero.
+ *
+ * A month can close in the red — deductions outrunning a short shift is an
+ * ordinary week in this trade — and a floor pinned at zero drew that month
+ * twelve thousand units below its own canvas while labelling the axis «₴0 ·
+ * ₴0.5 · ₴1». Money that went the wrong way still has to be drawable.
+ */
+export function niceFloor(value: number): number {
+  if (value >= 0) return 0;
+
+  return -niceCeiling(-value);
+}
+
 /** Rounds up to 1, 2 or 5 times a power of ten, so axis values read clean. */
 export function niceCeiling(value: number): number {
   const power = 10 ** Math.floor(Math.log10(value));

@@ -3,7 +3,7 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 
 import { fromKey, keysBetween } from '@/lib/calendar/calendar-date';
-import { CHART_H, CHART_W, Column, PAD, PLOT_H, PLOT_W, Tick, niceCeiling, smoothPath } from '@/lib/charts/math';
+import { CHART_H, CHART_W, Column, PAD, PLOT_H, PLOT_W, Tick, niceCeiling, niceFloor, smoothPath } from '@/lib/charts/math';
 import { useMoney } from '@/lib/settings/money';
 
 /*
@@ -32,38 +32,54 @@ export function AreaChart({
   projection = [],
   comparison = [],
   goal = null,
+  emptyNote,
 }: {
   points: AreaPoint[];
   projection?: AreaPoint[];
   comparison?: AreaPoint[];
   goal?: number | null;
+  /** Said in place of the plot when there is nothing in the stretch. */
+  emptyNote: string;
 }) {
   const { format, compact } = useMoney();
   const [hover, setHover] = useState<number | null>(null);
   const raw = useId().replace(/[«»:]/g, '');
 
-  const max = useMemo(
-    () =>
-      niceCeiling(
-        Math.max(
-          1,
-          ...points.map((point) => point.value),
-          ...projection.map((point) => point.value),
-          ...comparison.map((point) => point.value),
-          goal ?? 0,
-        ),
-      ),
+  /*
+   * The scale reaches wherever the money went, including down.
+   *
+   * Pinned at zero, a stretch that closed in the red — deductions outrunning
+   * a short shift — was drawn twelve thousand units below the canvas while
+   * the axis read «₴0 · ₴0.5 · ₴1». Both ends are rounded, and the zero line
+   * is drawn whenever the floor is under it.
+   */
+  const values = useMemo(
+    () => [
+      ...points.map((point) => point.value),
+      ...projection.map((point) => point.value),
+      ...comparison.map((point) => point.value),
+      goal ?? 0,
+    ],
     [points, projection, comparison, goal],
   );
+
+  const max = useMemo(() => niceCeiling(Math.max(1, ...values)), [values]);
+  const floor = useMemo(() => niceFloor(Math.min(0, ...values)), [values]);
+  const span = max - floor;
+
+  const height = (value: number) => ((value - floor) / span) * PLOT_H;
 
   const total = points.length + projection.length;
   const step = total <= 1 ? 0 : PLOT_W / (total - 1);
   const bottom = PAD.top + PLOT_H;
+  // Where nought sits. The same as the baseline until the floor drops under
+  // it, and then the wash has to hang from zero rather than from the frame.
+  const zeroY = PAD.top + PLOT_H - height(0);
 
   const place = (list: AreaPoint[], offset: number) =>
     list.map((point, index) => ({
       x: PAD.left + step * (offset + index),
-      y: PAD.top + PLOT_H - (point.value / max) * PLOT_H,
+      y: PAD.top + PLOT_H - height(point.value),
       ...point,
     }));
 
@@ -76,14 +92,16 @@ export function AreaChart({
 
     const span = comparison.length - 1;
 
+    const lastIndex = comparison.length - 1;
+
     return comparison.map((point, index) => ({
-      x: PAD.left + (PLOT_W * index) / span,
-      y: PAD.top + PLOT_H - (point.value / max) * PLOT_H,
+      x: PAD.left + (PLOT_W * index) / lastIndex,
+      y: PAD.top + PLOT_H - ((point.value - floor) / span) * PLOT_H,
       ...point,
     }));
-  }, [comparison, max]);
+  }, [comparison, floor, span]);
 
-  const goalY = goal === null || goal <= 0 ? null : PAD.top + PLOT_H - (goal / max) * PLOT_H;
+  const goalY = goal === null || goal <= 0 ? null : PAD.top + PLOT_H - height(goal);
 
   // Hover runs over fact and forecast alike; the tooltip says which is which.
   const all = [...coords, ...ahead];
@@ -93,6 +111,26 @@ export function AreaChart({
   const last = coords.at(-1);
 
   if (coords.length < 2) return null;
+
+  /*
+   * A scale nobody earned is not a chart.
+   *
+   * The ceiling is at least 1, so a stretch with nothing in it drew a full
+   * plot labelled «₴0 · ₴0.5 · ₴1» — three amounts of money that do not
+   * exist, on a page people read to find out what they made. When there is
+   * nothing to plot, the card says so.
+   */
+  const anything =
+    [...points, ...projection, ...comparison].some((point) => point.value !== 0) ||
+    (goal ?? 0) > 0;
+
+  if (!anything) {
+    return (
+      <p className="grid min-h-32 place-items-center text-center text-[0.85rem] text-faint">
+        {emptyNote}
+      </p>
+    );
+  }
 
   return (
     <div className="relative">
@@ -113,12 +151,16 @@ export function AreaChart({
           </filter>
         </defs>
 
-        {[0, max / 2, max].map((value) => {
-          const y = PAD.top + PLOT_H - (value / max) * PLOT_H;
+        {floor < 0 && (
+          <line x1={PAD.left} x2={CHART_W - PAD.right} y1={zeroY} y2={zeroY} stroke="var(--border-strong)" />
+        )}
+
+        {[floor, (floor + max) / 2, max].map((value) => {
+          const y = PAD.top + PLOT_H - height(value);
 
           return (
             <g key={value}>
-              {value > 0 && <line x1={PAD.left} x2={CHART_W - PAD.right} y1={y} y2={y} stroke="var(--border)" strokeDasharray="2 4" />}
+              {value !== floor && <line x1={PAD.left} x2={CHART_W - PAD.right} y1={y} y2={y} stroke="var(--border)" strokeDasharray="2 4" />}
               <text x={PAD.left - 8} y={y + 3} textAnchor="end" fontSize="10" fill="var(--faint)">
                 {compact(value)}
               </text>
@@ -132,7 +174,7 @@ export function AreaChart({
 
         <path
           className="fade-in"
-          d={`${smoothPath(coords)} L ${coords[coords.length - 1].x} ${bottom} L ${coords[0].x} ${bottom} Z`}
+          d={`${smoothPath(coords)} L ${coords[coords.length - 1].x} ${zeroY} L ${coords[0].x} ${zeroY} Z`}
           fill={`url(#${raw}-wash)`}
         />
         {/* The blurred twin under the crisp line — the glow. */}
@@ -228,10 +270,13 @@ export function ColumnChart({
   columns,
   ticks,
   labelEvery = 1,
+  emptyNote,
 }: {
   columns: Column[];
   ticks: Tick[];
   labelEvery?: number;
+  /** Said in place of the plot when there is nothing in the stretch. */
+  emptyNote: string;
 }) {
   const { format, compact } = useMoney();
   const [hover, setHover] = useState<number | null>(null);
@@ -254,6 +299,16 @@ export function ColumnChart({
 
     return `M ${x} ${y + height} L ${x} ${y + r} Q ${x} ${y} ${x + r} ${y} L ${x + width - r} ${y} Q ${x + width} ${y} ${x + width} ${y + r} L ${x + width} ${y + height} Z`;
   };
+
+  // Empty columns still had a ceiling of at least one, so a month with
+  // nothing worked drew a full grid labelled in money nobody made.
+  if (!columns.some((entry) => entry.earned !== 0 || (entry.planned ?? 0) !== 0)) {
+    return (
+      <p className="grid min-h-32 place-items-center text-center text-[0.85rem] text-faint">
+        {emptyNote}
+      </p>
+    );
+  }
 
   return (
     <div className="relative">

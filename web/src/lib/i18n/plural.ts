@@ -36,7 +36,13 @@ export function pluralWord(lang: Language, key: string, count: number): string {
   return forms[rule === 'one' ? 0 : rule === 'many' ? 2 : 1];
 }
 
-/** "5 смен" in one move — the number and its correctly bent word. */
+/**
+ * "5 смен" in one move — the number and its correctly bent word.
+ *
+ * Grouped like every other four-figure number in the app: the year page
+ * printed «1521 час» in its headline and «1 521» in the tile directly under
+ * it, from the same figure.
+ */
 export function nWord(lang: Language, count: number, key: string): string {
-  return `${count} ${pluralWord(lang, key, count)}`;
+  return `${count.toLocaleString(lang)} ${pluralWord(lang, key, count)}`;
 }

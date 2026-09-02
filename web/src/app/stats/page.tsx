@@ -721,7 +721,13 @@ function Stats() {
               : undefined
           }
         >
-          <AreaChart points={cumulative} projection={projection} comparison={cumulativePrevious} goal={active?.target ?? null} />
+          <AreaChart
+            points={cumulative}
+            projection={projection}
+            comparison={cumulativePrevious}
+            goal={active?.target ?? null}
+            emptyNote={t('Nothing earned in this stretch yet.')}
+          />
           <p className="field-hint mt-1 flex flex-wrap gap-3">
             <span className="flex items-center gap-1.5">
               <span className="h-0.5 w-4 rounded bg-(--accent)" /> {t('This period')}
@@ -797,7 +803,12 @@ function Stats() {
       {/* ==== Earnings + twelve months ==== */}
       <div className="cards">
         <Card title={t(buckets.grain === 'day' ? 'By day' : buckets.grain === 'week' ? 'By week' : 'By month')}>
-          <ColumnChart columns={earningsColumns} ticks={earningsTicks} labelEvery={buckets.data.length > 14 ? 7 : 1} />
+          <ColumnChart
+            columns={earningsColumns}
+            ticks={earningsTicks}
+            labelEvery={buckets.data.length > 14 ? 7 : 1}
+            emptyNote={t('Nothing worked in this stretch yet.')}
+          />
         </Card>
         <Card title={t('Twelve months')} hint={t('Is this month normal?')}>
           <MonthBars

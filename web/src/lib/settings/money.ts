@@ -51,14 +51,19 @@ export function formatMoneyCompact(settings: Settings, amount: number): string {
 
   if (hideAmounts) return currencyBefore ? `${currency}•••` : `••• ${currency}`;
 
-  const text = amount.toLocaleString(settings.language, {
+  // The same sign the long form uses. An axis that reached below zero printed
+  // «-100 ₴» beside «−77 ₴» in the tile above it — two minus signs for one
+  // idea, a hyphen standing in for the real one.
+  const sign = amount < 0 ? '−' : '';
+
+  const text = Math.abs(amount).toLocaleString(settings.language, {
     notation: 'compact',
     maximumFractionDigits: 1,
   });
 
-  if (currency === '') return text;
+  if (currency === '') return `${sign}${text}`;
 
-  return currencyBefore ? `${currency}${text}` : `${text} ${currency}`;
+  return currencyBefore ? `${sign}${currency}${text}` : `${sign}${text} ${currency}`;
 }
 
 /** Hook shape: one subscription, both formatters, for components. */

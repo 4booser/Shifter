@@ -373,38 +373,46 @@ function Schedule() {
           </select>
         )}
 
+        {/*
+          The planner brings its own week stepper, so this whole toolbar drove
+          nothing there: «Месяц» sat highlighted over a board showing one
+          week, and «Сегодня» and the arrows moved a range nobody could see. A
+          control that looks chosen and does nothing is worse than no control.
+        */}
         <div className="ml-auto flex flex-wrap items-center gap-1.5">
-          <Segmented
-            value={colourBy}
-            options={[
-              { value: 'person', label: t('By person') },
-              { value: 'shift', label: t('By shift') },
-            ]}
-            onChange={setColourBy}
-          />
-          <Segmented
-            value={span}
-            options={[
-              { value: 'week', label: t('Week') },
-              { value: 'month', label: t('Month') },
-            ]}
-            onChange={setSpan}
-          />
           {mode === 'rota' && (
-            <button type="button" className="btn btn-sm" disabled={rota === null} title={t('Week as a picture, for the group chat')} onClick={shareWeek}>
-              <Icon name="download" size={14} />
-              {t('Picture')}
-            </button>
+            <>
+              <Segmented
+                value={colourBy}
+                options={[
+                  { value: 'person', label: t('By person') },
+                  { value: 'shift', label: t('By shift') },
+                ]}
+                onChange={setColourBy}
+              />
+              <Segmented
+                value={span}
+                options={[
+                  { value: 'week', label: t('Week') },
+                  { value: 'month', label: t('Month') },
+                ]}
+                onChange={setSpan}
+              />
+              <button type="button" className="btn btn-sm" disabled={rota === null} title={t('Week as a picture, for the group chat')} onClick={shareWeek}>
+                <Icon name="download" size={14} />
+                {t('Picture')}
+              </button>
+              <button type="button" className="btn btn-sm" onClick={() => { setAnchor(todayKey()); setMonth(currentMonth()); }}>
+                {t('Today')}
+              </button>
+              <button type="button" className="btn btn-sm !px-2" aria-label={t('Previous')} onClick={() => step(-1)}>
+                <Icon name="chevron-left" size={16} />
+              </button>
+              <button type="button" className="btn btn-sm !px-2" aria-label={t('Next')} onClick={() => step(1)}>
+                <Icon name="chevron-right" size={16} />
+              </button>
+            </>
           )}
-          <button type="button" className="btn btn-sm" onClick={() => { setAnchor(todayKey()); setMonth(currentMonth()); }}>
-            {t('Today')}
-          </button>
-          <button type="button" className="btn btn-sm !px-2" aria-label={t('Previous')} onClick={() => step(-1)}>
-            <Icon name="chevron-left" size={16} />
-          </button>
-          <button type="button" className="btn btn-sm !px-2" aria-label={t('Next')} onClick={() => step(1)}>
-            <Icon name="chevron-right" size={16} />
-          </button>
         </div>
       </div>
 

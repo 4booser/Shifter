@@ -277,7 +277,9 @@ export function DayPanel() {
   return (
     <aside key={key} className="flex w-full flex-col gap-4">
       <section className="card rise p-4">
-        <h2 className="flex items-center gap-2 text-[1rem] font-bold capitalize">
+        {/* Not capitalize: it lifts «сентября» too, and the panel headed
+            «Среда, 2 Сентября». The formatter puts the one capital on. */}
+        <h2 className="flex items-center gap-2 text-[1rem] font-bold">
           <Icon name="calendar" size={16} className="text-(--accent)" />
           {formatDayLabel(key, lang)}
         </h2>

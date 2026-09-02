@@ -67,11 +67,14 @@ export function todayKey(): string {
 }
 
 export function formatDayLabel(key: string, locale = 'en'): string {
-  return new Intl.DateTimeFormat(locale, {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-  }).format(fromKey(key));
+  return sentenceCase(
+    new Intl.DateTimeFormat(locale, {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+    }).format(fromKey(key)),
+    locale,
+  );
 }
 
 /**
@@ -82,11 +85,14 @@ export function formatDayLabel(key: string, locale = 'en'): string {
  * ends mid-word is worse than an abbreviated one.
  */
 export function formatDayLabelShort(key: string, locale = 'en'): string {
-  return new Intl.DateTimeFormat(locale, {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-  }).format(fromKey(key));
+  return sentenceCase(
+    new Intl.DateTimeFormat(locale, {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+    }).format(fromKey(key)),
+    locale,
+  );
 }
 
 /**

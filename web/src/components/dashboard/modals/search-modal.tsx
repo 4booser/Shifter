@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import { calendarApi } from '@/lib/api/calendar';
+import { sentenceCase } from '@/lib/calendar/calendar-date';
 import { CalendarDayData } from '@/lib/calendar/models';
 import { useI18n } from '@/lib/i18n';
 import { ALL_TIME, calendarActions } from '@/lib/store/calendar';
@@ -50,7 +51,7 @@ export function SearchModal({ open, onClose }: { open: boolean; onClose: () => v
     return all
       .map((day) => ({
         date: day.date,
-        label: format.format(new Date(`${day.date}T00:00:00`)),
+        label: sentenceCase(format.format(new Date(`${day.date}T00:00:00`)), lang),
         note: day.note,
         shifts: day.shifts.map((entry) => entry.name).join(', '),
         earned: day.earned,
@@ -91,7 +92,7 @@ export function SearchModal({ open, onClose }: { open: boolean; onClose: () => v
                   onClose();
                 }}
               >
-                <span className="text-[0.88rem] font-semibold capitalize">{hit.label}</span>
+                <span className="text-[0.88rem] font-semibold">{hit.label}</span>
                 {hit.shifts && <span className="text-[0.8rem] text-muted">{hit.shifts}</span>}
                 {hit.note && <span className="w-full truncate text-[0.8rem] text-faint">{hit.note}</span>}
                 <Money value={hit.earned} className="ml-auto text-[0.85rem] font-semibold text-good" />

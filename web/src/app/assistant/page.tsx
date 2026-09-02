@@ -158,7 +158,10 @@ function Assistant() {
   return (
     <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-start">
       {/* ==== The thread ==== */}
-      <section className="card flex min-h-[26rem] flex-col gap-3 p-4">
+      {/* The floor is there so the card stops jumping as answers arrive; before
+          the first question there is nothing to steady, and it left 179 pixels
+          of dark between the invitation and the buttons that answer it. */}
+      <section className={`card flex flex-col gap-3 p-4 ${thread.length > 0 ? 'min-h-[26rem]' : ''}`}>
         <header className="flex items-center justify-between gap-2">
           <h1 className="flex items-center gap-2 text-[1.05rem] font-bold">
             <Icon name="spark" size={16} className="text-(--accent)" />

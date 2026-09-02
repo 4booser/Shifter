@@ -11,8 +11,7 @@ import {
   keysBetween,
   monthLabel,
   todayKey,
-  weekBounds,
-} from '@/lib/calendar/calendar-date';
+  weekBounds, formatDayLabelShort } from '@/lib/calendar/calendar-date';
 import { readableInk } from '@/lib/calendar/contrast';
 import { spokenDay } from '@/lib/calendar/spoken';
 import { recurring } from '@/lib/mono/mono-insights';
@@ -626,25 +625,39 @@ export function MonthGrid({
       {settings.view === 'year' ? (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
           {yearMonths.map((month) => (
-            <button
-              key={month.month}
-              type="button"
-              className="card p-3 text-left transition-transform hover:-translate-y-0.5"
-              onClick={() => {
-                update('view', 'month');
-                calendarActions.goToMonth(month.month);
-              }}
-            >
-              <span className="mb-2 block text-[0.85rem] font-semibold capitalize">{month.label}</span>
+            /*
+             * The card is not a button any more.
+             *
+             * The days inside it are the useful targets, and a button cannot
+             * hold a button — which is why they were spans with role="button"
+             * and no way to focus them: announced as buttons, impossible to
+             * press without a mouse. The month name is its own button now, and
+             * every day is one too.
+             */
+            <div key={month.month} className="card p-3 text-left">
+              <button
+                type="button"
+                className="mb-2 block w-full text-left text-[0.85rem] font-semibold"
+                onClick={() => {
+                  update('view', 'month');
+                  calendarActions.goToMonth(month.month);
+                }}
+              >
+                {month.label}
+              </button>
               <span className="grid grid-cols-7 gap-[3px]">
                 {month.weeks.flat().map((day) => {
                   const mark = dayColour(day.key) ?? entries(day.key)[0]?.colour;
                   const earned = state.days.get(day.key)?.earned ?? 0;
 
                   return (
-                    <span
+                    /* A role of «button» that cannot be focused announces
+                       itself as one and then refuses to be pressed. It is a
+                       button, so it says so by being one. */
+                    <button
+                      type="button"
                       key={day.key}
-                      role="button"
+                      aria-label={`${formatDayLabelShort(day.key, lang)}${earned > 0 ? ` · ${format(earned)}` : ''}`}
                       title={earned > 0 ? `${day.key.slice(8)}.${day.key.slice(5, 7)} · ${format(earned)}` : undefined}
                       className={`h-2 w-2 rounded-[3px] ${day.inCurrentMonth ? '' : 'opacity-25'} hover:outline hover:outline-1 hover:outline-(--accent)`}
                       style={{
@@ -664,7 +677,7 @@ export function MonthGrid({
                   );
                 })}
               </span>
-            </button>
+            </div>
           ))}
         </div>
       ) : (

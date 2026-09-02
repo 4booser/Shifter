@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 
+import { useEscape } from '@/lib/a11y';
 import { useI18n } from '@/lib/i18n';
 import {
   cancelLiveShift,
@@ -29,6 +30,7 @@ export function LiveBar() {
   const live = useLive((state) => state.live);
   const templates = useCalendar((state) => state.templates);
   const [open, setOpen] = useState(false);
+  useEscape(open, () => setOpen(false));
   const [, force] = useState(0);
   const discard = useArmed(() => {
     cancelLiveShift();

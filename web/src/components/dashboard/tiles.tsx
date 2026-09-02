@@ -11,6 +11,7 @@ import { bestDay } from '@/lib/calendar/insights';
 import { CalendarDayData, Goal, Reconciliation, ShiftTemplate } from '@/lib/calendar/models';
 import { activeGoalFor } from '@/lib/calendar/stats-math';
 import { stagger } from '@/lib/fx';
+import { useEscape } from '@/lib/a11y';
 import { useI18n } from '@/lib/i18n';
 import { useArmed } from '@/lib/live/arm';
 import {
@@ -103,6 +104,7 @@ export function TileStrip() {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [schedule, setSchedule] = useState<Reconciliation | null>(null);
   const [customising, setCustomising] = useState(false);
+  useEscape(customising, () => setCustomising(false));
 
   const today = todayKey();
   const bounds = monthBounds(today);

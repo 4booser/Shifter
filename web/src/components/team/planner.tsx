@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   Assignment,
@@ -10,6 +10,7 @@ import {
   PlannerBoard,
   plannerApi,
 } from '@/lib/api/team';
+import { useDialogKeys } from '@/lib/a11y';
 import { apiErrorMessage } from '@/lib/api/http';
 import { WhoRead, plannerApi as whoApi } from '@/lib/api/team';
 import { keysBetween, shiftDays, todayKey, weekBounds } from '@/lib/calendar/calendar-date';
@@ -40,6 +41,13 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
+  /*
+   * The cell editor is a real modal — a backdrop and one job — so it takes
+   * Escape, keeps Tab inside itself, and hands focus back to the cell that
+   * opened it. Before this it could only be dismissed with a pointer.
+   */
+  const fillingBox = useRef<HTMLDivElement>(null);
+
   /** The cell being edited: who and which day, plus the form. */
   const [filling, setFilling] = useState<{
     date: string;
@@ -49,6 +57,8 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
     role: PlanRole;
     count: number;
   } | null>(null);
+
+  useDialogKeys(filling !== null, fillingBox, () => setFilling(null));
 
   const [editing, setEditing] = useState<{
     userId: number;
@@ -629,7 +639,7 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
       {/* ==== Cell editor ==== */}
       {filling !== null && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-black/45 p-4" onClick={() => setFilling(null)}>
-          <div className="card rise w-full max-w-xs p-4" onClick={(event) => event.stopPropagation()}>
+          <div ref={fillingBox} className="card rise w-full max-w-xs p-4" onClick={(event) => event.stopPropagation()}>
             <h3 className="mb-1 text-[0.95rem] font-bold">{t('Hand out a shift')}</h3>
             <p className="field-hint mb-2">
               {t('Goes to whoever has the lightest week and has not blocked the day. Drafts, so you can still change them.')}

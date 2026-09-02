@@ -48,6 +48,32 @@ export function nextFocus(
 }
 
 /**
+ * Escape closes what a click outside closes.
+ *
+ * A popover is not a dialog and does not want a focus trap — but it does have
+ * to be dismissible without a pointer. The account menu, the tile picker and
+ * the live-shift panel each had a full-screen backdrop to click on and
+ * nothing at all for a keyboard, so opening one and changing your mind meant
+ * tabbing through it to the end.
+ */
+export function useEscape(open: boolean, onClose: () => void): void {
+  useEffect(() => {
+    if (!open) return;
+
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+
+      event.stopPropagation();
+      onClose();
+    };
+
+    document.addEventListener('keydown', onKey);
+
+    return () => document.removeEventListener('keydown', onKey);
+  }, [open, onClose]);
+}
+
+/**
  * Escape, a focus trap, and focus back where it came from.
  *
  * Restoring focus matters as much as trapping it: an overlay that closes and

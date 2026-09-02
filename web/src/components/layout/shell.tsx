@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import { authApi } from '@/lib/api/auth';
 import { onSessionChange, readSession } from '@/lib/api/http';
+import { useEscape } from '@/lib/a11y';
 import { useI18n } from '@/lib/i18n';
 import { useSettings } from '@/lib/settings/store';
 import { flushOffline, loadCatalogues, useCalendar } from '@/lib/store/calendar';
@@ -47,6 +48,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const pendingOffline = useCalendar((state) => state.pendingOffline);
   const [ready, setReady] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  useEscape(menuOpen, () => setMenuOpen(false));
   const [face, setFace] = useState<Profile | null>(null);
 
   /**

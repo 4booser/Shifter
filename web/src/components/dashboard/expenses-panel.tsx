@@ -447,7 +447,7 @@ function StandingCosts({
 
           {rules.map((rule) => (
             <div key={rule.id} className="flex flex-wrap items-center gap-2 text-[0.85rem]">
-              <span className="min-w-0 flex-1 truncate">{rule.note}</span>
+              <span className="min-w-0 flex-1 truncate" title={rule.note}>{rule.note}</span>
               <span className="field-hint tabular">
                 {rule.period === 'week'
                   ? t('every week')

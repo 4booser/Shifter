@@ -927,7 +927,7 @@ function CellMark({
         style={{ background: colour, color: ink, borderLeft: entry.kind === 'event' ? '2px dotted rgb(255 255 255/.6)' : undefined }}
       >
         <span>{entry.symbol}</span>
-        {showName && <span className="truncate">{entry.name}</span>}
+        {showName && <span className="truncate" title={entry.name}>{entry.name}</span>}
         {entry.time && (
           <span className="ml-auto hidden flex-none whitespace-nowrap opacity-80 @[9rem]:inline">{entry.time}</span>
         )}
@@ -942,7 +942,7 @@ function CellMark({
         style={{ borderColor: colour, color: 'var(--text)' }}
       >
         <span className="h-1.5 w-1.5 flex-none rounded-full" style={{ background: colour }} />
-        {showName && <span className="truncate">{entry.name}</span>}
+        {showName && <span className="truncate" title={entry.name}>{entry.name}</span>}
         {entry.time && (
           <span className="hidden flex-none whitespace-nowrap text-faint @[9rem]:inline">{entry.time}</span>
         )}
@@ -954,7 +954,7 @@ function CellMark({
     return (
       <span className={`flex min-w-0 items-center gap-1 text-[0.68rem] leading-4 ${planned}`}>
         <span className="h-2 w-2 flex-none rounded-full" style={{ background: colour }} />
-        {showName && <span className="truncate text-muted">{entry.name}</span>}
+        {showName && <span className="truncate text-muted" title={entry.name}>{entry.name}</span>}
       </span>
     );
   }
@@ -968,7 +968,7 @@ function CellMark({
       >
         {entry.symbol}
       </span>
-      {showName && <span className="truncate">{entry.name}</span>}
+      {showName && <span className="truncate" title={entry.name}>{entry.name}</span>}
       {entry.time && (
         <span className="ml-auto hidden flex-none whitespace-nowrap text-faint @[9rem]:inline">{entry.time}</span>
       )}

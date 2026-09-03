@@ -735,7 +735,7 @@ function TodayTile({ window, templates }: { window: CalendarDayData[]; templates
     return (
       <>
         <Label icon="spark">{t('Today')}</Label>
-        <span className="tile-value truncate">{planned.name}</span>
+        <span className="tile-value truncate" title={planned.name}>{planned.name}</span>
         <span className="field-hint">
           {planned.start_time}–{planned.end_time}
         </span>
@@ -757,7 +757,7 @@ function TodayTile({ window, templates }: { window: CalendarDayData[]; templates
       <>
         <Label icon="spark">{t('Today')}</Label>
         <span className="tile-value"><FlowMoney value={day?.earned ?? 0} /></span>
-        <span className="field-hint truncate">{worked.name}</span>
+        <span className="field-hint truncate" title={worked.name}>{worked.name}</span>
       </>
     );
   }

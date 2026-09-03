@@ -155,7 +155,7 @@ export function BankShape({
 
               return (
                 <div key={move.name} className="flex items-baseline justify-between gap-2 text-[0.86rem]">
-                  <span className="truncate">{move.name}</span>
+                  <span className="truncate" title={move.name}>{move.name}</span>
                   <span className="tabular flex-none">
                     <span className="text-faint"><Money value={Math.round(move.before)} /></span>
                     {' → '}

@@ -100,7 +100,7 @@ export function SearchModal({ open, onClose }: { open: boolean; onClose: () => v
               >
                 <span className="text-[0.88rem] font-semibold">{hit.label}</span>
                 {hit.shifts && <span className="text-[0.8rem] text-muted">{hit.shifts}</span>}
-                {hit.note && <span className="w-full truncate text-[0.8rem] text-faint">{hit.note}</span>}
+                {hit.note && <span className="w-full truncate text-[0.8rem] text-faint" title={hit.note}>{hit.note}</span>}
                 <Money value={hit.earned} className="ml-auto text-[0.85rem] font-semibold text-good-read" />
               </button>
             ))}

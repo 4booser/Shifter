@@ -880,7 +880,7 @@ function Schedule() {
                 <li key={member.member_id} className="grid grid-cols-[7rem_1fr_auto] items-center gap-2 text-[0.85rem]">
                   <span className="flex min-w-0 items-center gap-1.5">
                     <span className="h-2 w-2 flex-none rounded-full" style={{ background: member.colour }} />
-                    <span className="truncate">{member.display_name}</span>
+                    <span className="truncate" title={member.display_name}>{member.display_name}</span>
                   </span>
                   <span className="h-2 overflow-hidden rounded-full bg-surface-2">
                     <span

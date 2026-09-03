@@ -147,7 +147,7 @@ export function StatementCard({
                     style={{ background: item.amount > 0 ? 'var(--good)' : style.hue }}
                     title={item.amount > 0 ? t('arrivals') : category}
                   />
-                  <span className="min-w-0 flex-1 truncate text-[0.88rem]">{item.description}</span>
+                  <span className="min-w-0 flex-1 truncate text-[0.88rem]" title={item.description}>{item.description}</span>
                   <span className="flex-none text-[0.72rem] text-faint tabular">{time(item)}</span>
                   {/* Кешбэк тем же форматом, что и сумма рядом. Голое «+4.00»
                       без валюты и с двумя знаками посреди строки, где всё

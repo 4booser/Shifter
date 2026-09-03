@@ -309,7 +309,7 @@ export function CommandPalette() {
               onClick={command.run}
             >
               <Icon name={command.icon} size={15} className="text-muted" />
-              <span className="flex-1 truncate">{command.label}</span>
+              <span className="flex-1 truncate" title={command.label}>{command.label}</span>
               {command.hint !== undefined && <span className="text-[0.72rem] text-muted">{command.hint}</span>}
             </button>
           ))}

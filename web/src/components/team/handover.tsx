@@ -205,7 +205,7 @@ export function HandoverPanel({ teamId }: { teamId: number }) {
                 <span className={`chip ${item.kind === 'broken' ? 'chip-warn' : ''}`}>
                   {t(item.kind === 'broken' ? 'Broken' : 'Out')}
                 </span>
-                <span className="min-w-0 flex-1 truncate font-medium">{item.name}</span>
+                <span className="min-w-0 flex-1 truncate font-medium" title={item.name}>{item.name}</span>
                 {/* Three weeks broken is a different conversation from this
                     morning, and only the number says which. */}
                 <span className="field-hint">

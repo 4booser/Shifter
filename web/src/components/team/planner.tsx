@@ -481,7 +481,7 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
                 <td className="p-1.5">
                   <span className="flex items-center gap-1.5 text-[0.85rem] font-medium">
                     <span className="h-2.5 w-2.5 flex-none rounded-full" style={{ background: member.colour }} />
-                    <span className="min-w-0 truncate">{member.display_name}</span>
+                    <span className="min-w-0 truncate" title={member.display_name}>{member.display_name}</span>
                     {member.is_owner && <span title={t('owner')}>👑</span>}
                     {!member.is_owner && (board.can_grant ? (
                       <button

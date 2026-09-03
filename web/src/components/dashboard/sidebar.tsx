@@ -109,7 +109,7 @@ export function Sidebar() {
               <li key={location.id} className="group flex items-center gap-2 rounded-(--radius) px-1.5 py-1 hover:bg-surface-2">
                 <span className="h-2.5 w-2.5 flex-none rounded-full" style={{ background: location.colour }} />
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[0.86rem] font-medium">{location.name}</span>
+                  <span className="block truncate text-[0.86rem] font-medium" title={location.name}>{location.name}</span>
                   <span className="field-hint">{t(location.pay_period)}</span>
                 </span>
                 <span className="row-actions gap-0.5">
@@ -193,7 +193,7 @@ export function Sidebar() {
                       {template.symbol ?? template.name.charAt(0)}
                     </span>
                     <span className="min-w-0">
-                      <span className="block truncate text-[0.86rem] font-medium">{template.name}</span>
+                      <span className="block truncate text-[0.86rem] font-medium" title={template.name}>{template.name}</span>
                       {/* Each dot rides with the figure before it, so a
                           wrapped line never opens on a separator. */}
                       <span className="field-hint tabular">
@@ -302,7 +302,7 @@ export function Sidebar() {
                       {item.symbol ?? item.name.charAt(0)}
                     </span>
                     <span className="min-w-0">
-                      <span className="block truncate text-[0.86rem] font-medium">{item.name}</span>
+                      <span className="block truncate text-[0.86rem] font-medium" title={item.name}>{item.name}</span>
                       <span className="field-hint tabular">
                         {item.start_time === null
                           ? t('all day')
@@ -372,7 +372,7 @@ export function Sidebar() {
             {positions.map((position) => (
               <li key={position.id} className="group flex items-center gap-2 rounded-(--radius) px-1.5 py-1 hover:bg-surface-2">
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[0.86rem] font-medium">{position.name}</span>
+                  <span className="block truncate text-[0.86rem] font-medium" title={position.name}>{position.name}</span>
                   <span className="field-hint tabular">
                     {position.price} · {position.percentage ?? 0}%
                   </span>
@@ -415,7 +415,7 @@ export function Sidebar() {
             <ul className="mt-1.5 flex flex-col gap-0.5">
               {archivedTemplates.map((template) => (
                 <li key={`shift-${template.id}`} className="flex items-center gap-2 px-1.5 py-1 opacity-70">
-                  <span className="min-w-0 flex-1 truncate text-[0.85rem]">{template.name}</span>
+                  <span className="min-w-0 flex-1 truncate text-[0.85rem]" title={template.name}>{template.name}</span>
                   <button type="button" className="btn btn-quiet btn-sm" onClick={() => void catalogueActions.archiveShift(template.id, false)}>
                     {t('Restore')}
                   </button>
@@ -423,7 +423,7 @@ export function Sidebar() {
               ))}
               {archivedPositions.map((position) => (
                 <li key={`sale-${position.id}`} className="flex items-center gap-2 px-1.5 py-1 opacity-70">
-                  <span className="min-w-0 flex-1 truncate text-[0.85rem]">{position.name}</span>
+                  <span className="min-w-0 flex-1 truncate text-[0.85rem]" title={position.name}>{position.name}</span>
                   <button type="button" className="btn btn-quiet btn-sm" onClick={() => void catalogueActions.archivePosition(position.id, false)}>
                     {t('Restore')}
                   </button>
@@ -549,7 +549,7 @@ export function Sidebar() {
               <div key={place.location_id} className="flex items-center justify-between gap-2">
                 <dt className="flex min-w-0 items-center gap-1.5 text-muted">
                   <span className="h-2 w-2 flex-none rounded-full" style={{ background: place.colour }} />
-                  <span className="truncate">{place.name}</span>
+                  <span className="truncate" title={place.name}>{place.name}</span>
                 </dt>
                 <dd className="flex-none tabular">
                   {num(Math.round(place.hours * 10) / 10)} {t('h')} ·{' '}

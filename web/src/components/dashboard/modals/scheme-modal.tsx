@@ -122,7 +122,7 @@ export function SchemeModal({ open, onClose }: { open: boolean; onClose: () => v
                     }`}
                     onClick={() => edit(scheme)}
                   >
-                    <span className="truncate text-[0.88rem] font-medium">{scheme.name}</span>
+                    <span className="truncate text-[0.88rem] font-medium" title={scheme.name}>{scheme.name}</span>
                     <span className="ml-auto flex gap-0.5">
                       {(scheme.kind === 'weekday'
                         ? weekdays.map((day) => scheme.byWeekday[day.day])

@@ -48,7 +48,7 @@ export function CitiesCard() {
       <div className="flex flex-col gap-2">
         {rows.map((row) => (
           <div key={row.city} className="flex items-center gap-3">
-            <span className="w-24 flex-none truncate text-[0.9rem] font-semibold">{row.city}</span>
+            <span className="w-24 flex-none truncate text-[0.9rem] font-semibold" title={row.city}>{row.city}</span>
             <div className="h-4 flex-1 overflow-hidden rounded-full bg-surface-2">
               <div
                 className="h-full rounded-full bg-(--accent)/55"

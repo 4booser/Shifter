@@ -213,7 +213,7 @@ export function DocumentsPanel() {
                     : 'border-border'
               }`}
             >
-              <span className="min-w-0 flex-1 truncate font-medium">{row.name}</span>
+              <span className="min-w-0 flex-1 truncate font-medium" title={row.name}>{row.name}</span>
               <span className="tabular text-muted">{formatDate(row.expires_on, lang)}</span>
               <span
                 className={`chip ${

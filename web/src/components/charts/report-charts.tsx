@@ -342,7 +342,7 @@ export function Donut({ slices, centreLabel }: { slices: DonutSlice[]; centreLab
             onPointerLeave={() => setHover(null)}
           >
             <span className="h-2.5 w-2.5 flex-none rounded-full" style={{ background: slice.colour }} />
-            <span className="min-w-0 flex-1 truncate">{slice.label}</span>
+            <span className="min-w-0 flex-1 truncate" title={slice.label}>{slice.label}</span>
             <span className="tabular text-muted">{Math.round((slice.value / total) * 100)}%</span>
             <span className="tabular font-semibold">{format(slice.value)}</span>
           </li>

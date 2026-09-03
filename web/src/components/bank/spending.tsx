@@ -263,7 +263,7 @@ export function SpendCategories({
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="flex items-baseline justify-between gap-2">
-                      <span className="truncate text-[0.9rem] font-semibold">{row.name}</span>
+                      <span className="truncate text-[0.9rem] font-semibold" title={row.name}>{row.name}</span>
                       <span className="flex-none text-right">
                         <span className="tabular block text-[0.92rem] font-bold">
                           <Money value={row.total} />
@@ -388,7 +388,7 @@ export function SpendPlaces({
               className="chip !py-1.5 !text-[0.82rem]"
               title={`${row.name} · ×${row.count}`}
             >
-              <span className="max-w-64 truncate">{row.name}</span>
+              <span className="max-w-64 truncate" title={row.name}>{row.name}</span>
               <b className="tabular"><Money value={row.total} /></b>
               {row.count > 2 && <span className="text-faint">×{row.count}</span>}
             </span>
@@ -486,7 +486,7 @@ export function SpendOddities({
           <div className="flex flex-col gap-1.5">
             {odd.slice(0, 6).map((row) => (
               <div key={row.item.id} className="flex items-baseline justify-between gap-2 text-[0.86rem]">
-                <span className="truncate">{row.item.description}</span>
+                <span className="truncate" title={row.item.description}>{row.item.description}</span>
                 {/* `slice(5)` давал «09-01» — обрывок ISO, который читается
                     как «9 января». Везде в приложении дата пишется днём и
                     месяцем; здесь теперь так же. */}
@@ -566,7 +566,7 @@ function CategoryInside({
       <div className="flex flex-col gap-1">
         {merchants.map((shop) => (
           <div key={shop.name} className="flex items-baseline justify-between gap-2 text-[0.84rem]">
-            <span className="truncate">{shop.name}</span>
+            <span className="truncate" title={shop.name}>{shop.name}</span>
             <span className="tabular flex-none">
               <Money value={shop.total} />
               {shop.count > 1 && <span className="ml-1 text-[0.72rem] text-faint">×{shop.count}</span>}

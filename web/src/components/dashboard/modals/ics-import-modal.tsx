@@ -165,7 +165,7 @@ export function IcsImportModal({ open, onClose }: { open: boolean; onClose: () =
               return (
                 <div key={summary} className="rounded-lg border border-border p-2.5">
                   <div className="flex items-baseline justify-between gap-2">
-                    <span className="min-w-0 truncate text-[0.9rem] font-semibold">{summary}</span>
+                    <span className="min-w-0 truncate text-[0.9rem] font-semibold" title={summary}>{summary}</span>
                     <span className="flex-none text-[0.78rem] text-muted tabular">
                       {n(items.length, 'days')}
                       {usual?.start !== null && usual !== undefined && ` · ${usual.start}${usual.end !== null ? `–${usual.end}` : ''}`}

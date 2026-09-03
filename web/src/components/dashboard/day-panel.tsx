@@ -339,7 +339,7 @@ export function DayPanel() {
                   }}
                 >
                   <span>{event.symbol ?? '•'}</span>
-                  <span className="truncate">{event.name}</span>
+                  <span className="truncate" title={event.name}>{event.name}</span>
                   {event.start_time && (
                     <span className="ml-auto text-[0.72rem] text-faint">
                       {event.start_time}
@@ -384,7 +384,7 @@ export function DayPanel() {
               return (
                 <li key={entry.shift_id} className="rounded-(--radius) border border-border p-2">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="min-w-0 flex-1 truncate text-[0.88rem] font-semibold">{entry.name}</span>
+                    <span className="min-w-0 flex-1 truncate text-[0.88rem] font-semibold" title={entry.name}>{entry.name}</span>
 
                     <button
                       type="button"
@@ -611,7 +611,7 @@ export function DayPanel() {
                 >
                   <div className="flex items-center gap-2">
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-[0.86rem] font-medium">{position.name}</span>
+                      <span className="block truncate text-[0.86rem] font-medium" title={position.name}>{position.name}</span>
                       <span className="field-hint whitespace-nowrap tabular">
                         {position.price} × {position.percentage ?? 0}%
                         {quantity > 0 && (
@@ -949,7 +949,7 @@ function BulkPanel({ keys }: { keys: string[] }) {
               onClick={() => void applyToDates(keys, template)}
             >
               <span>{template.symbol ?? '•'}</span>
-              <span className="min-w-0 truncate">{template.name}</span>
+              <span className="min-w-0 truncate" title={template.name}>{template.name}</span>
               <span className="ml-auto text-[0.72rem] text-muted">
                 {template.start_time}–{template.end_time}
               </span>

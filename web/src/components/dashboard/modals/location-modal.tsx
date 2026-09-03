@@ -207,7 +207,7 @@ export function LocationModal({
               <li key={location.id} className="flex items-center gap-2 rounded-(--radius) border border-border px-2.5 py-1.5">
                 <span className="h-2.5 w-2.5 flex-none rounded-full" style={{ background: location.colour }} />
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[0.88rem] font-medium">{location.name}</span>
+                  <span className="block truncate text-[0.88rem] font-medium" title={location.name}>{location.name}</span>
                   {/* «2026-09-01 – 2026-09-15» is how a database says it.
                       The payout list learned this months ago; this list, on
                       the same fact, had not. */}
@@ -513,7 +513,7 @@ export function LocationModal({
             <ul className="flex flex-col gap-1">
               {archived.map((location) => (
                 <li key={location.id} className="flex items-center gap-2 rounded-(--radius) border border-border px-2.5 py-1.5 opacity-70">
-                  <span className="min-w-0 flex-1 truncate text-[0.85rem]">{location.name}</span>
+                  <span className="min-w-0 flex-1 truncate text-[0.85rem]" title={location.name}>{location.name}</span>
                   <button
                     type="button"
                     className="btn btn-quiet btn-sm"

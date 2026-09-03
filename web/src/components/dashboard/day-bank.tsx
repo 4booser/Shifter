@@ -60,7 +60,7 @@ export function DayBank({ dayKey }: { dayKey: string }) {
           <ul className="flex flex-col gap-1">
             {day.rows.slice(0, 8).map((item) => (
               <li key={item.id} className="flex items-baseline justify-between gap-2 text-[0.78rem]">
-                <span className="truncate text-muted">{item.description}</span>
+                <span className="truncate text-muted" title={item.description}>{item.description}</span>
                 <span className={`flex-none tabular ${item.amount > 0 ? 'text-good-read' : ''}`}>
                   {item.amount > 0 ? '+' : ''}
                   <Money value={fromMinor(item.amount)} />

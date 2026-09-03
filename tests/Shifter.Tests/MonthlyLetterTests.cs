@@ -107,4 +107,29 @@ public class MonthlyLetterTests
         Assert.DoesNotContain("<style", html);
         Assert.DoesNotContain("<link", html);
     }
+
+    /// <summary>
+    /// The letter goes to an inbox, where a reader has nothing to compare a
+    /// figure against and nobody to ask. It used to write «199.5 h» — an
+    /// invariant decimal point and an English unit — under Russian prose.
+    /// </summary>
+    [Fact]
+    public void TheLetterWritesHoursInTheLanguageItIsWrittenIn()
+    {
+        // A month's total is written whole — nobody reads «199,0 ч» — and a
+        // short one keeps its tenth. Both in the reader's own notation.
+        var month = new MonthlyLetter.Facts(
+            "сентябрь 2026", 359_396m, 69_120m, 199.5, 22, null, null, null, 0);
+
+        var html = MonthlyLetter.Html(month, value => $"{value:0} ₴", key => key == "h" ? "ч" : key, "https://x/stop");
+
+        Assert.Contains("200 ч", html);
+        Assert.DoesNotContain(" h<", html);
+
+        var short_ = month with { Hours = 9.5 };
+        var thin = MonthlyLetter.Html(short_, value => $"{value:0} ₴", key => key == "h" ? "ч" : key, "https://x/stop");
+
+        Assert.Contains("9,5 ч", thin);
+        Assert.DoesNotContain("9.5", thin);
+    }
 }

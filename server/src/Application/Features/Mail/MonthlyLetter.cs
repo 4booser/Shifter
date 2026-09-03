@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text;
+using Shifter.Application.Common.Text;
 
 namespace Shifter.Application.Features.Mail;
 
@@ -64,7 +65,7 @@ public static class MonthlyLetter
 
         body.Append("<table style=\"width:100%;border-collapse:collapse;font-size:14px\">");
 
-        Row(body, t("Worked"), $"{facts.Days} · {Hours(facts.Hours)}");
+        Row(body, t("Worked"), $"{facts.Days} · {Hours(facts.Hours, t)}");
 
         if (facts.Tips > 0m) Row(body, t("Of that, tips"), money(facts.Tips));
 
@@ -117,8 +118,14 @@ public static class MonthlyLetter
         return $"{money(then)} · {sign}{Math.Abs(Math.Round(share * 100))}%";
     }
 
-    private static string Hours(double hours)
-        => $"{Math.Round(hours, 1).ToString(CultureInfo.InvariantCulture)} h";
+    /// <summary>
+    /// The letter used to write «199.5 h» — an invariant decimal point and an
+    /// English unit, inside a letter that is Russian from the subject line
+    /// down. It goes out to somebody's inbox, where there is nothing to
+    /// compare it against and no way to ask.
+    /// </summary>
+    private static string Hours(double hours, Func<string, string> t)
+        => $"{Figures.Hours(hours)} {t("h")}";
 
     /// <summary>
     /// A venue called "Bar &amp; Grill" must not become markup, and a note

@@ -66,8 +66,8 @@ public static class BriefWriter
         if (facts.StreakDays >= 3)
         {
             body.Add(say.Of(
-                $"Серия: {facts.StreakDays} дня подряд со сменами.",
-                $"Серія: {facts.StreakDays} дні поспіль зі змінами."));
+                $"Серия: {facts.StreakDays} {Telegram.TelegramCommands.Plural(facts.StreakDays, "день", "дня", "дней")} подряд со сменами.",
+                $"Серія: {facts.StreakDays} {Telegram.TelegramCommands.Plural(facts.StreakDays, "день", "дні", "днів")} поспіль зі змінами."));
         }
 
         if (facts.DaysToPayday is int days && facts.PaydayAmount is decimal amount && amount > 0)

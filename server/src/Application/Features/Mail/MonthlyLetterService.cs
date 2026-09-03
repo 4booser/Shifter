@@ -8,6 +8,7 @@ using Serilog;
 
 using Shifter.Domain.Entities;
 using Shifter.Infrastructure.Persistence.DbContexts;
+using Shifter.Application.Common.Text;
 
 namespace Shifter.Application.Features.Mail;
 
@@ -118,7 +119,11 @@ public sealed class MonthlyLetterService : BackgroundService
         // August" is a true sentence nobody needs posted to them.
         if (facts.Days == 0) return;
 
-        string Money(decimal value) => $"{Math.Round(value):N0}".Replace(",", " ");
+        // Formatted by whatever culture the server happens to run under and
+        // then patched, and with no currency mark at all: a subject line
+        // reading «сентябрь 2026: 359 396» about money. The one formatter this
+        // app writes numbers with.
+        string Money(decimal value) => Figures.Money(value);
 
         await mail.SendAsync(
             user.Email!,
@@ -176,7 +181,10 @@ public sealed class MonthlyLetterService : BackgroundService
             .FirstOrDefault();
 
         return new MonthlyLetter.Facts(
-            from.ToString("MMMM yyyy"),
+            // The letter is Russian from the subject line down; its month
+            // name was whatever the server's culture said, so a box running
+            // under en-US posted «September 2026» over Russian prose.
+            from.ToString("MMMM yyyy", Figures.Ru),
             Earned(worked),
             worked.Sum(day => day.Tips ?? 0m),
             worked.Sum(day =>
@@ -208,6 +216,7 @@ public sealed class MonthlyLetterService : BackgroundService
         "Same month last year" => "Тот же месяц год назад",
         "Days worked but not filled in" => "Смены без записанных чаевых",
         "Stop these letters" => "Больше не присылать",
+        "h" => "ч",
         _ => key,
     };
 

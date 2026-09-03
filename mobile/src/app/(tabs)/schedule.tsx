@@ -632,7 +632,15 @@ function TemplateModal({
 
   return (
     <Modal visible={assignment !== null} animationType="slide" transparent onRequestClose={onClose}>
-      <Pressable style={styles.backdrop} onPress={onClose} />
+      {/* A full-screen «tap outside to close». Unnamed, a screen reader
+          announces it as a button and says nothing about what it does —
+          the first thing met on entering every sheet in this app. */}
+      <Pressable
+        style={styles.backdrop}
+        accessibilityRole="button"
+        accessibilityLabel={t('Закрыть')}
+        onPress={onClose}
+      />
       <ScrollView style={styles.tallSheet} contentContainerStyle={styles.tallSheetInner}>
         <Text style={styles.sheetTitle}>{t('Чем считать эту смену')}</Text>
         <Text style={styles.lead}>
@@ -795,7 +803,15 @@ function JoinModal({
 
   return (
     <Modal visible={open} animationType="slide" transparent onRequestClose={onClose}>
-      <Pressable style={styles.backdrop} onPress={onClose} />
+      {/* A full-screen «tap outside to close». Unnamed, a screen reader
+          announces it as a button and says nothing about what it does —
+          the first thing met on entering every sheet in this app. */}
+      <Pressable
+        style={styles.backdrop}
+        accessibilityRole="button"
+        accessibilityLabel={t('Закрыть')}
+        onPress={onClose}
+      />
       <View style={styles.sheet}>
         <Text style={styles.sheetTitle}>{t('Код приглашения')}</Text>
         <TextInput

@@ -503,7 +503,15 @@ function FillSheet({
 
   return (
     <Modal visible={open} animationType="slide" transparent onRequestClose={onClose}>
-      <Pressable style={styles.backdrop} onPress={onClose} />
+      {/* A full-screen «tap outside to close». Unnamed, a screen reader
+          announces it as a button and says nothing about what it does —
+          the first thing met on entering every sheet in this app. */}
+      <Pressable
+        style={styles.backdrop}
+        accessibilityRole="button"
+        accessibilityLabel={t('Закрыть')}
+        onPress={onClose}
+      />
       <ScrollView style={styles.tallSheet} contentContainerStyle={styles.sheetInner}>
         <Text style={styles.sheetTitle}>{t('Раздать смену')}</Text>
         <Text style={styles.lead}>{t('Достанется тем, у кого неделя легче и кто не отметил «не могу». Черновиками — потом можно поправить.')}</Text>
@@ -663,7 +671,15 @@ function CellEditor({
 
   return (
     <Modal visible={editing !== null} animationType="slide" transparent onRequestClose={onClose}>
-      <Pressable style={styles.backdrop} onPress={onClose} />
+      {/* A full-screen «tap outside to close». Unnamed, a screen reader
+          announces it as a button and says nothing about what it does —
+          the first thing met on entering every sheet in this app. */}
+      <Pressable
+        style={styles.backdrop}
+        accessibilityRole="button"
+        accessibilityLabel={t('Закрыть')}
+        onPress={onClose}
+      />
       <View style={styles.sheet}>
         <Text style={styles.sheetTitle}>{t('Поставить смену')}</Text>
         <Text style={styles.lead}>{editing !== null ? dayLabel(editing.date) : ''}</Text>

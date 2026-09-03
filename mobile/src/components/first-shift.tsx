@@ -148,7 +148,15 @@ export function FirstShift({
 
   return (
     <Modal visible={open} transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable style={styles.backdrop} onPress={onClose} />
+      {/* A full-screen «tap outside to close». Unnamed, a screen reader
+          announces it as a button and says nothing about what it does —
+          the first thing met on entering every sheet in this app. */}
+      <Pressable
+        style={styles.backdrop}
+        accessibilityRole="button"
+        accessibilityLabel={t('Закрыть')}
+        onPress={onClose}
+      />
 
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View style={[styles.sheet, { paddingBottom: insets.bottom + 12 }]}>

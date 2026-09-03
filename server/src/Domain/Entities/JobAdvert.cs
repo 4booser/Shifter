@@ -37,6 +37,33 @@ public static class JobAdvert
     private static readonly TimeSpan Timeout = TimeSpan.FromMilliseconds(200);
 
     /// <summary>
+    /// A match, or nothing, but never an exception.
+    ///
+    /// Every pattern here carries a 200 ms guard against a pathological
+    /// advert, and nothing caught what the guard throws. A
+    /// <see cref="RegexMatchTimeoutException"/> came straight out of
+    /// <see cref="Parse"/> — so a busy moment turned «we could not read the
+    /// hours out of this advert» into a failed request, on the one screen
+    /// where somebody is pasting a stranger's text and the whole design is
+    /// to read what can be read and leave the rest null. Found when a
+    /// compiled pattern's first match, JIT and all, went over the guard
+    /// under a loaded test run.
+    /// </summary>
+    private static Match? Scan(Regex pattern, string body)
+    {
+        try
+        {
+            var match = pattern.Match(body);
+
+            return match.Success ? match : null;
+        }
+        catch (RegexMatchTimeoutException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
     /// "10:00–22:00", "з 10.00 до 22.00", "10-22".
     ///
     /// The bare "10-22" form is deliberately last and deliberately narrow: it
@@ -95,9 +122,9 @@ public static class JobAdvert
 
     private static (decimal?, string?) ReadPay(string body)
     {
-        var match = Pay.Match(body);
+        var match = Scan(Pay, body);
 
-        if (!match.Success) return (null, null);
+        if (match is null) return (null, null);
 
         var group = match.Groups["low"].Success ? "low" : "amount";
 
@@ -126,9 +153,9 @@ public static class JobAdvert
 
     private static decimal? ReadPercent(string body)
     {
-        var match = Share.Match(body);
+        var match = Scan(Share, body);
 
-        if (!match.Success) return null;
+        if (match is null) return null;
 
         if (!decimal.TryParse(
                 match.Groups["percent"].Value.Replace(',', '.'),
@@ -147,9 +174,9 @@ public static class JobAdvert
 
     private static (TimeOnly Start, TimeOnly End)? ReadSpan(string body)
     {
-        var match = Span.Match(body);
+        var match = Scan(Span, body);
 
-        if (!match.Success) return null;
+        if (match is null) return null;
 
         var h1 = int.Parse(match.Groups["h1"].Value);
         var h2 = int.Parse(match.Groups["h2"].Value);
@@ -163,9 +190,9 @@ public static class JobAdvert
 
     private static int? ReadBreak(string body)
     {
-        var match = Break.Match(body);
+        var match = Scan(Break, body);
 
-        if (!match.Success) return null;
+        if (match is null) return null;
 
         var minutes = int.Parse(match.Groups["minutes"].Value);
 

@@ -61,6 +61,25 @@ public class JobAdvertTests
         Assert.Equal(250m, read.PayAmount);
     }
 
+    /// <summary>
+    /// Reading nothing is an answer; throwing is not.
+    ///
+    /// Every pattern carries a 200 ms guard, and for a long time nothing
+    /// caught what the guard throws — so a slow match came out of Parse as a
+    /// RegexMatchTimeoutException, on the one screen where somebody is
+    /// pasting a stranger's text.
+    /// </summary>
+    [Fact]
+    public void AnAdvertItCannotReadIsStillAnAnswer()
+    {
+        var awkward = new string('9', 8_000) + " грн з 10.00 до " + new string('0', 8_000);
+
+        var read = JobAdvert.Parse(awkward);
+
+        Assert.Null(read.Start);
+        Assert.Null(read.End);
+    }
+
     [Theory]
     [InlineData("з 10.00 до 22.00")]
     [InlineData("10:00 - 22:00")]

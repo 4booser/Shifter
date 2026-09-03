@@ -190,12 +190,20 @@ export default function LiveScreen() {
           <Text style={[styles.ticker, resting && styles.tickerResting]}>{stopwatch(paid)}</Text>
 
           {earnedNow !== null ? (
-            <Roll
-              value={earnedNow}
-              prefix="₴"
-              style={[styles.earned, { color: resting ? palette.textSecondary : palette.good }]}
-              duration={900}
-            />
+            <>
+              <Roll
+                value={earnedNow}
+                prefix="₴"
+                style={[styles.earned, { color: resting ? palette.textSecondary : palette.good }]}
+                duration={900}
+              />
+              {/* The rate times the clock, and nothing else: the night
+                  premium, the overtime and the tips all land on the day when
+                  it is recorded. The web tile says the same thing; teaching
+                  either one the server's rules would be a second copy of
+                  them. */}
+              <Text style={styles.noRate}>{t('по ставке')}</Text>
+            </>
           ) : (
             <Text style={styles.noRate}>{t('без почасовой ставки')}</Text>
           )}

@@ -229,9 +229,12 @@ export default function StatsScreen() {
   // fifty seconds priced the hour at −₴3 805 on the web pages and in the
   // assistant before both learned to hold an hour as the floor; this guarded
   // only against dividing by nought.
+  // Null, not nought: under an hour of work there is no rate to quote, and a
+  // «₴0» beside «↓ 100%» says the hour collapsed rather than that it was
+  // never counted.
   const perHour =
     summary === null || summary.hours < 1
-      ? 0
+      ? null
       : (summary.conversion?.total_earned ?? summary.total_earned) / summary.hours;
 
   // The same period a year or a month back, cut to the same length where this
@@ -332,6 +335,7 @@ export default function StatsScreen() {
             summary?.conversion?.total_earned ?? summary?.total_earned ?? 0,
             earnedBefore ?? 0,
           )}
+          sign={summary?.conversion?.total_earned ?? summary?.total_earned ?? 0}
           strong
         />
         {/* Every other figure on this screen is guarded; this one stamped a
@@ -341,11 +345,13 @@ export default function StatsScreen() {
           palette={palette}
           label={t("В час")}
           value={
-            (summary?.currencies ?? []).length > 1
-              ? moneyIn(summary?.conversion?.base_currency ?? 'UAH', perHour)
-              : money(perHour)
+            perHour === null
+              ? '—'
+              : (summary?.currencies ?? []).length > 1
+                ? moneyIn(summary?.conversion?.base_currency ?? 'UAH', perHour)
+                : money(perHour)
           }
-          change={changeOf(perHour, perHourBefore ?? 0)}
+          change={perHour === null || perHourBefore === null ? null : changeOf(perHour, perHourBefore)}
         />
         <Kpi
           palette={palette}
@@ -549,6 +555,7 @@ function Kpi({
   value,
   amount,
   change,
+  sign,
   strong = false,
 }: {
   palette: Palette;
@@ -557,6 +564,14 @@ function Kpi({
   value?: string;
   /** A plain count, which can be rolled rather than swapped. */
   amount?: number;
+  /**
+   * The headline's own sign, where it has one.
+   *
+   * `strong` used to mean «paint it green», and a month that finished at
+   * −₴156 printed the loss in the good colour with a red «↓ 104%» directly
+   * underneath it — the two halves of one tile disagreeing.
+   */
+  sign?: number;
   /** Per cent against the same period before. Null where there is none. */
   change?: number | null;
   strong?: boolean;
@@ -568,9 +583,14 @@ function Kpi({
       <Text style={styles.kpiLabel}>{label}</Text>
 
       {amount === undefined ? (
-        <Text style={[styles.kpiValue, strong && styles.kpiValueStrong]}>{value}</Text>
+        <Text style={[styles.kpiValue, strong && styles.kpiValueStrong, strong && toneOf(palette, sign)]}>
+          {value}
+        </Text>
       ) : (
-        <Roll value={amount} style={[styles.kpiValue, strong && styles.kpiValueStrong]} />
+        <Roll
+          value={amount}
+          style={[styles.kpiValue, strong && styles.kpiValueStrong, strong && toneOf(palette, sign)]}
+        />
       )}
 
       {/* Zero is worth saying — "the same as last month" is an answer. Null is
@@ -589,6 +609,14 @@ function Kpi({
     </View>
   );
 }
+
+/** Green for money made, red for money lost, plain ink for nought. */
+const toneOf = (palette: Palette, sign: number | undefined) =>
+  sign === undefined || sign > 0
+    ? null
+    : sign < 0
+      ? { color: palette.danger }
+      : { color: palette.text };
 
 const makeStyles = (palette: Palette) =>
   StyleSheet.create({

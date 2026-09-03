@@ -1,7 +1,7 @@
 import '../../global.css';
-import { Stack } from 'expo-router';
+import { Stack, router } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useColorScheme } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -30,6 +30,28 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (session !== undefined) void SplashScreen.hideAsync();
+  }, [session]);
+
+  /*
+   * Simulator convenience only, the sibling of EXPO_PUBLIC_AUTOLOGIN:
+   * EXPO_PUBLIC_START_AT="/(tabs)/stats" opens straight onto that screen.
+   *
+   * A screenshot of a phone screen is the only way to know what it actually
+   * looks like, and there is no way to tap one from here — iOS asks to
+   * confirm every deep link opened from the command line, and the
+   * confirmation itself needs a tap. Dev builds read env at bundle time;
+   * a store build never takes this path.
+   */
+  const jumped = useRef(false);
+
+  useEffect(() => {
+    const at = process.env.EXPO_PUBLIC_START_AT;
+
+    if (!__DEV__ || at === undefined || at === '' || jumped.current) return;
+    if (session === undefined || session === null) return;
+
+    jumped.current = true;
+    router.replace(at as Parameters<typeof router.replace>[0]);
   }, [session]);
 
   // The push address is offered once there is somebody to notify, and the

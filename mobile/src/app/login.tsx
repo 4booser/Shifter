@@ -249,8 +249,16 @@ export default function LoginScreen() {
 
           {error !== null && <Text style={styles.error}>{error}</Text>}
 
+          {/* The disabled state has to still look like a button. Empty
+              fields left white text sitting on the card with no fill under
+              it — on the very first screen of the app, the only thing to
+              press was invisible until something had been typed. */}
           <Pressable
-            style={({ pressed }) => [styles.button, pressed && styles.pressed]}
+            style={({ pressed }) => [
+              styles.button,
+              (busy || login.trim() === '' || password === '') && styles.buttonOff,
+              pressed && styles.pressed,
+            ]}
             disabled={busy || login.trim() === '' || password === ''}
             onPress={() => void submit()}
           >
@@ -321,6 +329,7 @@ const makeStyles = (palette: Palette) =>
       alignItems: 'center',
       marginTop: 4,
     },
+    buttonOff: { opacity: 0.45 },
     pressed: { opacity: 0.85 },
     buttonText: { color: '#fff', fontSize: 16, fontWeight: '700' },
     switch: { color: palette.accent, textAlign: 'center', paddingVertical: 6, fontWeight: '600' },

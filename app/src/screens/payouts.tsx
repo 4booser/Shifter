@@ -37,8 +37,17 @@ export function Payouts() {
   const settings = useSettings((state) => state.settings);
   const money = (value: number) => formatMoney(settings, Math.round(value));
 
+  /*
+   * Six months back, two ahead — the same window the phone asks for.
+   *
+   * They used to differ (three back here, six there), and «what am I owed»
+   * is a sum over whatever range is asked for, so the same account answered
+   * ₴104 370 on one screen and ₴221 380 on the other, with nothing on either
+   * saying they were looking at different amounts of history. Money owed from
+   * five months ago is still owed.
+   */
   const now = currentMonth();
-  const from = `${addMonths(now, -3).year}-${`${addMonths(now, -3).month}`.padStart(2, '0')}-01`;
+  const from = `${addMonths(now, -6).year}-${`${addMonths(now, -6).month}`.padStart(2, '0')}-01`;
   const ahead = addMonths(now, 2);
   const last = new Date(ahead.year, ahead.month - 1, 0);
   const to = `${last.getFullYear()}-${`${last.getMonth() + 1}`.padStart(2, '0')}-${`${last.getDate()}`.padStart(2, '0')}`;
@@ -74,10 +83,17 @@ export function Payouts() {
     .sort((one, two) => two.due_on.localeCompare(one.due_on))
     .slice(0, 8);
 
-  const owed = waiting.reduce((sum, row) => sum + (row.expected - row.paid), 0);
-  const late = waiting
-    .filter((row) => row.status === 'overdue' || row.status === 'short')
-    .reduce((sum, row) => sum + (row.expected - row.paid), 0);
+  /*
+   * The server's own totals, not a second opinion.
+   *
+   * These were being re-derived here from the rows, and the rules had drifted
+   * apart: this one counted every unsettled period including the one still
+   * being worked, and looked for a status called 'short' while the server
+   * counts a part-paid period that has passed its date. Two answers to one
+   * question, and the authoritative one was already in the payload.
+   */
+  const owed = schedule.data?.awaited ?? 0;
+  const late = schedule.data?.overdue ?? 0;
 
   const days = next === null ? null : Math.round(
     (new Date(`${next.day}T00:00:00`).getTime() - new Date(`${todayKey()}T00:00:00`).getTime()) / 86_400_000,

@@ -135,7 +135,10 @@ export default function PayoutsScreen() {
     const now = currentMonth();
     return {
       from: monthBounds(addMonths(now, -6)).from,
-      to: monthBounds(addMonths(now, 1)).to,
+      // Two months ahead, matching the web: a period due next month is money
+      // this screen exists to name, and the two clients answering «what am I
+      // owed» over different windows gave the same account two totals.
+      to: monthBounds(addMonths(now, 2)).to,
     };
   }, []);
 

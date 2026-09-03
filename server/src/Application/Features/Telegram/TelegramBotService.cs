@@ -10,6 +10,7 @@ using Shifter.Application.Features.business.Services.Interfaces;
 using Shifter.Domain.Entities;
 using Shifter.Infrastructure.Persistence.DbContexts;
 using Shifter.Infrastructure.Repositories.Interfaces;
+using Shifter.Application.Common.Text;
 
 namespace Shifter.Application.Features.Telegram;
 
@@ -217,7 +218,10 @@ public sealed class TelegramBotService : BackgroundService
                     return "Сверка выплат молчит: либо всё уже выплачено, либо у мест не задан день зарплаты.";
 
                 var wait = due.due_on.DayNumber - today.DayNumber;
-                var amount = $"{Math.Round(due.expected):N0}".Replace(',', ' ');
+                // Formatted by the current culture and then patched, which is
+                // two ways of being wrong about a separator. It uses the one
+                // formatter this app writes numbers with.
+                var amount = Figures.Count((double)due.expected);
 
                 return wait == 0
                     ? $"Деньги должны прийти сегодня — {amount} грн ({due.location_name})."

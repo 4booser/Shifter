@@ -28,13 +28,12 @@ public record BriefBlockDto(string kind, string emoji, string title, BriefLineDt
 /// </summary>
 public static class BriefBlocks
 {
-    private static readonly CultureInfo Ru = CultureInfo.GetCultureInfo("ru-RU");
+    private static readonly CultureInfo Ru = Figures.Ru;
 
-    private static string Money(decimal value) =>
-        $"{Math.Round(value).ToString("N0", Ru).Replace(',', ' ')} ₴";
+    private static string Money(decimal value) => Figures.Money(value);
 
     private static string Hours(double value, Say say) =>
-        $"{Math.Round(value, value < 10 ? 1 : 0).ToString(Ru)} {say.Of("ч", "год")}";
+        $"{Figures.Hours(value)} {say.Of("ч", "год")}";
 
     private static readonly string[] MonthsRu =
     [
@@ -172,7 +171,11 @@ public static class BriefBlocks
         // the comparison — the line the tiles cannot say.
         List<BriefLineDto> lines = [];
 
-        if (month.hours > 0)
+        // An hourly rate divided out of minutes is not a rate. A month holding
+        // one shift closed after fifty seconds priced the hour at −₴7 805 in
+        // the day's own summary, beside two other screens that had already
+        // learned to say nothing. Under an hour there is no hour to quote.
+        if (month.hours >= 1)
             lines.Add(new BriefLineDto(say.Of("Ваш час стоит", "Ваша година коштує"), Money(month.total_earned / (decimal)month.hours)));
 
         // Only the same number of days back, or a full month always beats a

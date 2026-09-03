@@ -12,14 +12,14 @@ namespace Shifter.Application.Features.Brief;
 /// </summary>
 public static class BriefWriter
 {
-    private static readonly CultureInfo Ru = CultureInfo.GetCultureInfo("ru-RU");
+    private static readonly CultureInfo Ru = Figures.Ru;
 
     public static (string Headline, string Body, string Tip, string Mood) Compose(
         BriefFacts facts,
         string? lang = null)
     {
         var say = Say.In(lang);
-        var money = (decimal value) => value.ToString("N0", Ru).Replace(',', ' ');
+        var money = (decimal value) => value.ToString("N0", Ru);
 
         var headline = facts.ShiftName is null
             ? say.Of("Сегодня выходной", "Сьогодні вихідний")
@@ -42,13 +42,19 @@ public static class BriefWriter
         {
             var left = Math.Max(0, goal - facts.MonthEarned);
 
+            // A month that closed in the red makes the share of the goal a
+            // small negative, and rounding it lands on negative zero: the
+            // day's summary read «осталось 40 156 ₴ (-0%)». Nothing has been
+            // put towards a goal here, and that is nought per cent.
+            var share = Math.Max(0, Math.Round(progress * 100));
+
             body.Add(progress >= 1
                 ? say.Of(
                     $"Цель {money(goal)} ₴ уже взята — дальше всё сверху.",
                     $"Ціль {money(goal)} ₴ уже взята — далі все зверху.")
                 : say.Of(
-                    $"До цели {money(goal)} ₴ осталось {money(left)} ₴ ({Math.Round(progress * 100)}%).",
-                    $"До цілі {money(goal)} ₴ лишилося {money(left)} ₴ ({Math.Round(progress * 100)}%)."));
+                    $"До цели {money(goal)} ₴ осталось {money(left)} ₴ ({share}%).",
+                    $"До цілі {money(goal)} ₴ лишилося {money(left)} ₴ ({share}%)."));
         }
         else if (facts.ProjectedMonth > facts.MonthEarned)
         {

@@ -1,5 +1,7 @@
 using System.Globalization;
 
+using Shifter.Application.Common.Text;
+
 namespace Shifter.Application.Features.Assistant;
 
 /// <summary>
@@ -11,35 +13,11 @@ namespace Shifter.Application.Features.Assistant;
 /// </summary>
 public static class AssistantWriter
 {
-    /// <summary>
-    /// Russian numbers with a plain space between the thousands.
-    ///
-    /// Every formatter here used to end in <c>.Replace(',', ' ')</c>, aimed at
-    /// a group separator. In ru-RU the comma is the <em>decimal</em> separator,
-    /// so two hundredths of an hour came out of it as «0 0 ч» — two numbers
-    /// where the assistant meant one, in the sentence it opens with. The
-    /// separator is set on the format now, and nothing is patched out of the
-    /// finished string.
-    /// </summary>
-    private static readonly CultureInfo Ru = Spaced();
+    private static readonly CultureInfo Ru = Figures.Ru;
 
-    private static CultureInfo Spaced()
-    {
-        var culture = (CultureInfo)CultureInfo.GetCultureInfo("ru-RU").Clone();
+    public static string Money(decimal value) => Figures.Money(value);
 
-        culture.NumberFormat.NumberGroupSeparator = " ";
-        // The typographic minus the rest of the app writes. The assistant said
-        // «-76 ₴» in a sentence sitting beside a tile that said «−76 ₴».
-        culture.NumberFormat.NegativeSign = "−";
-
-        return culture;
-    }
-
-    public static string Money(decimal value) =>
-        $"{Math.Round(value).ToString("N0", Ru)} ₴";
-
-    private static string Hours(double value) =>
-        $"{Math.Round(value, value < 10 ? 1 : 0).ToString(value < 10 ? "N1" : "N0", Ru)} ч";
+    private static string Hours(double value) => $"{Figures.Hours(value)} ч";
 
     /// <summary>
     /// A plain count, grouped the way the money beside it is.
@@ -47,8 +25,7 @@ public static class AssistantWriter
     /// The assistant's card put «Заработано 359 396 ₴» next to «Часов 2512»,
     /// two spellings of a thousand a finger apart.
     /// </summary>
-    public static string Count(double value) =>
-        Math.Round(value).ToString("N0", Ru);
+    public static string Count(double value) => Figures.Count(value);
 
     /// <summary>
     /// "1 смена", "2 смены", "5 смен". Russian declines after a number and
@@ -231,7 +208,7 @@ public static class AssistantWriter
     private static string Amount(AssistantPlace place) =>
         place.Currency == "UAH"
             ? Money(place.Earned)
-            : $"{Math.Round(place.Earned).ToString("N0", Ru).Replace(',', ' ')} {place.Currency}";
+            : $"{Math.Round(place.Earned).ToString("N0", Ru)} {place.Currency}";
 
     /// <summary>The places, biggest first. The only honest shape when currencies differ.</summary>
     private static string Places(AssistantFacts facts) =>

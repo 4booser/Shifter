@@ -53,7 +53,9 @@ export function LiveBar() {
     onSuccess: (done) => {
       void client.invalidateQueries({ queryKey: ['days'] });
 
-      if (done !== null) toast.success(`${t('Shift closed')} — ${formatElapsed(done.elapsed)} ${t('on the clock')}`);
+      if (done !== null) {
+      toast.success(t('Shift closed — {length} on the clock', { length: formatElapsed(done.elapsed) }));
+    }
     },
     onError: () => toast.error(t('The shift could not be recorded. Try again.')),
   });

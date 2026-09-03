@@ -127,8 +127,12 @@ export function GoalCard() {
         {done
           ? t('The goal is met — everything further is on top.')
           : daysLeft > 0
-            ? `${t('Left')} ${money(left)} ${t('over')} ${n(daysLeft, 'days')} — ${money(perDay)} ${t('a day')}.`
-            : `${t('Short by')} ${money(left)}.`}
+            ? t('{left} left over {days} — {perDay} a day.', {
+                left: money(left),
+                days: n(daysLeft, 'days'),
+                perDay: money(perDay),
+              })
+            : t('Short by {money}.', { money: money(left) })}
       </p>
     </section>
   );

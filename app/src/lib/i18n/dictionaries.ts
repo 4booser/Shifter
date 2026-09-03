@@ -2923,6 +2923,9 @@ export const RU: Dictionary = {
   'Team «{team}» created': 'Команда «{team}» создана',
   'signed in {day}': 'вошли {day}',
   'break {length}': 'перерыв {length}',
+  '{left} left over {days} — {perDay} a day.': 'Осталось {left} на {days} — по {perDay} в день.',
+  'Short by {money}.': 'Не хватило {money}.',
+  'Shift closed — {length} on the clock': 'Смена закрыта — {length} на часах',
 };
 
 export const UK: Dictionary = {
@@ -5830,4 +5833,7 @@ export const UK: Dictionary = {
   'Team «{team}» created': 'Команду «{team}» створено',
   'signed in {day}': 'увійшли {day}',
   'break {length}': 'перерва {length}',
+  '{left} left over {days} — {perDay} a day.': 'Залишилось {left} на {days} — по {perDay} на день.',
+  'Short by {money}.': 'Не вистачило {money}.',
+  'Shift closed — {length} on the clock': 'Зміну закрито — {length} на годиннику',
 };

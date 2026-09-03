@@ -24,7 +24,7 @@ import { perHour } from '@/lib/text/rate';
 type Span = 'month' | 'year';
 
 export function Stats() {
-  const { t } = useI18n();
+  const { t, n } = useI18n();
   const settings = useSettings((state) => state.settings);
   const money = (value: number) => formatMoney(settings, Math.round(value));
   const [span, setSpan] = useState<Span>('month');
@@ -182,7 +182,7 @@ export function Stats() {
           label: names[weekday]!,
           value: average,
           shown: money(average),
-          hint: `${seen.days} ${seen.days === 1 ? t('day') : t('d.')}`,
+          hint: n(seen.days, 'days'),
         };
       });
   }, [summary, settings.mondayFirst]);
@@ -253,7 +253,7 @@ export function Stats() {
       label: REASON_NAMES[split.reason] ?? split.reason,
       value: split.amount,
       shown: money(split.amount),
-      hint: `${split.days} ${split.days === 1 ? t('day') : t('d.')}`,
+      hint: n(split.days, 'days'),
       colour: 'var(--danger)',
     }),
   );

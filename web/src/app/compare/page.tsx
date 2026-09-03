@@ -125,7 +125,7 @@ function Compare() {
     { label: 'Earned', a: a.total_earned, b: b.total_earned, money: true },
     { label: 'Hours', a: a.hours, b: b.hours },
     { label: 'Days worked', a: a.days_worked, b: b.days_worked },
-    { label: 'Per hour', a: avgA.perHour, b: avgB.perHour, money: true, unset: (value) => value === 0 },
+    { label: 'Per hour', a: avgA.perHour ?? 0, b: avgB.perHour ?? 0, money: true, unset: () => avgA.perHour === null || avgB.perHour === null },
     { label: 'Per working day', a: avgA.perDay, b: avgB.perDay, money: true },
     { label: 'Tips', a: a.tips_earned, b: b.tips_earned, money: true },
     { label: 'Take-home', a: a.net_earned, b: b.net_earned, money: true },
@@ -207,7 +207,7 @@ function Compare() {
               <Money value={a.total_earned - b.total_earned} className="font-bold text-danger-read" />
             </>
           )}
-          {avgA.perHour > 0 && avgB.perHour > 0 && (
+          {avgA.perHour !== null && avgB.perHour !== null && avgA.perHour > 0 && avgB.perHour > 0 && (
             <span className="field-hint block">
               {t('The hour went from')} {format(avgA.perHour)} {t('to')} {format(avgB.perHour)}.
             </span>

@@ -15,6 +15,7 @@ import { useMono } from '@/lib/mono/store';
 import { downloadBlob } from '@/lib/export/xlsx';
 import { CountUp } from '@/components/ui/motion';
 import { Money } from '@/components/ui/bits';
+import { earnedTone } from '@/lib/tone';
 
 /**
  * «Куда уходят деньги» — the spending half of the bank tab, rebuilt to be
@@ -143,7 +144,7 @@ export function SpendHeadline({
           <div className="text-right">
             <div className="text-[0.85rem]">
               <span className="text-muted">{t('Came in')}</span>{' '}
-              <b className="tabular text-good-read"><Money value={totals.earned} /></b>
+              <b className={`tabular ${earnedTone(totals.earned)}`}><Money value={totals.earned} /></b>
             </div>
             {usual > 0 && (
               <div className="text-[0.85rem]">

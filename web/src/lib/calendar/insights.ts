@@ -13,8 +13,17 @@ export interface Averages {
   hoursPerDay: number;
   tipsPerDay: number;
   salesPerDay: number;
-  perHour: number;
-  tipsPerHour: number;
+  /**
+   * What an hour was worth, or null where there is no honest answer.
+   *
+   * Null rather than nought, because nought is a figure and every screen
+   * printed it as one: «В час 0 ₴» beside «↓ 100%» on the comparison table,
+   * on the report, and in the month's share text — all of them saying the
+   * hour had collapsed, when the truth was that under an hour of work there
+   * was nothing to divide.
+   */
+  perHour: number | null;
+  tipsPerHour: number | null;
   perShift: number;
   hoursPerShift: number;
   /** Share of everything earned that arrived as tips, in percent. */
@@ -28,8 +37,8 @@ const EMPTY: Averages = {
   hoursPerDay: 0,
   tipsPerDay: 0,
   salesPerDay: 0,
-  perHour: 0,
-  tipsPerHour: 0,
+  perHour: null,
+  tipsPerHour: null,
   perShift: 0,
   hoursPerShift: 0,
   tipShare: 0,
@@ -64,8 +73,8 @@ export function averagesFor(summary: DaysResponse): Averages {
     // after fifty seconds priced the hour at −₴3 805 on the statistics page,
     // beside a card that said nought hours had been worked. Under an hour
     // there is nothing to quote.
-    perHour: summary.hours < 1 ? 0 : per(summary.total_earned, summary.hours),
-    tipsPerHour: summary.hours < 1 ? 0 : per(summary.tips_earned, summary.hours),
+    perHour: summary.hours < 1 ? null : per(summary.total_earned, summary.hours),
+    tipsPerHour: summary.hours < 1 ? null : per(summary.tips_earned, summary.hours),
     perShift: per(summary.total_earned, shifts),
     hoursPerShift: per(summary.hours, shifts),
     tipShare: per(summary.tips_earned, summary.total_earned) * 100,

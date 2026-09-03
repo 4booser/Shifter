@@ -66,12 +66,32 @@ describe('averagesFor', () => {
     expect(result.tipShare).toBe(10);
   });
 
-  it('returns zeros rather than dividing by nothing', () => {
+  it('divides by nothing nowhere', () => {
     const result = averagesFor(EMPTY_SUMMARY);
 
     expect(result.perDay).toBe(0);
-    expect(result.perHour).toBe(0);
     expect(Number.isFinite(result.perShift)).toBe(true);
+  });
+
+  /*
+   * The rate says nothing rather than nought.
+   *
+   * Zero is a figure, and every screen printed it as one — «В час 0 ₴»
+   * beside «↓ 100%», which reads as an hour that collapsed rather than an
+   * hour nobody could count. Under an hour of work there is no answer.
+   */
+  it('has no hourly rate under an hour of work', () => {
+    expect(averagesFor(EMPTY_SUMMARY).perHour).toBeNull();
+    expect(averagesFor({ ...EMPTY_SUMMARY, days_worked: 1, hours: 0.02, total_earned: -156 }).perHour).toBeNull();
+    expect(averagesFor({ ...EMPTY_SUMMARY, days_worked: 1, hours: 0.99, total_earned: 100 }).perHour).toBeNull();
+    expect(averagesFor({ ...EMPTY_SUMMARY, days_worked: 1, hours: 0.5, total_earned: 100 }).tipsPerHour).toBeNull();
+  });
+
+  it('quotes a rate from a full hour up, sign and all', () => {
+    expect(averagesFor({ ...EMPTY_SUMMARY, days_worked: 1, hours: 1, total_earned: 250 }).perHour).toBe(250);
+    expect(averagesFor({ ...EMPTY_SUMMARY, days_worked: 1, hours: 10, total_earned: 2500 }).perHour).toBe(250);
+    // A loss is an answer too: it is the suppression that must not be one.
+    expect(averagesFor({ ...EMPTY_SUMMARY, days_worked: 1, hours: 10, total_earned: -200 }).perHour).toBe(-20);
   });
 });
 

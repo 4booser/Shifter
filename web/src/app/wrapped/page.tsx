@@ -27,6 +27,7 @@ import { Icon } from '@/components/ui/icon';
 import { useTitle } from '@/lib/use-title';
 import { YearStory } from '@/components/wrapped/year-story';
 import { CostOfWork, MadeOf, OwedLater, RaiseTrail, RoomCounted, ZoneTips } from '@/components/wrapped/year-charts';
+import { earnedTone } from '@/lib/tone';
 
 /** Earned by hours worked in the year — the badge at the top of the page. */
 const TIERS: { hours: number; name: string; emoji: string }[] = [
@@ -51,7 +52,7 @@ export default function WrappedPage() {
  * — while the year still runs — where it is heading at today's pace.
  */
 function Wrapped() {
-  const { t, n, lang } = useI18n();
+  const { t, n, lang, num } = useI18n();
 
   useTitle('Your year');
   const revealHost = useReveal<HTMLDivElement>();
@@ -227,7 +228,9 @@ function Wrapped() {
       topPlace !== null ? `${t('Top place')}: ${placeName(topPlace, t('No place set'))}` : null,
       summary.tips_earned > 0 ? `${t('Tips')}: ${formatMoney(settings, summary.tips_earned)}` : null,
       // Never fewer than three: a card with a hole in it reads as broken.
-      `${t('Per hour')}: ${formatMoney(settings, averages.perHour)}`,
+      averages.perHour === null
+        ? `${t('Hours')}: ${num(Math.round(summary.hours))}`
+        : `${t('Per hour')}: ${formatMoney(settings, averages.perHour)}`,
     ].filter((line): line is string => line !== null);
 
     const peak = Math.max(1, ...weekdayRhythm.map((day) => day.value));
@@ -258,7 +261,10 @@ function Wrapped() {
       value: formatMoney(settings, summary.total_earned),
       meta: `${n(totalShifts, 'shifts')} · ${n(Math.round(summary.hours), 'hours')}`,
       money: true,
-      lines: [`${t('Per hour')}: ${formatMoney(settings, averages.perHour)}`],
+      lines:
+        averages.perHour === null
+          ? []
+          : [`${t('Per hour')}: ${formatMoney(settings, averages.perHour)}`],
     },
     {
       label: t('Hours'),
@@ -376,11 +382,19 @@ function Wrapped() {
               className="pop mt-4 block"
               style={{ fontSize: 'clamp(3rem, 9vw, 5.5rem)', lineHeight: 1, ['--i' as string]: 3 } as React.CSSProperties}
             >
-              <CountUp value={summary.total_earned} className="font-extrabold tabular tracking-tight text-good-read" />
+              <CountUp
+                value={summary.total_earned}
+                className={`font-extrabold tabular tracking-tight ${earnedTone(summary.total_earned)}`}
+              />
             </span>
             <p className="pop mt-3 text-[1.05rem] text-muted" style={{ ['--i' as string]: 4 }}>
-              {n(totalShifts, 'shifts')} · {n(Math.round(summary.hours), 'hours')} ·{' '}
-              <Money value={averages.perHour} className="font-semibold text-ink" />/{t('hour')}
+              {n(totalShifts, 'shifts')} · {n(Math.round(summary.hours), 'hours')}
+              {averages.perHour !== null && (
+                <>
+                  {' · '}
+                  <Money value={averages.perHour} className="font-semibold text-ink" />/{t('hour')}
+                </>
+              )}
             </p>
             {live && (
               <p className="pop chip mt-4 !border-(--accent)/40 !bg-(--accent-soft) !text-(--accent-read)" style={{ ['--i' as string]: 5 }}>
@@ -393,7 +407,10 @@ function Wrapped() {
           {/* ==== Headline numbers, poster-sized ==== */}
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
             <Big label={t('Earned')} delta={change(summary.total_earned, previous.total_earned)}>
-              <CountUp value={summary.total_earned} className="text-[1.9rem] font-extrabold tracking-tight text-good-read" />
+              <CountUp
+                value={summary.total_earned}
+                className={`text-[1.9rem] font-extrabold tracking-tight ${earnedTone(summary.total_earned)}`}
+              />
             </Big>
             <Big label={t('Hours worked')} delta={change(summary.hours, previous.hours)}>
               <CountUp value={Math.round(summary.hours)} format={(value) => `${Math.round(value).toLocaleString(lang)}`} className="text-[1.9rem] font-extrabold tracking-tight" />
@@ -401,8 +418,19 @@ function Wrapped() {
             <Big label={t('Shifts')} delta={change(totalShifts, countShifts(previous.days))}>
               <span className="text-[1.9rem] font-extrabold tabular tracking-tight">{totalShifts}</span>
             </Big>
-            <Big label={t('Per hour')} delta={change(averages.perHour, before.perHour)}>
-              <Money value={averages.perHour} className="text-[1.9rem] font-extrabold tracking-tight" />
+            <Big
+              label={t('Per hour')}
+              delta={
+                averages.perHour === null || before.perHour === null
+                  ? null
+                  : change(averages.perHour, before.perHour)
+              }
+            >
+              {averages.perHour === null ? (
+                <span className="text-[1.9rem] font-extrabold tabular tracking-tight">—</span>
+              ) : (
+                <Money value={averages.perHour} className="text-[1.9rem] font-extrabold tracking-tight" />
+              )}
             </Big>
           </div>
 

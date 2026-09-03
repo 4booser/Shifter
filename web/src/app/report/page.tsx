@@ -30,6 +30,7 @@ import { Shell } from '@/components/layout/shell';
 import { Alert, CountUp, Delta, Money } from '@/components/ui/bits';
 import { Empty } from '@/components/ui/empty';
 import { Icon } from '@/components/ui/icon';
+import { earnedTone } from '@/lib/tone';
 
 /** The zone nobody named keeps its own row rather than being shared out. */
 const ZONE_NAMES: Record<string, string> = {
@@ -217,7 +218,9 @@ function Report() {
     ctx.fillStyle = 'rgba(255,255,255,0.6)';
     ctx.font = '44px system-ui, -apple-system, sans-serif';
     ctx.fillText(
-      `${n(summary.days_worked, 'days')} · ${Math.round(summary.hours)} h · ${format(averages.perHour)}/h`,
+      averages.perHour === null
+        ? `${n(summary.days_worked, 'days')} · ${Math.round(summary.hours)} h`
+        : `${n(summary.days_worked, 'days')} · ${Math.round(summary.hours)} h · ${format(averages.perHour)}/h`,
       W / 2,
       450,
     );
@@ -361,7 +364,10 @@ function Report() {
       {/* ==== Hero numbers ==== */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
         <Hero label={t('Earned')} change={running ? null : delta(summary.total_earned, previous.total_earned)}>
-          <CountUp value={summary.total_earned} className="text-[1.25rem] font-bold text-good-read" />
+          <CountUp
+            value={summary.total_earned}
+            className={`text-[1.25rem] font-bold ${earnedTone(summary.total_earned)}`}
+          />
         </Hero>
         <Hero label={t('Hours worked')} change={running ? null : delta(summary.hours, previous.hours)}>
           <CountUp value={summary.hours} format={(value) => num(Math.round(value))} className="text-[1.25rem] font-bold" />
@@ -369,8 +375,19 @@ function Report() {
         <Hero label={t('Days worked')} change={running ? null : delta(summary.days_worked, previous.days_worked)}>
           <span className="text-[1.25rem] font-bold tabular">{num(summary.days_worked)}</span>
         </Hero>
-        <Hero label={t('Per hour')} change={running ? null : delta(averages.perHour, beforeAverages.perHour)}>
-          <Money value={averages.perHour} className="text-[1.25rem] font-bold" />
+        <Hero
+          label={t('Per hour')}
+          change={
+            running || averages.perHour === null || beforeAverages.perHour === null
+              ? null
+              : delta(averages.perHour, beforeAverages.perHour)
+          }
+        >
+          {averages.perHour === null ? (
+            <span className="text-[1.25rem] font-bold tabular">—</span>
+          ) : (
+            <Money value={averages.perHour} className="text-[1.25rem] font-bold" />
+          )}
         </Hero>
         <Hero label={t('Tips')} change={running ? null : delta(summary.tips_earned, previous.tips_earned)}>
           <Money value={summary.tips_earned} className="text-[1.25rem] font-bold" />
@@ -553,7 +570,9 @@ function Report() {
                     <td className="max-w-44 truncate py-1.5 pr-2">
                       {day.shifts.filter((entry) => entry.worked).map((entry) => entry.name).join(', ') || '—'}
                     </td>
-                    <td className="py-1.5 pr-2 text-right tabular">{day.hours > 0 ? day.hours : '—'}</td>
+                    <td className="py-1.5 pr-2 text-right tabular">
+                      {day.hours > 0 ? num(day.hours) : '—'}
+                    </td>
                     <td className="py-1.5 pr-2 text-right tabular">
                       {(day.tips ?? 0) + (day.tips_cash ?? 0) > 0 ? format((day.tips ?? 0) + (day.tips_cash ?? 0)) : '—'}
                     </td>
@@ -579,7 +598,9 @@ function Report() {
                   <td className="py-2 pr-2 text-right tabular">
                     {rows.reduce((sum, day) => sum + salesUnits(day), 0) || '—'}
                   </td>
-                  <td className="py-2 pr-2 text-right tabular text-good-read">{format(summary.total_earned)}</td>
+                  <td className={`py-2 pr-2 text-right tabular ${earnedTone(summary.total_earned)}`}>
+                    {format(summary.total_earned)}
+                  </td>
                   <td />
                 </tr>
               </tfoot>

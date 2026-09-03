@@ -44,6 +44,7 @@ import { FlowMoney } from '@/components/ui/flow';
 import { Icon } from '@/components/ui/icon';
 import { useTitle } from '@/lib/use-title';
 import { ConfettiBurst } from '@/components/ui/confetti';
+import { earnedTone } from '@/lib/tone';
 
 type PresetId = 'month' | 'previous' | '3m' | '6m' | 'year' | 'all' | 'custom';
 
@@ -509,7 +510,9 @@ function Stats() {
     const peak = Math.max(1, ...byWeekday);
     const best = [...summary.days].sort((a, b) => b.earned - a.earned)[0];
     const lines = [
-      averages.perHour > 0 ? `${t('Per hour')}: ${formatMoney(settings, averages.perHour)}` : null,
+      averages.perHour !== null && averages.perHour > 0
+        ? `${t('Per hour')}: ${formatMoney(settings, averages.perHour)}`
+        : null,
       best !== undefined && best.earned > 0
         ? `${t('Best day')}: ${formatMoney(settings, best.earned)}`
         : null,
@@ -674,7 +677,10 @@ function Stats() {
             converted figure is the only honest headline. */}
         <Kpi label={t('Earned')} delta={summary.conversion === null ? delta(summary.total_earned, previous.total_earned) : null}>
           {summary.conversion === null ? (
-            <CountUp value={summary.total_earned} className="text-[1.25rem] font-bold text-good-read" />
+            <CountUp
+              value={summary.total_earned}
+              className={`text-[1.25rem] font-bold ${earnedTone(summary.total_earned)}`}
+            />
           ) : (
             <span className="text-[1.25rem] font-bold text-good-read tabular">
               ≈ {formatWith(summary.conversion.base_currency, summary.conversion.total_earned)}
@@ -691,8 +697,15 @@ function Stats() {
         <Kpi label={t('Per working day')} delta={delta(averages.perDay, beforeAverages.perDay)}>
           <FlowMoney value={averages.perDay} className="text-[1.25rem] font-bold" />
         </Kpi>
-        <Kpi label={t('Per hour')} delta={delta(averages.perHour, beforeAverages.perHour)}>
-          <FlowMoney value={averages.perHour} className="text-[1.25rem] font-bold" />
+        <Kpi
+          label={t('Per hour')}
+          delta={
+            averages.perHour === null || beforeAverages.perHour === null
+              ? null
+              : delta(averages.perHour, beforeAverages.perHour)
+          }
+        >
+          <FlowMoney value={averages.perHour ?? 0} className="text-[1.25rem] font-bold" />
         </Kpi>
         <Kpi label={t('Median day')} delta={null}>
           <FlowMoney value={dayMedian} className="text-[1.25rem] font-bold" />

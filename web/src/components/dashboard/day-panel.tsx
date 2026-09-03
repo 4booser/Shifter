@@ -47,6 +47,7 @@ const REASONS: { value: DeductionReason; label: string }[] = [
 import { Money, SwatchRow } from '@/components/ui/bits';
 import { EventModal } from './modals/event-modal';
 import { DayBank } from '@/components/dashboard/day-bank';
+import { earnedTone } from '@/lib/tone';
 
 /** Short on purpose: a list long enough for every venue is one nobody fills in. */
 const ZONES: { value: ShiftZone; label: string }[] = [
@@ -858,7 +859,7 @@ export function DayPanel() {
           )}
           <div className="flex justify-between gap-2 border-t border-border pt-1 text-[0.95rem] font-bold">
             <dt>{t('Earned')}</dt>
-            <dd className="text-good-read"><Money value={day.earned} /></dd>
+            <dd className={earnedTone(day.earned)}><Money value={day.earned} /></dd>
           </div>
           {/*
             What the day cost, kept beside what it earned rather than inside

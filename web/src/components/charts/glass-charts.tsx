@@ -8,6 +8,7 @@ import { stagger } from '@/lib/fx';
 import { useI18n } from '@/lib/i18n';
 import { useMoney } from '@/lib/settings/money';
 import { smoothPath } from '@/lib/charts/math';
+import { earnedTone } from '@/lib/tone';
 
 /*
  * The second-generation chart kit: fewer axes, bigger marks, direct labels,
@@ -195,7 +196,9 @@ export function MoneyFlow({ steps }: { steps: WaterfallStep[] }) {
             <span className="text-faint">→</span>
             <span>
               <span className="field-hint block">{t('Net')}</span>
-              <span className="text-[1.35rem] font-bold tracking-tight text-good-read tabular">{format(net.value)}</span>
+              <span className={`text-[1.35rem] font-bold tracking-tight tabular ${earnedTone(net.value)}`}>
+                {format(net.value)}
+              </span>
             </span>
           </>
         )}

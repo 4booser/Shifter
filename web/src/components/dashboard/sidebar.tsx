@@ -539,7 +539,13 @@ export function Sidebar() {
           <div className="rounded-(--radius) bg-surface-2 p-2">
             <span className="field-hint block">{t('Per hour')}</span>
             <Money value={averages.perHour} className="text-[0.92rem] font-bold" />{' '}
-            <Delta percent={change(averages.perHour, before.perHour)} />
+            <Delta
+              percent={
+                averages.perHour === null || before.perHour === null
+                  ? null
+                  : change(averages.perHour, before.perHour)
+              }
+            />
           </div>
         </div>
 

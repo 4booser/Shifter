@@ -118,7 +118,7 @@ export function insightsFor(input: InsightInput): Insight[] {
   }
 
   // The paying hour moved.
-  if (now.perHour > 0 && before.perHour > 0) {
+  if (now.perHour !== null && before.perHour !== null && now.perHour > 0 && before.perHour > 0) {
     const change = (now.perHour / before.perHour - 1) * 100;
 
     if (Math.abs(change) >= 5) {

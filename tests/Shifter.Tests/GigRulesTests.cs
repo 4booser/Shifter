@@ -107,6 +107,58 @@ public class GigRulesTests
             () => GigRules.CleanPhotos([Photo(300_000), Photo(), Photo()]));
     }
 
+    /// <summary>The one-pixel JPEG a listing was actually posted with.</summary>
+    private const string OnePixel =
+        "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRof"
+        + "Hh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/wAALCAABAAEBAREA/8QAFAABAAAAAAAAAAAAAAAAAAAA"
+        + "Cf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQEAAD8AKp//2Q==";
+
+    /// <summary>A JPEG header saying it is that many pixels each way.</summary>
+    private static string JpegOf(int side)
+    {
+        var bytes = new List<byte> { 0xFF, 0xD8, 0xFF, 0xC0, 0x00, 0x11, 0x08 };
+
+        bytes.Add((byte)(side >> 8));
+        bytes.Add((byte)(side & 0xFF));
+        bytes.Add((byte)(side >> 8));
+        bytes.Add((byte)(side & 0xFF));
+        bytes.AddRange(new byte[] { 0x03, 0x01, 0x22, 0x00, 0x02, 0x11, 0x01, 0x03, 0x11, 0x01, 0xFF, 0xD9 });
+
+        return "data:image/jpeg;base64," + Convert.ToBase64String(bytes.ToArray());
+    }
+
+    /// <summary>
+    /// A listing was posted whose three photos were one black pixel each, and
+    /// every client filled its card with a black slab. The count was checked;
+    /// whether the pictures were pictures was not.
+    /// </summary>
+    [Fact]
+    public void A_photo_of_one_pixel_is_not_a_photo_of_a_place()
+    {
+        var thrown = Assert.Throws<ValidationException>(
+            () => GigRules.CleanPhotos([OnePixel, OnePixel, OnePixel]));
+
+        Assert.Contains("1px", thrown.Message);
+    }
+
+    [Fact]
+    public void A_picture_somebody_can_look_at_passes()
+    {
+        var json = GigRules.CleanPhotos([JpegOf(64), JpegOf(800), JpegOf(1200)]);
+
+        Assert.Contains("data:image/jpeg;base64,", json);
+    }
+
+    [Fact]
+    public void A_photo_whose_size_cannot_be_read_is_left_alone()
+    {
+        // The count and the budget still hold; a picture nobody can measure is
+        // not by itself a reason to refuse somebody's listing.
+        var json = GigRules.CleanPhotos([Photo(), Photo(), Photo()]);
+
+        Assert.StartsWith("[", json);
+    }
+
     [Fact]
     public void Chips_keep_only_their_directions_vocabulary()
     {

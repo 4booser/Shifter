@@ -74,6 +74,16 @@ public sealed class GigListing
     public const int MaxPhotos = 6;
     /// <summary>Base64 budget per photo — a client-side 900px JPEG fits well under it.</summary>
     public const int PhotoBudget = 220_000;
+
+    /// <summary>
+    /// The shortest side a photograph of a place may have.
+    ///
+    /// A listing was posted whose three photos were each one pixel of black,
+    /// and every client did the only thing it could with them: filled the
+    /// card with a black slab. The count was checked; whether the pictures
+    /// were pictures was not.
+    /// </summary>
+    public const int MinPhotoSide = 64;
     public const int VenueMax = 60;
     public const int CityMax = 40;
     public const int DetailsMax = 600;

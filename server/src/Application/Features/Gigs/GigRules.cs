@@ -175,9 +175,70 @@ public static class GigRules
 
             if (photo.Length > GigListing.PhotoBudget)
                 throw new ValidationException("A photo is too heavy — the client should have shrunk it.");
+
+            var side = JpegSide(photo);
+
+            if (side is not null && side < GigListing.MinPhotoSide)
+                throw new ValidationException(
+                    $"A photo is {side}px on its short side — the board needs a picture somebody can look at.");
         }
 
         return System.Text.Json.JsonSerializer.Serialize(list);
+    }
+
+    /// <summary>
+    /// The shorter side of a JPEG, read from its frame header.
+    ///
+    /// Only the dimensions are wanted, so nothing is decoded: walk the
+    /// markers to the start-of-frame and read the two shorts it carries.
+    /// Null where the bytes are not a JPEG this can read — the count and the
+    /// budget still hold, and a picture nobody can measure is not by itself a
+    /// reason to refuse a listing.
+    /// </summary>
+    private static int? JpegSide(string dataUrl)
+    {
+        var comma = dataUrl.IndexOf(',');
+
+        if (comma < 0) return null;
+
+        byte[] bytes;
+
+        try
+        {
+            bytes = Convert.FromBase64String(dataUrl[(comma + 1)..]);
+        }
+        catch (FormatException)
+        {
+            return null;
+        }
+
+        // 0xFFD8 opens the file; then a chain of markers, each with a
+        // two-byte length, until a start-of-frame carries the size.
+        var at = 2;
+
+        while (at + 9 < bytes.Length)
+        {
+            if (bytes[at] != 0xFF) return null;
+
+            var marker = bytes[at + 1];
+            var length = (bytes[at + 2] << 8) | bytes[at + 3];
+
+            // SOF0..SOF15, minus the four that are not frames at all.
+            if (marker >= 0xC0 && marker <= 0xCF
+                && marker != 0xC4 && marker != 0xC8 && marker != 0xCC && marker != 0xC9)
+            {
+                var height = (bytes[at + 5] << 8) | bytes[at + 6];
+                var width = (bytes[at + 7] << 8) | bytes[at + 8];
+
+                return Math.Min(height, width);
+            }
+
+            if (length < 2) return null;
+
+            at += 2 + length;
+        }
+
+        return null;
     }
 
     public static (TimeOnly Start, TimeOnly End) ParseSlot(string? start, string? end)

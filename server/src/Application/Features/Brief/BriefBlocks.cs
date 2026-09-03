@@ -139,11 +139,17 @@ public static class BriefBlocks
         }
         else
         {
+            // Green is the colour this app prints money earned in, and the
+            // tone was set by whether somebody had ticked the shift rather
+            // than by what it came to: «Вечер · 16:00–02:00 — 0 ₴» in the
+            // ink of good news, and a shift that closed in the red after
+            // deductions in the same. A worked shift is good when it paid,
+            // and worth a second look when it took.
             foreach (var shift in shifts)
                 lines.Add(new BriefLineDto(
                     $"{shift.name} · {shift.start_time}–{shift.end_time}",
                     Money(shift.earned),
-                    shift.worked ? "good" : null));
+                    !shift.worked ? null : shift.earned > 0m ? "good" : shift.earned < 0m ? "warn" : null));
 
             if (shifts.Any(shift => !shift.worked))
                 lines.Add(new BriefLineDto(say.Of("Смена ещё не отмечена как отработанная.", "Зміну ще не позначено як відпрацьовану.")));

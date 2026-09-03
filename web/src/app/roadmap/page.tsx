@@ -2,6 +2,11 @@
 
 import Link from 'next/link';
 
+/** The day this build shipped; the roadmap is edited and deployed together. */
+const BUILT_ON: string | null = process.env.NEXT_PUBLIC_BUILT_ON
+  ? new Date(`${process.env.NEXT_PUBLIC_BUILT_ON}T12:00:00`).toLocaleDateString('ru-RU')
+  : null;
+
 import { useReveal } from '@/lib/fx';
 
 /**
@@ -160,7 +165,8 @@ export default function RoadmapPage() {
       </main>
 
       <footer className="border-t border-border py-6 text-center text-[0.8rem] text-muted">
-        <Link href="/" className="font-semibold text-(--accent-read)">← на главную</Link> · обновлено 27.08.2026
+        <Link href="/" className="font-semibold text-(--accent-read)">← на главную</Link>
+        {BUILT_ON !== null && <> · обновлено {BUILT_ON}</>}
       </footer>
     </div>
   );

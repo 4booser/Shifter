@@ -5,8 +5,20 @@ import type { NextConfig } from 'next';
  * wwwroot, exactly as it served the previous SPA. Next never runs on a server
  * here — every page is client-rendered against /shifter/v1.
  */
+/*
+ * The day this was built.
+ *
+ * The roadmap footer carried «обновлено 27.08.2026» as a literal, which is a
+ * page telling the reader how fresh it is out of a string nobody remembers to
+ * change. It was a week stale the first time anybody looked. A static export
+ * is built when it ships, so the build date is the honest answer and it keeps
+ * itself.
+ */
+const BUILT_ON = new Date().toISOString().slice(0, 10);
+
 const nextConfig: NextConfig = {
   output: 'export',
+  env: { NEXT_PUBLIC_BUILT_ON: BUILT_ON },
   // dashboard.html rather than dashboard/index.html: the server rewrites
   // extensionless paths to `{path}.html`, which is one rule instead of a
   // directory convention spread over every route.

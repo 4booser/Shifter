@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { calendarApi } from '@/lib/api/calendar';
 import { apiErrorMessage } from '@/lib/api/http';
-import { todayKey } from '@/lib/calendar/calendar-date';
+import { formatDate, todayKey } from '@/lib/calendar/calendar-date';
 import { DocumentKind, WorkDocument } from '@/lib/calendar/models';
 import { useI18n } from '@/lib/i18n';
 import { Alert } from '@/components/ui/bits';
@@ -32,7 +32,7 @@ const KINDS: { value: DocumentKind; label: string }[] = [
 ];
 
 export function DocumentsPanel() {
-  const { t, n } = useI18n();
+  const { t, n, lang } = useI18n();
 
   const [rows, setRows] = useState<WorkDocument[]>([]);
   const [open, setOpen] = useState(false);
@@ -214,7 +214,7 @@ export function DocumentsPanel() {
               }`}
             >
               <span className="min-w-0 flex-1 truncate font-medium">{row.name}</span>
-              <span className="tabular text-muted">{row.expires_on}</span>
+              <span className="tabular text-muted">{formatDate(row.expires_on, lang)}</span>
               <span
                 className={`chip ${
                   row.state === 'expired'

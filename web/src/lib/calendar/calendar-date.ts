@@ -108,6 +108,25 @@ export function monthShort(month: number, locale = 'en'): string {
 }
 
 /**
+ * One date as a person says it: «15 сент. 2026», «3 марта» when it is this year.
+ *
+ * The database's own spelling reached the screen in eleven places — a payout
+ * received on «2026-08-31», a medical book expiring on «2027-04-02», the
+ * period line on the card people post. Same rule as the range below it: the
+ * year appears only when it is not the current one.
+ */
+export function formatDate(key: string, locale = 'en'): string {
+  const date = fromKey(key);
+  const dated = date.getFullYear() !== new Date().getFullYear();
+
+  return new Intl.DateTimeFormat(locale, {
+    day: 'numeric',
+    month: 'short',
+    ...(dated ? { year: 'numeric' } : {}),
+  }).format(date);
+}
+
+/**
  * A pay period as a person says it: «1 — 15 марта», «16 марта — 2 апреля».
  *
  * The payout list printed «2026-03-01 — 2026-03-15», which is how a database

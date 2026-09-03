@@ -9,6 +9,7 @@ import { useMoney } from '@/lib/settings/money';
 import { useI18n } from '@/lib/i18n';
 import { Alert } from '@/components/ui/bits';
 import { Icon } from '@/components/ui/icon';
+import { formatDate, formatPeriod } from '@/lib/calendar/calendar-date';
 
 /**
  * The ledger as rows: every recorded payment, each one fixable or removable.
@@ -30,7 +31,7 @@ export function PayoutLedger({
   onEdit: (payout: Payout) => void;
   onChanged: () => void;
 }) {
-  const { t, n } = useI18n();
+  const { t, n, lang } = useI18n();
   const { format } = useMoney();
 
   const [open, setOpen] = useState(false);
@@ -111,7 +112,8 @@ export function PayoutLedger({
                     )}
                   </div>
                   <div className="text-[0.78rem] text-muted">
-                    {payout.period_from} — {payout.period_to} · {t('received')} {payout.received_on}
+                    {formatPeriod(payout.period_from, payout.period_to, lang)} · {t('received')}{' '}
+            {formatDate(payout.received_on, lang)}
                     {payout.note !== null && ` · ${payout.note}`}
                   </div>
                 </div>

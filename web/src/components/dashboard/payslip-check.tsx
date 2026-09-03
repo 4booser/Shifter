@@ -9,6 +9,7 @@ import { useI18n } from '@/lib/i18n';
 import { useMoney } from '@/lib/settings/money';
 import { Alert, Money } from '@/components/ui/bits';
 import { Modal } from '@/components/ui/modal';
+import { formatPeriod } from '@/lib/calendar/calendar-date';
 
 /**
  * The payslip, line against line.
@@ -44,7 +45,7 @@ export function PayslipCheckModal({
   on: string;
   onClose: () => void;
 }) {
-  const { t, n } = useI18n();
+  const { t, n, lang } = useI18n();
   const { formatIn } = useMoney();
 
   const [check, setCheck] = useState<PayslipCheck | null>(null);
@@ -108,7 +109,7 @@ export function PayslipCheckModal({
         ) : (
           <>
             <p className="field-hint">
-              {check.location_name} · {check.period_from} — {check.period_to} ·{' '}
+              {check.location_name} · {formatPeriod(check.period_from, check.period_to, lang)} ·{' '}
               {n(Math.round(check.hours), 'hours')} · {n(check.days_worked, 'shifts')}
             </p>
 

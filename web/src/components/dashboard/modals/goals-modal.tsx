@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 
 import { calendarApi } from '@/lib/api/calendar';
-import { todayKey } from '@/lib/calendar/calendar-date';
+import { formatPeriod, todayKey } from '@/lib/calendar/calendar-date';
 import { apiErrorMessage } from '@/lib/api/http';
 import { Goal, GoalPeriod } from '@/lib/calendar/models';
 import { useI18n } from '@/lib/i18n';
@@ -32,7 +32,7 @@ export function GoalsModal({
   onClose: () => void;
   onSaved?: () => void;
 }) {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const { format } = useMoney();
 
   const [goals, setGoals] = useState<Goal[]>([]);
@@ -107,7 +107,7 @@ export function GoalsModal({
                 <span className="min-w-0 flex-1">
                   <Money value={goal.amount} className="text-[0.9rem] font-semibold" />
                   <span className="field-hint block">
-                    {goal.anchor === null ? t(EVERY[goal.period]) : `${goal.current_from} — ${goal.current_to}`}
+                    {goal.anchor === null ? t(EVERY[goal.period]) : formatPeriod(goal.current_from, goal.current_to, lang)}
                     {goal.note ? ` · ${goal.note}` : ''}
                   </span>
                 </span>

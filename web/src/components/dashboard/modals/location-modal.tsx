@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 
 import { apiErrorMessage } from '@/lib/api/http';
-import { todayKey } from '@/lib/calendar/calendar-date';
+import { formatPeriod, todayKey } from '@/lib/calendar/calendar-date';
 import { MARK_COLOURS, PAY_PERIODS, PayPeriodKind, WorkLocation } from '@/lib/calendar/models';
 import { useI18n } from '@/lib/i18n';
 import { catalogueActions, useCalendar } from '@/lib/store/calendar';
@@ -28,7 +28,7 @@ export function LocationModal({
   editLocation: WorkLocation | null;
   onClose: () => void;
 }) {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const allLocations = useCalendar((state) => state.locations);
   const locations = allLocations.filter((location) => !location.archived);
   const archived = allLocations.filter((location) => location.archived);
@@ -208,8 +208,11 @@ export function LocationModal({
                 <span className="h-2.5 w-2.5 flex-none rounded-full" style={{ background: location.colour }} />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-[0.88rem] font-medium">{location.name}</span>
+                  {/* «2026-09-01 – 2026-09-15» is how a database says it.
+                      The payout list learned this months ago; this list, on
+                      the same fact, had not. */}
                   <span className="field-hint tabular">
-                    {location.current_period_from} – {location.current_period_to}
+                    {formatPeriod(location.current_period_from, location.current_period_to, lang)}
                   </span>
                 </span>
                 <button type="button" className="btn btn-quiet btn-sm" onClick={() => edit(location)} aria-label={t('Edit')}>

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 
 import { apiErrorMessage } from '@/lib/api/http';
-import { todayKey } from '@/lib/calendar/calendar-date';
+import { formatDate, todayKey } from '@/lib/calendar/calendar-date';
 import { Payout } from '@/lib/calendar/models';
 import { useI18n } from '@/lib/i18n';
 import { catalogueActions, summaryRange, useCalendar } from '@/lib/store/calendar';
@@ -47,7 +47,7 @@ export function PayoutModal({
   onClose: () => void;
   onSaved?: () => void;
 }) {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const summary = useCalendar((state) => state.summary);
   const payouts = useCalendar((state) => state.payouts);
   const allLocations = useCalendar((state) => state.locations);
@@ -237,7 +237,7 @@ export function PayoutModal({
               {payouts.map((payout) => (
                 <li key={payout.id} className="flex items-center gap-2 rounded-(--radius) border border-border px-2.5 py-1.5 text-[0.85rem]">
                   <Money value={payout.amount} className="font-semibold" />
-                  <span className="field-hint">{payout.received_on}</span>
+                  <span className="field-hint">{formatDate(payout.received_on, lang)}</span>
                   {payout.kind !== 'settlement' && (
                     <span className="chip">
                       {t(KINDS.find((option) => option.value === payout.kind)?.label ?? 'Settlement')}

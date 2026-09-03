@@ -4,13 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { calendarApi } from '@/lib/api/calendar';
 import { apiErrorMessage } from '@/lib/api/http';
-import {
-  addMonths,
-  currentMonth,
-  monthBounds,
-  monthLabel,
-  todayKey,
-} from '@/lib/calendar/calendar-date';
+import { addMonths, currentMonth, formatPeriod, monthBounds, monthLabel, todayKey } from '@/lib/calendar/calendar-date';
 import { averagesFor } from '@/lib/calendar/insights';
 import { DaysResponse, EMPTY_SUMMARY } from '@/lib/calendar/models';
 import { useI18n } from '@/lib/i18n';
@@ -76,8 +70,8 @@ function Compare() {
     }
 
     return {
-      a: { ...customA, label: `${customA.from} — ${customA.to}` },
-      b: { ...customB, label: `${customB.from} — ${customB.to}` },
+      a: { ...customA, label: formatPeriod(customA.from, customA.to, lang) },
+      b: { ...customB, label: formatPeriod(customB.from, customB.to, lang) },
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [preset, customA, customB, defaults]);

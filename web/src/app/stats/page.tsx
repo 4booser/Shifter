@@ -5,16 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { calendarApi } from '@/lib/api/calendar';
 import { apiErrorMessage } from '@/lib/api/http';
-import {
-  addMonths,
-  currentMonth,
-  keysBetween,
-  monthBounds,
-  shiftDays,
-  todayKey,
-  fromKey,
-  sentenceCase,
-} from '@/lib/calendar/calendar-date';
+import { addMonths, currentMonth, formatPeriod, fromKey, keysBetween, monthBounds, sentenceCase, shiftDays, todayKey } from '@/lib/calendar/calendar-date';
 import { seasonalIndex, yearShape } from '@/lib/calendar/seasonality';
 import { forecastFor, paceToGoal, projectionSeries } from '@/lib/calendar/forecast';
 import { averagesFor } from '@/lib/calendar/insights';
@@ -477,7 +468,7 @@ function Stats() {
     drawShareCard(
       {
         title: t('Statistics'),
-        period: `${range.from} — ${range.to}`,
+        period: formatPeriod(range.from, range.to, lang),
         summary,
         format: (value) => formatMoney(settings, value),
         number: (value) => value.toLocaleString(lang, { maximumFractionDigits: 1 }),
@@ -548,7 +539,7 @@ function Stats() {
     const overview: Sheet = {
       name: t('Statistics').slice(0, 28),
       rows: [
-        [t('Period'), `${range.from} — ${range.to}`],
+        [t('Period'), formatPeriod(range.from, range.to, lang)],
         [t('Earned'), summary.total_earned],
         [t('Still planned'), summary.planned_earned],
         [t('Hours'), summary.hours],

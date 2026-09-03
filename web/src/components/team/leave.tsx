@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { apiErrorMessage } from '@/lib/api/http';
 import { Leave, plannerApi } from '@/lib/api/team';
-import { todayKey } from '@/lib/calendar/calendar-date';
+import { formatDate, formatPeriod, todayKey } from '@/lib/calendar/calendar-date';
 import { useI18n } from '@/lib/i18n';
 import { Alert } from '@/components/ui/bits';
 import { Icon } from '@/components/ui/icon';
@@ -18,7 +18,7 @@ import { Icon } from '@/components/ui/icon';
  * say so, rather than being one grey row among the answered ones.
  */
 export function LeavePanel({ teamId, onChanged }: { teamId: number; onChanged?: () => void }) {
-  const { t, n } = useI18n();
+  const { t, n, lang } = useI18n();
   const [requests, setRequests] = useState<Leave[]>([]);
   const [open, setOpen] = useState(false);
   const [from, setFrom] = useState('');
@@ -165,13 +165,13 @@ export function LeavePanel({ teamId, onChanged }: { teamId: number; onChanged?: 
                 </span>
               </span>
               <span className="field-hint tabular">
-                {entry.from === entry.to ? entry.from : `${entry.from} — ${entry.to}`} ·{' '}
+                {entry.from === entry.to ? formatDate(entry.from, lang) : formatPeriod(entry.from, entry.to, lang)} ·{' '}
                 {n(entry.days, 'days')}
                 {entry.reason !== null && ` · ${entry.reason}`}
               </span>
               {entry.decided_by !== null && (
                 <span className="field-hint">
-                  {entry.decided_by} · {entry.decided_on}
+                  {entry.decided_by} · {entry.decided_on === null ? '' : formatDate(entry.decided_on, lang)}
                   {entry.decision_note !== null && ` · ${entry.decision_note}`}
                 </span>
               )}

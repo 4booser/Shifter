@@ -34,6 +34,7 @@ import { StatementCard } from '@/components/bank/statement';
 import { BankWork } from '@/components/bank/work';
 import { realHourly } from '@/lib/mono/mono-work';
 import { useTitle } from '@/lib/use-title';
+import { Icon } from '@/components/ui/icon';
 
 /**
  * The bank, now on the site.
@@ -280,12 +281,29 @@ export default function BankPage() {
 
             {/* ==== Month picker ==== */}
             <div className="flex items-center justify-between">
-              <button type="button" className="btn btn-sm" onClick={() => shiftMonth(-1)}>←</button>
+              {/* Two arrows that a screen reader announced as «button» and
+                  «button». The calendar's own month arrows have been named
+                  since they were drawn. */}
+              <button
+                type="button"
+                className="btn btn-sm !px-2"
+                aria-label={t('Previous month')}
+                onClick={() => shiftMonth(-1)}
+              >
+                <Icon name="chevron-left" size={16} />
+              </button>
               <span className="text-[0.95rem] font-semibold">
                 {new Intl.DateTimeFormat(lang, { month: 'long', year: 'numeric' })
                   .format(new Date(`${monthAt}-15T12:00:00`))}
               </span>
-              <button type="button" className="btn btn-sm" onClick={() => shiftMonth(1)}>→</button>
+              <button
+                type="button"
+                className="btn btn-sm !px-2"
+                aria-label={t('Next month')}
+                onClick={() => shiftMonth(1)}
+              >
+                <Icon name="chevron-right" size={16} />
+              </button>
             </div>
 
             {mono.items.length === 0 && !mono.busy && (

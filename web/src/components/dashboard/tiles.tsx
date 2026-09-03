@@ -227,6 +227,9 @@ function TilePicker({
                         type="button"
                         role="switch"
                         aria-checked={on}
+                        // A switch with a state and no name: «переключатель,
+                        // включён» and nothing about what it switches.
+                        aria-label={t(TILE_NAMES[id])}
                         className={`h-4 w-7 flex-none rounded-full transition-colors ${on ? 'bg-(--accent)' : 'bg-surface-2 border border-border'}`}
                         onClick={() =>
                           update(

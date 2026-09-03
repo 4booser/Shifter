@@ -764,6 +764,11 @@ function Schedule() {
                 <button
                   key={colour}
                   type="button"
+                  /* Seven buttons with nothing in them: a reader heard
+                     «кнопка» seven times and could not tell which colour was
+                     which, nor which one was already chosen. */
+                  aria-label={colour}
+                  aria-pressed={you.colour.toUpperCase() === colour.toUpperCase()}
                   className={`swatch ${you.colour.toUpperCase() === colour.toUpperCase() ? 'is-active' : ''}`}
                   style={{ background: colour }}
                   disabled={busy}

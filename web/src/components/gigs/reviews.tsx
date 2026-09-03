@@ -8,21 +8,37 @@ import { useI18n } from '@/lib/i18n';
 import { pushToast } from '@/lib/toast';
 import { Alert } from '@/components/ui/bits';
 import { Modal } from '@/components/ui/modal';
+import { nWord } from '@/lib/i18n/plural';
 
 /** ★★★★☆ 4.6 · 12 — the standing, wherever a person or venue appears. */
+/**
+ * Below this many verdicts a rating is one person's evening, not a
+ * reputation. It is still shown — hiding it would be its own kind of lie —
+ * but it is not painted gold, because five gold stars are read as a settled
+ * fact and this app holds a sample floor everywhere else it quotes a figure.
+ */
+const ENOUGH = 3;
+
 export function Stars({ rating, count, small = false }: { rating: number | null; count: number; small?: boolean }) {
+  const { lang } = useI18n();
+
   if (rating === null || count === 0) return null;
+
+  const settled = count >= ENOUGH;
 
   return (
     <span
-      className={`inline-flex items-center gap-0.5 whitespace-nowrap font-semibold tabular ${small ? 'text-[0.72rem]' : 'text-[0.8rem]'}`}
-      title={`${rating} / 5`}
+      className={`inline-flex items-center gap-1 whitespace-nowrap font-semibold tabular ${small ? 'text-[0.72rem]' : 'text-[0.8rem]'}`}
+      title={`${rating} / 5 · ${nWord(lang, count, 'reviews')}`}
     >
-      <span className="text-warn-read" aria-hidden>
+      <span className={settled ? 'text-warn-read' : 'text-muted'} aria-hidden>
         {'★'.repeat(Math.round(rating))}
         <span className="opacity-30">{'★'.repeat(5 - Math.round(rating))}</span>
       </span>
-      {rating} · {count}
+      {/* «5 · 1» said nothing about what the 1 was, and read like a decimal. */}
+      <span className={settled ? '' : 'text-muted'}>
+        {rating} · {nWord(lang, count, 'reviews')}
+      </span>
     </span>
   );
 }

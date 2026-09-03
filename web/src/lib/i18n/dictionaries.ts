@@ -2675,6 +2675,13 @@ export const RU: Dictionary = {
   'The photo leaves your device: an outside service reads it and sends back the rows. Shifter keeps no copy — only the days you tick below. A rota usually carries other people’s names.':
     'Фото уходит с устройства: его читает сторонний сервис и присылает обратно строки. Shifter снимок не хранит — только те дни, которые вы отметите ниже. На графике обычно есть чужие имена.',
   'Drop the .ics here, or tap to choose': 'Бросьте .ics сюда или нажмите, чтобы выбрать',
+  'There is no such page': 'Такой страницы нет',
+  'The address may have a typo in it, or the thing it pointed at is gone.': 'Возможно, в адресе опечатка — или то, на что он вёл, уже убрали.',
+  'Go to the calendar': 'В календарь',
+  'No replies of yours yet': 'Ваших откликов пока нет',
+  'To the board': 'На доску',
+  'Answer a gig on the board and it lands here — with the contacts, once the other side opens them.': 'Откликнитесь на смену с доски — она появится здесь, вместе с контактами, когда та сторона их откроет.',
+  'You have not posted anything yet': 'Вы ещё ничего не выставляли',
 };
 
 export const UK: Dictionary = {
@@ -5329,4 +5336,11 @@ export const UK: Dictionary = {
   'The photo leaves your device: an outside service reads it and sends back the rows. Shifter keeps no copy — only the days you tick below. A rota usually carries other people’s names.':
     'Фото залишає пристрій: його читає сторонній сервіс і надсилає назад рядки. Shifter знімок не зберігає — лише ті дні, які ви позначите нижче. У графіку зазвичай є чужі імена.',
   'Drop the .ics here, or tap to choose': 'Киньте .ics сюди або натисніть, щоб обрати',
+  'There is no such page': 'Такої сторінки немає',
+  'The address may have a typo in it, or the thing it pointed at is gone.': 'Можливо, в адресі помилка — або те, на що він вів, уже прибрали.',
+  'Go to the calendar': 'До календаря',
+  'No replies of yours yet': 'Ваших відгуків поки немає',
+  'To the board': 'На дошку',
+  'Answer a gig on the board and it lands here — with the contacts, once the other side opens them.': 'Відгукніться на зміну з дошки — вона зʼявиться тут, разом з контактами, коли та сторона їх відкриє.',
+  'You have not posted anything yet': 'Ви ще нічого не виставляли',
 };

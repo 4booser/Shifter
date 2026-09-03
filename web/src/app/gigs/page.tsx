@@ -335,6 +335,7 @@ function Gigs() {
       {view === 'mine' && (
         <MyListings
           rows={mine}
+          onPost={() => setEditing(blank())}
           onCallBack={setCallingBack}
           onRepost={(gig) =>
             setEditing({
@@ -370,7 +371,15 @@ function Gigs() {
       {view === 'replies' && (
         <div className="grid items-start gap-2 md:grid-cols-2 xl:grid-cols-3">
           {replies.length === 0 && (
-            <p className="field-hint col-span-full">{t('Answer a gig on the board and it lands here.')}</p>
+            <div className="col-span-full">
+              <Empty
+                icon="spark"
+                title={t('No replies of yours yet')}
+                action={{ label: t('To the board'), onClick: () => setView('board') }}
+              >
+                {t('Answer a gig on the board and it lands here — with the contacts, once the other side opens them.')}
+              </Empty>
+            </div>
           )}
           {replies.map((gig) => (
             <div key={gig.id} className="flex flex-col gap-1">
@@ -787,6 +796,7 @@ function MyListings({
   onCallBack,
   onChanged,
   onError,
+  onPost,
 }: {
   rows: { gig: Gig; replies: GigReply[] }[];
   onEdit: (gig: Gig) => void;
@@ -794,6 +804,8 @@ function MyListings({
   onCallBack: (gig: Gig) => void;
   onChanged: () => void;
   onError: (message: string) => void;
+  /** The same thing the header's button does, offered from the empty tab. */
+  onPost: () => void;
 }) {
   const { t } = useI18n();
   const { format } = useMoney();
@@ -814,7 +826,15 @@ function MyListings({
   }, []);
 
   if (rows.length === 0) {
-    return <p className="field-hint">{t('Post a gig and the replies gather here, contacts included.')}</p>;
+    return (
+      <Empty
+        icon="spark"
+        title={t('You have not posted anything yet')}
+        action={{ label: t('Post a gig'), onClick: onPost }}
+      >
+        {t('Post a gig and the replies gather here, contacts included.')}
+      </Empty>
+    );
   }
 
   return (

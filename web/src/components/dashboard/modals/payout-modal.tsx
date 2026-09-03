@@ -98,12 +98,29 @@ export function PayoutModal({
       return;
     }
 
-    const range = summaryRange();
+    /*
+     * A blank form opens on the period the place actually pays for.
+     *
+     * It used to open on whatever range the calendar's summary was showing —
+     * a calendar month — so a bar that pays twice a month offered «1 — 30
+     * сентября» every time, and the whole page it sits on is built out of
+     * «1 — 15» and «16 — 30». Either somebody corrected two dates on every
+     * payment, or a payment was filed against a period the reconciliation
+     * has never heard of.
+     *
+     * Only when the place is unambiguous. With several places and none
+     * chosen there is no period to prefer, and the summary range is as good
+     * a guess as any.
+     */
+    const only = locations.length === 1 ? locations[0] : null;
+    const range = only === null
+      ? summaryRange()
+      : { from: only.current_period_from, to: only.current_period_to };
 
     setFrom(range.from);
     setTo(range.to);
     setAmount(null);
-    setLocationId(locations.length === 1 ? locations[0].id : null);
+    setLocationId(only?.id ?? null);
     setKind(range.to > today ? 'advance' : 'settlement');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, prefill, editing]);

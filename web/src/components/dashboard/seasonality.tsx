@@ -82,35 +82,66 @@ export function Seasonality() {
       {/* The row must stay stretched: items-end on it once stopped the
           columns inheriting a height, and every bar quietly collapsed to its
           2px floor. Found by eye on the bank's copy of this pattern. */}
+      {/*
+        Two things were wrong with this row and both were about what a bar
+        means.
+
+        It had no scale. Twelve bars and not one number: a reader could see
+        that August beat June and could not see whether the gap was two
+        hundred or twenty thousand. The peak now carries its own figure on a
+        dashed rule, with the floor named, so the shape has a size.
+
+        And a month with fewer than two years behind it drew a two-pixel
+        stub in the border colour, which on a screen is exactly what «earned
+        almost nothing» looks like. Those months are not low, they are
+        unknown, and the card says so in its own subtitle. Unknown draws
+        nothing at all now — an empty slot under a dimmed name.
+      */}
       {shape.length > 0 && (
-        <div className="flex h-24 gap-1">
+        <div className="mb-1 flex items-baseline justify-between text-[0.62rem] text-faint">
+          <span>{t('Average per month')}</span>
+          <span className="tabular"><Money value={peak} /></span>
+        </div>
+      )}
+      {shape.length > 0 && (
+        <div className="flex h-24 gap-1 border-t border-dashed border-border">
           {Array.from({ length: 12 }, (_, index2) => index2 + 1).map((month) => {
             const row = shape.find((one) => one.month === month);
-            const height = row === undefined ? 0 : (row.average / peak) * 100;
+            const known = row !== undefined;
+            const height = known ? (row.average / peak) * 100 : 0;
 
             return (
               <div key={month} className="flex flex-1 flex-col items-center gap-1">
-                <div className="flex w-full flex-1 items-end">
-                  <div
-                    className="w-full rounded-t-[4px]"
-                    style={{
-                      height: `${Math.max(2, height)}%`,
-                      // The month being looked at, against the ones behind it.
-                      background:
-                        month === thisMonth
-                          ? 'var(--accent)'
-                          : row === undefined
-                            ? 'var(--border)'
+                <div
+                  className="flex w-full flex-1 items-end"
+                  title={known ? `${monthShort(month, lang)}: ${Math.round(row.average)}` : t('not enough years')}
+                >
+                  {known && (
+                    <div
+                      className="w-full rounded-t-[4px]"
+                      style={{
+                        height: `${Math.max(2, height)}%`,
+                        // The month being looked at, against the ones behind it.
+                        background:
+                          month === thisMonth
+                            ? 'var(--accent)'
                             : 'color-mix(in srgb, var(--accent) 35%, var(--surface-2))',
-                    }}
-                    title={row === undefined ? t('not enough years') : `${Math.round(row.average)}`}
-                  />
+                      }}
+                    />
+                  )}
                 </div>
-                <span className="text-[0.6rem] text-faint">{monthShort(month, lang)}</span>
+                <span className={`text-[0.6rem] ${known ? 'text-muted' : 'text-faint opacity-60'}`}>
+                  {monthShort(month, lang)}
+                </span>
               </div>
             );
           })}
         </div>
+      )}
+      {shape.length > 0 && shape.length < 12 && (
+        <p className="field-hint mt-1">
+          {t('Dimmed months do not have two years behind them yet.')}
+        </p>
       )}
 
       {/* The cushion: the one actionable sentence a second year of records

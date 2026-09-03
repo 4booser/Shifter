@@ -18,6 +18,7 @@ import { RotaEntry, teamApi } from '@/lib/api/team';
 import { keysBetween, shiftDays, todayKey, weekBounds } from '@/lib/calendar/calendar-date';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/lib/i18n';
+import { spanOf } from '@/lib/calendar/spans';
 
 /**
  * The rota: who is on, and when, for the week somebody is inside.
@@ -128,12 +129,10 @@ export function Schedule() {
               </Button>
             )}
           </span>
-          <span className="field-hint tabular">
-            {Number(monday.slice(8))}–{Number(sunday.slice(8))}{' '}
-            {new Date(`${sunday}T12:00:00`)
-              .toLocaleDateString(lang, { day: 'numeric', month: 'long' })
-              .replace(/^\d+\s*/, '')}
-          </span>
+          {/* The week is a span like any other, and a hand-rolled one named
+              only the last month: a week running 31 August to 6 September
+              read «31–6 September». */}
+          <span className="field-hint tabular">{spanOf(monday, sunday, lang)}</span>
         </div>
 
         <Button variant="ghost" size="sm" asChild>

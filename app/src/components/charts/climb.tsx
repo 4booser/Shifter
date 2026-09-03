@@ -1,6 +1,6 @@
 import { useId, useMemo, useState } from 'react';
 
-import { smoothPath } from '@/lib/charts/math';
+import { levelWindow, smoothPath } from '@/lib/charts/math';
 import { useChartWidth } from '@/lib/charts/measure';
 import { formatMoney, formatMoneyCompact } from '@/lib/settings/money';
 import { useSettings } from '@/lib/settings/store';
@@ -23,10 +23,23 @@ export function Climb({
   points,
   ghost = [],
   height = 260,
+  floor = 'zero',
 }: {
   points: ClimbPoint[];
   ghost?: ClimbPoint[];
   height?: number;
+  /**
+   * Where the y axis starts.
+   *
+   * A cumulative climb starts at nought — that is what makes it a climb, and
+   * the wash under it is a real quantity. A *level* — a bank balance, a
+   * runway — does not: a month moving between ₴55K and ₴62K drawn from zero
+   * is a straight line under a block of colour, which is every number the
+   * chart was asked to show, thrown away. Those pass 'data', and with a
+   * clipped axis the fill goes too: area over a floor that is not zero
+   * overstates the change it is drawn from.
+   */
+  floor?: 'zero' | 'data';
 }) {
   const { lang } = useI18n();
   const settings = useSettings((state) => state.settings);
@@ -34,24 +47,31 @@ export function Climb({
   const [hover, setHover] = useState<number | null>(null);
 
   const [host, width] = useChartWidth();
-  const pad = { top: 18, right: 16, bottom: 26, left: 52 };
+
+  const all = [...points, ...ghost].map((point) => point.value);
+  const window = floor === 'zero'
+    ? { base: 0, peak: Math.max(1, ...all) }
+    : levelWindow(all);
+  const { base, peak } = window;
+  const span = Math.max(1, peak - base);
+
+  // The gutter has to hold the longest label it will print. Fixed at 52 it
+  // clipped the first glyph off «₴62,4 тис.» — the balance chart's own top
+  // tick, cut in half by the card's edge.
+  const ticks = [base, base + span / 2, peak];
+  const widest = Math.max(...ticks.map((value) => formatMoneyCompact(settings, value).length));
+  const pad = { top: 18, right: 16, bottom: 26, left: Math.max(52, 14 + widest * 6) };
   const plotW = width - pad.left - pad.right;
   const plotH = height - pad.top - pad.bottom;
-
-  const peak = Math.max(
-    1,
-    ...points.map((point) => point.value),
-    ...ghost.map((point) => point.value),
-  );
 
   const line = useMemo(
     () =>
       points.map((point, index) => ({
         ...point,
         x: pad.left + (plotW * index) / Math.max(1, points.length - 1),
-        y: pad.top + plotH - (point.value / peak) * plotH,
+        y: pad.top + plotH - ((point.value - base) / span) * plotH,
       })),
-    [points, peak, plotW, plotH, pad.left, pad.top],
+    [points, base, span, plotW, plotH, pad.left, pad.top],
   );
 
   const pale = useMemo(
@@ -59,9 +79,9 @@ export function Climb({
       ghost.map((point, index) => ({
         ...point,
         x: pad.left + (plotW * index) / Math.max(1, ghost.length - 1),
-        y: pad.top + plotH - (point.value / peak) * plotH,
+        y: pad.top + plotH - ((point.value - base) / span) * plotH,
       })),
-    [ghost, peak, plotW, plotH, pad.left, pad.top],
+    [ghost, base, span, plotW, plotH, pad.left, pad.top],
   );
 
   if (line.length < 2) return null;
@@ -87,12 +107,12 @@ export function Climb({
           </linearGradient>
         </defs>
 
-        {[0, peak / 2, peak].map((value) => {
-          const y = pad.top + plotH - (value / peak) * plotH;
+        {ticks.map((value) => {
+          const y = pad.top + plotH - ((value - base) / span) * plotH;
 
           return (
             <g key={value}>
-              {value > 0 && (
+              {value > base && (
                 <line x1={pad.left} x2={width - pad.right} y1={y} y2={y} stroke="var(--border)" strokeDasharray="2 5" />
               )}
               <text x={pad.left - 10} y={y + 3} textAnchor="end" fontSize="10" fill="var(--faint)">
@@ -106,10 +126,12 @@ export function Climb({
           <path d={smoothPath(pale)} fill="none" stroke="var(--faint)" strokeWidth="1.8" opacity="0.55" />
         )}
 
-        <path
-          d={`${smoothPath(line)} L ${line[line.length - 1].x} ${pad.top + plotH} L ${line[0].x} ${pad.top + plotH} Z`}
-          fill={`url(#${raw}-wash)`}
-        />
+        {floor === 'zero' && (
+          <path
+            d={`${smoothPath(line)} L ${line[line.length - 1].x} ${pad.top + plotH} L ${line[0].x} ${pad.top + plotH} Z`}
+            fill={`url(#${raw}-wash)`}
+          />
+        )}
         <path
           d={smoothPath(line)}
           fill="none"

@@ -101,6 +101,25 @@ export function niceCeiling(value: number): number {
 }
 
 /**
+ * The window a *level* series is drawn in: its own range, with a little air.
+ *
+ * The round-number ladder `niceCeiling` climbs — 1, 2, 5, 10 × a power of ten
+ * — is chosen against the magnitude of a number, not the width of a band, and
+ * that is exactly wrong here. A balance moving between ₴57K and ₴62K rounds
+ * out to an axis of ₴50K–₴100K, which pushes the whole month into the bottom
+ * quarter of the card: a different way of throwing away the only thing the
+ * chart was drawn to show. The labels are compact and the crosshair gives the
+ * exact figure, so the ends do not need to be round — they need to be close.
+ */
+export function levelWindow(values: number[]): { base: number; peak: number } {
+  const low = Math.min(...values);
+  const high = Math.max(...values);
+  const air = Math.max((high - low) * 0.12, Math.abs(high) * 0.02, 1);
+
+  return { base: low - air, peak: high + air };
+}
+
+/**
  * A monotone curve through the points: smooth to read, honest to the data —
  * cubic segments whose slopes never overshoot a value they pass through
  * (Fritsch–Carlson), so the curve cannot invent a peak the month never had.

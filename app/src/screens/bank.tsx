@@ -289,6 +289,7 @@ export function Bank() {
           <Climb
             points={curve.map((point) => ({ label: point.day, value: point.balance }))}
             height={220}
+            floor="data"
           />
         </Panel>
       )}
@@ -329,6 +330,7 @@ export function Bank() {
             <Climb
               points={runway.days.map((day) => ({ label: day.day, value: day.balance }))}
               height={160}
+              floor="data"
             />
             <p className="field-hint">
               {runway.dry === null

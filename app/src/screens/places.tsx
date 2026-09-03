@@ -194,21 +194,21 @@ function PlaceCard({
   onEdit: () => void;
   onArchive: () => void;
 }) {
-  const { t } = useI18n();
+  const { t, num } = useI18n();
   // Only the rules that are actually switched on: a card listing every
   // multiplier at ×1 says nothing except that nobody filled the form in.
   const rules = [
-    place.night_multiplier > 1 && t('night ×{times}', { times: place.night_multiplier }),
-    place.public_holiday_multiplier > 1 && t('holiday ×{times}', { times: place.public_holiday_multiplier }),
+    place.night_multiplier > 1 && t('night ×{times}', { times: num(place.night_multiplier) }),
+    place.public_holiday_multiplier > 1 && t('holiday ×{times}', { times: num(place.public_holiday_multiplier) }),
     place.overtime_multiplier > 1 &&
       t('over {hours} ×{times}', {
-        hours: `${place.overtime_weekly_hours} ${t('h')}`,
-        times: place.overtime_multiplier,
+        hours: `${num(place.overtime_weekly_hours)} ${t('h')}`,
+        times: num(place.overtime_multiplier),
       }),
-    place.tax_percent > 0 && t('tax {percent}%', { percent: place.tax_percent }),
+    place.tax_percent > 0 && t('tax {percent}%', { percent: num(place.tax_percent) }),
     place.meal_deduction > 0 && t('meals {money}', { money: money(place.meal_deduction) }),
-    place.tip_out_of_tips_percent > 0 && t('{percent}% of tips into the pot', { percent: place.tip_out_of_tips_percent }),
-    place.holiday_percent > 0 && t('holiday pay {percent}%', { percent: place.holiday_percent }),
+    place.tip_out_of_tips_percent > 0 && t('{percent}% of tips into the pot', { percent: num(place.tip_out_of_tips_percent) }),
+    place.holiday_percent > 0 && t('holiday pay {percent}%', { percent: num(place.holiday_percent) }),
     place.minimum_hourly > 0 && t('no less than {rate}', { rate: `${money(place.minimum_hourly)}/${t('h')}` }),
   ].filter((rule): rule is string => typeof rule === 'string');
 

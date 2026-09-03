@@ -13,6 +13,7 @@ import { Chronicle } from '@/components/dashboard/chronicle';
 import { Empty } from '@/components/ui/empty';
 import { Alert } from '@/components/ui/bits';
 import { Shell } from '@/components/layout/shell';
+import { pluralWord } from '@/lib/i18n/plural';
 
 /**
  * The biography that has been accumulating in the calendar all along.
@@ -132,10 +133,26 @@ function Cv() {
                   page printed «2512 часов» over a table whose own total said
                   the same thing, and a CV is the one screen shown to someone
                   who has no reason to be forgiving about it. */}
-              <Figure value={history.months.toLocaleString(lang)} label={t('months in the trade')} />
-              <Figure value={history.shifts.toLocaleString(lang)} label={t('shifts worked')} />
-              <Figure value={Math.round(history.hours).toLocaleString(lang)} label={t('hours')} />
-              <Figure value={`${history.places.length}`} label={t('places')} />
+              {/* Every one of the four labels was a fixed string, so a person
+                  one month into the trade read «1 месяцев» and anybody with a
+                  single job read «1 мест». On the one page written to be
+                  handed to a stranger. */}
+              <Figure
+                value={history.months.toLocaleString(lang)}
+                label={`${pluralWord(lang, 'months', history.months)} ${t('in the trade')}`}
+              />
+              <Figure
+                value={history.shifts.toLocaleString(lang)}
+                label={`${pluralWord(lang, 'shifts', history.shifts)} ${t('worked')}`}
+              />
+              <Figure
+                value={Math.round(history.hours).toLocaleString(lang)}
+                label={pluralWord(lang, 'hours', Math.round(history.hours))}
+              />
+              <Figure
+                value={history.places.length.toLocaleString(lang)}
+                label={pluralWord(lang, 'places', history.places.length)}
+              />
             </div>
             <p className="field-hint mt-2.5">
               {said(history.first_month)} — {said(history.last_month)}

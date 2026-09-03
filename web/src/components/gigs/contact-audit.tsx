@@ -3,6 +3,7 @@
 import { Gig } from '@/lib/api/gigs';
 import { useI18n } from '@/lib/i18n';
 import { Icon } from '@/components/ui/icon';
+import { nWord } from '@/lib/i18n/plural';
 
 /**
  * Where the number went.
@@ -41,8 +42,10 @@ export function ContactAudit({ gig }: { gig: Gig }) {
   return (
     <p className="field-hint px-1">
       <Icon name="eye" size={12} />{' '}
-      {t('The venue opened your contacts')} {gig.contact_seen_count}{' '}
-      {gig.contact_seen_count === 1 ? t('once') : t('occasions')}
+      {/* A two-branch English count on a three-form language: five views
+          read «5 раза». The word bends with the number now. */}
+      {t('The venue opened your contacts')}{' '}
+      {nWord(lang, gig.contact_seen_count, 'times')}
       {when !== null && <>, {t('last')} {when}</>}
     </p>
   );

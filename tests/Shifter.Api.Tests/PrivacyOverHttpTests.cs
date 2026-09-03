@@ -21,10 +21,11 @@ public sealed class PrivacyOverHttpTests(Api api)
     private static string Day(int day) => $"2026-05-{day:00}";
 
     /// <summary>
-    /// One pixel of JPEG, because the board wants three photos of the venue
+    /// A JPEG frame header saying 320×320, because the board wants three
+    /// photos of the venue
     /// and will only take JPEGs the client has already shrunk.
     /// </summary>
-    private const string Pixel = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/wAALCAABAAEBAREA/8QAFAABAAAAAAAAAAAAAAAAAAAACf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQEAAD8AKp//2Q==";
+    private const string Pixel = "data:image/jpeg;base64,/9j/wAARCAFAAUADASIAAhEBAxEB/9k=";
 
     private static async Task<JsonElement> Read(HttpResponseMessage response)
     {

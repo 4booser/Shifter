@@ -14,7 +14,7 @@ namespace Shifter.Api.Tests;
 [Collection("api")]
 public sealed class CitiesOverHttpTests(Api api)
 {
-    private const string Pixel = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/wAALCAABAAEBAREA/8QAFAABAAAAAAAAAAAAAAAAAAAACf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQEAAD8AKp//2Q==";
+    private const string Pixel = "data:image/jpeg;base64,/9j/wAARCAFAAUADASIAAhEBAxEB/9k=";
 
     private static async Task<JsonElement> Read(HttpResponseMessage response)
     {

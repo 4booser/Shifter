@@ -20,6 +20,35 @@ export function Boot({ children }: { children: React.ReactNode }) {
   useEffect(() => bindSettingsToDocument(), []);
   useEffect(() => setMounted(true), []);
 
+  /*
+   * A file dropped anywhere else is a file that is not opened.
+   *
+   * Drop a .ics or a photograph an inch wide of the zone that wanted it and
+   * the browser does what browsers do with an unclaimed file: it opens it,
+   * navigating away from the app and taking a half-filled day with it. Two
+   * dialogs in this app invite exactly that gesture and five more carry a
+   * file button beside one.
+   *
+   * The zones that want a file call preventDefault themselves and are
+   * unaffected; everywhere else the drop now does nothing at all, which is
+   * the correct amount.
+   */
+  useEffect(() => {
+    const swallow = (event: DragEvent) => {
+      if (event.dataTransfer?.types.includes('Files') !== true) return;
+
+      event.preventDefault();
+    };
+
+    document.addEventListener('dragover', swallow);
+    document.addEventListener('drop', swallow);
+
+    return () => {
+      document.removeEventListener('dragover', swallow);
+      document.removeEventListener('drop', swallow);
+    };
+  }, []);
+
   // Whatever broke before React got here. Sent once, after the app is up, so a
   // failing report cannot be the thing that stops the page rendering.
   useEffect(() => {

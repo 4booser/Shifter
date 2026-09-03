@@ -79,6 +79,16 @@ export function ImportModal({ open, onClose }: { open: boolean; onClose: () => v
       <div className="flex flex-col gap-3.5">
         <p className="field-hint">{t('CSV or XLSX. One row per day; a column named date is the only one required.')}</p>
 
+        {/* The reader knows six columns and a spread of names for each, and
+            the line above named one of them. Somebody exporting from another
+            app had no way to tell whether their hours and tips would be read
+            or dropped — so they were left out, or the import looked broken.
+            Naming them costs a line. */}
+        <p className="field-hint">
+          {t('Also read, under any of their usual names:')}{' '}
+          {[t('Hours'), t('Earned'), t('Tips'), t('Place'), t('Note')].join(' · ')}
+        </p>
+
         <input
           type="file"
           accept=".csv,.xlsx,text/csv"

@@ -2671,6 +2671,7 @@ export const RU: Dictionary = {
   'Notice': 'Срок предупреждения',
   'Holiday': 'Отпуск',
   'at the rate': 'по ставке',
+  'Also read, under any of their usual names:': 'Читаются также, под любым из привычных названий:',
 };
 
 export const UK: Dictionary = {
@@ -5321,4 +5322,5 @@ export const UK: Dictionary = {
   'Notice': 'Строк попередження',
   'Holiday': 'Відпустка',
   'at the rate': 'за ставкою',
+  'Also read, under any of their usual names:': 'Читаються також, під будь-якою зі звичних назв:',
 };

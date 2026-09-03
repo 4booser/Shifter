@@ -624,8 +624,8 @@ export const RU: Dictionary = {
   'without a readable date': 'без читаемой даты',
   'official': 'официальный',
   'a bank buys at': 'банк купит по',
-  'You run a rota, so you will see what other people earn. That is behind two-factor.':
-    'Вы ведёте график, а значит увидите чужой заработок. Это доступно только со второй проверкой входа.',
+  'You run a rota. What colleagues who share their rate earn opens only behind two-factor.':
+    'Вы ведёте график. Заработок тех, кто им делится, открывается только со второй проверкой входа.',
   'Your tax arrangement': 'Ваш налоговый режим',
   'Set it up': 'Настроить',
   'Enter the rates from your own registration and this will keep a running total against your own ceiling. It ships no rates of its own — they change by law and by year, and a wrong one here is a confident lie about what you owe.':
@@ -3801,8 +3801,8 @@ export const UK: Dictionary = {
   'without a readable date': 'без читабельної дати',
   'official': 'офіційний',
   'a bank buys at': 'банк купить по',
-  'You run a rota, so you will see what other people earn. That is behind two-factor.':
-    'Ви ведете графік, а отже побачите чужий заробіток. Це доступно лише з другою перевіркою входу.',
+  'You run a rota. What colleagues who share their rate earn opens only behind two-factor.':
+    'Ви ведете графік. Заробіток тих, хто ним ділиться, відкривається лише з другою перевіркою входу.',
   'Your tax arrangement': 'Ваш податковий режим',
   'Set it up': 'Налаштувати',
   'Enter the rates from your own registration and this will keep a running total against your own ceiling. It ships no rates of its own — they change by law and by year, and a wrong one here is a confident lie about what you owe.':

@@ -12,7 +12,7 @@ import { ACCENT_PRESETS, THEME_PRESETS, Settings } from '@/lib/settings/settings
 import { formatMoney } from '@/lib/settings/money';
 import { useSettings } from '@/lib/settings/store';
 import { cn } from '@/lib/utils';
-import { useI18n } from '@/lib/i18n';
+import { LANGS, useI18n } from '@/lib/i18n';
 
 const CURRENCIES = ['₴', '€', '$', '£', 'zł', '₽', 'Kč', '₸'];
 
@@ -56,6 +56,17 @@ export function Account() {
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Section title={t('Look')} hint={t('The theme applies at once, on every screen.')}>
+          {/* The app has spoken three languages for a while and offered no way
+              to say which: it read the browser's list and that was that. A
+              Ukrainian speaker on an English laptop had no route to Ukrainian
+              short of editing storage by hand. */}
+          <Choice
+            label={t('Language')}
+            options={LANGS.map((one) => ({ value: one.value, label: one.label }))}
+            value={settings.language}
+            onPick={pick('language')}
+          />
+
           <Choice
             label={t('Theme')}
             options={THEME_PRESETS.map((preset) => ({

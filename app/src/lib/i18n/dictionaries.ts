@@ -2926,6 +2926,8 @@ export const RU: Dictionary = {
   '{left} left over {days} — {perDay} a day.': 'Осталось {left} на {days} — по {perDay} в день.',
   'Short by {money}.': 'Не хватило {money}.',
   'Shift closed — {length} on the clock': 'Смена закрыта — {length} на часах',
+  'Show fewer': 'Свернуть',
+  '{count} more': 'Ещё {count}',
 };
 
 export const UK: Dictionary = {
@@ -5836,4 +5838,6 @@ export const UK: Dictionary = {
   '{left} left over {days} — {perDay} a day.': 'Залишилось {left} на {days} — по {perDay} на день.',
   'Short by {money}.': 'Не вистачило {money}.',
   'Shift closed — {length} on the clock': 'Зміну закрито — {length} на годиннику',
+  'Show fewer': 'Згорнути',
+  '{count} more': 'Ще {count}',
 };

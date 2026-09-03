@@ -260,9 +260,19 @@ function TwoFactorCard({ on }: { on: boolean }) {
   );
 }
 
+/**
+ * Six is enough to recognise the list; the rest is on request.
+ *
+ * A device that signs in from a browser gets a row per sign-in, and an
+ * account a few weeks old had thirty of them — a card three screens tall
+ * beside an empty column, and no way to reach anything below it.
+ */
+const FIRST_FEW = 6;
+
 function SessionsCard() {
-  const { t, lang } = useI18n();
+  const { t, n, lang } = useI18n();
   const client = useQueryClient();
+  const [all, setAll] = useState(false);
   const sessions = useQuery({ queryKey: ['sessions'], queryFn: () => authApi.sessions() });
 
   const revoke = useMutation({
@@ -272,6 +282,7 @@ function SessionsCard() {
   });
 
   const rows = sessions.data?.sessions ?? [];
+  const shown = all ? rows : rows.slice(0, FIRST_FEW);
 
   if (rows.length === 0) return null;
 
@@ -282,7 +293,7 @@ function SessionsCard() {
       hint={t('Every row is a device that currently holds a key.')}
     >
       <ul className="flex flex-col gap-1.5">
-        {rows.map((row) => {
+        {shown.map((row) => {
           const phone = /iPhone|Android|Mobile|Expo/i.test(row.user_agent ?? '');
 
           return (
@@ -319,6 +330,12 @@ function SessionsCard() {
           );
         })}
       </ul>
+
+      {rows.length > FIRST_FEW && (
+        <Button variant="outline" size="sm" className="self-start" onClick={() => setAll(!all)}>
+          {all ? t('Show fewer') : t('{count} more', { count: n(rows.length - FIRST_FEW, 'entries') })}
+        </Button>
+      )}
     </Card>
   );
 }

@@ -862,9 +862,13 @@ function Schedule() {
               is only here is the breakdown, so that is what it is.
             */}
             <h2 className="mb-1 text-[0.98rem] font-bold">{t('Who shares their earnings')}</h2>
+            {/* The count said «0 / 1 делятся» directly above a list with a
+                person in it, because the list also carries your own row —
+                you always see your own money. Counting the sharers while
+                showing yourself made the card argue with itself, so the
+                line counts the rows that are there and says why they are. */}
             <p className="field-hint mb-3">
-              {(rota?.members ?? []).filter((member) => member.shares_earnings).length} / {rota?.members.length}{' '}
-              {t('of the crew share')}
+              {sharers.length} / {rota?.members.length} — {t('you and whoever shares their rate')}
             </p>
             <ul className="flex flex-col gap-1.5">
               {sharers.map((member) => (
@@ -884,7 +888,10 @@ function Schedule() {
                   <span className="tabular">
                     <Money value={member.earned ?? 0} />
                     {member.hours > 0 && member.earned !== null && (
-                      <span className="field-hint"> · <Money value={member.earned / member.hours} />/h</span>
+                      <span className="field-hint">
+                        {' · '}
+                        <Money value={member.earned / member.hours} />/{t('h')}
+                      </span>
                     )}
                   </span>
                 </li>

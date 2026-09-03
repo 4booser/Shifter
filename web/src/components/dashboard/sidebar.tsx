@@ -37,7 +37,7 @@ import { ShiftModal } from './modals/shift-modal';
 import { confirmDeleteLocation } from './modals/location-delete';
 
 export function Sidebar() {
-  const { t } = useI18n();
+  const { t, num } = useI18n();
   const { format } = useMoney();
   const state = useCalendar();
 
@@ -306,7 +306,7 @@ export function Sidebar() {
                       <span className="field-hint tabular">
                         {item.start_time === null
                           ? t('all day')
-                          : `${item.start_time}–${item.end_time} · ${item.hours} ${t('h')}`}
+                          : `${item.start_time}–${item.end_time} · ${num(item.hours)} ${t('h')}`}
                         {/* Money that leaves, marked as such so it can never be
                             mistaken for a line of earnings. */}
                         {item.cost !== null && <> · −{format(item.cost)}</>}

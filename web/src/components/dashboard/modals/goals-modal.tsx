@@ -7,6 +7,7 @@ import { todayKey } from '@/lib/calendar/calendar-date';
 import { apiErrorMessage } from '@/lib/api/http';
 import { Goal, GoalPeriod } from '@/lib/calendar/models';
 import { useI18n } from '@/lib/i18n';
+import { useMoney } from '@/lib/settings/money';
 import { Alert, Money, Segmented } from '@/components/ui/bits';
 import { Icon } from '@/components/ui/icon';
 import { Modal } from '@/components/ui/modal';
@@ -32,6 +33,7 @@ export function GoalsModal({
   onSaved?: () => void;
 }) {
   const { t } = useI18n();
+  const { format } = useMoney();
 
   const [goals, setGoals] = useState<Goal[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -80,7 +82,9 @@ export function GoalsModal({
   };
 
   const remove = async (goal: Goal) => {
-    if (!window.confirm(`${goal.amount} — ${t('Delete this? It cannot be undone.')}`)) return;
+    // Every other delete in the app names the thing in the reader's own
+    // formatting; this one asked about a bare «40000».
+    if (!window.confirm(`${format(goal.amount)} — ${t('Delete this? It cannot be undone.')}`)) return;
 
     try {
       await calendarApi.deleteGoal(goal.id);

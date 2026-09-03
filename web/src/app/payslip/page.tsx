@@ -140,7 +140,10 @@ function Payslip() {
               <Row label={t('Of which overtime')} value={`${num(range.overtime_hours)} ${t('h')}`} />
             )}
             {range.night_hours > 0 && (
-              <Row label={t('Of which night')} value={`${range.night_hours} ${t('h')}`} />
+              // The one row on this sheet that skipped the formatter: «0,02 ч»
+              // on the line above and «0.02 ч» on this one, in a document
+              // written to be printed and handed to somebody.
+              <Row label={t('Of which night')} value={`${num(range.night_hours)} ${t('h')}`} />
             )}
           </Section>
 

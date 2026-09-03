@@ -49,7 +49,19 @@ interface CellEntry {
   time: string | null;
 }
 
+/*
+ * Three is what a month's cell can hold without the grid outgrowing a screen,
+ * and a fourth shift hides behind «+1». A week is one row where a month is
+ * six, so the same day can simply be taller there: the minimum height stays
+ * the floor it always was, and a busy day grows the row rather than being
+ * summarised at it.
+ *
+ * Giving the week row a tall fixed height instead was tried and was worse —
+ * seven boxes of empty is the same fault as a card stretched past its
+ * content, which this project has already fixed once on the bank page.
+ */
 const MAX_CELL_ENTRIES = 3;
+const MAX_CELL_ENTRIES_WEEK = 8;
 
 const SCOPES = [
   { value: 'day' as const, label: 'Day' },
@@ -82,6 +94,7 @@ export function MonthGrid({
   const gridRef = useRef<HTMLDivElement>(null);
 
   const weekdays = settings.mondayFirst ? WEEKDAY_LABELS : WEEKDAY_LABELS_SUNDAY;
+  const weekView = settings.view === 'week';
   const painting =
     state.brush !== null || state.eventBrush !== null || state.patternBrush || state.colourBrush !== null;
 
@@ -705,7 +718,7 @@ export function MonthGrid({
             const colour = dayColour(day.key);
             const ink = colour === null ? null : readableInk(colour);
             const list = entries(day.key);
-            const visible = list.slice(0, MAX_CELL_ENTRIES);
+            const visible = list.slice(0, weekView ? MAX_CELL_ENTRIES_WEEK : MAX_CELL_ENTRIES);
             const hidden = list.length - visible.length;
             const holiday = holidays.get(day.key)?.name ?? null;
             const hours = hoursOf(day.key);
@@ -751,7 +764,7 @@ export function MonthGrid({
                    мониторе лезло в клетку шириной в девяносто пикселей: там
                    «13:00–23:00» переносилось на две строки, а название смены
                    ужималось до «Вых…». */
-                className={`group cell-in @container relative flex min-h-[4.6rem] flex-col gap-0.5 overflow-hidden rounded-(--radius) border p-1 text-left transition-all sm:min-h-(--cell-min) sm:p-(--pad-cell) ${
+                className={`group cell-in @container relative flex min-h-[4.6rem] flex-col gap-0.5 overflow-hidden rounded-(--radius) border p-1 text-left transition-all sm:p-(--pad-cell) sm:min-h-(--cell-min) ${
                   day.inCurrentMonth ? '' : 'opacity-45'
                 } ${dragged ? 'scale-[0.97] border-(--accent) ring-2 ring-(--ring)' : picked ? 'border-(--accent) bg-(--accent-soft)' : selected ? 'ring-pulse border-(--accent)' : 'border-transparent hover:border-border-strong'} ${
                   painting ? 'cursor-crosshair' : ''

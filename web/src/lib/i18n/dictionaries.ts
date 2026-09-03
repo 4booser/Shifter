@@ -2674,6 +2674,7 @@ export const RU: Dictionary = {
   'Also read, under any of their usual names:': 'Читаются также, под любым из привычных названий:',
   'The photo leaves your device: an outside service reads it and sends back the rows. Shifter keeps no copy — only the days you tick below. A rota usually carries other people’s names.':
     'Фото уходит с устройства: его читает сторонний сервис и присылает обратно строки. Shifter снимок не хранит — только те дни, которые вы отметите ниже. На графике обычно есть чужие имена.',
+  'Drop the .ics here, or tap to choose': 'Бросьте .ics сюда или нажмите, чтобы выбрать',
 };
 
 export const UK: Dictionary = {
@@ -5327,4 +5328,5 @@ export const UK: Dictionary = {
   'Also read, under any of their usual names:': 'Читаються також, під будь-якою зі звичних назв:',
   'The photo leaves your device: an outside service reads it and sends back the rows. Shifter keeps no copy — only the days you tick below. A rota usually carries other people’s names.':
     'Фото залишає пристрій: його читає сторонній сервіс і надсилає назад рядки. Shifter знімок не зберігає — лише ті дні, які ви позначите нижче. У графіку зазвичай є чужі імена.',
+  'Drop the .ics here, or tap to choose': 'Киньте .ics сюди або натисніть, щоб обрати',
 };

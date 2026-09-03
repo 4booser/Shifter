@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 
 import { IcsOccurrence, readIcs } from '@/lib/import/ics';
 import { calendarApi } from '@/lib/api/calendar';
@@ -39,6 +39,9 @@ export function IcsImportModal({ open, onClose }: { open: boolean; onClose: () =
 
     return [...map.entries()];
   }, [parsed]);
+
+  const input = useRef<HTMLInputElement>(null);
+
 
   const pick = (file: File) => {
     setError(null);
@@ -134,17 +137,41 @@ export function IcsImportModal({ open, onClose }: { open: boolean; onClose: () =
           {t('Export your Google/Apple calendar as .ics and drop it here. Nothing applies until you say so.')}
         </p>
 
+        {/*
+          The line above says «бросьте сюда» and there was nothing here to
+          drop onto — so a browser did what a browser does with a file dropped
+          on a page that does not want it: opened the file and navigated away
+          from the app. Following the instruction lost your place. The photo
+          import has had this zone since it was written; this is the same one.
+        */}
         <input
+          ref={input}
           aria-label={t('Choose a file')}
           type="file"
           accept=".ics,text/calendar"
-          className="field-input"
+          className="hidden"
           onChange={(event) => {
             const file = event.target.files?.[0];
 
             if (file !== undefined) pick(file);
           }}
         />
+
+        <button
+          type="button"
+          className="grid min-h-24 place-items-center rounded-(--radius) border-2 border-dashed border-border-strong p-3 text-[0.9rem] text-muted hover:border-(--accent)"
+          onClick={() => input.current?.click()}
+          onDragOver={(event) => event.preventDefault()}
+          onDrop={(event) => {
+            event.preventDefault();
+
+            const dropped = event.dataTransfer.files[0];
+
+            if (dropped !== undefined) pick(dropped);
+          }}
+        >
+          {t('Drop the .ics here, or tap to choose')}
+        </button>
 
         {error && <Alert kind="error">{error}</Alert>}
         {done !== null && <Alert kind="good">{done}</Alert>}

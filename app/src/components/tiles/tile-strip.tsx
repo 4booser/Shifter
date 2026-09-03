@@ -69,7 +69,7 @@ export function TileStrip({ days, summary }: { days: CalendarDayData[]; summary:
     {
       id: 'earned',
       icon: Coins,
-      label: 'Заработано',
+      label: t('Earned'),
       value: money(summary.total_earned),
       hint: `${shifts} ${shiftsWord(shifts)} · ${Math.round(summary.hours)} ч`,
       to: '/stats',
@@ -78,26 +78,26 @@ export function TileStrip({ days, summary }: { days: CalendarDayData[]; summary:
     {
       id: 'hourly',
       icon: Clock,
-      label: 'Твой час',
+      label: t('Your hour'),
       value: perHour > 0 ? money(perHour) : '·',
-      hint: summary.hours > 0 ? `${Math.round(summary.hours)} ч в этом месяце` : 'Часов пока нет',
+      hint: summary.hours > 0 ? `${Math.round(summary.hours)} ч в этом месяце` : t('No hours yet'),
       to: '/stats',
     },
     {
       id: 'tips',
       icon: Sparkles,
-      label: 'Чаевые',
+      label: t('Tips'),
       value: money(tips),
       hint:
         summary.total_earned > 0
           ? `${Math.round((tips / summary.total_earned) * 100)}% от заработка`
-          : 'в этом месяце',
+          : t('this month'),
       to: '/stats',
     },
     {
       id: 'best',
       icon: Trophy,
-      label: 'Лучший день',
+      label: t('Best day'),
       value: best === null ? '·' : money(best.earned),
       hint:
         best === null
@@ -108,47 +108,47 @@ export function TileStrip({ days, summary }: { days: CalendarDayData[]; summary:
     {
       id: 'nights',
       icon: Moon,
-      label: 'Ночные часы',
+      label: t('Night hours'),
       value: `${Math.round(nights)}`,
       hint:
-        summary.hours > 0 ? `${Math.round((nights / summary.hours) * 100)}% всех часов` : 'в этом месяце',
+        summary.hours > 0 ? `${Math.round((nights / summary.hours) * 100)}% всех часов` : t('this month'),
       to: '/stats',
     },
     {
       id: 'planned',
       icon: CalendarClock,
-      label: 'Ещё впереди',
+      label: t('Still ahead'),
       value: ahead.length > 0 ? money(ahead.reduce((sum, day) => sum + day.planned, 0)) : '·',
       // Days with something planned, which is what `ahead` counts — calling
       // them shifts made a day with two of them read as one.
       hint:
         ahead.length > 0
           ? `${ahead.length} ${daysWord(ahead.length)} впереди`
-          : 'Пока ничего не поставлено',
+          : t('Nothing put down yet'),
       to: '/payouts',
     },
     {
       id: 'overtime',
       icon: TrendingUp,
-      label: 'Переработка',
+      label: t('Overtime'),
       value: `${Math.round(summary.overtime_hours)}`,
-      hint: summary.overtime_hours > 0 ? 'часов сверх нормы' : 'ничего сверх нормы',
+      hint: summary.overtime_hours > 0 ? 'часов сверх нормы' : t('nothing past the norm'),
       to: '/stats',
       tone: summary.overtime_hours > 0 ? 'warn' : undefined,
     },
     {
       id: 'withheld',
       icon: Receipt,
-      label: 'Удержано',
+      label: t('Withheld'),
       value: withheld > 0 ? money(withheld) : '·',
-      hint: withheld > 0 ? 'штрафы и питание' : 'ничего не удержано',
+      hint: withheld > 0 ? 'штрафы и питание' : t('nothing withheld'),
       to: '/payouts',
       tone: withheld > 0 ? 'danger' : undefined,
     },
     {
       id: 'streak',
       icon: Flame,
-      label: 'Подряд',
+      label: t('In a row'),
       value: `${streak.run}`,
       hint:
         streak.record > streak.run
@@ -159,26 +159,26 @@ export function TileStrip({ days, summary }: { days: CalendarDayData[]; summary:
     {
       id: 'places',
       icon: Building2,
-      label: 'Откуда деньги',
+      label: t('Where the money comes from'),
       value: topPlace(summary) ?? '·',
-      hint: topShare(summary),
+      hint: topShare(summary, t),
       to: '/stats',
     },
     {
       id: 'guests',
       icon: Users,
-      label: 'Гостей',
+      label: t('Guests'),
       value: `${summary.guests_counted}`,
       hint:
         summary.guests_counted > 0 && tips > 0
           ? `${money(tips / summary.guests_counted)} с гостя`
-          : 'там, где считали',
+          : t('where they were counted'),
       to: '/stats',
     },
     {
       id: 'week',
       icon: CalendarRange,
-      label: 'Дней отработано',
+      label: t('Days worked'),
       value: `${worked.length}`,
       // Days the server has a row for, not days in the month: a month with
       // fourteen worked days and two coloured ones read «из 16 в месяце».
@@ -235,13 +235,13 @@ function topPlace(summary: DaysResponse): string | null {
   return [...named].sort((one, two) => two.earned - one.earned)[0]?.name ?? null;
 }
 
-function topShare(summary: DaysResponse): string {
+function topShare(summary: DaysResponse, t: (key: string) => string): string {
   const named = summary.by_location.filter(
     (place) => place.location_id !== 0 && place.name.trim() !== '',
   );
   const top = [...named].sort((one, two) => two.earned - one.earned)[0];
 
-  if (top === undefined || summary.total_earned <= 0) return 'в этом месяце';
+  if (top === undefined || summary.total_earned <= 0) return t('this month');
 
-  return `${Math.round((top.earned / summary.total_earned) * 100)}% месяца`;
+  return `${Math.round((top.earned / summary.total_earned) * 100)}% ${t('of the month')}`;
 }

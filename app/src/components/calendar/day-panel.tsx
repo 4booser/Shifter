@@ -143,14 +143,14 @@ export function DayPanel({
       </header>
 
       {shown.length === 0 ? (
-        <p className="field-hint">В этот день смен нет.</p>
+        <p className="field-hint">{t('No shifts on this day.')}</p>
       ) : (
         <ul className="flex flex-col gap-2">
           {shown.map((entry) => (
             <li key={entry.shift_id} className="flex flex-wrap items-start gap-2">
               <button
                 type="button"
-                aria-label={entry.worked ? 'Отметить как план' : 'Отметить отработанной'}
+                aria-label={entry.worked ? 'Отметить как план' : t('Mark as worked')}
                 onClick={() => toggleWorked(entry.shift_id, !entry.worked)}
                 className={cn(
                   'mt-0.5 grid size-5 flex-none place-items-center rounded-md border transition-colors',
@@ -180,7 +180,7 @@ export function DayPanel({
 
               <button
                 type="button"
-                aria-label={opened === entry.shift_id ? 'Свернуть' : 'Подробнее о смене'}
+                aria-label={opened === entry.shift_id ? 'Свернуть' : t('More about the shift')}
                 className="mt-0.5 text-muted-foreground transition-colors hover:text-ink"
                 onClick={() =>
                   setOpened((was) => (was === entry.shift_id ? null : entry.shift_id))
@@ -196,7 +196,7 @@ export function DayPanel({
 
               <button
                 type="button"
-                aria-label="Убрать смену"
+                aria-label={t('Remove the shift')}
                 className="mt-0.5 text-muted-foreground transition-colors hover:text-danger"
                 onClick={() => dropShift(entry.shift_id)}
               >
@@ -289,7 +289,7 @@ export function DayPanel({
           <Field
             key={`fine-${date}`}
             compact
-          label="Удержали"
+          label={t('Withheld')}
             initial={day?.deductions == null ? '' : `${day.deductions}`}
             placeholder="0"
             numeric
@@ -304,7 +304,7 @@ export function DayPanel({
             empty fine is a question about nothing. */}
         {(day?.deductions ?? 0) > 0 && (
           <div className="flex flex-col gap-1.5">
-            <span className="field-label">За что</span>
+            <span className="field-label">{t('What for')}</span>
             <div className="flex flex-wrap gap-1.5">
               {REASONS.map((reason) => (
                 <button
@@ -318,7 +318,7 @@ export function DayPanel({
                       : 'border-border text-muted-foreground hover:text-ink',
                   )}
                 >
-                  {reason.label}
+                  {t(reason.label)}
                 </button>
               ))}
             </div>
@@ -326,7 +326,7 @@ export function DayPanel({
         )}
 
         <ColourField
-          label="Цвет дня"
+          label={t('The day’s colour')}
           value={day?.colour}
           onPick={(colour) => save.mutate(() => ({ colour }))}
         />
@@ -407,21 +407,21 @@ function Field({
 }
 
 const REASONS: { value: DeductionReason; label: string }[] = [
-  { value: 'breakage', label: 'разбили' },
-  { value: 'shortfall', label: 'недостача' },
-  { value: 'late', label: 'опоздание' },
-  { value: 'waste', label: 'списание' },
-  { value: 'uniform', label: 'форма' },
-  { value: 'other', label: 'другое' },
+  { value: 'breakage', label: 'breakage' },
+  { value: 'shortfall', label: 'shortfall' },
+  { value: 'late', label: 'lateness' },
+  { value: 'waste', label: 'write-off' },
+  { value: 'uniform', label: 'uniform' },
+  { value: 'other', label: 'something else' },
 ];
 
 const ZONES: { value: ShiftZone; label: string }[] = [
-  { value: 'unset', label: 'не сказано' },
-  { value: 'hall', label: 'зал' },
-  { value: 'bar', label: 'бар' },
-  { value: 'terrace', label: 'терраса' },
-  { value: 'banquet', label: 'банкет' },
-  { value: 'takeaway', label: 'навынос' },
+  { value: 'unset', label: 'not said' },
+  { value: 'hall', label: 'the floor' },
+  { value: 'bar', label: 'the bar' },
+  { value: 'terrace', label: 'the terrace' },
+  { value: 'banquet', label: 'a function' },
+  { value: 'takeaway', label: 'takeaway' },
 ];
 
 /**
@@ -460,7 +460,7 @@ function ShiftDetail({
   return (
     <div className="mt-1 flex w-full flex-col gap-3 rounded-xl bg-surface-2 p-3">
       <div className="flex flex-col gap-1">
-        <span className="field-label">Отработано по факту</span>
+        <span className="field-label">{t('Actually worked')}</span>
         <span className="flex items-center gap-2">
           <Input
             type="time"
@@ -492,13 +492,13 @@ function ShiftDetail({
             Записать
           </Button>
         </span>
-        <span className="field-hint">Пусто — считать по плану смены.</span>
+        <span className="field-hint">{t('Leave empty to count by the shift’s plan.')}</span>
       </div>
 
       <div className="grid grid-cols-3 gap-2">
         <Field
           compact
-          label="Перерыв, мин"
+          label={t('Break, min')}
           initial={entry.break_minutes == null ? '' : `${entry.break_minutes}`}
           placeholder="0"
           numeric
@@ -507,7 +507,7 @@ function ShiftDetail({
         />
         <Field
           compact
-          label="Выручка"
+          label={t('Takings')}
           initial={entry.revenue == null ? '' : `${entry.revenue}`}
           placeholder="—"
           numeric
@@ -539,13 +539,13 @@ function ShiftDetail({
         className="flex items-center justify-between gap-3 text-left disabled:opacity-50"
       >
         <span className="min-w-0">
-          <span className="block text-sm font-medium">Прошу подменить</span>
+          <span className="block text-sm font-medium">{t('Asking for cover')}</span>
           <span className="field-hint">
             {entry.worked
               ? 'Смена уже отработана — передавать нечего.'
               : entry.needs_cover
                 ? 'Команда видит это на графике.'
-                : 'Смена появится на графике как «ищут подмену».'}
+                : t('The shift appears on the rota as «looking for cover».')}
           </span>
         </span>
         <span
@@ -564,7 +564,7 @@ function ShiftDetail({
       </button>
 
       <div className="flex flex-col gap-1.5">
-        <span className="field-label">Где работали</span>
+        <span className="field-label">{t('Where you worked')}</span>
         <div className="flex flex-wrap gap-1.5">
           {ZONES.map((zone) => (
             <button
@@ -578,7 +578,7 @@ function ShiftDetail({
                   : 'border-border text-muted-foreground hover:text-ink',
               )}
             >
-              {zone.label}
+              {t(zone.label)}
             </button>
           ))}
         </div>

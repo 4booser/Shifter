@@ -21,21 +21,21 @@ import { cn } from '@/lib/utils';
 import { useI18n } from '@/lib/i18n';
 
 const PERIOD_LABELS: Record<PayPeriodKind, string> = {
-  monthly: 'раз в месяц',
-  semimonthly: 'дважды в месяц',
-  biweekly: 'раз в две недели',
-  weekly: 'раз в неделю',
+  monthly: 'once a month',
+  semimonthly: 'twice a month',
+  biweekly: 'every two weeks',
+  weekly: 'every week',
 };
 
 /** Countries whose public holidays the server already knows. */
 const HOLIDAY_COUNTRIES: { value: string; label: string }[] = [
-  { value: '', label: 'не считать' },
-  { value: 'UA', label: 'Украина' },
-  { value: 'PL', label: 'Польша' },
-  { value: 'DE', label: 'Германия' },
-  { value: 'CZ', label: 'Чехия' },
-  { value: 'GB', label: 'Британия' },
-  { value: 'US', label: 'США' },
+  { value: '', label: 'do not count' },
+  { value: 'UA', label: 'Ukraine' },
+  { value: 'PL', label: 'Poland' },
+  { value: 'DE', label: 'Germany' },
+  { value: 'CZ', label: 'Czechia' },
+  { value: 'GB', label: 'Britain' },
+  { value: 'US', label: 'The United States' },
 ];
 
 const BLANK: WorkLocationCreate = {
@@ -78,6 +78,7 @@ const BLANK: WorkLocationCreate = {
  * place, and until now none of it could be said on this front.
  */
 export function Places() {
+  const { t } = useI18n();
   const settings = useSettings((state) => state.settings);
   const client = useQueryClient();
 
@@ -89,7 +90,7 @@ export function Places() {
       calendarApi.archiveLocation(id, archived),
     onSuccess: (_, { archived }) => {
       void client.invalidateQueries({ queryKey: ['locations'] });
-      toast.success(archived ? 'Место в архиве' : 'Место снова в деле');
+      toast.success(archived ? 'Место в архиве' : t('The place is back'));
     },
     onError: () => toast.error('Не вышло — попробуйте ещё раз.'),
   });
@@ -101,14 +102,14 @@ export function Places() {
     <div className="flex flex-col gap-5">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Места работы</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{t('Places of work')}</h1>
           <p className="field-hint">
             Когда приходят деньги, сколько стоит ночь и что удерживает заведение.
           </p>
         </div>
         <Button onClick={() => setEditing('new')}>
           <Plus className="size-4" />
-          Новое место
+          {t('A new place')}
         </Button>
       </header>
 
@@ -122,9 +123,9 @@ export function Places() {
         <div className="card flex flex-col items-center gap-3 p-10 text-center">
           <Building2 className="size-7 text-muted-foreground" />
           <div>
-            <p className="font-semibold">Мест пока нет</p>
+            <p className="font-semibold">{t('No places yet')}</p>
             <p className="field-hint mt-1">
-              Смены работают и без места. Место нужно, когда важно, <b>когда</b> платят и что
+              Смены работают и без места. Место нужно, когда важно, <b>{t('when')}</b> платят и что
               вычитают.
             </p>
           </div>
@@ -149,7 +150,7 @@ export function Places() {
 
       {shelved.length > 0 && (
         <section className="flex flex-col gap-2">
-          <h2 className="field-label">В архиве</h2>
+          <h2 className="field-label">{t('Archived')}</h2>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {shelved.map((place) => (
               <PlaceCard
@@ -220,7 +221,7 @@ function PlaceCard({
         <div className="min-w-0 flex-1">
           <p className="truncate font-semibold">{place.name}</p>
           <p className="field-hint">
-            {PERIOD_LABELS[place.pay_period]}
+            {t(PERIOD_LABELS[place.pay_period])}
             {place.pay_period === 'monthly' || place.pay_period === 'semimonthly'
               ? `, ${place.pay_day}-го`
               : ''}
@@ -237,7 +238,7 @@ function PlaceCard({
           </button>
           <button
             type="button"
-            aria-label={place.archived ? 'Вернуть из архива' : 'В архив'}
+            aria-label={place.archived ? 'Вернуть из архива' : t('To the archive')}
             onClick={onArchive}
             className="grid size-7 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-surface-2 hover:text-ink"
           >
@@ -306,7 +307,7 @@ function PlaceDialog({
         ? calendarApi.createLocation(form)
         : calendarApi.updateLocation(place.id, form),
     onSuccess: () => {
-      toast.success(place === null ? 'Место добавлено' : 'Место изменено');
+      toast.success(place === null ? 'Место добавлено' : t('Place changed'));
       onSaved();
     },
     onError: (error: Error) => toast.error(error.message),
@@ -322,18 +323,18 @@ function PlaceDialog({
         </DialogHeader>
 
         <div className="flex flex-col gap-5">
-          <Group title="Что за место">
+          <Group title={t('What place is it')}>
             <div className="grid gap-2 sm:grid-cols-2">
               <Text
                 label={t('Title')}
                 value={form.name}
-                placeholder="Кофейня на Соборной"
+                placeholder={t('The coffee house on the square')}
                 onPick={(value) => set('name', value)}
               />
               <Text
                 label={t('City')}
                 value={form.city ?? ''}
-                placeholder="Днепр"
+                placeholder={t('Dnipro')}
                 onPick={(value) => set('city', value)}
               />
             </div>
@@ -351,12 +352,12 @@ function PlaceDialog({
             />
           </Group>
 
-          <Group title="Когда платят" hint="Отсюда берётся дата следующей выплаты.">
+          <Group title={t('When they pay')} hint="Отсюда берётся дата следующей выплаты.">
             <Pills
-              label="Цикл"
+              label={t('Cycle')}
               options={(Object.keys(PERIOD_LABELS) as PayPeriodKind[]).map((value) => ({
                 value,
-                label: PERIOD_LABELS[value],
+                label: t(PERIOD_LABELS[value]),
               }))}
               value={form.pay_period}
               onPick={(value) => set('pay_period', value)}
@@ -364,13 +365,13 @@ function PlaceDialog({
             <div className="grid gap-2 sm:grid-cols-2">
               {byDate ? (
                 <Num
-                  label="Какого числа"
+                  label={t('On which day')}
                   value={form.pay_day}
                   onPick={(value) => set('pay_day', value)}
                 />
               ) : (
                 <label className="flex flex-col gap-1">
-                  <span className="field-label">Любой день, когда платили</span>
+                  <span className="field-label">{t('Any day they paid')}</span>
                   <Input
                     type="date"
                     value={form.pay_anchor ?? ''}
@@ -378,13 +379,13 @@ function PlaceDialog({
                       set('pay_anchor', event.target.value === '' ? null : event.target.value)
                     }
                   />
-                  <span className="field-hint">От него отсчитываются недели.</span>
+                  <span className="field-hint">{t('The weeks are counted from it.')}</span>
                 </label>
               )}
               <Text
                 label={t('Currency, three letters')}
                 value={form.currency ?? ''}
-                placeholder="как в приложении"
+                placeholder={t('as in the app')}
                 onPick={(value) => set('currency', value === '' ? null : value.toUpperCase())}
               />
             </div>
@@ -393,7 +394,7 @@ function PlaceDialog({
           <Group title={t('Premiums')} hint="×1 означает, что надбавки нет.">
             <div className="grid gap-2 sm:grid-cols-3">
               <Num
-                label="Ночь ×"
+                label={t('Night ×')}
                 value={form.night_multiplier}
                 onPick={(value) => set('night_multiplier', value)}
               />
@@ -410,77 +411,77 @@ function PlaceDialog({
             </div>
             <div className="grid gap-2 sm:grid-cols-2">
               <Num
-                label="Праздник ×"
+                label={t('Holiday ×')}
                 value={form.public_holiday_multiplier}
                 onPick={(value) => set('public_holiday_multiplier', value)}
               />
               <Pills
-                label="Праздники какой страны"
-                options={HOLIDAY_COUNTRIES}
+                label={t('Whose country’s holidays')}
+                options={HOLIDAY_COUNTRIES.map((one) => ({ ...one, label: t(one.label) }))}
                 value={form.holiday_country}
                 onPick={(value) => set('holiday_country', value)}
               />
             </div>
             <div className="grid gap-2 sm:grid-cols-2">
               <Num
-                label="Переработка после, ч в неделю"
+                label={t('Overtime after, h a week')}
                 value={form.overtime_weekly_hours}
                 min={1}
                 max={168}
                 onPick={(value) => set('overtime_weekly_hours', value)}
               />
               <Num
-                label="Переработка ×"
+                label={t('Overtime ×')}
                 value={form.overtime_multiplier}
                 min={1}
                 onPick={(value) => set('overtime_multiplier', value)}
               />
             </div>
             <Num
-              label="Ставка не ниже, за час"
+              label={t('Rate no lower than, per hour')}
               value={form.minimum_hourly ?? 0}
               onPick={(value) => set('minimum_hourly', value)}
             />
           </Group>
 
-          <Group title="Что удерживают">
+          <Group title={t('What is withheld')}>
             <div className="grid gap-2 sm:grid-cols-2">
               <Num
-                label="В котёл, % чаевых"
+                label={t('To the pool, % of tips')}
                 value={form.tip_out_of_tips_percent}
                 onPick={(value) => set('tip_out_of_tips_percent', value)}
               />
               <Num
-                label="В котёл, % выручки"
+                label={t('To the pool, % of takings')}
                 value={form.tip_out_of_sales_percent}
                 onPick={(value) => set('tip_out_of_sales_percent', value)}
               />
             </div>
             <div className="grid gap-2 sm:grid-cols-2">
               <Num
-                label="Питание за смену"
+                label={t('Meal per shift')}
                 value={form.meal_deduction}
                 onPick={(value) => set('meal_deduction', value)}
               />
               <Num
-                label="Налог, %"
+                label={t('Tax, %')}
                 value={form.tax_percent}
                 onPick={(value) => set('tax_percent', value)}
               />
             </div>
             <Switch
-              label="Налог и с чаевых"
+              label={t('Tax on tips as well')}
               on={form.tax_tips}
               onPick={(value) => set('tax_tips', value)}
             />
             <Num
-              label="Отпускные копятся, %"
+              label={t('Holiday pay accrues, %')}
               value={form.holiday_percent}
               onPick={(value) => set('holiday_percent', value)}
             />
           </Group>
 
-          <Group title="Перерыв и дорога" hint="Перерыв применяется сам, если смена длиннее.">
+          <Group title={t('Break and travel')} hint="Перерыв применяется сам, если смена длиннее.">
             <div className="grid gap-2 sm:grid-cols-2">
               <Num
                 label={t('Break after, h')}
@@ -495,7 +496,7 @@ function PlaceDialog({
             </div>
             <div className="grid gap-2 sm:grid-cols-2">
               <Num
-                label="Дорога в одну сторону, мин"
+                label={t('Travel one way, min')}
                 value={form.commute_minutes ?? 0}
                 onPick={(value) => set('commute_minutes', value)}
               />

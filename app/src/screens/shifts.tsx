@@ -27,10 +27,10 @@ import { cn } from '@/lib/utils';
 import { useI18n } from '@/lib/i18n';
 
 const PERIOD_LABELS: Record<SalaryPeriod, string> = {
-  hour: 'в час',
-  day: 'в день',
-  week: 'в неделю',
-  month: 'в месяц',
+  hour: 'per hour',
+  day: 'per day',
+  week: 'per week',
+  month: 'per month',
 };
 
 const BLANK: ShiftCreate = {
@@ -70,7 +70,7 @@ export function Shifts() {
       calendarApi.archiveShift(id, archived),
     onSuccess: (_, { archived }) => {
       void client.invalidateQueries({ queryKey: ['shifts'] });
-      toast.success(archived ? 'Смена в архиве' : 'Смена снова в деле');
+      toast.success(archived ? 'Смена в архиве' : t('The shift is back'));
     },
     onError: () => toast.error('Не вышло — попробуйте ещё раз.'),
   });
@@ -103,7 +103,7 @@ export function Shifts() {
         <div className="card flex flex-col items-center gap-3 p-10 text-center">
           <Clock className="size-7 text-muted-foreground" />
           <div>
-            <p className="font-semibold">Пока ни одной смены</p>
+            <p className="font-semibold">{t('No shifts yet')}</p>
             <p className="field-hint mt-1">
               Заведите ту, что работаете чаще всего, — остальное приложение построит вокруг неё.
             </p>
@@ -129,7 +129,7 @@ export function Shifts() {
 
       {shelved.length > 0 && (
         <section className="flex flex-col gap-2">
-          <h2 className="field-label">В архиве</h2>
+          <h2 className="field-label">{t('Archived')}</h2>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {shelved.map((shift) => (
               <ShiftCard
@@ -180,7 +180,7 @@ function ShiftCard({
       ? shift.revenue_percent == null
         ? 'без ставки'
         : `${shift.revenue_percent}% с выручки`
-      : `${money(shift.salary_amount)} ${PERIOD_LABELS[shift.salary_period]}`;
+      : `${money(shift.salary_amount)} ${t(PERIOD_LABELS[shift.salary_period])}`;
 
   return (
     <article className={cn('card flex flex-col gap-2 p-4', dimmed && 'opacity-60')}>
@@ -210,7 +210,7 @@ function ShiftCard({
           </button>
           <button
             type="button"
-            aria-label={shift.archived ? 'Вернуть из архива' : 'В архив'}
+            aria-label={shift.archived ? 'Вернуть из архива' : t('To the archive')}
             onClick={onArchive}
             className="grid size-7 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-surface-2 hover:text-ink"
           >
@@ -275,7 +275,7 @@ function ShiftDialog({
     mutationFn: () =>
       shift == null ? calendarApi.createShift(form) : calendarApi.updateShift(shift.id, form),
     onSuccess: () => {
-      toast.success(shift == null ? 'Смена заведена' : 'Смена изменена');
+      toast.success(shift == null ? 'Смена заведена' : t('Shift changed'));
       onSaved();
     },
     onError: (error: Error) => toast.error(error.message),
@@ -303,7 +303,7 @@ function ShiftDialog({
               <span className="field-label">{t('Title')}</span>
               <Input
                 value={form.name}
-                placeholder="Бар, вечер"
+                placeholder={t('The bar, evening')}
                 autoFocus
                 onChange={(event) => set('name', event.target.value)}
               />
@@ -340,11 +340,11 @@ function ShiftDialog({
           {/* The end before the start is a night shift, not a mistake — say so,
               because the hours it counts look wrong until you know. */}
           {form.end_time <= form.start_time && (
-            <p className="field-hint">Смена переходит за полночь — часы считаются до утра.</p>
+            <p className="field-hint">{t('The shift runs past midnight — the hours count through to morning.')}</p>
           )}
 
           <div className="flex flex-col gap-1.5">
-            <span className="field-label">Платят</span>
+            <span className="field-label">{t('Paid')}</span>
             <div className="flex flex-wrap gap-1.5">
               {SALARY_PERIODS.map((period) => (
                 <button
@@ -358,7 +358,7 @@ function ShiftDialog({
                       : 'border-border text-muted-foreground hover:text-ink',
                   )}
                 >
-                  {PERIOD_LABELS[period.value]}
+                  {t(PERIOD_LABELS[period.value])}
                 </button>
               ))}
             </div>
@@ -404,8 +404,8 @@ function ShiftDialog({
             <div className="flex flex-wrap items-center gap-1.5">
               {(
                 [
-                  ['personal', 'свои'],
-                  ['pool', 'из общего котла'],
+                  ['personal', t('your own')],
+                  ['pool', t('from the shared pool')],
                 ] as [TipSource, string][]
               ).map(([value, label]) => (
                 <button
@@ -426,7 +426,7 @@ function ShiftDialog({
                 <Input
                   className="w-24"
                   inputMode="decimal"
-                  placeholder="доля %"
+                  placeholder={t('share %')}
                   value={form.tip_pool_percent == null ? '' : `${form.tip_pool_percent}`}
                   onChange={(event) =>
                     set(
@@ -481,10 +481,10 @@ function ShiftDialog({
           )}
 
           <ColourField
-            label="Цвет смены"
+            label={t('The shift’s colour')}
             value={form.colour}
             onPick={(colour) => set('colour', colour)}
-            clearHint={form.location_id === null ? 'без цвета' : 'цвет места'}
+            clearHint={form.location_id === null ? 'без цвета' : t('the place’s colour')}
           />
         </div>
 

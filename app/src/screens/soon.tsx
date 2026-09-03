@@ -15,7 +15,7 @@ export function Soon({ title }: { title: string }) {
         href={`/${title}`}
         className="inline-flex items-center gap-1 text-sm font-semibold text-accent-foreground hover:underline"
       >
-        Открыть рабочую версию
+        {t('Open the working version')}
         <ArrowUpRight className="size-3.5" />
       </a>
     </section>

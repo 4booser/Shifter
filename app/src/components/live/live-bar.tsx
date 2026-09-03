@@ -132,13 +132,13 @@ export function LiveBar() {
                 15 мин
               </Button>
               <Button size="sm" variant="outline" onClick={pauseLiveShift}>
-                Пауза
+                {t('Pause')}
               </Button>
             </>
           )}
           <Button size="sm" disabled={finish.isPending} onClick={() => finish.mutate()}>
             <Square className="size-3.5" />
-            Закончить
+            {t('Finish')}
           </Button>
           <button
             type="button"

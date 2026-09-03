@@ -15,7 +15,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { calendarApi } from '@/lib/api/calendar';
 import { DaysResponse } from '@/lib/calendar/models';
 import { todayKey } from '@/lib/calendar/calendar-date';
-import { hoursWord, shiftsWord } from '@/lib/text/plural';
 import { formatMoney } from '@/lib/settings/money';
 import { useSettings } from '@/lib/settings/store';
 import { cn } from '@/lib/utils';
@@ -30,7 +29,7 @@ import { useI18n } from '@/lib/i18n';
  * happened.
  */
 export function Wrapped() {
-  const { t, lang } = useI18n();
+  const { t, n, lang } = useI18n();
   // Asked of the locale: Ukrainian's month initials are not Russian's.
   const MONTH_INITIALS = Array.from({ length: 12 }, (_, index) =>
     new Intl.DateTimeFormat(lang, { month: 'narrow' })
@@ -92,7 +91,7 @@ export function Wrapped() {
 
         <Button variant="ghost" size="sm" asChild>
           <a href="/wrapped">
-            Старая версия
+            {t('Old version')}
             <ArrowUpRight className="size-3.5" />
           </a>
         </Button>
@@ -105,7 +104,7 @@ export function Wrapped() {
         </>
       ) : summary === undefined ? (
         <p className="card p-4 text-sm" style={{ color: 'var(--danger)' }}>
-          Не дотянулись до сервера.
+          {t('Could not reach the server.')}
         </p>
       ) : shifts === 0 ? (
         <p className="card p-6 text-center">
@@ -127,7 +126,7 @@ export function Wrapped() {
               {money(summary.total_earned)}
             </p>
             <p className="field-hint relative mt-2">
-              {shifts} {shiftsWord(shifts)} · {Math.round(summary.hours)} ч ·{' '}
+              {n(shifts, 'shifts')} · {Math.round(summary.hours)} {t('h')} ·{' '}
               {/* An hour is the floor, not nought: a shift closed after fifty
                   seconds priced the hour at −₴3 805 on the other client. This
                   is the last of five copies of that rule. */}
@@ -200,7 +199,7 @@ function YearStory({
   summary: DaysResponse;
   previous: DaysResponse | undefined;
 }) {
-  const { t } = useI18n();
+  const { t, n } = useI18n();
   const settings = useSettings((state) => state.settings);
   const money = (value: number) => formatMoney(settings, Math.round(value));
 
@@ -220,36 +219,50 @@ function YearStory({
       .sort((one, two) => two.earned - one.earned)[0] ?? null;
 
   const lines: string[] = [
-    `В ${year} году вы отработали ${shifts} ${shiftsWord(shifts)} — ${Math.round(summary.hours)} ${hoursWord(Math.round(summary.hours))}, и они принесли ${money(summary.total_earned)}.`,
-    `Час вашего года стоил ${money(perHour)}${
-      grew === null
+    t('In {year} you worked {shifts} — {hours}, and they brought {money}.', {
+      year,
+      shifts: n(shifts, 'shifts'),
+      hours: n(Math.round(summary.hours), 'hours'),
+      money: money(summary.total_earned),
+    }),
+    t('An hour of your year was worth {money}.', { money: money(perHour) }).replace(/\.$/, '') +
+      (grew === null
         ? '.'
         : grew === 0
           ? t(', exactly as much as the year before.')
           : grew > 0
-            ? ` — на ${grew}% больше, чем годом раньше.`
-            : ` — на ${Math.abs(grew)}% меньше, чем годом раньше.`
-    }`,
+            ? t(' — {percent}% more than the year before.', { percent: grew })
+            : t(' — {percent}% less than the year before.', { percent: Math.abs(grew) })),
   ];
 
   if (summary.tips_earned > 0) {
-    lines.push(`Чаевые принесли ${money(summary.tips_earned)} — ${tipShare}% от всего.`);
+    lines.push(
+      t('Tips brought {money} — {percent}% of everything.', {
+        money: money(summary.tips_earned),
+        percent: tipShare,
+      }),
+    );
   }
 
   if (summary.night_hours > 0) {
     lines.push(
-      `${Math.round((summary.night_hours / Math.max(1, summary.hours)) * 100)}% этих часов были ночными.`,
+      t('{percent}% of those hours were at night.', {
+        percent: Math.round((summary.night_hours / Math.max(1, summary.hours)) * 100),
+      }),
     );
   }
 
   if (top !== null && summary.by_location.length > 1) {
     lines.push(
-      `Больше всего — ${Math.round((top.earned / summary.total_earned) * 100)}% — принесло ${top.name}.`,
+      t('Most of it — {percent}% — came from {place}.', {
+        percent: Math.round((top.earned / summary.total_earned) * 100),
+        place: top.name,
+      }),
     );
   }
 
   if (summary.deductions > 0) {
-    lines.push(`${money(summary.deductions)} удержано штрафами и питанием.`);
+    lines.push(t('{money} was withheld in fines and meals.', { money: money(summary.deductions) }));
   }
 
   return (

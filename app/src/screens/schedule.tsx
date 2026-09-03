@@ -16,7 +16,6 @@ import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { RotaEntry, teamApi } from '@/lib/api/team';
 import { keysBetween, shiftDays, todayKey, weekBounds } from '@/lib/calendar/calendar-date';
-import { daysWord } from '@/lib/text/plural';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/lib/i18n';
 
@@ -33,7 +32,7 @@ import { useI18n } from '@/lib/i18n';
  * rota is swap shifts on it.
  */
 export function Schedule() {
-  const { t } = useI18n();
+  const { t, n } = useI18n();
   const client = useQueryClient();
 
   const teams = useQuery({ queryKey: ['teams'], queryFn: () => teamApi.list() });
@@ -134,7 +133,7 @@ export function Schedule() {
 
         <Button variant="ghost" size="sm" asChild>
           <a href="/schedule">
-            Старая версия
+            {t('Old version')}
             <ArrowUpRight className="size-3.5" />
           </a>
         </Button>
@@ -144,7 +143,7 @@ export function Schedule() {
         <Skeleton className="h-56 rounded-[var(--radius-card)]" />
       ) : rota.data === undefined ? (
         <p className="card p-4 text-sm" style={{ color: 'var(--danger)' }}>
-          Не дотянулись до сервера.
+          {t('Could not reach the server.')}
         </p>
       ) : (
         <>
@@ -153,9 +152,7 @@ export function Schedule() {
               className="card flex items-center gap-2 p-3 text-sm"
               style={{ background: 'var(--warn-soft)' }}
             >
-              <ShieldAlert className="size-4 flex-none" />
-              Общие итоги команды скрыты, пока у вас не включён вход по коду.
-            </p>
+              <ShieldAlert className="size-4 flex-none" />{t('The team totals stay hidden until you turn on the code at sign-in.')}</p>
           )}
 
           <section className="card overflow-x-auto p-4">
@@ -249,10 +246,10 @@ export function Schedule() {
 
                     <td className="py-2 pl-3 text-right whitespace-nowrap tabular">
                       <span className="block text-xs font-semibold">
-                        {Math.round(member.hours)} ч
+                        {Math.round(member.hours)} {t('h')}
                       </span>
                       <span className="field-hint">
-                        {member.days} {daysWord(member.days)}
+                        {n(member.days, 'days')}
                       </span>
                     </td>
                   </tr>
@@ -338,7 +335,7 @@ function ShiftSheet({
               day: 'numeric',
               month: 'long',
             })}{' '}
-            · {entry.start_time.slice(0, 5)}–{entry.end_time.slice(0, 5)} · {entry.hours} ч
+            · {entry.start_time.slice(0, 5)}–{entry.end_time.slice(0, 5)} · {entry.hours} {t('h')}
           </span>
         </span>
 
@@ -355,7 +352,7 @@ function ShiftSheet({
               that exists only to be refused is worse than no button. */}
           {!entry.is_mine && entry.needs_cover && !past && mine === null && (
             <Button size="sm" disabled={busy} onClick={onOffer}>
-              Подменю
+              {t('Cover')}
             </Button>
           )}
           {!entry.is_mine && mine !== null && (
@@ -369,9 +366,7 @@ function ShiftSheet({
             </Button>
           )}
           {entry.is_mine && !entry.needs_cover && (
-            <span className="field-hint">
-              Попросить подмену можно в своём дне, в календаре.
-            </span>
+            <span className="field-hint">{t('You can ask for a cover from your own day, in the calendar.')}</span>
           )}
           <Button size="sm" variant="ghost" onClick={onClose}>
             {t('Close')}
@@ -396,9 +391,7 @@ function ShiftSheet({
       )}
 
       {entry.is_mine && entry.needs_cover && entry.offers.length === 0 && (
-        <p className="field-hint border-t border-border pt-3">
-          Пока никто не вызвался. Команде уже прилетело уведомление.
-        </p>
+        <p className="field-hint border-t border-border pt-3">{t('Nobody has stepped up yet. The team has already been notified.')}</p>
       )}
     </section>
   );
@@ -434,10 +427,7 @@ function NoTeam() {
       <section className="card p-6 text-center">
         <Users className="mx-auto mb-2 size-6 text-accent-foreground" />
         <p className="text-lg font-semibold">{t('You are not in a crew yet')}</p>
-        <p className="field-hint">
-          Общий график показывает, кто выходит и когда. Заработок остаётся вашим — на роте его
-          нет ни у кого.
-        </p>
+        <p className="field-hint">{t('The shared rota shows who is on and when. What you earn stays yours — nobody sees it on the rota.')}</p>
       </section>
 
       <section className="card flex flex-col gap-2 p-4">

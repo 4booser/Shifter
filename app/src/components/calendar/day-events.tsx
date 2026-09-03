@@ -74,7 +74,7 @@ export function DayEvents({ date, events }: { date: string; events: CalendarEven
                 style={{ background: event.colour }}
               />
               <span className="min-w-0 flex-1 truncate text-sm" title={event.name}>{event.name}</span>
-              {event.days > 1 && <span className="field-hint">{event.days} дн.</span>}
+              {event.days > 1 && <span className="field-hint">{event.days} {t('d.')}</span>}
               <button
                 type="button"
                 aria-label={`Убрать: ${event.name}`}

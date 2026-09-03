@@ -103,9 +103,7 @@ export function Places() {
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{t('Places of work')}</h1>
-          <p className="field-hint">
-            Когда приходят деньги, сколько стоит ночь и что удерживает заведение.
-          </p>
+          <p className="field-hint">{t('When the money arrives, what a night is worth, and what the place withholds.')}</p>
         </div>
         <Button onClick={() => setEditing('new')}>
           <Plus className="size-4" />
@@ -203,12 +201,12 @@ function PlaceCard({
     place.night_multiplier > 1 && `ночь ×${place.night_multiplier}`,
     place.public_holiday_multiplier > 1 && `праздник ×${place.public_holiday_multiplier}`,
     place.overtime_multiplier > 1 &&
-      `сверх ${place.overtime_weekly_hours} ч ×${place.overtime_multiplier}`,
+      `сверх ${place.overtime_weekly_hours} ${t('h')} ×${place.overtime_multiplier}`,
     place.tax_percent > 0 && `налог ${place.tax_percent}%`,
     place.meal_deduction > 0 && `питание ${money(place.meal_deduction)}`,
     place.tip_out_of_tips_percent > 0 && `в котёл ${place.tip_out_of_tips_percent}% чаевых`,
     place.holiday_percent > 0 && `отпускные ${place.holiday_percent}%`,
-    place.minimum_hourly > 0 && `не ниже ${money(place.minimum_hourly)}/ч`,
+    place.minimum_hourly > 0 && `не ниже ${money(place.minimum_hourly)}/${t('h')}`,
   ].filter((rule): rule is string => typeof rule === 'string');
 
   return (
@@ -348,7 +346,7 @@ function PlaceDialog({
               label={t('Colour')}
               value={form.colour}
               onPick={(colour) => set('colour', colour ?? '#6366F1')}
-              clearHint="вернуть базовый"
+              clearHint={t('back to the plain one')}
             />
           </Group>
 

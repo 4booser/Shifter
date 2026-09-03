@@ -67,7 +67,7 @@ export function Gigs() {
           </Button>
           <Button variant="ghost" size="sm" asChild>
             <a href="/gigs">
-              Старая версия
+              {t('Old version')}
               <ArrowUpRight className="size-3.5" />
             </a>
           </Button>
@@ -118,7 +118,7 @@ export function Gigs() {
           />
           {city.trim() !== asked && (
             <Button type="submit" size="sm" variant="outline">
-              Найти
+              {t('Find')}
             </Button>
           )}
         </form>
@@ -135,7 +135,7 @@ export function Gigs() {
                   : 'border-border text-muted-foreground hover:text-ink',
               )}
             >
-              все
+              {t('all')}
             </button>
             {groupsPresent.map((one) => (
               <button
@@ -164,7 +164,7 @@ export function Gigs() {
         </div>
       ) : board.isError ? (
         <p className="card p-4 text-sm" style={{ color: 'var(--danger)' }}>
-          Не дотянулись до сервера.
+          {t('Could not reach the server.')}
         </p>
       ) : shown.length === 0 ? (
         <section className="card flex flex-col items-center gap-2 p-6 text-center">
@@ -191,7 +191,7 @@ export function Gigs() {
               <p className="field-hint">{t('Look again later — or post your own listing.')}</p>
               <Button variant="outline" size="sm" onClick={() => setPosting(true)}>
                 <Plus className="size-3.5" />
-                Разместить своё
+                {t('Post your own')}
               </Button>
             </>
           )}
@@ -216,7 +216,7 @@ export function Gigs() {
                       className="flex-none rounded-full px-2 py-0.5 text-2xs font-bold"
                       style={{ background: 'var(--warn-soft)', color: 'var(--warn)' }}
                     >
-                      срочно
+                      {t('urgent')}
                     </span>
                   )}
                 </header>
@@ -252,7 +252,7 @@ export function Gigs() {
 
                 <Button className="mt-auto" variant="outline" size="sm" asChild>
                   <a href={`/gigs?gig=${gig.id}`}>
-                    Открыть и откликнуться
+                    {t('Open and reply')}
                     <ArrowUpRight className="size-3.5" />
                   </a>
                 </Button>

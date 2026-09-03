@@ -17,7 +17,6 @@ import type { LucideIcon } from 'lucide-react';
 
 import { CalendarDayData, DaysResponse } from '@/lib/calendar/models';
 import { streakOf } from '@/lib/calendar/streak';
-import { daysWord, shiftsWord } from '@/lib/text/plural';
 import { fromKey, todayKey } from '@/lib/calendar/calendar-date';
 import { formatMoney } from '@/lib/settings/money';
 import { useSettings } from '@/lib/settings/store';
@@ -42,7 +41,7 @@ interface Tile {
 }
 
 export function TileStrip({ days, summary }: { days: CalendarDayData[]; summary: DaysResponse }) {
-  const { t } = useI18n();
+  const { t, n, w } = useI18n();
   const settings = useSettings((state) => state.settings);
   const money = (value: number) => formatMoney(settings, Math.round(value));
 
@@ -71,7 +70,7 @@ export function TileStrip({ days, summary }: { days: CalendarDayData[]; summary:
       icon: Coins,
       label: t('Earned'),
       value: money(summary.total_earned),
-      hint: `${shifts} ${shiftsWord(shifts)} · ${Math.round(summary.hours)} ч`,
+      hint: `${n(shifts, 'shifts')} · ${Math.round(summary.hours)} ${t('h')}`,
       to: '/stats',
       tone: 'good',
     },
@@ -80,7 +79,10 @@ export function TileStrip({ days, summary }: { days: CalendarDayData[]; summary:
       icon: Clock,
       label: t('Your hour'),
       value: perHour > 0 ? money(perHour) : '·',
-      hint: summary.hours > 0 ? `${Math.round(summary.hours)} ч в этом месяце` : t('No hours yet'),
+      hint:
+        summary.hours > 0
+          ? `${Math.round(summary.hours)} ${t('h')} ${t('this month')}`
+          : t('No hours yet'),
       to: '/stats',
     },
     {
@@ -90,7 +92,7 @@ export function TileStrip({ days, summary }: { days: CalendarDayData[]; summary:
       value: money(tips),
       hint:
         summary.total_earned > 0
-          ? `${Math.round((tips / summary.total_earned) * 100)}% от заработка`
+          ? `${Math.round((tips / summary.total_earned) * 100)}% ${t('of earnings')}`
           : t('this month'),
       to: '/stats',
     },
@@ -111,7 +113,9 @@ export function TileStrip({ days, summary }: { days: CalendarDayData[]; summary:
       label: t('Night hours'),
       value: `${Math.round(nights)}`,
       hint:
-        summary.hours > 0 ? `${Math.round((nights / summary.hours) * 100)}% всех часов` : t('this month'),
+        summary.hours > 0
+          ? `${Math.round((nights / summary.hours) * 100)}% ${t('of all hours')}`
+          : t('this month'),
       to: '/stats',
     },
     {
@@ -123,7 +127,7 @@ export function TileStrip({ days, summary }: { days: CalendarDayData[]; summary:
       // them shifts made a day with two of them read as one.
       hint:
         ahead.length > 0
-          ? `${ahead.length} ${daysWord(ahead.length)} впереди`
+          ? `${n(ahead.length, 'days')} ${t('ahead')}`
           : t('Nothing put down yet'),
       to: '/payouts',
     },
@@ -152,8 +156,8 @@ export function TileStrip({ days, summary }: { days: CalendarDayData[]; summary:
       value: `${streak.run}`,
       hint:
         streak.record > streak.run
-          ? `${daysWord(streak.run)} без выходного · рекорд ${streak.record}`
-          : `${daysWord(streak.run)} без выходного`,
+          ? `${w(streak.run, 'days')} ${t('with no day off')} · ${t('record')} ${streak.record}`
+          : `${w(streak.run, 'days')} ${t('with no day off')}`,
       to: '/wrapped',
     },
     {
@@ -171,7 +175,7 @@ export function TileStrip({ days, summary }: { days: CalendarDayData[]; summary:
       value: `${summary.guests_counted}`,
       hint:
         summary.guests_counted > 0 && tips > 0
-          ? `${money(tips / summary.guests_counted)} с гостя`
+          ? `${money(tips / summary.guests_counted)} ${t('a guest')}`
           : t('where they were counted'),
       to: '/stats',
     },

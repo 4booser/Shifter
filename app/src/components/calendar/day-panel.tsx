@@ -168,7 +168,7 @@ export function DayPanel({
                     template planned: that is the pair the day was paid on. */}
                 <span className="field-hint tabular">
                   {(entry.actual_start ?? entry.start_time).slice(0, 5)}–
-                  {(entry.actual_end ?? entry.end_time).slice(0, 5)} · {entry.hours} ч
+                  {(entry.actual_end ?? entry.end_time).slice(0, 5)} · {entry.hours} {t('h')}
                   {entry.actual_start != null && ' · по факту'}
                   {entry.worked ? '' : ' · план'}
                 </span>
@@ -233,7 +233,7 @@ export function DayPanel({
             className="flex items-center gap-1.5 border-t border-border pt-3 text-sm font-medium text-accent-foreground underline-offset-4 hover:underline"
           >
             <Plus className="size-3.5" />
-            Сначала заведите смену
+            {t('Add a shift first')}
           </Link>
         )}
 

@@ -83,9 +83,7 @@ export function Shifts() {
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{t('Shifts')}</h1>
-          <p className="field-hint">
-            Шаблон помнит часы и ставку — в календаре смена ставится одним нажатием.
-          </p>
+          <p className="field-hint">{t('A template remembers the hours and the rate — in the calendar a shift goes down in one tap.')}</p>
         </div>
         <Button onClick={() => setEditing('new')}>
           <Plus className="size-4" />
@@ -104,13 +102,11 @@ export function Shifts() {
           <Clock className="size-7 text-muted-foreground" />
           <div>
             <p className="font-semibold">{t('No shifts yet')}</p>
-            <p className="field-hint mt-1">
-              Заведите ту, что работаете чаще всего, — остальное приложение построит вокруг неё.
-            </p>
+            <p className="field-hint mt-1">{t('Add the one you work most often — the app builds the rest around it.')}</p>
           </div>
           <Button onClick={() => setEditing('new')}>
             <Plus className="size-4" />
-            Завести первую
+            {t('Add the first one')}
           </Button>
         </div>
       ) : (
@@ -195,8 +191,8 @@ function ShiftCard({
             {shift.name}
           </p>
           <p className="field-hint tabular">
-            {shift.start_time.slice(0, 5)}–{shift.end_time.slice(0, 5)} · {shift.hours} ч
-            {shift.break_minutes > 0 && ` · перерыв ${shift.break_minutes} мин`}
+            {shift.start_time.slice(0, 5)}–{shift.end_time.slice(0, 5)} · {shift.hours} {t('h')}
+            {shift.break_minutes > 0 && ` · перерыв ${shift.break_minutes} ${t('min')}`}
           </p>
         </div>
         <span className="flex flex-none gap-1">

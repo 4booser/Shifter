@@ -8,7 +8,6 @@ import { Input } from '@/components/ui/input';
 import { calendarApi } from '@/lib/api/calendar';
 import { Goal, GoalPeriod } from '@/lib/calendar/models';
 import { todayKey } from '@/lib/calendar/calendar-date';
-import { daysWord } from '@/lib/text/plural';
 import { formatMoney } from '@/lib/settings/money';
 import { useSettings } from '@/lib/settings/store';
 import { cn } from '@/lib/utils';
@@ -29,7 +28,7 @@ const PERIODS: { value: GoalPeriod; label: string }[] = [
  * anything, whether the current pace gets there.
  */
 export function GoalCard() {
-  const { t } = useI18n();
+  const { t, n } = useI18n();
   const settings = useSettings((state) => state.settings);
   const money = (value: number) => formatMoney(settings, Math.round(value));
   const client = useQueryClient();
@@ -128,7 +127,7 @@ export function GoalCard() {
         {done
           ? t('The goal is met — everything further is on top.')
           : daysLeft > 0
-            ? `${t('Left')} ${money(left)} ${t('over')} ${daysLeft} ${daysWord(daysLeft)} — ${money(perDay)} ${t('a day')}.`
+            ? `${t('Left')} ${money(left)} ${t('over')} ${n(daysLeft, 'days')} — ${money(perDay)} ${t('a day')}.`
             : `${t('Short by')} ${money(left)}.`}
       </p>
     </section>
@@ -193,9 +192,7 @@ function GoalForm({
       </span>
 
       {goal === null && (
-        <p className="field-hint">
-          Сколько хотите зарабатывать. Приложение посчитает, по сколько выходит в день.
-        </p>
+        <p className="field-hint">{t('How much you want to earn. The app works out what that is per day.')}</p>
       )}
 
       <div className="flex flex-wrap gap-1.5">

@@ -161,7 +161,7 @@ export function PostGig({ onClose }: { onClose: () => void }) {
             options={GIG_GROUPS.flatMap((group) =>
               GIG_CATEGORIES.filter((one) => one.group === group).map((one) => ({
                 value: one.id,
-                label: `${one.emoji} ${roleName(one.id)}`,
+                label: `${one.emoji} ${t(roleName(one.id))}`,
                 group,
               })),
             )}
@@ -366,7 +366,7 @@ export function PostGig({ onClose }: { onClose: () => void }) {
             {t('Cancel')}
           </Button>
           <Button disabled={!ready || post.isPending} onClick={() => post.mutate()}>
-            Разместить
+            {t('Post')}
           </Button>
         </DialogFooter>
       </DialogContent>

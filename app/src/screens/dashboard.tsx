@@ -78,7 +78,7 @@ export function Dashboard() {
           href="/dashboard"
           className="flex items-center gap-1 text-sm font-medium text-muted-foreground transition-colors hover:text-ink"
         >
-          Старая версия
+          {t('Old version')}
           <ArrowUpRight className="size-3.5" />
         </a>
       </header>
@@ -91,7 +91,7 @@ export function Dashboard() {
         </div>
       ) : days.isError ? (
         <p className="card p-4 text-sm" style={{ color: 'var(--danger)' }}>
-          Не дотянулись до сервера.
+          {t('Could not reach the server.')}
         </p>
       ) : (
         <>

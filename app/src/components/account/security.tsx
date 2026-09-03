@@ -184,17 +184,14 @@ function TwoFactorCard({ on }: { on: boolean }) {
       {backup !== null && (
         <div className="flex flex-col gap-1.5 rounded-xl bg-surface-2 p-3">
           <p className="text-sm font-semibold">{t('Backup codes — save them now')}</p>
-          <p className="field-hint">
-            Каждый работает один раз. Второй раз их показать нельзя: на сервере лежат только
-            их отпечатки.
-          </p>
+          <p className="field-hint">{t('Each works once. They cannot be shown a second time: the server keeps only their fingerprints.')}</p>
           <ul className="grid grid-cols-2 gap-1 font-mono text-sm tabular">
             {backup.map((one) => (
               <li key={one}>{one}</li>
             ))}
           </ul>
           <Button variant="outline" size="sm" className="self-start" onClick={() => setBackup(null)}>
-            Записал
+            {t('Noted')}
           </Button>
         </div>
       )}

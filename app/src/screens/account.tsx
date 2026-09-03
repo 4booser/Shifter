@@ -51,9 +51,7 @@ export function Account() {
     <div className="flex flex-col gap-5">
       <header>
         <h1 className="text-2xl font-bold tracking-tight">{t('Settings')}</h1>
-        <p className="field-hint">
-          Всё здесь меняет только вид — числа остаются теми же, какими их посчитал сервер.
-        </p>
+        <p className="field-hint">{t('Everything here changes the look only — the numbers stay exactly as the server counted them.')}</p>
       </header>
 
       <div className="grid gap-4 lg:grid-cols-2">
@@ -189,10 +187,7 @@ export function Account() {
                 placeholder="UAH"
                 onChange={(event) => update('baseCurrency', event.target.value.toUpperCase())}
               />
-              <span className="field-hint">
-                Код валюты, в которую пересчитываются периоды с разными валютами. Пусто —
-                не пересчитывать.
-              </span>
+              <span className="field-hint">{t('The currency code that periods with mixed currencies are converted into. Empty means no conversion.')}</span>
             </span>
           </label>
 
@@ -264,10 +259,7 @@ export function Account() {
             </span>
           </label>
 
-          <p className="field-hint">
-            Привязка Google и Telegram, подписка на календарь и удаление аккаунта пока живут
-            в старой версии.
-          </p>
+          <p className="field-hint">{t('Linking Google and Telegram, the calendar subscription and deleting the account still live in the old version.')}</p>
 
           <Button
             variant="outline"

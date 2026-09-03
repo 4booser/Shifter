@@ -5,7 +5,6 @@ import { ArrowUpRight, CalendarClock, CircleAlert, Coins } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Bars, BarRow, Panel } from '@/components/charts/bars';
 import { dayOf, spanOf } from '@/lib/calendar/spans';
-import { paymentsWord } from '@/lib/text/plural';
 import { Skeleton } from '@/components/ui/skeleton';
 import { calendarApi } from '@/lib/api/calendar';
 import { PayPeriodRow } from '@/lib/calendar/models';
@@ -34,7 +33,7 @@ const STATUS: Record<PayPeriodRow['status'], { label: string; tone: string }> = 
 };
 
 export function Payouts() {
-  const { t } = useI18n();
+  const { t, n } = useI18n();
   const settings = useSettings((state) => state.settings);
   const money = (value: number) => formatMoney(settings, Math.round(value));
 
@@ -128,7 +127,7 @@ export function Payouts() {
           },
           {
             label: t('The longest'),
-            value: worst > 0 ? `${worst} дн.` : '·',
+            value: worst > 0 ? `${worst} ${t('d.')}` : '·',
             tone: worst > 0 ? 'text-danger' : '',
           },
         ].filter((fact) => fact.value !== '·');
@@ -139,7 +138,7 @@ export function Payouts() {
         <h1 className="text-2xl font-bold tracking-tight">{t('Payments')}</h1>
         <Button variant="ghost" size="sm" asChild>
           <a href="/payouts">
-            Старая версия
+            {t('Old version')}
             <ArrowUpRight className="size-3.5" />
           </a>
         </Button>
@@ -152,7 +151,7 @@ export function Payouts() {
         </>
       ) : schedule.isError ? (
         <p className="card p-4 text-sm" style={{ color: 'var(--danger)' }}>
-          Не дотянулись до сервера.
+          {t('Could not reach the server.')}
         </p>
       ) : (
         <>
@@ -174,12 +173,12 @@ export function Payouts() {
                 <>
                   <p className="mt-1 text-4xl font-black tabular text-good">{money(next.amount)}</p>
                   <p className="field-hint mt-1">
-                    {days === 0 ? t('today') : days === 1 ? t('tomorrow') : `через ${days} дн.`} ·{' '}
+                    {days === 0 ? t('today') : days === 1 ? t('tomorrow') : `через ${days} ${t('d.')}`} ·{' '}
                     {new Date(`${next.day}T12:00:00`).toLocaleDateString('ru', {
                       day: 'numeric',
                       month: 'long',
                     })}
-                    {next.payments > 1 ? ` · ${next.payments} ${paymentsWord(next.payments)}` : ''} · {next.places.join(' + ')}
+                    {next.payments > 1 ? ` · ${n(next.payments, 'payments')}` : ''} · {next.places.join(' + ')}
                   </p>
                 </>
               )}
@@ -188,7 +187,7 @@ export function Payouts() {
             <section className="card p-5">
               <span className="field-hint flex items-center gap-1.5">
                 <Coins className="size-3.5" />
-                Всего ждём
+                {t('Waiting in total')}
               </span>
               {/* Counted from the very rows listed below: a headline that
                   disagrees with the list under it is the first thing a
@@ -280,7 +279,7 @@ function Rows({
                   <span className="font-medium">{row.location_name}</span>
                   <span className={cn('text-xs font-semibold', status.tone)}>{t(status.label)}</span>
                   {row.days_late > 0 && (
-                    <span className="text-xs text-danger tabular">+{row.days_late} дн.</span>
+                    <span className="text-xs text-danger tabular">+{row.days_late} {t('d.')}</span>
                   )}
                 </span>
                 <span className="field-hint tabular">

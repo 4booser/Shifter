@@ -2,16 +2,16 @@
  * What work costs, in words.
  *
  * The same six kinds are used by the expense list and by the bank's reading
- * of a statement, so they are named once — a chart that says «transport» in
- * the middle of a Russian sentence is a chart nobody finished.
+ * of a statement, so they are named once — as dictionary keys the reader's
+ * own language fills in. Wrap a lookup in t() at the render site.
  */
 export const KIND_NAMES: Record<string, string> = {
-  transport: 'дорога',
-  uniform: 'форма',
-  tools: 'инструмент',
-  food: 'еда',
-  training: 'учёба',
-  other: 'другое',
+  transport: 'travel',
+  uniform: 'uniform',
+  tools: 'tools',
+  food: 'food',
+  training: 'training',
+  other: 'other',
 };
 
 export const kindName = (kind: string) => KIND_NAMES[kind] ?? kind;

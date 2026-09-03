@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Bars, BarRow, Panel, Split } from '@/components/charts/bars';
 import { calendarApi } from '@/lib/api/calendar';
-import { daysWord, timesWord } from '@/lib/text/plural';
 import { kindName } from '@/lib/text/kinds';
 import { buildRunway, chargesAhead } from '@/lib/mono/runway';
 import { balanceCurve } from '@/lib/mono/mono-shape';
@@ -37,7 +36,7 @@ import { useI18n } from '@/lib/i18n';
  * out whether the page is worth it.
  */
 export function Bank() {
-  const { t } = useI18n();
+  const { t, n } = useI18n();
   const settings = useSettings((state) => state.settings);
   const money = (value: number) => formatMoney(settings, Math.round(value));
   const mono = useMono();
@@ -165,7 +164,7 @@ export function Bank() {
           label: one.name,
           value: one.total,
           shown: money(one.total),
-          hint: `${one.count} ${timesWord(one.count)}`,
+          hint: n(one.count, 'times'),
         })),
     [mono.items, bounds.from, bounds.to],
   );
@@ -199,18 +198,13 @@ export function Bank() {
           <Landmark className="size-5" />
           {t('Bank')}
         </h1>
-        <p className="field-hint mt-1">
-          Токен только на чтение. Он идёт из этого браузера прямо в банк — сервер Shifter его не
-          видит.
-        </p>
+        <p className="field-hint mt-1">{t('The token is read-only. It goes from this browser straight to the bank — the Shifter server never sees it.')}</p>
 
         <Button className="mt-4 w-full" variant="outline" onClick={() => mono.enterDemo()}>
           <Eye className="size-4" />
           {t('Look around on an example')}
         </Button>
-        <p className="field-hint mt-1.5">
-          Девяносто выдуманных дней, нарисованных прямо здесь. Банк не участвует.
-        </p>
+        <p className="field-hint mt-1.5">{t('Ninety invented days, drawn right here. No bank involved.')}</p>
 
         <div className="mt-5 flex flex-col gap-2 border-t border-border pt-4">
           <span className="field-label">{t('The token from monobank')}</span>
@@ -230,10 +224,7 @@ export function Bank() {
               {t('Connect')}
             </Button>
           </span>
-          <span className="field-hint">
-            Берётся на api.monobank.ua/index.html. Он только на чтение, отзывается в банке одним
-            нажатием, и хранится в этом браузере — на сервер Shifter не уходит.
-          </span>
+          <span className="field-hint">{t('You get it at api.monobank.ua/index.html. It is read-only, revoked in the bank in one tap, and kept in this browser — it never goes to the Shifter server.')}</span>
           {refused !== null && (
             <span className="text-sm" style={{ color: 'var(--danger)' }}>
               {refused}
@@ -256,7 +247,7 @@ export function Bank() {
           )}
           <Button variant="ghost" size="sm" asChild>
             <a href="/bank">
-              Старая версия
+              {t('Old version')}
               <ArrowUpRight className="size-3.5" />
             </a>
           </Button>
@@ -264,9 +255,7 @@ export function Bank() {
       </header>
 
       {mono.demo && (
-        <p className="card p-3 text-sm" style={{ background: 'var(--accent-soft)' }}>
-          Это пример: девяносто сгенерированных дней, за ними нет банка.
-        </p>
+        <p className="card p-3 text-sm" style={{ background: 'var(--accent-soft)' }}>{t('This is a sample: ninety generated days, with no bank behind them.')}</p>
       )}
 
       <div className="grid gap-3 md:grid-cols-3">
@@ -306,7 +295,7 @@ export function Bank() {
         {stretch !== null && (
           <Panel
             title={t('Until payday')}
-            hint={`${stretch.days} ${daysWord(stretch.days)}, ${money(stretch.committed)} уже обещано подпискам.`}
+            hint={`${n(stretch.days, 'days')}, ${money(stretch.committed)} уже обещано подпискам.`}
           >
             <div className="flex items-baseline gap-3">
               <span className="text-2xl font-bold tabular">{money(stretch.perDay)}</span>
@@ -357,12 +346,12 @@ export function Bank() {
                     >
                       {place.averageLate <= 0
                         ? t('to the day')
-                        : `+${Math.round(place.averageLate)} ${daysWord(Math.round(place.averageLate))}`}
+                        : `+${n(Math.round(place.averageLate), 'days')}`}
                     </span>
                   </span>
                   <span className="field-hint">
                     {place.settled} {place.settled === 1 ? t('payment') : t('payments')} · {t('worst delay')}{' '}
-                    {place.worstLate} {daysWord(place.worstLate)}
+                    {n(place.worstLate, 'days')}
                     {place.short > 0 && ` · недоплат: ${place.short}`}
                   </span>
                 </li>
@@ -386,7 +375,7 @@ export function Bank() {
                   ? t('A shift day costs less')
                   : t('A shift and a day off cost the same')
             }
-            hint={`${byKind.onShiftDays} ${daysWord(byKind.onShiftDays)} со сменой против ${byKind.offDays} без.`}
+            hint={`${n(byKind.onShiftDays, 'days')} со сменой против ${byKind.offDays} без.`}
           >
             <Bars
               rows={[
@@ -410,7 +399,7 @@ export function Bank() {
                 Больше всего расходится{' '}
                 {byKind.differences
                   .slice(0, 2)
-                  .map((one) => kindName(one.kind))
+                  .map((one) => t(kindName(one.kind)))
                   .join(` ${t('and')} `)}
                 .
               </p>
@@ -428,7 +417,7 @@ export function Bank() {
               <span className="field-hint tabular">вместо {money(rate.headline)}</span>
             </div>
             <p className="field-hint">
-              За {Math.round(rate.hours)} ч работа съела {money(rate.costs)}.
+              За {Math.round(rate.hours)} {t('h')} работа съела {money(rate.costs)}.
             </p>
           </Panel>
         )}

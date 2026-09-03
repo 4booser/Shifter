@@ -200,8 +200,8 @@ export function Stats() {
         key: zone.zone,
         label: ZONE_NAMES[zone.zone] ?? zone.zone,
         value: zone.tips_per_hour,
-        shown: `${money(zone.tips_per_hour)}/ч`,
-        hint: `${Math.round(zone.hours)} ч`,
+        shown: `${money(zone.tips_per_hour)}/${t('h')}`,
+        hint: `${Math.round(zone.hours)} ${t('h')}`,
       }),
     );
 
@@ -226,7 +226,7 @@ export function Stats() {
           place.currency !== '' && place.currency !== undefined
             ? formatMoneyIn(settings, place.currency, Math.round(place.earned))
             : money(place.earned),
-        hint: `${place.days_worked} см. · ${Math.round(place.hours)} ч`,
+        hint: `${place.days_worked} ${t('sh.')} · ${Math.round(place.hours)} ${t('h')}`,
         colour: place.colour === '' ? undefined : place.colour,
       }),
     );
@@ -260,7 +260,7 @@ export function Stats() {
       : [
           { label: t('Best single day'), value: best === undefined || best.earned <= 0 ? '·' : money(best.earned) },
           { label: t('Night hours'), value: `${Math.round(summary.night_hours)}` },
-          { label: t('Past the norm'), value: summary.overtime_hours > 0 ? `${Math.round(summary.overtime_hours)} ч` : '·' },
+          { label: t('Past the norm'), value: summary.overtime_hours > 0 ? `${Math.round(summary.overtime_hours)} ${t('h')}` : '·' },
           { label: t('Premiums'), value: summary.premium_earned > 0 ? money(summary.premium_earned) : '·' },
           { label: t('Handed to the pool'), value: summary.tip_out > 0 ? money(summary.tip_out) : '·' },
           { label: t('Withheld'), value: summary.deductions > 0 ? money(summary.deductions) : '·' },
@@ -296,7 +296,7 @@ export function Stats() {
 
           <Button variant="ghost" size="sm" asChild>
             <a href="/stats">
-              Старая версия
+              {t('Old version')}
               <ArrowUpRight className="size-3.5" />
             </a>
           </Button>
@@ -314,7 +314,7 @@ export function Stats() {
         </>
       ) : summary === undefined ? (
         <p className="card p-4 text-sm" style={{ color: 'var(--danger)' }}>
-          Не дотянулись до сервера.
+          {t('Could not reach the server.')}
         </p>
       ) : (
         <>

@@ -1,6 +1,5 @@
 import { Bars, BarRow, Panel } from '@/components/charts/bars';
 import { streakOf } from '@/lib/calendar/streak';
-import { daysWord, timesWord } from '@/lib/text/plural';
 import { kindName } from '@/lib/text/kinds';
 import { DaysResponse } from '@/lib/calendar/models';
 import { formatMoney } from '@/lib/settings/money';
@@ -118,7 +117,7 @@ export function YearGrid({ summary, year }: { summary: DaysResponse; year: numbe
 
 /** The year's high-water marks. */
 export function Records({ summary }: { summary: DaysResponse }) {
-  const { t } = useI18n();
+  const { t, n } = useI18n();
   const settings = useSettings((state) => state.settings);
   const money = (value: number) => formatMoney(settings, Math.round(value));
 
@@ -156,12 +155,12 @@ export function Records({ summary }: { summary: DaysResponse }) {
     longestShift !== undefined && longestShift.entry.hours > 0
       ? {
           label: t('The longest shift'),
-          value: `${longestShift.entry.hours} ч`,
+          value: `${longestShift.entry.hours} ${t('h')}`,
           hint: pretty(longestShift.day.date),
         }
       : null,
     streak.record > 1
-      ? { label: t('No day off'), value: `${streak.record} ${daysWord(streak.record)}`, hint: t('in a row') }
+      ? { label: t('No day off'), value: n(streak.record, 'days'), hint: t('in a row') }
       : null,
   ].filter((fact): fact is { label: string; value: string; hint: string } => fact !== null);
 
@@ -205,8 +204,8 @@ export function ZoneTips({ summary }: { summary: DaysResponse }) {
         key: zone.zone,
         label: ZONE_NAMES[zone.zone] ?? zone.zone,
         value: zone.tips_per_hour,
-        shown: `${money(zone.tips_per_hour)}/ч`,
-        hint: `${Math.round(zone.hours)} ч · ${zone.shifts} см.`,
+        shown: `${money(zone.tips_per_hour)}/${t('h')}`,
+        hint: `${Math.round(zone.hours)} ${t('h')} · ${zone.shifts} ${t('sh.')}`,
       }),
     );
 
@@ -263,7 +262,7 @@ export function Raises({ summary }: { summary: DaysResponse }) {
 
 /** What the work cost. Never subtracted from anything: it happened after. */
 export function CostOfWork({ summary }: { summary: DaysResponse }) {
-  const { t } = useI18n();
+  const { t, n } = useI18n();
   const settings = useSettings((state) => state.settings);
   const money = (value: number) => formatMoney(settings, Math.round(value));
 
@@ -272,10 +271,10 @@ export function CostOfWork({ summary }: { summary: DaysResponse }) {
     .map(
       (split): BarRow => ({
         key: split.kind,
-        label: kindName(split.kind),
+        label: t(kindName(split.kind)),
         value: split.amount,
         shown: money(split.amount),
-        hint: `${split.count} ${timesWord(split.count)}`,
+        hint: n(split.count, 'times'),
         colour: 'var(--warn)',
       }),
     );

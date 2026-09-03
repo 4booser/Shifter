@@ -123,9 +123,7 @@ export function SignIn() {
                 value={code}
                 onChange={(event) => setCode(event.target.value)}
               />
-              <span className="field-hint">
-                Шесть цифр из приложения-аутентификатора или один из запасных кодов.
-              </span>
+              <span className="field-hint">{t('Six digits from your authenticator app, or one of the backup codes.')}</span>
             </div>
           ) : (
           <>

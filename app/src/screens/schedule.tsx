@@ -345,7 +345,7 @@ function ShiftSheet({
         {entry.needs_cover && (
           <span className="field-hint flex items-center gap-1">
             <HandHelping className="size-3.5" />
-            {entry.is_mine ? 'Вы просите подмену' : t('Looking for cover')}
+            {entry.is_mine ? t('You are asking for cover') : t('Looking for cover')}
           </span>
         )}
 

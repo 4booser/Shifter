@@ -101,7 +101,7 @@ export function TileStrip({ days, summary }: { days: CalendarDayData[]; summary:
       value: best === null ? '·' : money(best.earned),
       hint:
         best === null
-          ? 'в этом месяце'
+          ? t('this month')
           : fromKey(best.date).toLocaleDateString('ru', { day: 'numeric', month: 'long' }),
       to: '/stats',
     },
@@ -132,7 +132,7 @@ export function TileStrip({ days, summary }: { days: CalendarDayData[]; summary:
       icon: TrendingUp,
       label: t('Overtime'),
       value: `${Math.round(summary.overtime_hours)}`,
-      hint: summary.overtime_hours > 0 ? 'часов сверх нормы' : t('nothing past the norm'),
+      hint: summary.overtime_hours > 0 ? t('hours past the norm') : t('nothing past the norm'),
       to: '/stats',
       tone: summary.overtime_hours > 0 ? 'warn' : undefined,
     },
@@ -141,7 +141,7 @@ export function TileStrip({ days, summary }: { days: CalendarDayData[]; summary:
       icon: Receipt,
       label: t('Withheld'),
       value: withheld > 0 ? money(withheld) : '·',
-      hint: withheld > 0 ? 'штрафы и питание' : t('nothing withheld'),
+      hint: withheld > 0 ? t('fines and meals') : t('nothing withheld'),
       to: '/payouts',
       tone: withheld > 0 ? 'danger' : undefined,
     },

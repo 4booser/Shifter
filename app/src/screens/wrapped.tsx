@@ -225,7 +225,7 @@ function YearStory({
       grew === null
         ? '.'
         : grew === 0
-          ? ', ровно столько же, сколько годом раньше.'
+          ? t(', exactly as much as the year before.')
           : grew > 0
             ? ` — на ${grew}% больше, чем годом раньше.`
             : ` — на ${Math.abs(grew)}% меньше, чем годом раньше.`

@@ -381,9 +381,9 @@ export function Bank() {
             // with the bars under it is worse than no heading.
             title={
               byKind.onShift > byKind.off
-                ? 'Рабочий день дороже'
+                ? t('A working day costs more')
                 : byKind.onShift < byKind.off
-                  ? 'В смену тратится меньше'
+                  ? t('A shift day costs less')
                   : t('A shift and a day off cost the same')
             }
             hint={`${byKind.onShiftDays} ${daysWord(byKind.onShiftDays)} со сменой против ${byKind.offDays} без.`}

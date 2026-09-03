@@ -70,7 +70,7 @@ export function Shifts() {
       calendarApi.archiveShift(id, archived),
     onSuccess: (_, { archived }) => {
       void client.invalidateQueries({ queryKey: ['shifts'] });
-      toast.success(archived ? 'Смена в архиве' : t('The shift is back'));
+      toast.success(archived ? t('The shift is archived') : t('The shift is back'));
     },
     onError: () => toast.error(t('That did not work — try again.')),
   });
@@ -178,7 +178,7 @@ function ShiftCard({
   const pay =
     shift.salary_amount == null
       ? shift.revenue_percent == null
-        ? 'без ставки'
+        ? t('no rate')
         : `${shift.revenue_percent}% с выручки`
       : `${money(shift.salary_amount)} ${t(PERIOD_LABELS[shift.salary_period])}`;
 
@@ -210,7 +210,7 @@ function ShiftCard({
           </button>
           <button
             type="button"
-            aria-label={shift.archived ? 'Вернуть из архива' : t('To the archive')}
+            aria-label={shift.archived ? t('Bring back from the archive') : t('To the archive')}
             onClick={onArchive}
             className="grid size-7 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-surface-2 hover:text-ink"
           >
@@ -275,7 +275,7 @@ function ShiftDialog({
     mutationFn: () =>
       shift == null ? calendarApi.createShift(form) : calendarApi.updateShift(shift.id, form),
     onSuccess: () => {
-      toast.success(shift == null ? 'Смена заведена' : t('Shift changed'));
+      toast.success(shift == null ? t('Shift created') : t('Shift changed'));
       onSaved();
     },
     onError: (error: Error) => toast.error(error.message),
@@ -285,7 +285,7 @@ function ShiftDialog({
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-h-[88dvh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>{shift == null ? 'Новая смена' : form.name}</DialogTitle>
+          <DialogTitle>{shift == null ? t('New shift') : form.name}</DialogTitle>
         </DialogHeader>
 
         <div className="flex flex-col gap-4">
@@ -484,7 +484,7 @@ function ShiftDialog({
             label={t('The shift’s colour')}
             value={form.colour}
             onPick={(colour) => set('colour', colour)}
-            clearHint={form.location_id === null ? 'без цвета' : t('the place’s colour')}
+            clearHint={form.location_id === null ? t('no colour') : t('the place’s colour')}
           />
         </div>
 

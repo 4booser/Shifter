@@ -185,7 +185,7 @@ export function Gigs() {
             <>
               <p className="text-lg font-semibold">
                 {asked === ''
-                  ? 'Пока никто не ищет смену'
+                  ? t('Nobody is looking for a shift yet')
                   : `В городе «${asked}» пока пусто`}
               </p>
               <p className="field-hint">{t('Look again later — or post your own listing.')}</p>
@@ -232,7 +232,7 @@ export function Gigs() {
                 <p className="text-lg font-bold tabular">
                   {money(gig.pay_amount)}
                   <span className="field-hint ml-1">
-                    {gig.pay_period === 'hour' ? 'в час' : gig.pay_period === 'shift' ? 'за смену' : t('per month')}
+                    {gig.pay_period === 'hour' ? t('per hour') : gig.pay_period === 'shift' ? t('per shift') : t('per month')}
                   </span>
                 </p>
 
@@ -246,7 +246,7 @@ export function Gigs() {
                     {better ? <TrendingUp className="size-4" /> : <TrendingDown className="size-4" />}
                     {money(gig.worth.offered_per_hour)}/час — на{' '}
                     {Math.abs(Math.round(gig.worth.difference_percent))}%{' '}
-                    {better ? 'выше вашего' : t('below yours')}
+                    {better ? t('above yours') : t('below yours')}
                   </p>
                 )}
 

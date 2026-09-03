@@ -155,7 +155,7 @@ export function SignIn() {
                 <button
                   type="button"
                   tabIndex={-1}
-                  aria-label={peeking ? 'Скрыть пароль' : t('Show the password')}
+                  aria-label={peeking ? t('Hide the password') : t('Show the password')}
                   className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground transition-colors hover:text-ink"
                   onClick={() => setPeeking((was) => !was)}
                 >
@@ -184,7 +184,7 @@ export function SignIn() {
             disabled={busy || (ticket === null ? login === '' || password === '' : code.trim() === '')}
           >
             {busy ? <Loader2 className="size-4 animate-spin" /> : null}
-            {ticket === null ? 'Войти' : t('Confirm')}
+            {ticket === null ? t('Sign in') : t('Confirm')}
             <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
           </Button>
         </form>

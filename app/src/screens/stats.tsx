@@ -176,7 +176,7 @@ export function Stats() {
           label: names[weekday]!,
           value: average,
           shown: money(average),
-          hint: `${seen.days} ${seen.days === 1 ? 'день' : t('d.')}`,
+          hint: `${seen.days} ${seen.days === 1 ? t('day') : t('d.')}`,
         };
       });
   }, [summary, settings.mondayFirst]);
@@ -220,7 +220,7 @@ export function Stats() {
     .map(
       ({ place, restated }): BarRow => ({
         key: `${place.location_id}`,
-        label: place.name === '' ? 'без места' : place.name,
+        label: place.name === '' ? t('no place') : place.name,
         value: restated?.earned ?? place.earned,
         shown:
           place.currency !== '' && place.currency !== undefined
@@ -247,7 +247,7 @@ export function Stats() {
       label: REASON_NAMES[split.reason] ?? split.reason,
       value: split.amount,
       shown: money(split.amount),
-      hint: `${split.days} ${split.days === 1 ? 'день' : t('d.')}`,
+      hint: `${split.days} ${split.days === 1 ? t('day') : t('d.')}`,
       colour: 'var(--danger)',
     }),
   );
@@ -289,7 +289,7 @@ export function Stats() {
                 )}
                 onClick={() => setSpan(value)}
               >
-                {value === 'month' ? 'Месяц' : t('Year')}
+                {value === 'month' ? t('Month') : t('Year')}
               </button>
             ))}
           </div>
@@ -378,7 +378,7 @@ export function Stats() {
 
           <Panel
             title={t('Earned over the period')}
-            hint={`Плотная линия — этот ${span === 'month' ? 'месяц' : t('year')}, бледная — прошлый. Веди курсором — цифры дня.`}
+            hint={`Плотная линия — этот ${span === 'month' ? t('month') : t('year')}, бледная — прошлый. Веди курсором — цифры дня.`}
           >
             <Climb points={climb.line} ghost={climb.ghost} height={240} />
           </Panel>
@@ -391,7 +391,7 @@ export function Stats() {
               title={t('What the money is made of')}
               hint={
                 summary.conversion !== null
-                  ? 'Доли считаны по суммам как есть — валюты разные, поэтому проценты точнее самих чисел.'
+                  ? t('Shares are counted from the sums as they stand — the currencies differ, so the percentages are truer than the figures.')
                   : gross > summary.total_earned
                     ? `Заработано ${money(gross)}; на руки ${money(summary.total_earned)} — остальное в котёл и удержания.`
                     : t('The rate, the tips and everything on top.')

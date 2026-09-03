@@ -182,7 +182,7 @@ export function PostGig({ onClose }: { onClose: () => void }) {
           <div className="grid gap-2 sm:grid-cols-3">
             <label className="flex flex-col gap-1">
               <span className="field-label">
-                {form.employment === 'permanent' ? 'Выходить с' : t('When')}
+                {form.employment === 'permanent' ? t('Starting from') : t('When')}
               </span>
               <Input
                 type="date"

@@ -75,11 +75,11 @@ function PasswordCard({ needsOne }: { needsOne: boolean }) {
 
   return (
     <Card
-      title={needsOne ? 'Задать пароль' : t('Password')}
+      title={needsOne ? t('Set a password') : t('Password')}
       icon={KeyRound}
       hint={
         needsOne
-          ? 'Вход пока только через Google. Пароль добавит второй способ войти.'
+          ? t('Sign-in is Google only so far. A password adds a second way in.')
           : undefined
       }
     >
@@ -124,7 +124,7 @@ function PasswordCard({ needsOne }: { needsOne: boolean }) {
         </div>
       ) : (
         <Button variant="outline" className="self-start" onClick={() => setOpen(true)}>
-          {needsOne ? 'Задать пароль' : t('Change the password')}
+          {needsOne ? t('Set a password') : t('Change the password')}
         </Button>
       )}
     </Card>
@@ -177,7 +177,7 @@ function TwoFactorCard({ on }: { on: boolean }) {
       icon={ShieldCheck}
       hint={
         on
-          ? 'Включён: после пароля приложение спросит шесть цифр.'
+          ? t('On: after the password the app asks for six digits.')
           : t('A password is not enough once somebody knows it. The code changes every half a minute.')
       }
     >

@@ -174,7 +174,7 @@ export function Payouts() {
                 <>
                   <p className="mt-1 text-4xl font-black tabular text-good">{money(next.amount)}</p>
                   <p className="field-hint mt-1">
-                    {days === 0 ? 'сегодня' : days === 1 ? 'завтра' : `через ${days} дн.`} ·{' '}
+                    {days === 0 ? t('today') : days === 1 ? t('tomorrow') : `через ${days} дн.`} ·{' '}
                     {new Date(`${next.day}T12:00:00`).toLocaleDateString('ru', {
                       day: 'numeric',
                       month: 'long',
@@ -218,7 +218,7 @@ export function Payouts() {
 
             {cadence.length > 0 && (
               <Panel
-                title={places > 1 ? 'Как здесь платят' : t('How this place pays')}
+                title={places > 1 ? t('How they pay here') : t('How this place pays')}
                 hint={t('By what has already happened.')}
               >
                 <dl className="grid grid-cols-2 gap-x-4 gap-y-2">

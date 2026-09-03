@@ -150,7 +150,7 @@ export function DayPanel({
             <li key={entry.shift_id} className="flex flex-wrap items-start gap-2">
               <button
                 type="button"
-                aria-label={entry.worked ? 'Отметить как план' : t('Mark as worked')}
+                aria-label={entry.worked ? t('Mark as planned') : t('Mark as worked')}
                 onClick={() => toggleWorked(entry.shift_id, !entry.worked)}
                 className={cn(
                   'mt-0.5 grid size-5 flex-none place-items-center rounded-md border transition-colors',
@@ -180,7 +180,7 @@ export function DayPanel({
 
               <button
                 type="button"
-                aria-label={opened === entry.shift_id ? 'Свернуть' : t('More about the shift')}
+                aria-label={opened === entry.shift_id ? t('Fewer') : t('More about the shift')}
                 className="mt-0.5 text-muted-foreground transition-colors hover:text-ink"
                 onClick={() =>
                   setOpened((was) => (was === entry.shift_id ? null : entry.shift_id))
@@ -543,9 +543,9 @@ function ShiftDetail({
           <span className="block text-sm font-medium">{t('Asking for cover')}</span>
           <span className="field-hint">
             {entry.worked
-              ? 'Смена уже отработана — передавать нечего.'
+              ? t('The shift is already worked — there is nothing to hand over.')
               : entry.needs_cover
-                ? 'Команда видит это на графике.'
+                ? t('The crew sees this on the rota.')
                 : t('The shift appears on the rota as «looking for cover».')}
           </span>
         </span>

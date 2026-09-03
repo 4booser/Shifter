@@ -9,6 +9,7 @@ using Shifter.Application.Features.Gigs;
 using Shifter.Application.Features.Telegram;
 using Shifter.Domain.Entities;
 using Shifter.Infrastructure.Persistence.DbContexts;
+using Shifter.Application.Common.Text;
 
 namespace Shifter.Api.Controllers;
 
@@ -59,7 +60,9 @@ public class ShareController : ControllerBase
                 _ => "за смену",
             };
 
-            pay.Add($"{gig.PayAmount:N0} ₴ {period}");
+            // A page anybody can open, with a wage on it, grouped by
+            // whatever culture the server happened to start with.
+            pay.Add($"{Figures.Money(gig.PayAmount)} {period}");
         }
 
         if (gig.PayPercent is decimal percent) pay.Add($"{percent}% с продаж");

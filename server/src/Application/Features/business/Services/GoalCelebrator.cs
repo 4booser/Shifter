@@ -1,6 +1,7 @@
 using Shifter.Application.Features.Push;
 using Shifter.Domain.Entities;
 using Shifter.Infrastructure.Repositories.Interfaces;
+using Shifter.Application.Common.Text;
 
 namespace Shifter.Application.Features.business.Services;
 
@@ -92,9 +93,12 @@ public sealed class GoalCelebrator
                 userId,
                 language => language switch
                 {
-                    "ru" => ("Цель достигнута 🎉", $"{Math.Round(goal.Amount):N0} за {RuPeriod(goal.Period)} — есть!"),
-                    "uk" => ("Мета досягнута 🎉", $"{Math.Round(goal.Amount):N0} за {UkPeriod(goal.Period)} — є!"),
-                    _ => ("Goal reached 🎉", $"{Math.Round(goal.Amount):N0} for the {label} — done!"),
+                    // A goal is a sum of money and was pushed without a
+                    // currency mark, spelled by whatever culture the process
+                    // ran under.
+                    "ru" => ("Цель достигнута 🎉", $"{Figures.Money(goal.Amount)} за {RuPeriod(goal.Period)} — есть!"),
+                    "uk" => ("Мета досягнута 🎉", $"{Figures.Money(goal.Amount)} за {UkPeriod(goal.Period)} — є!"),
+                    _ => ("Goal reached 🎉", $"{Figures.Money(goal.Amount)} for the {label} — done!"),
                 },
                 "/stats",
                 ct);

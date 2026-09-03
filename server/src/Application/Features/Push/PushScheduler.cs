@@ -6,6 +6,7 @@ using Shifter.Application.Features.business.Services;
 using Shifter.Application.Features.business.Services.Interfaces;
 using Shifter.Domain.Entities;
 using Shifter.Infrastructure.Persistence.DbContexts;
+using Shifter.Application.Common.Text;
 
 namespace Shifter.Application.Features.Push;
 
@@ -289,14 +290,18 @@ public sealed class PushScheduler : BackgroundService
 
         if (due.Length == 0) return true;
 
-        var amount = Math.Round(due.Sum(row => row.expected));
+        // Formatted by whatever culture the process runs under and with no
+        // currency mark: a phone read «~19,095» about wages, where a comma is
+        // a decimal point half the world over. The one formatter this
+        // application writes money with.
+        var amount = Figures.Money(due.Sum(row => row.expected));
         var names = string.Join(", ", due.Select(row => row.location_name).Distinct());
 
         var (title, body) = device.Language switch
         {
-            "ru" => ("Сегодня зарплата", $"{names}: ~{amount:N0}. Придут деньги — запишите выплату."),
-            "uk" => ("Сьогодні зарплата", $"{names}: ~{amount:N0}. Прийдуть гроші — запишіть виплату."),
-            _ => ("Payday", $"{names}: ~{amount:N0}. When it lands, record the payout."),
+            "ru" => ("Сегодня зарплата", $"{names}: ~{amount}. Придут деньги — запишите выплату."),
+            "uk" => ("Сьогодні зарплата", $"{names}: ~{amount}. Прийдуть гроші — запишіть виплату."),
+            _ => ("Payday", $"{names}: ~{amount}. When it lands, record the payout."),
         };
 
         return await phones.SendAsync(device.Token, title, body, "/payouts", ct, "payday");
@@ -358,14 +363,18 @@ public sealed class PushScheduler : BackgroundService
 
         if (due.Length == 0) return true;
 
-        var amount = Math.Round(due.Sum(row => row.expected));
+        // Formatted by whatever culture the process runs under and with no
+        // currency mark: a phone read «~19,095» about wages, where a comma is
+        // a decimal point half the world over. The one formatter this
+        // application writes money with.
+        var amount = Figures.Money(due.Sum(row => row.expected));
         var names = string.Join(", ", due.Select(row => row.location_name).Distinct());
 
         var (title, body) = subscription.Language switch
         {
-            "ru" => ("Сегодня зарплата", $"{names}: ~{amount:N0}. Придут деньги — запишите выплату."),
-            "uk" => ("Сьогодні зарплата", $"{names}: ~{amount:N0}. Прийдуть гроші — запишіть виплату."),
-            _ => ("Payday", $"{names}: ~{amount:N0}. When it lands, record the payout."),
+            "ru" => ("Сегодня зарплата", $"{names}: ~{amount}. Придут деньги — запишите выплату."),
+            "uk" => ("Сьогодні зарплата", $"{names}: ~{amount}. Прийдуть гроші — запишіть виплату."),
+            _ => ("Payday", $"{names}: ~{amount}. When it lands, record the payout."),
         };
 
         return await _sender.SendAsync(subscription, title, body, "/payouts");
@@ -396,7 +405,7 @@ public sealed class PushScheduler : BackgroundService
             trend = change >= 1 ? $" (+{change:F0}%)" : change <= -1 ? $" ({change:F0}%)" : "";
         }
 
-        var earned = $"{Math.Round(week.total_earned):N0}";
+        var earned = Figures.Money(week.total_earned);
         var hours = Math.Round(week.hours);
 
         var (title, body) = subscription.Language switch

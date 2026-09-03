@@ -2670,6 +2670,7 @@ export const RU: Dictionary = {
   'Working hours': 'Рабочие часы',
   'Notice': 'Срок предупреждения',
   'Holiday': 'Отпуск',
+  'at the rate': 'по ставке',
 };
 
 export const UK: Dictionary = {
@@ -5319,4 +5320,5 @@ export const UK: Dictionary = {
   'A trial period': 'Випробувальний строк',
   'Notice': 'Строк попередження',
   'Holiday': 'Відпустка',
+  'at the rate': 'за ставкою',
 };

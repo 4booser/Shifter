@@ -165,9 +165,20 @@ export function LiveBar() {
               <div className="min-w-0">
                 <strong className="block truncate text-[0.95rem]">{template.name}</strong>
                 <span className="field-hint block tabular">{formatElapsed(tick.elapsed)}</span>
+                {/*
+                  Said for what it is. The counter is the rate multiplied by
+                  the clock — it knows nothing of the night premium, the
+                  overtime the week is heading for, the tips not yet counted
+                  or a percentage of the till, all of which the recorded day
+                  will carry. Teaching it those rules would be a second copy
+                  of arithmetic the server owns, which is the fault this
+                  project has spent a week removing; naming the figure costs
+                  nothing and claims nothing.
+                */}
                 {tick.earned !== null && (
                   <span className="block text-[1.15rem] font-bold text-good-read tabular">
-                    <Money value={tick.earned} />
+                    <Money value={tick.earned} />{' '}
+                    <span className="text-[0.72rem] font-normal text-muted">{t('at the rate')}</span>
                   </span>
                 )}
               </div>

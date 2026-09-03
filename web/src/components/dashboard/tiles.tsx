@@ -693,12 +693,16 @@ function TodayTile({ window, templates }: { window: CalendarDayData[]; templates
           {tick.earned === null ? formatElapsed(tick.elapsed) : <FlowMoney value={tick.earned} />}
         </span>
         <span className={`field-hint flex items-center gap-1.5 ${discard.armed ? 'text-danger-read' : ''}`}>
-          {discard.armed ? '✕' : <span className="live-dot" />}
+          {discard.armed ? <Icon name="close" size={11} /> : <span className="live-dot" />}
+          {/* The counter is the rate times the clock, and the recorded day
+              will also carry the night premium, the overtime and the tips.
+              Named for what it is rather than taught a second copy of the
+              server's rules. */}
           {discard.armed
             ? t('Press again to discard')
             : tick.earned === null
               ? template.name
-              : formatElapsed(tick.elapsed)}
+              : `${formatElapsed(tick.elapsed)} · ${t('at the rate')}`}
         </span>
         <span className="mt-auto flex gap-1">
           <button

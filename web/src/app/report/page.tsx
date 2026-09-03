@@ -473,7 +473,7 @@ function Report() {
                           <span className="h-2 w-2 flex-none rounded-full" style={{ background: place.colour }} />
                           {placeName(place, t('No place set'))}
                         </td>
-                        <td className="py-1.5 pr-2 text-right tabular">{Math.round(place.hours * 10) / 10}</td>
+                        <td className="py-1.5 pr-2 text-right tabular">{num(Math.round(place.hours * 10) / 10)}</td>
                         {/* Each place in its own currency: a month in Kraków
                             printed with a hryvnia mark reads as a tenfold
                             overstatement of somebody's wages. */}
@@ -574,7 +574,7 @@ function Report() {
                 <tr className="text-[0.9rem] font-bold">
                   <td className="py-2 pr-2">{t('Total')}</td>
                   <td />
-                  <td className="py-2 pr-2 text-right tabular">{Math.round(summary.hours * 10) / 10}</td>
+                  <td className="py-2 pr-2 text-right tabular">{num(Math.round(summary.hours * 10) / 10)}</td>
                   <td className="py-2 pr-2 text-right tabular">{format(summary.tips_earned)}</td>
                   <td className="py-2 pr-2 text-right tabular">
                     {rows.reduce((sum, day) => sum + salesUnits(day), 0) || '—'}

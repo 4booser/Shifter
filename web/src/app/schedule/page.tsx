@@ -95,7 +95,7 @@ export default function SchedulePage() {
  */
 function Schedule() {
   const revealHost = useReveal<HTMLDivElement>();
-  const { t, lang, n } = useI18n();
+  const { t, lang, n, num } = useI18n();
 
   useTitle('Schedule');
 
@@ -670,7 +670,7 @@ function Schedule() {
                     </div>
                   </td>
                 ))}
-                <td className="px-2 py-1.5 text-right text-[0.82rem] tabular">{Math.round(member.hours * 10) / 10}</td>
+                <td className="px-2 py-1.5 text-right text-[0.82rem] tabular">{num(Math.round(member.hours * 10) / 10)}</td>
               </tr>
             ))}
           </tbody>

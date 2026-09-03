@@ -910,7 +910,7 @@ export function DayPanel() {
  */
 function BulkPanel({ keys }: { keys: string[] }) {
   const [showAllColours, setShowAllColours] = useState(false);
-  const { t, n } = useI18n();
+  const { t, n, num } = useI18n();
   const { format } = useMoney();
   const templates = useCalendar((state) => state.templates);
   const days = useCalendar((state) => state.days);
@@ -934,7 +934,7 @@ function BulkPanel({ keys }: { keys: string[] }) {
       <p className="field-hint mb-3">
         {keys[0]?.slice(8)}.{keys[0]?.slice(5, 7)} — {keys.at(-1)?.slice(8)}.{keys.at(-1)?.slice(5, 7)}
         {earned > 0 && <> · {format(earned)}</>}
-        {hours > 0 && <> · {Math.round(hours * 10) / 10} {t('h')}</>}
+        {hours > 0 && <> · {num(Math.round(hours * 10) / 10)} {t('h')}</>}
       </p>
 
       <section className="mb-4">
@@ -1109,7 +1109,7 @@ function ActualClockRow({
  * a calendar should have been all along.
  */
 function DayWeek({ dayKey }: { dayKey: string }) {
-  const { t } = useI18n();
+  const { t, num } = useI18n();
   const { format } = useMoney();
   const allDays = useCalendar((state) => state.days);
   const allEvents = useCalendar((state) => state.events);
@@ -1141,7 +1141,7 @@ function DayWeek({ dayKey }: { dayKey: string }) {
       <h3 className="panel-head">
         <span>{t('This week')}</span>
         <span className="tabular text-[0.72rem] font-normal text-faint">
-          {Math.round(hours * 10) / 10} {t('h')}
+          {num(Math.round(hours * 10) / 10)} {t('h')}
         </span>
       </h3>
 

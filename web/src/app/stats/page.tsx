@@ -109,7 +109,7 @@ export default function StatsPage() {
 }
 
 function Stats() {
-  const { t, n, lang } = useI18n();
+  const { t, n, lang, num } = useI18n();
 
   useTitle('Statistics');
   const revealHost = useReveal<HTMLDivElement>();
@@ -1152,7 +1152,7 @@ function Stats() {
             </p>
             <p className="field-hint">
               {summary.night_hours > 0
-                ? `${Math.round(summary.night_hours * 10) / 10} ${t('night hours and public holidays')}`
+                ? `${num(Math.round(summary.night_hours * 10) / 10)} ${t('night hours and public holidays')}`
                 : t('public holidays')}
             </p>
           </Card>
@@ -1164,7 +1164,7 @@ function Stats() {
               +<Money value={summary.overtime_earned} />
             </p>
             <p className="field-hint">
-              {Math.round(summary.overtime_hours * 10) / 10} {t('hours past the weekly threshold')}
+              {num(Math.round(summary.overtime_hours * 10) / 10)} {t('hours past the weekly threshold')}
             </p>
           </Card>
         )}
@@ -1209,7 +1209,7 @@ function Stats() {
                         )}
                       </td>
                       <td className="px-2 py-1.5 tabular">{place.days_worked}</td>
-                      <td className="px-2 py-1.5 tabular">{Math.round(place.hours * 10) / 10}</td>
+                      <td className="px-2 py-1.5 tabular">{num(Math.round(place.hours * 10) / 10)}</td>
                       {/* Where the range mixes currencies, each place is
                           labelled with its own: printing zloty with a hryvnia
                           mark makes the comparison this table exists for a

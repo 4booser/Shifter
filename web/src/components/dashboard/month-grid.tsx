@@ -731,7 +731,10 @@ export function MonthGrid({
                     new Date(`${day.key}T12:00:00`),
                   ),
                   entries: list.map((entry) => entry.name),
-                  hours: hours > 0 ? `${Math.round(hours * 10) / 10} ${t('h')}` : null,
+                  hours:
+                    hours > 0
+                      ? `${(Math.round(hours * 10) / 10).toLocaleString(lang, { maximumFractionDigits: 1 })} ${t('h')}`
+                      : null,
                   earned:
                     settings.hideAmounts || (state.days.get(day.key)?.earned ?? 0) <= 0
                       ? null
@@ -802,7 +805,13 @@ export function MonthGrid({
 
                   {hours > 0 && (
                     <span className="ml-auto hidden text-[0.66rem] font-medium text-muted tabular @[5rem]:inline">
-                      {round1(hours)}{t('h')}
+                      {/* «9.5ч»: a machine's decimal point and no space
+                          before the unit, in the grid this app is most
+                          looked at through. The tooltip on the very same
+                          cell already wrote «9,5 ч». */}
+                      {round1(hours).toLocaleString(lang, { maximumFractionDigits: 1 })}
+                      {'\u2009'}
+                      {t('h')}
                     </span>
                   )}
                 </span>

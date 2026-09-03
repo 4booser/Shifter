@@ -558,7 +558,7 @@ function DeductionsTile({ monthDays }: { monthDays: CalendarDayData[] }) {
 
 /** The seven days somebody is actually inside right now. */
 function WeekTile({ window }: { window: CalendarDayData[] }) {
-  const { t } = useI18n();
+  const { t, num } = useI18n();
   const today = fromKey(todayKey());
   const monday = new Date(today);
 
@@ -576,7 +576,7 @@ function WeekTile({ window }: { window: CalendarDayData[] }) {
       <span className="tile-value">
         <FlowMoney value={Math.round(earned)} />
       </span>
-      <span className="field-hint">{Math.round(hours * 10) / 10} {t('h so far')}</span>
+      <span className="field-hint">{num(Math.round(hours * 10) / 10)} {t('h so far')}</span>
     </>
   );
 }

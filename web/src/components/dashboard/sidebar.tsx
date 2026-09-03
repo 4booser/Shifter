@@ -473,7 +473,7 @@ export function Sidebar() {
             <Money value={summary.shifts_earned} />
           </Row>
           {summary.overtime_hours > 0 && (
-            <Row label={`${t('Overtime')} · ${Math.round(summary.overtime_hours * 10) / 10} ${t('h')}`}>
+            <Row label={`${t('Overtime')} · ${num(Math.round(summary.overtime_hours * 10) / 10)} ${t('h')}`}>
               +<Money value={summary.overtime_earned} />
             </Row>
           )}
@@ -552,7 +552,7 @@ export function Sidebar() {
                   <span className="truncate">{place.name}</span>
                 </dt>
                 <dd className="flex-none tabular">
-                  {Math.round(place.hours * 10) / 10}h ·{' '}
+                  {num(Math.round(place.hours * 10) / 10)} {t('h')} ·{' '}
                   <Money value={place.earned} currency={place.currency} />
                 </dd>
               </div>

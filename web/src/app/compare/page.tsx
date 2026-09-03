@@ -41,7 +41,7 @@ interface Range {
  * for. A is the earlier period, B the later; every delta reads B against A.
  */
 function Compare() {
-  const { t, lang } = useI18n();
+  const { t, lang, num } = useI18n();
   const { format } = useMoney();
 
   const now = currentMonth();
@@ -248,10 +248,10 @@ function Compare() {
                 <tr key={fact.label} className="cell-in border-b border-border/60" style={{ ['--i' as string]: index }}>
                   <td className="py-1.5 pr-2 text-muted">{t(fact.label)}</td>
                   <td className="py-1.5 pr-2 text-right tabular">
-                    {fact.money === true ? format(fact.a) : Math.round(fact.a * 10) / 10}
+                    {fact.money === true ? format(fact.a) : num(Math.round(fact.a * 10) / 10)}
                   </td>
                   <td className="py-1.5 pr-2 text-right font-semibold tabular">
-                    {fact.money === true ? format(fact.b) : Math.round(fact.b * 10) / 10}
+                    {fact.money === true ? format(fact.b) : num(Math.round(fact.b * 10) / 10)}
                   </td>
                   <td className="py-1.5 text-right">
                     <Delta percent={fact.a === 0 ? null : ((fact.b - fact.a) / Math.abs(fact.a)) * 100} />

@@ -59,7 +59,7 @@ export function YearStory({
   const lines: string[] = [];
 
   lines.push(
-    `${t('In')} ${year} ${t('you worked')} ${n(shifts, 'shifts')} ${t('across')} ${n(days, 'days')} — ${n(Math.round(summary.hours), 'hours')} ${t('in all')}, ${t('and they came to')} ${format(summary.total_earned)}.`,
+    `${t('In the year')} ${year} ${t('you worked')} ${n(shifts, 'shifts')} ${t('across')} ${n(days, 'days')} — ${n(Math.round(summary.hours), 'hours')} ${t('in all')}, ${t('and they came to')} ${format(summary.total_earned)}.`,
   );
 
   lines.push(

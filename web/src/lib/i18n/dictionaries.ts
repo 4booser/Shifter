@@ -206,7 +206,10 @@ export const RU: Dictionary = {
   'The average a day of that weekday brings, and what share of it that was.': 'Сколько в среднем приносит такой день недели и какая это доля от дня.',
   'Best for tips:': 'Лучший на чай:',
   'averaging': 'в среднем',
-  'across': 'по',
+  // «169 смен по 169 дней» и «в среднем 9 965 ₴ по 7 дней»: the
+  // preposition was the wrong one in Russian and the right one in
+  // Ukrainian, from the same key.
+  'across': 'за',
   'Break after, h': 'Перерыв после, ч',
   'Break length, min': 'Длина перерыва, мин',
   'A shift longer than this loses those minutes, unpaid, unless the template already books more.': 'Смена длиннее теряет эти минуты — неоплачиваемо, если в шаблоне не заложено больше.',
@@ -454,6 +457,9 @@ export const RU: Dictionary = {
   'Nothing ahead': 'Впереди пусто',
   'Tomorrow': 'Завтра',
   'In': 'Через',
+  // «Через 2026 вы отработали…» — 'In' is «через» only about a
+  // distance in time. A year is a stretch you worked in, not a wait.
+  'In the year': 'В',
   'Spent': 'Потрачено',
   'Left over': 'Осталось',
   'Costs': 'Стоит',
@@ -3109,6 +3115,7 @@ export const UK: Dictionary = {
   'Nothing ahead': 'Попереду порожньо',
   'Tomorrow': 'Завтра',
   'In': 'Через',
+  'In the year': 'У',
   'Spent': 'Витрачено',
   'Left over': 'Залишилось',
   'Costs': 'Коштує',

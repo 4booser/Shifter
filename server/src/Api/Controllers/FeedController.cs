@@ -10,6 +10,7 @@ using Shifter.Application.Common.Exceptions;
 using Shifter.Application.Features.business.DTOs;
 using Shifter.Application.Features.business.Services.Interfaces;
 using Shifter.Infrastructure.Persistence.DbContexts;
+using System.Linq;
 
 namespace Shifter.Api.Controllers;
 
@@ -104,7 +105,51 @@ public class FeedController : ControllerBase
 
         lines.Add("END:VCALENDAR");
 
-        return string.Join("\r\n", lines) + "\r\n";
+        return string.Join("\r\n", lines.Select(Fold)) + "\r\n";
+    }
+
+    /// <summary>
+    /// RFC 5545 folds at 75 octets, not 75 characters.
+    ///
+    /// This feed did not fold at all. Cyrillic is two bytes a letter and an
+    /// emoji is four, so a shift called «Вечерняя смена в баре на Подоле
+    /// (второй этаж)» leaves here as a line of ninety-odd octets and a strict
+    /// reader is entitled to refuse the whole calendar. The app's own .ics
+    /// export learned this the hard way; the subscription feed, which is the
+    /// copy that lives in somebody's Google Calendar for months, had not.
+    ///
+    /// The walk is over whole characters: slicing by byte would emit half a
+    /// letter, which is worse than a long line.
+    /// </summary>
+    private static string Fold(string line)
+    {
+        static int Octets(string text) => Encoding.UTF8.GetByteCount(text);
+
+        if (Octets(line) <= 75) return line;
+
+        var parts = new List<string>();
+        var current = new StringBuilder();
+        var limit = 75;
+
+        foreach (var rune in line.EnumerateRunes())
+        {
+            var piece = rune.ToString();
+
+            if (Octets(current.ToString()) + Octets(piece) > limit)
+            {
+                parts.Add(parts.Count == 0 ? current.ToString() : $" {current}");
+                current.Clear();
+                // A continuation line carries a leading space, and that space
+                // is an octet like any other.
+                limit = 74;
+            }
+
+            current.Append(piece);
+        }
+
+        if (current.Length > 0) parts.Add(parts.Count == 0 ? current.ToString() : $" {current}");
+
+        return string.Join("\r\n", parts);
     }
 
     private static string Escape(string text)

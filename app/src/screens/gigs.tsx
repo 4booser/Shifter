@@ -63,7 +63,7 @@ export function Gigs() {
         <span className="flex items-center gap-2">
           <Button onClick={() => setPosting(true)}>
             <Plus className="size-4" />
-            Нужен человек
+            {t('Somebody is needed')}
           </Button>
           <Button variant="ghost" size="sm" asChild>
             <a href="/gigs">
@@ -83,8 +83,8 @@ export function Gigs() {
         <div className="flex rounded-full border border-border p-0.5">
           {(
             [
-              ['freelance', 'разовые'],
-              ['permanent', 'постоянные'],
+              ['freelance', t('one-off')],
+              ['permanent', t('permanent')],
             ] as [GigEmployment, string][]
           ).map(([value, label]) => (
             <button
@@ -149,7 +149,7 @@ export function Gigs() {
                     : 'border-border text-muted-foreground hover:text-ink',
                 )}
               >
-                {GROUP_NAMES[one] ?? one}
+                {t(GROUP_NAMES[one] ?? one)}
               </button>
             ))}
           </div>
@@ -173,7 +173,7 @@ export function Gigs() {
               лечится кнопкой, которая тут же и стоит. */}
           {(board.data ?? []).length > 0 ? (
             <>
-              <p className="text-lg font-semibold">Под фильтры ничего не подошло</p>
+              <p className="text-lg font-semibold">{t('Nothing matched the filters')}</p>
               <p className="field-hint">
                 На доске есть {board.data!.length}, но не в этой части дома.
               </p>
@@ -188,7 +188,7 @@ export function Gigs() {
                   ? 'Пока никто не ищет смену'
                   : `В городе «${asked}» пока пусто`}
               </p>
-              <p className="field-hint">Загляните позже — или разместите своё объявление.</p>
+              <p className="field-hint">{t('Look again later — or post your own listing.')}</p>
               <Button variant="outline" size="sm" onClick={() => setPosting(true)}>
                 <Plus className="size-3.5" />
                 Разместить своё
@@ -246,7 +246,7 @@ export function Gigs() {
                     {better ? <TrendingUp className="size-4" /> : <TrendingDown className="size-4" />}
                     {money(gig.worth.offered_per_hour)}/час — на{' '}
                     {Math.abs(Math.round(gig.worth.difference_percent))}%{' '}
-                    {better ? 'выше вашего' : 'ниже вашего'}
+                    {better ? 'выше вашего' : t('below yours')}
                   </p>
                 )}
 
@@ -267,12 +267,12 @@ export function Gigs() {
 
 /** The eight parts of a house, said the way people say them. */
 const GROUP_NAMES: Record<string, string> = {
-  Management: 'управление',
+  Management: 'management',
   Bar: 'бар',
   Floor: 'зал',
-  Kitchen: 'кухня',
-  Bakery: 'пекарня',
-  'Back of house': 'подсобка',
-  Delivery: 'доставка',
-  Events: 'мероприятия',
+  Kitchen: 'the kitchen',
+  Bakery: 'the bakery',
+  'Back of house': 'the back',
+  Delivery: 'delivery',
+  Events: 'events',
 };

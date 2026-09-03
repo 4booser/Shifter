@@ -24,13 +24,13 @@ import { useI18n } from '@/lib/i18n';
  * colour alone.
  */
 const STATUS: Record<PayPeriodRow['status'], { label: string; tone: string }> = {
-  open: { label: 'Идёт', tone: 'text-muted-foreground' },
-  due: { label: 'Ждём', tone: 'text-ink' },
-  overdue: { label: 'Задержка', tone: 'text-danger' },
-  partial: { label: 'Аванс', tone: 'text-warn' },
-  paid: { label: 'Пришло', tone: 'text-good' },
-  short: { label: 'Недоплата', tone: 'text-danger' },
-  over: { label: 'С запасом', tone: 'text-good' },
+  open: { label: 'Running', tone: 'text-muted-foreground' },
+  due: { label: 'Waiting', tone: 'text-ink' },
+  overdue: { label: 'Late', tone: 'text-danger' },
+  partial: { label: 'Advance', tone: 'text-warn' },
+  paid: { label: 'Arrived', tone: 'text-good' },
+  short: { label: 'Short', tone: 'text-danger' },
+  over: { label: 'Over', tone: 'text-good' },
 };
 
 export function Payouts() {
@@ -119,15 +119,15 @@ export function Payouts() {
     (schedule.data?.periods ?? []).length === 0
       ? []
       : [
-          { label: 'Уже получено', value: received > 0 ? money(received) : '·', tone: '' },
-          { label: 'Периодов закрыто', value: closed.length > 0 ? `${closed.length}` : '·', tone: '' },
+          { label: t('Already received'), value: received > 0 ? money(received) : '·', tone: '' },
+          { label: t('Periods closed'), value: closed.length > 0 ? `${closed.length}` : '·', tone: '' },
           {
-            label: 'Задерживали раз',
+            label: t('Times they were late'),
             value: `${lateOnes.length}`,
             tone: lateOnes.length > 0 ? 'text-danger' : '',
           },
           {
-            label: 'Дольше всего',
+            label: t('The longest'),
             value: worst > 0 ? `${worst} дн.` : '·',
             tone: worst > 0 ? 'text-danger' : '',
           },
@@ -204,13 +204,13 @@ export function Payouts() {
             </section>
           </div>
 
-          <Rows title="Ждём" rows={waiting} money={money} />
+          <Rows title={t('Waiting')} rows={waiting} money={money} />
 
           <div className="columns-1 gap-3 lg:columns-2 [&>*]:mb-3 [&>*]:break-inside-avoid">
             {history.length > 1 && (
               <Panel
-                title="Сколько выходит за период"
-                hint="Слева старые, справа свежие. Красным — то, что ещё не пришло."
+                title={t('What a period comes to')}
+                hint={t('Older on the left, newer on the right. In red, what has not arrived.')}
               >
                 <Bars rows={history} />
               </Panel>
@@ -218,8 +218,8 @@ export function Payouts() {
 
             {cadence.length > 0 && (
               <Panel
-                title={places > 1 ? 'Как здесь платят' : 'Как это место платит'}
-                hint="По тому, что уже случилось."
+                title={places > 1 ? 'Как здесь платят' : t('How this place pays')}
+                hint={t('By what has already happened.')}
               >
                 <dl className="grid grid-cols-2 gap-x-4 gap-y-2">
                   {cadence.map((fact) => (
@@ -253,6 +253,7 @@ function Rows({
   money: (value: number) => string;
   muted?: boolean;
 }) {
+  const { t } = useI18n();
   if (rows.length === 0) return null;
 
   return (
@@ -277,7 +278,7 @@ function Rows({
               <span className="min-w-0 flex-1">
                 <span className="flex flex-wrap items-center gap-2">
                   <span className="font-medium">{row.location_name}</span>
-                  <span className={cn('text-xs font-semibold', status.tone)}>{status.label}</span>
+                  <span className={cn('text-xs font-semibold', status.tone)}>{t(status.label)}</span>
                   {row.days_late > 0 && (
                     <span className="text-xs text-danger tabular">+{row.days_late} дн.</span>
                   )}

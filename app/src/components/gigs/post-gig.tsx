@@ -32,14 +32,14 @@ const MIN_PHOTOS = 3;
 const MAX_PHOTOS = 6;
 
 const GROUP_NAMES: Record<string, string> = {
-  Management: 'управление',
+  Management: 'management',
   Bar: 'бар',
   Floor: 'зал',
-  Kitchen: 'кухня',
-  Bakery: 'пекарня',
-  'Back of house': 'подсобка',
-  Delivery: 'доставка',
-  Events: 'мероприятия',
+  Kitchen: 'the kitchen',
+  Bakery: 'the bakery',
+  'Back of house': 'the back',
+  Delivery: 'delivery',
+  Events: 'events',
 };
 
 /**
@@ -80,7 +80,7 @@ export function PostGig({ onClose }: { onClose: () => void }) {
     mutationFn: () => gigApi.create(form),
     onSuccess: () => {
       void client.invalidateQueries({ queryKey: ['gigs'] });
-      toast.success('Объявление на доске');
+      toast.success(t('A listing on the board'));
       onClose();
     },
     onError: (error: Error) => toast.error(error.message),
@@ -122,7 +122,7 @@ export function PostGig({ onClose }: { onClose: () => void }) {
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-h-[88dvh] overflow-y-auto sm:max-w-xl">
         <DialogHeader>
-          <DialogTitle>Нужен человек</DialogTitle>
+          <DialogTitle>{t('Somebody is needed')}</DialogTitle>
         </DialogHeader>
 
         <div className="flex flex-col gap-4">
@@ -131,7 +131,7 @@ export function PostGig({ onClose }: { onClose: () => void }) {
               <span className="field-label">{t('Venue')}</span>
               <Input
                 value={form.venue}
-                placeholder="Бар «Сова»"
+                placeholder={t('The Owl bar')}
                 autoFocus
                 onChange={(event) => set('venue', event.target.value)}
               />
@@ -147,17 +147,17 @@ export function PostGig({ onClose }: { onClose: () => void }) {
           </div>
 
           <label className="flex flex-col gap-1">
-            <span className="field-label">Заголовок</span>
+            <span className="field-label">{t('Title')}</span>
             <Input
               value={form.title}
-              placeholder="Бармен на вечер пятницы"
+              placeholder={t('Bartender for a Friday evening')}
               maxLength={80}
               onChange={(event) => set('title', event.target.value)}
             />
           </label>
 
           <Pills
-            label="Кого ищете"
+            label={t('Who you are looking for')}
             options={GIG_GROUPS.flatMap((group) =>
               GIG_CATEGORIES.filter((one) => one.group === group).map((one) => ({
                 value: one.id,
@@ -170,10 +170,10 @@ export function PostGig({ onClose }: { onClose: () => void }) {
           />
 
           <Pills
-            label="Какая работа"
+            label={t('What kind of work')}
             options={[
-              { value: 'freelance', label: 'разовая смена' },
-              { value: 'permanent', label: 'постоянная' },
+              { value: 'freelance', label: t('a one-off shift') },
+              { value: 'permanent', label: t('permanent') },
             ]}
             value={form.employment}
             onPick={(value) => set('employment', value as GigEmployment)}
@@ -182,7 +182,7 @@ export function PostGig({ onClose }: { onClose: () => void }) {
           <div className="grid gap-2 sm:grid-cols-3">
             <label className="flex flex-col gap-1">
               <span className="field-label">
-                {form.employment === 'permanent' ? 'Выходить с' : 'Когда'}
+                {form.employment === 'permanent' ? 'Выходить с' : t('When')}
               </span>
               <Input
                 type="date"
@@ -199,7 +199,7 @@ export function PostGig({ onClose }: { onClose: () => void }) {
               />
             </label>
             <label className="flex flex-col gap-1">
-              <span className="field-label">До</span>
+              <span className="field-label">{t('Until')}</span>
               <Input
                 type="time"
                 value={form.end}
@@ -209,9 +209,9 @@ export function PostGig({ onClose }: { onClose: () => void }) {
           </div>
 
           <Pills
-            label="Платим"
+            label={t('We pay')}
             options={[
-              { value: 'shift', label: 'за смену' },
+              { value: 'shift', label: t('per shift') },
               { value: 'hour', label: 'в час' },
               ...(form.employment === 'permanent'
                 ? [{ value: 'month', label: 'в месяц' }]
@@ -234,7 +234,7 @@ export function PostGig({ onClose }: { onClose: () => void }) {
               />
             </label>
             <label className="flex flex-col gap-1">
-              <span className="field-label">+ % с продаж</span>
+              <span className="field-label">{t('+ % of sales')}</span>
               <Input
                 inputMode="decimal"
                 value={form.pay_percent == null ? '' : `${form.pay_percent}`}
@@ -318,12 +318,12 @@ export function PostGig({ onClose }: { onClose: () => void }) {
           </div>
 
           <label className="flex flex-col gap-1">
-            <span className="field-label">Подробности</span>
+            <span className="field-label">{t('Details')}</span>
             <textarea
               className="min-h-20 rounded-[var(--radius-field)] border border-border bg-surface px-3 py-2 text-sm outline-none focus-visible:border-[var(--accent)]"
               value={form.details ?? ''}
               maxLength={800}
-              placeholder="Что делать, какой опыт нужен, как добраться."
+              placeholder={t('What to do, what experience is wanted, how to get there.')}
               onChange={(event) =>
                 set('details', event.target.value.trim() === '' ? null : event.target.value)
               }
@@ -341,8 +341,8 @@ export function PostGig({ onClose }: { onClose: () => void }) {
               className="flex items-center justify-between gap-3 text-left"
             >
               <span>
-                <span className="block text-sm font-medium">Горит</span>
-                <span className="field-hint">Кто-то не вышел, а смена уже сегодня.</span>
+                <span className="block text-sm font-medium">{t('Urgent')}</span>
+                <span className="field-hint">{t('Somebody did not turn up and the shift is today.')}</span>
               </span>
               <span
                 className={cn(
@@ -386,6 +386,7 @@ function Pills({
   value: string;
   onPick: (value: string) => void;
 }) {
+  const { t } = useI18n();
   const groups = [...new Set(options.map((one) => one.group).filter(Boolean))] as string[];
 
   return (
@@ -397,7 +398,7 @@ function Pills({
         <div className="flex flex-col gap-2">
           {groups.map((group) => (
             <div key={group} className="flex flex-col gap-1">
-              <span className="field-hint">{GROUP_NAMES[group] ?? group}</span>
+              <span className="field-hint">{t(GROUP_NAMES[group] ?? group)}</span>
               <Row
                 options={options.filter((one) => one.group === group)}
                 value={value}

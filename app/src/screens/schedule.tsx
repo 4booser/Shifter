@@ -61,7 +61,7 @@ export function Schedule() {
     mutationFn: (dayShiftId: number) => teamApi.offerCover(team!.id, dayShiftId),
     onSuccess: () => {
       refresh();
-      toast.success('Вы вызвались подменить — теперь слово за тем, чья смена');
+      toast.success(t('You offered to cover — the word is now with whoever owns the shift'));
     },
     onError: (error: Error) => toast.error(error.message),
   });
@@ -70,7 +70,7 @@ export function Schedule() {
     mutationFn: (offerId: number) => teamApi.withdrawCover(team!.id, offerId),
     onSuccess: () => {
       refresh();
-      toast.success('Больше не вызываетесь');
+      toast.success(t('Take the offer back'));
     },
     onError: (error: Error) => toast.error(error.message),
   });
@@ -105,7 +105,7 @@ export function Schedule() {
             <Button
               variant="outline"
               size="icon"
-              aria-label="Прошлая неделя"
+              aria-label={t('Last week')}
               onClick={() => setAnchor((was) => shiftDays(was, -7))}
             >
               <ChevronLeft className="size-4" />
@@ -113,7 +113,7 @@ export function Schedule() {
             <Button
               variant="outline"
               size="icon"
-              aria-label="Следующая неделя"
+              aria-label={t('Next week')}
               onClick={() => setAnchor((was) => shiftDays(was, 7))}
             >
               <ChevronRight className="size-4" />
@@ -194,8 +194,8 @@ export function Schedule() {
                           style={{ background: member.colour }}
                         />
                         <span className="truncate" title={member.display_name}>{member.display_name}</span>
-                        {member.is_you && <span className="field-hint">· вы</span>}
-                        {member.trainee && <span className="field-hint">· стажёр</span>}
+                        {member.is_you && <span className="field-hint">{t('· you')}</span>}
+                        {member.trainee && <span className="field-hint">{t('· trainee')}</span>}
                       </span>
                     </td>
 
@@ -236,7 +236,7 @@ export function Schedule() {
                             {gigs.map((gig, index) => (
                               <span
                                 key={`${gig.date}-${index}`}
-                                title="Подработка на стороне"
+                                title={t('A gig elsewhere')}
                                 className="text-muted-foreground"
                               >
                                 <Sparkles className="size-3" />
@@ -269,7 +269,7 @@ export function Schedule() {
                       <td key={key} className="pt-2 text-center text-xs font-semibold tabular">
                         {day?.on_shift ?? 0}
                         {(day?.cover_requests ?? 0) > 0 && (
-                          <span className="ml-0.5 text-warn" title="Кто-то отдаёт смену">
+                          <span className="ml-0.5 text-warn" title={t('Somebody is giving a shift away')}>
                             !
                           </span>
                         )}
@@ -320,6 +320,7 @@ function ShiftSheet({
   onWithdraw: (offerId: number) => void;
   onAccept: (offerId: number) => void;
 }) {
+  const { t } = useI18n();
   const mine = entry.offers.find((one) => one.is_you) ?? null;
   const past = entry.date < todayKey();
 
@@ -344,7 +345,7 @@ function ShiftSheet({
         {entry.needs_cover && (
           <span className="field-hint flex items-center gap-1">
             <HandHelping className="size-3.5" />
-            {entry.is_mine ? 'Вы просите подмену' : 'Ищут подмену'}
+            {entry.is_mine ? 'Вы просите подмену' : t('Looking for cover')}
           </span>
         )}
 
@@ -382,7 +383,7 @@ function ShiftSheet({
           put their hand up. */}
       {entry.is_mine && entry.offers.length > 0 && (
         <div className="flex flex-col gap-1.5 border-t border-border pt-3">
-          <span className="field-label">Вызвались подменить</span>
+          <span className="field-label">{t('Offered to cover')}</span>
           {entry.offers.map((one) => (
             <span key={one.offer_id} className="flex items-center gap-2">
               <span className="min-w-0 flex-1 truncate text-sm" title={one.display_name}>{one.display_name}</span>
@@ -432,7 +433,7 @@ function NoTeam() {
     <div className="mx-auto flex w-full max-w-md flex-col gap-3">
       <section className="card p-6 text-center">
         <Users className="mx-auto mb-2 size-6 text-accent-foreground" />
-        <p className="text-lg font-semibold">Вы пока не в команде</p>
+        <p className="text-lg font-semibold">{t('You are not in a crew yet')}</p>
         <p className="field-hint">
           Общий график показывает, кто выходит и когда. Заработок остаётся вашим — на роте его
           нет ни у кого.
@@ -440,11 +441,11 @@ function NoTeam() {
       </section>
 
       <section className="card flex flex-col gap-2 p-4">
-        <span className="field-label">У меня есть код приглашения</span>
+        <span className="field-label">{t('I have an invitation code')}</span>
         <span className="flex gap-2">
           <Input
             value={code}
-            placeholder="Код от команды"
+            placeholder={t('The crew’s code')}
             onChange={(event) => setCode(event.target.value)}
             onKeyDown={(event) => {
               if (event.key === 'Enter' && code.trim() !== '') join.mutate();
@@ -457,11 +458,11 @@ function NoTeam() {
       </section>
 
       <section className="card flex flex-col gap-2 p-4">
-        <span className="field-label">Или собрать свою</span>
+        <span className="field-label">{t('Or start your own')}</span>
         <span className="flex gap-2">
           <Input
             value={name}
-            placeholder="Название команды"
+            placeholder={t('The crew’s name')}
             onChange={(event) => setName(event.target.value)}
             onKeyDown={(event) => {
               if (event.key === 'Enter' && name.trim() !== '') create.mutate();

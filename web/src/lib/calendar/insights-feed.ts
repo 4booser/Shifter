@@ -34,13 +34,15 @@ export interface InsightInput {
   /** Sunday-first weekday names, already translated. */
   weekdayNames: string[];
   formatMoney: (amount: number) => string;
+  /** A number in the reader's own notation — «9,5», not «9.5». */
+  formatNumber: (value: number) => string;
 }
 
 const pct = (value: number): string => `${Math.abs(Math.round(value))}`;
 
 /** The rules, in one pass. Sorted by weight; the caller takes what fits. */
 export function insightsFor(input: InsightInput): Insight[] {
-  const { summary, previous, forecast, days, today, weekdayNames, formatMoney } = input;
+  const { summary, previous, forecast, days, today, weekdayNames, formatMoney, formatNumber } = input;
   const found: Insight[] = [];
   const now = averagesFor(summary);
   const before = averagesFor(previous);
@@ -160,9 +162,7 @@ export function insightsFor(input: InsightInput): Insight[] {
       vars: {
         // Rounded before the whole-number test: a sum of halves lands on
         // 113.99999999999999, which is not whole and prints «114.0».
-        hours: (Math.round(summary.overtime_hours * 10) / 10).toFixed(
-          Math.round(summary.overtime_hours * 10) % 10 === 0 ? 0 : 1,
-        ),
+        hours: formatNumber(Math.round(summary.overtime_hours * 10) / 10),
         amount: formatMoney(summary.overtime_earned),
       },
       weight: 45,

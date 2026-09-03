@@ -480,6 +480,7 @@ function Stats() {
         period: `${range.from} — ${range.to}`,
         summary,
         format: (value) => formatMoney(settings, value),
+        number: (value) => value.toLocaleString(lang, { maximumFractionDigits: 1 }),
         labels: {
           earned: t('Earned'),
           net: t('After tax'),

@@ -43,6 +43,7 @@ export function AreaChart({
   emptyNote: string;
 }) {
   const { format, compact } = useMoney();
+  const { lang } = useI18n();
   const [hover, setHover] = useState<number | null>(null);
   const raw = useId().replace(/[«»:]/g, '');
 
@@ -284,7 +285,7 @@ export function AreaChart({
           </strong>
           {before !== null && before > 0 && !hoveredAhead && (
             <span className="field-hint block tabular">
-              ×{(hovered.value / before).toFixed(2)} · {format(before)}
+              ×{(hovered.value / before).toLocaleString(lang, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} · {format(before)}
             </span>
           )}
         </div>

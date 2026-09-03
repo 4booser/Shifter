@@ -58,6 +58,7 @@ const base = (over: Partial<InsightInput>): InsightInput => ({
   today: '2026-03-16',
   weekdayNames: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
   formatMoney: (amount) => `${amount}`,
+  formatNumber: (value: number) => String(value),
   ...over,
 });
 

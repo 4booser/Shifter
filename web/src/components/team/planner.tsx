@@ -570,7 +570,7 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
                 <td className="p-1.5 text-right align-middle">
                   {(load.get(member.user_id) ?? 0) > 0 && (
                     <span className="text-[0.82rem] font-bold tabular">
-                      {Number((load.get(member.user_id) ?? 0).toFixed(1))}
+                      {(Math.round((load.get(member.user_id) ?? 0) * 10) / 10).toLocaleString(lang, { maximumFractionDigits: 1 })}
                     </span>
                   )}
                 </td>

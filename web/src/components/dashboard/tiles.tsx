@@ -964,7 +964,7 @@ function BestTile({ monthDays }: { monthDays: CalendarDayData[] }) {
  * шёл за один. Считаем смены.
  */
 function HoursTile({ monthDays }: { monthDays: CalendarDayData[] }) {
-  const { t, n } = useI18n();
+  const { t, n, lang } = useI18n();
   const all = monthDays.reduce(
     (sum, day) => sum + day.shifts.reduce((inner, entry) => inner + entry.hours, 0),
     0,
@@ -976,10 +976,12 @@ function HoursTile({ monthDays }: { monthDays: CalendarDayData[] }) {
   );
   // Rounded before the whole-number test: a month of 9.5s and 7.5s adds up to
   // 113.99999999999999, which is not a whole number and printed «114.0».
+  // Written out by the locale rather than by toFixed, which only ever knows
+  // the dot: «104.5» stood in a Russian tile next to «0,02 ч» elsewhere.
   const round = (value: number) => {
     const tenth = Math.round(value * 10) / 10;
 
-    return tenth.toFixed(tenth % 1 === 0 ? 0 : 1);
+    return tenth.toLocaleString(lang, { maximumFractionDigits: 1 });
   };
 
   return (
@@ -989,8 +991,12 @@ function HoursTile({ monthDays }: { monthDays: CalendarDayData[] }) {
         <CountUp value={all} format={round} />
       </span>
       <span className="field-hint">
+        {/* The headline counts every shift on the month, worked or not, and
+            the caption used to open «отработано 0 ч» directly under it —
+            two numbers about hours, in one tile, that read as a
+            contradiction. It says which of the two it is now. */}
         {done < all
-          ? `${t('worked')} ${round(done)} ${t('h')} · ${n(shifts, 'shifts')}`
+          ? `${t('of them worked')} ${round(done)} ${t('h')} · ${n(shifts, 'shifts')}`
           : `${n(shifts, 'shifts')} ${t('this month')}`}
       </span>
     </>

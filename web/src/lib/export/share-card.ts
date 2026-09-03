@@ -15,6 +15,8 @@ export interface CardData {
   summary: DaysResponse;
   /** Money already formatted with the user's currency. */
   format: (value: number) => string;
+  /** A plain number in the reader's own notation — «9,5», not «9.5». */
+  number: (value: number) => string;
   labels: {
     earned: string;
     net: string;
@@ -144,7 +146,7 @@ export function drawShareCard(data: CardData, theme: CardTheme): Promise<Blob> {
   const perHour = summary.hours < 1 ? 0 : summary.shifts_earned / summary.hours;
 
   const tiles: [string, string][] = [
-    [`${round(summary.hours)}`, data.labels.hours],
+    [data.number(Math.round(summary.hours * 10) / 10), data.labels.hours],
     [`${summary.days_worked}`, data.labels.days],
     [data.format(perHour), data.labels.perHour],
     [data.format(summary.tips_earned), data.labels.tips],
@@ -153,7 +155,7 @@ export function drawShareCard(data: CardData, theme: CardTheme): Promise<Blob> {
   if (summary.planned_earned > 0) {
     tiles.push([data.format(summary.planned_earned), data.labels.planned]);
   } else if (summary.overtime_hours > 0) {
-    tiles.push([`${round(summary.overtime_hours)}`, data.labels.overtime]);
+    tiles.push([data.number(Math.round(summary.overtime_hours * 10) / 10), data.labels.overtime]);
   }
 
   const tileWidth = (W - PAD * 2 - 16 * (tiles.length - 1)) / tiles.length;
@@ -314,8 +316,7 @@ export function drawShareCard(data: CardData, theme: CardTheme): Promise<Blob> {
   });
 }
 
-const round = (value: number): string =>
-  Number.isInteger(value) ? `${value}` : value.toFixed(1);
+
 
 function measure(ctx: CanvasRenderingContext2D, value: string, font: string): number {
   const previous = ctx.font;

@@ -22,7 +22,7 @@ export function fill(text: string, vars: Record<string, string>): string {
  * observation feed that scrolls is a report, and nobody reads reports.
  */
 export function InsightsPanel() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const { format } = useMoney();
   const summary = useCalendar((state) => state.summary);
   const previous = useCalendar((state) => state.previousSummary);
@@ -55,8 +55,9 @@ export function InsightsPanel() {
       today,
       weekdayNames: WEEKDAY_KEYS.map((key) => t(key)),
       formatMoney: format,
+      formatNumber: (value) => value.toLocaleString(lang, { maximumFractionDigits: 1 }),
     }).slice(0, 3);
-  }, [summary, previous, days, t, format]);
+  }, [summary, previous, days, t, lang, format]);
 
   if (insights.length === 0) return null;
 

@@ -1255,6 +1255,10 @@ export const RU: Dictionary = {
   'Actually': 'Фактически',
   'Back to the plan': 'Вернуть по плану',
   'Breaks': 'Перерывы',
+  'What it looks for': 'Что здесь ищут',
+  'The rate': 'Ставка',
+  'The day the money comes': 'День выплаты',
+  'A trial period': 'Испытательный срок',
   'Resume': 'Продолжить',
   'Shift over?': 'Смена закончилась?',
   'The planned end passed a while ago — finish or keep going.': 'Плановый конец давно прошёл — завершите или продолжайте.',
@@ -2664,6 +2668,9 @@ export const RU: Dictionary = {
   'This device is subscribed.': 'Это устройство подписано.',
   'Send a test': 'Отправить тест',
   'Sent — check the notification': 'Отправлено — проверьте уведомление',
+  'Working hours': 'Рабочие часы',
+  'Notice': 'Срок предупреждения',
+  'Holiday': 'Отпуск',
 };
 
 export const UK: Dictionary = {
@@ -5307,4 +5314,11 @@ export const UK: Dictionary = {
   'This device is subscribed.': 'Цей пристрій підписано.',
   'Send a test': 'Надіслати тест',
   'Sent — check the notification': 'Надіслано — перевірте сповіщення',
+  'What it looks for': 'Що тут шукають',
+  'The rate': 'Ставка',
+  'The day the money comes': 'День виплати',
+  'Working hours': 'Робочі години',
+  'A trial period': 'Випробувальний строк',
+  'Notice': 'Строк попередження',
+  'Holiday': 'Відпустка',
 };

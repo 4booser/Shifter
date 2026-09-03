@@ -34,6 +34,28 @@ const QUESTIONS: Record<string, string> = {
   holiday: 'No holiday. Ask how many days a year and how they are booked.',
 };
 
+/**
+ * The ten, named plainly.
+ *
+ * The page opened as a box and a button over half a screen of nothing, and
+ * said only that it looks for «те несколько вещей» — a promise a person has
+ * to paste four pages of somebody else's lawyer into it to have kept. The
+ * list is short, fixed and the whole point; there is no reason to keep it
+ * secret until after the paste.
+ */
+const LOOKS_FOR: string[] = [
+  'The rate',
+  'The day the money comes',
+  'Working hours',
+  'Overtime',
+  'Tips',
+  'Deductions',
+  'Breaks',
+  'A trial period',
+  'Notice',
+  'Holiday',
+];
+
 const ALSO: Record<string, string> = {
   deductions: 'It does mention deductions. Ask for an example: what exactly counts as a shortfall, and who decides it happened.',
   tips: 'It does mention tips. Ask what the split is in numbers, and who can change it.',
@@ -125,6 +147,20 @@ export default function ContractPage() {
                 </li>
               ))}
             </ul>
+          </section>
+        )}
+
+        {result === null && (
+          <section className="card reveal p-4">
+            <h2 className="mb-2 text-[0.98rem] font-bold">{t('What it looks for')}</h2>
+            <ul className="flex flex-wrap gap-1.5">
+              {LOOKS_FOR.map((topic) => (
+                <li key={topic} className="chip">{t(topic)}</li>
+              ))}
+            </ul>
+            <p className="field-hint mt-3">
+              {t('These are questions, not findings. Nothing here says a term is unusual or unlawful — that is not something this app can know.')}
+            </p>
           </section>
         )}
 

@@ -114,11 +114,18 @@ function Compare() {
   const seriesA = useMemo(() => cumulative(a), [a]);
   const seriesB = useMemo(() => cumulative(b), [b]);
 
-  const facts: { label: string; a: number; b: number; money?: boolean }[] = [
+  /*
+   * `unset` marks a figure that is missing rather than nought. The hourly
+   * rate is suppressed under an hour of work — there is no rate to quote —
+   * and the suppression arrives here as a plain 0, which the table then
+   * printed as «0 ₴» beside «↓ −100%»: the hour did not collapse to nothing,
+   * it was never counted.
+   */
+  const facts: { label: string; a: number; b: number; money?: boolean; unset?: (value: number) => boolean }[] = [
     { label: 'Earned', a: a.total_earned, b: b.total_earned, money: true },
     { label: 'Hours', a: a.hours, b: b.hours },
     { label: 'Days worked', a: a.days_worked, b: b.days_worked },
-    { label: 'Per hour', a: avgA.perHour, b: avgB.perHour, money: true },
+    { label: 'Per hour', a: avgA.perHour, b: avgB.perHour, money: true, unset: (value) => value === 0 },
     { label: 'Per working day', a: avgA.perDay, b: avgB.perDay, money: true },
     { label: 'Tips', a: a.tips_earned, b: b.tips_earned, money: true },
     { label: 'Take-home', a: a.net_earned, b: b.net_earned, money: true },
@@ -242,13 +249,27 @@ function Compare() {
                 <tr key={fact.label} className="cell-in border-b border-border/60" style={{ ['--i' as string]: index }}>
                   <td className="py-1.5 pr-2 text-muted">{t(fact.label)}</td>
                   <td className="py-1.5 pr-2 text-right tabular">
-                    {fact.money === true ? format(fact.a) : num(Math.round(fact.a * 10) / 10)}
+                    {fact.unset?.(fact.a) === true
+                      ? '—'
+                      : fact.money === true
+                        ? format(fact.a)
+                        : num(Math.round(fact.a * 10) / 10)}
                   </td>
                   <td className="py-1.5 pr-2 text-right font-semibold tabular">
-                    {fact.money === true ? format(fact.b) : num(Math.round(fact.b * 10) / 10)}
+                    {fact.unset?.(fact.b) === true
+                      ? '—'
+                      : fact.money === true
+                        ? format(fact.b)
+                        : num(Math.round(fact.b * 10) / 10)}
                   </td>
                   <td className="py-1.5 text-right">
-                    <Delta percent={fact.a === 0 ? null : ((fact.b - fact.a) / Math.abs(fact.a)) * 100} />
+                    <Delta
+                      percent={
+                        fact.a === 0 || fact.unset?.(fact.a) === true || fact.unset?.(fact.b) === true
+                          ? null
+                          : ((fact.b - fact.a) / Math.abs(fact.a)) * 100
+                      }
+                    />
                   </td>
                 </tr>
               ))}

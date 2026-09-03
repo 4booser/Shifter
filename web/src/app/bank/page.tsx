@@ -253,11 +253,15 @@ export default function BankPage() {
                 колонки считаются по числу отрисованных карточек: осталась
                 одна — она и займёт ряд. Обёртки над ними нет намеренно, иначе
                 пустой div считался бы за карточку. */}
-            {/* Not items-start: the reserve card is a fifth of the forecast's
-                height, and hugging its content left a quarter of the screen
-                dark beside it. Stretched, the same emptiness is inside a card,
-                which is breathing room rather than a hole. */}
-            <div className="cards">
+            {/* The reserve card is a fifth of the forecast's height. As a
+                column grid this row had to choose between two bad answers —
+                hug the content and leave a quarter of the screen dark, or
+                stretch and put three hundred empty pixels inside a card,
+                which is what it did. The deck is the third answer and it was
+                already in the stylesheet: laid out in text columns, the next
+                card starts where the last one ended, so nothing stretches
+                and nothing is left dark. */}
+            <div className="deck">
               {/* ==== Дожить до зарплаты: the forward-looking chart ==== */}
               <BankForecast account={account ?? null} items={mono.items} />
 

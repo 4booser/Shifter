@@ -38,7 +38,7 @@ export function Account() {
     onSuccess: () => {
       void client.invalidateQueries({ queryKey: ['account'] });
       setName(null);
-      toast.success('Имя изменено');
+      toast.success(t('Name changed'));
     },
     onError: (error: Error) => toast.error(error.message),
   });
@@ -57,12 +57,12 @@ export function Account() {
       </header>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <Section title="Оформление" hint="Тема применяется сразу, на всех экранах.">
+        <Section title={t('Look')} hint={t('The theme applies at once, on every screen.')}>
           <Choice
             label={t('Theme')}
             options={THEME_PRESETS.map((preset) => ({
               value: preset.value,
-              label: THEME_NAMES[preset.value] ?? preset.label,
+              label: t(THEME_NAMES[preset.value] ?? preset.label),
             }))}
             value={settings.theme}
             onPick={pick('theme')}
@@ -93,15 +93,15 @@ export function Account() {
           <Choice
             label={t('Density')}
             options={[
-              { value: 'comfortable', label: 'просторно' },
-              { value: 'compact', label: 'плотно' },
+              { value: 'comfortable', label: t('roomy') },
+              { value: 'compact', label: t('dense') },
             ]}
             value={settings.density}
             onPick={pick('density')}
           />
 
           <Slide
-            label="Скругления"
+            label={t('Corners')}
             value={settings.roundness}
             min={0}
             max={22}
@@ -118,8 +118,8 @@ export function Account() {
           />
 
           <Toggle
-            label="Меньше движения"
-            hint="Переходы и появления становятся мгновенными."
+            label={t('Less motion')}
+            hint={t('Transitions and entrances become instant.')}
             on={settings.reduceMotion}
             onPick={(value) => update('reduceMotion', value)}
           />
@@ -130,7 +130,7 @@ export function Account() {
           hint={`Так будут выглядеть суммы: ${formatMoney(settings, 12345)}`}
         >
           <div className="flex flex-col gap-1.5">
-            <span className="field-label">Знак</span>
+            <span className="field-label">{t('Mark')}</span>
             <div className="flex flex-wrap items-center gap-1.5">
               {CURRENCIES.map((sign) => (
                 <button
@@ -157,7 +157,7 @@ export function Account() {
           </div>
 
           <Choice
-            label="Где знак"
+            label={t('Where the mark goes')}
             options={[
               { value: true, label: `${settings.currency}100` },
               { value: false, label: `100 ${settings.currency}` },
@@ -166,10 +166,10 @@ export function Account() {
             onPick={pick('currencyBefore')}
           />
           <Choice
-            label="Копейки"
+            label={t('Kopecks')}
             options={[
-              { value: 0 as const, label: 'без них' },
-              { value: 2 as const, label: 'две цифры' },
+              { value: 0 as const, label: t('without them') },
+              { value: 2 as const, label: t('two digits') },
             ]}
             value={settings.moneyDecimals}
             onPick={pick('moneyDecimals')}
@@ -180,7 +180,7 @@ export function Account() {
             onPick={(value) => update('groupThousands', value)}
           />
           <label className="flex flex-col gap-1">
-            <span className="field-label">Считать всё в</span>
+            <span className="field-label">{t('Count everything in')}</span>
             <span className="flex items-center gap-2">
               <Input
                 className="w-24"
@@ -197,45 +197,45 @@ export function Account() {
           </label>
 
           <Toggle
-            label="Прятать суммы"
-            hint="Числа заменяются точками — для чужих глаз через плечо."
+            label={t('Hide the amounts')}
+            hint={t('The figures become dots — for somebody else’s eyes over your shoulder.')}
             on={settings.hideAmounts}
             onPick={(value) => update('hideAmounts', value)}
           />
         </Section>
 
-        <Section title={t('Calendar')} hint="Что видно в клетке и с какого дня начинается неделя.">
+        <Section title={t('Calendar')} hint={t('What shows in a cell and which day the week starts on.')}>
           <Choice
-            label="Неделя начинается"
+            label={t('The week starts')}
             options={[
-              { value: true, label: 'с понедельника' },
-              { value: false, label: 'с воскресенья' },
+              { value: true, label: t('on Monday') },
+              { value: false, label: t('on Sunday') },
             ]}
             value={settings.mondayFirst}
             onPick={pick('mondayFirst')}
           />
           <Choice
-            label="Время в клетке"
+            label={t('Time in the cell')}
             options={[
-              { value: 'none' as const, label: 'не показывать' },
-              { value: 'start' as const, label: 'начало' },
-              { value: 'range' as const, label: 'начало и конец' },
+              { value: 'none' as const, label: t('do not show') },
+              { value: 'start' as const, label: t('the start') },
+              { value: 'range' as const, label: t('start and end') },
             ]}
             value={settings.cellTimes}
             onPick={pick('cellTimes')}
           />
           <Toggle
-            label="Заработок в клетке"
+            label={t('Earnings in the cell')}
             on={settings.showEarningsInCells}
             onPick={(value) => update('showEarningsInCells', value)}
           />
           <Toggle
-            label="Названия смен в клетке"
+            label={t('Shift names in the cell')}
             on={settings.showShiftNamesInCells}
             onPick={(value) => update('showShiftNamesInCells', value)}
           />
           <Toggle
-            label="Выделять выходные"
+            label={t('Mark the days off')}
             on={settings.highlightWeekends}
             onPick={(value) => update('highlightWeekends', value)}
           />
@@ -243,7 +243,7 @@ export function Account() {
 
         <Section title={t('Account')} hint={profile.data?.login ?? ' '}>
           <label className="flex flex-col gap-1">
-            <span className="field-label">Как вас зовут</span>
+            <span className="field-label">{t('What you are called')}</span>
             <span className="flex gap-2">
               <Input
                 value={shownName}
@@ -293,16 +293,16 @@ export function Account() {
 }
 
 const THEME_NAMES: Record<string, string> = {
-  system: 'как в системе',
-  light: 'светлая',
-  grey: 'серая',
-  sand: 'песок',
-  mint: 'мята',
-  dark: 'тёмная',
-  night: 'ночь',
-  ocean: 'океан',
-  plum: 'слива',
-  gradient: 'градиент',
+  system: 'as in the system',
+  light: 'light',
+  grey: 'grey',
+  sand: 'sand',
+  mint: 'mint',
+  dark: 'dark',
+  night: 'night',
+  ocean: 'ocean',
+  plum: 'plum',
+  gradient: 'gradient',
 };
 
 function Section({

@@ -185,8 +185,8 @@ export function Bank() {
 
     const answer = await mono.connect(typed.trim());
 
-    if (answer === 'refused') setRefused('Банк не принял этот токен.');
-    else if (answer === 'failed') setRefused('Не дотянулись до банка. Попробуйте ещё раз.');
+    if (answer === 'refused') setRefused(t('The bank did not accept this token.'));
+    else if (answer === 'failed') setRefused(t('Could not reach the bank. Try again.'));
     else setTyped('');
   };
 
@@ -213,7 +213,7 @@ export function Bank() {
         </p>
 
         <div className="mt-5 flex flex-col gap-2 border-t border-border pt-4">
-          <span className="field-label">Токен из monobank</span>
+          <span className="field-label">{t('The token from monobank')}</span>
           <span className="flex gap-2">
             <Input
               type="password"
@@ -278,12 +278,12 @@ export function Bank() {
         </section>
 
         <section className="card p-5">
-          <span className="field-hint">Потрачено за месяц</span>
+          <span className="field-hint">{t('Spent this month')}</span>
           <p className="mt-1 text-2xl font-bold tabular text-danger">−{money(spent)}</p>
         </section>
 
         <section className="card p-5">
-          <span className="field-hint">Регулярных</span>
+          <span className="field-hint">{t('Standing')}</span>
           <p className="mt-1 text-2xl font-bold tabular">{standing.length}</p>
           {standing.length > 0 && (
             <p className="field-hint">
@@ -294,7 +294,7 @@ export function Bank() {
       </div>
 
       {curve !== null && curve.length > 1 && (
-        <Panel title="Баланс за месяц" hint="Каждая точка — вечер того дня.">
+        <Panel title={t('Balance over the month')} hint={t('Every dot is that day’s evening.')}>
           <Climb
             points={curve.map((point) => ({ label: point.day, value: point.balance }))}
             height={220}
@@ -305,26 +305,26 @@ export function Bank() {
       <div className="columns-1 gap-3 lg:columns-2 [&>*]:mb-3 [&>*]:break-inside-avoid">
         {stretch !== null && (
           <Panel
-            title="До зарплаты"
+            title={t('Until payday')}
             hint={`${stretch.days} ${daysWord(stretch.days)}, ${money(stretch.committed)} уже обещано подпискам.`}
           >
             <div className="flex items-baseline gap-3">
               <span className="text-2xl font-bold tabular">{money(stretch.perDay)}</span>
-              <span className="field-hint">в день</span>
+              <span className="field-hint">{t('a day')}</span>
             </div>
             <p className="field-hint">
               {stretch.usual > 0 && stretch.perDay < stretch.usual
                 ? `Обычно уходит ${money(stretch.usual)} — на ${money(stretch.usual - stretch.perDay)} больше.`
                 : stretch.usual > 0
                   ? `Обычно уходит ${money(stretch.usual)}, так что запас есть.`
-                  : 'Пока не с чем сравнить — выписка короткая.'}
+                  : t('Nothing to compare against yet — the statement is short.')}
             </p>
           </Panel>
         )}
 
         {runway !== null && (
           <Panel
-            title={runway.dry === null ? 'Хватит на два месяца' : 'Когда закончится'}
+            title={runway.dry === null ? t('Enough for two months') : t('When it runs out')}
             hint={`Считаем по ${money(runway.usualPerDay)} в день плюс то, что списывается само.`}
           >
             <Climb
@@ -341,7 +341,7 @@ export function Bank() {
 
         {paying.length > 0 && (
           <Panel
-            title="Платят ли вовремя"
+            title={t('Whether they pay on time')}
             hint="По периодам, где деньги уже пришли. Банк это подтверждает, память — нет."
           >
             <ul className="flex flex-col gap-2">
@@ -356,12 +356,12 @@ export function Bank() {
                       )}
                     >
                       {place.averageLate <= 0
-                        ? 'день в день'
+                        ? t('to the day')
                         : `+${Math.round(place.averageLate)} ${daysWord(Math.round(place.averageLate))}`}
                     </span>
                   </span>
                   <span className="field-hint">
-                    {place.settled} {place.settled === 1 ? 'выплата' : 'выплат'} · худшая задержка{' '}
+                    {place.settled} {place.settled === 1 ? t('payment') : t('payments')} · {t('worst delay')}{' '}
                     {place.worstLate} {daysWord(place.worstLate)}
                     {place.short > 0 && ` · недоплат: ${place.short}`}
                   </span>
@@ -384,7 +384,7 @@ export function Bank() {
                 ? 'Рабочий день дороже'
                 : byKind.onShift < byKind.off
                   ? 'В смену тратится меньше'
-                  : 'Смена и выходной стоят одинаково'
+                  : t('A shift and a day off cost the same')
             }
             hint={`${byKind.onShiftDays} ${daysWord(byKind.onShiftDays)} со сменой против ${byKind.offDays} без.`}
           >
@@ -392,14 +392,14 @@ export function Bank() {
               rows={[
                 {
                   key: 'on',
-                  label: 'в смену',
+                  label: t('on a shift'),
                   value: byKind.onShift,
                   shown: money(byKind.onShift),
                   colour: 'var(--warn)',
                 },
                 {
                   key: 'off',
-                  label: 'без смены',
+                  label: t('off shift'),
                   value: byKind.off,
                   shown: money(byKind.off),
                 },
@@ -411,7 +411,7 @@ export function Bank() {
                 {byKind.differences
                   .slice(0, 2)
                   .map((one) => kindName(one.kind))
-                  .join(' и ')}
+                  .join(` ${t('and')} `)}
                 .
               </p>
             )}
@@ -420,7 +420,7 @@ export function Bank() {
 
         {rate !== null && rate.costs > 0 && (
           <Panel
-            title="Сколько стоит ваш час на самом деле"
+            title={t('What your hour really costs')}
             hint="Из ставки вычтено то, что тратится в дни смен на дорогу и еду."
           >
             <div className="flex items-baseline gap-3">
@@ -434,19 +434,19 @@ export function Bank() {
         )}
 
         {money_flow.spent > 0 && (
-          <Panel title="Пришло и ушло" hint="Переводы между своими счетами не в счёт.">
+          <Panel title={t('In and out')} hint="Переводы между своими счетами не в счёт.">
             <Split
               total={money(money_flow.earned)}
               parts={[
                 {
                   key: 'left',
-                  label: 'осталось',
+                  label: t('left'),
                   value: Math.max(0, money_flow.left),
                   colour: 'var(--good)',
                 },
                 {
                   key: 'spent',
-                  label: 'потрачено',
+                  label: t('spent'),
                   value: money_flow.spent,
                   colour: 'var(--danger)',
                 },
@@ -488,7 +488,7 @@ export function Bank() {
         )}
 
         {given.length > 0 && (
-          <Panel title="Вернули деньги" hint="Отмены и возвраты, уже вычтенные из трат.">
+          <Panel title={t('Money came back')} hint="Отмены и возвраты, уже вычтенные из трат.">
             <ul className="flex flex-col gap-1">
               {given.slice(0, 5).map((pair) => (
                 <li
@@ -510,7 +510,7 @@ export function Bank() {
         <section className="card flex flex-wrap items-center gap-x-4 gap-y-2 p-4">
           {(mono.client?.accounts ?? []).length > 1 && (
             <span className="flex flex-wrap items-center gap-1.5">
-              <span className="field-label">Счёт</span>
+              <span className="field-label">{t('Account')}</span>
               {(mono.client?.accounts ?? []).map((one) => (
                 <button
                   key={one.id}

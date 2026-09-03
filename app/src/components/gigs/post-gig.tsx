@@ -103,7 +103,7 @@ export function PostGig({ onClose }: { onClose: () => void }) {
       try {
         taken.push(await shrinkPhoto(file));
       } catch {
-        toast.error(`Не вышло прочитать ${file.name}`);
+        toast.error(t('Could not read {name}', { name: file.name }));
       }
     }
 
@@ -223,7 +223,7 @@ export function PostGig({ onClose }: { onClose: () => void }) {
 
           <div className="grid gap-2 sm:grid-cols-3">
             <label className="flex flex-col gap-1">
-              <span className="field-label">Сколько, {settings.currency}</span>
+              <span className="field-label">{t('How much, {currency}', { currency: settings.currency })}</span>
               <Input
                 inputMode="decimal"
                 value={form.pay_amount === 0 ? '' : `${form.pay_amount}`}
@@ -264,7 +264,10 @@ export function PostGig({ onClose }: { onClose: () => void }) {
               server would rather say so than let one through. */}
           <div className="flex flex-col gap-1.5">
             <span className="field-label">
-              Фото места — от {MIN_PHOTOS} до {MAX_PHOTOS}
+              {t('Photos of the place — from {min} to {max}', {
+                min: MIN_PHOTOS,
+                max: MAX_PHOTOS,
+              })}
             </span>
             <div className="flex flex-wrap items-center gap-2">
               {form.photos.map((photo, index) => (
@@ -276,7 +279,7 @@ export function PostGig({ onClose }: { onClose: () => void }) {
                   />
                   <button
                     type="button"
-                    aria-label={`Убрать фото ${index + 1}`}
+                    aria-label={t('Remove photo {number}', { number: index + 1 })}
                     onClick={() =>
                       set('photos', form.photos.filter((one) => one !== photo))
                     }

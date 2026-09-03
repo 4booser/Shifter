@@ -175,7 +175,7 @@ function ShiftCard({
     shift.salary_amount == null
       ? shift.revenue_percent == null
         ? t('no rate')
-        : `${shift.revenue_percent}% с выручки`
+        : t('{percent}% of takings', { percent: shift.revenue_percent })
       : `${money(shift.salary_amount)} ${t(PERIOD_LABELS[shift.salary_period])}`;
 
   return (
@@ -192,7 +192,7 @@ function ShiftCard({
           </p>
           <p className="field-hint tabular">
             {shift.start_time.slice(0, 5)}–{shift.end_time.slice(0, 5)} · {shift.hours} {t('h')}
-            {shift.break_minutes > 0 && ` · перерыв ${shift.break_minutes} ${t('min')}`}
+            {shift.break_minutes > 0 && ` · ${t('break {length}', { length: `${shift.break_minutes} ${t('min')}` })}`}
           </p>
         </div>
         <span className="flex flex-none gap-1">
@@ -224,10 +224,10 @@ function ShiftCard({
       <p className="field-hint">
         {shift.location_name ?? t('no place')}
         {shift.tip_source === 'pool' &&
-          ` · пул${shift.tip_pool_percent == null ? '' : ` ${shift.tip_pool_percent}%`}`}
+          ` · ${t('pool')}${shift.tip_pool_percent == null ? '' : ` ${shift.tip_pool_percent}%`}`}
         {shift.revenue_percent != null &&
           shift.salary_amount != null &&
-          ` · +${shift.revenue_percent}% с выручки`}
+          ` · +${t('{percent}% of takings', { percent: shift.revenue_percent })}`}
       </p>
     </article>
   );

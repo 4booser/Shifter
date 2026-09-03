@@ -248,7 +248,10 @@ export function Raises({ summary }: { summary: DaysResponse }) {
               </span>
               {raise.worth_since !== 0 && (
                 <span className="w-full field-hint">
-                  с тех пор это {up ? t('brought') : t('cost')} {money(Math.abs(raise.worth_since))}
+                  {t('since then that has {verb} {money}', {
+                    verb: up ? t('brought') : t('cost'),
+                    money: money(Math.abs(raise.worth_since)),
+                  })}
                 </span>
               )}
             </li>
@@ -287,7 +290,9 @@ export function CostOfWork({ summary }: { summary: DaysResponse }) {
       hint={
         summary.travel_share_of_tips == null
           ? t('This is not taken off the earnings — it happened after them.')
-          : `Дорога съела ${Math.round(summary.travel_share_of_tips)}% чаевых.`
+          : t('Travel ate {percent}% of the tips.', {
+              percent: Math.round(summary.travel_share_of_tips),
+            })
       }
     >
       <Bars rows={rows} />

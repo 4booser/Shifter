@@ -169,8 +169,8 @@ export function DayPanel({
                 <span className="field-hint tabular">
                   {(entry.actual_start ?? entry.start_time).slice(0, 5)}–
                   {(entry.actual_end ?? entry.end_time).slice(0, 5)} · {entry.hours} {t('h')}
-                  {entry.actual_start != null && ' · по факту'}
-                  {entry.worked ? '' : ' · план'}
+                  {entry.actual_start != null && ` · ${t('as worked')}`}
+                  {entry.worked ? '' : ` · ${t('planned')}`}
                 </span>
               </span>
 

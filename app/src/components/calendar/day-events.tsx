@@ -77,7 +77,7 @@ export function DayEvents({ date, events }: { date: string; events: CalendarEven
               {event.days > 1 && <span className="field-hint">{event.days} {t('d.')}</span>}
               <button
                 type="button"
-                aria-label={`Убрать: ${event.name}`}
+                aria-label={t('Remove: {name}', { name: event.name })}
                 disabled={drop.isPending}
                 onClick={() => drop.mutate(event.id)}
                 className="text-muted-foreground transition-colors hover:text-danger"

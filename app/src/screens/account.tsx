@@ -125,7 +125,7 @@ export function Account() {
 
         <Section
           title={t('Money')}
-          hint={`Так будут выглядеть суммы: ${formatMoney(settings, 12345)}`}
+          hint={t('This is how sums will look: {example}', { example: formatMoney(settings, 12345) })}
         >
           <div className="flex flex-col gap-1.5">
             <span className="field-label">{t('Mark')}</span>

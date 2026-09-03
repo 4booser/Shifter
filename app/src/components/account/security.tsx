@@ -261,7 +261,7 @@ function TwoFactorCard({ on }: { on: boolean }) {
 }
 
 function SessionsCard() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const client = useQueryClient();
   const sessions = useQuery({ queryKey: ['sessions'], queryFn: () => authApi.sessions() });
 
@@ -295,9 +295,11 @@ function SessionsCard() {
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-sm">{describe(row.user_agent, t)}</span>
                 <span className="field-hint">
-                  вошли {new Date(row.created_at).toLocaleDateString('ru', {
-                    day: 'numeric',
-                    month: 'long',
+                  {t('signed in {day}', {
+                    day: new Date(row.created_at).toLocaleDateString(lang, {
+                      day: 'numeric',
+                      month: 'long',
+                    }),
                   })}
                 </span>
               </span>

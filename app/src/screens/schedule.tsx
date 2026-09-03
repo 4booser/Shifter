@@ -83,7 +83,12 @@ export function Schedule() {
       // which is why the server will not write it for them — and gets a push
       // saying so.
       void client.invalidateQueries({ queryKey: ['days'] });
-      toast.success(`${taken.shift_name} теперь у ${taken.taken_by} — им придёт напоминание поставить её себе`);
+      toast.success(
+        t('{shift} is {person}’s now — they will get a reminder to put it in', {
+          shift: taken.shift_name,
+          person: taken.taken_by,
+        }),
+      );
     },
     onError: (error: Error) => toast.error(error.message),
   });
@@ -408,7 +413,7 @@ function NoTeam() {
     mutationFn: () => teamApi.join(code.trim(), null),
     onSuccess: (team) => {
       void client.invalidateQueries({ queryKey: ['teams'] });
-      toast.success(`Вы в команде «${team.name}»`);
+      toast.success(t('You are in «{team}»', { team: team.name }));
     },
     onError: (error: Error) => toast.error(error.message),
   });
@@ -417,7 +422,7 @@ function NoTeam() {
     mutationFn: () => teamApi.create(name.trim()),
     onSuccess: (team) => {
       void client.invalidateQueries({ queryKey: ['teams'] });
-      toast.success(`Команда «${team.name}» создана`);
+      toast.success(t('Team «{team}» created', { team: team.name }));
     },
     onError: (error: Error) => toast.error(error.message),
   });

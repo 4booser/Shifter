@@ -175,7 +175,9 @@ export function Gigs() {
             <>
               <p className="text-lg font-semibold">{t('Nothing matched the filters')}</p>
               <p className="field-hint">
-                На доске есть {board.data!.length}, но не в этой части дома.
+                {t('The board has {count}, just not in this corner of it.', {
+                  count: board.data!.length,
+                })}
               </p>
               <Button variant="outline" size="sm" onClick={() => setGroup(null)}>
                 {t('Show all')}
@@ -186,7 +188,7 @@ export function Gigs() {
               <p className="text-lg font-semibold">
                 {asked === ''
                   ? t('Nobody is looking for a shift yet')
-                  : `В городе «${asked}» пока пусто`}
+                  : t('Nothing in {city} yet', { city: `«${asked}»` })}
               </p>
               <p className="field-hint">{t('Look again later — or post your own listing.')}</p>
               <Button variant="outline" size="sm" onClick={() => setPosting(true)}>
@@ -244,7 +246,7 @@ export function Gigs() {
                     )}
                   >
                     {better ? <TrendingUp className="size-4" /> : <TrendingDown className="size-4" />}
-                    {money(gig.worth.offered_per_hour)}/час — на{' '}
+                    {money(gig.worth.offered_per_hour)}/{t('h')} — {t('by')}{' '}
                     {Math.abs(Math.round(gig.worth.difference_percent))}%{' '}
                     {better ? t('above yours') : t('below yours')}
                   </p>

@@ -186,7 +186,7 @@ export function TileStrip({ days, summary }: { days: CalendarDayData[]; summary:
       value: `${worked.length}`,
       // Days the server has a row for, not days in the month: a month with
       // fourteen worked days and two coloured ones read «из 16 в месяце».
-      hint: `из ${daysInMonth} в месяце`,
+      hint: t('of {days} in the month', { days: daysInMonth }),
       to: '/stats',
     },
   ];

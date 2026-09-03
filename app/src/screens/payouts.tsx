@@ -33,7 +33,7 @@ const STATUS: Record<PayPeriodRow['status'], { label: string; tone: string }> = 
 };
 
 export function Payouts() {
-  const { t, n } = useI18n();
+  const { t, n, lang } = useI18n();
   const settings = useSettings((state) => state.settings);
   const money = (value: number) => formatMoney(settings, Math.round(value));
 
@@ -173,8 +173,8 @@ export function Payouts() {
                 <>
                   <p className="mt-1 text-4xl font-black tabular text-good">{money(next.amount)}</p>
                   <p className="field-hint mt-1">
-                    {days === 0 ? t('today') : days === 1 ? t('tomorrow') : `через ${days} ${t('d.')}`} ·{' '}
-                    {new Date(`${next.day}T12:00:00`).toLocaleDateString('ru', {
+                    {days === 0 ? t('today') : days === 1 ? t('tomorrow') : t('in {days}', { days: n(days ?? 0, 'days') })} ·{' '}
+                    {new Date(`${next.day}T12:00:00`).toLocaleDateString(lang, {
                       day: 'numeric',
                       month: 'long',
                     })}
@@ -197,7 +197,7 @@ export function Payouts() {
               {late > 0 && (
                 <p className="mt-2 flex items-center gap-1.5 text-sm font-semibold text-danger">
                   <CircleAlert className="size-4" />
-                  {money(late)} задерживают
+                  {t('{money} are late', { money: money(late) })}
                 </p>
               )}
             </section>
@@ -283,14 +283,14 @@ function Rows({
                   )}
                 </span>
                 <span className="field-hint tabular">
-                  {spanOf(row.period_from, row.period_to)} · выплата {dayOf(row.due_on)}
+                  {spanOf(row.period_from, row.period_to)} · {t('paid out {day}', { day: dayOf(row.due_on) })}
                 </span>
               </span>
 
               <span className={cn('text-right tabular', muted && 'text-muted-foreground')}>
                 <span className="block font-semibold">{money(row.expected)}</span>
                 {row.paid > 0 && row.paid !== row.expected && (
-                  <span className="field-hint">пришло {money(row.paid)}</span>
+                  <span className="field-hint">{t('{money} arrived', { money: money(row.paid) })}</span>
                 )}
               </span>
             </li>

@@ -351,7 +351,7 @@ export function Stats() {
               {summary.conversion !== null ? (
                 <>
                   <span>
-                    Всего это{' '}
+                    {t('Altogether that is')}{' '}
                     <b className="tabular">
                       {formatMoneyIn(
                         settings,
@@ -359,18 +359,19 @@ export function Stats() {
                         Math.round(summary.conversion.total_earned),
                       )}
                     </b>{' '}
-                    по сегодняшнему курсу.
+                    {t('at today’s rate.')}
                   </span>
                   {summary.conversion.unconverted.length > 0 && (
                     <span className="field-hint">
-                      Курса нет для: {summary.conversion.unconverted.join(', ')} — эти деньги в
-                      пересчёт не вошли.
+                      {t('No rate for: {list} — that money is not in the conversion.', {
+                        list: summary.conversion.unconverted.join(', '),
+                      })}
                     </span>
                   )}
                 </>
               ) : (
                 <span className="field-hint">
-                  Валюта пересчёта не выбрана — суммы выше просто сложены.
+                  {t('No conversion currency is chosen — the sums above are simply added up.')}
                 </span>
               )}
             </p>
@@ -378,7 +379,9 @@ export function Stats() {
 
           <Panel
             title={t('Earned over the period')}
-            hint={`Плотная линия — этот ${span === 'month' ? t('month') : t('year')}, бледная — прошлый. Веди курсором — цифры дня.`}
+            hint={t('The solid line is this {span}, the pale one is the last. Move the cursor for a day’s figures.', {
+              span: span === 'month' ? t('month') : t('year'),
+            })}
           >
             <Climb points={climb.line} ghost={climb.ghost} height={240} />
           </Panel>
@@ -393,7 +396,10 @@ export function Stats() {
                 summary.conversion !== null
                   ? t('Shares are counted from the sums as they stand — the currencies differ, so the percentages are truer than the figures.')
                   : gross > summary.total_earned
-                    ? `Заработано ${money(gross)}; на руки ${money(summary.total_earned)} — остальное в котёл и удержания.`
+                    ? t('Earned {gross}; {net} in hand — the rest went to the pot and to deductions.', {
+                        gross: money(gross),
+                        net: money(summary.total_earned),
+                      })
                     : t('The rate, the tips and everything on top.')
               }
             >

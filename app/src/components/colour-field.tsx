@@ -80,7 +80,7 @@ export function ColourField({
             <Swatch
               key={colour}
               colour={colour}
-              label={`${colour} — правой кнопкой убрать`}
+              label={t('{colour} — right-click to remove', { colour })}
               picked={picked === colour}
               onPick={onPick}
               onForget={() => forgetColour(colour)}

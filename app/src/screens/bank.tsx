@@ -276,7 +276,9 @@ export function Bank() {
           <p className="mt-1 text-2xl font-bold tabular">{standing.length}</p>
           {standing.length > 0 && (
             <p className="field-hint">
-              {money(standing.reduce((sum, row) => sum + row.amount * (30 / row.everyDays), 0))} в месяц
+              {t('{money} a month', {
+                money: money(standing.reduce((sum, row) => sum + row.amount * (30 / row.everyDays), 0)),
+              })}
             </p>
           )}
         </section>
@@ -295,7 +297,10 @@ export function Bank() {
         {stretch !== null && (
           <Panel
             title={t('Until payday')}
-            hint={`${n(stretch.days, 'days')}, ${money(stretch.committed)} уже обещано подпискам.`}
+            hint={t('{days}, {money} already promised to subscriptions.', {
+              days: n(stretch.days, 'days'),
+              money: money(stretch.committed),
+            })}
           >
             <div className="flex items-baseline gap-3">
               <span className="text-2xl font-bold tabular">{money(stretch.perDay)}</span>
@@ -303,9 +308,12 @@ export function Bank() {
             </div>
             <p className="field-hint">
               {stretch.usual > 0 && stretch.perDay < stretch.usual
-                ? `Обычно уходит ${money(stretch.usual)} — на ${money(stretch.usual - stretch.perDay)} больше.`
+                ? t('Usually {usual} goes — {more} more.', {
+                    usual: money(stretch.usual),
+                    more: money(stretch.usual - stretch.perDay),
+                  })
                 : stretch.usual > 0
-                  ? `Обычно уходит ${money(stretch.usual)}, так что запас есть.`
+                  ? t('Usually {usual} goes, so there is room.', { usual: money(stretch.usual) })
                   : t('Nothing to compare against yet — the statement is short.')}
             </p>
           </Panel>
@@ -314,7 +322,9 @@ export function Bank() {
         {runway !== null && (
           <Panel
             title={runway.dry === null ? t('Enough for two months') : t('When it runs out')}
-            hint={`Считаем по ${money(runway.usualPerDay)} в день плюс то, что списывается само.`}
+            hint={t('Counted at {money} a day plus what is taken automatically.', {
+              money: money(runway.usualPerDay),
+            })}
           >
             <Climb
               points={runway.days.map((day) => ({ label: day.day, value: day.balance }))}
@@ -322,8 +332,11 @@ export function Bank() {
             />
             <p className="field-hint">
               {runway.dry === null
-                ? `Тоньше всего ${dayOfMonth(runway.thinnest.day)} — ${money(runway.thinnest.balance)}.`
-                : `Ноль ${dayOfMonth(runway.dry)}, если ничего не изменится.`}
+                ? t('Thinnest on {day} — {money}.', {
+                    day: dayOfMonth(runway.thinnest.day),
+                    money: money(runway.thinnest.balance),
+                  })
+                : t('Zero on {day}, if nothing changes.', { day: dayOfMonth(runway.dry) })}
             </p>
           </Panel>
         )}
@@ -352,7 +365,7 @@ export function Bank() {
                   <span className="field-hint">
                     {place.settled} {place.settled === 1 ? t('payment') : t('payments')} · {t('worst delay')}{' '}
                     {n(place.worstLate, 'days')}
-                    {place.short > 0 && ` · недоплат: ${place.short}`}
+                    {place.short > 0 && ` · ${t('short paid')}: ${place.short}`}
                   </span>
                 </li>
               ))}
@@ -375,7 +388,10 @@ export function Bank() {
                   ? t('A shift day costs less')
                   : t('A shift and a day off cost the same')
             }
-            hint={`${n(byKind.onShiftDays, 'days')} со сменой против ${byKind.offDays} без.`}
+            hint={t('{on} with a shift against {off} without.', {
+              on: n(byKind.onShiftDays, 'days'),
+              off: byKind.offDays,
+            })}
           >
             <Bars
               rows={[
@@ -396,7 +412,7 @@ export function Bank() {
             />
             {byKind.differences.length > 0 && (
               <p className="field-hint">
-                Больше всего расходится{' '}
+                {t('The biggest gap is in')}{' '}
                 {byKind.differences
                   .slice(0, 2)
                   .map((one) => t(kindName(one.kind)))
@@ -414,10 +430,13 @@ export function Bank() {
           >
             <div className="flex items-baseline gap-3">
               <span className="text-2xl font-bold tabular">{money(rate.real)}</span>
-              <span className="field-hint tabular">вместо {money(rate.headline)}</span>
+              <span className="field-hint tabular">{t('instead of {money}', { money: money(rate.headline) })}</span>
             </div>
             <p className="field-hint">
-              За {Math.round(rate.hours)} {t('h')} работа съела {money(rate.costs)}.
+              {t('Over {hours} of work it ate {money}.', {
+                hours: `${Math.round(rate.hours)} ${t('h')}`,
+                money: money(rate.costs),
+              })}
             </p>
           </Panel>
         )}
@@ -442,7 +461,7 @@ export function Bank() {
               ]}
             />
             {money_flow.returned > 0 && (
-              <p className="field-hint">Вернули {money(money_flow.returned)}.</p>
+              <p className="field-hint">{t('{money} came back.', { money: money(money_flow.returned) })}</p>
             )}
           </Panel>
         )}
@@ -467,7 +486,7 @@ export function Bank() {
                   <span className="flex-none tabular">
                     {money(row.amount)}
                     <span className="field-hint ml-1.5">
-                      след. {row.next.slice(8)}.{row.next.slice(5, 7)}
+                      {t('next {date}', { date: `${row.next.slice(8)}.${row.next.slice(5, 7)}` })}
                     </span>
                   </span>
                 </li>
@@ -521,11 +540,13 @@ export function Bank() {
           <span className="ml-auto flex items-center gap-2">
             {mono.progress !== null && (
               <span className="field-hint tabular">
-                {mono.progress.done} из {mono.progress.total}
+                {t('{done} of {total}', { done: mono.progress.done, total: mono.progress.total })}
               </span>
             )}
             {mono.waiting > 0 && (
-              <span className="field-hint tabular">банк просит подождать {mono.waiting} с</span>
+              <span className="field-hint tabular">
+                {t('the bank asks for {seconds} s', { seconds: mono.waiting })}
+              </span>
             )}
             {/* Monobank allows one statement request a minute, so the days
                 asked for are a real choice rather than a slider nobody reads. */}
@@ -538,7 +559,7 @@ export function Bank() {
                 onClick={() => void mono.sync(back)}
               >
                 <RefreshCw className={cn('size-3.5', mono.busy && 'animate-spin')} />
-                {back} дней
+                {n(back, 'days')}
               </Button>
             ))}
           </span>

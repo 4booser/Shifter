@@ -108,7 +108,7 @@ export function Wrapped() {
         </p>
       ) : shifts === 0 ? (
         <p className="card p-6 text-center">
-          <span className="block text-lg font-semibold">В {year} году записей пока нет</span>
+          <span className="block text-lg font-semibold">{t('Nothing written down for {year} yet', { year })}</span>
           <span className="field-hint">{t('Mark a few shifts and the year starts assembling itself.')}</span>
         </p>
       ) : (
@@ -130,7 +130,7 @@ export function Wrapped() {
               {/* An hour is the floor, not nought: a shift closed after fifty
                   seconds priced the hour at −₴3 805 on the other client. This
                   is the last of five copies of that rule. */}
-              {summary.hours >= 1 ? `${money(summary.total_earned / summary.hours)}/час` : '—'}
+              {summary.hours >= 1 ? `${money(summary.total_earned / summary.hours)}/${t('h')}` : '—'}
             </p>
 
             {/* The shape of the year, right in the hero: twelve columns, the

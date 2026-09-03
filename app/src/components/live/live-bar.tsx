@@ -129,7 +129,7 @@ export function LiveBar() {
             <>
               <Button size="sm" variant="ghost" onClick={() => startTimedBreak(15)}>
                 <Coffee className="size-3.5" />
-                15 мин
+                {t('{count} min', { count: 15 })}
               </Button>
               <Button size="sm" variant="outline" onClick={pauseLiveShift}>
                 {t('Pause')}
@@ -160,6 +160,7 @@ export function LiveBar() {
  * planned for today that has not been marked worked yet.
  */
 export function StartLive() {
+  const { t } = useI18n();
   const live = useLive((state) => state.live);
   const today = todayKey();
 
@@ -191,7 +192,7 @@ export function StartLive() {
             onClick={() => template !== undefined && startLiveShift(template)}
           >
             <Play className="size-3.5" />
-            Начать: {entry.name}
+            {t('Start: {name}', { name: entry.name })}
           </Button>
         );
       })}

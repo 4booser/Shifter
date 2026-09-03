@@ -165,7 +165,7 @@ export function Payouts() {
               />
               <span className="field-hint flex items-center gap-1.5">
                 <CalendarClock className="size-3.5" />
-                Ближайшие деньги
+                {t('Next money in')}
               </span>
 
               {next === null ? (

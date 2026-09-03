@@ -33,8 +33,8 @@ const MAX_PHOTOS = 6;
 
 const GROUP_NAMES: Record<string, string> = {
   Management: 'management',
-  Bar: 'бар',
-  Floor: 'зал',
+  Bar: 'the bar',
+  Floor: 'the floor',
   Kitchen: 'the kitchen',
   Bakery: 'the bakery',
   'Back of house': 'the back',
@@ -140,7 +140,7 @@ export function PostGig({ onClose }: { onClose: () => void }) {
               <span className="field-label">{t('City')}</span>
               <Input
                 value={form.city}
-                placeholder="Днепр"
+                placeholder={t('Dnipro')}
                 onChange={(event) => set('city', event.target.value)}
               />
             </label>
@@ -212,9 +212,9 @@ export function PostGig({ onClose }: { onClose: () => void }) {
             label={t('We pay')}
             options={[
               { value: 'shift', label: t('per shift') },
-              { value: 'hour', label: 'в час' },
+              { value: 'hour', label: t('per hour') },
               ...(form.employment === 'permanent'
-                ? [{ value: 'month', label: 'в месяц' }]
+                ? [{ value: 'month', label: t('per month') }]
                 : []),
             ]}
             value={form.pay_period}
@@ -363,7 +363,7 @@ export function PostGig({ onClose }: { onClose: () => void }) {
 
         <DialogFooter>
           <Button variant="ghost" onClick={onClose}>
-            Отмена
+            {t('Cancel')}
           </Button>
           <Button disabled={!ready || post.isPending} onClick={() => post.mutate()}>
             Разместить

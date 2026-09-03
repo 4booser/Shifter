@@ -105,7 +105,7 @@ export function SignIn() {
           </span>
           <div>
             <h1 className="text-xl font-bold tracking-tight">Shifter</h1>
-            <p className="field-hint">Смены, часы и деньги — посчитанные честно.</p>
+            <p className="field-hint">{t('Shifts, hours and money — counted honestly.')}</p>
           </div>
         </header>
 
@@ -155,7 +155,7 @@ export function SignIn() {
                 <button
                   type="button"
                   tabIndex={-1}
-                  aria-label={peeking ? 'Скрыть пароль' : 'Показать пароль'}
+                  aria-label={peeking ? 'Скрыть пароль' : t('Show the password')}
                   className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground transition-colors hover:text-ink"
                   onClick={() => setPeeking((was) => !was)}
                 >
@@ -184,7 +184,7 @@ export function SignIn() {
             disabled={busy || (ticket === null ? login === '' || password === '' : code.trim() === '')}
           >
             {busy ? <Loader2 className="size-4 animate-spin" /> : null}
-            {ticket === null ? 'Войти' : 'Подтвердить'}
+            {ticket === null ? 'Войти' : t('Confirm')}
             <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
           </Button>
         </form>

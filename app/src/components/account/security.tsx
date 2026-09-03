@@ -110,15 +110,15 @@ function PasswordCard({ needsOne }: { needsOne: boolean }) {
           />
           {again !== '' && !matches && (
             <p className="field-hint" style={{ color: 'var(--danger)' }}>
-              Пароли не совпадают.
+              {t('The two passwords do not match.')}
             </p>
           )}
           <span className="flex gap-2">
             <Button disabled={!matches || save.isPending} onClick={() => save.mutate()}>
-              Сохранить
+              {t('Keep')}
             </Button>
             <Button variant="ghost" onClick={() => setOpen(false)}>
-              Отмена
+              {t('Cancel')}
             </Button>
           </span>
         </div>
@@ -214,10 +214,10 @@ function TwoFactorCard({ on }: { on: boolean }) {
           />
           <span className="flex gap-2">
             <Button disabled={code.trim() === '' || enable.isPending} onClick={() => enable.mutate()}>
-              Включить
+              {t('Turn it on')}
             </Button>
             <Button variant="ghost" onClick={done}>
-              Отмена
+              {t('Cancel')}
             </Button>
           </span>
         </div>
@@ -237,16 +237,16 @@ function TwoFactorCard({ on }: { on: boolean }) {
                 disabled={code.trim() === '' || disable.isPending}
                 onClick={() => disable.mutate()}
               >
-                Выключить
+                {t('Switch off')}
               </Button>
               <Button variant="ghost" onClick={done}>
-                Отмена
+                {t('Cancel')}
               </Button>
             </span>
           </div>
         ) : (
           <Button variant="outline" className="self-start" onClick={() => setOffering(true)}>
-            Выключить
+            {t('Switch off')}
           </Button>
         )
       ) : (
@@ -256,7 +256,7 @@ function TwoFactorCard({ on }: { on: boolean }) {
           disabled={begin.isPending}
           onClick={() => begin.mutate()}
         >
-          Включить
+          {t('Turn it on')}
         </Button>
       )}
     </Card>
@@ -282,7 +282,7 @@ function SessionsCard() {
     <Card
       title={t('Where you are signed in')}
       icon={Monitor}
-      hint="Каждая строка — устройство, у которого сейчас есть ключ."
+      hint={t('Every row is a device that currently holds a key.')}
     >
       <ul className="flex flex-col gap-1.5">
         {rows.map((row) => {

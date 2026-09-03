@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n';
 
 /**
  * Bars read as rows.
@@ -23,7 +24,7 @@ export interface BarRow {
 
 export function Bars({
   rows,
-  empty = 'Пока нечего показать.',
+  empty,
   highlight,
 }: {
   rows: BarRow[];
@@ -31,7 +32,11 @@ export function Bars({
   /** The row worth pointing at — drawn in the accent, the rest in a quiet ink. */
   highlight?: string;
 }) {
-  if (rows.length === 0) return <p className="field-hint">{empty}</p>;
+  const { t } = useI18n();
+
+  // The default needs the reader, so it is chosen here rather than in the
+  // parameter list, where no hook can run.
+  if (rows.length === 0) return <p className="field-hint">{empty ?? t('Nothing to show yet.')}</p>;
 
   const peak = Math.max(...rows.map((row) => Math.abs(row.value)), 1);
 
@@ -78,10 +83,11 @@ export interface SplitPart {
  * still named in the legend — the point of the chart is often the sliver.
  */
 export function Split({ parts, total }: { parts: SplitPart[]; total: string }) {
+  const { t } = useI18n();
   const shown = parts.filter((part) => part.value > 0);
   const sum = shown.reduce((all, part) => all + part.value, 0);
 
-  if (sum <= 0) return <p className="field-hint">Пока не из чего складываться.</p>;
+  if (sum <= 0) return <p className="field-hint">{t('Nothing to add up yet.')}</p>;
 
   return (
     <div className="flex flex-col gap-2">

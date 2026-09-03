@@ -228,11 +228,11 @@ function GoalForm({
           }}
         />
         <Button disabled={!valid || save.isPending} onClick={() => save.mutate()}>
-          Сохранить
+          {t('Keep')}
         </Button>
         {goal !== null && (
           <Button variant="ghost" onClick={onClose}>
-            Отмена
+            {t('Cancel')}
           </Button>
         )}
       </div>

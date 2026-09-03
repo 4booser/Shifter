@@ -92,7 +92,7 @@ export function Stats() {
             // Restated where the range mixes currencies: the raw total there
             // is 20 000 ₴ and 4 000 zł added together, which is a number in
             // nothing and would be printed with one of the two symbols.
-            label: 'Заработано',
+            label: t('Earned'),
             value:
               summary.conversion === null
                 ? money(summary.total_earned)
@@ -184,12 +184,12 @@ export function Stats() {
   const bestWeekday = [...byWeekday].sort((a, b) => b.value - a.value)[0]?.key;
 
   const ZONE_NAMES: Record<string, string> = {
-    unset: 'не сказано',
-    hall: 'зал',
-    bar: 'бар',
-    terrace: 'терраса',
-    banquet: 'банкет',
-    takeaway: 'навынос',
+    unset: t('unsaid'),
+    hall: t('the floor'),
+    bar: t('the bar'),
+    terrace: t('the terrace'),
+    banquet: t('a function'),
+    takeaway: t('takeaway'),
   };
 
   const byZone = (summary?.by_zone ?? [])
@@ -232,12 +232,12 @@ export function Stats() {
     );
 
   const REASON_NAMES: Record<string, string> = {
-    breakage: 'разбили',
-    shortfall: 'недостача',
-    late: 'опоздание',
-    waste: 'списание',
-    uniform: 'форма',
-    other: 'другое',
+    breakage: t('breakage'),
+    shortfall: t('shortfall'),
+    late: t('lateness'),
+    waste: t('write-off'),
+    uniform: t('uniform'),
+    other: t('something else'),
     unsaid: t('no reason'),
   };
 
@@ -258,15 +258,15 @@ export function Stats() {
     summary === undefined
       ? []
       : [
-          { label: 'Лучший день', value: best === undefined || best.earned <= 0 ? '·' : money(best.earned) },
+          { label: t('Best single day'), value: best === undefined || best.earned <= 0 ? '·' : money(best.earned) },
           { label: t('Night hours'), value: `${Math.round(summary.night_hours)}` },
           { label: t('Past the norm'), value: summary.overtime_hours > 0 ? `${Math.round(summary.overtime_hours)} ч` : '·' },
           { label: t('Premiums'), value: summary.premium_earned > 0 ? money(summary.premium_earned) : '·' },
           { label: t('Handed to the pool'), value: summary.tip_out > 0 ? money(summary.tip_out) : '·' },
-          { label: 'Удержано', value: summary.deductions > 0 ? money(summary.deductions) : '·' },
+          { label: t('Withheld'), value: summary.deductions > 0 ? money(summary.deductions) : '·' },
           { label: t('Tax'), value: summary.tax > 0 ? money(summary.tax) : '·' },
           { label: t('Holiday pay accruing'), value: summary.holiday_accrued > 0 ? money(summary.holiday_accrued) : '·' },
-          { label: 'Гостей', value: summary.guests_counted > 0 ? `${summary.guests_counted}` : '·' },
+          { label: t('Guests'), value: summary.guests_counted > 0 ? `${summary.guests_counted}` : '·' },
           { label: t('Average cheque'), value: summary.average_cheque == null ? '·' : money(summary.average_cheque) },
           { label: t('Planned'), value: summary.planned_earned > 0 ? money(summary.planned_earned) : '·' },
           { label: t('Travel ate this much of the tips'), value: summary.travel_share_of_tips == null ? '·' : `${Math.round(summary.travel_share_of_tips)}%` },
@@ -445,32 +445,32 @@ export function Stats() {
               />
             </Panel>
 
-            <Panel title={t('Which weekday pays')} hint="Средний заработок за отработанный день.">
+            <Panel title={t('Which weekday pays')} hint={t('Average earnings per worked day.')}>
               <Bars rows={byWeekday} highlight={bestWeekday} />
             </Panel>
 
             {byZone.length > 0 && (
               <Panel
                 title={t('Where the tips are thicker')}
-                hint="Чаевые за час, по участкам. Тот самый спор."
+                hint={t('Tips per hour, by station. The argument itself.')}
               >
                 <Bars rows={byZone} highlight={byZone[0]?.key} />
               </Panel>
             )}
 
             {byPlace.length > 1 && (
-              <Panel title={t('Where it was earned')} hint="За период, по местам.">
+              <Panel title={t('Where it was earned')} hint={t('Over the period, by place.')}>
                 <Bars rows={byPlace} highlight={byPlace[0]?.key} />
               </Panel>
             )}
 
             {fines.length > 0 && (
-              <Panel title={t('What was withheld for')} hint="Штрафы отдельно от питания.">
+              <Panel title={t('What was withheld for')} hint={t('Fines apart from meals.')}>
                 <Bars rows={fines} />
               </Panel>
             )}
 
-            <Panel title={t('What else happened')} hint="Мелочи, которые обычно негде увидеть.">
+            <Panel title={t('What else happened')} hint={t('The small things there is usually nowhere to see.')}>
               <dl className="grid grid-cols-2 gap-x-4 gap-y-2">
                 {extras.map((extra) => (
                   <div key={extra.label} className="flex flex-col">

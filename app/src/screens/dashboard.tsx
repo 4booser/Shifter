@@ -69,7 +69,7 @@ export function Dashboard() {
               <ChevronRight className="size-4" />
             </Button>
             <Button variant="ghost" size="sm" onClick={() => setMonth(todayKey())}>
-              Сегодня
+              {t('Today')}
             </Button>
           </span>
         </div>

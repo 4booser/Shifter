@@ -371,6 +371,7 @@ function Field({
   busy: boolean;
   onSave: (value: string) => void;
 }) {
+  const { t } = useI18n();
   const [value, setValue] = useState(initial);
   const changed = value.trim() !== initial.trim();
 
@@ -398,7 +399,7 @@ function Field({
         />
         {!compact && (
           <Button variant="outline" disabled={busy || !changed} onClick={commit}>
-            Сохранить
+            {t('Keep')}
           </Button>
         )}
       </span>
@@ -489,7 +490,7 @@ function ShiftDetail({
               )
             }
           >
-            Записать
+            {t('Record it')}
           </Button>
         </span>
         <span className="field-hint">{t('Leave empty to count by the shift’s plan.')}</span>

@@ -206,7 +206,7 @@ export function Bank() {
 
         <Button className="mt-4 w-full" variant="outline" onClick={() => mono.enterDemo()}>
           <Eye className="size-4" />
-          Посмотреть на примере
+          {t('Look around on an example')}
         </Button>
         <p className="field-hint mt-1.5">
           Девяносто выдуманных дней, нарисованных прямо здесь. Банк не участвует.
@@ -227,7 +227,7 @@ export function Bank() {
               }}
             />
             <Button disabled={typed.trim() === '' || mono.busy} onClick={() => void link()}>
-              Подключить
+              {t('Connect')}
             </Button>
           </span>
           <span className="field-hint">
@@ -251,7 +251,7 @@ export function Bank() {
         <div className="flex items-center gap-2">
           {mono.demo && (
             <Button variant="outline" size="sm" onClick={() => mono.disconnect()}>
-              Выйти из примера
+              {t('Leave the example')}
             </Button>
           )}
           <Button variant="ghost" size="sm" asChild>
@@ -342,7 +342,7 @@ export function Bank() {
         {paying.length > 0 && (
           <Panel
             title={t('Whether they pay on time')}
-            hint="По периодам, где деньги уже пришли. Банк это подтверждает, память — нет."
+            hint={t('By the periods the money has already arrived for. The bank confirms it; memory does not.')}
           >
             <ul className="flex flex-col gap-2">
               {paying.map((place) => (
@@ -421,7 +421,7 @@ export function Bank() {
         {rate !== null && rate.costs > 0 && (
           <Panel
             title={t('What your hour really costs')}
-            hint="Из ставки вычтено то, что тратится в дни смен на дорогу и еду."
+            hint={t('The travel and food of a shift day are taken off the rate.')}
           >
             <div className="flex items-baseline gap-3">
               <span className="text-2xl font-bold tabular">{money(rate.real)}</span>
@@ -434,7 +434,7 @@ export function Bank() {
         )}
 
         {money_flow.spent > 0 && (
-          <Panel title={t('In and out')} hint="Переводы между своими счетами не в счёт.">
+          <Panel title={t('In and out')} hint={t('Transfers between your own accounts do not count.')}>
             <Split
               total={money(money_flow.earned)}
               parts={[
@@ -459,13 +459,13 @@ export function Bank() {
         )}
 
         {where.length > 0 && (
-          <Panel title={t('Where it goes')} hint="Кому платили чаще всего за месяц.">
+          <Panel title={t('Where it goes')} hint={t('Who was paid most often this month.')}>
             <Bars rows={where} highlight={where[0]?.key} />
           </Panel>
         )}
 
         {standing.length > 0 && (
-          <Panel title={t('Comes round by itself')} hint="Подписки и всё, что списывается по кругу.">
+          <Panel title={t('Comes round by itself')} hint={t('Subscriptions and everything that charges on a cycle.')}>
             <ul className="flex flex-col gap-1.5">
               {standing.slice(0, 8).map((row) => (
                 <li key={row.key} className="flex items-baseline justify-between gap-2 text-sm">
@@ -488,7 +488,7 @@ export function Bank() {
         )}
 
         {given.length > 0 && (
-          <Panel title={t('Money came back')} hint="Отмены и возвраты, уже вычтенные из трат.">
+          <Panel title={t('Money came back')} hint={t('Cancellations and refunds, already taken off the spending.')}>
             <ul className="flex flex-col gap-1">
               {given.slice(0, 5).map((pair) => (
                 <li

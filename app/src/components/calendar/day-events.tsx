@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { calendarApi } from '@/lib/api/calendar';
 import { CalendarEvent, EventKind } from '@/lib/calendar/models';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n';
 
 /**
  * What a day was, when it was not a shift.
@@ -16,12 +17,13 @@ import { cn } from '@/lib/utils';
  * fill in a form.
  */
 const KINDS: { kind: EventKind; label: string; colour: string; icon: typeof Plane }[] = [
-  { kind: 'vacation', label: 'Отпуск', colour: '#38BDF8', icon: Plane },
-  { kind: 'sick', label: 'Больничный', colour: '#A855F7', icon: Stethoscope },
-  { kind: 'dayoff', label: 'Выходной', colour: '#64748B', icon: Sun },
+  { kind: 'vacation', label: 'Vacation', colour: '#38BDF8', icon: Plane },
+  { kind: 'sick', label: 'Sick leave', colour: '#A855F7', icon: Stethoscope },
+  { kind: 'dayoff', label: 'Day off', colour: '#64748B', icon: Sun },
 ];
 
 export function DayEvents({ date, events }: { date: string; events: CalendarEvent[] }) {
+  const { t } = useI18n();
   const client = useQueryClient();
 
   const refresh = () => void client.invalidateQueries({ queryKey: ['days'] });
@@ -44,7 +46,7 @@ export function DayEvents({ date, events }: { date: string; events: CalendarEven
     },
     onSuccess: () => {
       refresh();
-      toast.success('День отмечен');
+      toast.success(t('The day is marked'));
     },
     onError: (error: Error) => toast.error(error.message),
   });
@@ -52,7 +54,7 @@ export function DayEvents({ date, events }: { date: string; events: CalendarEven
   const drop = useMutation({
     mutationFn: (id: number) => calendarApi.deleteEvent(id),
     onSuccess: refresh,
-    onError: () => toast.error('Не удалось убрать.'),
+    onError: () => toast.error(t('Could not remove it.')),
   });
 
   const onThisDay = events.filter(
@@ -61,7 +63,7 @@ export function DayEvents({ date, events }: { date: string; events: CalendarEven
 
   return (
     <div className="flex flex-col gap-1.5 border-t border-border pt-3">
-      <span className="field-label">День без смены</span>
+      <span className="field-label">{t('A day with no shift')}</span>
 
       {onThisDay.length > 0 && (
         <ul className="flex flex-col gap-1">
@@ -100,7 +102,7 @@ export function DayEvents({ date, events }: { date: string; events: CalendarEven
             )}
           >
             <one.icon className="size-3" style={{ color: one.colour }} />
-            {one.label}
+            {t(one.label)}
           </button>
         ))}
       </div>

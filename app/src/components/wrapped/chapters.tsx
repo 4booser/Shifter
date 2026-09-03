@@ -144,7 +144,7 @@ export function Records({ summary }: { summary: DaysResponse }) {
 
   const facts = [
     best !== undefined && best.earned > 0
-      ? { label: 'Лучший день', value: money(best.earned), hint: pretty(best.date) }
+      ? { label: t('Best single day'), value: money(best.earned), hint: pretty(best.date) }
       : null,
     bestMonth !== undefined && bestMonth[1] > 0
       ? {
@@ -183,12 +183,12 @@ export function Records({ summary }: { summary: DaysResponse }) {
 }
 
 const ZONE_NAMES: Record<string, string> = {
-  unset: 'не сказано',
-  hall: 'зал',
-  bar: 'бар',
-  terrace: 'терраса',
-  banquet: 'банкет',
-  takeaway: 'навынос',
+  unset: 'unsaid',
+  hall: 'the floor',
+  bar: 'the bar',
+  terrace: 'the terrace',
+  banquet: 'a function',
+  takeaway: 'takeaway',
 };
 
 /** Where the tips were denser, per hour actually stood there. */
@@ -304,8 +304,8 @@ export function Elsewhere({ summary }: { summary: DaysResponse }) {
 
   const facts = [
     summary.tax > 0 ? { label: t('Went in tax'), value: money(summary.tax) } : null,
-    summary.tip_out > 0 ? { label: 'Отдано в котёл', value: money(summary.tip_out) } : null,
-    summary.deductions > 0 ? { label: 'Удержано', value: money(summary.deductions) } : null,
+    summary.tip_out > 0 ? { label: t('Handed to the pool'), value: money(summary.tip_out) } : null,
+    summary.deductions > 0 ? { label: t('Withheld'), value: money(summary.deductions) } : null,
     summary.holiday_accrued > 0
       ? { label: t('Holiday pay accrued'), value: money(summary.holiday_accrued) }
       : null,
@@ -316,10 +316,10 @@ export function Elsewhere({ summary }: { summary: DaysResponse }) {
       ? { label: t('Guests served'), value: `${summary.guests_counted}` }
       : null,
     summary.average_cheque != null
-      ? { label: 'Средний чек', value: money(summary.average_cheque) }
+      ? { label: t('Average cheque'), value: money(summary.average_cheque) }
       : null,
     summary.night_hours > 0
-      ? { label: 'Ночных часов', value: `${Math.round(summary.night_hours)}` }
+      ? { label: t('Night hours'), value: `${Math.round(summary.night_hours)}` }
       : null,
   ].filter((fact): fact is { label: string; value: string } => fact !== null);
 

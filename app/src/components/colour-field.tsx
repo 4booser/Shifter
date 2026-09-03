@@ -4,6 +4,7 @@ import { Star } from 'lucide-react';
 import { MARK_COLOURS } from '@/lib/calendar/models';
 import { usePalette } from '@/lib/settings/palette';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n';
 
 /**
  * Picking a colour, the same way everywhere it is picked.
@@ -16,7 +17,7 @@ export function ColourField({
   label,
   value,
   onPick,
-  clearHint = 'без цвета',
+  clearHint,
 }: {
   label: string;
   value: string | null | undefined;
@@ -24,6 +25,10 @@ export function ColourField({
   /** What clearing the colour means here — a day loses it, a shift falls back. */
   clearHint?: string;
 }) {
+  const { t } = useI18n();
+  // The default needs the reader, so it is chosen in the body rather than
+  // in the parameter list, where no hook can run.
+  const hint = clearHint ?? t('no colour');
   const saved = usePalette((state) => state.colours);
   const loadPalette = usePalette((state) => state.load);
   const keepColour = usePalette((state) => state.save);
@@ -39,8 +44,8 @@ export function ColourField({
       <div className="flex flex-wrap items-center gap-1.5">
         <button
           type="button"
-          aria-label={clearHint}
-          title={clearHint}
+          aria-label={hint}
+          title={hint}
           onClick={() => onPick(null)}
           className={cn(
             'size-6 rounded-full border border-dashed transition-colors',
@@ -59,8 +64,8 @@ export function ColourField({
         {picked !== null && !saved.includes(picked) && (
           <button
             type="button"
-            aria-label="Сохранить цвет"
-            title="Сохранить в свои"
+            aria-label={t('Keep the colour')}
+            title={t('Keep it among your own')}
             onClick={() => keepColour(picked)}
             className="grid size-6 place-items-center rounded-full border border-border text-muted-foreground transition-colors hover:text-ink"
           >
@@ -70,7 +75,7 @@ export function ColourField({
       </div>
       {saved.length > 0 && (
         <div className="flex flex-wrap items-center gap-1.5">
-          <span className="field-hint">Мои</span>
+          <span className="field-hint">{t('Mine')}</span>
           {saved.map((colour) => (
             <Swatch
               key={colour}

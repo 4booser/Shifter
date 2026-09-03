@@ -72,7 +72,7 @@ export function Shifts() {
       void client.invalidateQueries({ queryKey: ['shifts'] });
       toast.success(archived ? 'Смена в архиве' : t('The shift is back'));
     },
-    onError: () => toast.error('Не вышло — попробуйте ещё раз.'),
+    onError: () => toast.error(t('That did not work — try again.')),
   });
 
   const live = (shifts.data ?? []).filter((shift) => !shift.archived);
@@ -226,7 +226,7 @@ function ShiftCard({
       <p className="text-sm font-semibold tabular">{pay}</p>
 
       <p className="field-hint">
-        {shift.location_name ?? 'без места'}
+        {shift.location_name ?? t('no place')}
         {shift.tip_source === 'pool' &&
           ` · пул${shift.tip_pool_percent == null ? '' : ` ${shift.tip_pool_percent}%`}`}
         {shift.revenue_percent != null &&
@@ -328,7 +328,7 @@ function ShiftDialog({
               />
             </label>
             <label className="flex flex-col gap-1">
-              <span className="field-label">Перерыв, мин</span>
+              <span className="field-label">{t('Break, min')}</span>
               <Input
                 inputMode="numeric"
                 value={`${form.break_minutes}`}
@@ -382,7 +382,7 @@ function ShiftDialog({
               />
             </label>
             <label className="flex flex-col gap-1">
-              <span className="field-label">% с выручки</span>
+              <span className="field-label">{t('% of takings')}</span>
               <Input
                 inputMode="decimal"
                 value={form.revenue_percent == null ? '' : `${form.revenue_percent}`}
@@ -455,7 +455,7 @@ function ShiftDialog({
                       : 'border-border text-muted-foreground hover:text-ink',
                   )}
                 >
-                  без места
+                  {t('no place')}
                 </button>
                 {places.map((place) => (
                   <button
@@ -490,13 +490,13 @@ function ShiftDialog({
 
         <DialogFooter>
           <Button variant="ghost" onClick={onClose}>
-            Отмена
+            {t('Cancel')}
           </Button>
           <Button
             disabled={form.name.trim() === '' || save.isPending}
             onClick={() => save.mutate()}
           >
-            Сохранить
+            {t('Keep')}
           </Button>
         </DialogFooter>
       </DialogContent>

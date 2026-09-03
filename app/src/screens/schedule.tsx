@@ -120,7 +120,7 @@ export function Schedule() {
             </Button>
             {!thisWeek && (
               <Button variant="ghost" size="sm" onClick={() => setAnchor(today)}>
-                Эта неделя
+                {t('This week')}
               </Button>
             )}
           </span>
@@ -163,7 +163,7 @@ export function Schedule() {
               <thead>
                 <tr>
                   <th className="pb-2 text-left text-2xs font-semibold uppercase tracking-wide text-faint">
-                    Кто
+                    {t('Who')}
                   </th>
                   {days.map((key) => (
                     <th
@@ -178,7 +178,7 @@ export function Schedule() {
                     </th>
                   ))}
                   <th className="pb-2 pl-3 text-right text-2xs font-semibold uppercase tracking-wide text-faint">
-                    Часы
+                    {t('Hours')}
                   </th>
                 </tr>
               </thead>
@@ -365,7 +365,7 @@ function ShiftSheet({
               disabled={busy}
               onClick={() => onWithdraw(mine.offer_id)}
             >
-              Передумал
+              {t('Never mind')}
             </Button>
           )}
           {entry.is_mine && !entry.needs_cover && (
@@ -374,7 +374,7 @@ function ShiftSheet({
             </span>
           )}
           <Button size="sm" variant="ghost" onClick={onClose}>
-            Закрыть
+            {t('Close')}
           </Button>
         </span>
       </div>
@@ -388,7 +388,7 @@ function ShiftSheet({
             <span key={one.offer_id} className="flex items-center gap-2">
               <span className="min-w-0 flex-1 truncate text-sm" title={one.display_name}>{one.display_name}</span>
               <Button size="sm" disabled={busy || past} onClick={() => onAccept(one.offer_id)}>
-                Отдать
+                {t('Hand it over')}
               </Button>
             </span>
           ))}
@@ -473,7 +473,7 @@ function NoTeam() {
             disabled={name.trim() === '' || create.isPending}
             onClick={() => create.mutate()}
           >
-            Создать
+            {t('Create one')}
           </Button>
         </span>
       </section>

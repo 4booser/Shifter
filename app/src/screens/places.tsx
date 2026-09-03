@@ -92,7 +92,7 @@ export function Places() {
       void client.invalidateQueries({ queryKey: ['locations'] });
       toast.success(archived ? 'Место в архиве' : t('The place is back'));
     },
-    onError: () => toast.error('Не вышло — попробуйте ещё раз.'),
+    onError: () => toast.error(t('That did not work — try again.')),
   });
 
   const live = (places.data ?? []).filter((place) => !place.archived);
@@ -131,7 +131,7 @@ export function Places() {
           </div>
           <Button onClick={() => setEditing('new')}>
             <Plus className="size-4" />
-            Добавить место
+            {t('Add a place')}
           </Button>
         </div>
       ) : (
@@ -352,7 +352,7 @@ function PlaceDialog({
             />
           </Group>
 
-          <Group title={t('When they pay')} hint="Отсюда берётся дата следующей выплаты.">
+          <Group title={t('When they pay')} hint={t('The next payday is taken from here.')}>
             <Pills
               label={t('Cycle')}
               options={(Object.keys(PERIOD_LABELS) as PayPeriodKind[]).map((value) => ({
@@ -391,7 +391,7 @@ function PlaceDialog({
             </div>
           </Group>
 
-          <Group title={t('Premiums')} hint="×1 означает, что надбавки нет.">
+          <Group title={t('Premiums')} hint={t('×1 means there is no premium.')}>
             <div className="grid gap-2 sm:grid-cols-3">
               <Num
                 label={t('Night ×')}
@@ -481,7 +481,7 @@ function PlaceDialog({
             />
           </Group>
 
-          <Group title={t('Break and travel')} hint="Перерыв применяется сам, если смена длиннее.">
+          <Group title={t('Break and travel')} hint={t('The break applies itself when the shift is longer.')}>
             <div className="grid gap-2 sm:grid-cols-2">
               <Num
                 label={t('Break after, h')}
@@ -489,7 +489,7 @@ function PlaceDialog({
                 onPick={(value) => set('auto_break_after_hours', value)}
               />
               <Num
-                label="Перерыв, мин"
+                label={t('Break, min')}
                 value={form.auto_break_minutes ?? 0}
                 onPick={(value) => set('auto_break_minutes', value)}
               />
@@ -511,13 +511,13 @@ function PlaceDialog({
 
         <DialogFooter>
           <Button variant="ghost" onClick={onClose}>
-            Отмена
+            {t('Cancel')}
           </Button>
           <Button
             disabled={form.name.trim() === '' || save.isPending}
             onClick={() => save.mutate()}
           >
-            Сохранить
+            {t('Keep')}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -178,7 +178,7 @@ export function Gigs() {
                 На доске есть {board.data!.length}, но не в этой части дома.
               </p>
               <Button variant="outline" size="sm" onClick={() => setGroup(null)}>
-                Показать все
+                {t('Show all')}
               </Button>
             </>
           ) : (
@@ -232,7 +232,7 @@ export function Gigs() {
                 <p className="text-lg font-bold tabular">
                   {money(gig.pay_amount)}
                   <span className="field-hint ml-1">
-                    {gig.pay_period === 'hour' ? 'в час' : gig.pay_period === 'shift' ? 'за смену' : 'в месяц'}
+                    {gig.pay_period === 'hour' ? 'в час' : gig.pay_period === 'shift' ? 'за смену' : t('per month')}
                   </span>
                 </p>
 
@@ -268,8 +268,8 @@ export function Gigs() {
 /** The eight parts of a house, said the way people say them. */
 const GROUP_NAMES: Record<string, string> = {
   Management: 'management',
-  Bar: 'бар',
-  Floor: 'зал',
+  Bar: 'the bar',
+  Floor: 'the floor',
   Kitchen: 'the kitchen',
   Bakery: 'the bakery',
   'Back of house': 'the back',

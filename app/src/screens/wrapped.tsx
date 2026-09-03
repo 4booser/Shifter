@@ -268,7 +268,7 @@ function MadeOf({ summary }: { summary: DaysResponse }) {
 
   const parts = [
     { name: t('Shifts'), value: summary.shifts_earned - summary.revenue_earned, hue: 'var(--s1)' },
-    { name: 'Чаевые', value: summary.tips_earned, hue: 'var(--s3)' },
+    { name: t('Tips'), value: summary.tips_earned, hue: 'var(--s3)' },
     { name: t('A percentage of takings'), value: summary.revenue_earned, hue: 'var(--s4)' },
     { name: t('Night and holiday'), value: summary.premium_earned, hue: 'var(--s2)' },
     { name: t('Sales'), value: summary.sales_earned, hue: 'var(--s5)' },

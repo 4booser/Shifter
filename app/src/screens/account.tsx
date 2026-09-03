@@ -259,7 +259,7 @@ export function Account() {
                 }
                 onClick={() => rename.mutate()}
               >
-                Сохранить
+                {t('Keep')}
               </Button>
             </span>
           </label>
@@ -282,7 +282,7 @@ export function Account() {
             }}
           >
             <LogOut className="size-4" />
-            Выйти
+            {t('Sign out')}
           </Button>
         </Section>
 

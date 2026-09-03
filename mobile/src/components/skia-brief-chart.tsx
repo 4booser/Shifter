@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { CartesianChart, Line, Area, useChartPressState } from 'victory-native';
 import { Circle } from '@shopify/react-native-skia';
 import type { SharedValue } from 'react-native-reanimated';
-import { useDerivedValue } from 'react-native-reanimated';
+import { runOnJS, useAnimatedReaction } from 'react-native-reanimated';
 
 import { Palette } from '@/constants/theme';
 import { api } from '@/lib/api';
@@ -77,24 +77,28 @@ export function SkiaBriefChart({ palette, days }: { palette: Palette; days: Cale
   const { state, isActive } = useChartPressState({ x: 0, y: { fact: 0, tail: 0 } });
   const [picked, setPicked] = useState<{ day: number; value: number } | null>(null);
 
-  useDerivedValue(() => {
-    // Reading on the UI thread, reporting to JS only when it changes.
-    return state.x.value.value;
-  });
+  const pick = (day: number) => {
+    const row = rows.find((entry) => entry.day === day);
+    const value = row?.fact ?? row?.tail ?? null;
 
-  useEffect(() => {
-    if (!isActive) return;
+    if (value !== null) setPicked({ day, value });
+  };
 
-    const interval = setInterval(() => {
-      const day = Math.round(state.x.value.value);
-      const row = rows.find((entry) => entry.day === day);
-      const value = row?.fact ?? row?.tail ?? null;
-
-      if (value !== null) setPicked({ day, value });
-    }, 80);
-
-    return () => clearInterval(interval);
-  }, [isActive, rows, state]);
+  /*
+   * The day under the finger, read on the thread that holds it.
+   *
+   * Two things stood here: a derived value whose result nobody consumed, and
+   * a timer polling the same shared value from JS twelve times a second. One
+   * reaction does the work, and does it when the number actually changes.
+   */
+  useAnimatedReaction(
+    () => Math.round(state.x.value.value),
+    (day, before) => {
+      if (day === before) return;
+      runOnJS(pick)(day);
+    },
+    [rows],
+  );
 
   if (facts === null || rows.length < 3) return null;
 

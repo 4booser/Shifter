@@ -3,6 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import { CartesianChart, Line, Area, useChartPressState } from 'victory-native';
 import { Circle } from '@shopify/react-native-skia';
 import type { SharedValue } from 'react-native-reanimated';
+import { runOnJS, useAnimatedReaction } from 'react-native-reanimated';
 
 import { Palette } from '@/constants/theme';
 
@@ -55,22 +56,25 @@ export function SkiaClimb({
   const { state, isActive } = useChartPressState({ x: 0, y: { fact: 0, ghost: 0 } });
 
   useEffect(() => {
-    if (onPick === undefined) return;
+    if (onPick !== undefined && !isActive) onPick(null);
+  }, [isActive, onPick]);
 
-    if (!isActive) {
-      onPick(null);
-
-      return;
-    }
-
-    const interval = setInterval(() => {
-      const at = Math.round(state.x.value.value);
-
-      if (at >= 1 && at <= rows.length) onPick(at);
-    }, 80);
-
-    return () => clearInterval(interval);
-  }, [isActive, rows.length, state, onPick]);
+  /*
+   * The finger's position, watched where it lives.
+   *
+   * This used to be a timer reading the shared value twelve times a second
+   * from the JS thread — which is both the thing Reanimated's strict mode
+   * warns about and a poll that keeps running between two frames that say
+   * the same thing. A reaction fires when the number changes, and only then.
+   */
+  useAnimatedReaction(
+    () => Math.round(state.x.value.value),
+    (at, before) => {
+      if (at === before || onPick === undefined) return;
+      if (at >= 1 && at <= rows.length) runOnJS(onPick)(at);
+    },
+    [rows.length, onPick],
+  );
 
   if (rows.length < 3) return null;
 

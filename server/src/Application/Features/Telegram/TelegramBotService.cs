@@ -192,7 +192,10 @@ public sealed class TelegramBotService : BackgroundService
                 var to = from.AddMonths(1).AddDays(-1);
                 var summary = await days.ListAsync(link.UserId, from, to, ct);
 
-                return $"Месяц: {summary.days_worked} {TelegramCommands.Plural(summary.days_worked, "смена", "смены", "смен")} · {Math.Round(summary.hours)} ч · {Math.Round(summary.total_earned):N0}";
+                // Hours and money both went out under whatever culture the
+                // process runs with, and the money with no mark on it at all:
+                // «Месяц: 22 смены · 199 ч · 359396».
+                return $"Месяц: {summary.days_worked} {TelegramCommands.Plural(summary.days_worked, "смена", "смены", "смен")} · {Figures.Count(summary.hours)} ч · {Figures.Money(summary.total_earned)}";
             }
 
             case TelegramCommand.ClockIn:
@@ -218,14 +221,13 @@ public sealed class TelegramBotService : BackgroundService
                     return "Сверка выплат молчит: либо всё уже выплачено, либо у мест не задан день зарплаты.";
 
                 var wait = due.due_on.DayNumber - today.DayNumber;
-                // Formatted by the current culture and then patched, which is
-                // two ways of being wrong about a separator. It uses the one
-                // formatter this app writes numbers with.
-                var amount = Figures.Count((double)due.expected);
+                // One formatter, and the mark the rest of the app uses: the
+                // bot said «19 095 грн» where every screen says «19 095 ₴».
+                var amount = Figures.Money(due.expected);
 
                 return wait == 0
-                    ? $"Деньги должны прийти сегодня — {amount} грн ({due.location_name})."
-                    : $"Ближайшие деньги {due.due_on:dd.MM} — через {wait} {TelegramCommands.Plural(wait, "день", "дня", "дней")}: {amount} грн ({due.location_name}).";
+                    ? $"Деньги должны прийти сегодня — {amount} ({due.location_name})."
+                    : $"Ближайшие деньги {due.due_on:dd.MM} — через {wait} {TelegramCommands.Plural(wait, "день", "дня", "дней")}: {amount} ({due.location_name}).";
             }
 
             case TelegramCommand.TimeZone:

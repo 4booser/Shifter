@@ -65,7 +65,7 @@ public class ShareController : ControllerBase
             pay.Add($"{Figures.Money(gig.PayAmount)} {period}");
         }
 
-        if (gig.PayPercent is decimal percent) pay.Add($"{percent}% с продаж");
+        if (gig.PayPercent is decimal percent) pay.Add($"{percent.ToString(Figures.Ru)}% с продаж");
 
         var title = $"{gig.Title} — {gig.Venue}";
         var description =
@@ -94,9 +94,17 @@ public class ShareController : ControllerBase
             <meta property="og:image" content="{Escape(image)}">
             <meta property="og:url" content="{Escape($"{origin}/g/{gig.ShareSlug}")}">
             <meta name="twitter:card" content="summary_large_image">
-            <meta http-equiv="refresh" content="0; url=/gigs">
             </head>
             <body style="font:16px system-ui;padding:2rem;background:#f4f2ed;color:#1c1b18">
+            <!--
+              This page used to carry a zero-second meta refresh to /gigs, so
+              everything below was written and then thrown away: somebody
+              followed a link to one shift and landed on a board of all of
+              them, with no way back to the one they were sent. The page shows
+              what was shared and offers the board as a next step, which is
+              what the link promised. Crawlers were always reading the meta
+              tags above and are unaffected.
+            -->
             <p><b>{Escape(title)}</b></p>
             <p>{Escape(description)}</p>
             <p><a href="/gigs">Открыть на бирже Shifter →</a></p>

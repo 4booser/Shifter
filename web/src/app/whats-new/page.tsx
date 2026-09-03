@@ -146,8 +146,15 @@ function WhatsNew() {
       <ol className="relative flex flex-col gap-4 border-l border-border pl-5">
         {RELEASES.map((release, index) => (
           <li key={index} className="reveal relative" style={stagger(index)}>
-            <span className="absolute -left-[27px] top-1 grid h-4 w-4 place-items-center rounded-full border border-border bg-surface text-[0.6rem]">
-              {release.icon}
+            {/* A plain node on the rail. It used to repeat the entry's own
+                emoji at nine pixels inside a fifteen-pixel circle — a colour
+                glyph at that size is a smudge, and it was a smudge of
+                something already legible two centimetres to its right. */}
+            <span
+              className="absolute -left-[27px] top-1 grid h-4 w-4 place-items-center rounded-full border border-border bg-surface"
+              aria-hidden="true"
+            >
+              <span className="h-1.5 w-1.5 rounded-full bg-(--accent)" />
             </span>
             <section className="card lift p-4">
               <p className="field-hint mb-0.5 tabular">

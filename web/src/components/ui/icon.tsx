@@ -52,6 +52,12 @@ const PATHS: Record<string, React.ReactNode> = {
       <path d="M6 6l12 12" />
     </>
   ),
+  warn: (
+    <>
+      <path d="M12 3.5 21.5 20H2.5L12 3.5Z" />
+      <path d="M12 10v4.5M12 17.2v.1" />
+    </>
+  ),
   send: <path d="M20.5 3.5 3.5 10.2l6.6 2.7 2.7 6.6L20.5 3.5ZM10.1 12.9l3.8-3.8" />,
   share: (
     <>

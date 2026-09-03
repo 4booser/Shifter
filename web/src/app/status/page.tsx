@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 
 import { api } from '@/lib/api/http';
 import { useReveal } from '@/lib/fx';
+import { Icon } from '@/components/ui/icon';
 
 interface Status {
   ok: boolean;
@@ -57,6 +58,11 @@ export default function StatusPage() {
     if (days > 0) return `${days} ${t('d.')} ${hours} ${t('hr')}`;
     if (hours > 0) return `${hours} ${t('hr')} ${minutes} ${t('min')}`;
 
+    // A service up for forty seconds read «0 мин без перезапуска», which on a
+    // status page is what a broken counter looks like. Under the unit, say
+    // «under the unit».
+    if (minutes === 0) return t('under a minute');
+
     return `${minutes} ${t('min')}`;
   };
 
@@ -78,12 +84,19 @@ export default function StatusPage() {
 
       <main className="mx-auto max-w-3xl px-4 py-12">
         <section className="reveal mb-8 text-center">
+          {/* Three colour emoji in a coloured disc: the tick brought its own
+              green square inside the app's green circle. Drawn from the set,
+              the disc's colour is the only colour. */}
           <span
-            className={`mx-auto mb-3 grid h-16 w-16 place-items-center rounded-full text-[1.9rem] ${
-              unreachable ? 'bg-(--danger-soft)' : good ? 'bg-(--good-soft)' : 'bg-(--warn-soft)'
+            className={`mx-auto mb-3 grid h-16 w-16 place-items-center rounded-full ${
+              unreachable
+                ? 'bg-(--danger-soft) text-danger-read'
+                : good
+                  ? 'bg-(--good-soft) text-good-read'
+                  : 'bg-(--warn-soft) text-warn-read'
             }`}
           >
-            {unreachable ? '🔌' : good ? '✅' : '⚠️'}
+            <Icon name={unreachable ? 'close' : good ? 'check' : 'warn'} size={30} />
           </span>
           <h1 className="text-balance text-[clamp(1.6rem,4vw,2.2rem)] font-extrabold tracking-tight">
             {t(unreachable ? 'Not responding' : good ? 'Everything is running' : 'Something is wrong')}
@@ -107,7 +120,9 @@ export default function StatusPage() {
                       ? t('not responding')
                       : service.latency_ms === null
                         ? t('answering')
-                        : `${service.latency_ms} ${t('ms')}`}
+                        : service.latency_ms < 1
+                          ? `< 1 ${t('ms')}`
+                          : `${service.latency_ms} ${t('ms')}`}
                   </span>
                 </div>
               ))}

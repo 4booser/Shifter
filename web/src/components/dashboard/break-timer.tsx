@@ -14,6 +14,7 @@ import {
   taken,
 } from '@/lib/calendar/break-timer';
 import { useI18n } from '@/lib/i18n';
+import { Icon } from '@/components/ui/icon';
 
 /**
  * The break, counted while it is happening.
@@ -135,7 +136,8 @@ export function BreakTimer({
           }
         }}
       >
-        ☕ {t('Break')}
+        <Icon name="cup" size={13} />
+        {t('Break')}
         {already > 0 && <span className="ml-1 text-faint tabular">{already}m</span>}
       </button>
     );
@@ -148,10 +150,11 @@ export function BreakTimer({
   return (
     <span className="flex items-center gap-1.5">
       <span
-        className={`tabular text-[0.82rem] font-semibold ${over ? 'text-warn-read' : 'text-accent'}`}
+        className={`flex items-center gap-1 tabular text-[0.82rem] font-semibold ${over ? 'text-warn-read' : 'text-accent'}`}
         title={t('Time on break')}
       >
-        ☕ {clock(left)}
+        <Icon name="cup" size={12} />
+        {clock(left)}
       </span>
 
       {/* A break that has run for hours is a shut laptop. The button stops

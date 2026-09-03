@@ -146,7 +146,7 @@ export function FirstRun() {
 
   return (
     <section className="card rise p-4">
-      <h2 className="mb-1 text-[1.05rem] font-bold">👋 {t('Sixty seconds and it starts counting')}</h2>
+      <h2 className="mb-1 text-[1.05rem] font-bold">{t('Sixty seconds and it starts counting')}</h2>
       <p className="field-hint mb-3">
         {t('Three questions. Everything else is a setting you can find later.')}
       </p>

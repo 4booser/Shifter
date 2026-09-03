@@ -90,7 +90,7 @@ export function BadgeWall() {
   return (
     <section className="card reveal p-4">
       <div className="mb-3 flex items-baseline justify-between">
-        <h2 className="text-[1.05rem] font-bold">🎖️ {t('Badges')}</h2>
+        <h2 className="text-[1.05rem] font-bold">{t('Badges')}</h2>
         <span className="field-hint tabular">
           {done} / {ACHIEVEMENTS.length}
         </span>

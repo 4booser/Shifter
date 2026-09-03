@@ -2,6 +2,7 @@
 
 import { Gig } from '@/lib/api/gigs';
 import { useI18n } from '@/lib/i18n';
+import { Icon } from '@/components/ui/icon';
 
 /**
  * Where the number went.
@@ -22,7 +23,7 @@ export function ContactAudit({ gig }: { gig: Gig }) {
   // dressed as a privacy feature.
   if (gig.contact_seen_at === null && gig.contact_seen_count === 0) {
     return (
-      <p className="field-hint px-1">🔒 {t('Nobody has opened your contacts yet.')}</p>
+      <p className="field-hint flex items-center gap-1.5 px-1"><Icon name="lock" size={12} />{t('Nobody has opened your contacts yet.')}</p>
     );
   }
 
@@ -39,7 +40,8 @@ export function ContactAudit({ gig }: { gig: Gig }) {
 
   return (
     <p className="field-hint px-1">
-      👁 {t('The venue opened your contacts')} {gig.contact_seen_count}{' '}
+      <Icon name="eye" size={12} />{' '}
+      {t('The venue opened your contacts')} {gig.contact_seen_count}{' '}
       {gig.contact_seen_count === 1 ? t('once') : t('occasions')}
       {when !== null && <>, {t('last')} {when}</>}
     </p>

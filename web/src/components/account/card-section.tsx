@@ -74,7 +74,7 @@ export function CardSection() {
 
   return (
     <section className="card reveal p-4">
-      <h2 className="mb-1 text-[0.98rem] font-bold">🔗 {t('A link to your record')}</h2>
+      <h2 className="mb-1 text-[0.98rem] font-bold">{t('A link to your record')}</h2>
       <p className="field-hint mb-3">
         {t('A page anybody can open without an account — for a manager who is not going to make one.')}
       </p>

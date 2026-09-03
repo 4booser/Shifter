@@ -292,7 +292,8 @@ function Dashboard() {
       {nearby !== null && (
         <Alert kind="info" onDismiss={() => setNearby(null)}>
           <span className="flex flex-wrap items-center gap-2">
-            📍 {t('Looks like you are at')} <strong>{nearby.place}</strong>
+            <Icon name="pin" size={14} />
+            {t('Looks like you are at')} <strong>{nearby.place}</strong>
             <button
               type="button"
               className="btn btn-primary btn-sm"

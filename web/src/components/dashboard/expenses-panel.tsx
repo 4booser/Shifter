@@ -132,7 +132,14 @@ export function ExpensesPanel({
               asking about. Two days later nobody remembers it at all. */}
           {canRead !== false && (
             <label className="btn btn-sm w-full cursor-pointer justify-center">
-              {reading ? t('Reading…') : `📷 ${t('Photograph the receipt')}`}
+              {reading ? (
+                t('Reading…')
+              ) : (
+                <>
+                  <Icon name="camera" size={13} />
+                  {t('Photograph the receipt')}
+                </>
+              )}
               <input
                 type="file"
                 accept="image/*"

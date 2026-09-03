@@ -585,9 +585,14 @@ function GigCard({ gig, onRespond, onWithdraw }: { gig: Gig; onRespond: () => vo
           />
           {photos.length > 1 && (
             <span className="absolute bottom-1.5 right-2 flex items-center gap-1">
-              {photos.map((url, index) => (
+              {/* Keyed by position, not by the photograph. Two gigs posted
+                  with the same picture twice gave React two children with
+                  the same key, and React is entitled to drop one of them —
+                  it said so in the console on every load of this page. A
+                  dot here means «the third photo», which is what index is. */}
+              {photos.map((_url, index) => (
                 <span
-                  key={url}
+                  key={index}
                   className={`h-1.5 rounded-full transition-all ${
                     index === photo % photos.length ? 'w-4 bg-white' : 'w-1.5 bg-white/60'
                   }`}
@@ -610,7 +615,8 @@ function GigCard({ gig, onRespond, onWithdraw }: { gig: Gig; onRespond: () => vo
                   className="chip chip-accent"
                   title={t('Five shifts that happened and three people who came back to say it went well.')}
                 >
-                  ✓ {t('Proven')}
+                  <Icon name="check" size={11} />
+                  {t('Proven')}
                 </span>
               )}
               {/* Your own history first. Four evenings there answers more than
@@ -635,7 +641,8 @@ function GigCard({ gig, onRespond, onWithdraw }: { gig: Gig; onRespond: () => vo
       </p>
       {gig.urgent && (
         <p className="text-[0.82rem] font-bold text-danger-read">
-          🔴 {t('Needed today')}
+          <span className="inline-block h-1.5 w-1.5 rounded-full bg-(--danger) align-middle" aria-hidden="true" />{' '}
+          {t('Needed today')}
         </p>
       )}
       {gig.details !== null && <p className="line-clamp-2 text-[0.85rem] text-muted">{gig.details}</p>}
@@ -761,7 +768,14 @@ function ShareGig({ gig }: { gig: Gig }) {
       title={t('Copy a link for the work chat')}
       onClick={() => void share()}
     >
-      {copied ? `✓ ${t('copied')}` : '🔗'}
+      {copied ? (
+        <span className="flex items-center gap-1 text-[0.8rem]">
+          <Icon name="check" size={12} />
+          {t('copied')}
+        </span>
+      ) : (
+        <Icon name="link" size={14} />
+      )}
     </button>
   );
 }
@@ -818,7 +832,8 @@ function MyListings({
             <span className="ml-auto flex gap-1.5">
               {gig.status === 'open' && (
                 <button type="button" className="btn btn-sm" onClick={() => onCallBack(gig)}>
-                  👋 {t('Call somebody back')}
+                  <Icon name="user" size={13} />
+                  {t('Call somebody back')}
                 </button>
               )}
               <button type="button" className="btn btn-quiet btn-sm" onClick={() => onEdit(gig)}>{t('Edit')}</button>

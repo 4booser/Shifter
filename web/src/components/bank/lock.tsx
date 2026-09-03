@@ -69,7 +69,7 @@ export function BankLock({ children }: { children: React.ReactNode }) {
 
   return (
     <section className="card reveal mx-auto max-w-md p-4">
-      <h2 className="mb-1 text-[1.05rem] font-bold">🔒 {t('The bank tab is locked')}</h2>
+      <h2 className="mb-1 text-[1.05rem] font-bold">{t('The bank tab is locked')}</h2>
       <p className="field-hint mb-3">
         {t('Where you were and what you bought is a different order of private than a rota. The account password opens it for this session.')}
       </p>

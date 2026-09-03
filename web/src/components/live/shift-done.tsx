@@ -183,7 +183,8 @@ export function ShiftDoneOverlay() {
         <div className="mt-5 border-t border-border pt-4">
           {tipsSaved ? (
             <p className="text-[0.9rem] font-semibold text-good-read">
-              ✓ {t('Tips added')}: <Money value={Number(tips.replace(',', '.'))} />
+              <Icon name="check" size={13} />{' '}
+              {t('Tips added')}: <Money value={Number(tips.replace(',', '.'))} />
             </p>
           ) : (
             <>

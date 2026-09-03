@@ -591,7 +591,7 @@ function TwoFactorSection({ hasPassword, on }: { hasPassword: boolean; on: boole
 
   return (
     <section className="card reveal p-4">
-      <h2 className="mb-1 text-[0.98rem] font-bold">🔐 {t('Two-factor sign-in')}</h2>
+      <h2 className="mb-1 text-[0.98rem] font-bold">{t('Two-factor sign-in')}</h2>
       <p className="field-hint mb-3">
         {t('A rotating code from your phone on top of the password. Backup codes cover a lost phone.')}
       </p>
@@ -651,7 +651,7 @@ function TwoFactorSection({ hasPassword, on }: { hasPassword: boolean; on: boole
 
       {stage === 'backup' && (
         <div>
-          <p className="mb-2 text-[0.9rem] font-semibold text-good-read">✓ {t('Two-factor is on. Keep these backup codes somewhere safe:')}</p>
+          <p className="mb-2 flex items-center gap-1.5 text-[0.9rem] font-semibold text-good-read"><Icon name="check" size={14} />{t('Two-factor is on. Keep these backup codes somewhere safe:')}</p>
           <div className="mb-2 grid grid-cols-2 gap-1.5 sm:grid-cols-4">
             {backups.map((backup) => (
               <code key={backup} className="rounded-(--radius) border border-border bg-surface-2 px-2 py-1 text-center text-[0.85rem] tabular">
@@ -700,7 +700,7 @@ function TelegramSection() {
 
   return (
     <section className="card reveal p-4">
-      <h2 className="mb-1 text-[0.98rem] font-bold">✈️ Telegram</h2>
+      <h2 className="mb-1 text-[0.98rem] font-bold">Telegram</h2>
       <p className="field-hint mb-3">
         {t('«сегодня», «завтра», «месяц», «начал», «закончил» — the calendar answers in the chat.')}
       </p>

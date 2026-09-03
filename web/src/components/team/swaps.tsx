@@ -53,7 +53,7 @@ export function SwapsPanel({ teamId, rota, onChanged }: { teamId: number; rota: 
   return (
     <section className="card reveal p-3">
       <header className="mb-2 flex items-center gap-2">
-        <h2 className="text-[0.95rem] font-bold">🤝 {t('Swaps')}</h2>
+        <h2 className="text-[0.95rem] font-bold">{t('Swaps')}</h2>
         {pending.length > 0 && <span className="chip">{pending.length}</span>}
         <button type="button" className="btn btn-sm ml-auto" onClick={() => setProposing(true)}>
           {t('Offer a swap')}

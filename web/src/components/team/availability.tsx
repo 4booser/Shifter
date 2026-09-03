@@ -55,7 +55,7 @@ export function AvailabilityStrip({
   return (
     <section className="card reveal p-3">
       <header className="flex flex-wrap items-center gap-2">
-        <h2 className="text-[0.95rem] font-bold">🚫 {t('Days I cannot work')}</h2>
+        <h2 className="text-[0.95rem] font-bold">{t('Days I cannot work')}</h2>
         {mine.size > 0 && (
           <span className="chip">
             {mine.size} {pluralWord(lang, 'days', mine.size)}

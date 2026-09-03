@@ -49,7 +49,7 @@ export function ReferralSection() {
 
   return (
     <section className="card reveal p-4">
-      <h2 className="mb-1 text-[0.98rem] font-bold">🤝 {t('Bring a colleague')}</h2>
+      <h2 className="mb-1 text-[0.98rem] font-bold">{t('Bring a colleague')}</h2>
       <p className="field-hint mb-3">
         {t('Your own link. Nothing about them ever reaches you — only the count.')}
       </p>

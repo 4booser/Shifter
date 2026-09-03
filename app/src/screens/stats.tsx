@@ -104,17 +104,17 @@ export function Stats() {
             delta: past === undefined ? null : change(summary.total_earned, past.total_earned),
           },
           {
-            label: 'Часов',
+            label: t('Hours'),
             value: `${Math.round(summary.hours)}`,
             delta: past === undefined ? null : change(summary.hours, past.hours),
           },
           {
-            label: 'Смен',
+            label: t('Shifts'),
             value: `${summary.days_worked}`,
             delta: past === undefined ? null : change(summary.days_worked, past.days_worked),
           },
           {
-            label: 'В час',
+            label: t('Per hour'),
             value:
               summary.hours <= 0
                 ? '·'
@@ -151,7 +151,7 @@ export function Stats() {
   const byWeekday = useMemo((): BarRow[] => {
     if (summary === undefined) return [];
 
-    const names = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
+    const names = [t('Sun'), t('Mon'), t('Tue'), t('Wed'), t('Thu'), t('Fri'), t('Sat')];
     const totals = new Map<number, { earned: number; days: number }>();
 
     for (const day of summary.days) {
@@ -176,7 +176,7 @@ export function Stats() {
           label: names[weekday]!,
           value: average,
           shown: money(average),
-          hint: `${seen.days} ${seen.days === 1 ? 'день' : 'дн.'}`,
+          hint: `${seen.days} ${seen.days === 1 ? 'день' : t('d.')}`,
         };
       });
   }, [summary, settings.mondayFirst]);
@@ -238,7 +238,7 @@ export function Stats() {
     waste: 'списание',
     uniform: 'форма',
     other: 'другое',
-    unsaid: 'без причины',
+    unsaid: t('no reason'),
   };
 
   const fines = (summary?.deductions_by_reason ?? []).map(
@@ -247,7 +247,7 @@ export function Stats() {
       label: REASON_NAMES[split.reason] ?? split.reason,
       value: split.amount,
       shown: money(split.amount),
-      hint: `${split.days} ${split.days === 1 ? 'день' : 'дн.'}`,
+      hint: `${split.days} ${split.days === 1 ? 'день' : t('d.')}`,
       colour: 'var(--danger)',
     }),
   );
@@ -259,17 +259,17 @@ export function Stats() {
       ? []
       : [
           { label: 'Лучший день', value: best === undefined || best.earned <= 0 ? '·' : money(best.earned) },
-          { label: 'Ночных часов', value: `${Math.round(summary.night_hours)}` },
-          { label: 'Сверх нормы', value: summary.overtime_hours > 0 ? `${Math.round(summary.overtime_hours)} ч` : '·' },
-          { label: 'Надбавки', value: summary.premium_earned > 0 ? money(summary.premium_earned) : '·' },
-          { label: 'Отдано в котёл', value: summary.tip_out > 0 ? money(summary.tip_out) : '·' },
+          { label: t('Night hours'), value: `${Math.round(summary.night_hours)}` },
+          { label: t('Past the norm'), value: summary.overtime_hours > 0 ? `${Math.round(summary.overtime_hours)} ч` : '·' },
+          { label: t('Premiums'), value: summary.premium_earned > 0 ? money(summary.premium_earned) : '·' },
+          { label: t('Handed to the pool'), value: summary.tip_out > 0 ? money(summary.tip_out) : '·' },
           { label: 'Удержано', value: summary.deductions > 0 ? money(summary.deductions) : '·' },
-          { label: 'Налог', value: summary.tax > 0 ? money(summary.tax) : '·' },
-          { label: 'Отпускные копятся', value: summary.holiday_accrued > 0 ? money(summary.holiday_accrued) : '·' },
+          { label: t('Tax'), value: summary.tax > 0 ? money(summary.tax) : '·' },
+          { label: t('Holiday pay accruing'), value: summary.holiday_accrued > 0 ? money(summary.holiday_accrued) : '·' },
           { label: 'Гостей', value: summary.guests_counted > 0 ? `${summary.guests_counted}` : '·' },
-          { label: 'Средний чек', value: summary.average_cheque == null ? '·' : money(summary.average_cheque) },
-          { label: 'Запланировано', value: summary.planned_earned > 0 ? money(summary.planned_earned) : '·' },
-          { label: 'Дорога съела чаевых', value: summary.travel_share_of_tips == null ? '·' : `${Math.round(summary.travel_share_of_tips)}%` },
+          { label: t('Average cheque'), value: summary.average_cheque == null ? '·' : money(summary.average_cheque) },
+          { label: t('Planned'), value: summary.planned_earned > 0 ? money(summary.planned_earned) : '·' },
+          { label: t('Travel ate this much of the tips'), value: summary.travel_share_of_tips == null ? '·' : `${Math.round(summary.travel_share_of_tips)}%` },
         ].filter((extra) => extra.value !== '·');
 
   return (
@@ -289,7 +289,7 @@ export function Stats() {
                 )}
                 onClick={() => setSpan(value)}
               >
-                {value === 'month' ? 'Месяц' : 'Год'}
+                {value === 'month' ? 'Месяц' : t('Year')}
               </button>
             ))}
           </div>
@@ -346,7 +346,7 @@ export function Stats() {
               className="card flex flex-wrap items-baseline gap-x-2 p-3 text-sm"
               style={{ background: 'var(--warn-soft)' }}
             >
-              <span className="font-semibold">Период смешивает валюты:</span>
+              <span className="font-semibold">{t('The period mixes currencies:')}</span>
               <span>{summary.currencies.join(', ')}.</span>
               {summary.conversion !== null ? (
                 <>
@@ -378,7 +378,7 @@ export function Stats() {
 
           <Panel
             title={t('Earned over the period')}
-            hint={`Плотная линия — этот ${span === 'month' ? 'месяц' : 'год'}, бледная — прошлый. Веди курсором — цифры дня.`}
+            hint={`Плотная линия — этот ${span === 'month' ? 'месяц' : t('year')}, бледная — прошлый. Веди курсором — цифры дня.`}
           >
             <Climb points={climb.line} ghost={climb.ghost} height={240} />
           </Panel>
@@ -388,13 +388,13 @@ export function Stats() {
               match a ten-line one and leave the hole between them. */}
           <div className="columns-1 gap-3 lg:columns-2 [&>*]:mb-3 [&>*]:break-inside-avoid">
             <Panel
-              title="Из чего сложились деньги"
+              title={t('What the money is made of')}
               hint={
                 summary.conversion !== null
                   ? 'Доли считаны по суммам как есть — валюты разные, поэтому проценты точнее самих чисел.'
                   : gross > summary.total_earned
                     ? `Заработано ${money(gross)}; на руки ${money(summary.total_earned)} — остальное в котёл и удержания.`
-                    : 'Ставка, чаевые и всё, что сверху.'
+                    : t('The rate, the tips and everything on top.')
               }
             >
               <Split
@@ -402,7 +402,7 @@ export function Stats() {
                 parts={[
                   {
                     key: 'base',
-                    label: 'ставка',
+                    label: t('the rate'),
                     // Only the revenue share is inside shifts_earned. The
                     // premiums and the overtime are added to the total beside
                     // it, so subtracting them here made the segments add up to
@@ -410,34 +410,34 @@ export function Stats() {
                     value: summary.shifts_earned - summary.revenue_earned,
                     colour: 'var(--s1)',
                   },
-                  { key: 'tips', label: 'чаевые', value: summary.tips_earned, colour: 'var(--s2)' },
+                  { key: 'tips', label: t('tips'), value: summary.tips_earned, colour: 'var(--s2)' },
                   {
                     key: 'premium',
-                    label: 'надбавки',
+                    label: t('premiums'),
                     value: summary.premium_earned,
                     colour: 'var(--s3)',
                   },
                   {
                     key: 'revenue',
-                    label: '% с выручки',
+                    label: t('% of takings'),
                     value: summary.revenue_earned,
                     colour: 'var(--s4)',
                   },
                   {
                     key: 'sales',
-                    label: 'позиции',
+                    label: t('sales'),
                     value: summary.sales_earned,
                     colour: 'var(--s5)',
                   },
                   {
                     key: 'overtime',
-                    label: 'переработка',
+                    label: t('overtime'),
                     value: summary.overtime_earned,
                     colour: 'var(--warn)',
                   },
                   {
                     key: 'period',
-                    label: 'оклад',
+                    label: t('salary'),
                     value: summary.period_earned,
                     colour: 'var(--border-strong)',
                   },
@@ -445,13 +445,13 @@ export function Stats() {
               />
             </Panel>
 
-            <Panel title="Какой день недели платит" hint="Средний заработок за отработанный день.">
+            <Panel title={t('Which weekday pays')} hint="Средний заработок за отработанный день.">
               <Bars rows={byWeekday} highlight={bestWeekday} />
             </Panel>
 
             {byZone.length > 0 && (
               <Panel
-                title="Где чаевые гуще"
+                title={t('Where the tips are thicker')}
                 hint="Чаевые за час, по участкам. Тот самый спор."
               >
                 <Bars rows={byZone} highlight={byZone[0]?.key} />
@@ -459,18 +459,18 @@ export function Stats() {
             )}
 
             {byPlace.length > 1 && (
-              <Panel title="Где заработано" hint="За период, по местам.">
+              <Panel title={t('Where it was earned')} hint="За период, по местам.">
                 <Bars rows={byPlace} highlight={byPlace[0]?.key} />
               </Panel>
             )}
 
             {fines.length > 0 && (
-              <Panel title="За что удержали" hint="Штрафы отдельно от питания.">
+              <Panel title={t('What was withheld for')} hint="Штрафы отдельно от питания.">
                 <Bars rows={fines} />
               </Panel>
             )}
 
-            <Panel title="Что ещё случилось" hint="Мелочи, которые обычно негде увидеть.">
+            <Panel title={t('What else happened')} hint="Мелочи, которые обычно негде увидеть.">
               <dl className="grid grid-cols-2 gap-x-4 gap-y-2">
                 {extras.map((extra) => (
                   <div key={extra.label} className="flex flex-col">

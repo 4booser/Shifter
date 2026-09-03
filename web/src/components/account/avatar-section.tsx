@@ -230,6 +230,7 @@ function EmailRow({ email, onSaved }: { email: string | null; onSaved: () => voi
         <input
           type="email"
           inputMode="email"
+          autoComplete="email"
           autoCapitalize="none"
           className="field-input min-w-48 flex-1"
           placeholder="you@example.com"

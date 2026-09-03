@@ -100,11 +100,11 @@ export default function RegisterPage() {
         <div className="grid grid-cols-2 gap-3">
           <label>
             <span className="field-label">{t('First name')}</span>
-            <input className="field-input" type="text" maxLength={60} {...bind('first_name')} />
+            <input className="field-input" type="text" autoComplete="given-name" maxLength={60} {...bind('first_name')} />
           </label>
           <label>
             <span className="field-label">{t('Last name')}</span>
-            <input className="field-input" type="text" maxLength={60} {...bind('last_name')} />
+            <input className="field-input" type="text" autoComplete="family-name" maxLength={60} {...bind('last_name')} />
           </label>
         </div>
 

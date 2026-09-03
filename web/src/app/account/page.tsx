@@ -105,11 +105,11 @@ function Account() {
             <div className="grid grid-cols-2 gap-3">
               <label>
                 <span className="field-label">{t('First name')}</span>
-                <input className="field-input" maxLength={60} value={firstName} onChange={(event) => setFirstName(event.target.value)} />
+                <input className="field-input" autoComplete="given-name" maxLength={60} value={firstName} onChange={(event) => setFirstName(event.target.value)} />
               </label>
               <label>
                 <span className="field-label">{t('Last name')}</span>
-                <input className="field-input" maxLength={60} value={lastName} onChange={(event) => setLastName(event.target.value)} />
+                <input className="field-input" autoComplete="family-name" maxLength={60} value={lastName} onChange={(event) => setLastName(event.target.value)} />
               </label>
             </div>
 

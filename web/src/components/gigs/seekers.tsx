@@ -238,7 +238,7 @@ function SeekerModal({ mine, onClose, onDone }: { mine: Seeker | null; onClose: 
         <div className="grid grid-cols-2 gap-2">
           <label>
             <span className="field-label">{t('Phone')}</span>
-            <input className="field-input w-full" inputMode="tel" placeholder="+380…" value={form.phone ?? ''} onChange={(event) => setForm((current) => ({ ...current, phone: event.target.value }))} />
+            <input className="field-input w-full" autoComplete="tel" inputMode="tel" placeholder="+380…" value={form.phone ?? ''} onChange={(event) => setForm((current) => ({ ...current, phone: event.target.value }))} />
           </label>
           <label>
             <span className="field-label">Telegram</span>

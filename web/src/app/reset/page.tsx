@@ -113,6 +113,7 @@ function Reset() {
             <input
               type="email"
               inputMode="email"
+              autoComplete="email"
               autoCapitalize="none"
               className="field-input mb-3 w-full"
               placeholder="you@example.com"

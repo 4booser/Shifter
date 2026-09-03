@@ -1003,7 +1003,7 @@ function RespondModal({ gig, onClose, onDone }: { gig: Gig; onClose: () => void;
           <div className="grid grid-cols-2 gap-2">
             <label>
               <span className="field-label">{t('Phone')}</span>
-              <input className="field-input w-full" inputMode="tel" placeholder="+380…" value={phone} onChange={(event) => setPhone(event.target.value)} />
+              <input className="field-input w-full" autoComplete="tel" inputMode="tel" placeholder="+380…" value={phone} onChange={(event) => setPhone(event.target.value)} />
             </label>
             <label>
               <span className="field-label">Telegram</span>

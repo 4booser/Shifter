@@ -5,6 +5,7 @@ import { fromKey, keyOf, todayKey } from '@/lib/calendar/calendar-date';
 import { formatMoney, formatMoneyCompact } from '@/lib/settings/money';
 import { useSettings } from '@/lib/settings/store';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n';
 
 /**
  * The month.
@@ -38,6 +39,7 @@ export function MonthGrid({
   onSelect: (key: string) => void;
 }) {
   const settings = useSettings((state) => state.settings);
+  const { t, num } = useI18n();
   const mondayFirst = settings.mondayFirst;
   const onDay = (key: string) =>
     events.filter((event) => event.start_date <= key && key <= event.end_date);
@@ -138,7 +140,12 @@ export function MonthGrid({
                 </span>
                 {day !== undefined && day.hours > 0 && (
                   <span className="hidden text-2xs text-faint tabular sm:inline">
-                    {Math.round(day.hours * 10) / 10}ч
+                    {/* «9.5ч»: a machine's decimal point, no space before
+                        the unit, and the unit itself hard-coded Russian. The
+                        other web client fixed the same cell last night. */}
+                    {num(Math.round(day.hours * 10) / 10)}
+                    {'\u2009'}
+                    {t('h')}
                   </span>
                 )}
               </span>

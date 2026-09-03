@@ -4,6 +4,7 @@ import { smoothPath } from '@/lib/charts/math';
 import { useChartWidth } from '@/lib/charts/measure';
 import { formatMoney, formatMoneyCompact } from '@/lib/settings/money';
 import { useSettings } from '@/lib/settings/store';
+import { useI18n } from '@/lib/i18n';
 
 /**
  * The cumulative climb: what the period earned, day by day, against the one
@@ -27,6 +28,7 @@ export function Climb({
   ghost?: ClimbPoint[];
   height?: number;
 }) {
+  const { lang } = useI18n();
   const settings = useSettings((state) => state.settings);
   const raw = useId().replace(/[«»:]/g, '');
   const [hover, setHover] = useState<number | null>(null);
@@ -154,7 +156,8 @@ export function Climb({
           <strong className="tabular">{formatMoney(settings, at.value)}</strong>
           {before !== null && before > 0 && (
             <span className="field-hint block tabular">
-              ×{(at.value / before).toFixed(2)} · {formatMoney(settings, before)}
+              ×{(at.value / before).toLocaleString(lang, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ·{' '}
+              {formatMoney(settings, before)}
             </span>
           )}
         </div>

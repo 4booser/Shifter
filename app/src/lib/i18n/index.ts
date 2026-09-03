@@ -29,5 +29,10 @@ export function useI18n() {
     t: (key: string) => translate(lang, key),
     /** "5 смен": a count glued to its correctly declined word. */
     n: (count: number, key: string) => nWord(lang, count, key),
+    /**
+     * A number in the reader's own notation. `toFixed` and a bare
+     * interpolation both know only the full stop, and this app writes «9,5».
+     */
+    num: (value: number) => value.toLocaleString(lang),
   };
 }

@@ -108,8 +108,12 @@ function Compare() {
 
     let running = 0;
 
+    // A worked day, not a profitable one. Filtering on `earned > 0` dropped
+    // any day that closed in the red — deductions over a short shift — and
+    // the running total then disagreed with the «Заработано» row of the very
+    // table underneath it.
     return sorted
-      .filter((day) => day.earned > 0)
+      .filter((day) => day.shifts.some((entry) => entry.worked))
       .map((day, index) => ({ label: `${index + 1}`, value: (running += day.earned) }));
   };
 

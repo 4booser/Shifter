@@ -91,8 +91,14 @@ export function AreaChart({
   const comparisonCoords = useMemo(() => {
     if (comparison.length < 2) return [];
 
-    const span = comparison.length - 1;
-
+    /*
+     * This used to open with `const span = comparison.length - 1`, which
+     * shadowed the outer span — the value range — with a count of points.
+     * The comparison line was then divided by «how many days» instead of
+     * «how much money», and a month worth forty-seven thousand hryvnia was
+     * plotted some two thousand times above the canvas. Nobody saw a wrong
+     * line; they saw no line, which is why it survived.
+     */
     const lastIndex = comparison.length - 1;
 
     return comparison.map((point, index) => ({
@@ -111,8 +117,6 @@ export function AreaChart({
   const before = hover === null ? null : (comparison[hover]?.value ?? null);
   const last = coords.at(-1);
 
-  if (coords.length < 2) return null;
-
   /*
    * A scale nobody earned is not a chart.
    *
@@ -125,7 +129,19 @@ export function AreaChart({
     [...points, ...projection, ...comparison].some((point) => point.value !== 0) ||
     (goal ?? 0) > 0;
 
-  if (!anything) {
+  /*
+   * A short stretch used to `return null` — no plot, no sentence, and a card
+   * left holding a heading and a legend over a hole. On the comparison page
+   * that was every September until somebody had worked two days of it, with
+   * a whole August sitting in the comparison series ready to be drawn.
+   *
+   * The two series are now asked separately. Either one can carry the card;
+   * only when neither has a shape does the card say so in words.
+   */
+  const hasLine = coords.length > 1;
+  const hasComparison = comparisonCoords.length > 1;
+
+  if (!anything || (!hasLine && !hasComparison)) {
     return (
       <p className="grid min-h-32 place-items-center text-center text-[0.85rem] text-faint">
         {emptyNote}
@@ -173,21 +189,32 @@ export function AreaChart({
           <path d={smoothPath(comparisonCoords)} fill="none" stroke="var(--faint)" strokeWidth="1.6" opacity="0.5" />
         )}
 
-        <path
-          className="fade-in"
-          d={`${smoothPath(coords)} L ${coords[coords.length - 1].x} ${zeroY} L ${coords[0].x} ${zeroY} Z`}
-          fill={`url(#${raw}-wash)`}
-        />
-        {/* The blurred twin under the crisp line — the glow. */}
-        <path
-          d={smoothPath(coords)}
-          fill="none"
-          stroke="var(--accent)"
-          strokeWidth="6"
-          opacity="0.28"
-          filter={`url(#${raw}-glow)`}
-        />
-        <DrawnPath key={points.length + ':' + (points.at(-1)?.value ?? 0)} d={smoothPath(coords)} />
+        {/* One worked day is a place on the scale, not a line. Drawn as a
+            point, so the legend's «this period» has something to point at
+            instead of promising a stroke that a single value cannot make. */}
+        {!hasLine && coords.length === 1 && (
+          <circle cx={coords[0].x} cy={coords[0].y} r="4" fill="var(--accent)" stroke="var(--surface)" strokeWidth="2" />
+        )}
+
+        {hasLine && (
+          <>
+            <path
+              className="fade-in"
+              d={`${smoothPath(coords)} L ${coords[coords.length - 1].x} ${zeroY} L ${coords[0].x} ${zeroY} Z`}
+              fill={`url(#${raw}-wash)`}
+            />
+            {/* The blurred twin under the crisp line — the glow. */}
+            <path
+              d={smoothPath(coords)}
+              fill="none"
+              stroke="var(--accent)"
+              strokeWidth="6"
+              opacity="0.28"
+              filter={`url(#${raw}-glow)`}
+            />
+            <DrawnPath key={points.length + ':' + (points.at(-1)?.value ?? 0)} d={smoothPath(coords)} />
+          </>
+        )}
 
         {projectionCoords.length > 1 && (
           <path d={smoothPath(projectionCoords)} fill="none" stroke="var(--accent)" strokeWidth="2" strokeDasharray="4 5" opacity="0.65" />

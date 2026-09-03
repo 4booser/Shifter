@@ -226,6 +226,25 @@ export function CostOfWork({
   const spent = expenses.filter((row) => row.amount > 0);
   const taken = fines.filter((row) => row.amount > 0);
 
+  /*
+   * The bars have to add up to the figure above them.
+   *
+   * «Удержано · 16 770 ₴» sat over a list of fines summing to ₴3 250,
+   * because the server splits by reason only what somebody wrote a reason
+   * for. The rest of a withholding is the staff meal, charged by the place's
+   * own rule with nothing to explain — and it was the larger part of the
+   * two. A reader saw a total four times its own breakdown and concluded the
+   * chart was broken.
+   *
+   * The meal is a row now, worked out as what the reasons do not cover.
+   */
+  const explained = taken.reduce((sum, row) => sum + row.amount, 0);
+  const meals = Math.round((withheld - explained) * 100) / 100;
+  const rows =
+    meals > 0
+      ? [...taken, { reason: 'meal', amount: meals, days: 0 }]
+      : taken;
+
   if (spent.length === 0 && taken.length === 0) return null;
 
   return (
@@ -260,10 +279,13 @@ export function CostOfWork({
           <div>
             <span className="field-label">{t('Withheld')} · {format(withheld)}</span>
             <RankBars
-              rows={taken.map((row) => ({
-                name: reasons[row.reason] ?? row.reason,
+              rows={rows.map((row) => ({
+                // A reason the map does not know still has to have a name:
+                // the fallback printed the raw key, and a blank key printed
+                // a bar with no label at all.
+                name: reasons[row.reason] ?? (row.reason.trim() === '' ? reasons.unsaid : row.reason),
                 value: row.amount,
-                caption: `${row.days} ${t('d.')}`,
+                caption: row.days > 0 ? `${row.days} ${t('d.')}` : '',
               }))}
               format={(value) => format(value)}
               // Семи ремов не хватало на «Причина не записана»: подпись

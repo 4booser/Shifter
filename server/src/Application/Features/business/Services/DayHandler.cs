@@ -1035,7 +1035,12 @@ public partial class DayHandler : IDayHandler
     public static DeductionReasonDto[] ByReason(IEnumerable<Day> days)
         => days
             .Where(day => (day.Deductions ?? 0m) > 0m)
-            .GroupBy(day => day.DeductionReason ?? "unsaid")
+            // Blank counts as unsaid. `?? "unsaid"` caught the null and let an
+            // empty string through as a group of its own, so a year's page
+            // drew two buckets that mean the same thing and could only name
+            // one of them: «Причина не записана — 3 000 ₴» over a nameless bar
+            // holding another 250.
+            .GroupBy(day => string.IsNullOrWhiteSpace(day.DeductionReason) ? "unsaid" : day.DeductionReason!)
             .Select(group => new DeductionReasonDto(
                 group.Key,
                 group.Sum(day => day.Deductions ?? 0m),

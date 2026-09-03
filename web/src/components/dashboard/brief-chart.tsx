@@ -9,7 +9,7 @@ import { useMoney } from '@/lib/settings/money';
 import { useI18n } from '@/lib/i18n';
 import { ChartCard } from '@/components/charts/chart-card';
 import { ChartTip, CrossHair, useChartHover } from '@/components/charts/hover';
-import { smoothPath } from '@/lib/charts/math';
+import { niceCeiling, niceFloor, smoothPath } from '@/lib/charts/math';
 import { Money } from '@/components/ui/bits';
 
 /**
@@ -80,7 +80,11 @@ export function BriefChart() {
     const projected: { day: string; value: number }[] = [];
     const target = facts?.projectedMonth ?? null;
 
-    if (target !== null && target > running && todayDay < daysInMonth) {
+    // Drawn whichever way it points. This read `target > running`, so a month
+    // heading downwards — which is what a month in the red does — printed
+    // «−156 ₴ → ≈−1 561 ₴ к концу месяца» in its own header, explained the
+    // dashed line in its own footer, and then drew no dashes at all.
+    if (target !== null && target !== running && todayDay < daysInMonth) {
       const left = daysInMonth - todayDay;
 
       for (let ahead = 1; ahead <= left; ahead += 1) {
@@ -99,13 +103,25 @@ export function BriefChart() {
   if (line === null || facts === null) return null;
 
   const all = [...line.fact, ...line.projected];
-  const peak = Math.max(1, facts.goal ?? 0, ...all.map((point) => point.value));
+  const values = [...all.map((point) => point.value), facts.goal ?? 0];
+  /*
+   * The scale reaches wherever the month went, including down.
+   *
+   * Pinned at zero under a ceiling set by the goal, a month sitting at −₴156
+   * was a fifty-pixel scratch along the bottom of a 720×225 box, and a month
+   * projected to −₴1 561 had nowhere at all to be drawn. The same treatment
+   * the statistics chart got: both ends rounded, and a zero line whenever
+   * the floor is under it.
+   */
+  const peak = niceCeiling(Math.max(1, ...values));
+  const floor = niceFloor(Math.min(0, ...values));
+  const span = peak - floor;
   // 16:5 — the ChartCard strip aspect. 720×130 used to squash the month
   // into a flat ribbon; the plot now owns real height.
   const W = 720;
   const H = 225;
   const x = (index: number) => (index / Math.max(1, line.daysInMonth - 1)) * W;
-  const y = (value: number) => H - (value / peak) * (H - 16) - 6;
+  const y = (value: number) => H - ((value - floor) / span) * (H - 16) - 6;
 
   const factPath = smoothPath(line.fact.map((point, index) => ({ x: x(index), y: y(point.value) })));
   const projPath = line.projected.length > 0
@@ -192,6 +208,9 @@ export function BriefChart() {
               <stop offset="1" stopColor="var(--accent)" stopOpacity="0" />
             </linearGradient>
           </defs>
+          {floor < 0 && (
+            <line x1="0" y1={y(0)} x2={W} y2={y(0)} stroke="var(--border-strong)" />
+          )}
           {facts.goal !== null && facts.goal <= peak && (
             <line
               x1="0"

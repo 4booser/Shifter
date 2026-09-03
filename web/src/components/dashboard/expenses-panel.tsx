@@ -529,8 +529,12 @@ function StandingCosts({
               </select>
             )}
 
+            {/* Both of the labels below named the field beside them: the
+                kind picker announced itself as «день месяца», the place
+                picker as «каждые N месяцев». Sighted people never saw it;
+                a screen reader read nothing else. */}
             <select
-              aria-label={t('Day of the month')}
+              aria-label={t('Kind')}
               className="field-input !w-auto"
               value={kind}
               onChange={(event) => setKind(event.target.value as ExpenseKind)}
@@ -543,7 +547,7 @@ function StandingCosts({
             </select>
 
             <select
-              aria-label={t('Every N months')}
+              aria-label={t('Place')}
               className="field-input !w-auto"
               value={placeId ?? ''}
               onChange={(event) =>

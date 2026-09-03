@@ -5,6 +5,7 @@ import { kindName } from '@/lib/text/kinds';
 import { DaysResponse } from '@/lib/calendar/models';
 import { formatMoney } from '@/lib/settings/money';
 import { useSettings } from '@/lib/settings/store';
+import { useI18n } from '@/lib/i18n';
 
 /**
  * The chapters of the year.
@@ -16,6 +17,7 @@ import { useSettings } from '@/lib/settings/store';
 
 /** Every day of the year, one square each. The shape of the work. */
 export function YearGrid({ summary, year }: { summary: DaysResponse; year: number }) {
+  const { t, lang } = useI18n();
   const settings = useSettings((state) => state.settings);
   const money = (value: number) => formatMoney(settings, Math.round(value));
 
@@ -45,14 +47,22 @@ export function YearGrid({ summary, year }: { summary: DaysResponse; year: numbe
     cells.push({ key, date: key, value: earned.get(key) ?? 0 });
   }
 
-  const months = ['я', 'ф', 'м', 'а', 'м', 'и', 'и', 'а', 'с', 'о', 'н', 'д'];
+  /*
+   * The twelve initials were written out in Russian, and Ukrainian's months
+   * do not share them: «березень» is not «м», «жовтень» is not «о». Asked of
+   * the locale, they are right in every language and stay right.
+   */
+  const narrow = new Intl.DateTimeFormat(lang, { month: 'narrow' });
+  const months = Array.from({ length: 12 }, (_, index) =>
+    narrow.format(new Date(Date.UTC(2026, index, 15))).toLowerCase(),
+  );
   const columnOf = (stamp: number) =>
     Math.floor((weekdayOfFirst + Math.round((stamp - Date.UTC(year, 0, 1)) / 86_400_000)) / 7);
   // 10px squares with a 3px gap, minus the gap the last column does not need.
   const gridWidth = (columnOf(Date.UTC(year, 11, 31)) + 1) * 13 - 3;
 
   return (
-    <Panel title="Год по дням" hint="Чем гуще квадрат, тем больше принёс день.">
+    <Panel title={t('The year, day by day')} hint={t('The denser the square, the more the day brought.')}>
       <div className="overflow-x-auto">
         <div className="flex min-w-max flex-col gap-1">
           <div
@@ -108,6 +118,7 @@ export function YearGrid({ summary, year }: { summary: DaysResponse; year: numbe
 
 /** The year's high-water marks. */
 export function Records({ summary }: { summary: DaysResponse }) {
+  const { t } = useI18n();
   const settings = useSettings((state) => state.settings);
   const money = (value: number) => formatMoney(settings, Math.round(value));
 
@@ -137,27 +148,27 @@ export function Records({ summary }: { summary: DaysResponse }) {
       : null,
     bestMonth !== undefined && bestMonth[1] > 0
       ? {
-          label: 'Лучший месяц',
+          label: t('Best month'),
           value: money(bestMonth[1]),
           hint: new Date(`${bestMonth[0]}-15T12:00:00`).toLocaleDateString('ru', { month: 'long' }),
         }
       : null,
     longestShift !== undefined && longestShift.entry.hours > 0
       ? {
-          label: 'Самая длинная смена',
+          label: t('The longest shift'),
           value: `${longestShift.entry.hours} ч`,
           hint: pretty(longestShift.day.date),
         }
       : null,
     streak.record > 1
-      ? { label: 'Без выходного', value: `${streak.record} ${daysWord(streak.record)}`, hint: 'подряд' }
+      ? { label: t('No day off'), value: `${streak.record} ${daysWord(streak.record)}`, hint: t('in a row') }
       : null,
   ].filter((fact): fact is { label: string; value: string; hint: string } => fact !== null);
 
   if (facts.length === 0) return null;
 
   return (
-    <Panel title="Рекорды года">
+    <Panel title={t('The year’s records')}>
       <dl className="grid grid-cols-2 gap-x-4 gap-y-3">
         {facts.map((fact) => (
           <div key={fact.label} className="flex flex-col">
@@ -182,6 +193,7 @@ const ZONE_NAMES: Record<string, string> = {
 
 /** Where the tips were denser, per hour actually stood there. */
 export function ZoneTips({ summary }: { summary: DaysResponse }) {
+  const { t } = useI18n();
   const settings = useSettings((state) => state.settings);
   const money = (value: number) => formatMoney(settings, Math.round(value));
 
@@ -201,7 +213,7 @@ export function ZoneTips({ summary }: { summary: DaysResponse }) {
   if (rows.length < 2) return null;
 
   return (
-    <Panel title="Где чаевые были гуще" hint="За час, действительно проведённый там.">
+    <Panel title={t('Where the tips were thicker')} hint={t('Per hour actually spent there.')}>
       <Bars rows={rows} highlight={rows[0]?.key} />
     </Panel>
   );
@@ -209,13 +221,14 @@ export function ZoneTips({ summary }: { summary: DaysResponse }) {
 
 /** Every time the rate moved, and what the move has been worth since. */
 export function Raises({ summary }: { summary: DaysResponse }) {
+  const { t } = useI18n();
   const settings = useSettings((state) => state.settings);
   const money = (value: number) => formatMoney(settings, Math.round(value));
 
   if (summary.raises.length === 0) return null;
 
   return (
-    <Panel title="Как двигалась ставка" hint="И сколько это принесло с тех пор.">
+    <Panel title={t('How the rate moved')} hint={t('And what it has brought since.')}>
       <ul className="flex flex-col gap-2">
         {summary.raises.slice(0, 6).map((raise) => {
           const up = raise.after >= raise.before;
@@ -236,7 +249,7 @@ export function Raises({ summary }: { summary: DaysResponse }) {
               </span>
               {raise.worth_since !== 0 && (
                 <span className="w-full field-hint">
-                  с тех пор это {up ? 'принесло' : 'стоило'} {money(Math.abs(raise.worth_since))}
+                  с тех пор это {up ? 'принесло' : t('cost')} {money(Math.abs(raise.worth_since))}
                 </span>
               )}
             </li>
@@ -250,6 +263,7 @@ export function Raises({ summary }: { summary: DaysResponse }) {
 
 /** What the work cost. Never subtracted from anything: it happened after. */
 export function CostOfWork({ summary }: { summary: DaysResponse }) {
+  const { t } = useI18n();
   const settings = useSettings((state) => state.settings);
   const money = (value: number) => formatMoney(settings, Math.round(value));
 
@@ -270,7 +284,7 @@ export function CostOfWork({ summary }: { summary: DaysResponse }) {
 
   return (
     <Panel
-      title="Во что обошлась работа"
+      title={t('What the work cost')}
       hint={
         summary.travel_share_of_tips == null
           ? 'Это не вычтено из заработка — это случилось после него.'
@@ -284,21 +298,22 @@ export function CostOfWork({ summary }: { summary: DaysResponse }) {
 
 /** Money that left, or has not arrived yet, and is easy to forget. */
 export function Elsewhere({ summary }: { summary: DaysResponse }) {
+  const { t } = useI18n();
   const settings = useSettings((state) => state.settings);
   const money = (value: number) => formatMoney(settings, Math.round(value));
 
   const facts = [
-    summary.tax > 0 ? { label: 'Ушло налогом', value: money(summary.tax) } : null,
+    summary.tax > 0 ? { label: t('Went in tax'), value: money(summary.tax) } : null,
     summary.tip_out > 0 ? { label: 'Отдано в котёл', value: money(summary.tip_out) } : null,
     summary.deductions > 0 ? { label: 'Удержано', value: money(summary.deductions) } : null,
     summary.holiday_accrued > 0
-      ? { label: 'Отпускных накопилось', value: money(summary.holiday_accrued) }
+      ? { label: t('Holiday pay accrued'), value: money(summary.holiday_accrued) }
       : null,
     summary.overtime_earned > 0
-      ? { label: 'За переработку', value: money(summary.overtime_earned) }
+      ? { label: t('For overtime'), value: money(summary.overtime_earned) }
       : null,
     summary.guests_counted > 0
-      ? { label: 'Гостей обслужено', value: `${summary.guests_counted}` }
+      ? { label: t('Guests served'), value: `${summary.guests_counted}` }
       : null,
     summary.average_cheque != null
       ? { label: 'Средний чек', value: money(summary.average_cheque) }
@@ -311,7 +326,7 @@ export function Elsewhere({ summary }: { summary: DaysResponse }) {
   if (facts.length === 0) return null;
 
   return (
-    <Panel title="И ещё вот столько" hint="То, что обычно проходит мимо счёта.">
+    <Panel title={t('And this much besides')} hint={t('The things that usually go uncounted.')}>
       <dl className="grid grid-cols-2 gap-x-4 gap-y-2">
         {facts.map((fact) => (
           <div key={fact.label} className="flex flex-col">

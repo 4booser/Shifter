@@ -30,7 +30,13 @@ import { useI18n } from '@/lib/i18n';
  * happened.
  */
 export function Wrapped() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
+  // Asked of the locale: Ukrainian's month initials are not Russian's.
+  const MONTH_INITIALS = Array.from({ length: 12 }, (_, index) =>
+    new Intl.DateTimeFormat(lang, { month: 'narrow' })
+      .format(new Date(Date.UTC(2026, index, 15)))
+      .toUpperCase(),
+  );
   const settings = useSettings((state) => state.settings);
   const money = (value: number) => formatMoney(settings, Math.round(value));
   const [year, setYear] = useState(Number(todayKey().slice(0, 4)));
@@ -68,14 +74,14 @@ export function Wrapped() {
         <div className="flex items-center gap-2">
           <h1 className="text-2xl font-bold tracking-tight">{t('Your year')}</h1>
           <span className="flex items-center gap-1">
-            <Button variant="outline" size="icon" aria-label="Прошлый год" onClick={() => setYear((was) => was - 1)}>
+            <Button variant="outline" size="icon" aria-label={t('Last year')} onClick={() => setYear((was) => was - 1)}>
               <ChevronLeft className="size-4" />
             </Button>
             <span className="min-w-14 text-center text-lg font-bold tabular">{year}</span>
             <Button
               variant="outline"
               size="icon"
-              aria-label="Следующий год"
+              aria-label={t('Next year')}
               disabled={year >= Number(todayKey().slice(0, 4))}
               onClick={() => setYear((was) => was + 1)}
             >
@@ -104,7 +110,7 @@ export function Wrapped() {
       ) : shifts === 0 ? (
         <p className="card p-6 text-center">
           <span className="block text-lg font-semibold">В {year} году записей пока нет</span>
-          <span className="field-hint">Отметьте несколько смен — и год начнёт собираться сам.</span>
+          <span className="field-hint">{t('Mark a few shifts and the year starts assembling itself.')}</span>
         </p>
       ) : (
         <>
@@ -136,7 +142,7 @@ export function Wrapped() {
             <div className="relative mx-auto mt-6 flex h-24 max-w-lg items-end justify-center gap-1.5">
               {months.map((value, index) => {
                 const peak = Math.max(1, ...months);
-                const names = ['Я', 'Ф', 'М', 'А', 'М', 'И', 'И', 'А', 'С', 'О', 'Н', 'Д'];
+                const names = MONTH_INITIALS;
 
                 return (
                   <span key={index} className="flex h-full w-full max-w-8 flex-col justify-end gap-1">
@@ -194,6 +200,7 @@ function YearStory({
   summary: DaysResponse;
   previous: DaysResponse | undefined;
 }) {
+  const { t } = useI18n();
   const settings = useSettings((state) => state.settings);
   const money = (value: number) => formatMoney(settings, Math.round(value));
 
@@ -247,7 +254,7 @@ function YearStory({
 
   return (
     <section className="card p-5">
-      <h2 className="mb-1.5 text-base font-bold">Ваш год словами</h2>
+      <h2 className="mb-1.5 text-base font-bold">{t('Your year, written out')}</h2>
       <p className="text-[0.98rem] leading-relaxed text-muted-foreground">{lines.join(' ')}</p>
     </section>
   );
@@ -260,11 +267,11 @@ function MadeOf({ summary }: { summary: DaysResponse }) {
   const money = (value: number) => formatMoney(settings, Math.round(value));
 
   const parts = [
-    { name: 'Смены', value: summary.shifts_earned - summary.revenue_earned, hue: 'var(--s1)' },
+    { name: t('Shifts'), value: summary.shifts_earned - summary.revenue_earned, hue: 'var(--s1)' },
     { name: 'Чаевые', value: summary.tips_earned, hue: 'var(--s3)' },
-    { name: 'Процент с выручки', value: summary.revenue_earned, hue: 'var(--s4)' },
-    { name: 'Ночные и праздничные', value: summary.premium_earned, hue: 'var(--s2)' },
-    { name: 'Продажи', value: summary.sales_earned, hue: 'var(--s5)' },
+    { name: t('A percentage of takings'), value: summary.revenue_earned, hue: 'var(--s4)' },
+    { name: t('Night and holiday'), value: summary.premium_earned, hue: 'var(--s2)' },
+    { name: t('Sales'), value: summary.sales_earned, hue: 'var(--s5)' },
   ].filter((part) => part.value > 0);
 
   const total = parts.reduce((sum, part) => sum + part.value, 0);

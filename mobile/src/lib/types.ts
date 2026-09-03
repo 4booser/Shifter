@@ -1,6 +1,7 @@
 import { eyeShut } from './eye';
 
 import { t } from '@/lib/i18n';
+import { tenth } from './format';
 /** Mirrors the server DTOs the calendar screens touch. */
 
 export interface ShiftTemplate {
@@ -452,7 +453,7 @@ export const moneyShort = (value: number): string => {
   const thousands = rounded / 1000;
 
   return Math.abs(thousands) < 10
-    ? `${thousands.toFixed(1).replace('.', ',')}\u043a`
+    ? `${tenth(thousands)}\u043a`
     : `${Math.round(thousands)}\u043a`;
 };
 

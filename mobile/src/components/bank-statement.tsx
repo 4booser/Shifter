@@ -8,6 +8,7 @@ import { CategoryRule, categorise } from '@/lib/mono-rules';
 import { categoryStyle } from '@/lib/spend-viz';
 import { t } from '@/lib/i18n';
 import { money } from '@/lib/types';
+import { tenth } from '../lib/format';
 
 /**
  * The statement itself, in the pocket — the rows every figure above is made
@@ -131,7 +132,7 @@ export function BankStatement({
                 <Text style={styles.rowName} numberOfLines={1}>{item.description}</Text>
                 <Text style={styles.rowTime}>{timeOf(item)}</Text>
                 {item.cashbackAmount > 0 && (
-                  <Text style={styles.rowBack}>+{(item.cashbackAmount / 100).toFixed(2)}</Text>
+                  <Text style={styles.rowBack}>+{tenth(item.cashbackAmount / 100, 2)}</Text>
                 )}
                 <Text style={[styles.rowAmount, item.amount > 0 && { color: palette.good }]}>
                   {item.amount > 0 ? '+' : ''}{money(fromMinor(item.amount))}

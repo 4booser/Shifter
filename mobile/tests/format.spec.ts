@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { spaced, stopwatch, two } from '@/lib/format';
+import { spaced, stopwatch, tenth, two } from '@/lib/format';
 import { numberOf, payLine } from '@/lib/places';
 
 /**
@@ -94,5 +94,16 @@ describe('how a pay cycle reads', () => {
 
   it('says nothing about a day where the cycle does not have one', () => {
     expect(payLine({ ...place, pay_period: 'weekly' })).toBe('Раз в неделю');
+  });
+
+  it('пишет дробь запятой и не оставляет пустого хвоста', () => {
+    // Четыре экрана звали toFixed(1) и получали точку, а два лечили её
+    // заменой после — одно и то же решение, принятое дважды не там.
+    expect(tenth(9.5)).toBe('9,5');
+    expect(tenth(9)).toBe('9');
+    expect(tenth(9.04)).toBe('9');
+    expect(tenth(-2.5)).toBe('−2,5');
+    expect(tenth(1234.5)).toBe('1 234,5');
+    expect(tenth(12.34, 2)).toBe('12,34');
   });
 });

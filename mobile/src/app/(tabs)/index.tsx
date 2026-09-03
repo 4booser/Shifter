@@ -70,6 +70,7 @@ import { heldDays, Pending } from '@/lib/outbox';
 import { useOutbox } from '@/store/outbox';
 import { t } from '@/lib/i18n';
 import { buzz } from '@/lib/haptics';
+import { tenth } from '../../lib/format';
 
 /** Three years each way. Further than that and nobody is planning, they are lost. */
 const SPAN = 36;
@@ -1048,7 +1049,7 @@ export default function CalendarScreen() {
                 color={week.hours >= week.limit ? palette.danger : palette.textSecondary}
               />
               <Text style={styles.weekText}>
-                {t('На этой неделе')} {`${Math.round(week.hours * 10) / 10}`.replace('.', ',')} {t('из')}{' '}
+                {t('На этой неделе')} {tenth(week.hours)} {t('из')}{' '}
                 {week.limit} {t('ч')}
                 {week.hours >= week.limit
                   ? ` · ${t('дальше идут сверхурочные')}`

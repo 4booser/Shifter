@@ -18,6 +18,7 @@ import { Colors, Palette } from '@/constants/theme';
 import { api } from '@/lib/api';
 import { Gig, payLine, tradeOf } from '@/lib/gigs';
 import { t } from '@/lib/i18n';
+import { tenth } from '../lib/format';
 
 /**
  * The employer's half of the board, finally in the pocket. The reply already
@@ -213,7 +214,7 @@ export default function MyListingsScreen() {
                     <Text style={styles.replyName}>
                       {reply.name || t('Кто-то')}
                       {reply.worker_rating !== null && (
-                        <Text style={styles.rating}> ★ {reply.worker_rating.toFixed(1)} · {reply.worker_count}</Text>
+                        <Text style={styles.rating}> ★ {tenth(reply.worker_rating)} · {reply.worker_count}</Text>
                       )}
                     </Text>
                     {reply.accepted ? (

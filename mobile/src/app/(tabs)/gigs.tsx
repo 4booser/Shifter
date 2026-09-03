@@ -24,6 +24,7 @@ import { DaysResponse, ShiftTemplate, toSavePayload } from '@/lib/types';
 import { Gig, payLine, photosOf, postedAgo, templateFromGig, tradeOf } from '@/lib/gigs';
 import { t } from '@/lib/i18n';
 import { buzz } from '@/lib/haptics';
+import { tenth } from '../../lib/format';
 
 type Tab = 'freelance' | 'permanent' | 'mine';
 
@@ -291,7 +292,7 @@ function GigCard({
           <Text style={styles.cardAge}>{postedAgo(gig.created_at)}</Text>
           {gig.employer_rating !== null && (
             <Text style={styles.cardRating}>
-              ★ {gig.employer_rating.toFixed(1)} ({gig.employer_count})
+              ★ {tenth(gig.employer_rating)} ({gig.employer_count})
             </Text>
           )}
           {gig.responses > 0 && <Text style={styles.cardAge}>откликов: {gig.responses}</Text>}

@@ -25,6 +25,28 @@ export const spaced = (value: number): string => {
   return `${sign}${rest}${tail}`;
 };
 
+/**
+ * One decimal place, written the way both of this app's languages write it.
+ *
+ * Four screens reached for `toFixed(1)` and got a full stop — «★ 5.0», «9.5 ч»
+ * — and two others patched the stop out with a string replace afterwards,
+ * which is the same decision made twice in the wrong place. A whole number
+ * keeps no tail: «9», not «9,0».
+ */
+export const tenth = (value: number, places = 1): string => {
+  'worklet';
+
+  const rounded = Math.round(value * 10 ** places) / 10 ** places;
+  const whole = Math.trunc(rounded);
+  const tail = Math.abs(rounded - whole);
+
+  if (tail < 10 ** -places / 2) return spaced(whole);
+
+  const digits = `${Math.round(tail * 10 ** places)}`.padStart(places, '0');
+
+  return `${spaced(whole)},${digits}`;
+};
+
 /** Two digits, for a clock. */
 export const two = (value: number): string => {
   'worklet';

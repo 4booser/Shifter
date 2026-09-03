@@ -14,6 +14,7 @@ import {
 } from '@/lib/mono-work';
 import { CalendarDayData, money } from '@/lib/types';
 import { t } from '@/lib/i18n';
+import { tenth } from '../lib/format';
 
 /** The matcher's own kinds, in the words somebody would use. */
 const KIND_NAMES: Record<string, string> = {
@@ -221,7 +222,7 @@ export function BankAnalysis({
             <Text style={styles.cardNote}>
               {row.averageLate < 0.5
                 ? t('Вовремя.')
-                : `${t('В среднем на')} ${Math.round(row.averageLate * 10) / 10} ${t('дн. позже обещанного.')}`}
+                : `${t('В среднем на')} ${tenth(row.averageLate)} ${t('дн. позже обещанного.')}`}
               {row.worstLate > 0 && ` ${t('Худший раз —')} ${row.worstLate} ${t('дн.')}`}
             </Text>
             {/* Late and short are different complaints and different

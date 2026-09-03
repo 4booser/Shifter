@@ -58,13 +58,38 @@ function Join() {
       });
   };
 
+  // A link that lost its code — copied out of a message that wrapped, or
+  // typed from a photograph — landed on a form with «Код: —» and a button
+  // that could never be pressed. Say what happened instead.
+  if (code.length < 4) {
+    return (
+      <div className="auth-scene grid min-h-dvh place-items-center px-4 py-10">
+        <div className="card rise glow w-full max-w-sm p-7 text-center">
+          <span className="text-[2.4rem]">🤝</span>
+          <h1 className="mt-2 text-[1.3rem] font-bold tracking-tight">{t('This invite has no code')}</h1>
+          <p className="field-hint mb-4 mt-1">
+            {t('The link is cut short. Ask for it again, or type the code on the rota page.')}
+          </p>
+
+          <button type="button" className="btn btn-primary w-full" onClick={() => router.replace('/schedule')}>
+            {t('To the rota')}
+          </button>
+
+          <button type="button" className="btn btn-quiet mt-2 w-full" onClick={() => router.replace('/dashboard')}>
+            {t('Not now')}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="auth-scene grid min-h-dvh place-items-center px-4 py-10">
       <div className="card rise glow w-full max-w-sm p-7 text-center">
         <span className="text-[2.4rem]">🤝</span>
         <h1 className="mt-2 text-[1.3rem] font-bold tracking-tight">{t('You are invited to a crew')}</h1>
         <p className="field-hint mb-4 mt-1">
-          {t('Code')}: <strong className="tabular tracking-widest">{code || '—'}</strong>
+          {t('Code')}: <strong className="tabular tracking-widest">{code}</strong>
         </p>
 
         <label className="mb-3 block text-left">
@@ -79,7 +104,7 @@ function Join() {
 
         {error !== null && <p className="mb-2 text-[0.85rem] text-danger-read">{error}</p>}
 
-        <button type="button" className="btn btn-primary w-full" disabled={busy || code.length < 4} onClick={join}>
+        <button type="button" className="btn btn-primary w-full" disabled={busy} onClick={join}>
           {busy ? '…' : t('Join the crew')}
         </button>
 

@@ -2682,6 +2682,9 @@ export const RU: Dictionary = {
   'To the board': 'На доску',
   'Answer a gig on the board and it lands here — with the contacts, once the other side opens them.': 'Откликнитесь на смену с доски — она появится здесь, вместе с контактами, когда та сторона их откроет.',
   'You have not posted anything yet': 'Вы ещё ничего не выставляли',
+  'This invite has no code': 'В приглашении нет кода',
+  'The link is cut short. Ask for it again, or type the code on the rota page.': 'Ссылка оборвалась. Попросите её ещё раз — или введите код на странице графика.',
+  'To the rota': 'К графику',
 };
 
 export const UK: Dictionary = {
@@ -5343,4 +5346,7 @@ export const UK: Dictionary = {
   'To the board': 'На дошку',
   'Answer a gig on the board and it lands here — with the contacts, once the other side opens them.': 'Відгукніться на зміну з дошки — вона зʼявиться тут, разом з контактами, коли та сторона їх відкриє.',
   'You have not posted anything yet': 'Ви ще нічого не виставляли',
+  'This invite has no code': 'У запрошенні немає коду',
+  'The link is cut short. Ask for it again, or type the code on the rota page.': 'Посилання обірвалося. Попросіть його ще раз — або введіть код на сторінці графіка.',
+  'To the rota': 'До графіка',
 };

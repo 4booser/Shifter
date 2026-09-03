@@ -62,7 +62,7 @@ function PasswordCard({ needsOne }: { needsOne: boolean }) {
   const save = useMutation({
     mutationFn: () => accountApi.changePassword(needsOne ? null : current, next),
     onSuccess: () => {
-      toast.success('Пароль изменён');
+      toast.success(t('Password changed'));
       setOpen(false);
       setCurrent('');
       setNext('');
@@ -75,7 +75,7 @@ function PasswordCard({ needsOne }: { needsOne: boolean }) {
 
   return (
     <Card
-      title={needsOne ? 'Задать пароль' : 'Пароль'}
+      title={needsOne ? 'Задать пароль' : t('Password')}
       icon={KeyRound}
       hint={
         needsOne
@@ -104,7 +104,7 @@ function PasswordCard({ needsOne }: { needsOne: boolean }) {
           <Input
             type="password"
             autoComplete="new-password"
-            placeholder="Ещё раз"
+            placeholder={t('Again')}
             value={again}
             onChange={(event) => setAgain(event.target.value)}
           />
@@ -124,7 +124,7 @@ function PasswordCard({ needsOne }: { needsOne: boolean }) {
         </div>
       ) : (
         <Button variant="outline" className="self-start" onClick={() => setOpen(true)}>
-          {needsOne ? 'Задать пароль' : 'Изменить пароль'}
+          {needsOne ? 'Задать пароль' : t('Change the password')}
         </Button>
       )}
     </Card>
@@ -165,7 +165,7 @@ function TwoFactorCard({ on }: { on: boolean }) {
   const disable = useMutation({
     mutationFn: () => authApi.twoFactorDisable(code.trim()),
     onSuccess: () => {
-      toast.success('Второй фактор выключен');
+      toast.success(t('Two-factor is off'));
       done();
     },
     onError: (error: Error) => toast.error(error.message),
@@ -173,17 +173,17 @@ function TwoFactorCard({ on }: { on: boolean }) {
 
   return (
     <Card
-      title="Вход по коду"
+      title={t('Sign in with a code')}
       icon={ShieldCheck}
       hint={
         on
           ? 'Включён: после пароля приложение спросит шесть цифр.'
-          : 'Пароля мало, если его узнали. Код меняется каждые полминуты.'
+          : t('A password is not enough once somebody knows it. The code changes every half a minute.')
       }
     >
       {backup !== null && (
         <div className="flex flex-col gap-1.5 rounded-xl bg-surface-2 p-3">
-          <p className="text-sm font-semibold">Запасные коды — сохраните их сейчас</p>
+          <p className="text-sm font-semibold">{t('Backup codes — save them now')}</p>
           <p className="field-hint">
             Каждый работает один раз. Второй раз их показать нельзя: на сервере лежат только
             их отпечатки.
@@ -201,7 +201,7 @@ function TwoFactorCard({ on }: { on: boolean }) {
 
       {secret !== null ? (
         <div className="flex flex-col gap-2">
-          <p className="field-hint">Введите этот ключ в приложение-аутентификатор:</p>
+          <p className="field-hint">{t('Enter this key into an authenticator app:')}</p>
           <code className="select-all rounded-lg bg-surface-2 px-3 py-2 font-mono text-sm">
             {secret}
           </code>
@@ -226,7 +226,7 @@ function TwoFactorCard({ on }: { on: boolean }) {
           <div className="flex flex-col gap-2">
             <Input
               inputMode="numeric"
-              placeholder="Код, чтобы подтвердить"
+              placeholder={t('The code, to confirm')}
               maxLength={9}
               value={code}
               onChange={(event) => setCode(event.target.value)}
@@ -264,13 +264,14 @@ function TwoFactorCard({ on }: { on: boolean }) {
 }
 
 function SessionsCard() {
+  const { t } = useI18n();
   const client = useQueryClient();
   const sessions = useQuery({ queryKey: ['sessions'], queryFn: () => authApi.sessions() });
 
   const revoke = useMutation({
     mutationFn: (id: number) => authApi.revokeSession(id),
     onSuccess: () => void client.invalidateQueries({ queryKey: ['sessions'] }),
-    onError: () => toast.error('Не вышло — попробуйте ещё раз.'),
+    onError: () => toast.error(t('That did not work — try again.')),
   });
 
   const rows = sessions.data?.sessions ?? [];
@@ -279,7 +280,7 @@ function SessionsCard() {
 
   return (
     <Card
-      title="Где вы вошли"
+      title={t('Where you are signed in')}
       icon={Monitor}
       hint="Каждая строка — устройство, у которого сейчас есть ключ."
     >
@@ -295,7 +296,7 @@ function SessionsCard() {
                 <Monitor className="size-4 flex-none text-muted-foreground" />
               )}
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm">{describe(row.user_agent)}</span>
+                <span className="block truncate text-sm">{describe(row.user_agent, t)}</span>
                 <span className="field-hint">
                   вошли {new Date(row.created_at).toLocaleDateString('ru', {
                     day: 'numeric',
@@ -305,7 +306,7 @@ function SessionsCard() {
               </span>
               <button
                 type="button"
-                aria-label="Выкинуть это устройство"
+                aria-label={t('Sign this device out')}
                 disabled={revoke.isPending}
                 onClick={() => revoke.mutate(row.id)}
                 className={cn(
@@ -324,9 +325,9 @@ function SessionsCard() {
 }
 
 /** A user agent is not something to show a person; this is the gist of one. */
-function describe(agent: string | null): string {
-  if (agent === null || agent.trim() === '') return 'Неизвестное устройство';
-  if (/Expo|okhttp|CFNetwork/i.test(agent)) return 'Приложение на телефоне';
+function describe(agent: string | null, t: (key: string) => string): string {
+  if (agent === null || agent.trim() === '') return t('Unknown device');
+  if (/Expo|okhttp|CFNetwork/i.test(agent)) return t('The phone app');
 
   const browser = /Firefox/i.test(agent)
     ? 'Firefox'
@@ -336,7 +337,7 @@ function describe(agent: string | null): string {
         ? 'Chrome'
         : /Safari/i.test(agent)
           ? 'Safari'
-          : 'Браузер';
+          : t('Browser');
 
   const system = /iPhone|iPad/i.test(agent)
     ? 'iPhone'

@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { calendarApi } from '@/lib/api/calendar';
 import { Reconciliation } from '@/lib/calendar/models';
 import { useI18n } from '@/lib/i18n';
-import { MonoAccount, MonoStatementItem, dayOf, fromMinor } from '@/lib/mono/mono';
+import { MonoAccount, MonoStatementItem, markOf, dayOf, fromMinor } from '@/lib/mono/mono';
 import { recurring } from '@/lib/mono/mono-insights';
 import { smoothPath } from '@/lib/charts/math';
 import { FlowMoney } from '@/components/ui/flow';
@@ -159,7 +159,10 @@ export function BankForecast({
             ) : (
               <>
                 {t('thinnest around')} {spellDay(runway.thinnest.day)}:{' '}
-                <FlowMoney value={Math.round(runway.thinnest.balance)} mark="₴" />
+                <FlowMoney
+                  value={Math.round(runway.thinnest.balance)}
+                  mark={account === null ? undefined : markOf(account.currencyCode)}
+                />
               </>
             )}
           </div>

@@ -21,15 +21,22 @@ export function FlowMoney({
   value: number | null | undefined;
   className?: string;
   /**
-   * A forced currency mark, prefix-placed. The bank speaks hryvnia whatever
-   * label the person picked for wages, and must keep saying so.
+   * The mark this amount is actually in, where it is not the label the person
+   * picked for wages. A bank statement is in the account's own currency and
+   * must keep saying so.
+   *
+   * It used to force the mark in front of the figure as well, which is a
+   * separate question and one the person has already answered: «На карте
+   * ₴84 214» stood two lines above «минимум 84 214 ₴», the same number
+   * spelled two ways inside one card. Which currency is the statement's
+   * business; which side of the digits it stands on is the reader's.
    */
   mark?: string;
 }) {
   const settings = useSettings((state) => state.settings);
   const { hideAmounts } = settings;
   const currency = mark ?? settings.currency;
-  const currencyBefore = mark !== undefined ? true : settings.currencyBefore;
+  const currencyBefore = settings.currencyBefore;
 
   // The mask keeps the currency mark so a hidden value still reads as money —
   // and never mounts the animated element, so nothing can flash a real digit.

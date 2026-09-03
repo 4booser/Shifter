@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 
 import { useI18n } from '@/lib/i18n';
 import { useMoney } from '@/lib/settings/money';
-import { MonoAccount, MonoStatementItem, fromMinor } from '@/lib/mono/mono';
+import { MonoAccount, MonoStatementItem, markOf, fromMinor } from '@/lib/mono/mono';
 import { balanceCurve } from '@/lib/mono/mono-shape';
 import { ChartTip, CrossHair, useChartHover } from '@/components/charts/hover';
 import { smoothPath } from '@/lib/charts/math';
@@ -79,7 +79,12 @@ export function BankHero({
         <div>
           <span className="field-hint">{t('On the card')}</span>
           <div className="tabular text-[1.9rem] font-bold leading-tight">
-            <FlowMoney value={Math.round(balance)} mark="₴" />
+            {/* The statement's own currency, not a hryvnia stamped on
+                whatever the card is actually in. */}
+            <FlowMoney
+              value={Math.round(balance)}
+              mark={account === null ? undefined : markOf(account.currencyCode)}
+            />
           </div>
         </div>
 

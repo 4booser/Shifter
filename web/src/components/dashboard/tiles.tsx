@@ -29,7 +29,7 @@ import { CountUp, Money } from '@/components/ui/bits';
 import { FlowMoney } from '@/components/ui/flow';
 import { Icon } from '@/components/ui/icon';
 import { useMono } from '@/lib/mono/store';
-import { fromMinor } from '@/lib/mono/mono';
+import { markOf, fromMinor } from '@/lib/mono/mono';
 
 /**
  * The command-centre strip over the calendar: this month at a glance, one
@@ -360,7 +360,11 @@ function BankTile() {
     <>
       <Label icon="coins">{t('Bank')}</Label>
       <span className="tile-value">
-        {balance !== null ? <FlowMoney value={Math.round(balance)} mark="₴" /> : '—'}
+        {balance !== null && account !== undefined ? (
+          <FlowMoney value={Math.round(balance)} mark={markOf(account.currencyCode)} />
+        ) : (
+          '—'
+        )}
       </span>
       <span className="field-hint tabular">
         −<Money value={Math.round(spent)} /> {t('this month')}

@@ -22,7 +22,7 @@ import { api, ApiError } from '@/lib/api';
 import { addMonths, currentMonth, dayLabel, monthBounds, todayKey } from '@/lib/calendar';
 import { DaysResponse, ShiftTemplate, toSavePayload } from '@/lib/types';
 import { Gig, payLine, photosOf, postedAgo, templateFromGig, tradeOf } from '@/lib/gigs';
-import { t } from '@/lib/i18n';
+import { plural, t } from '@/lib/i18n';
 import { buzz } from '@/lib/haptics';
 import { tenth } from '../../lib/format';
 
@@ -290,9 +290,19 @@ function GigCard({
 
         <View style={styles.cardFoot}>
           <Text style={styles.cardAge}>{postedAgo(gig.created_at)}</Text>
+          {/* «★ 5,0 (1)» said nothing about what the 1 was, and painted one
+              person's evening in the same ink as a settled reputation. Below
+              three verdicts the star is ordinary ink, and the count says what
+              it counts. */}
           {gig.employer_rating !== null && (
-            <Text style={styles.cardRating}>
-              ★ {tenth(gig.employer_rating)} ({gig.employer_count})
+            <Text
+              style={[
+                styles.cardRating,
+                gig.employer_count < 3 && { color: palette.textSecondary },
+              ]}
+            >
+              ★ {tenth(gig.employer_rating)} ·{' '}
+              {gig.employer_count} {plural(gig.employer_count, t('отзыв'), t('отзыва'), t('отзывов'))}
             </Text>
           )}
           {gig.responses > 0 && <Text style={styles.cardAge}>откликов: {gig.responses}</Text>}

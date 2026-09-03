@@ -17,7 +17,7 @@ import { Loading, Press } from '@/components/motion';
 import { Colors, Palette } from '@/constants/theme';
 import { api } from '@/lib/api';
 import { Gig, payLine, tradeOf } from '@/lib/gigs';
-import { t } from '@/lib/i18n';
+import { plural, t } from '@/lib/i18n';
 import { tenth } from '../lib/format';
 
 /**
@@ -214,7 +214,11 @@ export default function MyListingsScreen() {
                     <Text style={styles.replyName}>
                       {reply.name || t('Кто-то')}
                       {reply.worker_rating !== null && (
-                        <Text style={styles.rating}> ★ {tenth(reply.worker_rating)} · {reply.worker_count}</Text>
+                        <Text style={styles.rating}>
+                          {' '}★ {tenth(reply.worker_rating)} ·{' '}
+                          {reply.worker_count}{' '}
+                          {plural(reply.worker_count, t('отзыв'), t('отзыва'), t('отзывов'))}
+                        </Text>
                       )}
                     </Text>
                     {reply.accepted ? (

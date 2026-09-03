@@ -163,7 +163,7 @@ export function LiveBar() {
                 />
               </svg>
               <div className="min-w-0">
-                <strong className="block truncate text-[0.95rem]">{template.name}</strong>
+                <strong className="block truncate text-[0.95rem]" title={template.name}>{template.name}</strong>
                 <span className="field-hint block tabular">{formatElapsed(tick.elapsed)}</span>
                 {/*
                   Said for what it is. The counter is the rate multiplied by

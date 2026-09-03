@@ -40,7 +40,7 @@ export function Bars({
       {rows.map((row) => (
         <li key={row.key} className="grid grid-cols-[minmax(4.5rem,auto)_1fr_auto] items-center gap-2">
           <span className="min-w-0">
-            <span className="block truncate text-xs font-medium">{row.label}</span>
+            <span className="block truncate text-xs font-medium" title={row.label}>{row.label}</span>
             {row.hint !== undefined && <span className="field-hint">{row.hint}</span>}
           </span>
 

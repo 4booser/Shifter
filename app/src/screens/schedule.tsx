@@ -191,7 +191,7 @@ export function Schedule() {
                           className="size-2.5 flex-none rounded-full"
                           style={{ background: member.colour }}
                         />
-                        <span className="truncate">{member.display_name}</span>
+                        <span className="truncate" title={member.display_name}>{member.display_name}</span>
                         {member.is_you && <span className="field-hint">· вы</span>}
                         {member.trainee && <span className="field-hint">· стажёр</span>}
                       </span>
@@ -383,7 +383,7 @@ function ShiftSheet({
           <span className="field-label">Вызвались подменить</span>
           {entry.offers.map((one) => (
             <span key={one.offer_id} className="flex items-center gap-2">
-              <span className="min-w-0 flex-1 truncate text-sm">{one.display_name}</span>
+              <span className="min-w-0 flex-1 truncate text-sm" title={one.display_name}>{one.display_name}</span>
               <Button size="sm" disabled={busy || past} onClick={() => onAccept(one.offer_id)}>
                 Отдать
               </Button>

@@ -80,7 +80,7 @@ export function OnShiftNow({ rota }: { rota: Rota | null }) {
                 className="h-2.5 w-2.5 flex-none rounded-full"
                 style={{ background: colour(row.entry.member_id) }}
               />
-              <strong className="min-w-0 truncate">{name(row.entry.member_id)}</strong>
+              <strong className="min-w-0 truncate" title={name(row.entry.member_id)}>{name(row.entry.member_id)}</strong>
               <span className="field-hint truncate">
                 {row.entry.shift_name} · {row.entry.start_time}–{row.entry.end_time}
               </span>

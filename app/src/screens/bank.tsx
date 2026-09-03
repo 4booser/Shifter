@@ -346,7 +346,7 @@ export function Bank() {
               {paying.map((place) => (
                 <li key={place.locationId} className="flex flex-col gap-0.5">
                   <span className="flex items-baseline justify-between gap-2">
-                    <span className="min-w-0 truncate text-sm font-medium">{place.place}</span>
+                    <span className="min-w-0 truncate text-sm font-medium" title={place.place}>{place.place}</span>
                     <span
                       className={cn(
                         'flex-none text-sm font-semibold tabular',
@@ -493,7 +493,7 @@ export function Bank() {
                   key={pair.refund.id}
                   className="flex items-baseline justify-between gap-2 text-sm"
                 >
-                  <span className="min-w-0 truncate">{pair.refund.description}</span>
+                  <span className="min-w-0 truncate" title={pair.refund.description}>{pair.refund.description}</span>
                   <span className="flex-none tabular text-good">
                     +{money(fromMinor(pair.refund.amount))}
                   </span>

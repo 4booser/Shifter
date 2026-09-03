@@ -606,7 +606,7 @@ function GigCard({ gig, onRespond, onWithdraw }: { gig: Gig; onRespond: () => vo
         <span className="flex min-w-0 items-center gap-1.5">
           <span className="text-[1.2rem]">{trade.emoji}</span>
           <span className="min-w-0">
-            <strong className="block truncate text-[0.95rem] leading-tight">{gig.title}</strong>
+            <strong className="block truncate text-[0.95rem] leading-tight" title={gig.title}>{gig.title}</strong>
             <span className="field-hint flex items-center gap-1.5 truncate">
               {gig.venue} · {gig.city} <Stars rating={gig.employer_rating} count={gig.employer_count} small />
               {/* Earned by shifts that happened, not claimed on a form. */}

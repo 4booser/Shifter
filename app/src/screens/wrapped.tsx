@@ -284,7 +284,7 @@ function MadeOf({ summary }: { summary: DaysResponse }) {
           <li key={part.name} className="flex items-baseline justify-between gap-2 text-sm">
             <span className="flex min-w-0 items-center gap-1.5">
               <i className="size-2 flex-none rounded-full" style={{ background: part.hue }} />
-              <span className="truncate">{part.name}</span>
+              <span className="truncate" title={part.name}>{part.name}</span>
             </span>
             <span className={cn('flex-none tabular')}>
               {money(part.value)}{' '}

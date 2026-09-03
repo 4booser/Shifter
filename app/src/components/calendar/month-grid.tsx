@@ -161,7 +161,7 @@ export function MonthGrid({
                       className="size-1.5 flex-none rounded-full"
                       style={{ background: event.colour }}
                     />
-                    <span className="hidden truncate sm:inline">{event.name}</span>
+                    <span className="hidden truncate sm:inline" title={event.name}>{event.name}</span>
                   </span>
                 ))}
                 {shifts.slice(0, 2).map((entry, index) => (
@@ -178,7 +178,7 @@ export function MonthGrid({
                       style={{ background: entry.colour ?? 'var(--accent)' }}
                     />
                     {settings.showShiftNamesInCells && (
-                      <span className="hidden truncate sm:inline">{entry.name}</span>
+                      <span className="hidden truncate sm:inline" title={entry.name}>{entry.name}</span>
                     )}
                     {settings.cellTimes !== 'none' && (
                       <span className="hidden truncate tabular sm:inline">

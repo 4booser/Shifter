@@ -36,10 +36,22 @@ const category = () => 'Продукты';
 describe('the statement on the way out', () => {
   it('writes money as a spreadsheet reads it', () => {
     // Minor units would export honestly and open as 80000, which is the sort
-    // of file somebody blames the app for.
+    // of file somebody blames the app for. The decimal has to match the
+    // separator: the fields are split on semicolons because this reader's
+    // Excel expects that, and the same Excel wants «−800,00» — with a full
+    // stop every amount arrived as text and nothing could be summed.
     const csv = statementCsv([item({})], category, '2026-08-01', '2026-08-31');
 
-    expect(csv.split('\n')[1]).toContain(';-800.00;UAH;16.00;42000.00;');
+    expect(csv.split('\n')[1]).toContain(';-800,00;UAH;16,00;42000,00;');
+  });
+
+  it('keeps the decimal out of the field separator', () => {
+    const csv = statementCsv([item({})], category, '2026-08-01', '2026-08-31');
+    const row = csv.split('\n')[1];
+
+    // A comma inside a cell would still split nothing — the separator is a
+    // semicolon — but a bare full stop in a sum is the bug this pins.
+    expect(row).not.toMatch(/;-?\d+\.\d{2};/);
   });
 
   it('carries the person’s own category, not the bank’s guess', () => {

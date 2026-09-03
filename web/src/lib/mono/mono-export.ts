@@ -47,6 +47,16 @@ const HEADER = [
 const cell = (value: string): string =>
   /[";\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value;
 
+/**
+ * A sum, written the way the spreadsheet that opens this file reads one.
+ *
+ * The separator above is a semicolon precisely because this reader's Excel
+ * expects one — and that same Excel expects «1234,56», not «1234.56». Half a
+ * locale is worse than none: the file opened in the right columns and every
+ * amount in it arrived as text, so nothing could be summed.
+ */
+const sum = (value: number): string => value.toFixed(2).replace('.', ',');
+
 const time = (item: MonoStatementItem): string => {
   const at = new Date(item.time * 1000);
 
@@ -91,10 +101,10 @@ export function statementCsv(
       categoryOf(item),
       // Major units with a dot, which is what a spreadsheet reads as a number.
       // Minor units would export honestly and open as 80000.
-      fromMinor(item.amount).toFixed(2),
+      sum(fromMinor(item.amount)),
       CURRENCY[item.currencyCode] ?? String(item.currencyCode),
-      fromMinor(item.cashbackAmount ?? 0).toFixed(2),
-      fromMinor(item.balance).toFixed(2),
+      sum(fromMinor(item.cashbackAmount ?? 0)),
+      sum(fromMinor(item.balance)),
       String(item.mcc),
       // A hold is money the bank has not taken yet, and a row that looks final
       // in a file nobody can re-check is the wrong kind of wrong.

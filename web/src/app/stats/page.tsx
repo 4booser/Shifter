@@ -682,7 +682,9 @@ function Stats() {
               className={`text-[1.25rem] font-bold ${earnedTone(summary.total_earned)}`}
             />
           ) : (
-            <span className="text-[1.25rem] font-bold text-good-read tabular">
+            <span
+              className={`text-[1.25rem] font-bold tabular ${earnedTone(summary.conversion.total_earned)}`}
+            >
               ≈ {formatWith(summary.conversion.base_currency, summary.conversion.total_earned)}
             </span>
           )}

@@ -175,17 +175,30 @@ public class ShareController : ControllerBase
         var history = Shifter.Application.Features.business.Services.WorkHistory.Of(
             days, places.ToDictionary(place => place.Id), today, user.CardShowsMoney);
 
+        // «2025-08 — 2026-09» on the one page a stranger reads about somebody's
+        // work. The app's own record page has said «август 2025 — сентябрь
+        // 2026» for months; this, which is the copy handed to an employer,
+        // had not.
+        static string Month(string yyyyMM) =>
+            DateOnly.TryParseExact($"{yyyyMM}-01", "yyyy-MM-dd", out var date)
+                // «MMMM», not «LLLL»: the standalone-month specifier is an
+                // ICU one and .NET emits it literally, so the page read «LLLL
+                // 2025». Without a day in the pattern .NET already gives the
+                // nominative, which is what a month standing alone wants.
+                ? date.ToString("MMMM yyyy", Figures.Ru)
+                : yyyyMM;
+
         string name = $"{user.FirstName} {user.LastName}".Trim();
         string headline = history.shifts == 0
             ? "Пока без записей"
             // Declined: this page is the one a stranger reads, and it said
             // «1 смен» to anyone with a first month behind them.
-            : $"{history.months} мес · {history.shifts} {TelegramCommands.Plural(history.shifts, "смена", "смены", "смен")} · {Math.Round(history.hours)} ч";
+            : $"{history.months} мес · {history.shifts} {TelegramCommands.Plural(history.shifts, "смена", "смены", "смен")} · {Figures.Count(history.hours)} ч";
 
         var rows = history.places
             .Select(place => user.CardShowsPlaces
-                ? $"{Escape(place.name)} · {place.from} — {place.to} · {place.shifts} {TelegramCommands.Plural(place.shifts, "смена", "смены", "смен")}"
-                : $"{place.from} — {place.to} · {place.shifts} {TelegramCommands.Plural(place.shifts, "смена", "смены", "смен")}")
+                ? $"{Escape(place.name)} · {Month(place.from)} — {Month(place.to)} · {place.shifts} {TelegramCommands.Plural(place.shifts, "смена", "смены", "смен")}"
+                : $"{Month(place.from)} — {Month(place.to)} · {place.shifts} {TelegramCommands.Plural(place.shifts, "смена", "смены", "смен")}")
             .ToArray();
 
         string body = string.Join("", rows.Select(row => $"<li>{row}</li>"));

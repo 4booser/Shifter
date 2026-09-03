@@ -139,7 +139,7 @@ public class AssistantTests
         new(
             "2026-03-01", "2026-03-31", "март 2026",
             earned, 0m, earned, 0m,
-            14, hours, hours <= 0 ? 0m : Math.Round(earned / (decimal)hours, 2),
+            14, hours, hours < 1 ? 0m : Math.Round(earned / (decimal)hours, 2),
             16_240m, revenue, 18_000m, tips, 0m, 0m, 0m, 1_600m,
             0m, 0m, 0, 0,
             2_960m, "2026-03-05", "субботу", "пятницу", 640m, 11m, 17,
@@ -226,7 +226,32 @@ public class AssistantTests
     {
         var answer = AssistantWriter.Answer("сколько стоит мой час", Facts(earned: 0m, hours: 0));
 
-        Assert.Contains("часов нет", answer);
+        Assert.Contains("не выходит", answer);
+        Assert.DoesNotContain("₴ в час", answer);
+    }
+
+    /// <summary>
+    /// The failure that made the floor an hour rather than nought: a shift
+    /// closed after fifty seconds, and the arithmetic was happy to divide by
+    /// two hundredths and call the answer a wage.
+    /// </summary>
+    [Fact]
+    public void PartOfAnHourIsNotAnHourlyRate()
+    {
+        var facts = Facts(earned: -76m, hours: 0.02);
+
+        Assert.Equal(0m, facts.PerHour);
+
+        var rate = AssistantWriter.Answer("сколько стоит мой час", facts);
+
+        Assert.Contains("не выходит", rate);
+        Assert.DoesNotContain("₴ в час", rate);
+
+        // And the sentence the assistant opens with must not quote one either.
+        var month = AssistantWriter.Answer("сколько заработал", facts);
+
+        Assert.DoesNotContain("в час", month);
+        Assert.DoesNotContain("0 0", month);
     }
 
     [Fact]

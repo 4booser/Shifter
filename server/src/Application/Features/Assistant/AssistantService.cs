@@ -235,7 +235,9 @@ public sealed class AssistantService
             range.tax,
             range.days_worked,
             range.hours,
-            range.hours <= 0 ? 0m : Math.Round(range.total_earned / (decimal)range.hours, 2),
+            // An hourly rate divided out of minutes is not a rate; the same
+            // one-hour floor the web pages hold to.
+            range.hours < 1 ? 0m : Math.Round(range.total_earned / (decimal)range.hours, 2),
             range.shifts_earned,
             range.revenue_earned,
             range.revenue_counted,

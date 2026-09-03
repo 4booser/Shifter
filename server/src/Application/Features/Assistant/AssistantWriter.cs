@@ -11,13 +11,35 @@ namespace Shifter.Application.Features.Assistant;
 /// </summary>
 public static class AssistantWriter
 {
-    private static readonly CultureInfo Ru = CultureInfo.GetCultureInfo("ru-RU");
+    /// <summary>
+    /// Russian numbers with a plain space between the thousands.
+    ///
+    /// Every formatter here used to end in <c>.Replace(',', ' ')</c>, aimed at
+    /// a group separator. In ru-RU the comma is the <em>decimal</em> separator,
+    /// so two hundredths of an hour came out of it as «0 0 ч» — two numbers
+    /// where the assistant meant one, in the sentence it opens with. The
+    /// separator is set on the format now, and nothing is patched out of the
+    /// finished string.
+    /// </summary>
+    private static readonly CultureInfo Ru = Spaced();
+
+    private static CultureInfo Spaced()
+    {
+        var culture = (CultureInfo)CultureInfo.GetCultureInfo("ru-RU").Clone();
+
+        culture.NumberFormat.NumberGroupSeparator = " ";
+        // The typographic minus the rest of the app writes. The assistant said
+        // «-76 ₴» in a sentence sitting beside a tile that said «−76 ₴».
+        culture.NumberFormat.NegativeSign = "−";
+
+        return culture;
+    }
 
     public static string Money(decimal value) =>
-        $"{Math.Round(value).ToString("N0", Ru).Replace(',', ' ')} ₴";
+        $"{Math.Round(value).ToString("N0", Ru)} ₴";
 
     private static string Hours(double value) =>
-        $"{Math.Round(value, value < 10 ? 1 : 0).ToString(value < 10 ? "N1" : "N0", Ru).Replace(',', ' ')} ч";
+        $"{Math.Round(value, value < 10 ? 1 : 0).ToString(value < 10 ? "N1" : "N0", Ru)} ч";
 
     /// <summary>
     /// A plain count, grouped the way the money beside it is.
@@ -26,7 +48,7 @@ public static class AssistantWriter
     /// two spellings of a thousand a finger apart.
     /// </summary>
     public static string Count(double value) =>
-        Math.Round(value).ToString("N0", Ru).Replace(',', ' ');
+        Math.Round(value).ToString("N0", Ru);
 
     /// <summary>
     /// "1 смена", "2 смены", "5 смен". Russian declines after a number and
@@ -65,9 +87,12 @@ public static class AssistantWriter
                 : $"Лучший день — {Said(facts.BestDayDate)}: {Money(facts.BestDayAmount)}. "
                   + $"Это {Share(facts.BestDayAmount, facts.Earned)} от всего заработка за {facts.Period}.";
 
+        // Under an hour there is no hour to price. The web pages settled this
+        // the same way after a shift closed at fifty seconds priced the hour
+        // at −₴3 805; the assistant was still saying it out loud.
         if (Asks("час", "почас", "в час"))
-            return facts.Hours <= 0
-                ? "За этот период отработанных часов нет, так что и ставки в час не выходит."
+            return facts.Hours < 1
+                ? "За этот период отработанного часа не набралось, так что и ставки в час не выходит."
                 : $"Ваш час стоит {Money(facts.PerHour)}: {Money(facts.Earned)} за {Hours(facts.Hours)}."
                   + (facts.NightHours > 0 ? $" Из них {Hours(facts.NightHours)} — ночные." : "");
 
@@ -121,8 +146,8 @@ public static class AssistantWriter
                 ? $"За {facts.Period} отработанных смен нет — в плане {Money(facts.Planned)}."
                 : $"За {facts.Period} отработанных смен нет.";
 
-        return $"За {facts.Period} заработано {Money(facts.Earned)} — {Shifts(facts.Shifts)}, {Hours(facts.Hours)}, "
-               + $"по {Money(facts.PerHour)} в час."
+        return $"За {facts.Period} заработано {Money(facts.Earned)} — {Shifts(facts.Shifts)}, {Hours(facts.Hours)}"
+               + (facts.Hours < 1 ? "." : $", по {Money(facts.PerHour)} в час.")
                + (change is null ? "" : $" {change}")
                + (facts.Planned > 0 ? $" Ещё {Money(facts.Planned)} в плане." : "");
     }
@@ -132,8 +157,8 @@ public static class AssistantWriter
     {
         var summary = facts.Shifts == 0
             ? $"За {facts.Period} отработанных смен не было."
-            : $"За {facts.Period} — {Money(facts.Earned)} за {Shifts(facts.Shifts)} и {Hours(facts.Hours)}, "
-              + $"по {Money(facts.PerHour)} в час.";
+            : $"За {facts.Period} — {Money(facts.Earned)} за {Shifts(facts.Shifts)} и {Hours(facts.Hours)}"
+              + (facts.Hours < 1 ? "." : $", по {Money(facts.PerHour)} в час.");
 
         var paragraphs = new List<string>();
 

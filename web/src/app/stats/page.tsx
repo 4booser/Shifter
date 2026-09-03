@@ -663,7 +663,8 @@ function Stats() {
             title={t('A 9:16 card for stories')}
             onClick={exportStory}
           >
-            📱 {t('Story')}
+            <Icon name="phone" size={13} />
+            {t('Story')}
           </button>
           <button type="button" className="btn btn-sm" onClick={exportXlsx}>
             <Icon name="download" size={13} />

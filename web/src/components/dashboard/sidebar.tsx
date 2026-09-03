@@ -574,10 +574,12 @@ export function Sidebar() {
           {t('Import a spreadsheet')}
         </button>
         <button type="button" className="btn w-full" onClick={() => setModal('photo')}>
-          📸 {t('Import from a photo')}
+          <Icon name="camera" size={14} />
+          {t('Import from a photo')}
         </button>
         <button type="button" className="btn w-full" onClick={() => setModal('ics')}>
-          🗓️ {t('Import from a calendar (.ics)')}
+          <Icon name="calendar" size={14} />
+          {t('Import from a calendar (.ics)')}
         </button>
         <button
           type="button"

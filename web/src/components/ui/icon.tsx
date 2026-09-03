@@ -7,6 +7,29 @@ const PATHS: Record<string, React.ReactNode> = {
   plus: <path d="M12 5v14M5 12h14" />,
   close: <path d="M6 6l12 12M18 6L6 18" />,
   'chevron-left': <path d="M15 6l-6 6 6 6" />,
+  // Buttons that sat in a row of stroked icons wearing a colour emoji
+  // instead. An emoji is somebody else's drawing at somebody else's weight,
+  // and it changes shape between a Mac and a phone.
+  phone: (
+    <>
+      <rect x="7" y="2.5" width="10" height="19" rx="2.5" />
+      <path d="M10.5 5.5h3" />
+    </>
+  ),
+  camera: (
+    <>
+      <path d="M3.5 8.5h3.2l1.6-2.5h7.4l1.6 2.5h3.2a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-17a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1Z" />
+      <circle cx="12" cy="14" r="3.4" />
+    </>
+  ),
+  share: (
+    <>
+      <circle cx="18" cy="5.5" r="2.5" />
+      <circle cx="6" cy="12" r="2.5" />
+      <circle cx="18" cy="18.5" r="2.5" />
+      <path d="M8.2 10.8 15.8 6.7M8.2 13.2l7.6 4.1" />
+    </>
+  ),
   'chevron-right': <path d="M9 6l6 6-6 6" />,
   calendar: (
     <>

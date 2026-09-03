@@ -346,7 +346,8 @@ function Report() {
             XLSX
           </button>
           <button type="button" className="btn btn-sm" onClick={() => void shareCard()}>
-            📤 {t('Share')}
+            <Icon name="share" size={13} />
+            {t('Share')}
           </button>
           <Link href="/stats" className="btn btn-quiet btn-sm">
             {t('Statistics')}

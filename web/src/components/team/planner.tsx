@@ -392,10 +392,12 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
               })
             }
           >
-            🎲 {t('Hand out a shift')}
+            <Icon name="users" size={13} />
+            {t('Hand out a shift')}
           </button>
           <button type="button" className="btn btn-sm" disabled={board === null} onClick={exportTimesheet}>
-            📄 {t('Timesheet')}
+            <Icon name="doc" size={13} />
+            {t('Timesheet')}
           </button>
           <button type="button" className="btn btn-primary btn-sm" disabled={busy || drafts === 0} onClick={() => void publish()}>
             <Icon name="check" size={13} />

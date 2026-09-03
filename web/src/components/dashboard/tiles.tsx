@@ -1024,6 +1024,16 @@ function HeatTile({ window }: { window: CalendarDayData[] }) {
     return sum;
   });
 
+  /*
+   * A line with no number on it.
+   *
+   * This tile drew twelve weeks as a shape and said nothing about their
+   * size: the same stroke serves a week of ₴400 and a week of ₴40 000, and
+   * a reader could tell that one week beat another and nothing else. It now
+   * leads with the week it is standing in and names the best of the twelve
+   * underneath, which is the scale the line is drawn to.
+   */
+  const best = Math.max(0, ...weeks);
   const peak = Math.max(1, ...weeks);
   const W = 120;
   const H = 36;
@@ -1035,6 +1045,9 @@ function HeatTile({ window }: { window: CalendarDayData[] }) {
   return (
     <>
       <Label icon="calendar">{t('Twelve weeks')}</Label>
+      <span className="tile-value">
+        <CountUp value={weeks[11]} />
+      </span>
       <svg viewBox={`0 0 ${W} ${H}`} className="mt-auto w-full" aria-hidden>
         <polyline
           points={points}
@@ -1051,6 +1064,9 @@ function HeatTile({ window }: { window: CalendarDayData[] }) {
           fill="var(--accent)"
         />
       </svg>
+      <span className="field-hint">
+        {best > 0 ? <>{t('Best week')}: <Money value={best} /></> : t('This week')}
+      </span>
     </>
   );
 }

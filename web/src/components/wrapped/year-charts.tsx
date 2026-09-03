@@ -17,18 +17,45 @@ import { RankBars } from '@/components/charts/glass-charts';
 
 /** What the year's money was made of, as one bar with its parts named. */
 export function MadeOf({ summary }: { summary: DaysResponse }) {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const { format } = useMoney();
 
+  /*
+   * The parts have to add up to the year.
+   *
+   * They did not. Two of the things the server folds into a year's earnings
+   * were missing — the overtime premium and the wage paid by period, both of
+   * them money — and so were the deductions and the tip-out, which are money
+   * going the other way. A card headed «из чего сложился год» summed to
+   * ₴362 886 beside a headline of ₴359 396, and then quoted percentages of
+   * its own wrong total. The gap was exactly the deductions less the
+   * overtime, which is to say: two mistakes that nearly hid each other.
+   *
+   * Grouped the way the report's own bar groups the same money, and into the
+   * five series slots the palette actually has. A premium is a premium
+   * whether the clock or the calendar earned it; a wage is a wage whether it
+   * arrived per shift or per month, and the row says which it was.
+   */
+  const wage = summary.shifts_earned - summary.revenue_earned;
+  const premiums = summary.premium_earned + summary.overtime_earned;
+
+  const wageName =
+    wage > 0 && summary.period_earned > 0
+      ? `${t('Shifts')} ${t('and')} ${t('Wage by period').toLocaleLowerCase(lang)}`
+      : summary.period_earned > 0
+        ? t('Wage by period')
+        : t('Shifts');
+
   const parts = [
-    { name: t('Shifts'), value: summary.shifts_earned - summary.revenue_earned, hue: 'var(--s1)' },
+    { name: wageName, value: wage + summary.period_earned, hue: 'var(--s1)' },
     { name: t('Tips'), value: summary.tips_earned, hue: 'var(--s3)' },
     { name: t('A share of the takings'), value: summary.revenue_earned, hue: 'var(--s4)' },
-    { name: t('Night and holiday premiums'), value: summary.premium_earned, hue: 'var(--s2)' },
+    { name: t('Premiums'), value: premiums, hue: 'var(--s2)' },
     { name: t('Sales'), value: summary.sales_earned, hue: 'var(--s5)' },
   ].filter((part) => part.value > 0);
 
   const total = parts.reduce((sum, part) => sum + part.value, 0);
+  const taken = summary.deductions + summary.tip_out;
 
   if (parts.length < 2 || total <= 0) return null;
 
@@ -61,6 +88,19 @@ export function MadeOf({ summary }: { summary: DaysResponse }) {
           </li>
         ))}
       </ul>
+
+      {taken > 0 && (
+        <dl className="mt-2.5 flex flex-col gap-1 border-t border-border pt-2.5 text-[0.86rem]">
+          <div className="flex items-baseline justify-between gap-2">
+            <dt className="text-muted">{t('Withheld')}</dt>
+            <dd className="tabular text-danger-read">−<Money value={taken} /></dd>
+          </div>
+          <div className="flex items-baseline justify-between gap-2 font-bold">
+            <dt>{t('Earned')}</dt>
+            <dd className="tabular"><Money value={summary.total_earned} /></dd>
+          </div>
+        </dl>
+      )}
     </section>
   );
 }

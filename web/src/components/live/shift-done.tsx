@@ -20,7 +20,7 @@ import { Icon } from '@/components/ui/icon';
  * on; nothing here blocks the save, which already happened.
  */
 export function ShiftDoneOverlay() {
-  const { t, lang } = useI18n();
+  const { t, lang, num } = useI18n();
   const { format } = useMoney();
   const hideAmounts = useSettings((state) => state.settings.hideAmounts);
   const days = useCalendar((state) => state.days);
@@ -168,7 +168,7 @@ export function ShiftDoneOverlay() {
             </span>
           )}
           <span>
-            <strong className="block tabular">{done.hours} {t('h')}</strong>
+            <strong className="block tabular">{num(done.hours)} {t('h')}</strong>
             <span className="field-hint">{t('paid')}</span>
           </span>
           {rank !== null && (

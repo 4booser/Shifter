@@ -199,7 +199,7 @@ export function Sidebar() {
                       <span className="field-hint tabular">
                         {template.start_time}–{template.end_time}
                         {'\u00A0· '}
-                        {template.hours} {t('h')}
+                        {num(template.hours)} {t('h')}
                         {'\u00A0· '}
                         {rateLabel(template, t)}
                       </span>
@@ -638,7 +638,7 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
 
 /** The shared rota, summarised beside the calendar where the day is planned. */
 function TeamCard() {
-  const { t } = useI18n();
+  const { t, num } = useI18n();
   const [rota, setRota] = useState<Rota | null>(null);
   const [loading, setLoading] = useState(true);
 

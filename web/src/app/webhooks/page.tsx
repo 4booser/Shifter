@@ -69,7 +69,7 @@ export default function WebhooksPage() {
  */
 function Webhooks() {
   const revealHost = useReveal<HTMLDivElement>();
-  const { t, lang } = useI18n();
+  const { t, lang, num } = useI18n();
 
   const [hooks, setHooks] = useState<Webhook[]>([]);
   const [templates, setTemplates] = useState<ShiftTemplate[]>([]);
@@ -501,7 +501,7 @@ function Webhooks() {
                     {testResult.preview?.shift && (
                       <p className="field-hint">
                         {testResult.preview.shift.name} · {testResult.preview.shift.start_time}–{testResult.preview.shift.end_time} ·{' '}
-                        {testResult.preview.shift.hours}h · {t(testResult.preview.shift.worked ? 'worked' : 'planned')}
+                        {num(testResult.preview.shift.hours)} {t('h')} · {t(testResult.preview.shift.worked ? 'worked' : 'planned')}
                       </p>
                     )}
                     {testResult.preview?.sales.map((line) => (

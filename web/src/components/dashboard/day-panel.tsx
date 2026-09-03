@@ -67,7 +67,7 @@ const TIP_STEPS = [50, 100, 200, 500];
  * on it, filling only what the draft has no answer for.
  */
 export function DayPanel() {
-  const { t, n, lang } = useI18n();
+  const { t, n, lang, num } = useI18n();
   const { format } = useMoney();
   const settings = useSettings((state) => state.settings);
   const key = useCalendar((state) => state.selectedDate);
@@ -405,7 +405,7 @@ export function DayPanel() {
                   <span className="field-hint block">
                     {entry.start_time}–{entry.end_time}
                     {'\u00A0· '}
-                    {entry.hours} {t('h')}
+                    {num(entry.hours)} {t('h')}
                     {'\u00A0· '}
                     <Money value={entry.earned} />
                   </span>
@@ -1395,7 +1395,7 @@ interface HistoryEntry {
  * room and because the question it answers is one people ask in a hurry.
  */
 function DayHistory({ dayKey }: { dayKey: string }) {
-  const { t, lang } = useI18n();
+  const { t, lang, num } = useI18n();
   const { format } = useMoney();
   const [entries, setEntries] = useState<HistoryEntry[] | null>(null);
   const [all, setAll] = useState(false);
@@ -1449,7 +1449,7 @@ function DayHistory({ dayKey }: { dayKey: string }) {
               · {SOURCES[entry.source] ?? entry.source}
               {/* What actually changed, rather than only that something did. */}
               {entry.shift_count > 0 && <> · {entry.shift_count} {t('sh.')}</>}
-              {entry.hours > 0 && <> · {entry.hours} {t('h')}</>}
+              {entry.hours > 0 && <> · {num(entry.hours)} {t('h')}</>}
             </span>
             <span className="flex-none">
               {format(entry.earned)}

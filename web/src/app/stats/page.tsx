@@ -695,7 +695,7 @@ function Stats() {
             the same word with different numbers is how a page stops being
             trusted. */}
         <Kpi label={t('Hours worked')} delta={delta(summary.hours, previous.hours)}>
-          <CountUp value={summary.hours} format={(value) => `${Math.round(value)}`} className="text-[1.25rem] font-bold" />
+          <CountUp value={summary.hours} format={(value) => num(Math.round(value))} className="text-[1.25rem] font-bold" />
         </Kpi>
         <Kpi label={t('Per working day')} delta={delta(averages.perDay, beforeAverages.perDay)}>
           <FlowMoney value={averages.perDay} className="text-[1.25rem] font-bold" />

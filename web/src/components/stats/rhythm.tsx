@@ -18,7 +18,7 @@ import { useI18n } from '@/lib/i18n';
  * what a comparison of two piles of days is.
  */
 export function RhythmCard() {
-  const { t } = useI18n();
+  const { t, num } = useI18n();
   const { format } = useMoney();
 
   const [rest, setRest] = useState<RestRead | null>(null);
@@ -78,7 +78,7 @@ export function RhythmCard() {
                   />
                 </div>
                 <span className={`w-14 flex-none text-right text-[0.8rem] font-semibold tabular ${window.short ? 'text-danger-read' : ''}`}>
-                  {window.hours} {t('h')}
+                  {num(window.hours)} {t('h')}
                 </span>
               </div>
             ))}

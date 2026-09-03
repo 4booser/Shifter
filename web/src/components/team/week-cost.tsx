@@ -19,7 +19,7 @@ import { Money } from '@/components/ui/bits';
  * wrong besides.
  */
 export function WeekCostPanel({ rota }: { rota: Rota }) {
-  const { t, lang } = useI18n();
+  const { t, lang, num } = useI18n();
 
   const cost = useMemo(() => weekCost(rota.entries, rota.members), [rota]);
 
@@ -42,7 +42,9 @@ export function WeekCostPanel({ rota }: { rota: Rota }) {
           <Money value={cost.covered} />
         </span>
         <span className="text-[0.84rem] text-muted">
-          {cost.coveredHours} {t('h')}
+          {/* «124.5 ч» here, «124,5» in the crew's own hours column two rows
+              down: the same figure spelled two ways on one screen. */}
+          {num(cost.coveredHours)} {t('h')}
           {cost.perHour !== null && (
             <>
               {' · '}
@@ -56,7 +58,7 @@ export function WeekCostPanel({ rota }: { rota: Rota }) {
           gets read as the wage bill, whatever the caption says. */}
       {cost.uncoveredHours > 0 && (
         <p className="field-hint mt-2">
-          {t('Not counted:')} {cost.uncoveredHours} {t('h')}{' '}
+          {t('Not counted:')} {num(cost.uncoveredHours)} {t('h')}{' '}
           {t('whose pay this rota cannot price — not shared, or on a salary that belongs to the month rather than the day. There is no estimate for it.')}
         </p>
       )}

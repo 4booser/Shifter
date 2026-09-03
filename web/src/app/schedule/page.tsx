@@ -703,7 +703,7 @@ function Schedule() {
             {focusEntries.map((entry) => (
               <li key={entry.day_shift_id} className="flex flex-wrap items-center gap-2 text-[0.88rem]">
                 <span className="h-2.5 w-2.5 rounded-full" style={{ background: entry.member_colour }} />
-                <strong>{entry.who}</strong> · {entry.shift_name} · {entry.start_time}–{entry.end_time} · {entry.hours}h
+                <strong>{entry.who}</strong> · {entry.shift_name} · {entry.start_time}–{entry.end_time} · {num(entry.hours)}h
                 {entry.pay !== null && (
                   <span className="chip">
                     <Money value={entry.pay} />

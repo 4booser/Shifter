@@ -225,8 +225,12 @@ export default function StatsScreen() {
 
   // Converted where the range mixes currencies: adding złoty to hryvnia and
   // dividing by hours is a number with no meaning at all.
+  // An hourly rate divided out of minutes is not a rate. A shift closed after
+  // fifty seconds priced the hour at −₴3 805 on the web pages and in the
+  // assistant before both learned to hold an hour as the floor; this guarded
+  // only against dividing by nought.
   const perHour =
-    summary === null || summary.hours <= 0
+    summary === null || summary.hours < 1
       ? 0
       : (summary.conversion?.total_earned ?? summary.total_earned) / summary.hours;
 
@@ -237,7 +241,7 @@ export default function StatsScreen() {
     ? null
     : (before.conversion?.total_earned ?? before.total_earned);
   const perHourBefore =
-    before === null || before.hours <= 0
+    before === null || before.hours < 1
       ? null
       : (before.conversion?.total_earned ?? before.total_earned) / before.hours;
 

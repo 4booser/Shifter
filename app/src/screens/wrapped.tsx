@@ -19,6 +19,7 @@ import { hoursWord, shiftsWord } from '@/lib/text/plural';
 import { formatMoney } from '@/lib/settings/money';
 import { useSettings } from '@/lib/settings/store';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n';
 
 /**
  * The year: the poster first, then the year written out, then the chapters.
@@ -29,6 +30,7 @@ import { cn } from '@/lib/utils';
  * happened.
  */
 export function Wrapped() {
+  const { t } = useI18n();
   const settings = useSettings((state) => state.settings);
   const money = (value: number) => formatMoney(settings, Math.round(value));
   const [year, setYear] = useState(Number(todayKey().slice(0, 4)));
@@ -64,7 +66,7 @@ export function Wrapped() {
     <div className="flex flex-col gap-5">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <h1 className="text-2xl font-bold tracking-tight">Твой год</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{t('Your year')}</h1>
           <span className="flex items-center gap-1">
             <Button variant="outline" size="icon" aria-label="Прошлый год" onClick={() => setYear((was) => was - 1)}>
               <ChevronLeft className="size-4" />
@@ -253,6 +255,7 @@ function YearStory({
 
 /** What the year's money was made of, as one bar with its parts named. */
 function MadeOf({ summary }: { summary: DaysResponse }) {
+  const { t } = useI18n();
   const settings = useSettings((state) => state.settings);
   const money = (value: number) => formatMoney(settings, Math.round(value));
 
@@ -270,7 +273,7 @@ function MadeOf({ summary }: { summary: DaysResponse }) {
 
   return (
     <section className="card p-5">
-      <h2 className="mb-2 text-base font-bold">Из чего сложился год</h2>
+      <h2 className="mb-2 text-base font-bold">{t('What the year was made of')}</h2>
 
       <div className="flex h-5 gap-[2px] overflow-hidden rounded-full">
         {parts.map((part) => (

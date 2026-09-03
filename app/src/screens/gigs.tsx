@@ -11,6 +11,7 @@ import { addMonths, currentMonth, todayKey } from '@/lib/calendar/calendar-date'
 import { formatMoney } from '@/lib/settings/money';
 import { useSettings } from '@/lib/settings/store';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n';
 
 /**
  * The board: one-off shifts somebody could take this fortnight.
@@ -20,6 +21,7 @@ import { cn } from '@/lib/utils';
  * figures, not in a rating out of five.
  */
 export function Gigs() {
+  const { t } = useI18n();
   const settings = useSettings((state) => state.settings);
   const money = (value: number) => formatMoney(settings, Math.round(value));
 
@@ -57,7 +59,7 @@ export function Gigs() {
   return (
     <div className="flex flex-col gap-5">
       <header className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold tracking-tight">Подработки</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{t('Gigs')}</h1>
         <span className="flex items-center gap-2">
           <Button onClick={() => setPosting(true)}>
             <Plus className="size-4" />
@@ -111,7 +113,7 @@ export function Gigs() {
           <Input
             className="h-8 w-36"
             value={city}
-            placeholder="Город"
+            placeholder={t('City')}
             onChange={(event) => setCity(event.target.value)}
           />
           {city.trim() !== asked && (

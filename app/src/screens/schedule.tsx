@@ -18,6 +18,7 @@ import { RotaEntry, teamApi } from '@/lib/api/team';
 import { keysBetween, shiftDays, todayKey, weekBounds } from '@/lib/calendar/calendar-date';
 import { daysWord } from '@/lib/text/plural';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n';
 
 /**
  * The rota: who is on, and when, for the week somebody is inside.
@@ -32,6 +33,7 @@ import { cn } from '@/lib/utils';
  * rota is swap shifts on it.
  */
 export function Schedule() {
+  const { t } = useI18n();
   const client = useQueryClient();
 
   const teams = useQuery({ queryKey: ['teams'], queryFn: () => teamApi.list() });
@@ -259,7 +261,7 @@ export function Schedule() {
 
               <tfoot>
                 <tr className="border-t border-border-strong">
-                  <td className="pt-2 text-2xs uppercase tracking-wide text-faint">На смене</td>
+                  <td className="pt-2 text-2xs uppercase tracking-wide text-faint">{t('On shift')}</td>
                   {days.map((key) => {
                     const day = rota.data.days.find((row) => row.date === key);
 
@@ -403,6 +405,7 @@ function ShiftSheet({
 
 /** No crew yet: joining one is the screen, rather than a link off it. */
 function NoTeam() {
+  const { t } = useI18n();
   const client = useQueryClient();
   const [code, setCode] = useState('');
   const [name, setName] = useState('');
@@ -448,7 +451,7 @@ function NoTeam() {
             }}
           />
           <Button disabled={code.trim() === '' || join.isPending} onClick={() => join.mutate()}>
-            Войти
+            {t('Sign in')}
           </Button>
         </span>
       </section>

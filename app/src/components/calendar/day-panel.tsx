@@ -22,6 +22,7 @@ import { fromKey, todayKey } from '@/lib/calendar/calendar-date';
 import { formatMoney } from '@/lib/settings/money';
 import { useSettings } from '@/lib/settings/store';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n';
 
 /**
  * The day, opened and editable.
@@ -43,6 +44,7 @@ export function DayPanel({
   events?: CalendarEvent[];
   onSaved: () => void;
 }) {
+  const { t } = useI18n();
   const settings = useSettings((state) => state.settings);
   const money = (value: number) => formatMoney(settings, Math.round(value));
   const client = useQueryClient();
@@ -79,7 +81,7 @@ export function DayPanel({
   if (date === null) {
     return (
       <aside className="card p-4">
-        <p className="field-hint">Выберите день в календаре.</p>
+        <p className="field-hint">{t('Pick a day in the calendar.')}</p>
       </aside>
     );
   }
@@ -263,7 +265,7 @@ export function DayPanel({
             doing by hand. */}
         <Field
           key={`tips-${date}`}
-          label="Чаевые"
+          label={t('Tips')}
           initial={day?.tips == null ? '' : `${day.tips}`}
           placeholder="0"
           numeric
@@ -275,7 +277,7 @@ export function DayPanel({
           <Field
             key={`cash-${date}`}
             compact
-          label="Из них наличными"
+          label={t('Of that, cash')}
             initial={day?.tips_cash == null ? '' : `${day.tips_cash}`}
             placeholder="0"
             numeric
@@ -331,7 +333,7 @@ export function DayPanel({
 
         <Field
           key={`note-${date}`}
-          label="Заметка"
+          label={t('Note')}
           initial={day?.note ?? ''}
           placeholder="—"
           maxLength={500}
@@ -447,6 +449,7 @@ function ShiftDetail({
     zone?: ShiftZone;
   }) => void;
 }) {
+  const { t } = useI18n();
   const [start, setStart] = useState(entry.actual_start?.slice(0, 5) ?? '');
   const [end, setEnd] = useState(entry.actual_end?.slice(0, 5) ?? '');
 
@@ -515,7 +518,7 @@ function ShiftDetail({
         />
         <Field
           compact
-          label="Гостей"
+          label={t('Guests')}
           initial={entry.guests == null ? '' : `${entry.guests}`}
           placeholder="—"
           numeric

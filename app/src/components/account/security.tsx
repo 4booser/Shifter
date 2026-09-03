@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { accountApi, authApi, Profile } from '@/lib/api/auth';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n';
 
 /**
  * The parts of an account nobody changes twice: the password, the second
@@ -52,6 +53,7 @@ function Card({
 }
 
 function PasswordCard({ needsOne }: { needsOne: boolean }) {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const [current, setCurrent] = useState('');
   const [next, setNext] = useState('');
@@ -87,7 +89,7 @@ function PasswordCard({ needsOne }: { needsOne: boolean }) {
             <Input
               type="password"
               autoComplete="current-password"
-              placeholder="Текущий пароль"
+              placeholder={t('Current password')}
               value={current}
               onChange={(event) => setCurrent(event.target.value)}
             />
@@ -95,7 +97,7 @@ function PasswordCard({ needsOne }: { needsOne: boolean }) {
           <Input
             type="password"
             autoComplete="new-password"
-            placeholder="Новый пароль"
+            placeholder={t('New password')}
             value={next}
             onChange={(event) => setNext(event.target.value)}
           />
@@ -130,6 +132,7 @@ function PasswordCard({ needsOne }: { needsOne: boolean }) {
 }
 
 function TwoFactorCard({ on }: { on: boolean }) {
+  const { t } = useI18n();
   const client = useQueryClient();
   const [secret, setSecret] = useState<string | null>(null);
   const [code, setCode] = useState('');
@@ -204,7 +207,7 @@ function TwoFactorCard({ on }: { on: boolean }) {
           </code>
           <Input
             inputMode="numeric"
-            placeholder="Код из приложения"
+            placeholder={t('Two-factor code')}
             maxLength={9}
             value={code}
             onChange={(event) => setCode(event.target.value)}

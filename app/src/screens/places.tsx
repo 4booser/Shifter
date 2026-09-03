@@ -18,6 +18,7 @@ import { PayPeriodKind, WorkLocation, WorkLocationCreate } from '@/lib/calendar/
 import { formatMoney } from '@/lib/settings/money';
 import { useSettings } from '@/lib/settings/store';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n';
 
 const PERIOD_LABELS: Record<PayPeriodKind, string> = {
   monthly: 'раз в месяц',
@@ -194,6 +195,7 @@ function PlaceCard({
   onEdit: () => void;
   onArchive: () => void;
 }) {
+  const { t } = useI18n();
   // Only the rules that are actually switched on: a card listing every
   // multiplier at ×1 says nothing except that nobody filled the form in.
   const rules = [
@@ -227,7 +229,7 @@ function PlaceCard({
         <span className="flex flex-none gap-1">
           <button
             type="button"
-            aria-label="Изменить"
+            aria-label={t('Change')}
             onClick={onEdit}
             className="grid size-7 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-surface-2 hover:text-ink"
           >
@@ -280,6 +282,7 @@ function PlaceDialog({
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const { t } = useI18n();
   const [form, setForm] = useState<WorkLocationCreate>(
     place === null
       ? BLANK
@@ -322,26 +325,26 @@ function PlaceDialog({
           <Group title="Что за место">
             <div className="grid gap-2 sm:grid-cols-2">
               <Text
-                label="Название"
+                label={t('Title')}
                 value={form.name}
                 placeholder="Кофейня на Соборной"
                 onPick={(value) => set('name', value)}
               />
               <Text
-                label="Город"
+                label={t('City')}
                 value={form.city ?? ''}
                 placeholder="Днепр"
                 onPick={(value) => set('city', value)}
               />
             </div>
             <Text
-              label="Адрес"
+              label={t('Address')}
               value={form.address ?? ''}
               placeholder="—"
               onPick={(value) => set('address', value === '' ? null : value)}
             />
             <ColourField
-              label="Цвет"
+              label={t('Colour')}
               value={form.colour}
               onPick={(colour) => set('colour', colour ?? '#6366F1')}
               clearHint="вернуть базовый"
@@ -379,7 +382,7 @@ function PlaceDialog({
                 </label>
               )}
               <Text
-                label="Валюта, три буквы"
+                label={t('Currency, three letters')}
                 value={form.currency ?? ''}
                 placeholder="как в приложении"
                 onPick={(value) => set('currency', value === '' ? null : value.toUpperCase())}
@@ -387,7 +390,7 @@ function PlaceDialog({
             </div>
           </Group>
 
-          <Group title="Надбавки" hint="×1 означает, что надбавки нет.">
+          <Group title={t('Premiums')} hint="×1 означает, что надбавки нет.">
             <div className="grid gap-2 sm:grid-cols-3">
               <Num
                 label="Ночь ×"
@@ -395,12 +398,12 @@ function PlaceDialog({
                 onPick={(value) => set('night_multiplier', value)}
               />
               <Time
-                label="Ночь с"
+                label={t('Night from')}
                 value={form.night_from}
                 onPick={(value) => set('night_from', value)}
               />
               <Time
-                label="до"
+                label={t('until')}
                 value={form.night_to}
                 onPick={(value) => set('night_to', value)}
               />
@@ -480,7 +483,7 @@ function PlaceDialog({
           <Group title="Перерыв и дорога" hint="Перерыв применяется сам, если смена длиннее.">
             <div className="grid gap-2 sm:grid-cols-2">
               <Num
-                label="Перерыв после, ч"
+                label={t('Break after, h')}
                 value={form.auto_break_after_hours ?? 0}
                 onPick={(value) => set('auto_break_after_hours', value)}
               />
@@ -497,7 +500,7 @@ function PlaceDialog({
                 onPick={(value) => set('commute_minutes', value)}
               />
               <Num
-                label="Одна поездка стоит"
+                label={t('One trip costs')}
                 value={form.commute_cost ?? 0}
                 onPick={(value) => set('commute_cost', value)}
               />

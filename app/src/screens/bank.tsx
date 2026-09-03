@@ -26,6 +26,7 @@ import { cn } from '@/lib/utils';
 import { keysBetween, monthBounds, shiftDays, todayKey } from '@/lib/calendar/calendar-date';
 import { formatMoney } from '@/lib/settings/money';
 import { useSettings } from '@/lib/settings/store';
+import { useI18n } from '@/lib/i18n';
 
 /**
  * The bank.
@@ -36,6 +37,7 @@ import { useSettings } from '@/lib/settings/store';
  * out whether the page is worth it.
  */
 export function Bank() {
+  const { t } = useI18n();
   const settings = useSettings((state) => state.settings);
   const money = (value: number) => formatMoney(settings, Math.round(value));
   const mono = useMono();
@@ -195,7 +197,7 @@ export function Bank() {
       <section className="card mx-auto max-w-lg p-6">
         <h1 className="flex items-center gap-2 text-xl font-bold tracking-tight">
           <Landmark className="size-5" />
-          Банк
+          {t('Bank')}
         </h1>
         <p className="field-hint mt-1">
           Токен только на чтение. Он идёт из этого браузера прямо в банк — сервер Shifter его не
@@ -245,7 +247,7 @@ export function Bank() {
   return (
     <div className="flex flex-col gap-5">
       <header className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold tracking-tight">Банк</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{t('Bank')}</h1>
         <div className="flex items-center gap-2">
           {mono.demo && (
             <Button variant="outline" size="sm" onClick={() => mono.disconnect()}>
@@ -269,7 +271,7 @@ export function Bank() {
 
       <div className="grid gap-3 md:grid-cols-3">
         <section className="card p-5">
-          <span className="field-hint">На карте</span>
+          <span className="field-hint">{t('On the card')}</span>
           <p className="mt-1 text-3xl font-black tabular">
             {account === undefined ? '·' : money(fromMinor(account.balance - account.creditLimit))}
           </p>
@@ -457,20 +459,20 @@ export function Bank() {
         )}
 
         {where.length > 0 && (
-          <Panel title="Куда уходит" hint="Кому платили чаще всего за месяц.">
+          <Panel title={t('Where it goes')} hint="Кому платили чаще всего за месяц.">
             <Bars rows={where} highlight={where[0]?.key} />
           </Panel>
         )}
 
         {standing.length > 0 && (
-          <Panel title="Приходит само" hint="Подписки и всё, что списывается по кругу.">
+          <Panel title={t('Comes round by itself')} hint="Подписки и всё, что списывается по кругу.">
             <ul className="flex flex-col gap-1.5">
               {standing.slice(0, 8).map((row) => (
                 <li key={row.key} className="flex items-baseline justify-between gap-2 text-sm">
                   <span className="min-w-0 truncate">
                     {row.name}
                     {row.fresh && (
-                      <span className="ml-1.5 text-xs font-bold text-accent-foreground">новое</span>
+                      <span className="ml-1.5 text-xs font-bold text-accent-foreground">{t('new')}</span>
                     )}
                   </span>
                   <span className="flex-none tabular">

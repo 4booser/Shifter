@@ -11,6 +11,7 @@ import { fromKey, keysBetween, monthBounds, todayKey } from '@/lib/calendar/cale
 import { formatMoney, formatMoneyIn } from '@/lib/settings/money';
 import { useSettings } from '@/lib/settings/store';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n';
 
 /**
  * Statistics, rebuilt: one question per card, the climb first.
@@ -22,6 +23,7 @@ import { cn } from '@/lib/utils';
 type Span = 'month' | 'year';
 
 export function Stats() {
+  const { t } = useI18n();
   const settings = useSettings((state) => state.settings);
   const money = (value: number) => formatMoney(settings, Math.round(value));
   const [span, setSpan] = useState<Span>('month');
@@ -273,7 +275,7 @@ export function Stats() {
   return (
     <div className="flex flex-col gap-5">
       <header className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold tracking-tight">Статистика</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{t('Stats')}</h1>
 
         <div className="flex items-center gap-2">
           <div className="flex rounded-full border border-border p-0.5">
@@ -375,7 +377,7 @@ export function Stats() {
           )}
 
           <Panel
-            title="Заработано за период"
+            title={t('Earned over the period')}
             hint={`Плотная линия — этот ${span === 'month' ? 'месяц' : 'год'}, бледная — прошлый. Веди курсором — цифры дня.`}
           >
             <Climb points={climb.line} ghost={climb.ghost} height={240} />

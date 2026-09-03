@@ -13,6 +13,7 @@ import { addMonths, currentMonth, todayKey } from '@/lib/calendar/calendar-date'
 import { formatMoney } from '@/lib/settings/money';
 import { useSettings } from '@/lib/settings/store';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n';
 
 /**
  * Payouts: what is owed, what is late, and what lands next.
@@ -33,6 +34,7 @@ const STATUS: Record<PayPeriodRow['status'], { label: string; tone: string }> = 
 };
 
 export function Payouts() {
+  const { t } = useI18n();
   const settings = useSettings((state) => state.settings);
   const money = (value: number) => formatMoney(settings, Math.round(value));
 
@@ -134,7 +136,7 @@ export function Payouts() {
   return (
     <div className="flex flex-col gap-5">
       <header className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold tracking-tight">Выплаты</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{t('Payments')}</h1>
         <Button variant="ghost" size="sm" asChild>
           <a href="/payouts">
             Старая версия
@@ -167,7 +169,7 @@ export function Payouts() {
               </span>
 
               {next === null ? (
-                <p className="mt-2 text-lg font-semibold">Пока ничего не ждём</p>
+                <p className="mt-2 text-lg font-semibold">{t('Nothing due yet')}</p>
               ) : (
                 <>
                   <p className="mt-1 text-4xl font-black tabular text-good">{money(next.amount)}</p>
@@ -233,7 +235,7 @@ export function Payouts() {
             )}
           </div>
 
-          {settled.length > 0 && <Rows title="Закрыто" rows={settled} money={money} muted />}
+          {settled.length > 0 && <Rows title={t('Settled')} rows={settled} money={money} muted />}
         </>
       )}
     </div>

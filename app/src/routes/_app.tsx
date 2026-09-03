@@ -14,6 +14,7 @@ import {
 
 import { LiveBar } from '@/components/live/live-bar';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n';
 
 /**
  * The shell every signed-in screen wears.
@@ -35,6 +36,7 @@ const NAV = [
 ] as const;
 
 function AppShell() {
+  const { t } = useI18n();
   const path = useRouterState({ select: (state) => state.location.pathname });
 
   return (
@@ -76,7 +78,7 @@ function AppShell() {
           <Link
             to="/account"
             className="ml-2 grid size-8 flex-none place-items-center rounded-full border border-border text-muted-foreground transition-colors hover:text-ink"
-            aria-label="Аккаунт"
+            aria-label={t('Account')}
           >
             <Coins className="size-4" />
           </Link>

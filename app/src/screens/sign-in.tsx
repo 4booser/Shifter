@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { authApi } from '@/lib/api/auth';
 import { apiErrorMessage } from '@/lib/api/http';
+import { useI18n } from '@/lib/i18n';
 
 /**
  * The door.
@@ -35,6 +36,7 @@ function landing(): string {
 }
 
 export function SignIn() {
+  const { t } = useI18n();
   const [login, setLogin] = useState('');
   const [password, setPassword] = useState('');
   const [peeking, setPeeking] = useState(false);
@@ -110,7 +112,7 @@ export function SignIn() {
         <form onSubmit={submit} className="flex flex-col gap-4" noValidate>
           {ticket !== null ? (
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="code">Код из приложения</Label>
+              <Label htmlFor="code">{t('Two-factor code')}</Label>
               <Input
                 id="code"
                 inputMode="numeric"
@@ -128,7 +130,7 @@ export function SignIn() {
           ) : (
           <>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="login">Логин</Label>
+            <Label htmlFor="login">{t('Login')}</Label>
             <Input
               id="login"
               autoComplete="username"
@@ -139,7 +141,7 @@ export function SignIn() {
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="password">Пароль</Label>
+            <Label htmlFor="password">{t('Password')}</Label>
             <div className="relative">
               <Input
                 id="password"

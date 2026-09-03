@@ -12,6 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { calendarApi } from '@/lib/api/calendar';
 import { useSettings } from '@/lib/settings/store';
 import { fromKey, gridBounds, keyOf, todayKey } from '@/lib/calendar/calendar-date';
+import { useI18n } from '@/lib/i18n';
 
 /**
  * The calendar page, rebuilt.
@@ -22,6 +23,7 @@ import { fromKey, gridBounds, keyOf, todayKey } from '@/lib/calendar/calendar-da
  * on screen.
  */
 export function Dashboard() {
+  const { t } = useI18n();
   const [month, setMonth] = useState(todayKey());
   const [selected, setSelected] = useState<string | null>(todayKey());
   const mondayFirst = useSettings((state) => state.settings.mondayFirst);
@@ -53,7 +55,7 @@ export function Dashboard() {
             <Button
               variant="outline"
               size="icon"
-              aria-label="Предыдущий месяц"
+              aria-label={t('Previous month')}
               onClick={() => setMonth((was) => shiftMonth(was, -1))}
             >
               <ChevronLeft className="size-4" />
@@ -61,7 +63,7 @@ export function Dashboard() {
             <Button
               variant="outline"
               size="icon"
-              aria-label="Следующий месяц"
+              aria-label={t('Next month')}
               onClick={() => setMonth((was) => shiftMonth(was, 1))}
             >
               <ChevronRight className="size-4" />

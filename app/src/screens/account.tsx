@@ -12,6 +12,7 @@ import { ACCENT_PRESETS, THEME_PRESETS, Settings } from '@/lib/settings/settings
 import { formatMoney } from '@/lib/settings/money';
 import { useSettings } from '@/lib/settings/store';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n';
 
 const CURRENCIES = ['₴', '€', '$', '£', 'zł', '₽', 'Kč', '₸'];
 
@@ -21,6 +22,7 @@ const CURRENCIES = ['₴', '€', '$', '£', 'zł', '₽', 'Kč', '₸'];
  * account itself last, because that is what they change once.
  */
 export function Account() {
+  const { t } = useI18n();
   const settings = useSettings((state) => state.settings);
   const update = useSettings((state) => state.update);
   const navigate = useNavigate();
@@ -48,7 +50,7 @@ export function Account() {
   return (
     <div className="flex flex-col gap-5">
       <header>
-        <h1 className="text-2xl font-bold tracking-tight">Настройки</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{t('Settings')}</h1>
         <p className="field-hint">
           Всё здесь меняет только вид — числа остаются теми же, какими их посчитал сервер.
         </p>
@@ -57,7 +59,7 @@ export function Account() {
       <div className="grid gap-4 lg:grid-cols-2">
         <Section title="Оформление" hint="Тема применяется сразу, на всех экранах.">
           <Choice
-            label="Тема"
+            label={t('Theme')}
             options={THEME_PRESETS.map((preset) => ({
               value: preset.value,
               label: THEME_NAMES[preset.value] ?? preset.label,
@@ -67,7 +69,7 @@ export function Account() {
           />
 
           <div className="flex flex-col gap-1.5">
-            <span className="field-label">Акцент</span>
+            <span className="field-label">{t('Accent')}</span>
             <div className="flex flex-wrap gap-1.5">
               {ACCENT_PRESETS.slice(0, 15).map((preset, index) => (
                 <button
@@ -89,7 +91,7 @@ export function Account() {
           </div>
 
           <Choice
-            label="Плотность"
+            label={t('Density')}
             options={[
               { value: 'comfortable', label: 'просторно' },
               { value: 'compact', label: 'плотно' },
@@ -107,7 +109,7 @@ export function Account() {
             onPick={(value) => update('roundness', value)}
           />
           <Slide
-            label="Размер текста"
+            label={t('Text size')}
             value={settings.fontScale}
             min={13}
             max={19}
@@ -124,7 +126,7 @@ export function Account() {
         </Section>
 
         <Section
-          title="Деньги"
+          title={t('Money')}
           hint={`Так будут выглядеть суммы: ${formatMoney(settings, 12345)}`}
         >
           <div className="flex flex-col gap-1.5">
@@ -173,7 +175,7 @@ export function Account() {
             onPick={pick('moneyDecimals')}
           />
           <Toggle
-            label="Разделять тысячи"
+            label={t('Group thousands')}
             on={settings.groupThousands}
             onPick={(value) => update('groupThousands', value)}
           />
@@ -202,7 +204,7 @@ export function Account() {
           />
         </Section>
 
-        <Section title="Календарь" hint="Что видно в клетке и с какого дня начинается неделя.">
+        <Section title={t('Calendar')} hint="Что видно в клетке и с какого дня начинается неделя.">
           <Choice
             label="Неделя начинается"
             options={[
@@ -239,13 +241,13 @@ export function Account() {
           />
         </Section>
 
-        <Section title="Аккаунт" hint={profile.data?.login ?? ' '}>
+        <Section title={t('Account')} hint={profile.data?.login ?? ' '}>
           <label className="flex flex-col gap-1">
             <span className="field-label">Как вас зовут</span>
             <span className="flex gap-2">
               <Input
                 value={shownName}
-                placeholder="Имя"
+                placeholder={t('First name')}
                 onChange={(event) => setName(event.target.value)}
               />
               <Button

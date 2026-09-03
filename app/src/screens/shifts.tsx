@@ -24,6 +24,7 @@ import {
 import { formatMoney } from '@/lib/settings/money';
 import { useSettings } from '@/lib/settings/store';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n';
 
 const PERIOD_LABELS: Record<SalaryPeriod, string> = {
   hour: 'в час',
@@ -55,6 +56,7 @@ const BLANK: ShiftCreate = {
  * not an apology.
  */
 export function Shifts() {
+  const { t } = useI18n();
   const settings = useSettings((state) => state.settings);
   const client = useQueryClient();
 
@@ -80,14 +82,14 @@ export function Shifts() {
     <div className="flex flex-col gap-5">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Смены</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{t('Shifts')}</h1>
           <p className="field-hint">
             Шаблон помнит часы и ставку — в календаре смена ставится одним нажатием.
           </p>
         </div>
         <Button onClick={() => setEditing('new')}>
           <Plus className="size-4" />
-          Новая смена
+          {t('New shift')}
         </Button>
       </header>
 
@@ -172,6 +174,7 @@ function ShiftCard({
   onEdit: () => void;
   onArchive: () => void;
 }) {
+  const { t } = useI18n();
   const pay =
     shift.salary_amount == null
       ? shift.revenue_percent == null
@@ -199,7 +202,7 @@ function ShiftCard({
         <span className="flex flex-none gap-1">
           <button
             type="button"
-            aria-label="Изменить"
+            aria-label={t('Change')}
             onClick={onEdit}
             className="grid size-7 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-surface-2 hover:text-ink"
           >
@@ -245,6 +248,7 @@ function ShiftDialog({
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const { t } = useI18n();
   const [form, setForm] = useState<ShiftCreate>(
     shift == null
       ? BLANK
@@ -287,7 +291,7 @@ function ShiftDialog({
         <div className="flex flex-col gap-4">
           <div className="grid grid-cols-[4.5rem_1fr] gap-2">
             <label className="flex flex-col gap-1">
-              <span className="field-label">Значок</span>
+              <span className="field-label">{t('Badge')}</span>
               <Input
                 value={form.symbol ?? ''}
                 placeholder="🍸"
@@ -296,7 +300,7 @@ function ShiftDialog({
               />
             </label>
             <label className="flex flex-col gap-1">
-              <span className="field-label">Название</span>
+              <span className="field-label">{t('Title')}</span>
               <Input
                 value={form.name}
                 placeholder="Бар, вечер"
@@ -308,7 +312,7 @@ function ShiftDialog({
 
           <div className="grid grid-cols-3 gap-2">
             <label className="flex flex-col gap-1">
-              <span className="field-label">Начало</span>
+              <span className="field-label">{t('Starts')}</span>
               <Input
                 type="time"
                 value={form.start_time}
@@ -316,7 +320,7 @@ function ShiftDialog({
               />
             </label>
             <label className="flex flex-col gap-1">
-              <span className="field-label">Конец</span>
+              <span className="field-label">{t('Ends')}</span>
               <Input
                 type="time"
                 value={form.end_time}
@@ -362,7 +366,7 @@ function ShiftDialog({
 
           <div className="grid grid-cols-2 gap-2">
             <label className="flex flex-col gap-1">
-              <span className="field-label">Ставка</span>
+              <span className="field-label">{t('Wage')}</span>
               <Input
                 inputMode="decimal"
                 value={form.salary_amount == null ? '' : `${form.salary_amount}`}
@@ -396,7 +400,7 @@ function ShiftDialog({
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <span className="field-label">Чаевые</span>
+            <span className="field-label">{t('Tips')}</span>
             <div className="flex flex-wrap items-center gap-1.5">
               {(
                 [
@@ -439,7 +443,7 @@ function ShiftDialog({
 
           {places.length > 0 && (
             <div className="flex flex-col gap-1.5">
-              <span className="field-label">Место</span>
+              <span className="field-label">{t('Place')}</span>
               <div className="flex flex-wrap gap-1.5">
                 <button
                   type="button"

@@ -22,6 +22,7 @@ import { fromKey, todayKey } from '@/lib/calendar/calendar-date';
 import { formatMoney } from '@/lib/settings/money';
 import { useSettings } from '@/lib/settings/store';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n';
 
 /**
  * The strip of facts, rebuilt.
@@ -41,6 +42,7 @@ interface Tile {
 }
 
 export function TileStrip({ days, summary }: { days: CalendarDayData[]; summary: DaysResponse }) {
+  const { t } = useI18n();
   const settings = useSettings((state) => state.settings);
   const money = (value: number) => formatMoney(settings, Math.round(value));
 
@@ -190,7 +192,7 @@ export function TileStrip({ days, summary }: { days: CalendarDayData[]; summary:
        tiles stacked two-wide put six screens of scrolling between somebody
        and the calendar they opened the app for. */
     <section
-      aria-label="Обзор"
+      aria-label={t('Overview')}
       className={cn(
         'flex snap-x snap-mandatory gap-3 overflow-x-auto pb-1',
         '[&>*]:w-[62%] [&>*]:flex-none [&>*]:snap-start',

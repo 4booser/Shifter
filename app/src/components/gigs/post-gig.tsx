@@ -25,6 +25,7 @@ import { roleName } from '@/lib/api/roles';
 import { todayKey } from '@/lib/calendar/calendar-date';
 import { useSettings } from '@/lib/settings/store';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n';
 
 /** The board's own bounds, said once. */
 const MIN_PHOTOS = 3;
@@ -50,6 +51,7 @@ const GROUP_NAMES: Record<string, string> = {
  * card is left out.
  */
 export function PostGig({ onClose }: { onClose: () => void }) {
+  const { t } = useI18n();
   const settings = useSettings((state) => state.settings);
   const client = useQueryClient();
 
@@ -126,7 +128,7 @@ export function PostGig({ onClose }: { onClose: () => void }) {
         <div className="flex flex-col gap-4">
           <div className="grid gap-2 sm:grid-cols-2">
             <label className="flex flex-col gap-1">
-              <span className="field-label">Заведение</span>
+              <span className="field-label">{t('Venue')}</span>
               <Input
                 value={form.venue}
                 placeholder="Бар «Сова»"
@@ -135,7 +137,7 @@ export function PostGig({ onClose }: { onClose: () => void }) {
               />
             </label>
             <label className="flex flex-col gap-1">
-              <span className="field-label">Город</span>
+              <span className="field-label">{t('City')}</span>
               <Input
                 value={form.city}
                 placeholder="Днепр"
@@ -189,7 +191,7 @@ export function PostGig({ onClose }: { onClose: () => void }) {
               />
             </label>
             <label className="flex flex-col gap-1">
-              <span className="field-label">С</span>
+              <span className="field-label">{t('From')}</span>
               <Input
                 type="time"
                 value={form.start}
@@ -248,7 +250,7 @@ export function PostGig({ onClose }: { onClose: () => void }) {
               />
             </label>
             <label className="flex flex-col gap-1">
-              <span className="field-label">Сколько человек</span>
+              <span className="field-label">{t('How many people')}</span>
               <Input
                 inputMode="numeric"
                 value={`${form.slots}`}

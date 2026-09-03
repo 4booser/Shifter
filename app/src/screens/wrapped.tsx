@@ -19,6 +19,7 @@ import { formatMoney } from '@/lib/settings/money';
 import { useSettings } from '@/lib/settings/store';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/lib/i18n';
+import { perHour } from '@/lib/text/rate';
 
 /**
  * The year: the poster first, then the year written out, then the chapters.
@@ -66,6 +67,7 @@ export function Wrapped() {
       (count, day) => count + day.shifts.filter((entry) => entry.worked).length,
       0,
     ) ?? 0;
+  const rate = summary === undefined ? null : perHour(summary.total_earned, summary.hours);
 
   return (
     <div className="flex flex-col gap-5">
@@ -130,7 +132,7 @@ export function Wrapped() {
               {/* An hour is the floor, not nought: a shift closed after fifty
                   seconds priced the hour at −₴3 805 on the other client. This
                   is the last of five copies of that rule. */}
-              {summary.hours >= 1 ? `${money(summary.total_earned / summary.hours)}/${t('h')}` : '—'}
+              {rate === null ? '—' : `${money(rate)}/${t('h')}`}
             </p>
 
             {/* The shape of the year, right in the hero: twelve columns, the
@@ -207,10 +209,10 @@ function YearStory({
     (count, day) => count + day.shifts.filter((entry) => entry.worked).length,
     0,
   );
-  const perHour = summary.hours > 0 ? summary.total_earned / summary.hours : 0;
-  const beforeHour =
-    previous !== undefined && previous.hours > 0 ? previous.total_earned / previous.hours : 0;
-  const grew = beforeHour > 0 ? Math.round((perHour / beforeHour - 1) * 100) : null;
+  const rate = perHour(summary.total_earned, summary.hours);
+  const before = previous === undefined ? null : perHour(previous.total_earned, previous.hours);
+  const grew =
+    rate === null || before === null || before === 0 ? null : Math.round((rate / before - 1) * 100);
   const tipShare =
     summary.total_earned > 0 ? Math.round((summary.tips_earned / summary.total_earned) * 100) : 0;
   const top =
@@ -225,7 +227,7 @@ function YearStory({
       hours: n(Math.round(summary.hours), 'hours'),
       money: money(summary.total_earned),
     }),
-    t('An hour of your year was worth {money}.', { money: money(perHour) }).replace(/\.$/, '') +
+    t('An hour of your year was worth {money}.', { money: money(rate ?? 0) }).replace(/\.$/, '') +
       (grew === null
         ? '.'
         : grew === 0

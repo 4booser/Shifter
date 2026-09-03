@@ -21,7 +21,7 @@ import { useI18n } from '@/lib/i18n';
  * figures, not in a rating out of five.
  */
 export function Gigs() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const settings = useSettings((state) => state.settings);
   const money = (value: number) => formatMoney(settings, Math.round(value));
 
@@ -224,7 +224,7 @@ export function Gigs() {
                 </header>
 
                 <p className="text-sm tabular">
-                  {new Date(`${gig.date}T12:00:00`).toLocaleDateString('ru', {
+                  {new Date(`${gig.date}T12:00:00`).toLocaleDateString(lang, {
                     day: 'numeric',
                     month: 'long',
                   })}{' '}

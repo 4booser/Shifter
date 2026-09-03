@@ -44,7 +44,7 @@ export function DayPanel({
   events?: CalendarEvent[];
   onSaved: () => void;
 }) {
-  const { t } = useI18n();
+  const { t, num, lang } = useI18n();
   const settings = useSettings((state) => state.settings);
   const money = (value: number) => formatMoney(settings, Math.round(value));
   const client = useQueryClient();
@@ -129,7 +129,7 @@ export function DayPanel({
       <header className="flex items-start justify-between gap-2">
         <div>
           <h2 className="text-base font-bold first-letter:uppercase">
-            {fromKey(date).toLocaleDateString('ru', {
+            {fromKey(date).toLocaleDateString(lang, {
               weekday: 'long',
               day: 'numeric',
               month: 'long',
@@ -168,7 +168,7 @@ export function DayPanel({
                     template planned: that is the pair the day was paid on. */}
                 <span className="field-hint tabular">
                   {(entry.actual_start ?? entry.start_time).slice(0, 5)}–
-                  {(entry.actual_end ?? entry.end_time).slice(0, 5)} · {entry.hours} {t('h')}
+                  {(entry.actual_end ?? entry.end_time).slice(0, 5)} · {num(entry.hours)} {t('h')}
                   {entry.actual_start != null && ` · ${t('as worked')}`}
                   {entry.worked ? '' : ` · ${t('planned')}`}
                 </span>

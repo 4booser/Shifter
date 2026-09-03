@@ -170,7 +170,7 @@ function ShiftCard({
   onEdit: () => void;
   onArchive: () => void;
 }) {
-  const { t } = useI18n();
+  const { t, num } = useI18n();
   const pay =
     shift.salary_amount == null
       ? shift.revenue_percent == null
@@ -191,7 +191,7 @@ function ShiftCard({
             {shift.name}
           </p>
           <p className="field-hint tabular">
-            {shift.start_time.slice(0, 5)}–{shift.end_time.slice(0, 5)} · {shift.hours} {t('h')}
+            {shift.start_time.slice(0, 5)}–{shift.end_time.slice(0, 5)} · {num(shift.hours)} {t('h')}
             {shift.break_minutes > 0 && ` · ${t('break {length}', { length: `${shift.break_minutes} ${t('min')}` })}`}
           </p>
         </div>

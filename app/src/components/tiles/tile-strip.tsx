@@ -22,6 +22,7 @@ import { formatMoney } from '@/lib/settings/money';
 import { useSettings } from '@/lib/settings/store';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/lib/i18n';
+import { perHour } from '@/lib/text/rate';
 
 /**
  * The strip of facts, rebuilt.
@@ -41,7 +42,7 @@ interface Tile {
 }
 
 export function TileStrip({ days, summary }: { days: CalendarDayData[]; summary: DaysResponse }) {
-  const { t, n, w } = useI18n();
+  const { t, n, w, lang } = useI18n();
   const settings = useSettings((state) => state.settings);
   const money = (value: number) => formatMoney(settings, Math.round(value));
 
@@ -55,7 +56,7 @@ export function TileStrip({ days, summary }: { days: CalendarDayData[]; summary:
     (count, day) => count + day.shifts.filter((entry) => entry.worked).length,
     0,
   );
-  const perHour = summary.hours > 0 ? summary.total_earned / summary.hours : 0;
+  const rate = perHour(summary.total_earned, summary.hours);
   const tips = summary.tips_earned;
   const best = [...worked].sort((one, two) => two.earned - one.earned)[0] ?? null;
   const ahead = days.filter(
@@ -78,7 +79,7 @@ export function TileStrip({ days, summary }: { days: CalendarDayData[]; summary:
       id: 'hourly',
       icon: Clock,
       label: t('Your hour'),
-      value: perHour > 0 ? money(perHour) : '·',
+      value: rate === null ? '·' : money(rate),
       hint:
         summary.hours > 0
           ? `${Math.round(summary.hours)} ${t('h')} ${t('this month')}`
@@ -104,7 +105,7 @@ export function TileStrip({ days, summary }: { days: CalendarDayData[]; summary:
       hint:
         best === null
           ? t('this month')
-          : fromKey(best.date).toLocaleDateString('ru', { day: 'numeric', month: 'long' }),
+          : fromKey(best.date).toLocaleDateString(lang, { day: 'numeric', month: 'long' }),
       to: '/stats',
     },
     {
@@ -112,8 +113,11 @@ export function TileStrip({ days, summary }: { days: CalendarDayData[]; summary:
       icon: Moon,
       label: t('Night hours'),
       value: `${Math.round(nights)}`,
+      // A share needs an hour under it to mean anything. Two shifts of a few
+      // minutes each made this tile read «0» over «100% of all hours» — both
+      // numbers true, the pair of them a contradiction.
       hint:
-        summary.hours > 0
+        summary.hours >= 1
           ? `${Math.round((nights / summary.hours) * 100)}% ${t('of all hours')}`
           : t('this month'),
       to: '/stats',

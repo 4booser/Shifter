@@ -23,7 +23,7 @@ import { useI18n } from '@/lib/i18n';
  * on screen.
  */
 export function Dashboard() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const [month, setMonth] = useState(todayKey());
   const [selected, setSelected] = useState<string | null>(todayKey());
   const mondayFirst = useSettings((state) => state.settings.mondayFirst);
@@ -48,7 +48,7 @@ export function Dashboard() {
                 an abbreviation no headline needs. `first-letter:uppercase`
                 rather than `capitalize`, which would title-case the year's
                 abbreviation too. */}
-            {fromKey(month).toLocaleDateString('ru', { month: 'long' })}{' '}
+            {fromKey(month).toLocaleDateString(lang, { month: 'long' })}{' '}
             {fromKey(month).getFullYear()}
           </h1>
           <span className="flex items-center gap-1">

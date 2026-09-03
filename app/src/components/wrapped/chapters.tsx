@@ -117,7 +117,7 @@ export function YearGrid({ summary, year }: { summary: DaysResponse; year: numbe
 
 /** The year's high-water marks. */
 export function Records({ summary }: { summary: DaysResponse }) {
-  const { t, n } = useI18n();
+  const { t, n, num, lang } = useI18n();
   const settings = useSettings((state) => state.settings);
   const money = (value: number) => formatMoney(settings, Math.round(value));
 
@@ -143,20 +143,20 @@ export function Records({ summary }: { summary: DaysResponse }) {
 
   const facts = [
     best !== undefined && best.earned > 0
-      ? { label: t('Best single day'), value: money(best.earned), hint: pretty(best.date) }
+      ? { label: t('Best single day'), value: money(best.earned), hint: pretty(best.date, lang) }
       : null,
     bestMonth !== undefined && bestMonth[1] > 0
       ? {
           label: t('Best month'),
           value: money(bestMonth[1]),
-          hint: new Date(`${bestMonth[0]}-15T12:00:00`).toLocaleDateString('ru', { month: 'long' }),
+          hint: new Date(`${bestMonth[0]}-15T12:00:00`).toLocaleDateString(lang, { month: 'long' }),
         }
       : null,
     longestShift !== undefined && longestShift.entry.hours > 0
       ? {
           label: t('The longest shift'),
-          value: `${longestShift.entry.hours} ${t('h')}`,
-          hint: pretty(longestShift.day.date),
+          value: `${num(longestShift.entry.hours)} ${t('h')}`,
+          hint: pretty(longestShift.day.date, lang),
         }
       : null,
     streak.record > 1
@@ -220,7 +220,7 @@ export function ZoneTips({ summary }: { summary: DaysResponse }) {
 
 /** Every time the rate moved, and what the move has been worth since. */
 export function Raises({ summary }: { summary: DaysResponse }) {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const settings = useSettings((state) => state.settings);
   const money = (value: number) => formatMoney(settings, Math.round(value));
 
@@ -238,7 +238,7 @@ export function Raises({ summary }: { summary: DaysResponse }) {
               className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5"
             >
               <span className="text-sm font-medium">{raise.shift_name}</span>
-              <span className="field-hint">{pretty(raise.on)}</span>
+              <span className="field-hint">{pretty(raise.on, lang)}</span>
               <span className="ml-auto text-sm font-semibold tabular">
                 <span className="text-muted-foreground">{money(raise.before)}</span>
                 {' → '}
@@ -343,8 +343,8 @@ export function Elsewhere({ summary }: { summary: DaysResponse }) {
   );
 }
 
-function pretty(key: string): string {
-  return new Date(`${key}T12:00:00`).toLocaleDateString('ru', {
+function pretty(key: string, lang: string): string {
+  return new Date(`${key}T12:00:00`).toLocaleDateString(lang, {
     day: 'numeric',
     month: 'long',
   });

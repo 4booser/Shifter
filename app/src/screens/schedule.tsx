@@ -32,7 +32,7 @@ import { useI18n } from '@/lib/i18n';
  * rota is swap shifts on it.
  */
 export function Schedule() {
-  const { t, n } = useI18n();
+  const { t, n, lang } = useI18n();
   const client = useQueryClient();
 
   const teams = useQuery({ queryKey: ['teams'], queryFn: () => teamApi.list() });
@@ -131,7 +131,7 @@ export function Schedule() {
           <span className="field-hint tabular">
             {Number(monday.slice(8))}–{Number(sunday.slice(8))}{' '}
             {new Date(`${sunday}T12:00:00`)
-              .toLocaleDateString('ru', { day: 'numeric', month: 'long' })
+              .toLocaleDateString(lang, { day: 'numeric', month: 'long' })
               .replace(/^\d+\s*/, '')}
           </span>
         </div>
@@ -175,7 +175,7 @@ export function Schedule() {
                         key === today ? 'text-accent-foreground' : 'text-faint',
                       )}
                     >
-                      {new Date(`${key}T12:00:00`).toLocaleDateString('ru', { weekday: 'short' })}
+                      {new Date(`${key}T12:00:00`).toLocaleDateString(lang, { weekday: 'short' })}
                       <span className="ml-1 tabular">{Number(key.slice(8))}</span>
                     </th>
                   ))}
@@ -322,7 +322,7 @@ function ShiftSheet({
   onWithdraw: (offerId: number) => void;
   onAccept: (offerId: number) => void;
 }) {
-  const { t } = useI18n();
+  const { t, num, lang } = useI18n();
   const mine = entry.offers.find((one) => one.is_you) ?? null;
   const past = entry.date < todayKey();
 
@@ -335,12 +335,12 @@ function ShiftSheet({
             {entry.shift_name}
           </span>
           <span className="field-hint tabular">
-            {new Date(`${entry.date}T12:00:00`).toLocaleDateString('ru', {
+            {new Date(`${entry.date}T12:00:00`).toLocaleDateString(lang, {
               weekday: 'long',
               day: 'numeric',
               month: 'long',
             })}{' '}
-            · {entry.start_time.slice(0, 5)}–{entry.end_time.slice(0, 5)} · {entry.hours} {t('h')}
+            · {entry.start_time.slice(0, 5)}–{entry.end_time.slice(0, 5)} · {num(entry.hours)} {t('h')}
           </span>
         </span>
 

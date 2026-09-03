@@ -23,6 +23,12 @@ import { useI18n } from '@/lib/i18n';
  * than by a colour alone — the strip is read at a glance between two tables
  * and has to survive being glanced at.
  */
+/*
+ * The labels here are dictionary keys, not words. A module constant is
+ * evaluated once, before any component exists, so it cannot call the hook —
+ * the whole strip stayed English while the page under it was Ukrainian.
+ * Translated where it is drawn, below.
+ */
 const NAV = [
   { to: '/', label: 'Calendar', icon: CalendarDays },
   { to: '/shifts', label: 'Shifts', icon: Clock },
@@ -69,7 +75,7 @@ function AppShell() {
                   )}
                 >
                   <item.icon className="size-4" />
-                  {item.label}
+                  {t(item.label)}
                 </Link>
               );
             })}

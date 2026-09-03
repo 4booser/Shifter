@@ -36,7 +36,7 @@ import { useI18n } from '@/lib/i18n';
  * out whether the page is worth it.
  */
 export function Bank() {
-  const { t, n } = useI18n();
+  const { t, n, lang } = useI18n();
   const settings = useSettings((state) => state.settings);
   const money = (value: number) => formatMoney(settings, Math.round(value));
   const mono = useMono();
@@ -333,10 +333,10 @@ export function Bank() {
             <p className="field-hint">
               {runway.dry === null
                 ? t('Thinnest on {day} — {money}.', {
-                    day: dayOfMonth(runway.thinnest.day),
+                    day: dayOfMonth(runway.thinnest.day, lang),
                     money: money(runway.thinnest.balance),
                   })
-                : t('Zero on {day}, if nothing changes.', { day: dayOfMonth(runway.dry) })}
+                : t('Zero on {day}, if nothing changes.', { day: dayOfMonth(runway.dry, lang) })}
             </p>
           </Panel>
         )}
@@ -576,6 +576,6 @@ export function Bank() {
 }
 
 /** «5 сентября» — a date said the way somebody would read it aloud. */
-function dayOfMonth(key: string): string {
-  return new Date(`${key}T12:00:00`).toLocaleDateString('ru', { day: 'numeric', month: 'long' });
+function dayOfMonth(key: string, lang: string): string {
+  return new Date(`${key}T12:00:00`).toLocaleDateString(lang, { day: 'numeric', month: 'long' });
 }

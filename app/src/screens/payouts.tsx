@@ -92,7 +92,7 @@ export function Payouts() {
     .map(
       (row): BarRow => ({
         key: `${row.location_id}:${row.period_from}:${row.stream}`,
-        label: spanOf(row.period_from, row.period_to),
+        label: spanOf(row.period_from, row.period_to, lang),
         value: row.expected,
         shown: money(row.expected),
         colour:
@@ -252,7 +252,7 @@ function Rows({
   money: (value: number) => string;
   muted?: boolean;
 }) {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   if (rows.length === 0) return null;
 
   return (
@@ -283,7 +283,8 @@ function Rows({
                   )}
                 </span>
                 <span className="field-hint tabular">
-                  {spanOf(row.period_from, row.period_to)} · {t('paid out {day}', { day: dayOf(row.due_on) })}
+                  {spanOf(row.period_from, row.period_to, lang)} ·{' '}
+                  {t('paid out {day}', { day: dayOf(row.due_on, lang) })}
                 </span>
               </span>
 

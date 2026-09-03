@@ -12,6 +12,7 @@ import { formatMoney, formatMoneyIn } from '@/lib/settings/money';
 import { useSettings } from '@/lib/settings/store';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/lib/i18n';
+import { perHour } from '@/lib/text/rate';
 
 /**
  * Statistics, rebuilt: one question per card, the climb first.
@@ -116,19 +117,24 @@ export function Stats() {
           {
             label: t('Per hour'),
             value:
-              summary.hours <= 0
+              perHour(summary.total_earned, summary.hours) === null
                 ? '·'
                 : summary.conversion === null
-                  ? money(summary.total_earned / summary.hours)
+                  ? money(perHour(summary.total_earned, summary.hours)!)
                   : formatMoneyIn(
                       settings,
                       summary.conversion.base_currency,
-                      Math.round(summary.conversion.total_earned / summary.hours),
+                      Math.round(perHour(summary.conversion.total_earned, summary.hours)!),
                     ),
             delta:
-              past === undefined || past.hours === 0 || summary.hours === 0
+              past === undefined
+              || perHour(summary.total_earned, summary.hours) === null
+              || perHour(past.total_earned, past.hours) === null
                 ? null
-                : change(summary.total_earned / summary.hours, past.total_earned / past.hours),
+                : change(
+                    perHour(summary.total_earned, summary.hours)!,
+                    perHour(past.total_earned, past.hours)!,
+                  ),
           },
         ];
 

@@ -16,8 +16,8 @@ import { useI18n } from '@/lib/i18n';
  * a filled cell makes its own text unreadable at exactly the moment the
  * money matters.
  */
-const WEEKDAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
-const SUNDAY_FIRST = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const SUNDAY_FIRST = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 export function MonthGrid({
   month,
@@ -85,7 +85,7 @@ export function MonthGrid({
                 : 'text-faint',
             )}
           >
-            {name}
+            {t(name)}
           </span>
         ))}
       </div>

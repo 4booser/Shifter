@@ -12,11 +12,12 @@ import { daysWord } from '@/lib/text/plural';
 import { formatMoney } from '@/lib/settings/money';
 import { useSettings } from '@/lib/settings/store';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n';
 
 const PERIODS: { value: GoalPeriod; label: string }[] = [
-  { value: 'week', label: 'в неделю' },
-  { value: 'month', label: 'в месяц' },
-  { value: 'year', label: 'в год' },
+  { value: 'week', label: 'per week' },
+  { value: 'month', label: 'per month' },
+  { value: 'year', label: 'per year' },
 ];
 
 /**
@@ -28,6 +29,7 @@ const PERIODS: { value: GoalPeriod; label: string }[] = [
  * anything, whether the current pace gets there.
  */
 export function GoalCard() {
+  const { t } = useI18n();
   const settings = useSettings((state) => state.settings);
   const money = (value: number) => formatMoney(settings, Math.round(value));
   const client = useQueryClient();
@@ -92,11 +94,11 @@ export function GoalCard() {
       <div className="flex items-start justify-between gap-2">
         <span className="field-hint flex items-center gap-1.5">
           <Target className="size-3.5" />
-          Цель {PERIOD_LABELS[goal.period]}
+          {t('Goal')} {t(PERIOD_LABELS[goal.period])}
         </span>
         <button
           type="button"
-          aria-label="Изменить цель"
+          aria-label={t('Change the goal')}
           onClick={() => setEditing(true)}
           className="text-muted-foreground transition-colors hover:text-ink"
         >
@@ -108,7 +110,7 @@ export function GoalCard() {
         {money(earned)}
         <span className="text-base font-semibold text-muted-foreground">
           {' '}
-          из {money(goal.amount)}
+          {t('of')} {money(goal.amount)}
         </span>
       </p>
 
@@ -124,20 +126,20 @@ export function GoalCard() {
 
       <p className={cn('field-hint', done && 'text-good')}>
         {done
-          ? 'Цель закрыта — всё, что дальше, сверху.'
+          ? t('The goal is met — everything further is on top.')
           : daysLeft > 0
-            ? `Осталось ${money(left)} за ${daysLeft} ${daysWord(daysLeft)} — по ${money(perDay)} в день.`
-            : `Не хватило ${money(left)}.`}
+            ? `${t('Left')} ${money(left)} ${t('over')} ${daysLeft} ${daysWord(daysLeft)} — ${money(perDay)} ${t('a day')}.`
+            : `${t('Short by')} ${money(left)}.`}
       </p>
     </section>
   );
 }
 
 const PERIOD_LABELS: Record<GoalPeriod, string> = {
-  day: 'на день',
-  week: 'на неделю',
-  month: 'на месяц',
-  year: 'на год',
+  day: 'per day',
+  week: 'per week',
+  month: 'per month',
+  year: 'per year',
 };
 
 function GoalForm({
@@ -149,6 +151,7 @@ function GoalForm({
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const { t } = useI18n();
   const settings = useSettings((state) => state.settings);
   const [amount, setAmount] = useState(goal === null ? '' : `${goal.amount}`);
   const [period, setPeriod] = useState<GoalPeriod>(goal?.period ?? 'month');
@@ -174,7 +177,7 @@ function GoalForm({
       return saved;
     },
     onSuccess: () => {
-      toast.success('Цель поставлена');
+      toast.success(t('Goal set'));
       onSaved();
     },
     onError: (error: Error) => toast.error(error.message),
@@ -186,7 +189,7 @@ function GoalForm({
     <section className="card flex flex-col gap-2.5 p-4">
       <span className="field-hint flex items-center gap-1.5">
         <Target className="size-3.5" />
-        {goal === null ? 'Поставьте цель' : 'Изменить цель'}
+        {goal === null ? t('Set a goal') : t('Change the goal')}
       </span>
 
       {goal === null && (

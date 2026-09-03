@@ -24,15 +24,15 @@ import { useI18n } from '@/lib/i18n';
  * and has to survive being glanced at.
  */
 const NAV = [
-  { to: '/', label: 'Календарь', icon: CalendarDays },
-  { to: '/shifts', label: 'Смены', icon: Clock },
-  { to: '/places', label: 'Места', icon: Building2 },
-  { to: '/schedule', label: 'График', icon: Users },
-  { to: '/gigs', label: 'Подработки', icon: Sparkles },
-  { to: '/payouts', label: 'Выплаты', icon: Wallet },
-  { to: '/bank', label: 'Банк', icon: Landmark },
-  { to: '/stats', label: 'Статистика', icon: BarChart3 },
-  { to: '/wrapped', label: 'Твой год', icon: Trophy },
+  { to: '/', label: 'Calendar', icon: CalendarDays },
+  { to: '/shifts', label: 'Shifts', icon: Clock },
+  { to: '/places', label: 'Places', icon: Building2 },
+  { to: '/schedule', label: 'Rota', icon: Users },
+  { to: '/gigs', label: 'Gigs', icon: Sparkles },
+  { to: '/payouts', label: 'Payouts', icon: Wallet },
+  { to: '/bank', label: 'Bank', icon: Landmark },
+  { to: '/stats', label: 'Statistics', icon: BarChart3 },
+  { to: '/wrapped', label: 'Your year', icon: Trophy },
 ] as const;
 
 function AppShell() {

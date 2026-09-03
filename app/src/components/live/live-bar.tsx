@@ -21,6 +21,7 @@ import {
 import { formatMoney } from '@/lib/settings/money';
 import { useSettings } from '@/lib/settings/store';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n';
 
 /**
  * The shift being worked, pinned under the navigation.
@@ -31,6 +32,7 @@ import { cn } from '@/lib/utils';
  * monthly salary does not.
  */
 export function LiveBar() {
+  const { t } = useI18n();
   const live = useLive((state) => state.live);
   const settings = useSettings((state) => state.settings);
   const client = useQueryClient();
@@ -51,9 +53,9 @@ export function LiveBar() {
     onSuccess: (done) => {
       void client.invalidateQueries({ queryKey: ['days'] });
 
-      if (done !== null) toast.success(`Смена закрыта — ${formatElapsed(done.elapsed)} на часах`);
+      if (done !== null) toast.success(`${t('Shift closed')} — ${formatElapsed(done.elapsed)} ${t('on the clock')}`);
     },
-    onError: () => toast.error('Не удалось записать смену. Попробуйте ещё раз.'),
+    onError: () => toast.error(t('The shift could not be recorded. Try again.')),
   });
 
   if (live === null) return null;
@@ -96,13 +98,13 @@ export function LiveBar() {
         <span className="field-hint">
           {paused
             ? left === null
-              ? 'на паузе'
+              ? t('paused')
               : left > 0
-                ? `перерыв, осталось ${formatElapsed(left)}`
-                : 'перерыв кончился'
+                ? `${t('break, left')} ${formatElapsed(left)}`
+                : t('the break is over')
             : over
-              ? 'смена по плану уже закончилась'
-              : `до конца ${formatElapsed(tick.planned - tick.elapsed)}`}
+              ? t('the shift was due to end a while ago')
+              : `${t('left to go')} ${formatElapsed(tick.planned - tick.elapsed)}`}
         </span>
 
         {/* The progress of the planned shift, as a rule under the bar rather
@@ -121,7 +123,7 @@ export function LiveBar() {
           {paused ? (
             <Button size="sm" variant="outline" onClick={resumeLiveShift}>
               <Play className="size-3.5" />
-              Продолжить
+              {t('Resume')}
             </Button>
           ) : (
             <>
@@ -140,8 +142,8 @@ export function LiveBar() {
           </Button>
           <button
             type="button"
-            aria-label="Отменить смену, ничего не записывая"
-            title="Отменить, ничего не записывая"
+            aria-label={t('Discard the shift without recording anything')}
+            title={t('Discard without recording')}
             onClick={cancelLiveShift}
             className="grid size-7 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-surface hover:text-danger"
           >

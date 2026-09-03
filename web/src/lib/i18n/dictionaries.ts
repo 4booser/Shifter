@@ -1735,7 +1735,7 @@ export const RU: Dictionary = {
   'Delete account': 'Удалить аккаунт',
   'Every shift, day, place and payout goes with it. This cannot be undone.':
     'Вместе с ним исчезнут все смены, дни, места и выплаты. Отменить нельзя.',
-  'Type your login to confirm': 'Введи логин для подтверждения',
+  'Type your login to confirm': 'Введите логин для подтверждения',
   'Your password': 'Твой пароль',
   'Delete for good': 'Удалить навсегда',
   'No connection — your edits are saved on this device.':
@@ -1748,7 +1748,7 @@ export const RU: Dictionary = {
   'Notify me about open days': 'Уведомлять о незакрытых днях',
   'Notify at': 'Уведомлять в',
   'Notifications are blocked in the browser.': 'Уведомления заблокированы в браузере.',
-  'Close your day': 'Закрой день',
+  'Close your day': 'Закройте день',
   'days are still open — tips and sales are missing.':
     'дней ещё не закрыты — не хватает чаевых и продаж.',
   'Import a spreadsheet': 'Импорт из таблицы',
@@ -1788,7 +1788,7 @@ export const RU: Dictionary = {
   'Search': 'Поиск',
   'Find a note, a shift or a date': 'Найти заметку, смену или дату',
   'covered for Ann, 2026-03…': 'подменял Аню, 2026-03…',
-  'Type at least two characters.': 'Введи хотя бы два символа.',
+  'Type at least two characters.': 'Введите хотя бы два символа.',
   'Nothing found.': 'Ничего не нашлось.',
   'Loading…': 'Загружаю…',
   'Meals': 'Питание',
@@ -1931,7 +1931,7 @@ export const RU: Dictionary = {
   'Let us set this up': 'Давай настроим',
   'Three steps, and the calendar starts counting for you.':
     'Три шага — и календарь начнёт считать за тебя.',
-  'Add where you work': 'Добавь место работы',
+  'Add where you work': 'Добавьте место работы',
   'Pay period, overtime, tip-out and meals live on the place.':
     'Расчётный период, переработки, tip-out и питание живут у места.',
   'Create a shift': 'Создай смену',
@@ -1995,7 +1995,7 @@ export const RU: Dictionary = {
   'today': 'сегодня',
   'in': 'через',
   'Add a place of work and record a payout — this page then tracks every cycle for you.':
-    'Добавь место работы и запиши выплату — дальше страница сама следит за каждым циклом.',
+    'Добавьте место работы и запишите выплату — дальше страница сама следит за каждым циклом.',
   'Due dates come from each place’s own pay period. Amounts are take-home: what should arrive after tax.':
     'Сроки берутся из расчётного периода каждого места. Суммы — на руки, то есть после налога.',
   'Who paid it': 'Кто заплатил',
@@ -2058,7 +2058,7 @@ export const RU: Dictionary = {
   'looking for cover': 'ищут подмену',
   'Open the rota': 'Открыть график',
   'Google will not sign in from this address.': 'Google не пускает с этого адреса.',
-  'Add': 'Добавь',
+  'Add': 'Добавить',
   'to Authorized JavaScript origins in the Google console.':
     'в Authorized JavaScript origins в консоли Google.',
   Period: 'Период',
@@ -4380,7 +4380,7 @@ export const UK: Dictionary = {
   'Delete account': 'Видалити акаунт',
   'Every shift, day, place and payout goes with it. This cannot be undone.':
     'Разом із ним зникнуть усі зміни, дні, місця та виплати. Скасувати не можна.',
-  'Type your login to confirm': 'Введи логін для підтвердження',
+  'Type your login to confirm': 'Введіть логін для підтвердження',
   'Your password': 'Твій пароль',
   'Delete for good': 'Видалити назавжди',
   'No connection — your edits are saved on this device.':
@@ -4393,7 +4393,7 @@ export const UK: Dictionary = {
   'Notify me about open days': 'Сповіщати про незакриті дні',
   'Notify at': 'Сповіщати о',
   'Notifications are blocked in the browser.': 'Сповіщення заблоковані в браузері.',
-  'Close your day': 'Закрий день',
+  'Close your day': 'Закрийте день',
   'days are still open — tips and sales are missing.':
     'днів ще не закриті — бракує чайових і продажів.',
   'Import a spreadsheet': 'Імпорт із таблиці',
@@ -4433,7 +4433,7 @@ export const UK: Dictionary = {
   'Search': 'Пошук',
   'Find a note, a shift or a date': 'Знайти нотатку, зміну або дату',
   'covered for Ann, 2026-03…': 'підміняв Аню, 2026-03…',
-  'Type at least two characters.': 'Введи хоча б два символи.',
+  'Type at least two characters.': 'Введіть хоча б два символи.',
   'Nothing found.': 'Нічого не знайшлося.',
   'Loading…': 'Завантажую…',
   'Meals': 'Харчування',
@@ -4576,7 +4576,7 @@ export const UK: Dictionary = {
   'Let us set this up': 'Давай налаштуємо',
   'Three steps, and the calendar starts counting for you.':
     'Три кроки — і календар почне рахувати за тебе.',
-  'Add where you work': 'Додай місце роботи',
+  'Add where you work': 'Додайте місце роботи',
   'Pay period, overtime, tip-out and meals live on the place.':
     'Розрахунковий період, переробки, tip-out і харчування живуть у місця.',
   'Create a shift': 'Створи зміну',
@@ -4640,7 +4640,7 @@ export const UK: Dictionary = {
   'today': 'сьогодні',
   'in': 'через',
   'Add a place of work and record a payout — this page then tracks every cycle for you.':
-    'Додай місце роботи й запиши виплату — далі сторінка сама стежить за кожним циклом.',
+    'Додайте місце роботи й запишіть виплату — далі сторінка сама стежить за кожним циклом.',
   'Due dates come from each place’s own pay period. Amounts are take-home: what should arrive after tax.':
     'Терміни беруться з розрахункового періоду кожного місця. Суми — на руки, тобто після податку.',
   'Who paid it': 'Хто заплатив',
@@ -4703,7 +4703,7 @@ export const UK: Dictionary = {
   'looking for cover': 'шукають підміну',
   'Open the rota': 'Відкрити графік',
   'Google will not sign in from this address.': 'Google не пускає з цієї адреси.',
-  'Add': 'Додай',
+  'Add': 'Додати',
   'to Authorized JavaScript origins in the Google console.':
     'в Authorized JavaScript origins у консолі Google.',
   Period: 'Період',

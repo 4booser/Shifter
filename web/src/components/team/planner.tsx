@@ -431,8 +431,14 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
                       {new Date(`${day}T00:00:00`).toLocaleDateString(lang, { weekday: 'short' })}
                     </span>
                     <span className={`text-[0.82rem] font-bold tabular ${isToday ? 'text-(--accent-read)' : ''}`}>{day.slice(8)}</span>
+                    {/* «пусто» under every date of a week the rota shows five
+                        shifts in. The count is right — it counts what this
+                        board has handed out — but the word claims the day is
+                        empty, and a manager reads that against a calendar
+                        saying otherwise. Zero of the same unit the other
+                        columns show says only what is true. */}
                     <span className={`block text-[0.64rem] tabular ${covered === 0 ? 'text-danger-read' : 'text-faint'}`}>
-                      {covered === 0 ? t('empty') : `×${covered}`}
+                      ×{covered}
                     </span>
                     </button>
 

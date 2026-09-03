@@ -466,7 +466,7 @@ export function Sidebar() {
         <dl className="flex flex-col gap-1 text-[0.85rem]">
           <Row label={t('Days worked')}>{summary.days_worked}</Row>
           <Row label={t('Hours')}>
-            <span className="tabular">{Math.round(summary.hours * 100) / 100}</span>{' '}
+            <span className="tabular">{num(Math.round(summary.hours * 100) / 100)}</span>{' '}
             <Delta percent={change(summary.hours, previous.hours)} />
           </Row>
           <Row label={t('Shifts')}>

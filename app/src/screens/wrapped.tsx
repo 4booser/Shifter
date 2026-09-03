@@ -120,7 +120,10 @@ export function Wrapped() {
             </p>
             <p className="field-hint relative mt-2">
               {shifts} {shiftsWord(shifts)} · {Math.round(summary.hours)} ч ·{' '}
-              {summary.hours > 0 ? `${money(summary.total_earned / summary.hours)}/час` : '—'}
+              {/* An hour is the floor, not nought: a shift closed after fifty
+                  seconds priced the hour at −₴3 805 on the other client. This
+                  is the last of five copies of that rule. */}
+              {summary.hours >= 1 ? `${money(summary.total_earned / summary.hours)}/час` : '—'}
             </p>
 
             {/* The shape of the year, right in the hero: twelve columns, the

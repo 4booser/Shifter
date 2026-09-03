@@ -18,7 +18,7 @@ export function SalesModal({
   editing: SalesPosition | null;
   onClose: () => void;
 }) {
-  const { t } = useI18n();
+  const { t, num } = useI18n();
 
   const [name, setName] = useState('');
   const [price, setPrice] = useState(0);
@@ -78,7 +78,7 @@ export function SalesModal({
         </div>
 
         <p className="field-hint">
-          {t('You keep')} <strong className="tabular">{Math.round(perUnit * 100) / 100}</strong> {t('per unit sold.')}
+          {t('You keep')} <strong className="tabular">{num(Math.round(perUnit * 100) / 100)}</strong> {t('per unit sold.')}
         </p>
 
         {editing !== null && (

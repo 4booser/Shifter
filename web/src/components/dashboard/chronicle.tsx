@@ -48,12 +48,18 @@ export function Chronicle() {
       .catch((caught) => setError(apiErrorMessage(caught)));
   };
 
+  /*
+   * Month and year apart, the way the page around this one already does it.
+   * Asked for together, Russian and Ukrainian append «г.» — so one card read
+   * «авг. 2025 г. — сейчас» directly under a heading that said «август 2025 —
+   * сентябрь 2026». One date, two manners, on one page.
+   */
   const said = (key: string | null) => {
     if (key === null) return '';
 
     const date = new Date(key);
 
-    return `${date.toLocaleDateString(lang, { month: 'short', year: 'numeric' })}`;
+    return `${date.toLocaleDateString(lang, { month: 'short' })} ${date.getFullYear()}`;
   };
 
   if (chapters === null || chapters.length === 0) {

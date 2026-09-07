@@ -177,6 +177,20 @@ public class ShareController : ControllerBase
 
         DateOnly today = clock.Today;
 
+        /*
+         * The card is the one page here with no client in front of it, so the
+         * language cannot arrive the way it does everywhere else. The server
+         * keeps no preference of its own — so it asks the reader, who is the
+         * person the page exists for. Ukrainian where the browser says so,
+         * Russian otherwise; those are the two this file can write.
+         */
+        bool uk = (Request.Headers.AcceptLanguage.ToString() ?? "")
+            .Split(',')
+            .Select(part => part.Split(';')[0].Trim())
+            .Any(tag => tag.StartsWith("uk", StringComparison.OrdinalIgnoreCase));
+
+        var culture = uk ? Figures.Uk : Figures.Ru;
+
         var days = await query.GetDaysInRangeAsync(user.Id, new DateOnly(2000, 1, 1), today, ct);
         var places = await query.GetLocationsAsync(user.Id, true, ct);
 
@@ -187,26 +201,33 @@ public class ShareController : ControllerBase
         // work. The app's own record page has said «август 2025 — сентябрь
         // 2026» for months; this, which is the copy handed to an employer,
         // had not.
-        static string Month(string yyyyMM) =>
+        string Month(string yyyyMM) =>
             DateOnly.TryParseExact($"{yyyyMM}-01", "yyyy-MM-dd", out var date)
                 // «MMMM», not «LLLL»: the standalone-month specifier is an
                 // ICU one and .NET emits it literally, so the page read «LLLL
                 // 2025». Without a day in the pattern .NET already gives the
                 // nominative, which is what a month standing alone wants.
-                ? date.ToString("MMMM yyyy", Figures.Ru)
+                ? date.ToString("MMMM yyyy", culture)
                 : yyyyMM;
 
         string name = $"{user.FirstName} {user.LastName}".Trim();
-        string headline = history.shifts == 0
-            ? "Пока без записей"
+        string shiftsWord = uk
+            ? TelegramCommands.Plural(history.shifts, "зміна", "зміни", "змін")
             // Declined: this page is the one a stranger reads, and it said
             // «1 смен» to anyone with a first month behind them.
-            : $"{history.months} мес · {history.shifts} {TelegramCommands.Plural(history.shifts, "смена", "смены", "смен")} · {Figures.Count(history.hours)} ч";
+            : TelegramCommands.Plural(history.shifts, "смена", "смены", "смен");
+        string headline = history.shifts == 0
+            ? uk ? "Поки без записів" : "Пока без записей"
+            : $"{history.months} {(uk ? "міс" : "мес")} · {history.shifts} {shiftsWord} · {Figures.Count(history.hours, culture)} {(uk ? "год" : "ч")}";
+
+        string Shifts(int count) => uk
+            ? $"{count} {TelegramCommands.Plural(count, "зміна", "зміни", "змін")}"
+            : $"{count} {TelegramCommands.Plural(count, "смена", "смены", "смен")}";
 
         var rows = history.places
             .Select(place => user.CardShowsPlaces
-                ? $"{Escape(place.name)} · {Month(place.from)} — {Month(place.to)} · {place.shifts} {TelegramCommands.Plural(place.shifts, "смена", "смены", "смен")}"
-                : $"{Month(place.from)} — {Month(place.to)} · {place.shifts} {TelegramCommands.Plural(place.shifts, "смена", "смены", "смен")}")
+                ? $"{Escape(place.name)} · {Month(place.from)} — {Month(place.to)} · {Shifts(place.shifts)}"
+                : $"{Month(place.from)} — {Month(place.to)} · {Shifts(place.shifts)}")
             .ToArray();
 
         string body = string.Join("", rows.Select(row => $"<li>{row}</li>"));
@@ -214,7 +235,7 @@ public class ShareController : ControllerBase
 
         return Content(
             $$"""
-            <!doctype html><html lang="ru"><head><meta charset="utf-8">
+            <!doctype html><html lang="{{(uk ? "uk" : "ru")}}"><head><meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1">
             <title>{{Escape(name)}} — Shifter</title>
             <meta name="robots" content="noindex">
@@ -232,8 +253,13 @@ public class ShareController : ControllerBase
             <h1>{{Escape(name)}}</h1>
             <p class="big">{{headline}}</p>
             <ul>{{body}}</ul>
-            {{(roles.Length > 0 ? $"<p class=\"roles\">{roles}</p>" : "")}}
-            <footer>Посчитано по записанным сменам в <a href="/">Shifter</a>.</footer>
+            {{(roles.Length > 0
+                // Bare, this line read «Вечер, День» to somebody who had no way
+                // to know it was a list of jobs. The app's own record page
+                // labels it; the copy handed to an employer did not.
+                ? $"<p class=\"roles\"><b>{(uk ? "На чому стояли" : "На чём стояли")}:</b> {roles}</p>"
+                : "")}}
+            <footer>{{(uk ? "Пораховано за записаними змінами в" : "Посчитано по записанным сменам в")}} <a href="/">Shifter</a>.</footer>
             </main></body></html>
             """,
             "text/html; charset=utf-8");

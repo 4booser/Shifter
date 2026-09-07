@@ -37,7 +37,11 @@ public static class Figures
     public static string Money(decimal value) => $"{Math.Round(value).ToString("N0", Ru)} ₴";
 
     /// <summary>A plain count, grouped the way the money beside it is.</summary>
-    public static string Count(double value) => Math.Round(value).ToString("N0", Ru);
+    public static string Count(double value) => Count(value, Ru);
+
+    /// <summary>The same, for a page that knows which language it is in.</summary>
+    public static string Count(double value, CultureInfo culture) =>
+        Math.Round(value).ToString("N0", culture);
 
     /// <summary>
     /// Hours, to a tenth under ten and whole above it. Nobody reads «9,53 ч»,

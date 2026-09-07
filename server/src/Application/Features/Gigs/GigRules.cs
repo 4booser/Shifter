@@ -109,6 +109,54 @@ public static class GigRules
             [GigCategory.Promoter] = "промоутер",
         };
 
+    /// <summary>
+    /// The same list in Ukrainian, for the same reason. The share page is
+    /// public and has no client to tell it which language to write, so it
+    /// asks the reader — and a page that asked and then printed «повар
+    /// горячего цеха» in the middle of a Ukrainian sentence would have made
+    /// the asking pointless.
+    /// </summary>
+    public static readonly IReadOnlyDictionary<GigCategory, string> CategoryUk =
+        new Dictionary<GigCategory, string>
+        {
+            [GigCategory.Bartender] = "бармен",
+            [GigCategory.Barback] = "барбек",
+            [GigCategory.Barista] = "бариста",
+            [GigCategory.Waiter] = "офіціант",
+            [GigCategory.Runner] = "раннер",
+            [GigCategory.Host] = "хостес",
+            [GigCategory.Cashier] = "касир",
+            [GigCategory.CookHot] = "кухар гарячого цеху",
+            [GigCategory.CookCold] = "кухар холодного цеху",
+            [GigCategory.Prep] = "заготівельник",
+            [GigCategory.Pizzaiolo] = "піцайоло",
+            [GigCategory.Sushi] = "сушист",
+            [GigCategory.Pastry] = "кондитер",
+            [GigCategory.Baker] = "пекар",
+            [GigCategory.Dishwasher] = "посудомийник",
+            [GigCategory.Courier] = "курʼєр",
+            [GigCategory.Catering] = "кейтеринг",
+            [GigCategory.FloorManager] = "менеджер залу",
+            [GigCategory.Managing] = "керуючий",
+            [GigCategory.Chef] = "шеф-кухар",
+            [GigCategory.SousChef] = "су-шеф",
+            [GigCategory.ShiftLead] = "старший зміни",
+            [GigCategory.Sommelier] = "сомельє",
+            [GigCategory.Busser] = "збирач столів",
+            [GigCategory.CookUniversal] = "кухар-універсал",
+            [GigCategory.Grill] = "гриль",
+            [GigCategory.Wok] = "вок-кухар",
+            [GigCategory.Cleaner] = "прибиральник",
+            [GigCategory.Storekeeper] = "комірник",
+            [GigCategory.Administrator] = "адміністратор",
+            [GigCategory.Hookah] = "кальянник",
+            [GigCategory.Shawarma] = "шаурміст",
+            [GigCategory.Butcher] = "мʼясник-обвалювальник",
+            [GigCategory.Security] = "охоронець",
+            [GigCategory.Dj] = "діджей",
+            [GigCategory.Promoter] = "промоутер",
+        };
+
     public static GigCategory ParseCategory(string? value)
     {
         foreach (var (category, name) in CategoryNames)

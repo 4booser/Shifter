@@ -34,7 +34,11 @@ public static class Figures
     }
 
     /// <summary>A whole number of hryvnia, with its mark.</summary>
-    public static string Money(decimal value) => $"{Math.Round(value).ToString("N0", Ru)} ₴";
+    public static string Money(decimal value) => Money(value, Ru);
+
+    /// <summary>The same, for a page that knows which language it is in.</summary>
+    public static string Money(decimal value, CultureInfo culture) =>
+        $"{Math.Round(value).ToString("N0", culture)} ₴";
 
     /// <summary>A plain count, grouped the way the money beside it is.</summary>
     public static string Count(double value) => Count(value, Ru);

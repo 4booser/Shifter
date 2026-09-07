@@ -74,6 +74,57 @@ public sealed class PublicCardOverHttpTests(Api api)
     }
 
     /// <summary>
+    /// The board's own public page is the card's sibling and had the same
+    /// gap. A crawler is usually the first reader, and it carries whatever
+    /// the sharer's browser sent.
+    /// </summary>
+    [Fact]
+    public async Task The_shared_listing_answers_in_the_readers_language()
+    {
+        var (client, _) = await api.SignInAsync("giglang");
+
+        var posted = await client.PostAsJsonAsync(
+            "/shifter/v1/gigs",
+            new
+            {
+                venue = "Бар «Ніч»",
+                category = "bartender",
+                employment = "freelance",
+                title = "Бармен",
+                city = "Київ",
+                date = "2026-12-05",
+                start = "18:00",
+                end = "23:00",
+                pay_amount = 900,
+                pay_period = "shift",
+                slots = 1,
+                photos = new[] { Pixel, Pixel, Pixel },
+            },
+            TestContext.Current.CancellationToken);
+
+        posted.EnsureSuccessStatusCode();
+
+        var gig = await posted.Content.ReadFromJsonAsync<JsonElement>(
+            TestContext.Current.CancellationToken);
+        var slug = gig.GetProperty("share_slug").GetString()!;
+
+        using var request = new HttpRequestMessage(HttpMethod.Get, $"/g/{slug}");
+
+        request.Headers.Add("Accept-Language", "uk-UA,uk;q=0.9");
+
+        var page = await (await client.SendAsync(request, TestContext.Current.CancellationToken))
+            .Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+
+        Assert.Contains("<html lang=\"uk\">", page);
+        Assert.Contains("разова зміна", page);
+        Assert.Contains("бармен", page);
+        Assert.DoesNotContain("разовая смена", page);
+    }
+
+    /// <summary>A JPEG frame header saying 320×320 — the board wants photos.</summary>
+    private const string Pixel = "data:image/jpeg;base64,/9j/wAARCAFAAUADASIAAhEBAxEB/9k=";
+
+    /// <summary>
     /// Switching the card off has to take the page with it — a link handed out
     /// once and revoked later is the whole point of the switch.
     /// </summary>

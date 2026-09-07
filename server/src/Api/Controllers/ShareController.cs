@@ -30,6 +30,20 @@ public class ShareController : ControllerBase
     public ShareController(ShifterDbContext db) => _db = db;
 
     /// <summary>
+    /// Which of the two languages this file writes the reader asked for.
+    ///
+    /// These are the only pages here with no client in front of them, so the
+    /// language cannot arrive the way it does everywhere else, and the server
+    /// keeps no preference of its own. The reader is the person the page
+    /// exists for, so the reader is who it asks.
+    /// </summary>
+    private bool ReaderWantsUkrainian()
+        => Request.Headers.AcceptLanguage.ToString()
+            .Split(',')
+            .Select(part => part.Split(';')[0].Trim())
+            .Any(tag => tag.StartsWith("uk", StringComparison.OrdinalIgnoreCase));
+
+    /// <summary>
     /// A numeric link is no longer a preview. It used to be, and counting from
     /// one walked the entire board — every open listing's venue, city, date,
     /// hours and pay — without an account, which is the one party the board's
@@ -48,30 +62,39 @@ public class ShareController : ControllerBase
 
         if (gig is null) return Redirect("/gigs");
 
-        var trade = GigRules.CategoryRu.GetValueOrDefault(gig.Category, GigRules.CategoryNames[gig.Category]);
+        // The other public page, and the same question: nothing on the way in
+        // says which language to write, so it asks the reader. See Card below.
+        bool uk = ReaderWantsUkrainian();
+        var culture = uk ? Figures.Uk : Figures.Ru;
+
+        var trade = (uk ? GigRules.CategoryUk : GigRules.CategoryRu)
+            .GetValueOrDefault(gig.Category, GigRules.CategoryNames[gig.Category]);
         var pay = new List<string>();
 
         if (gig.PayAmount > 0)
         {
             var period = gig.PayPeriod switch
             {
-                "hour" => "за час",
-                "month" => "в месяц",
-                _ => "за смену",
+                "hour" => uk ? "за годину" : "за час",
+                "month" => uk ? "на місяць" : "в месяц",
+                _ => uk ? "за зміну" : "за смену",
             };
 
             // A page anybody can open, with a wage on it, grouped by
             // whatever culture the server happened to start with.
-            pay.Add($"{Figures.Money(gig.PayAmount)} {period}");
+            pay.Add($"{Figures.Money(gig.PayAmount, culture)} {period}");
         }
 
-        if (gig.PayPercent is decimal percent) pay.Add($"{percent.ToString(Figures.Ru)}% с продаж");
+        if (gig.PayPercent is decimal percent)
+            pay.Add($"{percent.ToString(culture)}% {(uk ? "з продажів" : "с продаж")}");
 
         var title = $"{gig.Title} — {gig.Venue}";
         var description =
             $"{gig.City} · {gig.Date:dd.MM} · {gig.StartTime:HH\\:mm}–{gig.EndTime:HH\\:mm}"
             + (pay.Count > 0 ? $" · {string.Join(" + ", pay)}" : "")
-            + $" · {(gig.Employment == GigEmployment.Permanent ? "постоянная работа" : "разовая смена")}"
+            + $" · {(gig.Employment == GigEmployment.Permanent
+                ? uk ? "постійна робота" : "постоянная работа"
+                : uk ? "разова зміна" : "разовая смена")}"
             + $" · {trade}";
 
         // The card's first photo is the preview image, served from the sibling
@@ -81,7 +104,7 @@ public class ShareController : ControllerBase
 
         var html = $"""
             <!doctype html>
-            <html lang="ru">
+            <html lang="{(uk ? "uk" : "ru")}">
             <head>
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -107,7 +130,7 @@ public class ShareController : ControllerBase
             -->
             <p><b>{Escape(title)}</b></p>
             <p>{Escape(description)}</p>
-            <p><a href="/gigs">Открыть на бирже Shifter →</a></p>
+            <p><a href="/gigs">{(uk ? "Відкрити на біржі Shifter" : "Открыть на бирже Shifter")} →</a></p>
             </body>
             </html>
             """;
@@ -184,10 +207,7 @@ public class ShareController : ControllerBase
          * person the page exists for. Ukrainian where the browser says so,
          * Russian otherwise; those are the two this file can write.
          */
-        bool uk = (Request.Headers.AcceptLanguage.ToString() ?? "")
-            .Split(',')
-            .Select(part => part.Split(';')[0].Trim())
-            .Any(tag => tag.StartsWith("uk", StringComparison.OrdinalIgnoreCase));
+        bool uk = ReaderWantsUkrainian();
 
         var culture = uk ? Figures.Uk : Figures.Ru;
 

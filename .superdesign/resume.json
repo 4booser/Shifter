@@ -9,12 +9,12 @@
       "entry": "web/src/app/dashboard/page.tsx",
       "baselineDraftId": "2b0e0b69-7678-4f1e-a345-eb3dc1fe8d09",
       "baselineNote": "structurally right, content partly invented — not ground truth",
-      "activeDraftId": null,
+      "activeDraftId": "de455758-c329-4f83-9e97-ce671f1e9898",
       "branches": [
         {
           "id": "de455758-c329-4f83-9e97-ce671f1e9898",
-          "name": "Ведомость",
-          "note": "document/ledger direction: display face on figures, ruled rows instead of cards, one chart family"
+          "name": "Ведомость × Смена (выбрано)",
+          "note": "v1 = pure ledger; v2 = crossed with the hour strip. revert-design-draft --to-version 1 restores the pure ledger"
         },
         {
           "id": "06023629-4e74-43d8-bd64-3c74c12d5298",
@@ -43,7 +43,8 @@
         "web/src/components/dashboard/month-grid.tsx:72:120": "2a10c7f94c34b8aa56903ab006028e5ce36398636e0c90e2592278cfacc5bfd2",
         "web/src/components/dashboard/month-grid.tsx:490:700": "2a10c7f94c34b8aa56903ab006028e5ce36398636e0c90e2592278cfacc5bfd2",
         "web/src/components/dashboard/day-panel.tsx:70:520": "51f880603298c13e2d59dae2d9be0681ac46a135bf54074a42bef8afbcca3f80"
-      }
+      },
+      "activeNote": "Ведомость × Смена — leger type and rules, day panel as an hour strip, paper ground kept"
     }
   },
   "componentsExtracted": [],

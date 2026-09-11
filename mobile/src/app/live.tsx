@@ -66,9 +66,26 @@ export default function LiveScreen() {
   const styles = makeStyles(palette);
 
   if (live === null) {
+    /*
+     * The screen still has to be a screen when there is nothing running.
+     *
+     * It used to inherit the running layout — head at the top, controls at
+     * the bottom — so with a shift closed it read as one grey sentence in the
+     * corner and a «Назад» stranded at the foot of an empty phone, with no
+     * word about what this screen is or how to fill it.
+     */
     return (
-      <View style={[styles.screen, { paddingTop: insets.top + 40 }]}>
-        <Text style={styles.hint}>{t('Смена не запущена.')}</Text>
+      <View style={[styles.screen, styles.empty, { paddingTop: insets.top + 40 }]}>
+        <Text style={styles.emptyMark}>⏱️</Text>
+        <Text style={styles.emptyTitle}>{t('Смена не запущена')}</Text>
+        <Text style={styles.emptyHint}>
+          {t('Запущенная смена считает часы и деньги сама, даже с закрытым приложением. Начать можно с календаря — сегодняшним шаблоном, в одно нажатие.')}
+        </Text>
+
+        <Press style={styles.emptyButton} onPress={() => router.replace('/')}>
+          <Text style={styles.emptyButtonText}>{t('В календарь')}</Text>
+        </Press>
+
         <Press style={styles.quiet} onPress={() => router.back()}>
           <Text style={styles.quietText}>{t('Назад')}</Text>
         </Press>
@@ -399,4 +416,25 @@ const makeStyles = (palette: Palette) =>
     overdueHint: { color: palette.textSecondary, fontSize: 12, marginTop: 8, lineHeight: 16 },
     quiet: { paddingVertical: 9 },
     quietText: { color: palette.textSecondary, fontWeight: '600', fontSize: 13.5 },
+
+    // Centred rather than pushed apart: there is one thing to say here and
+    // one thing to press.
+    empty: { justifyContent: 'center', gap: 10 },
+    emptyMark: { fontSize: 40 },
+    emptyTitle: { fontSize: 20, fontWeight: '800', color: palette.text, letterSpacing: -0.3 },
+    emptyHint: {
+      color: palette.textSecondary,
+      fontSize: 14.5,
+      lineHeight: 21,
+      textAlign: 'center',
+      maxWidth: 320,
+    },
+    emptyButton: {
+      backgroundColor: palette.accent,
+      borderRadius: 16,
+      paddingVertical: 14,
+      paddingHorizontal: 26,
+      marginTop: 6,
+    },
+    emptyButtonText: { color: '#fff', fontWeight: '800', fontSize: 15.5 },
   });

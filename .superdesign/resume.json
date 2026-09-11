@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "projectId": "141bd797-477f-4791-b2d6-44db2486a45d",
+  "teamId": "b9c3fb0a-ce03-47b9-895a-713114e84083",
+  "canvas": "https://superdesign.dev/teams/b9c3fb0a-ce03-47b9-895a-713114e84083/projects/141bd797-477f-4791-b2d6-44db2486a45d",
+  "targets": {
+    "web:/dashboard": {
+      "route": "/dashboard",
+      "entry": "web/src/app/dashboard/page.tsx",
+      "baselineDraftId": "2b0e0b69-7678-4f1e-a345-eb3dc1fe8d09",
+      "baselineNote": "structurally right, content partly invented — not ground truth",
+      "activeDraftId": null,
+      "branches": [
+        {
+          "id": "de455758-c329-4f83-9e97-ce671f1e9898",
+          "name": "Ведомость",
+          "note": "document/ledger direction: display face on figures, ruled rows instead of cards, one chart family"
+        },
+        {
+          "id": "06023629-4e74-43d8-bd64-3c74c12d5298",
+          "name": "Смена",
+          "note": "time-first direction: day panel as an hour strip, serif display, dark ground"
+        }
+      ],
+      "contextBundle": [
+        ".superdesign/design-system.md",
+        ".superdesign/init/theme.md",
+        "web/src/app/dashboard/page.tsx",
+        "web/src/components/layout/shell.tsx",
+        "web/src/components/ui/bits.tsx",
+        "web/src/components/dashboard/tiles.tsx:95:420",
+        "web/src/components/dashboard/month-grid.tsx:72:120",
+        "web/src/components/dashboard/month-grid.tsx:490:700",
+        "web/src/components/dashboard/day-panel.tsx:70:520"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "a33bc83119b59078439ebf15b8fd9c78a9ff7f71b0acb83743e61f850d9bd9b2",
+        ".superdesign/init/theme.md": "b81b279dec5891d7300cad33691a44fd7dcfec13c839c6539d931a45437fe926",
+        "web/src/app/dashboard/page.tsx": "4d6e25ba6936f4b4b3eeb7e4bb09c3150ab76ffb9f28fefecdde3c44d67fca84",
+        "web/src/components/layout/shell.tsx": "6c07575e8ebe4bb1a35ca26f7fc14485cbb6b202b385cbd0d96ccf9eb1947dde",
+        "web/src/components/ui/bits.tsx": "a5d6e3982b6741c232735fd4af65598509a904e5b28f038c1332ed4063c46d66",
+        "web/src/components/dashboard/tiles.tsx:95:420": "d04d672eee1bd10b80d1c035ba8e1221069c0f08e62a027e0b254d13c188a79a",
+        "web/src/components/dashboard/month-grid.tsx:72:120": "2a10c7f94c34b8aa56903ab006028e5ce36398636e0c90e2592278cfacc5bfd2",
+        "web/src/components/dashboard/month-grid.tsx:490:700": "2a10c7f94c34b8aa56903ab006028e5ce36398636e0c90e2592278cfacc5bfd2",
+        "web/src/components/dashboard/day-panel.tsx:70:520": "51f880603298c13e2d59dae2d9be0681ac46a135bf54074a42bef8afbcca3f80"
+      }
+    }
+  },
+  "componentsExtracted": [],
+  "componentsNote": "deliberately skipped — extracting the current shell would pin the redesign to it; revisit once a direction is chosen"
+}

@@ -1,9 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
   ActivityIndicator,
+  AppState,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -24,6 +25,7 @@ import { todayKey } from '@/lib/calendar';
 import {
   CalendarDayData,
   DEDUCTION_REASONS,
+  DaySave,
   DaysResponse,
   DeductionReason,
   SalesPosition,
@@ -53,6 +55,14 @@ const ZONES: { value: ShiftZone; label: string }[] = [
  * the tips and the fines. The same PUT the web sends — one server, one
  * truth, whichever pocket the edit came from.
  */
+/**
+ * How long the screen waits after the last change before it saves. Four
+ * seconds, matching the web panel: the delay only decides how chatty the
+ * network is, and every way of leaving — the back gesture, backgrounding the
+ * app, «Готово» — flushes anyway.
+ */
+const QUIET_BEFORE_SAVE = 4_000;
+
 export default function DayScreen() {
   const { date } = useLocalSearchParams<{ date: string }>();
   const router = useRouter();
@@ -256,7 +266,72 @@ export default function DayScreen() {
     });
   };
 
-  const save = async () => {
+  /*
+   * Saving without being asked to, the same rule as the web day panel.
+   *
+   * This screen's button did double duty — it saved and it closed — so
+   * anybody who left by the back gesture lost what they had typed, and
+   * anybody who wanted to stay had to press save and then come back in.
+   * The day keeps itself now and the button only closes.
+   *
+   * As on the web: the draft is fingerprinted and compared against what was
+   * loaded, rather than thirty setters each remembering to raise a flag.
+   */
+  const fingerprint = (payload: DaySave) => JSON.stringify({ ...payload, version: 0 });
+  const sent = useRef<string | null>(null);
+
+  const drafted = useMemo(() => {
+    if (day === null) return null;
+
+    const payload = toSavePayload(day);
+
+    payload.sales = Object.entries(quantities)
+      .map(([id, quantity]) => ({ sales_id: Number(id), quantity }))
+      .filter((entry) => entry.quantity > 0);
+    payload.tips = tips.trim() === '' ? null : Number(tips) || 0;
+    payload.tips_cash =
+      payload.tips_cash == null ? null : Math.min(payload.tips_cash, payload.tips ?? 0);
+    payload.tip_pool = tipPool.trim() === '' ? null : Number(tipPool) || 0;
+    payload.deductions = deductions.trim() === '' ? null : Number(deductions) || 0;
+    payload.deduction_reason = (payload.deductions ?? 0) > 0 ? deductionReason : null;
+    payload.note = note.trim() === '' ? null : note.trim();
+
+    return fingerprint(payload);
+  }, [day, quantities, tips, tipPool, deductions, deductionReason, note]);
+
+  // The loaded day is the baseline; re-taken when a different day arrives.
+  useEffect(() => {
+    if (drafted !== null && sent.current === null) sent.current = drafted;
+  }, [drafted]);
+
+  const dirty = sent.current !== null && drafted !== null && drafted !== sent.current;
+  const flush = useRef<() => void>(() => undefined);
+
+  flush.current = () => {
+    if (dirty && !busy) void save();
+  };
+
+  useEffect(() => {
+    if (!dirty) return;
+
+    const timer = setTimeout(() => flush.current(), QUIET_BEFORE_SAVE);
+
+    return () => clearTimeout(timer);
+  }, [dirty, drafted]);
+
+  // Backgrounding the app counts as leaving, and so does closing the screen.
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (next) => {
+      if (next !== 'active') flush.current();
+    });
+
+    return () => {
+      sub.remove();
+      flush.current();
+    };
+  }, []);
+
+  const save = async (andLeave = false) => {
     if (day === null) return;
 
     setBusy(true);
@@ -283,7 +358,10 @@ export default function DayScreen() {
       payload.note = note.trim() === '' ? null : note.trim();
 
       await api(`/shifter/v1/days/${date}`, { method: 'PUT', body: payload });
-      router.back();
+
+      sent.current = fingerprint(payload);
+
+      if (andLeave) router.back();
     } catch (caught) {
       // Another device edited this day first. Show both versions and ask;
       // never merge — a silent merge of money is the worst outcome there is.
@@ -673,13 +751,25 @@ export default function DayScreen() {
               onChangeText={setNote}
             />
 
-            <Pressable
-              style={({ pressed }) => [styles.saveButton, pressed && { opacity: 0.85 }]}
-              disabled={busy}
-              onPress={() => void save()}
-            >
-              {busy ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveText}>{t('Сохранить день')}</Text>}
-            </Pressable>
+            {/* Where the day stands. Taking the button's old job away without
+                saying anything would only move the doubt. */}
+            <Text style={styles.savedNote}>
+              {busy
+                ? t('Сохраняется…')
+                : dirty
+                  ? t('Изменения сохраняются сами')
+                  : t('Сохранено')}
+            </Text>
+
+            {/* `Press`, not a raw `Pressable`: NativeWind's transform drops
+                the resolved style when `style` is a function, so this button
+                — and the one on the sign-in screen — rendered as white text
+                on the cream ground with no fill at all, left-aligned, on
+                every light palette. It has been invisible for as long as it
+                has existed. */}
+            <Press style={styles.saveButton} disabled={busy} onPress={() => void save(true)}>
+              <Text style={styles.saveText}>{t('Готово')}</Text>
+            </Press>
           </>
         )}
       </ScrollView>
@@ -848,6 +938,12 @@ const makeStyles = (palette: Palette) =>
       paddingVertical: 14,
       alignItems: 'center',
       marginTop: 8,
+    },
+    savedNote: {
+      color: palette.textSecondary,
+      fontSize: 13,
+      textAlign: 'center',
+      marginTop: 14,
     },
     saveText: { color: '#fff', fontWeight: '700', fontSize: 16 },
   });

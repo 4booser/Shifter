@@ -3,7 +3,6 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   StyleSheet,
   Text,
   TextInput,
@@ -147,13 +146,13 @@ export default function LoginScreen() {
             {error !== null && <Text style={styles.error}>{error}</Text>}
 
             {!letterSent && (
-              <Pressable
-                style={({ pressed }) => [styles.button, pressed && styles.pressed]}
+              <Press
+                style={styles.button}
                 disabled={busy || email.trim() === ''}
                 onPress={() => void submitForgot()}
               >
                 {busy ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>{t('Прислать письмо')}</Text>}
-              </Pressable>
+              </Press>
             )}
 
             <Press
@@ -186,13 +185,13 @@ export default function LoginScreen() {
 
             {error !== null && <Text style={styles.error}>{error}</Text>}
 
-            <Pressable
-              style={({ pressed }) => [styles.button, pressed && styles.pressed]}
+            <Press
+              style={styles.button}
               disabled={busy || code.trim().length < 6}
               onPress={() => void submitCode()}
             >
               {busy ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>{t('Подтвердить')}</Text>}
-            </Pressable>
+            </Press>
 
             <Press
               onPress={() => {
@@ -249,15 +248,25 @@ export default function LoginScreen() {
 
           {error !== null && <Text style={styles.error}>{error}</Text>}
 
-          {/* The disabled state has to still look like a button. Empty
-              fields left white text sitting on the card with no fill under
-              it — on the very first screen of the app, the only thing to
-              press was invisible until something had been typed. */}
-          <Pressable
-            style={({ pressed }) => [
+          {/*
+            * `Press`, not a raw `Pressable`.
+            *
+            * NativeWind's transform drops the resolved style when `style` is a
+            * function, so this button rendered as white text on the cream card
+            * with no fill under it and no centring — on the first screen of the
+            * app, the only thing to press was invisible. I first read that as
+            * the disabled state and dimmed it, which was treating a symptom of
+            * something else: the original «Сохранить день» in the day screen
+            * was broken the same way, and the two of them were the only raw
+            * Pressables with a function style in the codebase.
+            *
+            * The disabled tone stays, because a button that cannot be pressed
+            * should still say so.
+            */}
+          <Press
+            style={[
               styles.button,
               (busy || login.trim() === '' || password === '') && styles.buttonOff,
-              pressed && styles.pressed,
             ]}
             disabled={busy || login.trim() === '' || password === ''}
             onPress={() => void submit()}
@@ -267,7 +276,7 @@ export default function LoginScreen() {
             ) : (
               <Text style={styles.buttonText}>{mode === 'in' ? t('Войти') : t('Создать аккаунт')}</Text>
             )}
-          </Pressable>
+          </Press>
 
           <Press onPress={() => setMode(mode === 'in' ? 'up' : 'in')}>
             <Text style={styles.switch}>

@@ -43,25 +43,6 @@ Server-rendered, outside Next entirely:
 | `/c/{slug}` | `server/.../ShareController.cs` `Card` | **public CV card** — a stranger's view, hand-written HTML+CSS, no client |
 | `/g/{slug}` | `server/.../ShareController.cs` `Preview` | **public gig preview** — og: tags for chat unfurls |
 
-## app/ — Vite + TanStack Router, ships to /next
-
-Shell: `src/routes/_app.tsx` — 9 nav pills, same product, different code.
-Radix primitives, lucide icons, `cn()` from tailwind-merge.
-
-| path | file |
-|---|---|
-| `/next/` | `routes/_app/index.tsx` → `screens/dashboard.tsx` — calendar + tiles + day panel |
-| `/next/shifts` | `screens/shifts.tsx` — templates |
-| `/next/places` | `screens/places.tsx` — venues and their pay rules |
-| `/next/schedule` | `screens/schedule.tsx` — rota |
-| `/next/gigs` | `screens/gigs.tsx` |
-| `/next/payouts` | `screens/payouts.tsx` |
-| `/next/bank` | `screens/bank.tsx` |
-| `/next/stats` | `screens/stats.tsx` |
-| `/next/wrapped` | `screens/wrapped.tsx` |
-| `/next/account` | `screens/account.tsx` |
-| `/next/sign-in` | `routes/sign-in.tsx` |
-
 ## mobile/ — Expo Router
 
 Six tabs (`(tabs)/_layout.tsx`, custom `components/tab-bar.tsx` with a

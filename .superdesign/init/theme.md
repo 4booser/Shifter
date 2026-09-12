@@ -13,7 +13,7 @@ because the user picks it freely from a 15-swatch palette — a component can
 never hardcode it.
 
 `bindSettingsToDocument()` (web `src/lib/settings/store.ts`, app
-`app/src/lib/settings/store.ts`) stamps on `document.documentElement`:
+`web/src/lib/settings/store.ts`) stamps on `document.documentElement`:
 
 | written | from | note |
 |---|---|---|
@@ -110,14 +110,6 @@ that sits in a column. Money, hours and counts are always tabular.
     .reveal .rise .pop .lift .tilt .glow .fade-in .cell-in .page-enter
     .auth-scene .deck .done-scene .live-dot .confetti-piece .landing-marquee
 
-### The second front (`app/`, served at /next)
-
-`app/src/index.css`, 450 lines. Same idea, fewer themes, different names:
-`--ink` instead of `--text`, `--surface-2`, `--accent-foreground`. Uses
-`radix-ui` primitives + `lucide-react` icons + `tailwind-merge`'s `cn()`,
-none of which exist on the web front. This divergence is real and is one of
-the things a shared redesign would close.
-
 ### The phone (`mobile/`)
 
 `mobile/src/constants/theme.ts` — a plain TS object, two palettes only:
@@ -143,7 +135,6 @@ NativeWind for a few utilities. Charts are Skia (`@shopify/react-native-skia`
 See, in the repo:
 
 - `web/src/app/globals.css` — 1686 lines, the whole system
-- `app/src/index.css` — 450 lines, the second front
 - `mobile/src/constants/theme.ts` — 52 lines
 - `mobile/global.css` — 33 lines, NativeWind entry
 

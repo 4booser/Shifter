@@ -49,8 +49,6 @@ TZ=UTC npm test --silent
 # failing a push over. In a subshell: the widget step below reads paths
 # relative to mobile/, and a `cd` that leaks out of here would send it looking
 # for Swift files in the wrong tree.
-echo "── app"
-(cd ../app && npx tsc -b && npx oxlint --quiet && TZ=UTC npm test --silent)
 
 # The mock. It ships nothing and has no tests to run — but it is a whole site
 # now, and a caption that does not compile is still a caption nobody sees.

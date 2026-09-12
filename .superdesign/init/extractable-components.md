@@ -15,7 +15,7 @@ component, and belong inline in drafts.
 - Hardcoded: the nine labels and their icons, the «S» mark, all CSS
 
 ## NextShell
-- Source: `app/src/routes/_app.tsx` (~120 ln)
+- Source: `web/src/components/layout/shell.tsx`
 - Category: layout
 - Description: the second front's top bar — same nine destinations, Radix + lucide
 - Extractable props: activeItem (string, default "/")
@@ -39,7 +39,7 @@ component, and belong inline in drafts.
 - Note: this is the single most-repeated unit in the product — 22 on the dashboard alone, and near-identical `Kpi`/`Hero`/`Big` variants exist on `/stats`, `/report` and `/wrapped`. **Unifying those four is the highest-value structural win of the redesign.**
 
 ## Panel
-- Source: `app/src/components/ui/panel.tsx`, and `.panel-head` in web `globals.css`
+- Source: `.panel` / `.panel-head` in web `globals.css`
 - Category: basic
 - Description: card with a title, a hint line, and content — the wrapper around every chart
 - Extractable props: title (string), hint (string)

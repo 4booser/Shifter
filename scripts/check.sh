@@ -25,6 +25,16 @@ fi
 echo "── web"
 cd web
 npx tsc --noEmit
+# The weight budget lived only in the deploy pipeline, so a green gate said
+# nothing about whether the deploy would go out: two pushes reached main on a
+# red budget before anybody noticed production had not moved in a day.
+#
+# It needs the export to measure, and reading a stale `out/` is worse than not
+# checking — the first attempt died on a chunk name from the previous build.
+# So the gate builds. That is the minute this check costs, and it buys back a
+# day of a deploy that silently did not happen.
+npm run build >/dev/null
+npm run budget
 # TZ=UTC, deliberately: CI runs in UTC and three deploys died on a date test
 # that was green in Europe/Kyiv. The gate must fail where CI will fail.
 TZ=UTC npm test --silent

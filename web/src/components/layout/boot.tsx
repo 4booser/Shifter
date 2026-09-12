@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 
 import { reportCollectedErrors } from '@/lib/diagnostics/report';
-import { bindSettingsToDocument } from '@/lib/settings/store';
+import { loadDictionary } from '@/lib/i18n';
+import { bindSettingsToDocument, useSettings } from '@/lib/settings/store';
 
 /**
  * Client-side start-up: binds the settings store to the document (theme,
@@ -18,7 +19,27 @@ export function Boot({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => bindSettingsToDocument(), []);
-  useEffect(() => setMounted(true), []);
+
+  /*
+   * The dictionary is fetched before the first word is drawn.
+   *
+   * It is loaded per language now rather than bundled into every page, and
+   * that only works because this gate already existed: the shell renders
+   * nothing until mount, so awaiting one fetch here costs no flash of
+   * untranslated English. A dictionary that fails to load still renders —
+   * every key is a readable English string.
+   */
+  useEffect(() => {
+    let alive = true;
+
+    void loadDictionary(useSettings.getState().settings.language).finally(() => {
+      if (alive) setMounted(true);
+    });
+
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   /*
    * A file dropped anywhere else is a file that is not opened.

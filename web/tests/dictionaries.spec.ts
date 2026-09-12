@@ -3,7 +3,8 @@ import { basename, join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { RU, UK } from '../src/lib/i18n/dictionaries';
+import RU from '../src/lib/i18n/dictionaries.ru';
+import UK from '../src/lib/i18n/dictionaries.uk';
 
 /**
  * The dictionaries are phrase-keyed object literals, thousands of lines long,
@@ -16,7 +17,15 @@ import { RU, UK } from '../src/lib/i18n/dictionaries';
  * is an object the duplicate has already been collapsed and there is nothing
  * left to find.
  */
-const source = readFileSync(join(__dirname, '../src/lib/i18n/dictionaries.ts'), 'utf8');
+/*
+ * One file per language now: both used to live in one module imported
+ * statically, which shipped 371 kB of translation pairs to every page,
+ * including the public ones a stranger opens without an account.
+ */
+const sources: Record<'RU' | 'UK', string> = {
+  RU: readFileSync(join(__dirname, '../src/lib/i18n/dictionaries.ru.ts'), 'utf8'),
+  UK: readFileSync(join(__dirname, '../src/lib/i18n/dictionaries.uk.ts'), 'utf8'),
+};
 
 /**
  * The keys on one line of a dictionary.
@@ -69,15 +78,16 @@ function keysIn(line: string): string[] {
 }
 
 function keysOf(name: 'RU' | 'UK'): string[] {
-  const lines = source.split('\n');
-  const start = lines.findIndex((line) => line.startsWith(`export const ${name}: Dictionary`));
+  const lines = sources[name].split('\n');
+  // One dictionary per file, so the opening line is a plain `const`.
+  const start = lines.findIndex((line) => line.startsWith(`const ${name}: Dictionary`));
 
   expect(start, `${name} dictionary not found`).toBeGreaterThan(-1);
 
   const keys: string[] = [];
 
   for (let i = start + 1; i < lines.length; i++) {
-    if (lines[i].startsWith('export const ')) break;
+    if (lines[i].startsWith('export default')) break;
 
     keys.push(...keysIn(lines[i]));
   }

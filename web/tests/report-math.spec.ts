@@ -1,3 +1,4 @@
+import { levelWindow } from '@/lib/charts/math';
 import { waterfall } from '@/lib/charts/report-math';
 import { CalendarDayData, DaysResponse, EMPTY_SUMMARY } from '@/lib/calendar/models';
 
@@ -163,6 +164,35 @@ describe('hourDial', () => {
 });
 
 describe('rateTrend', () => {
+  /*
+   * The rule the chart above it depends on. A week of two worked minutes
+   * priced the hour at −7 805 ₴ and dragged the window from «around 230» out
+   * to 1 443, flattening a year of drift onto the floor.
+   */
+  it('needs an hour before a week has a rate', () => {
+    const week = (date: string, hours: number, earned: number) => ({
+      date,
+      shifts: [],
+      sales: [],
+      tips: null,
+      tips_cash: null,
+      tip_pool: null,
+      tip_out: 0,
+      deductions: 0,
+      note: null,
+      colour: null,
+      below_floor: false,
+      hours,
+      earned,
+      planned: 0,
+    });
+
+    const rows = rateTrend([week('2026-03-02', 0.02, -156), week('2026-03-09', 40, 9_200)]);
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.perHour).toBe(230);
+  });
+
   it('groups by Monday-anchored weeks and divides honestly', () => {
     const day = (date: string, hours: number, earned: number) => ({
       date,
@@ -249,5 +279,42 @@ describe('weekBands', () => {
     const bands = weekBands([day('2026-03-03', '10:30', '19:00', 8.5, 850)]);
 
     expect(bands[0].from).toBeCloseTo(10.5);
+  });
+});
+
+/**
+ * The window a level series gets, shared with the second front.
+ *
+ * A rate drifting between ₴230 and ₴250 drawn from nought is a flat line at
+ * the ceiling; the round-number ladder that suits a column chart is chosen
+ * against a number's magnitude rather than a band's width, which is the
+ * wrong tool. This was hand-rolled inside the trend line before.
+ */
+describe('levelWindow', () => {
+  it('opens a window around the band, not around nought', () => {
+    const { base, peak } = levelWindow([230, 250]);
+
+    expect(base).toBeLessThan(230);
+    expect(peak).toBeGreaterThan(250);
+    // The band has to occupy a readable share of the window.
+    expect((250 - 230) / (peak - base)).toBeGreaterThan(0.1);
+  });
+
+  it('never opens below nought for a quantity that has no negative half', () => {
+    // The flag is «do not go under zero», not «always start at zero»: a band
+    // with room beneath it keeps its air.
+    expect(levelWindow([10, 20], { floorAtZero: true }).base).toBeGreaterThan(0);
+    // A band sitting near nought is where the clamp earns its place: the air
+    // is never less than one unit, so a small band would otherwise open a
+    // window under zero that an hourly rate can never fill.
+    expect(levelWindow([0.5, 1]).base).toBeLessThan(0);
+    expect(levelWindow([0.5, 1], { floorAtZero: true }).base).toBe(0);
+  });
+
+  it('gives a single flat value room to be seen', () => {
+    const { base, peak } = levelWindow([200, 200], { floorAtZero: true });
+
+    expect(peak).toBeGreaterThan(200);
+    expect(base).toBeLessThan(200);
   });
 });

@@ -142,7 +142,19 @@ export function rateTrend(days: readonly CalendarDayData[]): RatePoint[] {
   }
 
   return [...weeks.entries()]
-    .filter(([, bucket]) => bucket.hours > 0)
+    /*
+     * An hour before a week has a rate, not a minute.
+     *
+     * `hours > 0` let a week of 0.02 worked hours onto the chart, where
+     * deductions outrunning two minutes of work priced the hour at −7 805 ₴.
+     * One such week dragged the whole window: real rates sat around 230 ₴ and
+     * the axis reached 1 443 ₴, so a year of drift — the thing this chart
+     * exists to show — was a flat line along the floor. It also produced «↓
+     * 1851%», a fall of more than everything there was.
+     *
+     * The same floor the hourly rate keeps everywhere else in the app.
+     */
+    .filter(([, bucket]) => bucket.hours >= 1)
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([week, bucket]) => ({ week, perHour: bucket.earned / bucket.hours, hours: bucket.hours }));
 }

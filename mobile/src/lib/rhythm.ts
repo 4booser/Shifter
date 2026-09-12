@@ -42,7 +42,9 @@ export const byWeekday = (days: { date: string; hours: number; earned: number }[
   }
 
   for (const row of rows) {
-    row.perHour = row.hours > 0 ? row.earned / row.hours : null;
+    // An hour, not a minute. Two worked minutes divide into a rate in the
+    // thousands and win «лучший день» on the strength of nothing worked.
+    row.perHour = row.hours >= 1 ? row.earned / row.hours : null;
   }
 
   return rows;

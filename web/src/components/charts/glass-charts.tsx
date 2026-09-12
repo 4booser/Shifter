@@ -7,7 +7,7 @@ import { TipDay, WaterfallStep, WeekBand } from '@/lib/charts/report-math';
 import { stagger } from '@/lib/fx';
 import { useI18n } from '@/lib/i18n';
 import { useMoney } from '@/lib/settings/money';
-import { smoothPath } from '@/lib/charts/math';
+import { levelWindow, smoothPath } from '@/lib/charts/math';
 import { earnedTone } from '@/lib/tone';
 
 /*
@@ -476,14 +476,14 @@ export function TrendLine({ points }: { points: TrendPoint[] }) {
   const H = 200;
   const PAD = { top: 30, right: 76, bottom: 34, left: 46 };
 
-  const values = points.map((point) => point.value);
-  const low = Math.min(...values);
-  const high = Math.max(...values);
   // A zoomed window shows drift, but a window without a scale reads as
   // nonsense — so the frame carries real ticks, and the floor never dips
-  // below zero: an hourly rate has no negative half-plane.
-  const floor = Math.max(0, low === high ? low * 0.85 : low - (high - low) * 0.3);
-  const ceiling = low === high ? high * 1.15 || 1 : high + (high - low) * 0.3;
+  // below zero: an hourly rate has no negative half-plane. The window itself
+  // is the shared one, not a third hand-rolled copy of the same arithmetic.
+  const { base: floor, peak: ceiling } = levelWindow(
+    points.map((point) => point.value),
+    { floorAtZero: true },
+  );
 
   const x = (index: number) =>
     PAD.left + (points.length === 1 ? (W - PAD.left - PAD.right) / 2 : ((W - PAD.left - PAD.right) * index) / (points.length - 1));
@@ -492,7 +492,19 @@ export function TrendLine({ points }: { points: TrendPoint[] }) {
   const path = smoothPath(points.map((point, index) => ({ x: x(index), y: y(point.value) })));
   const last = points.at(-1);
   const first = points[0];
-  const change = first !== undefined && last !== undefined && first.value > 0 ? ((last.value - first.value) / first.value) * 100 : null;
+  /*
+   * A fall cannot exceed everything there was.
+   *
+   * This printed «↓ 1851%» — arithmetically what you get when the last point
+   * is negative and the first is small, and nonsense as a sentence. Both ends
+   * have to be real positive rates before a change between them means
+   * anything; the source now keeps minute-long weeks off the chart, and this
+   * refuses to quote a figure it cannot stand behind even if one arrives.
+   */
+  const change =
+    first !== undefined && last !== undefined && first.value > 0 && last.value > 0
+      ? ((last.value - first.value) / first.value) * 100
+      : null;
 
   if (points.length === 0 || last === undefined) return null;
 
@@ -501,7 +513,15 @@ export function TrendLine({ points }: { points: TrendPoint[] }) {
   const area = `${path} L ${x(points.length - 1)} ${H - PAD.bottom} L ${x(0)} ${H - PAD.bottom} Z`;
   // Labels near the top edge would leave the frame; flip them under the dot.
   const labelY = (value: number) => (y(value) < PAD.top + 16 ? y(value) + 20 : y(value) - 12);
+  /*
+   * Ticks counted back from the newest week, not forward from the oldest.
+   * Forward plus «always label the last one» put 36 and 37 side by side and
+   * printed «17.0Д4.08» — two dates in one place. Counting back keeps the
+   * spacing even and anchors the end everybody reads first.
+   */
   const every = Math.max(1, Math.ceil(points.length / 10));
+  const marked = new Set<number>();
+  for (let index = points.length - 1; index >= 0; index -= every) marked.add(index);
 
   return (
     <div className="relative">
@@ -563,7 +583,7 @@ export function TrendLine({ points }: { points: TrendPoint[] }) {
                 {point.hours !== undefined ? ` · ${Math.round(point.hours)}ч` : ''}
               </text>
             )}
-            {(index % every === 0 || index === points.length - 1) && (
+            {marked.has(index) && (
               <text x={x(index)} y={H - 6} textAnchor="middle" fontSize="9.5" fill="var(--faint)">
                 {point.label}
               </text>

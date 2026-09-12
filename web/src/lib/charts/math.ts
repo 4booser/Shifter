@@ -97,6 +97,35 @@ export function buildTicks(data: ColumnDatum[]): Tick[] {
  * twelve thousand units below its own canvas while labelling the axis «₴0 ·
  * ₴0.5 · ₴1». Money that went the wrong way still has to be drawable.
  */
+/**
+ * The window a *level* series is drawn in: its own range, with a little air.
+ *
+ * A cumulative climb starts at nought — that is what makes it a climb. A
+ * level does not: an hourly rate drifting between ₴230 and ₴250, drawn from
+ * zero, is a flat line at the ceiling and every number the chart was asked
+ * to show is thrown away. The round-number ladder `niceCeiling` climbs is
+ * chosen against the magnitude of a number rather than the width of a band,
+ * which makes it exactly the wrong tool here.
+ *
+ * `floorAtZero` for a quantity that has no negative half-plane — a rate, a
+ * count of hours — so a low value near nought does not open a window below
+ * it that can never be filled.
+ *
+ * The second front has had this since its balance chart was a straight line
+ * over a block of colour; this is the same function, and now there is one of
+ * it per client rather than one hand-rolled copy per chart.
+ */
+export function levelWindow(
+  values: number[],
+  { floorAtZero = false }: { floorAtZero?: boolean } = {},
+): { base: number; peak: number } {
+  const low = Math.min(...values);
+  const high = Math.max(...values);
+  const air = Math.max((high - low) * 0.3, Math.abs(high) * 0.15, 1);
+
+  return { base: floorAtZero ? Math.max(0, low - air) : low - air, peak: high + air };
+}
+
 export function niceFloor(value: number): number {
   if (value >= 0) return 0;
 

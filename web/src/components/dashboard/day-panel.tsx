@@ -67,6 +67,16 @@ const TIP_STEPS = [50, 100, 200, 500];
  * shipped a fix for — also picks up a day that arrives after the panel opened
  * on it, filling only what the draft has no answer for.
  */
+/**
+ * How long the panel waits after the last change before it saves.
+ *
+ * Four seconds, not the ten it is tempting to give it: the delay buys nothing
+ * but fewer requests, and every way of leaving the panel flushes anyway, so a
+ * longer wait only widens the window where a phone locking mid-thought has
+ * something in hand that the server has not been told about.
+ */
+const QUIET_BEFORE_SAVE = 4_000;
+
 export function DayPanel() {
   const { t, n, lang, num } = useI18n();
   const { format } = useMoney();
@@ -231,10 +241,17 @@ export function DayPanel() {
   // The break override exists because a break must be recorded when it ends,
   // not when somebody later remembers to press Save. React state has not
   // settled by then, so the finished figure is handed straight in.
-  const save = (breakOverride?: Record<number, number>) => {
+  /**
+   * The day as it currently stands in this panel, ready to send.
+   *
+   * Pulled out of `save` so the autosave below can compare it against what
+   * was loaded without a second copy of these rules drifting away from this
+   * one.
+   */
+  const draftOf = (breakOverride?: Record<number, number>) => {
     const breaksNow = breakOverride ?? breaks;
 
-    void saveDay(key, {
+    return {
       shifts: shifts.map((entry) => {
         // An explicit null is "back to the plan"; undefined means untouched.
         const start =
@@ -268,8 +285,77 @@ export function DayPanel() {
       // Echo what was loaded: the server refuses a save over a version this
       // panel never saw, and the conflict modal takes it from there.
       version: day?.version ?? 0,
-    });
+    };
   };
+
+  const save = (breakOverride?: Record<number, number>) => {
+    const payload = draftOf(breakOverride);
+
+    sent.current = fingerprint(payload);
+    void saveDay(key, payload);
+  };
+
+  /*
+   * Saving without a button.
+   *
+   * There was one «Сохранить день» at the foot of the panel, and everything
+   * above it — every tick, every figure, the colour, the note — waited for
+   * somebody to remember to press it. A day edited and left unpressed was a
+   * day that silently did not happen.
+   *
+   * It saves itself now: a few seconds after the last change, and at once on
+   * any of the moments where the panel is about to stop being looked at —
+   * the day switching, the tab going away, the page closing. The delay only
+   * decides how chatty the network is; nothing waits on it to survive,
+   * because every exit flushes.
+   *
+   * `fingerprint` is the whole trick: rather than teach thirty setters to
+   * raise a dirty flag, the draft is compared against the day it was loaded
+   * from. Nothing to forget when a thirty-first field is added.
+   */
+  const fingerprint = (payload: ReturnType<typeof draftOf>) =>
+    JSON.stringify({ ...payload, version: 0 });
+
+  const sent = useRef<string | null>(null);
+  const draft = fingerprint(draftOf());
+  const dirty = sent.current !== null && draft !== sent.current;
+
+  // The loaded day is the baseline, re-taken whenever a different day arrives
+  // or the server answers with a new version of this one.
+  useEffect(() => {
+    sent.current = fingerprint(draftOf());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key, day?.version]);
+
+  const flush = useRef<() => void>(() => undefined);
+
+  flush.current = () => {
+    if (dirty) save();
+  };
+
+  useEffect(() => {
+    if (!dirty) return;
+
+    const timer = setTimeout(() => flush.current(), QUIET_BEFORE_SAVE);
+
+    return () => clearTimeout(timer);
+  }, [dirty, draft]);
+
+  // Leaving, in every sense: another day, another tab, another page.
+  useEffect(() => {
+    const onHide = () => {
+      if (document.visibilityState === 'hidden') flush.current();
+    };
+
+    document.addEventListener('visibilitychange', onHide);
+    window.addEventListener('pagehide', onHide);
+
+    return () => {
+      document.removeEventListener('visibilitychange', onHide);
+      window.removeEventListener('pagehide', onHide);
+      flush.current();
+    };
+  }, []);
 
   // A column of cards, the same shape as the sidebar opposite it. It was one
   // tall card that stuck to the top and scrolled inside itself, which meant
@@ -829,10 +915,24 @@ export function DayPanel() {
         </p>
       </section>
 
-      <button type="button" className="btn btn-primary w-full" disabled={saving} onClick={() => save()}>
-        <Icon name="check" size={15} />
-        {saving ? t('Saving…') : t('Save day')}
-      </button>
+      {/* Where the day stands, instead of something to press. Removing the
+          button without saying anything would only move the doubt: a person
+          who no longer presses «Сохранить» needs to see that it happened. */}
+      <p className="field-hint flex items-center justify-center gap-1.5">
+        {saving ? (
+          <>
+            <Icon name="check" size={13} />
+            {t('Saving…')}
+          </>
+        ) : dirty ? (
+          t('Changes save on their own')
+        ) : (
+          <>
+            <Icon name="check" size={13} className="text-good-read" />
+            {t('Saved')}
+          </>
+        )}
+      </p>
 
       {/* Saved figures */}
       {day && (

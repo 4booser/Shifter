@@ -1352,7 +1352,6 @@ const UK: Dictionary = {
   Worked: 'Відпрацьовано',
   Planned: 'Заплановано',
   Note: 'Нотатка',
-  'Save day': 'Зберегти день',
   Saved: 'Збережено',
   'Saving…': 'Зберігаємо…',
   Clear: 'Скинути',
@@ -2663,6 +2662,7 @@ const UK: Dictionary = {
   'This invite has no code': 'У запрошенні немає коду',
   'The link is cut short. Ask for it again, or type the code on the rota page.': 'Посилання обірвалося. Попросіть його ще раз — або введіть код на сторінці графіка.',
   'To the rota': 'До графіка',
+  'Changes save on their own': 'Зміни зберігаються самі',
 };
 
 

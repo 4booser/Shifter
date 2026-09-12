@@ -1367,7 +1367,6 @@ const RU: Dictionary = {
   Worked: 'Отработано',
   Planned: 'Запланировано',
   Note: 'Заметка',
-  'Save day': 'Сохранить день',
   Saved: 'Сохранено',
   'Saving…': 'Сохранение…',
   Clear: 'Сбросить',
@@ -2682,6 +2681,7 @@ const RU: Dictionary = {
   'This invite has no code': 'В приглашении нет кода',
   'The link is cut short. Ask for it again, or type the code on the rota page.': 'Ссылка оборвалась. Попросите её ещё раз — или введите код на странице графика.',
   'To the rota': 'К графику',
+  'Changes save on their own': 'Изменения сохраняются сами',
 };
 
 export default RU;

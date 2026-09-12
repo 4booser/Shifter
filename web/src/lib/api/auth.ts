@@ -46,6 +46,11 @@ export interface Profile {
   two_factor: boolean;
   /** Whether they asked for the month's letter. Off unless they did. */
   monthly_letter: boolean;
+  /**
+   * A throwaway account somebody pressed «look around» to get. Everything in
+   * it is invented and it sweeps itself after two days; the shell says so.
+   */
+  is_demo: boolean;
 }
 
 /**
@@ -98,6 +103,16 @@ export const authApi = {
         },
       }),
     );
+  },
+
+  /**
+   * The whole application, on invented work. Nobody is asked for anything:
+   * the server mints a throwaway account, seeds half a year into it and
+   * answers with the same envelope a login does — so the session is kept the
+   * same way, and everything downstream cannot tell the difference.
+   */
+  async demo(): Promise<void> {
+    saveSession(await api<AuthResponse>('/shifter/v1/demo', { method: 'POST' }));
   },
 
   googleConfig: () => api<{ client_id: string | null }>(`${AUTH}/google/config`),

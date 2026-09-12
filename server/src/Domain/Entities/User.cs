@@ -164,6 +164,16 @@ public sealed class User
     public string? BackupCodeHashes { get; set; }
 
     public bool IsActive { get; set; } = true;
+
+    /// <summary>
+    /// When this account stops being a demonstration and starts being
+    /// rubbish. Null on every real account, which is what the flag is for as
+    /// much as the date: the application has to be able to say «this is an
+    /// example» out loud on every screen, and the sweep has to be able to
+    /// find these and only these.
+    /// </summary>
+    public DateTime? DemoUntil { get; set; }
+
     public DateTime CreatedAt { get; set; }
     public DateTime? LastLogin { get; set; }
 }

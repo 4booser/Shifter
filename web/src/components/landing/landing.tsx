@@ -4,6 +4,7 @@ import Link from 'next/link';
 
 import { useEffect, useRef, useState } from 'react';
 
+import { authApi } from '@/lib/api/auth';
 import { GIG_CATEGORIES } from '@/lib/api/gigs';
 import { useReveal } from '@/lib/fx';
 import { Icon } from '@/components/ui/icon';
@@ -161,6 +162,25 @@ function NightDust() {
 
 export function Landing() {
   const revealHost = useReveal<HTMLDivElement>();
+  /** «Посмотреть на примере»: сервер заводит временный аккаунт и сразу впускает. */
+  const [showing, setShowing] = useState(false);
+
+  const example = async () => {
+    if (showing) return;
+
+    setShowing(true);
+
+    try {
+      await authApi.demo();
+      location.assign('/dashboard');
+    } catch {
+      // Не вышло — верните кнопку и дайте обычный путь: на входе
+      // та же кнопка есть, и там видно сообщение об ошибке.
+      setShowing(false);
+      location.assign('/login');
+    }
+  };
+
   const [theme, setTheme] = useState(0);
 
   return (
@@ -235,6 +255,19 @@ export function Landing() {
                 <a href="#shift" className="btn !border-0 !px-5 !py-3 !text-[0.95rem]" style={{ background: 'rgb(240 239 247 / 9%)', color: NIGHT.ink }}>
                   Прожить смену за минуту ↓
                 </a>
+                {/* Полгода чужой работы одним нажатием. Всё, что ниже на этой
+                    странице, — рассказ о приложении; это единственная кнопка,
+                    которая показывает само приложение, и она не просит ни
+                    почты, ни пароля. */}
+                <button
+                  type="button"
+                  className="btn !border-0 !px-5 !py-3 !text-[0.95rem]"
+                  style={{ background: 'rgb(240 239 247 / 9%)', color: NIGHT.ink }}
+                  onClick={() => void example()}
+                  disabled={showing}
+                >
+                  {showing ? 'Готовлю пример…' : 'Посмотреть на примере →'}
+                </button>
               </div>
 
               <p className="reveal mt-6 font-mono text-[0.78rem]" style={{ color: NIGHT.faint }}>

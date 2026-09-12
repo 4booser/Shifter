@@ -34,6 +34,31 @@ function LoginForm() {
   const [ticket, setTicket] = useState<string | null>(null);
   const [code, setCode] = useState('');
 
+  /*
+   * Looking costs nothing.
+   *
+   * The bank tab has had this for months and it is the only reason anybody
+   * can see that page without handing over a token; the rest of the
+   * application had no such door, so the only way to find out what it does
+   * was to register and type in a month of one's own work first.
+   */
+  const [showing, setShowing] = useState(false);
+
+  const show = async () => {
+    if (showing || pending) return;
+
+    setShowing(true);
+    setError(null);
+
+    try {
+      await authApi.demo();
+      router.replace('/dashboard');
+    } catch (fault) {
+      setError(apiErrorMessage(fault));
+      setShowing(false);
+    }
+  };
+
   const submit = async (event: FormEvent) => {
     event.preventDefault();
 
@@ -155,6 +180,13 @@ function LoginForm() {
         </button>
 
         <GoogleButton onCredential={google} />
+
+        <button type="button" className="btn w-full" onClick={() => void show()} disabled={showing}>
+          {showing ? t('Setting the example up…') : t('Look around on an example')}
+        </button>
+        <p className="-mt-1 text-center text-[0.8rem] text-muted">
+          {t('Half a year of invented work, yours for two days. Nothing to fill in.')}
+        </p>
 
         <p className="text-center text-[0.85rem] text-muted">
           {t('No account yet?')}{' '}

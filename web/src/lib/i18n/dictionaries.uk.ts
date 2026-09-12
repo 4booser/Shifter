@@ -2682,6 +2682,11 @@ const UK: Dictionary = {
   'Транспорт': 'Транспорт',
   'остальное': 'решта',
   'прочее': 'інше',
+  'Setting the example up…': 'Готую приклад…',
+  'Half a year of invented work, yours for two days. Nothing to fill in.': 'Пів року вигаданої роботи, на дві доби. Нічого заповнювати не треба.',
+  'This is an example.': 'Це приклад.',
+  'The work in it is invented, and the account disappears in two days.': 'Робота в ньому вигадана, а акаунт зникне за дві доби.',
+  'nobody counted the room this month': 'цього місяця залу ніхто не рахував',
 };
 
 

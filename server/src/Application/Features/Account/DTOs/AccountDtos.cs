@@ -35,7 +35,14 @@ public record ProfileDto(
     /// <summary>Whether they asked for the month's letter. Off unless they did.</summary>
     bool monthly_letter = false,
     /// <summary>The colours saved to reuse, as "#RRGGBB". Empty until any are.</summary>
-    string[]? colour_presets = null);
+    string[]? colour_presets = null,
+    /// <summary>
+    /// Whether this account is a demonstration: invented work, and gone in
+    /// two days. The application has to say so on every screen rather than
+    /// let somebody spend an evening typing into an account that will not be
+    /// there on Thursday.
+    /// </summary>
+    bool is_demo = false);
 
 public record GetProfileDto(int UserId) : IRequest<ProfileDto>;
 

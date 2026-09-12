@@ -598,13 +598,24 @@ function GuestsTile({ monthDays }: { monthDays: CalendarDayData[] }) {
   return (
     <>
       <Label icon="users">{t('Guests served')}</Label>
+      {/*
+        «0» is an answer, and it is the wrong one here. Nobody counting the
+        room is not the same fact as an evening with no guests in it, and this
+        tile said «0 · там, где считали» to every month where the question was
+        never asked — which is most of them, and which is the first thing a
+        stranger sees on the example account.
+      */}
       <span className="tile-value">
-        <CountUp value={guests} format={(value) => `${Math.round(value)}`} />
+        {counted.length === 0
+          ? <span className="text-faint">·</span>
+          : <CountUp value={guests} format={(value) => `${Math.round(value)}`} />}
       </span>
       <span className="field-hint">
-        {guests > 0 && tips > 0
-          ? <><Money value={Math.round((tips / guests) * 100) / 100} /> {t('a guest in tips')}</>
-          : t('where anybody counted')}
+        {counted.length === 0
+          ? t('nobody counted the room this month')
+          : guests > 0 && tips > 0
+            ? <><Money value={Math.round((tips / guests) * 100) / 100} /> {t('a guest in tips')}</>
+            : t('where anybody counted')}
       </span>
     </>
   );

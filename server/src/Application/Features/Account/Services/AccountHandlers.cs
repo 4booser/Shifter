@@ -37,7 +37,8 @@ public static class AccountRules
         user.MonthlyLetter,
         // Stored as JSON because it is a list a person edits, not a schema:
         // unreadable text reads as "no palette yet" rather than as a crash.
-        ReadPresets(user.ColourPresets));
+        ReadPresets(user.ColourPresets),
+        user.DemoUntil is not null);
 
     private static string[] ReadPresets(string? stored)
     {

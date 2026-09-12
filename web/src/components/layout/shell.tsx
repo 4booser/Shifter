@@ -134,6 +134,30 @@ export function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-dvh">
       <LiveTitle />
+
+      {/*
+        Above the chrome and not dismissable, because the one thing this
+        account must never do is let somebody spend an evening typing their
+        real month into work that is invented and gone on Thursday. It sits
+        outside the sticky header on purpose: a banner that scrolls away is a
+        banner that stops being true half a page down.
+      */}
+      {face?.is_demo === true && (
+        <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 bg-(--warn-soft) px-3 py-1.5 text-center text-[0.82rem] text-warn-read">
+          <span>
+            <b>{t('This is an example.')}</b>{' '}
+            {t('The work in it is invented, and the account disappears in two days.')}
+          </span>
+          <button
+            type="button"
+            className="font-semibold underline underline-offset-2"
+            onClick={logout}
+          >
+            {t('Leave the example')}
+          </button>
+        </div>
+      )}
+
       <header className="app-chrome sticky top-0 z-40 border-b border-border bg-(--surface)/85 backdrop-blur-md">
         <div className="mx-auto flex h-14 max-w-[1440px] items-center gap-1 px-3 sm:px-5">
           <Link href="/dashboard" className="mr-2 flex items-center gap-2 font-bold tracking-tight">

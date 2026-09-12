@@ -2701,6 +2701,11 @@ const RU: Dictionary = {
   'Транспорт': 'Транспорт',
   'остальное': 'остальное',
   'прочее': 'прочее',
+  'Setting the example up…': 'Готовлю пример…',
+  'Half a year of invented work, yours for two days. Nothing to fill in.': 'Полгода придуманной работы, на двое суток. Ничего заполнять не надо.',
+  'This is an example.': 'Это пример.',
+  'The work in it is invented, and the account disappears in two days.': 'Работа в нём придумана, а аккаунт исчезнет через двое суток.',
+  'nobody counted the room this month': 'в этом месяце зал никто не считал',
 };
 
 export default RU;

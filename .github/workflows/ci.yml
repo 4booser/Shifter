@@ -218,6 +218,7 @@ jobs:
       - name: Give it a schema
         run: |
           dotnet tool install --global dotnet-ef
+          dotnet restore server/Shifter.csproj
           PGPASSWORD=ci psql -h localhost -U shifter_user -d shifter -c 'CREATE DATABASE tokens;'
           dotnet ef database update --project server/Shifter.csproj --context ShifterDbContext
           dotnet ef database update --project server/Shifter.csproj --context TokensDbContext

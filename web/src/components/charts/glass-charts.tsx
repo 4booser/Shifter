@@ -66,6 +66,15 @@ export interface BarRow {
   caption?: string;
   /** The row this chart is about — the current month, the chosen place. */
   marked?: boolean;
+  /**
+   * The row's own colour, where the thing being measured has one.
+   *
+   * Places carry a colour their owner chose, and it is identity rather than
+   * rank — the same place keeps the same colour whether it earned most or
+   * least this month. Rows without one take the accent, which is the normal
+   * case: a month or a weekday has no colour of its own to honour.
+   */
+  colour?: string;
 }
 
 export function Bars({
@@ -137,10 +146,11 @@ export function Bars({
                 ))}
               {row.value > 0 && (
                 <span
-                  className="grow-w absolute inset-y-0 left-0 rounded-full bg-(--accent)"
+                  className="grow-w absolute inset-y-0 left-0 rounded-full"
                   style={{
                     ['--i' as string]: index,
                     width: `${Math.max(2, (row.value / peak) * 100)}%`,
+                    background: row.colour ?? 'var(--accent)',
                     opacity: hover === null || hover === index ? (lead ? 1 : 0.68) : 0.3,
                   }}
                 />

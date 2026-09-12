@@ -92,55 +92,6 @@ export interface PunchCell {
   perHour: number;
 }
 
-export interface Punchcard {
-  cells: PunchCell[];
-  hourFrom: number;
-  hourTo: number;
-  maxCount: number;
-  maxPerHour: number;
-}
-
-/**
- * Worked shifts bucketed by weekday and starting hour — the shape of a
- * working life. Size will say how often, colour how well it pays.
- */
-export function punchcard(days: readonly CalendarDayData[]): Punchcard | null {
-  const buckets = new Map<string, PunchCell>();
-
-  for (const day of days) {
-    const weekday = (new Date(`${day.date}T00:00:00`).getDay() + 6) % 7;
-
-    for (const entry of day.shifts) {
-      if (!entry.worked) continue;
-
-      const hour = Number(entry.start_time.slice(0, 2));
-      const key = `${weekday}:${hour}`;
-      const cell =
-        buckets.get(key) ?? { weekday, hour, count: 0, hours: 0, earned: 0, perHour: 0 };
-
-      cell.count += 1;
-      cell.hours += entry.hours;
-      cell.earned += entry.earned;
-      buckets.set(key, cell);
-    }
-  }
-
-  if (buckets.size === 0) return null;
-
-  const cells = [...buckets.values()].map((cell) => ({
-    ...cell,
-    perHour: cell.hours > 0 ? cell.earned / cell.hours : 0,
-  }));
-
-  return {
-    cells,
-    hourFrom: Math.min(...cells.map((cell) => cell.hour)),
-    hourTo: Math.max(...cells.map((cell) => cell.hour)),
-    maxCount: Math.max(...cells.map((cell) => cell.count)),
-    maxPerHour: Math.max(...cells.map((cell) => cell.perHour)),
-  };
-}
-
 /** Money attributed to each hour of the clock, spread across shift spans. */
 export function hourDial(days: readonly CalendarDayData[]): number[] {
   const hours = new Array<number>(24).fill(0);
@@ -263,40 +214,4 @@ export interface TipDay {
   /** Tips as a share of everything those days earned, 0–1. */
   share: number;
   total: number;
-}
-
-/**
- * Which nights actually tip. Averaged over worked days rather than summed,
- * because a weekday somebody works twice as often would otherwise look twice
- * as generous — the question is "is Friday worth taking", not "how many
- * Fridays did I take".
- */
-export function tipsByWeekday(days: readonly CalendarDayData[]): TipDay[] {
-  const buckets = new Map<number, { days: number; tips: number; earned: number }>();
-
-  for (const day of days) {
-    if (!day.shifts.some((entry) => entry.worked)) continue;
-
-    // A day with no tips figure is a blank, not a zero: counting it as zero
-    // drags an average down with something nobody ever recorded.
-    if (day.tips === null) continue;
-
-    const weekday = (new Date(`${day.date}T00:00:00`).getDay() + 6) % 7;
-    const bucket = buckets.get(weekday) ?? { days: 0, tips: 0, earned: 0 };
-
-    bucket.days += 1;
-    bucket.tips += day.tips;
-    bucket.earned += day.earned;
-    buckets.set(weekday, bucket);
-  }
-
-  return [...buckets.entries()]
-    .map(([weekday, bucket]) => ({
-      weekday,
-      days: bucket.days,
-      average: bucket.tips / bucket.days,
-      share: bucket.earned > 0 ? bucket.tips / bucket.earned : 0,
-      total: bucket.tips,
-    }))
-    .sort((left, right) => left.weekday - right.weekday);
 }

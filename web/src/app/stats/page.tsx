@@ -36,7 +36,7 @@ import { CitiesCard } from '@/components/stats/cities';
 import { RecordsHealthCard } from '@/components/stats/records-health';
 import { YearHeat } from '@/components/stats/year-heat';
 import { TrophyShelf } from '@/components/stats/trophies';
-import { hourDial, rateTrend, tipsByWeekday, waterfall, weekBands } from '@/lib/charts/report-math';
+import { hourDial, rateTrend, waterfall, weekBands } from '@/lib/charts/report-math';
 import { Bars, ClockRing, MoneyFlow, TrendLine, WeekBandsChart } from '@/components/charts/glass-charts';
 import { AreaChart, ColumnChart, Plot } from '@/components/charts/charts';
 import { Alert, CountUp, Delta, Money } from '@/components/ui/bits';
@@ -289,7 +289,6 @@ function Stats() {
   const forecast = forecastFor(summary.days, range.from, range.to, awayDays, season);
   const waterfallSteps = useMemo(() => waterfall(summary), [summary]);
   const bands = useMemo(() => weekBands(summary.days), [summary.days]);
-  const tipWeek = useMemo(() => tipsByWeekday(summary.days), [summary.days]);
   const dial = useMemo(() => hourDial(summary.days), [summary.days]);
   const rate = useMemo(
     () =>

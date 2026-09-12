@@ -20,8 +20,7 @@ import { delta } from '@/lib/calendar/stats-math';
 import { waterfall, weekBands } from '@/lib/charts/report-math';
 import { useI18n } from '@/lib/i18n';
 import { useMoney } from '@/lib/settings/money';
-import { Donut } from '@/components/charts/report-charts';
-import { MoneyFlow, WeekBandsChart } from '@/components/charts/glass-charts';
+import { Bars, MoneyFlow, WeekBandsChart } from '@/components/charts/glass-charts';
 import { Sheet, buildXlsx, downloadBlob } from '@/lib/export/xlsx';
 import { Seasonality } from '@/components/dashboard/seasonality';
 import { WeatherEffectCard } from '@/components/dashboard/weather-effect';
@@ -466,13 +465,20 @@ function Report() {
             <section className="card reveal p-4">
               <h2 className="mb-2 text-[0.98rem] font-bold">{t('By place')}</h2>
               <div className="grid items-center gap-3 lg:grid-cols-2">
-                <Donut
-                  centreLabel={t('Earned')}
-                  slices={summary.by_location.map((place, index) => ({
+                {/* Bars, not a donut. This sits beside a table that already
+                    lists every one of these numbers, so the shape's only job
+                    is «which is biggest», and a donut answers that by asking
+                    somebody to compare arc angles. Each place keeps the
+                    colour its owner gave it — that is identity, not rank. */}
+                <Bars
+                  rows={summary.by_location.map((place, index) => ({
                     label: placeName(place, t('No place set')),
                     value: place.earned,
                     colour: place.colour || PLACE_TINTS[index % PLACE_TINTS.length],
                   }))}
+                  format={format}
+                  labelWidth="7rem"
+                  scale
                 />
                 <table className="w-full border-collapse text-[0.85rem]">
                   <thead>

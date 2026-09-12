@@ -37,8 +37,8 @@ import { RecordsHealthCard } from '@/components/stats/records-health';
 import { YearHeat } from '@/components/stats/year-heat';
 import { TrophyShelf } from '@/components/stats/trophies';
 import { hourDial, rateTrend, tipsByWeekday, waterfall, weekBands } from '@/lib/charts/report-math';
-import { ClockRing, DaysAtGlance, MoneyFlow, MonthBars, RankBars, TipWeek, TrendLine, WeekBandsChart } from '@/components/charts/glass-charts';
-import { AreaChart, ColumnChart, Plot, ProgressRing } from '@/components/charts/charts';
+import { Bars, ClockRing, MoneyFlow, TrendLine, WeekBandsChart } from '@/components/charts/glass-charts';
+import { AreaChart, ColumnChart, Plot } from '@/components/charts/charts';
 import { Alert, CountUp, Delta, Money } from '@/components/ui/bits';
 import { FlowMoney } from '@/components/ui/flow';
 import { Icon } from '@/components/ui/icon';
@@ -784,14 +784,29 @@ function Stats() {
           {goalProgress === null ? (
             <p className="field-hint">{t('Set an amount to aim for and the period fills this meter.')}</p>
           ) : (
-            <div className="relative flex items-center gap-4">
+            /* The same meter the dashboard's goal tile uses.
+               It was a ring here and a bar there, for one question asked
+               twice — and at nought per cent the ring is an empty circle
+               with nothing in it to read, where a bar at least shows the
+               track it has not filled. */
+            <div className="relative flex flex-col gap-2">
               <GoalCheer periodFrom={range.from} reached={goalProgress.reached} />
-              <div className="relative">
-                <ProgressRing percent={goalProgress.percent} />
-                <span className="absolute inset-0 grid place-items-center text-[1.05rem] font-bold tabular">
+              <div className="flex items-baseline gap-2">
+                <span className="text-[1.6rem] font-bold tabular">
                   {Math.round(goalProgress.percent)}%
                 </span>
+                <span className="field-hint">
+                  {t('of')} <Money value={goalProgress.target} />
+                </span>
               </div>
+              <span className="goal-bar" aria-hidden>
+                <i
+                  style={{
+                    width: `${Math.max(1, Math.min(100, goalProgress.percent))}%`,
+                    background: goalProgress.reached ? 'var(--good)' : 'var(--accent)',
+                  }}
+                />
+              </span>
               <div className="min-w-0">
                 <p className="text-[0.9rem]">
                   <Money value={summary.total_earned} className="font-bold" /> / <Money value={goalProgress.target} />
@@ -838,12 +853,16 @@ function Stats() {
           />
         </Card>
         <Card title={t('Twelve months')} hint={t('Is this month normal?')}>
-          <MonthBars
+          <Bars
             rows={trendRaw.map((month, index) => ({
               label: month.label,
               value: month.earned,
-              current: index === trendRaw.length - 1,
+              marked: index === trendRaw.length - 1,
             }))}
+            format={(value) => formatMoney(settings, value)}
+            compact={(value) => formatMoneyCompact(settings, value)}
+            labelWidth="2.4rem"
+            thinWhenEmpty
           />
         </Card>
       </div>
@@ -1100,18 +1119,20 @@ function Stats() {
       {/* ==== What feeds the month: days and shifts side by side ==== */}
       <Card title={t('What feeds the month')} hint={t('The same money twice: by weekday and by shift.')}>
         <div className="grid gap-4 md:grid-cols-2">
-          <RankBars
-            rows={weekdays.map((day) => ({ name: t(day.name), value: day.value }))}
+          <Bars
+            rows={weekdays.map((day) => ({ label: t(day.name), value: day.value }))}
             format={(value) => formatMoneyCompact(settings, value)}
+            scale
           />
           {topShifts.length > 0 && (
-            <RankBars
+            <Bars
               rows={topShifts.map((row) => ({
-                name: row.name,
+                label: row.name,
                 value: row.value,
-                caption: `${Math.round(row.hours)}h`,
+                caption: `${Math.round(row.hours)} ${t('h')}`,
               }))}
               format={(value) => formatMoneyCompact(settings, value)}
+              scale
             />
           )}
         </div>

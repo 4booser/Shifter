@@ -4,7 +4,7 @@ import { DaysResponse, DeductionSplit, ExpenseSplit, ZoneTotal } from '@/lib/cal
 import { useI18n } from '@/lib/i18n';
 import { useMoney } from '@/lib/settings/money';
 import { Money } from '@/components/ui/bits';
-import { RankBars } from '@/components/charts/glass-charts';
+import { Bars } from '@/components/charts/glass-charts';
 
 /**
  * The year's other chapters, each one a question the page could not answer
@@ -130,14 +130,15 @@ export function ZoneTips({ zones }: { zones: ZoneTotal[] }) {
       <h2 className="mb-1 text-[0.98rem] font-bold">{t('Where the tips happened')}</h2>
       <p className="field-hint mb-2">{t('Per hour spent standing there — the comparison the argument is about.')}</p>
 
-      <RankBars
+      <Bars
         rows={rows.map((zone) => ({
-          name: named[zone.zone] ?? zone.zone,
+          label: named[zone.zone] ?? zone.zone,
           value: Math.round(zone.tips_per_hour),
           caption: `${Math.round(zone.hours)} ${t('h')}`,
         }))}
         format={(value) => `${format(value)}/${t('h')}`}
         labelWidth="6.5rem"
+        scale
       />
     </section>
   );
@@ -258,14 +259,15 @@ export function CostOfWork({
         {spent.length > 0 && (
           <div>
             <span className="field-label">{t('Spent to work')} · {format(total)}</span>
-            <RankBars
+            <Bars
               rows={spent.map((row) => ({
-                name: kinds[row.kind] ?? row.kind,
+                label: kinds[row.kind] ?? row.kind,
                 value: row.amount,
                 caption: `×${row.count}`,
               }))}
               format={(value) => format(value)}
               labelWidth="7rem"
+              scale
             />
             {travelShare !== null && (
               <p className="field-hint mt-1">
@@ -278,12 +280,12 @@ export function CostOfWork({
         {taken.length > 0 && (
           <div>
             <span className="field-label">{t('Withheld')} · {format(withheld)}</span>
-            <RankBars
+            <Bars
               rows={rows.map((row) => ({
                 // A reason the map does not know still has to have a name:
                 // the fallback printed the raw key, and a blank key printed
                 // a bar with no label at all.
-                name: reasons[row.reason] ?? (row.reason.trim() === '' ? reasons.unsaid : row.reason),
+                label: reasons[row.reason] ?? (row.reason.trim() === '' ? reasons.unsaid : row.reason),
                 value: row.amount,
                 caption: row.days > 0 ? `${row.days} ${t('d.')}` : '',
               }))}

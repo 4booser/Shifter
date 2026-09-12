@@ -21,7 +21,15 @@ const GRAD_TOP = 'var(--accent)';
 const GRAD_BOTTOM = 'color-mix(in srgb, var(--accent) 45%, var(--surface))';
 
 /** A shared vertical gradient; the id is per-instance so charts can coexist. */
-function useBarGradient(): [string, React.ReactNode] {
+/**
+ * The vertical wash under a line's area, and the line's own stroke.
+ *
+ * Named for bars because it used to paint them; it does not any more — a
+ * horizontal fade across a bar claimed an encoding the bar did not have. Top
+ * to bottom under an area is the other thing entirely: it reads as a fill
+ * fading out, not as a value changing.
+ */
+function useLineWash(): [string, React.ReactNode] {
   const id = useId().replace(/[«»:]/g, '');
 
   return [
@@ -35,36 +43,67 @@ function useBarGradient(): [string, React.ReactNode] {
 
 // ==== Twelve months, readable with one month of data ====
 
-export interface MonthBarRow {
+/**
+ * One horizontal bar chart, for every «which of these is biggest» question.
+ *
+ * There were two of these, ninety per cent identical: `MonthBars` for a year
+ * of months and `RankBars` for ranked categories. They differed in the width
+ * of the label gutter, in which row counts as the important one, and in
+ * whether the scale was drawn — three props, not two components. Between them
+ * they answered five questions on three pages, and every fix to one had to be
+ * remembered for the other.
+ *
+ * The gradient is gone. A left-to-right fade across each bar encoded nothing
+ * — the bar's length already carries the number — and a fill that means
+ * nothing is decoration competing with the one thing on the row that does.
+ * The marked row and the peak carry full accent; the rest stand slightly
+ * back, which is a real difference about real values.
+ */
+export interface BarRow {
   label: string;
   value: number;
-  current?: boolean;
+  /** Shown in place of the value on hover: «8 ч», «12 смен». */
+  caption?: string;
+  /** The row this chart is about — the current month, the chosen place. */
+  marked?: boolean;
 }
 
-/**
- * Horizontal rows instead of a forest of empty columns: a year with one
- * lived month reads as one strong bar and eleven quiet tracks, not as a
- * broken chart. The best month carries its value; the current one glows.
- */
-export function MonthBars({ rows }: { rows: MonthBarRow[] }) {
-  const { format, compact } = useMoney();
+export function Bars({
+  rows,
+  format,
+  compact,
+  labelWidth = '6rem',
+  scale = false,
+  thinWhenEmpty = false,
+}: {
+  rows: BarRow[];
+  format: (value: number) => string;
+  /** A shorter form for the resting state, where one exists. */
+  compact?: (value: number) => string;
+  labelWidth?: string;
+  /** Quarter gridlines and a labelled axis, so the width means something. */
+  scale?: boolean;
+  /** A nought row becomes a hairline rather than a full empty track. */
+  thinWhenEmpty?: boolean;
+}) {
   const [hover, setHover] = useState<number | null>(null);
-
   const peak = Math.max(1, ...rows.map((row) => row.value));
+  const columns = `${labelWidth} 1fr auto`;
 
   return (
-    <div className="flex flex-col gap-[7px]" onPointerLeave={() => setHover(null)}>
+    <div className="flex flex-col gap-1.5" onPointerLeave={() => setHover(null)}>
       {rows.map((row, index) => {
-        const share = row.value / peak;
-        const best = row.value === peak && row.value > 0;
+        const loudest = row.value === peak && row.value > 0;
+        const lead = loudest || row.marked === true;
 
-        // A month with nothing in it earns eight pixels, not a full row of
-        // grey skeleton — ten of those were most of the card.
-        if (row.value === 0 && !row.current) {
+        // Ten empty months were most of the card; a hairline says «nothing
+        // here» without spending a row on it.
+        if (thinWhenEmpty && row.value === 0 && row.marked !== true) {
           return (
-            <div key={row.label} className="flex h-2 items-center gap-2.5">
-              <span className="w-9 flex-none text-right text-[0.62rem] capitalize text-faint">{row.label}</span>
-              <span className="h-px min-w-0 flex-1 bg-border" />
+            <div key={row.label} className="grid h-2 items-center gap-2" style={{ gridTemplateColumns: columns }}>
+              <span className="truncate text-right text-[0.62rem] capitalize text-faint">{row.label}</span>
+              <span className="h-px min-w-0 bg-border" />
+              <span />
             </div>
           );
         }
@@ -72,43 +111,72 @@ export function MonthBars({ rows }: { rows: MonthBarRow[] }) {
         return (
           <div
             key={row.label}
-            className="group flex items-center gap-2.5"
+            className="grid items-center gap-2 text-[0.85rem]"
+            style={{ gridTemplateColumns: columns }}
             onPointerEnter={() => setHover(index)}
           >
             <span
-              className={`w-9 flex-none text-right text-[0.72rem] capitalize tabular ${
-                row.current ? 'font-bold text-(--accent-read)' : 'text-faint'
+              className={`truncate ${
+                row.marked === true
+                  ? 'font-bold text-(--accent-read)'
+                  : lead
+                    ? 'font-semibold text-ink'
+                    : 'text-muted'
               }`}
             >
               {row.label}
             </span>
-            <span className="relative h-[18px] min-w-0 flex-1 overflow-hidden rounded-full bg-surface-2">
+            <span className="relative h-3.5 min-w-0 rounded-full bg-surface-2">
+              {scale
+                && [0.25, 0.5, 0.75].map((tick) => (
+                  <span
+                    key={tick}
+                    className="absolute inset-y-[3px] w-px bg-(--border-strong) opacity-60"
+                    style={{ left: `${tick * 100}%` }}
+                  />
+                ))}
               {row.value > 0 && (
                 <span
-                  className="grow-w absolute inset-y-0 left-0 rounded-full"
+                  className="grow-w absolute inset-y-0 left-0 rounded-full bg-(--accent)"
                   style={{
                     ['--i' as string]: index,
-                    width: `${Math.max(2.5, share * 100)}%`,
-                    background: `linear-gradient(90deg, ${GRAD_BOTTOM}, ${GRAD_TOP})`,
-                    boxShadow: best ? '0 0 12px color-mix(in srgb, var(--accent) 55%, transparent)' : undefined,
-                    opacity: hover === null || hover === index ? 1 : 0.4,
+                    width: `${Math.max(2, (row.value / peak) * 100)}%`,
+                    opacity: hover === null || hover === index ? (lead ? 1 : 0.68) : 0.3,
                   }}
                 />
               )}
             </span>
             <span
-              className={`w-20 flex-none whitespace-nowrap text-right text-[0.78rem] tabular ${
-                best ? 'font-bold' : row.value > 0 ? 'text-muted' : 'text-faint'
+              className={`whitespace-nowrap text-right tabular ${
+                lead ? 'font-bold' : row.value > 0 ? 'text-muted' : 'text-faint'
               }`}
             >
-              {row.value > 0 ? (hover === index ? format(row.value) : compact(row.value)) : '·'}
+              {row.value === 0
+                ? '·'
+                : hover === index
+                  ? (row.caption ?? format(row.value))
+                  : (compact ?? format)(row.value)}
             </span>
           </div>
         );
       })}
+
+      {/* What the full width means, so the bars are a chart and not a mood. */}
+      {scale && (
+        <div className="grid items-center gap-2" style={{ gridTemplateColumns: columns }} aria-hidden>
+          <span />
+          <span className="flex justify-between text-[0.62rem] tabular text-faint">
+            <span>0</span>
+            <span>{format(peak / 2)}</span>
+            <span>{format(peak)}</span>
+          </span>
+          <span />
+        </div>
+      )}
     </div>
   );
 }
+
 
 // ==== How the money assembled — a flow, not a staircase ====
 
@@ -269,7 +337,10 @@ export function WeekBandsChart({ bands }: { bands: WeekBand[] }) {
                     ['--i' as string]: weekday,
                     left: `${(band.from / span) * 100}%`,
                     width: `${Math.max(3, ((band.to - band.from) / span) * 100)}%`,
-                    background: `linear-gradient(90deg, ${GRAD_BOTTOM}, ${GRAD_TOP})`,
+                    // Flat, like the bars: this band's left edge and width
+                    // already say when the shift ran, and its opacity says
+                    // how often. A fade across it said nothing at all.
+                    background: 'var(--accent)',
                     opacity: (hover === null || hover === weekday ? 1 : 0.35) * (0.55 + 0.45 * (band.count / maxCount)),
                   }}
                 />
@@ -294,79 +365,6 @@ export function WeekBandsChart({ bands }: { bands: WeekBand[] }) {
 }
 
 // ==== Ranked bars: magnitude with a scale, not a pill with a number ====
-
-/**
- * Horizontal bars for «which of these earns most» questions. The scale is
- * visible — quarter gridlines and a labelled peak — the champion row reads
- * bold at full ink, and the rest stand back until hovered. One hue, because
- * the rows are ranks of one measure, not different things.
- */
-export function RankBars({
-  rows,
-  format,
-  labelWidth = '6rem',
-}: {
-  rows: { name: string; value: number; caption?: string }[];
-  format: (value: number) => string;
-  labelWidth?: string;
-}) {
-  const [hover, setHover] = useState<number | null>(null);
-  const peak = Math.max(1, ...rows.map((row) => row.value));
-
-  return (
-    <div className="flex flex-col gap-1.5" onPointerLeave={() => setHover(null)}>
-      {rows.map((row, index) => {
-        const champion = row.value === peak;
-
-        return (
-          <div
-            key={row.name}
-            className="grid items-center gap-2 text-[0.85rem]"
-            style={{ gridTemplateColumns: `${labelWidth} 1fr auto` }}
-            onPointerEnter={() => setHover(index)}
-          >
-            <span className={`truncate ${champion ? 'font-semibold text-ink' : 'text-muted'}`}>
-              {row.name}
-            </span>
-            <span className="relative h-3.5 min-w-0 rounded-full bg-surface-2">
-              {[0.25, 0.5, 0.75].map((tick) => (
-                <span
-                  key={tick}
-                  className="absolute inset-y-[3px] w-px bg-(--border-strong) opacity-60"
-                  style={{ left: `${tick * 100}%` }}
-                />
-              ))}
-              {row.value > 0 && (
-                <span
-                  className="grow-w absolute inset-y-0 rounded-full"
-                  style={{
-                    ['--i' as string]: index,
-                    width: `${Math.max(2, (row.value / peak) * 100)}%`,
-                    background: `linear-gradient(90deg, ${GRAD_BOTTOM}, ${GRAD_TOP})`,
-                    opacity: hover === null || hover === index ? (champion ? 1 : 0.7) : 0.3,
-                  }}
-                />
-              )}
-            </span>
-            <span className={`text-right tabular ${champion ? 'font-bold' : 'text-muted'}`}>
-              {hover === index && row.caption !== undefined ? row.caption : format(row.value)}
-            </span>
-          </div>
-        );
-      })}
-      {/* What the full width means, so the bars are a chart and not a mood. */}
-      <div className="grid items-center gap-2" style={{ gridTemplateColumns: `${labelWidth} 1fr auto` }} aria-hidden>
-        <span />
-        <span className="flex justify-between text-[0.62rem] text-faint tabular">
-          <span>0</span>
-          <span>{format(peak / 2)}</span>
-          <span>{format(peak)}</span>
-        </span>
-        <span />
-      </div>
-    </div>
-  );
-}
 
 // ==== Around the clock: a ring, not petals ====
 
@@ -461,7 +459,7 @@ export interface TrendPoint {
 
 export function TrendLine({ points }: { points: TrendPoint[] }) {
   const { format } = useMoney();
-  const [id, gradient] = useBarGradient();
+  const [id, gradient] = useLineWash();
   const [hover, setHover] = useState<number | null>(null);
 
   const W = 640;
@@ -587,210 +585,3 @@ export function TrendLine({ points }: { points: TrendPoint[] }) {
   );
 }
 
-
-/**
- * The range, day by day, shaped like what it is. A month is drawn as an
- * actual calendar — big cells, day numbers, money in the fill — because
- * that is how people think about a month. Anything longer becomes month
- * strips with a total on the right, so a year is twelve readable rows
- * rather than a field of 10px dots lost in an empty card.
- */
-export function DaysAtGlance({
-  values,
-  from,
-  to,
-}: {
-  values: ReadonlyMap<string, number>;
-  from: string;
-  to: string;
-}) {
-  const { lang } = useI18n();
-  const { format } = useMoney();
-  const [hover, setHover] = useState<string | null>(null);
-
-  const keys = useMemo(() => keysBetween(from, to), [from, to]);
-  const peak = useMemo(() => Math.max(1, ...keys.map((key) => values.get(key) ?? 0)), [keys, values]);
-  const today = todayKey();
-
-  const fill = (value: number) =>
-    value === 0
-      ? 'var(--surface-2)'
-      : `color-mix(in srgb, var(--heat) ${25 + Math.round((value / peak) * 75)}%, var(--surface-2))`;
-
-  const readout =
-    hover !== null ? (
-      <>
-        <b className="text-ink">{formatDayLabel(hover, lang)}</b>
-        {' · '}
-        {(values.get(hover) ?? 0) > 0 ? format(values.get(hover) ?? 0) : '—'}
-      </>
-    ) : (
-      <>
-        {keys.filter((key) => (values.get(key) ?? 0) > 0).length} / {keys.length}
-      </>
-    );
-
-  // ==== A month: the calendar itself ====
-  if (keys.length <= 45) {
-    const offset = (fromKey(keys[0]).getDay() + 6) % 7;
-    const cells: (string | null)[] = [...new Array<null>(offset).fill(null), ...keys];
-    const weekdays = Array.from({ length: 7 }, (_, day) =>
-      new Intl.DateTimeFormat(lang, { weekday: 'short' }).format(new Date(2024, 0, day + 1)),
-    );
-
-    return (
-      <div onPointerLeave={() => setHover(null)}>
-        <div className="grid grid-cols-7 gap-1">
-          {weekdays.map((name) => (
-            <span key={name} className="pb-0.5 text-center text-[0.62rem] font-semibold uppercase tracking-wide text-faint">
-              {name}
-            </span>
-          ))}
-          {cells.map((key, index) =>
-            key === null ? (
-              <span key={`pad-${index}`} />
-            ) : (
-              <button
-                type="button"
-                key={key}
-                className={`relative h-11 rounded-(--radius) text-left transition-transform hover:scale-[1.05] ${key === today ? 'ring-2 ring-(--accent)' : ''}`}
-                style={{ background: fill(values.get(key) ?? 0) }}
-                onPointerEnter={() => setHover(key)}
-                onFocus={() => setHover(key)}
-              >
-                <span className={`absolute left-1.5 top-1 text-[0.64rem] font-semibold tabular ${(values.get(key) ?? 0) > 0 ? 'text-ink/70' : 'text-faint'}`}>
-                  {Number(key.slice(8))}
-                </span>
-                {(values.get(key) ?? 0) > 0 && (
-                  <span className="absolute bottom-1 right-1.5 hidden text-[0.7rem] font-bold tabular sm:block">
-                    {format(values.get(key) ?? 0)}
-                  </span>
-                )}
-              </button>
-            ),
-          )}
-        </div>
-        <p className="field-hint mt-2 tabular">{readout}</p>
-      </div>
-    );
-  }
-
-  // ==== Longer: one strip per month, totals on the right ====
-  const months = new Map<string, string[]>();
-
-  for (const key of keys) {
-    const month = key.slice(0, 7);
-    const list = months.get(month) ?? [];
-
-    list.push(key);
-    months.set(month, list);
-  }
-
-  return (
-    <div onPointerLeave={() => setHover(null)}>
-      <div className="flex flex-col gap-1">
-        {[...months.entries()].map(([month, days]) => {
-          const total = days.reduce((sum, key) => sum + (values.get(key) ?? 0), 0);
-
-          return (
-            <div key={month} className="grid grid-cols-[2.6rem_1fr_auto] items-center gap-2">
-              <span className="text-[0.72rem] font-semibold capitalize text-muted">
-                {new Intl.DateTimeFormat(lang, { month: 'short' }).format(new Date(`${month}-15T00:00:00`))}
-              </span>
-              <span className="grid gap-[2px]" style={{ gridTemplateColumns: 'repeat(31, minmax(0, 1fr))' }}>
-                {days.map((key) => (
-                  /* Three hundred and sixty-five buttons with nothing in
-                     them: a screen reader read «button» once a day for a
-                     year. Each one says its date and its figure. */
-                  <button
-                    type="button"
-                    key={key}
-                    className={`h-5 rounded-[3px] ${key === today ? 'ring-1 ring-(--accent)' : ''}`}
-                    style={{ background: fill(values.get(key) ?? 0), gridColumnStart: Number(key.slice(8)) }}
-                    aria-label={`${formatDayLabelShort(key, lang)} · ${format(values.get(key) ?? 0)}`}
-                    onPointerEnter={() => setHover(key)}
-                    onFocus={() => setHover(key)}
-                  />
-                ))}
-              </span>
-              <span className={`min-w-16 text-right text-[0.78rem] font-semibold tabular ${total === 0 ? 'text-faint' : ''}`}>
-                {total === 0 ? '·' : format(total)}
-              </span>
-            </div>
-          );
-        })}
-      </div>
-      <p className="field-hint mt-2 tabular">{readout}</p>
-    </div>
-  );
-}
-
-/**
- * Which nights actually tip. The bar is the average a day of that weekday
- * brings; the number beside it is what share of the day that was, because
- * ₴400 on a ₴4 000 night and ₴400 on a ₴800 one are not the same result.
- */
-export function TipWeek({ rows }: { rows: TipDay[] }) {
-  const { t, n } = useI18n();
-  const { format } = useMoney();
-
-  const peak = Math.max(1, ...rows.map((row) => row.average));
-  const byDay = new Map(rows.map((row) => [row.weekday, row]));
-  const best = rows.reduce<TipDay | null>(
-    (top, row) => (top === null || row.average > top.average ? row : top),
-    null,
-  );
-
-  return (
-    <div className="flex flex-col gap-[7px]">
-      {BAND_DAYS.map((name, weekday) => {
-        const row = byDay.get(weekday);
-
-        return (
-          <div key={name} className="flex items-center gap-2.5">
-            <span
-              className={`w-7 flex-none text-[0.72rem] ${
-                row !== undefined ? 'font-semibold' : 'text-faint'
-              }`}
-            >
-              {t(name)}
-            </span>
-
-            <span className="relative h-[18px] min-w-0 flex-1 overflow-hidden rounded-full bg-surface-2">
-              {row !== undefined && row.average > 0 && (
-                <span
-                  className="absolute inset-y-0 left-0 rounded-full"
-                  style={{
-                    width: `${Math.max(4, (row.average / peak) * 100)}%`,
-                    background: row.weekday === best?.weekday ? 'var(--accent)' : 'var(--s3)',
-                  }}
-                />
-              )}
-            </span>
-
-            <span className="w-[8.5rem] flex-none text-right text-[0.72rem] tabular">
-              {row === undefined ? (
-                <span className="text-faint">·</span>
-              ) : (
-                <>
-                  <b>{format(Math.round(row.average))}</b>
-                  <span className="text-muted"> · {Math.round(row.share * 100)}%</span>
-                </>
-              )}
-            </span>
-          </div>
-        );
-      })}
-
-      {best !== null && (
-        <p className="field-hint mt-1">
-          {t('Best for tips:')} <b className="text-ink">{t(BAND_DAYS[best.weekday])}</b>
-          {' · '}
-          {/* Russian has three forms after a number, so the count and the
-              word are one call rather than a ternary. */}
-          {t('averaging')} {format(Math.round(best.average))} {t('across')} {n(best.days, 'days')}
-        </p>
-      )}
-    </div>
-  );
-}

@@ -507,32 +507,6 @@ export function Heatmap({ values, from, to }: { values: ReadonlyMap<string, numb
   );
 }
 
-/** A single ratio against a limit. */
-export function ProgressRing({ percent, size = 120 }: { percent: number; size?: number }) {
-  const stroke = 10;
-  const radius = (size - stroke) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const clamped = Math.max(0, Math.min(100, percent));
-
-  return (
-    <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size} role="img" className="-rotate-90">
-      <circle cx={size / 2} cy={size / 2} r={radius} strokeWidth={stroke} fill="none" stroke="var(--surface-2)" />
-      <circle
-        cx={size / 2}
-        cy={size / 2}
-        r={radius}
-        strokeWidth={stroke}
-        fill="none"
-        stroke={clamped >= 100 ? 'var(--good)' : 'var(--accent)'}
-        strokeLinecap="round"
-        strokeDasharray={circumference}
-        strokeDashoffset={circumference * (1 - clamped / 100)}
-        style={{ transition: 'stroke-dashoffset calc(0.6s * var(--motion)) ease' }}
-      />
-    </svg>
-  );
-}
-
 /**
  * The frame around a chart made of elements: a value axis down the left,
  * gridlines across, marks projected in. Shared so six div-charts share one

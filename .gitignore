@@ -22,5 +22,13 @@ web/*.tsbuildinfo
 # rule above — so they are excluded by name here as well.
 * 2
 * 2.*
+# ...and the directory form. Something outside git — iCloud in ~/Documents by
+# the look of the 600 permissions — leaves conflict copies in this tree: 41
+# duplicate directories under web/src alone, each holding a stale snapshot.
+# A file pattern missed «src/app/wrapped 2/page.tsx», which sat in
+# tsconfig's include and broke the typecheck with three errors from code
+# nobody had edited in a week.
+* [0-9]/
+* [0-9].*
 node_modules/
 .superdesign/tmp/

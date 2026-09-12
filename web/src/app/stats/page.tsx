@@ -340,7 +340,13 @@ function Stats() {
 
   const heatValues = useMemo(() => new Map(summary.days.map((day) => [day.date, day.earned])), [summary.days]);
 
-  const dayMedian = median(summary.days.map((day) => day.earned).filter((value) => value > 0));
+  /*
+   * Null, not nought. `median([])` answers 0, and a month with nothing
+   * earned then printed «Медианный день 0 ₴» — a figure, where the truth is
+   * that no day had one. The same mistake the hourly rate above used to make.
+   */
+  const earningDays = summary.days.map((day) => day.earned).filter((value) => value > 0);
+  const dayMedian = earningDays.length === 0 ? null : median(earningDays);
 
   const bestDay = useMemo(() => {
     if (summary.days.length === 0) return null;
@@ -707,10 +713,18 @@ function Stats() {
               : delta(averages.perHour, beforeAverages.perHour)
           }
         >
-          <FlowMoney value={averages.perHour ?? 0} className="text-[1.25rem] font-bold" />
+          {averages.perHour === null ? (
+            <span className="text-[1.25rem] font-bold tabular">—</span>
+          ) : (
+            <FlowMoney value={averages.perHour} className="text-[1.25rem] font-bold" />
+          )}
         </Kpi>
         <Kpi label={t('Median day')} delta={null}>
-          <FlowMoney value={dayMedian} className="text-[1.25rem] font-bold" />
+          {dayMedian === null ? (
+            <span className="text-[1.25rem] font-bold tabular">—</span>
+          ) : (
+            <FlowMoney value={dayMedian} className="text-[1.25rem] font-bold" />
+          )}
         </Kpi>
         <Kpi label={t('Days worked')} delta={delta(summary.days_worked, previous.days_worked)}>
           <span className="text-[1.25rem] font-bold tabular">{summary.days_worked}</span>

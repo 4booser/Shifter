@@ -147,7 +147,7 @@ jobs:
       # different stages, and are tagged with the same commit so a deployment
       # can never pair an app with someone else's schema.
       - name: App image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           target: final
@@ -161,7 +161,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Migration image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           target: migrate

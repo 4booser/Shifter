@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 
@@ -143,12 +144,35 @@ public sealed class PublicCardOverHttpTests(Api api)
 
         off.EnsureSuccessStatusCode();
 
-        // It answers by sending the reader to the front door rather than by
-        // saying «this card is gone» — which would confirm to a stranger that
-        // it had been there. What matters is that the record is no longer on
-        // the other end of the link.
-        var gone = await ReadAsync(client, slug, "ru");
+        /*
+         * It answers by sending the reader to the front door rather than by
+         * saying «this card is gone» — which would confirm to a stranger that
+         * it had been there. What matters is that the record is no longer on
+         * the other end of the link.
+         *
+         * Asked as a redirect rather than by following one. Following it goes
+         * on to «/», which is the built site — and the job that runs these
+         * over real HTTP never builds it, so this test failed on a 404 from
+         * the front door for as long as anybody has been looking: red for a
+         * reason that had nothing to do with cards.
+         */
+        using var direct = api.CreateClient(
+            new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions
+            {
+                AllowAutoRedirect = false,
+            });
 
-        Assert.DoesNotContain("Посчитано по записанным сменам", gone);
+        using var request = new HttpRequestMessage(HttpMethod.Get, $"/c/{slug}");
+
+        request.Headers.Add("Accept-Language", "ru");
+
+        var gone = await direct.SendAsync(request, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.Redirect, gone.StatusCode);
+        Assert.Equal("/", gone.Headers.Location?.ToString());
+
+        var body = await gone.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+
+        Assert.DoesNotContain("Посчитано по записанным сменам", body);
     }
 }

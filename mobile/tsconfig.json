@@ -3,6 +3,27 @@
   "compilerOptions": {
     "strict": true,
     "paths": {
+      "@/lib/mono": [
+        "../shared/mono/mono"
+      ],
+      "@/lib/mono-work": [
+        "../shared/mono/mono-work"
+      ],
+      "@/lib/mono-insights": [
+        "../shared/mono/mono-insights"
+      ],
+      "@/lib/mono-rules": [
+        "../shared/mono/mono-rules"
+      ],
+      "@/lib/mono-shape": [
+        "../shared/mono/mono-shape"
+      ],
+      "@/lib/spend-viz": [
+        "../shared/mono/spend-viz"
+      ],
+      "@/lib/ics": [
+        "../shared/calendar/ics"
+      ],
       "@/*": [
         "./src/*"
       ],
@@ -22,6 +43,7 @@
     "**/*.tsx",
     ".expo/types/**/*.ts",
     "expo-env.d.ts",
-    "nativewind-env.d.ts"
+    "nativewind-env.d.ts",
+    "../shared/**/*.ts"
   ]
 }

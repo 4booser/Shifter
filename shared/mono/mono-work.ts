@@ -1,4 +1,38 @@
-import { CalendarDayData } from './types';
+/*
+ * One copy, read by the web and by the phone.
+ *
+ * This file used to exist twice, and the header said parity between the
+ * platforms was parity of files — keep them identical by hand. They did not
+ * stay identical: the web learned that an hour priced on two worked minutes
+ * is not a rate and the phone did not, the web's «what a day usually costs»
+ * settled on one window and the phone kept two, and a comment here described
+ * a rule the code stopped following. None of that is visible from either side
+ * alone, which is the whole problem with parity by discipline.
+ *
+ * So it lives outside both clients now and neither owns it. The rule that
+ * makes that possible: nothing in here may import from a platform. No
+ * `@/`, no expo, no next, no react — statements in, numbers out. A test
+ * holds that line.
+ */
+/**
+ * The four fields of a day this file actually reads. Both platforms' own day
+ * models satisfy it structurally, which is the point: this library must not
+ * import either of them.
+ */
+export interface WorkedDay {
+  date: string;
+  earned: number;
+  tips_cash: number | null;
+  shifts: {
+    hours: number;
+    worked: boolean;
+    start_time: string;
+    end_time: string;
+    /** The recorded clock, where somebody kept one. */
+    actual_start: string | null;
+    actual_end: string | null;
+  }[];
+}
 import { MonoStatementItem, dayOf, kindForMcc, spent } from './mono';
 
 /**
@@ -14,7 +48,7 @@ import { MonoStatementItem, dayOf, kindForMcc, spent } from './mono';
  */
 
 /** The days with a shift somebody actually worked. */
-export const workedDays = (days: CalendarDayData[]): Set<string> =>
+export const workedDays = (days: WorkedDay[]): Set<string> =>
   new Set(
     days
       .filter((day) => day.shifts.some((entry) => entry.worked))
@@ -52,7 +86,7 @@ export interface DayKindSpending {
  */
 export const spendingByDayKind = (
   items: MonoStatementItem[],
-  days: CalendarDayData[],
+  days: WorkedDay[],
   from: string,
   to: string,
   /** How many days of each kind before it is worth saying anything. */
@@ -135,7 +169,7 @@ export interface RealRate {
  */
 export const realHourly = (
   items: MonoStatementItem[],
-  days: CalendarDayData[],
+  days: WorkedDay[],
   from: string,
   to: string,
 ): RealRate | null => {
@@ -147,7 +181,10 @@ export const realHourly = (
     0,
   );
 
-  if (hours <= 0) return null;
+  // A whole hour before an hourly figure: a shift closed inside a minute
+  // leaves a hundredth of one, and dividing a day's spending by that prices
+  // the hour in the thousands.
+  if (hours < 1) return null;
 
   const earned = within.reduce((sum, day) => sum + day.earned, 0);
 
@@ -194,7 +231,7 @@ const RIDE_HOME_HOURS = 3;
  */
 export const closingCosts = (
   items: MonoStatementItem[],
-  days: CalendarDayData[],
+  days: WorkedDay[],
   from: string,
   to: string,
   /** A shift ending at or after this hour counts as a close. */
@@ -294,6 +331,28 @@ export const untilPayday = (
     perDay: spendable / daysToPay,
     usual: usualPerDay,
   };
+};
+
+/**
+ * What a day usually costs, over the two months behind a given day.
+ *
+ * The one place that stretch is decided. The forecast read it over two months
+ * and the reserve card took a median of whatever the month on screen had
+ * lived, so the same row of the bank page carried «an ordinary day costs
+ * ₴588» beside «÷ ₴532/day» — two answers to one question, a finger's width
+ * apart. Long enough to even out a heavy week, short enough to still be this
+ * person.
+ */
+export const habitualDay = (items: MonoStatementItem[], today: string): number => {
+  const [year, month, day] = today.split('-').map(Number);
+  const start = new Date(year, month - 3, day);
+  const pad = (value: number) => String(value).padStart(2, '0');
+
+  return usualDay(
+    items,
+    `${start.getFullYear()}-${pad(start.getMonth() + 1)}-${pad(start.getDate())}`,
+    today,
+  );
 };
 
 /** What a day usually costs, over the days there is a record for. */
@@ -453,7 +512,7 @@ export interface CashTipOffer {
  */
 export const cashTipOffers = (
   items: MonoStatementItem[],
-  days: CalendarDayData[],
+  days: WorkedDay[],
   from: string,
   to: string,
   /** Transactions already turned into a Shifter row, so nothing is offered twice. */
@@ -502,7 +561,7 @@ export interface CashGap {
  */
 export const cashGap = (
   items: MonoStatementItem[],
-  days: CalendarDayData[],
+  days: WorkedDay[],
   from: string,
   to: string,
 ): CashGap => {

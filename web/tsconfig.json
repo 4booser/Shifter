@@ -15,8 +15,36 @@
     "jsx": "preserve",
     "incremental": true,
     "plugins": [{ "name": "next" }],
-    "paths": { "@/*": ["./src/*"] }
+    "paths": {
+      "@/lib/mono/mono": [
+            "../shared/mono/mono"
+      ],
+      "@/lib/mono/mono-work": [
+            "../shared/mono/mono-work"
+      ],
+      "@/lib/mono/mono-insights": [
+            "../shared/mono/mono-insights"
+      ],
+      "@/lib/mono/mono-rules": [
+            "../shared/mono/mono-rules"
+      ],
+      "@/lib/mono/mono-shape": [
+            "../shared/mono/mono-shape"
+      ],
+      "@/lib/mono/spend-viz": [
+            "../shared/mono/spend-viz"
+      ],
+      "@/lib/import/ics": [
+            "../shared/calendar/ics"
+      ],
+      "@/*": [
+            "./src/*"
+      ]
+    }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "include": [
+    "next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts",
+    "../shared/**/*.ts"
+  ],
   "exclude": ["node_modules", "out", "scripts"]
 }

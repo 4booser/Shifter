@@ -2663,6 +2663,25 @@ const UK: Dictionary = {
   'The link is cut short. Ask for it again, or type the code on the rota page.': 'Посилання обірвалося. Попросіть його ще раз — або введіть код на сторінці графіка.',
   'To the rota': 'До графіка',
   'Changes save on their own': 'Зміни зберігаються самі',
+
+  /*
+   * The bank's own labels. They are written in the shared arithmetic as
+   * Russian strings — a category is a value there, not a phrase — and they
+   * were drawn straight onto the screen, so a Ukrainian interface said
+   * «Кафе и бары» in the middle of its own language.
+   */
+  'Дом': 'Дім',
+  'Другое': 'Інше',
+  'Здоровье': "Здоров'я",
+  'Кафе и бары': 'Кафе і бари',
+  'Одежда': 'Одяг',
+  'Переводы': 'Перекази',
+  'Продукты': 'Продукти',
+  'Развлечения': 'Розваги',
+  'Связь и подписки': "Зв'язок і підписки",
+  'Транспорт': 'Транспорт',
+  'остальное': 'решта',
+  'прочее': 'інше',
 };
 
 

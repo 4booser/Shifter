@@ -1,4 +1,4 @@
-import { dayOf, fromMinor, MonoStatementItem, payerName } from './mono';
+import { dayOf, fromMinor, MonoStatementItem, payerName } from '@/lib/mono';
 import { CalendarDayData } from './types';
 import { t } from '@/lib/i18n';
 

@@ -180,7 +180,7 @@ export function BankLedger({
                     {item.amount > 0 ? payerName(item) : item.description}
                   </Text>
                   <Text style={styles.lineWhat} numberOfLines={1}>
-                    {categoryOf(item.mcc)}
+                    {t(categoryOf(item.mcc))}
                   </Text>
 
                   {item.hold && (

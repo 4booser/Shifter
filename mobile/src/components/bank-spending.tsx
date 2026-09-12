@@ -281,7 +281,7 @@ export function BankSpending({
               {limits.map((row) => (
                 <View key={row.category} style={{ gap: 4 }}>
                   <View style={styles.rowTop}>
-                    <Text style={styles.rowName} numberOfLines={1}>{row.category}</Text>
+                    <Text style={styles.rowName} numberOfLines={1}>{t(row.category)}</Text>
                     <Text
                       style={[
                         styles.rowValue,
@@ -551,7 +551,7 @@ export function BankSpending({
                       setAssigning(null);
                     }}
                   >
-                    <Text style={styles.chipText}>{category}</Text>
+                    <Text style={styles.chipText}>{t(category)}</Text>
                   </Press>
                 ))}
               </View>

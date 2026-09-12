@@ -8,7 +8,7 @@
  * that is a bug by definition, and keeping the code identical is the
  * cheapest way to make it a rare one.
  */
-import { MonoStatementItem, dayOf, fromMinor } from './mono';
+import { MonoStatementItem, dayOf, fromMinor } from '@/lib/mono/mono';
 
 /**
  * The statement, on the way out.

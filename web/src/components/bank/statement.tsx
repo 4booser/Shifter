@@ -145,7 +145,7 @@ export function StatementCard({
                   <span
                     className="h-2.5 w-2.5 flex-none rounded-full"
                     style={{ background: item.amount > 0 ? 'var(--good)' : style.hue }}
-                    title={item.amount > 0 ? t('arrivals') : category}
+                    title={item.amount > 0 ? t('arrivals') : t(category)}
                   />
                   <span className="min-w-0 flex-1 truncate text-[0.88rem]" title={item.description}>{item.description}</span>
                   <span className="flex-none text-[0.72rem] text-faint tabular">{time(item)}</span>

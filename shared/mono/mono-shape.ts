@@ -1,3 +1,19 @@
+/*
+ * One copy, read by the web and by the phone.
+ *
+ * This file used to exist twice, and the header said parity between the
+ * platforms was parity of files — keep them identical by hand. They did not
+ * stay identical: the web learned that an hour priced on two worked minutes
+ * is not a rate and the phone did not, the web's «what a day usually costs»
+ * settled on one window and the phone kept two, and a comment here described
+ * a rule the code stopped following. None of that is visible from either side
+ * alone, which is the whole problem with parity by discipline.
+ *
+ * So it lives outside both clients now and neither owns it. The rule that
+ * makes that possible: nothing in here may import from a platform. No
+ * `@/`, no expo, no next, no react — statements in, numbers out. A test
+ * holds that line.
+ */
 import { MonoStatementItem, dayOf, fromMinor, spent } from './mono';
 
 /*

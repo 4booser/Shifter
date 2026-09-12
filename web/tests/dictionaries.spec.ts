@@ -129,9 +129,10 @@ describe('the dictionaries', () => {
     // The checks above compare RU with UK, so a phrase missing from both is
     // invisible to them — and five were, rendering raw English into a Russian
     // interface. This reads the call sites instead.
-    const files = walk(join(__dirname, '../src')).filter(
-      (file) => file.endsWith('.ts') || file.endsWith('.tsx'),
-    );
+    // ../../shared as well: the arithmetic both clients read lives outside
+    // this one, and a phrase it hands to t() needs an entry here just the same.
+    const files = [...walk(join(__dirname, '../src')), ...walk(join(__dirname, '../../shared'))]
+      .filter((file) => file.endsWith('.ts') || file.endsWith('.tsx'));
 
     const missing = new Set<string>();
 

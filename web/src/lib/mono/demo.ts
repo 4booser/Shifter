@@ -1,4 +1,4 @@
-import { MonoClientInfo, MonoStatementItem } from './mono';
+import { MonoClientInfo, MonoStatementItem } from '@/lib/mono/mono';
 
 /**
  * The bank on a test drive: ninety days of a believable barista's statement,

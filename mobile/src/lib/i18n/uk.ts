@@ -1146,4 +1146,19 @@ export const UK: Record<string, string> = {
   'Изменения сохраняются сами': 'Зміни зберігаються самі',
   'Сохраняется…': 'Зберігається…',
   'Сохранено': 'Збережено',
+
+  /*
+   * The bank's own labels. They are written in the shared arithmetic as
+   * Russian strings — a category is a value there, not a phrase — and they
+   * were drawn straight onto the screen, so a Ukrainian interface said
+   * «Кафе и бары» in the middle of its own language.
+   */
+  'Дом': 'Дім',
+  'Здоровье': "Здоров'я",
+  'Кафе и бары': 'Кафе і бари',
+  'Одежда': 'Одяг',
+  'Переводы': 'Перекази',
+  'Продукты': 'Продукти',
+  'Развлечения': 'Розваги',
+  'Связь и подписки': "Зв'язок і підписки",
 };

@@ -6,7 +6,16 @@ import { describe, expect, it } from 'vitest';
 
 import { UK } from '@/lib/i18n/uk';
 
-const ROOT = join(import.meta.dirname, '..', 'src');
+/*
+ * Two roots, because the phrases the app says are not all written inside it.
+ * The shared arithmetic emits a few as data — «втрое больше обычного здесь»
+ * is a reason a bank insight carries, translated where it is drawn — and with
+ * only src/ scanned those entries read as phrases the app no longer says.
+ */
+const ROOTS = [
+  join(import.meta.dirname, '..', 'src'),
+  join(import.meta.dirname, '..', '..', 'shared'),
+];
 
 const sources = (): string[] => {
   const found: string[] = [];
@@ -19,7 +28,7 @@ const sources = (): string[] => {
     }
   };
 
-  walk(ROOT);
+  for (const root of ROOTS) walk(root);
 
   return found;
 };

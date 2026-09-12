@@ -14,13 +14,14 @@
  * fact — the sin this codebase is organised around not committing.
  */
 
-/** A standing charge the forecast should land on its date. */
-export interface PlannedCharge {
-  name: string;
-  amount: number;
-  /** 'YYYY-MM-DD'. Charges beyond the horizon are ignored, not clamped. */
-  on: string;
-}
+// The same two names the phone's month grid reads, from the one copy
+// they both now share; re-exported because every call site here says
+// «from runway» and the forecast is where they belong in this app's head.
+import { PlannedCharge, chargesAhead } from '@/lib/mono/mono-insights';
+
+export { chargesAhead };
+export type { PlannedCharge };
+
 
 /** Money expected to arrive: the reconciliation's own figure and due date. */
 export interface PlannedIncome {
@@ -119,37 +120,3 @@ export function buildRunway(input: {
   return { days, thinnest, dry, usualPerDay: input.usualPerDay };
 }
 
-/**
- * Standing charges projected onto their next dates inside the horizon.
- *
- * A monthly charge lands once; a weekly one lands every week it fits. The
- * rhythm comes from the statement's own history — this file adds no guesses
- * of its own.
- */
-export function chargesAhead(
-  standing: { name: string; amount: number; next: string; everyDays: number }[],
-  from: string,
-  horizon: number,
-): PlannedCharge[] {
-  const until = shift(from, horizon - 1);
-  const ahead: PlannedCharge[] = [];
-
-  for (const charge of standing) {
-    let on = charge.next;
-
-    // A "next" already behind the window start still lands: rent due
-    // yesterday is not cancelled by being late, it is coming out of the very
-    // first projected day.
-    if (on < from) on = from;
-
-    while (on <= until) {
-      ahead.push({ name: charge.name, amount: charge.amount, on });
-
-      if (charge.everyDays <= 0) break;
-
-      on = shift(on, charge.everyDays);
-    }
-  }
-
-  return ahead;
-}

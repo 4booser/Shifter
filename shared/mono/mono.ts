@@ -1,3 +1,19 @@
+/*
+ * One copy, read by the web and by the phone.
+ *
+ * This file used to exist twice, and the header said parity between the
+ * platforms was parity of files — keep them identical by hand. They did not
+ * stay identical: the web learned that an hour priced on two worked minutes
+ * is not a rate and the phone did not, the web's «what a day usually costs»
+ * settled on one window and the phone kept two, and a comment here described
+ * a rule the code stopped following. None of that is visible from either side
+ * alone, which is the whole problem with parity by discipline.
+ *
+ * So it lives outside both clients now and neither owns it. The rule that
+ * makes that possible: nothing in here may import from a platform. No
+ * `@/`, no expo, no next, no react — statements in, numbers out. A test
+ * holds that line.
+ */
 /**
  * monobank, as far as arithmetic goes.
  *
@@ -90,6 +106,30 @@ const CURRENCIES: Record<number, string> = {
 };
 
 export const currencyOf = (code: number): string => CURRENCIES[code] ?? `${code}`;
+
+/**
+ * The mark to print beside an account's balance.
+ *
+ * The bank page used to stamp «₴» on every figure it drew, which is right
+ * for most cards in this trade and wrong for anybody holding a dollar or a
+ * złoty one — and this app's one unbreakable rule about money is that it
+ * never puts the wrong mark on a number. The symbol where the currency has a
+ * familiar one, the ISO code where it does not, so an unusual account reads
+ * as unusual rather than as somebody's hryvnia.
+ *
+ * The rest of the bank page still prices a day and a month in whatever
+ * currency the person picked for wages; that is a wider question than the
+ * mark on a balance and it is not answered here.
+ */
+const MARKS: Record<string, string> = {
+  UAH: '₴', USD: '$', EUR: '€', GBP: '£', PLN: 'zł', CZK: 'Kč', KZT: '₸', JPY: '¥',
+};
+
+export const markOf = (code: number): string => {
+  const iso = currencyOf(code);
+
+  return MARKS[iso] ?? iso;
+};
 
 /**
  * Minor units to whole money.

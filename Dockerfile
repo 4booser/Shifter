@@ -6,6 +6,9 @@ WORKDIR /web
 COPY ["web/package.json", "web/package-lock.json", "./"]
 RUN npm ci
 COPY web/ ./
+# Beside it, not inside: the client's tsconfig points at ../shared, so the
+# arithmetic both clients read has to land at /shared for the build to see it.
+COPY shared/ /shared/
 # Which build a crash report came from. Without it every report from
 # production says "dev" and a fault that was fixed last week goes on being
 # chased.

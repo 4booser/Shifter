@@ -2682,6 +2682,25 @@ const RU: Dictionary = {
   'The link is cut short. Ask for it again, or type the code on the rota page.': 'Ссылка оборвалась. Попросите её ещё раз — или введите код на странице графика.',
   'To the rota': 'К графику',
   'Changes save on their own': 'Изменения сохраняются сами',
+
+  /*
+   * The bank's own labels. They are written in the shared arithmetic as
+   * Russian strings — a category is a value there, not a phrase — and they
+   * were drawn straight onto the screen, so a Ukrainian interface said
+   * «Кафе и бары» in the middle of its own language.
+   */
+  'Дом': 'Дом',
+  'Другое': 'Другое',
+  'Здоровье': 'Здоровье',
+  'Кафе и бары': 'Кафе и бары',
+  'Одежда': 'Одежда',
+  'Переводы': 'Переводы',
+  'Продукты': 'Продукты',
+  'Развлечения': 'Развлечения',
+  'Связь и подписки': 'Связь и подписки',
+  'Транспорт': 'Транспорт',
+  'остальное': 'остальное',
+  'прочее': 'прочее',
 };
 
 export default RU;

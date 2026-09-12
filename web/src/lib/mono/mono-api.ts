@@ -8,7 +8,7 @@
  * that is a bug by definition, and keeping the code identical is the
  * cheapest way to make it a rare one.
  */
-import { MonoClientInfo, MonoStatementItem } from './mono';
+import { MonoClientInfo, MonoStatementItem } from '@/lib/mono/mono';
 
 /**
  * The only place in this app that holds a monobank token, and the only place

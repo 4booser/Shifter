@@ -1,12 +1,18 @@
 /*
- * Carried over from the phone, verbatim where possible.
+ * One copy, read by the web and by the phone.
  *
- * The bank tab lived only in the pocket, and every formula here — what counts
- * as a transfer, how branches of one shop merge, what a day usually costs —
- * was already written and tested there. Parity between the platforms is
- * parity of files: if the web and the phone ever disagree about a figure,
- * that is a bug by definition, and keeping the code identical is the
- * cheapest way to make it a rare one.
+ * This file used to exist twice, and the header said parity between the
+ * platforms was parity of files — keep them identical by hand. They did not
+ * stay identical: the web learned that an hour priced on two worked minutes
+ * is not a rate and the phone did not, the web's «what a day usually costs»
+ * settled on one window and the phone kept two, and a comment here described
+ * a rule the code stopped following. None of that is visible from either side
+ * alone, which is the whole problem with parity by discipline.
+ *
+ * So it lives outside both clients now and neither owns it. The rule that
+ * makes that possible: nothing in here may import from a platform. No
+ * `@/`, no expo, no next, no react — statements in, numbers out. A test
+ * holds that line.
  */
 import { MonoStatementItem, dayOf, fromMinor, income, spent } from './mono';
 
@@ -538,3 +544,47 @@ export const cashback = (
       .sort((one, two) => two.earned - one.earned),
   };
 };
+
+/**
+ * Standing charges projected onto the concrete days they will land on.
+ *
+ * A monthly charge lands once inside a month's horizon; a weekly one lands
+ * every week that fits. The rhythm comes from the statement's own history, so
+ * this adds no guesses of its own. A «next» already behind the window start
+ * still lands: rent due yesterday is not cancelled by being late, it comes
+ * out of the very first projected day.
+ *
+ * It stood twice too — here for the phone's month grid, and in the web's
+ * runway.ts for the forecast, the same body with the day-shifting helper
+ * named differently in each. One body now, on the one `addDays` above.
+ */
+export interface PlannedCharge {
+  name: string;
+  amount: number;
+  on: string;
+}
+
+export function chargesAhead(
+  standing: { name: string; amount: number; next: string; everyDays: number }[],
+  from: string,
+  horizon: number,
+): PlannedCharge[] {
+  const until = addDays(from, horizon - 1);
+  const ahead: PlannedCharge[] = [];
+
+  for (const charge of standing) {
+    let on = charge.next;
+
+    if (on < from) on = from;
+
+    while (on <= until) {
+      ahead.push({ name: charge.name, amount: charge.amount, on });
+
+      if (charge.everyDays <= 0) break;
+
+      on = addDays(on, charge.everyDays);
+    }
+  }
+
+  return ahead;
+}

@@ -1,4 +1,4 @@
-import { MonoClientInfo, MonoStatementItem } from './mono';
+import { MonoClientInfo, MonoStatementItem } from '@/lib/mono';
 import { t } from '@/lib/i18n';
 
 /**

@@ -2706,6 +2706,12 @@ const RU: Dictionary = {
   'This is an example.': 'Это пример.',
   'The work in it is invented, and the account disappears in two days.': 'Работа в нём придумана, а аккаунт исчезнет через двое суток.',
   'nobody counted the room this month': 'в этом месяце зал никто не считал',
+  'Cash tips cannot exceed the total.': 'Наличными не может быть больше, чем всего.',
+  'Tips cannot be negative.': 'Чаевые не могут быть отрицательными.',
+  'Deductions cannot be negative.': 'Удержания не могут быть отрицательными.',
+  'Colour must be a hex value like #1F3A5F.': 'Цвет задаётся в виде #1F3A5F.',
+  'Range start must not be after its end.': 'Начало периода не может быть позже конца.',
+  'A position is listed more than once.': 'Позиция указана дважды.',
 };
 
 export default RU;

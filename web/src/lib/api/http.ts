@@ -170,9 +170,15 @@ export function apiErrorMessage(error: unknown): string {
     if (error.code in CODED) return say(CODED[error.code]);
   }
 
-  // The server's own words for everything not yet coded; the sentences this
-  // function writes itself are its own responsibility and are translated.
-  if (error instanceof HttpError) return error.message;
+  /*
+   * The server's own words for everything not yet coded — through the
+   * dictionary, which is the same shape it already has: the keys in there are
+   * English sentences, so a server sentence either finds its translation or
+   * falls out the other side unchanged. It used to fall straight onto the
+   * screen, and the day panel's «Cash tips cannot exceed the total.» greeted
+   * a Russian interface in English.
+   */
+  if (error instanceof HttpError) return say(error.message);
 
   // A request that never landed. Saying which address was tried turns an
   // unhelpful message into a diagnosis — and it read in English to every

@@ -174,17 +174,36 @@ public static class DemoWorld
             // two differently and the difference is half of what it is for.
             bool worked = date <= today;
 
+            decimal? tips = worked && shift.TipSource == TipSource.Personal
+                ? dice.Between(120, 480)
+                : null;
+
+            // Part of the total, never beside it and never more than it. The
+            // application refuses to save a day whose cash exceeds its total,
+            // and this was seeding exactly that — cash on a pooled evening,
+            // where the total is null. Opening the example was met by a red
+            // «Cash tips cannot exceed the total.» before the visitor had
+            // touched anything, which is a poor first sentence.
+            decimal? cash = tips is not null && dice.Next() < 0.4
+                ? Math.Round(tips.Value * (decimal)(0.2 + dice.Next() * 0.4))
+                : null;
+
+            // One roll, not two. Separate rolls gave days a reason with
+            // nothing withheld and days withholding with no reason given,
+            // and the second is precisely the state the app's own «без
+            // причины» line exists to shame.
+            bool fined = worked && dice.Next() < 0.06;
+
             var day = new Day
             {
                 UserId = user.Id,
                 Date = date,
-                Tips = worked && shift.TipSource == TipSource.Personal ? dice.Between(120, 480) : null,
+                Tips = tips,
                 TipPool = worked && shift.TipSource == TipSource.Pool ? dice.Between(900, 3_400) : null,
-                TipsCash = worked && dice.Next() < 0.4 ? dice.Between(50, 300) : null,
-                // A fine is rare and always has a reason; a meal is the
-                // place's own rule and does not belong here.
-                Deductions = worked && dice.Next() < 0.06 ? 200 : null,
-                DeductionReason = worked && dice.Next() < 0.06 ? "late" : null,
+                TipsCash = cash,
+                // A meal is the place's own rule and does not belong here.
+                Deductions = fined ? 200 : null,
+                DeductionReason = fined ? "late" : null,
                 Shifts =
                 [
                     new DayShift

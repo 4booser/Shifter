@@ -2687,6 +2687,12 @@ const UK: Dictionary = {
   'This is an example.': 'Це приклад.',
   'The work in it is invented, and the account disappears in two days.': 'Робота в ньому вигадана, а акаунт зникне за дві доби.',
   'nobody counted the room this month': 'цього місяця залу ніхто не рахував',
+  'Cash tips cannot exceed the total.': 'Готівкою не може бути більше, ніж усього.',
+  'Tips cannot be negative.': 'Чайові не можуть бути відʼємними.',
+  'Deductions cannot be negative.': 'Утримання не можуть бути відʼємними.',
+  'Colour must be a hex value like #1F3A5F.': 'Колір задається у вигляді #1F3A5F.',
+  'Range start must not be after its end.': 'Початок періоду не може бути пізніше кінця.',
+  'A position is listed more than once.': 'Позицію вказано двічі.',
 };
 
 

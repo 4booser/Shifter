@@ -192,7 +192,7 @@ jobs:
           --health-interval 5s --health-timeout 3s --health-retries 20
     env:
       ConnectionStrings__Shifter: "Host=localhost;Port=5432;Database=shifter;Username=shifter_user;Password=ci"
-      ConnectionStrings__Tokens: "Host=localhost;Port=5432;Database=shifter;Username=shifter_user;Password=ci"
+      ConnectionStrings__Tokens: "Host=localhost;Port=5432;Database=tokens;Username=shifter_user;Password=ci"
       Jwt__Key: "ci-screenshots-signing-key-32-chars!!"
     steps:
       - uses: actions/checkout@v4
@@ -210,6 +210,17 @@ jobs:
           cd web
           npm ci
           npm run build
+
+      # Without this the database has no tables, every registration answers
+      # 500, and not one shot is taken. This job has been reporting success
+      # and uploading the committed baselines untouched — «look at the
+      # pictures on the run» was pointing at pictures from a laptop.
+      - name: Give it a schema
+        run: |
+          dotnet tool install --global dotnet-ef
+          PGPASSWORD=ci psql -h localhost -U shifter_user -d shifter -c 'CREATE DATABASE tokens;'
+          dotnet ef database update --project server/Shifter.csproj --context ShifterDbContext
+          dotnet ef database update --project server/Shifter.csproj --context TokensDbContext
 
       - name: Serve the real thing
         run: |

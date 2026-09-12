@@ -181,7 +181,7 @@ jobs:
       - run: dotnet test tests/Shifter.Api.Tests/Shifter.Api.Tests.csproj --nologo
 
   screens:
-    name: Screenshots, softly
+    name: The screens, looked at
     runs-on: ubuntu-latest
     services:
       postgres:

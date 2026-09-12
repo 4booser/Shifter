@@ -4,11 +4,16 @@ name: CI
 # fires on a push to main, so the first build of any change was the same run
 # that also shipped it — and up to eleven dependency updates a week were merged
 # without once being built. This runs on the proposal instead.
+#
+# And on main as well, since everything here goes straight there: three of
+# these five jobs check things the deploy does not look at at all — the phone,
+# migrations against a database with rows in it, and what the screens look
+# like. Excluding main meant they had not run in six days, and three of them
+# were red when they last did.
 on:
   pull_request:
     branches: [main]
   push:
-    branches-ignore: [main]
   workflow_dispatch:
 
 # A second push to the same branch cancels the first: the older answer is not
@@ -232,19 +237,24 @@ jobs:
           done
 
       - name: Shoot the screens
-        # A diff is a question, not a failure: the job stays green and hangs
-        # the pictures on the run for a person to look at. The baselines are
-        # darwin-named; Linux renders differently, so CI always writes its
-        # own actuals — which is exactly the artefact worth looking at.
-        continue-on-error: true
+        # A diff is a failure now. It could not be before: the baselines were
+        # darwin-named, Linux renders differently, and --update-snapshots made
+        # every run agree with itself by definition. Linux baselines are
+        # committed beside the darwin ones, so this compares against something.
+        #
+        # Two percent of pixels is the tolerance, which is wide enough for
+        # font hinting and narrow enough to catch a section that collapsed.
+        # When it goes red, look at the diff in the artefact below before
+        # reaching for --update-snapshots=all.
         env:
           SCREENS: '1'
         run: |
           cd web
           npx playwright install --with-deps chromium
-          npx playwright test e2e/screens.spec.ts --update-snapshots || true
+          npx playwright test e2e/screens.spec.ts
 
       - name: Hang the shots on the run
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: screens

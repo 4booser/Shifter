@@ -43,6 +43,7 @@ import { OnShiftNow } from '@/components/dashboard/on-shift-now';
 import { currentCardTheme } from '@/lib/export/share-card';
 import { downloadBlob } from '@/lib/export/xlsx';
 import { Alert, Money, Segmented } from '@/components/ui/bits';
+import { Empty } from '@/components/ui/empty';
 import { Icon } from '@/components/ui/icon';
 import { useTitle } from '@/lib/use-title';
 import { SkeletonRows } from '@/components/ui/skeleton';
@@ -350,15 +351,17 @@ function Schedule() {
 
   if (!loading && teams.length === 0) {
     return (
+      // The shared one. This screen wrote its own version of the same card —
+      // same icon, same three lines, same button — and so kept none of the
+      // improvements the shared one got.
       <div ref={revealHost} className="mx-auto max-w-md">
-        <div className="card reveal p-6 text-center">
-          <Icon name="users" size={32} className="mx-auto mb-2 text-muted" />
-          <h1 className="mb-1 text-[1.1rem] font-bold">{t('No team yet')}</h1>
-          <p className="field-hint mb-3">{t('Share a rota with your crew: who is on and when, without anyone’s money.')}</p>
-          <a href="/team" className="btn btn-primary w-full">
-            {t('Join or start a team')}
-          </a>
-        </div>
+        <Empty
+          icon="users"
+          title={t('No team yet')}
+          action={{ label: t('Join or start a team'), href: '/team' }}
+        >
+          {t('Share a rota with your crew: who is on and when, without anyone’s money.')}
+        </Empty>
       </div>
     );
   }

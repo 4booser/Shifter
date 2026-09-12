@@ -269,7 +269,13 @@ export function MoneyFlow({ steps }: { steps: WaterfallStep[] }) {
           </span>
         ))}
 
-        {net !== undefined && (
+        {/*
+          * Only where something was actually taken. A month with no tip-out,
+          * no fines and no tax showed «₴3 450 → ₴3 450»: an arrow is a
+          * promise that the number on the right is different, and here it
+          * was the same number twice with a full stop between them.
+          */}
+        {net !== undefined && (cuts.length > 0 || net.value !== gross.value) && (
           <>
             <span className="text-faint">→</span>
             <span>

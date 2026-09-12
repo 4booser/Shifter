@@ -362,7 +362,10 @@ export function DayPanel() {
   // two scrollbars fighting over the same wheel and a panel that unpinned
   // halfway down the page.
   return (
-    <aside key={key} className="flex w-full flex-col gap-4">
+    // The screenshot test needs to find this and only this: the sidebar
+    // beside it is an <aside> too, and matching on the word «Смена»
+    // shot the sidebar instead.
+    <aside key={key} data-testid="day-panel" className="flex w-full flex-col gap-4">
       <section className="card rise p-4">
         {/* Not capitalize: it lifts «сентября» too, and the panel headed
             «Среда, 2 Сентября». The formatter puts the one capital on. */}
@@ -1158,10 +1161,16 @@ function ActualClockRow({
           панели шириной в двести тридцать пикселей «16:00 –» оставалось на
           строке с подписью, а «02:00» уезжало вниз, и промежуток переставал
           читаться промежутком. */}
+      {/* И ширина по содержимому, а не 5.2rem намертво. Поле времени рисует
+          себя по часам системы, и там, где они двенадцатичасовые, браузер
+          дописывает «PM» — на что в жёстких 5.2rem места не было. Здесь
+          часы двадцатичетырёхчасовые и проверить это вживую нечем, так что
+          это защита, а не починка увиденного: минимум оставлен прежним,
+          поэтому при 24 часах всё выглядит ровно как раньше. */}
       <span className="flex flex-none items-center gap-1.5">
       <input
         type="time"
-        className="field-input !w-[5.2rem] !px-1.5 !py-0.5 !text-[0.8rem]"
+        className="field-input !w-auto !min-w-[5.2rem] !px-1.5 !py-0.5 !text-[0.8rem]"
         aria-label={t('Actually started')}
         value={start ?? entry.start_time}
         onChange={(event) => {
@@ -1174,7 +1183,7 @@ function ActualClockRow({
       <span className="text-faint">–</span>
       <input
         type="time"
-        className="field-input !w-[5.2rem] !px-1.5 !py-0.5 !text-[0.8rem]"
+        className="field-input !w-auto !min-w-[5.2rem] !px-1.5 !py-0.5 !text-[0.8rem]"
         aria-label={t('Actually finished')}
         value={end ?? entry.end_time}
         onChange={(event) => {

@@ -777,7 +777,16 @@ export function MonthGrid({
                         ? colour
                         : `color-mix(in srgb, ${colour} 22%, var(--surface))`
                       : weekend
-                        ? 'var(--surface-2)'
+                        ? /* Приглушённый --surface-2, не полный: на полном
+                             суббота и воскресенье закрашивались в два
+                             сплошных столбца, и месяц читался полосатым —
+                             выходные выходили заметнее смен, то есть заметнее
+                             самих данных. Смесь оставляет «другой день
+                             недели» (в светлой теме шаг падает с 12–17
+                             единиц RGB до 7–10, в тёмной — с 7–8 до 4–5), а
+                             сам день недели уже назван оранжевой шапкой
+                             столбца. */
+                          'color-mix(in oklab, var(--surface-2) 60%, var(--surface))'
                         : 'var(--surface)',
                   color: colour !== null && fill === 'full' ? (ink ?? undefined) : undefined,
                   boxShadow: colour !== null && fill === 'outline' ? `inset 0 0 0 2px ${colour}` : undefined,

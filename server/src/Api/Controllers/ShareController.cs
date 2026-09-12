@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
+using Shifter.Api.Pages;
 using Shifter.Application.Features.Gigs;
 using Shifter.Application.Features.Telegram;
 using Shifter.Domain.Entities;
@@ -14,12 +15,18 @@ using Shifter.Application.Common.Text;
 namespace Shifter.Api.Controllers;
 
 /// <summary>
-/// Share links for a gig: shifter.ink/g/42. A chat's link preview crawler
-/// gets a tiny HTML page with Open Graph tags — venue, trade, pay, date —
-/// while a human is bounced straight into the board. Nothing here needs a
-/// token, and nothing here leaks: what is on the card is what is already
-/// public to every signed-in person on the board, minus the contacts, which
-/// never live on a listing in the first place.
+/// The pages a stranger opens: a shared shift at shifter.ink/g/{slug} and
+/// somebody's record at /c/{slug}. A chat's link preview crawler reads the
+/// Open Graph tags — venue, trade, pay, date — and a person reads the page
+/// itself, which is a page now rather than a redirect that threw away
+/// everything it had just written. Both are drawn into the one shell in
+/// Pages/PublicPage.cs.
+///
+/// Nothing here needs a token, and nothing here leaks: the gig shows what is
+/// already public to every signed-in person on the board, minus the contacts,
+/// which never live on a listing in the first place; the record shows months,
+/// shifts and hours, with venue names and money only where their owner said
+/// so.
 /// </summary>
 [AllowAnonymous]
 [Route("g")]
@@ -28,20 +35,6 @@ public class ShareController : ControllerBase
     private readonly ShifterDbContext _db;
 
     public ShareController(ShifterDbContext db) => _db = db;
-
-    /// <summary>
-    /// Which of the two languages this file writes the reader asked for.
-    ///
-    /// These are the only pages here with no client in front of them, so the
-    /// language cannot arrive the way it does everywhere else, and the server
-    /// keeps no preference of its own. The reader is the person the page
-    /// exists for, so the reader is who it asks.
-    /// </summary>
-    private bool ReaderWantsUkrainian()
-        => Request.Headers.AcceptLanguage.ToString()
-            .Split(',')
-            .Select(part => part.Split(';')[0].Trim())
-            .Any(tag => tag.StartsWith("uk", StringComparison.OrdinalIgnoreCase));
 
     /// <summary>
     /// A numeric link is no longer a preview. It used to be, and counting from
@@ -62,9 +55,7 @@ public class ShareController : ControllerBase
 
         if (gig is null) return Redirect("/gigs");
 
-        // The other public page, and the same question: nothing on the way in
-        // says which language to write, so it asks the reader. See Card below.
-        bool uk = ReaderWantsUkrainian();
+        bool uk = PublicPage.WantsUkrainian(Request);
         var culture = uk ? Figures.Uk : Figures.Ru;
 
         var trade = (uk ? GigRules.CategoryUk : GigRules.CategoryRu)
@@ -102,13 +93,7 @@ public class ShareController : ControllerBase
         var origin = $"{Request.Scheme}://{Request.Host}";
         var image = gig.PhotosJson.Length > 4 ? $"{origin}/g/{gig.ShareSlug}/photo" : $"{origin}/icon-512.png";
 
-        var html = $"""
-            <!doctype html>
-            <html lang="{(uk ? "uk" : "ru")}">
-            <head>
-            <meta charset="utf-8">
-            <meta name="viewport" content="width=device-width,initial-scale=1">
-            <title>{Escape(title)} · Shifter</title>
+        var head = $"""
             <meta name="description" content="{Escape(description)}">
             <meta property="og:type" content="website">
             <meta property="og:site_name" content="Shifter">
@@ -117,25 +102,24 @@ public class ShareController : ControllerBase
             <meta property="og:image" content="{Escape(image)}">
             <meta property="og:url" content="{Escape($"{origin}/g/{gig.ShareSlug}")}">
             <meta name="twitter:card" content="summary_large_image">
-            </head>
-            <body style="font:16px system-ui;padding:2rem;background:#f4f2ed;color:#1c1b18">
-            <!--
-              This page used to carry a zero-second meta refresh to /gigs, so
-              everything below was written and then thrown away: somebody
-              followed a link to one shift and landed on a board of all of
-              them, with no way back to the one they were sent. The page shows
-              what was shared and offers the board as a next step, which is
-              what the link promised. Crawlers were always reading the meta
-              tags above and are unaffected.
-            -->
-            <p><b>{Escape(title)}</b></p>
-            <p>{Escape(description)}</p>
-            <p><a href="/gigs">{(uk ? "Відкрити на біржі Shifter" : "Открыть на бирже Shifter")} →</a></p>
-            </body>
-            </html>
             """;
 
-        return Content(html, "text/html; charset=utf-8", Encoding.UTF8);
+        // This page used to carry a zero-second meta refresh to /gigs, so
+        // everything below was written and then thrown away: somebody followed
+        // a link to one shift and landed on a board of all of them, with no way
+        // back to the one they were sent. The page shows what was shared and
+        // offers the board as a next step, which is what the link promised.
+        // Crawlers were always reading the meta tags above and are unaffected.
+        var body = $"""
+            <h1>{Escape(title)}</h1>
+            <p class="lede">{Escape(description)}</p>
+            <p><a href="/gigs">{(uk ? "Відкрити на біржі Shifter" : "Открыть на бирже Shifter")} →</a></p>
+            """;
+
+        return Content(
+            PublicPage.Render(uk, $"{Escape(title)} · Shifter", head, body),
+            "text/html; charset=utf-8",
+            Encoding.UTF8);
     }
 
     /// <summary>The listing's first photo, decoded from its data URL for crawlers.</summary>
@@ -200,14 +184,7 @@ public class ShareController : ControllerBase
 
         DateOnly today = clock.Today;
 
-        /*
-         * The card is the one page here with no client in front of it, so the
-         * language cannot arrive the way it does everywhere else. The server
-         * keeps no preference of its own — so it asks the reader, who is the
-         * person the page exists for. Ukrainian where the browser says so,
-         * Russian otherwise; those are the two this file can write.
-         */
-        bool uk = ReaderWantsUkrainian();
+        bool uk = PublicPage.WantsUkrainian(Request);
 
         var culture = uk ? Figures.Uk : Figures.Ru;
 
@@ -250,38 +227,30 @@ public class ShareController : ControllerBase
                 : $"{Month(place.from)} — {Month(place.to)} · {Shifts(place.shifts)}")
             .ToArray();
 
-        string body = string.Join("", rows.Select(row => $"<li>{row}</li>"));
+        string items = string.Join("", rows.Select(row => $"<li>{row}</li>"));
         string roles = string.Join(", ", history.roles.Select(Escape));
 
-        return Content(
-            $$"""
-            <!doctype html><html lang="{{(uk ? "uk" : "ru")}}"><head><meta charset="utf-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1">
-            <title>{{Escape(name)}} — Shifter</title>
-            <meta name="robots" content="noindex">
-            <style>
-              body{margin:0;background:#f4f2ed;color:#1c1b18;font:16px/1.55 system-ui,sans-serif;padding:2rem 1.25rem}
-              main{max-width:34rem;margin:0 auto}
-              h1{font-size:1.6rem;margin:0 0 .25rem;letter-spacing:-.02em}
-              .big{font-size:1.15rem;font-weight:700;margin:0 0 1.25rem}
-              ul{list-style:none;padding:0;margin:0 0 1.25rem}
-              li{padding:.5rem 0;border-bottom:1px solid #e3ded2}
-              .roles{color:#6f6a5e}
-              footer{margin-top:2rem;color:#8c8578;font-size:.85rem}
-              a{color:#4a44c8}
-            </style></head><body><main>
-            <h1>{{Escape(name)}}</h1>
-            <p class="big">{{headline}}</p>
-            <ul>{{body}}</ul>
-            {{(roles.Length > 0
+        string body = $"""
+            <h1>{Escape(name)}</h1>
+            <p class="big">{headline}</p>
+            <ul>{items}</ul>
+            {(roles.Length > 0
                 // Bare, this line read «Вечер, День» to somebody who had no way
                 // to know it was a list of jobs. The app's own record page
                 // labels it; the copy handed to an employer did not.
                 ? $"<p class=\"roles\"><b>{(uk ? "На чому стояли" : "На чём стояли")}:</b> {roles}</p>"
-                : "")}}
-            <footer>{{(uk ? "Пораховано за записаними змінами в" : "Посчитано по записанным сменам в")}} <a href="/">Shifter</a>.</footer>
-            </main></body></html>
-            """,
+                : "")}
+            """;
+
+        return Content(
+            // Not a page for search results: it is somebody's work record,
+            // reachable only by the link they chose to hand out.
+            PublicPage.Render(
+                uk,
+                $"{Escape(name)} — Shifter",
+                "<meta name=\"robots\" content=\"noindex\">",
+                body,
+                uk ? "Пораховано за записаними змінами в" : "Посчитано по записанным сменам в"),
             "text/html; charset=utf-8");
     }
 }

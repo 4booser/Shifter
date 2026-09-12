@@ -57,7 +57,14 @@ internal static class PublicPage
     /// <param name="title">The tab, and nothing else — cards add their own heading.</param>
     /// <param name="head">Whatever this page alone needs: og: tags, robots.</param>
     /// <param name="body">The inside of &lt;main&gt;, already escaped.</param>
-    internal static string Render(bool uk, string title, string head, string body)
+    /// <param name="footer">
+    /// The last line, which is not the same sentence on both pages and cannot
+    /// be. The card's «посчитано по записанным сменам» is a claim about how
+    /// its numbers were arrived at; under a shared shift advert, where
+    /// nothing was counted at all, the same line simply is not true. Null
+    /// gives the neutral one.
+    /// </param>
+    internal static string Render(bool uk, string title, string head, string body, string? footer = null)
         => $"""
             <!doctype html>
             <html lang="{(uk ? "uk" : "ru")}">
@@ -72,7 +79,7 @@ internal static class PublicPage
             </head>
             <body><main>
             {body}
-            <footer>{(uk ? "Пораховано за записаними змінами в" : "Посчитано по записанным сменам в")} <a href="/">Shifter</a>.</footer>
+            <footer>{footer ?? (uk ? "Оголошення з біржі" : "Объявление с биржи")} <a href="/">Shifter</a>.</footer>
             </main></body>
             </html>
             """;

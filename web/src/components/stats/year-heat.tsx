@@ -39,10 +39,40 @@ export function YearHeat() {
       .catch(() => setDays([]));
   }, []);
 
-  const grid = useMemo(
-    () => (days === null ? null : heatGrid(days, todayKey())),
-    [days],
-  );
+  /*
+   * Сетка начинается с первой недели, где вообще есть запись.
+   *
+   * Полный год назад — это у большинства полкарточки пустых клеток: аккаунт
+   * заведён весной, а сетка тянется с прошлой осени, и сначала идут пять
+   * месяцев серого, потом данные. Пустая половина не сообщает ничего, кроме
+   * того, что человек тогда не пользовался приложением.
+   */
+  const grid = useMemo(() => {
+    if (days === null) return null;
+
+    const full = heatGrid(days, todayKey());
+    // Первая неделя, в которой вообще есть запись.
+    const from = full.weeks.findIndex((week) => week.some((cell) => cell.earned !== null));
+
+    if (from <= 0) return full;
+
+    /*
+     * Ведущие пустые недели срезаются.
+     *
+     * heatGrid всегда строит пятьдесят три колонки до сегодня — он зеркалится
+     * в мобильном, и менять его форму нельзя. Но у аккаунта, заведённого
+     * весной, первые пять месяцев — это полкарточки серых клеток, которые
+     * сообщают ровно одно: тогда человек приложением не пользовался. Подписи
+     * месяцев сдвигаются вместе с колонками, иначе «авг.» встанет над
+     * неделями марта.
+     */
+    return {
+      weeks: full.weeks.slice(from),
+      months: full.months
+        .filter((month) => month.index >= from)
+        .map((month) => ({ ...month, index: month.index - from })),
+    };
+  }, [days]);
 
   // The strip opens on the freshest weeks; the far left is a year ago.
   const strip = useRef<HTMLDivElement>(null);
@@ -93,14 +123,29 @@ export function YearHeat() {
           Теперь неделя — доля ширины, с потолком, чтобы квадрат оставался
           квадратом на коротком годе. Подписи месяцев тоже в долях: пиксельный
           отступ разъехался бы с первой же растяжкой. */}
+      {/* Клетка тянется под ширину карточки, но не больше 26 px: год из
+          двадцати девяти недель занимал половину карточки, а остальное было
+          пустым полем. Потолок держит клетку клеткой, а не плиткой. */}
       <div ref={strip} className="overflow-x-auto pb-1">
-        <div>
-          <div className="relative ml-8 h-4 text-[0.62rem] text-faint">
+        <div className="mx-auto" style={{ maxWidth: `${grid.weeks.length * 26 + (grid.weeks.length - 1) * 4 + 32}px` }}>
+          {/*
+            Подписи стоят в той же сетке, что и клетки.
+
+            Раньше клетка была фиксированные 18 px, а подпись месяца — доля
+            ширины карточки. Пятьдесят три недели — это 954 px, подписи же
+            растягивались на всю тысячу с лишним: «авг.» и «сент.» оказывались
+            правее последней клетки, над пустотой. Одна сетка на обе строки —
+            и разъехаться им больше негде.
+          */}
+          <div
+            className="ml-8 grid h-4 gap-[4px] text-[0.62rem] text-faint"
+            style={{ gridTemplateColumns: `repeat(${grid.weeks.length}, minmax(0, 1fr))` }}
+          >
             {grid.months.map((month) => (
               <span
                 key={`${month.index}-${month.label}`}
-                className="absolute top-0 whitespace-nowrap"
-                style={{ left: `${(month.index / Math.max(1, grid.weeks.length)) * 100}%` }}
+                className="whitespace-nowrap"
+                style={{ gridColumnStart: month.index + 1 }}
               >
                 {monthName(month.label)}
               </span>
@@ -108,9 +153,15 @@ export function YearHeat() {
           </div>
 
           <div className="mt-1 flex items-start gap-[3px]">
-            <div className="flex w-8 flex-col gap-[4px] pr-1 text-right text-[0.62rem] text-faint">
+            {/* Семь строк той же сетки, а не семь блоков по 18 px: клетка
+                теперь тянется под ширину карточки, и жёсткая высота подписи
+                разъезжалась с рядами — «Пт» оказывалась над субботой. */}
+            <div
+              className="grid w-8 flex-none gap-[4px] pr-1 text-right text-[0.62rem] text-faint"
+              style={{ gridTemplateRows: 'repeat(7, 1fr)' }}
+            >
               {[t('Mon'), '', t('Wed'), '', t('Fri'), '', t('Sun')].map((label, row) => (
-                <div key={row} className="h-[18px] leading-[18px]">{label}</div>
+                <div key={row} className="flex items-center justify-end">{label}</div>
               ))}
             </div>
 
@@ -121,8 +172,8 @@ export function YearHeat() {
                 клетку до двадцати шести, так что соседние сливались в
                 сплошные полосы. Узкий экран прокручивает, как и прежде. */}
             <div
-              className="grid gap-[4px]"
-              style={{ gridTemplateColumns: `repeat(${grid.weeks.length}, 18px)` }}
+              className="grid flex-1 gap-[4px]"
+              style={{ gridTemplateColumns: `repeat(${grid.weeks.length}, minmax(0, 1fr))` }}
             >
             {grid.weeks.map((week, index) => (
               <div key={index} className="grid gap-[4px]">
@@ -147,7 +198,7 @@ export function YearHeat() {
                       calendarActions.select(cell.date);
                       router.push('/dashboard');
                     }}
-                    className="h-[18px] w-[18px] rounded-[3px] border"
+                    className="aspect-square w-full rounded-[3px] border"
                     style={
                       cell.level === null
                         ? { borderColor: 'var(--border)', background: 'transparent' }

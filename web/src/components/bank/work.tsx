@@ -16,6 +16,16 @@ import { Money } from '@/components/ui/bits';
  * All three go silent without enough of either. A card that guessed would be
  * mixing an estimate into a fact.
  */
+/** Машинные виды расхода из общей арифметики — в человеческие фразы. */
+const WORK_EXPENSE: Record<string, string> = {
+  transport: 'Travel',
+  food: 'Food on shift',
+  uniform: 'Uniform',
+  tools: 'Tools',
+  training: 'Training',
+  other: 'Other',
+};
+
 export function BankWork({
   items,
   days,
@@ -122,7 +132,10 @@ export function BankWork({
               <div className="mt-2 flex flex-col gap-0.5">
                 {byKind.differences.slice(0, 3).map((row) => (
                   <div key={row.kind} className="flex justify-between gap-2 text-[0.82rem] text-muted">
-                    <span>{row.kind}</span>
+                    {/* Вид расхода приходит из общей арифметики машинным
+                        словом — 'transport', 'food', 'other'. В русском
+                        интерфейсе они так и печатались по-английски. */}
+                    <span>{t(WORK_EXPENSE[row.kind] ?? row.kind)}</span>
                     <span className="tabular">
                       <Money value={Math.round(row.onShift)} /> {t('vs')}{' '}
                       <Money value={Math.round(row.off)} />

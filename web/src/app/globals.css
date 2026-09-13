@@ -349,6 +349,32 @@ body {
   grid-template-columns: repeat(auto-fit, minmax(min(26rem, 100%), 1fr));
 }
 
+/*
+ * Сетка, в которой последний ряд не бывает неполным.
+ *
+ * `.cards` раскладывает карточки по auto-fit: при трёх колонках и пяти
+ * карточках последний ряд — две карточки и пустая треть ряда. На банке это
+ * был прямоугольник пустоты в пол-экрана справа от «Формы трат», и кладка
+ * не спасала: она равняет колонки по высоте и всё равно оставляет одну
+ * короче. Здесь колонок ровно две, а нечётная последняя занимает ряд
+ * целиком — незанятому месту просто неоткуда взяться.
+ */
+.cards-fill {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 64rem) {
+  .cards-fill {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .cards-fill > *:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+}
+
 .cards-tight {
   display: grid;
   gap: 1rem;

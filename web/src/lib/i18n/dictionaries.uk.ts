@@ -2727,6 +2727,9 @@ const UK: Dictionary = {
   'over this stretch': 'за цей відрізок',
   'the rota knows of nothing owed yet': 'графік поки не чекає виплат',
   'the stretch is not over yet': 'відрізок ще не закінчився',
+  'Which shift brings the money, and what an hour of it is worth.': 'Яка зміна приносить гроші та скільки коштує її година.',
+  'Travel': 'Дорога',
+  'Food on shift': 'Їжа на зміні',
 };
 
 

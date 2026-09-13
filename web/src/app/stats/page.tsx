@@ -30,7 +30,6 @@ import { useSettings } from '@/lib/settings/store';
 import { Shell } from '@/components/layout/shell';
 import { useReveal } from '@/lib/fx';
 import { GoalsModal } from '@/components/dashboard/modals/goals-modal';
-import { WhatIfCard } from '@/components/stats/what-if';
 import { RhythmCard } from '@/components/stats/rhythm';
 import { CitiesCard } from '@/components/stats/cities';
 import { RecordsHealthCard } from '@/components/stats/records-health';
@@ -398,12 +397,36 @@ function Stats() {
   }, [weekdays, bands]);
 
   /** Months with nothing in them are not drawn at all — see the card. */
+  /*
+   * Месяц со своим составом в одной строке.
+   *
+   * Состав жил отдельной карточкой «Из чего состоял каждый месяц» — теми же
+   * месяцами, теми же суммами, только столбиками и с пустой верхней
+   * половиной, потому что высота бралась от лучшего месяца за год. Два
+   * рассказа об одном и том же рядом: теперь полоса в строке показывает и
+   * величину месяца, и из чего он собран.
+   */
   const months = useMemo(
     () =>
       trendRaw
-        .map((month, index) => ({ ...month, current: index === trendRaw.length - 1 }))
+        .map((month, index) => {
+          const parts = trendParts.find((entry) => entry.label === month.label);
+          const whole = Math.max(1, (parts?.shifts ?? 0) + (parts?.sales ?? 0) + (parts?.tips ?? 0));
+
+          return {
+            ...month,
+            current: index === trendRaw.length - 1,
+            parts: parts === undefined
+              ? null
+              : {
+                  shifts: (parts.shifts / whole) * 100,
+                  sales: (parts.sales / whole) * 100,
+                  tips: (parts.tips / whole) * 100,
+                },
+          };
+        })
         .filter((month) => month.earned !== 0),
-    [trendRaw],
+    [trendRaw, trendParts],
   );
 
   const dayParts = useMemo(
@@ -837,7 +860,19 @@ function Stats() {
       {/* items-start: цель без заданной суммы — это одна строка подсказки, и
           растянутая под высокий график она превращалась в обведённую рамкой
           пустоту в треть экрана. Пусть будет своего роста. */}
-      <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+      {/*
+        Справа — две карточки, а не одна.
+
+        «Цель» — это процент, полоса и две строки; рядом с графиком в треть
+        экрана высотой под ней оставалось пустое поле, и растягивать её
+        бессмысленно: растянутая карточка на три строки — та же пустота, но в
+        рамке. Второй карточкой колонка заполняется по-настоящему, а «Ваш час»
+        как раз того же роста и о том же периоде.
+      */}
+      {/* Без items-start: пусть ряд равняет обе колонки, а Panel растянет
+          содержимое — иначе пустое поле просто переезжает под ту карточку,
+          которая оказалась короче. */}
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <Panel
           title={t('Earned over the period')}
           hint={
@@ -878,6 +913,7 @@ function Stats() {
           />
         </Panel>
 
+        <div className="flex flex-col gap-4">
         <Panel
           title={t('Goal')}
           /* Заданная цель тянется на всю высоту графика рядом — иначе под ней
@@ -939,18 +975,38 @@ function Stats() {
             </div>
           )}
         </Panel>
+
+        {/* Компактно, а не во весь рост: вопрос здесь один — сколько платит
+              час сейчас и куда он идёт, — и на него отвечают число, дельта и
+              линия в палец высотой. */}
+          {rate.length > 1 && (
+            <Panel title={t('Your hour, week by week')} hint={t('Where a raise — or a quiet cut — shows up first.')}>
+              <div className="flex items-baseline justify-between gap-2">
+                <FlowMoney value={Math.round(rate[rate.length - 1].value)} className="text-[1.6rem] font-bold" />
+                <Delta percent={delta(rate[rate.length - 1].value, rate[rate.length - 2].value)} />
+              </div>
+              <Spark values={rate.map((point) => point.value)} />
+              <div className="flex justify-between text-[0.66rem] font-semibold uppercase text-faint tabular">
+                <span>{rate[0].label}</span>
+                <span>{rate[rate.length - 1].label}</span>
+              </div>
+            </Panel>
+          )}
+        </div>
       </div>
 
       {/* ==== The year, square by square ==== */}
       <YearHeat />
 
-      {/* ==== Where the money came from, and when in the day ==== */}
+      {/* ==== Where the money came from, and when in the day ====
+
+          Каждая во всю ширину, а не парой. «Как собрались деньги» — это
+          полоса, легенда и цепочка вычетов: в месяце без удержаний она
+          коротка, а сутки рядом высокие, и под ней оставалось пустое поле.
+          Обе широкие по смыслу: полоса источников тем понятнее, чем длиннее,
+          а у бублика справа встают подписанные доли. */}
       {(waterfallSteps.length > 0 || dialTotal > 0) && (
-        <div
-          className={`grid items-start gap-4 ${
-            waterfallSteps.length > 0 && dialTotal > 0 ? 'lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]' : ''
-          }`}
-        >
+        <div className="flex flex-col gap-4">
           {waterfallSteps.length > 0 && (
             <Panel title={t('How the money assembled')} hint={t('Every source in one bar; the cuts hang under it.')}>
               <MoneyFlow steps={waterfallSteps} />
@@ -1030,11 +1086,19 @@ function Stats() {
               hint={t('Midnight on top; the brighter the hour, the more it brings.')}
               action={<span className="field-hint tabular">{formatMoneyCompact(settings, dialTotal)}</span>}
             >
-              <ClockRing hours={dial} />
-              {/* Подписанные полосы рядом с бубликом: сам круг отвечает про
-                  один лучший час, а эти четыре — про то, в какую половину
-                  суток вообще уходит смена. */}
-              <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2.5">
+              {/*
+                Круг слева, доли справа — рядом, а не одно под другим.
+
+                Во всю ширину карточки бублик оказался маленьким кругом
+                посреди пустого поля, а четыре полосы растянулись на метр. В
+                паре они объясняют друг друга: круг отвечает про один лучший
+                час, полосы — в какую часть суток вообще уходит смена.
+              */}
+              <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-center">
+              <span className="w-full max-w-[18rem] shrink-0">
+                <ClockRing hours={dial} />
+              </span>
+              <div className="grid w-full grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
                 {dayParts.map((part) => (
                   <div key={part.label}>
                     <p className="flex items-baseline justify-between gap-1 text-[0.72rem] font-semibold">
@@ -1053,6 +1117,7 @@ function Stats() {
                     </span>
                   </div>
                 ))}
+              </div>
               </div>
             </Panel>
           )}
@@ -1145,14 +1210,30 @@ function Stats() {
       )}
 
       {/* ==== Twelve months, and what an hour of them paid ==== */}
-      {(months.length > 0 || rate.length > 1) && (
+      {(months.length > 0 || topShifts.length > 0) && (
         <div
           className={`grid items-start gap-4 ${
-            months.length > 0 && rate.length > 1 ? 'lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]' : ''
+            months.length > 0 && topShifts.length > 0 ? 'lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]' : ''
           }`}
         >
           {months.length > 0 && (
-            <Panel title={t('Twelve months')} hint={t('Is this month normal?')} flush>
+            <Panel
+              title={t('Twelve months')}
+              hint={t('Is this month normal?')}
+              flush
+              action={
+                <span className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.72rem] font-semibold text-muted">
+                  {([['Shifts', 'var(--s1)'], ['Sales', 'var(--s2)'], ['Tips', 'var(--s3)']] as const).map(
+                    ([label, colour]) => (
+                      <span key={label} className="flex items-center gap-1.5">
+                        <span className="h-2 w-2 rounded-full" style={{ background: colour }} />
+                        {t(label)}
+                      </span>
+                    ),
+                  )}
+                </span>
+              }
+            >
               <div className="overflow-x-auto">
                 <table className="w-full text-[0.9rem]">
                   <thead>
@@ -1174,15 +1255,27 @@ function Stats() {
                       >
                         <td className="px-4 py-2 font-semibold capitalize">{month.label}</td>
                         <td className="px-4 py-2">
-                          <span className="block h-1.5 w-24 overflow-hidden rounded-full bg-surface-2 md:w-40">
-                            <i
-                              className="block h-full rounded-full"
+                          {/* Во всю ширину колонки: полоса в десять рем внутри
+                              колонки в сорок читалась как обрубок. Внутри —
+                              слои: смены, продажи, чаевые. */}
+                          <span className="block h-2.5 w-full overflow-hidden rounded-full bg-surface-2">
+                            <span
+                              className="flex h-full overflow-hidden rounded-full"
                               style={{
                                 width: `${Math.max(2, Math.min(100, (month.earned / monthPeak) * 100))}%`,
-                                background: 'var(--accent)',
-                                opacity: month.current ? 1 : 0.6,
+                                opacity: month.current ? 1 : 0.72,
                               }}
-                            />
+                            >
+                              {month.parts === null ? (
+                                <i className="block h-full w-full" style={{ background: 'var(--accent)' }} />
+                              ) : (
+                                <>
+                                  <i style={{ width: `${month.parts.shifts}%`, background: 'var(--s1)' }} />
+                                  <i style={{ width: `${month.parts.sales}%`, background: 'var(--s2)' }} />
+                                  <i style={{ width: `${month.parts.tips}%`, background: 'var(--s3)' }} />
+                                </>
+                              )}
+                            </span>
                           </span>
                         </td>
                         <td className={`px-4 py-2 text-right tabular ${month.current ? 'font-bold' : 'text-muted'}`}>
@@ -1196,93 +1289,79 @@ function Stats() {
             </Panel>
           )}
 
-          {/* Компактно, а не во весь рост: вопрос здесь один — сколько платит
-              час сейчас и куда он идёт, — и на него отвечают число, дельта и
-              линия в палец высотой. */}
-          {rate.length > 1 && (
-            <Panel title={t('Your hour, week by week')} hint={t('Where a raise — or a quiet cut — shows up first.')}>
-              <div className="flex items-baseline justify-between gap-2">
-                <FlowMoney value={Math.round(rate[rate.length - 1].value)} className="text-[1.6rem] font-bold" />
-                <Delta percent={delta(rate[rate.length - 1].value, rate[rate.length - 2].value)} />
-              </div>
-              <Spark values={rate.map((point) => point.value)} />
-              <div className="flex justify-between text-[0.66rem] font-semibold uppercase text-faint tabular">
-                <span>{rate[0].label}</span>
-                <span>{rate[rate.length - 1].label}</span>
-              </div>
-            </Panel>
-          )}
         </div>
       )}
 
-      <WhatIfCard suggestedTarget={active?.target ?? null} />
+      {/*
+        ==== Что стоит дозаполнить и как спали между сменами ====
 
-      {/* ==== Что стоит дозаполнить и как спали между сменами ==== */}
-      {/* Кладка, а не сетка: карточки тут разной высоты, и в сетке короткая
-          получала полкарточки воздуха над своей единственной строкой. */}
-      <div className="deck">
-        <RhythmCard />
+        Каждая во всю ширину, а не двумя колонками.
 
-        <RecordsHealthCard />
-      </div>
+        «Дозаполнить» — это три строки, «Ночи между сменами» — семь строк и
+        итог. В паре короткая оставляла под собой пустое поле в пол-экрана:
+        сетка держит ряд по высокой, а кладка на двух карточках делает ровно
+        то же самое. Соседа нет — и мерить не по чему.
+      */}
+      <RecordsHealthCard />
+
+      <RhythmCard />
 
       {/* ==== Mix, shifts, raises, currencies ==== */}
       <div className="cards">
-        {trendParts.filter((month) => month.shifts + month.sales + month.tips > 0).length >= 3 && (
-          <Panel title={t('What each month was made of')}>
-            <Plot max={mixMax} height="11rem">
-              {trendParts.filter((month) => month.shifts + month.sales + month.tips > 0).map((month) => {
-                const total = month.shifts + month.sales + month.tips;
-                const parts = [
-                  { value: month.shifts, colour: 'var(--s1)' },
-                  { value: month.sales, colour: 'var(--s2)' },
-                  { value: month.tips, colour: 'var(--s3)' },
-                ].filter((part) => part.value > 0);
-
-                return (
-                  <div key={month.label} className="group relative flex h-full flex-1 flex-col justify-end" title={`${month.label}: ${formatMoney(settings, total)}`}>
-                    <div
-                      className="grow-y flex flex-col-reverse gap-[2px] overflow-hidden rounded-t"
-                      style={{ height: `${(total / mixMax) * 100}%` }}
-                    >
-                      {parts.map((part, index) => (
-                        <span key={index} style={{ background: part.colour, height: `${total > 0 ? (part.value / total) * 100 : 0}%` }} />
-                      ))}
-                    </div>
-                    <span className="mt-0.5 text-center text-[0.62rem] text-faint">{month.label}</span>
-                  </div>
-                );
-              })}
-            </Plot>
-            <p className="field-hint mt-1.5 flex gap-3">
-              {[
-                { name: t('Shifts'), colour: 'var(--s1)' },
-                { name: t('Sales'), colour: 'var(--s2)' },
-                { name: t('Tips'), colour: 'var(--s3)' },
-              ].map((entry) => (
-                <span key={entry.name} className="flex items-center gap-1.5">
-                  <span className="h-2 w-2 rounded-full" style={{ background: entry.colour }} />
-                  {entry.name}
-                </span>
-              ))}
-            </p>
-          </Panel>
-        )}
 
         {/* Раньше эта карточка держала две разбивки — по дням недели и по
             сменам. Дни недели теперь живут в своей таблице выше, а смены
             остались здесь: это другой вопрос и другой список. */}
         {topShifts.length > 0 && (
-          <Panel title={t('What feeds the month')} hint={t('Which shift brings the money, and how many hours it takes.')}>
-            <Bars
-              rows={topShifts.map((row) => ({
-                label: row.name,
-                value: row.value,
-                caption: `${Math.round(row.hours)} ${t('h')}`,
-              }))}
-              format={(value) => formatMoneyCompact(settings, value)}
-              scale
-            />
+          /*
+           * Таблицей, а не полосами.
+           *
+           * Полосы показывали четыре смены с округлённой суммой «₴2 тыс.» у
+           * каждой — четыре одинаковых строки, из которых нельзя выбрать. А
+           * вопрос здесь именно про выбор: какая смена стоит того. Значит
+           * нужны точная сумма, часы и цена часа — последнее и есть ответ.
+           */
+          <Panel
+            title={t('What feeds the month')}
+            hint={t('Which shift brings the money, and what an hour of it is worth.')}
+            flush
+          >
+            <div className="overflow-x-auto">
+              <table className="w-full text-[0.9rem]">
+                <thead>
+                  <tr className="border-b border-border bg-surface-2/40 text-left">
+                    <th className={TH}>{t('Shift')}</th>
+                    <th className={`${TH} text-right`}>{t('Hours')}</th>
+                    <th className={`${TH} text-right`}>{t('Amount')}</th>
+                    <th className={`${TH} text-right`}>{t('Per hour')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {topShifts.map((row, index) => (
+                    <tr key={row.name} className="border-t border-border">
+                      <td className="px-4 py-2 font-semibold">
+                        <span className="flex items-center gap-2">
+                          <span
+                            className="h-2 w-2 shrink-0 rounded-full"
+                            style={{ background: `var(--s${(index % 5) + 1})` }}
+                          />
+                          {row.name}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2 text-right tabular text-muted">{num(row.hours)}</td>
+                      <td className="px-4 py-2 text-right tabular">
+                        <Money value={row.value} />
+                      </td>
+                      {/* Час считается только там, где отработан хотя бы один:
+                          две минуты делятся в ставку в тысячах. */}
+                      <td className="px-4 py-2 text-right font-bold tabular">
+                        {row.hours >= 1 ? <Money value={row.value / row.hours} /> : '—'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </Panel>
         )}
 

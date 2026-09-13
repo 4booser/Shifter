@@ -367,17 +367,17 @@ export default function BankPage() {
                 drawn, and these go quiet at different times: a month with one
                 loaded neighbour gets one full-width card instead of a card and
                 a hole. */}
-            <div className="cards items-stretch">
+            <div className="cards-fill">
               <SpendRhythm items={mono.items} from={bounds.from} to={bounds.to} />
               <MonthlyFlowsCard items={mono.items} />
             </div>
 
-            <div className="cards items-stretch">
+            <div className="cards-fill">
               <SpendPaceCard items={mono.items} from={bounds.from} to={bounds.to} />
               <CategoryMonthsCard items={mono.items} rules={mono.rules} />
             </div>
 
-            <div className="cards items-stretch">
+            <div className="cards-fill">
               <SpendPlaces items={mono.items} from={bounds.from} to={bounds.to} />
               <SpendOddities items={mono.items} from={bounds.from} to={bounds.to} />
             </div>
@@ -389,7 +389,12 @@ export default function BankPage() {
                 постоянно оказывался рядом из одного, а рядом с ним — дыра во
                 всю его высоту. Кладка ставит следующую карточку туда, где
                 кончилась предыдущая. */}
-            <div className="deck">
+            {/* Сетка, а не кладка. Кладка на двух колонках раскладывает
+                карточки по высоте и всё равно оставляет одну колонку короче —
+                справа от «Формы трат» висел пустой прямоугольник в пол-экрана.
+                В `.cards` ряд равняет высоты, а одиночная карточка в конце
+                растягивается во всю ширину: дыре взяться неоткуда. */}
+            <div className="cards-fill">
               <BankWork items={mono.items} days={days} from={bounds.from} to={bounds.to} />
               <BankShape items={mono.items} from={bounds.from} to={bounds.to} />
             </div>

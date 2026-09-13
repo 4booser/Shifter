@@ -2746,6 +2746,9 @@ const RU: Dictionary = {
   'over this stretch': 'за этот отрезок',
   'the rota knows of nothing owed yet': 'график пока не ждёт выплат',
   'the stretch is not over yet': 'отрезок ещё не закончился',
+  'Which shift brings the money, and what an hour of it is worth.': 'Какая смена приносит деньги и сколько стоит её час.',
+  'Travel': 'Дорога',
+  'Food on shift': 'Еда на смене',
 };
 
 export default RU;

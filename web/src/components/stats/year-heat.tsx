@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation';
 import { calendarActions, useCalendar } from '@/lib/store/calendar';
 import { useMoney } from '@/lib/settings/money';
 import { useI18n } from '@/lib/i18n';
+import { Panel } from './panel';
 
 /**
  * The year as a strip of week columns — where the season fed the wallet and
@@ -68,18 +69,31 @@ export function YearHeat() {
   };
 
   return (
-    <section className="panel p-5">
-      <h2 className="text-[0.98rem] font-bold">{t('The year in squares')}</h2>
-      <p className="mt-0.5 text-[0.78rem] text-muted">
-        {t('Colour is the earnings quartile among the paid days. An empty cell is a day without a record — that is not a zero.')}
-      </p>
-
+    <Panel
+      title={t('The year in squares')}
+      hint={t('Colour is the earnings quartile among the paid days. An empty cell is a day without a record — that is not a zero.')}
+      /* Легенда «меньше — больше» переехала в шапку карточки: снизу она стояла
+         в одной строке с наведённой подсказкой и они толкали друг друга. */
+      action={
+        <span className="flex items-center gap-1.5 text-[0.66rem] font-bold uppercase tracking-widest text-faint">
+          {t('less')}
+          {[14, 32, 55, 78, 100].map((share) => (
+            <i
+              key={share}
+              className="inline-block h-3.5 w-3.5 rounded-[3px]"
+              style={{ background: `color-mix(in oklab, var(--accent) ${share}%, var(--surface))` }}
+            />
+          ))}
+          {t('more')}
+        </span>
+      }
+    >
       {/* Клетка была ровно одиннадцать пикселей, и полсотни недель занимали
           семьсот из тысячи девятисот — половина карточки уходила в пустоту.
           Теперь неделя — доля ширины, с потолком, чтобы квадрат оставался
           квадратом на коротком годе. Подписи месяцев тоже в долях: пиксельный
           отступ разъехался бы с первой же растяжкой. */}
-      <div ref={strip} className="mt-3 overflow-x-auto pb-1">
+      <div ref={strip} className="overflow-x-auto pb-1">
         <div>
           <div className="relative ml-8 h-4 text-[0.62rem] text-faint">
             {grid.months.map((month) => (
@@ -95,8 +109,8 @@ export function YearHeat() {
 
           <div className="mt-1 flex items-start gap-[3px]">
             <div className="flex w-8 flex-col gap-[4px] pr-1 text-right text-[0.62rem] text-faint">
-              {[t('Mon'), '', t('Wed'), '', t('Fri'), '', ''].map((label, row) => (
-                <div key={row} className="h-4 leading-4">{label}</div>
+              {[t('Mon'), '', t('Wed'), '', t('Fri'), '', t('Sun')].map((label, row) => (
+                <div key={row} className="h-[18px] leading-[18px]">{label}</div>
               ))}
             </div>
 
@@ -108,7 +122,7 @@ export function YearHeat() {
                 сплошные полосы. Узкий экран прокручивает, как и прежде. */}
             <div
               className="grid gap-[4px]"
-              style={{ gridTemplateColumns: `repeat(${grid.weeks.length}, 16px)` }}
+              style={{ gridTemplateColumns: `repeat(${grid.weeks.length}, 18px)` }}
             >
             {grid.weeks.map((week, index) => (
               <div key={index} className="grid gap-[4px]">
@@ -117,6 +131,10 @@ export function YearHeat() {
                     key={cell.date}
                     type="button"
                     aria-label={say(cell)}
+                    /* Числа в клетках не печатаются — при пятидесяти трёх
+                       колонках они нечитаемы. Величину несёт цвет, точную
+                       сумму — подсказка браузера. */
+                    title={say(cell)}
                     onMouseEnter={() => setPicked(cell)}
                     onFocus={() => setPicked(cell)}
                     onMouseLeave={() => setPicked(null)}
@@ -129,7 +147,7 @@ export function YearHeat() {
                       calendarActions.select(cell.date);
                       router.push('/dashboard');
                     }}
-                    className="h-4 w-4 rounded-[3px] border"
+                    className="h-[18px] w-[18px] rounded-[3px] border"
                     style={
                       cell.level === null
                         ? { borderColor: 'var(--border)', background: 'transparent' }
@@ -147,20 +165,7 @@ export function YearHeat() {
         </div>
       </div>
 
-      <div className="mt-2 flex items-center justify-between text-[0.72rem] text-muted">
-        <span className="min-h-[1rem]">{picked !== null ? say(picked) : ''}</span>
-        <span className="flex items-center gap-1">
-          {t('less')}
-          {[14, 32, 55, 78, 100].map((share) => (
-            <i
-              key={share}
-              className="inline-block h-[9px] w-[9px] rounded-[2px]"
-              style={{ background: `color-mix(in oklab, var(--accent) ${share}%, var(--surface))` }}
-            />
-          ))}
-          {t('more')}
-        </span>
-      </div>
-    </section>
+      <p className="mt-2 min-h-[1rem] text-[0.72rem] text-muted">{picked !== null ? say(picked) : ''}</p>
+    </Panel>
   );
 }

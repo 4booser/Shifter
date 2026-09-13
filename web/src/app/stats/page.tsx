@@ -19,8 +19,8 @@ import {
   Raise,
   placeName,
 } from '@/lib/calendar/models';
-import { activeGoalFor, delta, earningsBuckets, median, weekdayTotals } from '@/lib/calendar/stats-math';
-import { buildColumns, buildTicks, niceCeiling } from '@/lib/charts/math';
+import { activeGoalFor, delta, median, weekdayTotals } from '@/lib/calendar/stats-math';
+import { niceCeiling } from '@/lib/charts/math';
 import { Sheet, buildXlsx, downloadBlob } from '@/lib/export/xlsx';
 import { currentCardTheme, drawShareCard } from '@/lib/export/share-card';
 import { drawStoryCard } from '@/lib/export/story-card';
@@ -35,16 +35,16 @@ import { RhythmCard } from '@/components/stats/rhythm';
 import { CitiesCard } from '@/components/stats/cities';
 import { RecordsHealthCard } from '@/components/stats/records-health';
 import { YearHeat } from '@/components/stats/year-heat';
+import { Panel } from '@/components/stats/panel';
 import { TrophyShelf } from '@/components/stats/trophies';
 import { hourDial, rateTrend, waterfall, weekBands } from '@/lib/charts/report-math';
-import { Bars, ClockRing, MoneyFlow, TrendLine, WeekBandsChart } from '@/components/charts/glass-charts';
-import { AreaChart, ColumnChart, Plot } from '@/components/charts/charts';
+import { Bars, ClockRing, MoneyFlow } from '@/components/charts/glass-charts';
+import { AreaChart, Plot } from '@/components/charts/charts';
 import { Alert, CountUp, Delta, Money } from '@/components/ui/bits';
 import { FlowMoney } from '@/components/ui/flow';
 import { Icon } from '@/components/ui/icon';
 import { useTitle } from '@/lib/use-title';
 import { ConfettiBurst } from '@/components/ui/confetti';
-import { earnedTone } from '@/lib/tone';
 
 type PresetId = 'month' | 'previous' | '3m' | '6m' | 'year' | 'all' | 'custom';
 
@@ -82,6 +82,42 @@ const REASON_LABEL: Record<DeductionSplit['reason'], string> = {
   other: 'Something else',
   unsaid: 'Not said',
 };
+
+/**
+ * What the one weekday card is showing.
+ *
+ * There used to be three cards asking the same question of the same seven
+ * days — «Форма вашей недели», the weekday half of «Что кормит месяц» and the
+ * column chart «По дням» — and a reader had to scroll between them to learn
+ * that Friday is long and Wednesday pays better per hour. One table, three
+ * modes, same rows.
+ */
+type WeekMode = 'money' | 'hours' | 'rate';
+
+const WEEK_MODES: { id: WeekMode; label: string }[] = [
+  { id: 'money', label: 'Money' },
+  { id: 'hours', label: 'Hours' },
+  { id: 'rate', label: 'The rate' },
+];
+
+/** A table's column heading, quiet and the same in all three tables here. */
+const TH = 'px-4 py-2 text-[0.66rem] font-bold uppercase tracking-widest text-faint';
+
+/** 18.5 → «18:30». The same reading the week bands were drawn with. */
+const clockAt = (value: number) => {
+  const hour = Math.floor(value) % 24;
+  const minute = Math.round((value % 1) * 60);
+
+  return `${hour}:${`${minute}`.padStart(2, '0')}`;
+};
+
+/** The clock, in the four stretches anybody actually names. */
+const DAY_PARTS: { label: string; from: number; to: number }[] = [
+  { label: 'Morning', from: 6, to: 12 },
+  { label: 'Daytime', from: 12, to: 18 },
+  { label: 'Evening', from: 18, to: 24 },
+  { label: 'After midnight', from: 0, to: 6 },
+];
 
 const PRESETS: { id: PresetId; label: string }[] = [
   { id: 'month', label: 'This month' },
@@ -130,6 +166,7 @@ function Stats() {
   const [trendParts, setTrendParts] = useState<{ label: string; shifts: number; sales: number; tips: number }[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [goalsOpen, setGoalsOpen] = useState(false);
+  const [weekMode, setWeekMode] = useState<WeekMode>('money');
   const [error, setError] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
 
@@ -329,13 +366,75 @@ function Stats() {
 
   const projection = forecast.live ? projectionSeries(summary.days, range.from, range.to, forecast) : [];
 
-  const buckets = earningsBuckets(summary, range.from, range.to);
-  const earningsColumns = buildColumns(buckets.data);
-  const earningsTicks = buildTicks(buckets.data);
-  const trendColumns = buildColumns(trendRaw, 34);
-  const trendTicks = buildTicks(trendRaw);
-
   const weekdays = weekdayTotals(summary.days);
+
+  /**
+   * The seven rows the weekday card draws, whichever mode it is in.
+   *
+   * Money comes from the day totals — everything a Friday brought, tips and
+   * all — while hours and the paying hour come from the worked shifts, which
+   * is the only place a start and an end are written down. A weekday nobody
+   * has ever worked is left out rather than drawn as a nought: an empty row
+   * says «Tuesday pays nothing», and the truth is there has not been one.
+   */
+  const weekRows = useMemo(() => {
+    const byDay = new Map(bands.map((band) => [band.weekday, band]));
+
+    return weekdays
+      .map((day, weekday) => {
+        const band = byDay.get(weekday);
+
+        return {
+          weekday,
+          money: day.value,
+          hours: band?.hours ?? 0,
+          rate: band?.perHour ?? 0,
+          count: band?.count ?? 0,
+          from: band?.from ?? null,
+          to: band?.to ?? null,
+        };
+      })
+      .filter((row) => row.money !== 0 || row.hours > 0);
+  }, [weekdays, bands]);
+
+  /** Months with nothing in them are not drawn at all — see the card. */
+  const months = useMemo(
+    () =>
+      trendRaw
+        .map((month, index) => ({ ...month, current: index === trendRaw.length - 1 }))
+        .filter((month) => month.earned !== 0),
+    [trendRaw],
+  );
+
+  const dayParts = useMemo(
+    () =>
+      DAY_PARTS.map((part) => {
+        let value = 0;
+
+        for (let hour = part.from; hour < part.to; hour += 1) value += dial[hour];
+
+        return { label: part.label, value };
+      }),
+    [dial],
+  );
+
+  const peakPart = Math.max(...dayParts.map((part) => part.value));
+  const monthPeak = Math.max(1, ...months.map((month) => month.earned));
+  const weekPeak = Math.max(
+    1,
+    ...weekRows.map((row) => (weekMode === 'money' ? row.money : weekMode === 'hours' ? row.hours : row.rate)),
+  );
+
+  /*
+   * «Понедельник», not «Пн», and not a dictionary key either: a weekday's own
+   * name is what Intl is for, and three languages of seven days is twenty-one
+   * translations nobody would have to maintain. 1 January 2024 was a Monday.
+   */
+  const weekdayName = (weekday: number) =>
+    sentenceCase(
+      new Intl.DateTimeFormat(lang, { weekday: 'long' }).format(new Date(2024, 0, 1 + weekday)),
+      lang,
+    );
 
   const heatValues = useMemo(() => new Map(summary.days.map((day) => [day.date, day.earned])), [summary.days]);
 
@@ -675,36 +774,40 @@ function Stats() {
 
       {error && <Alert onDismiss={() => setError(null)}>{error}</Alert>}
 
-      {/* ==== KPI row ==== */}
+      {/* ==== The band of figures: one filled, five quiet ==== */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
         {/* Where the range mixes currencies the plain sum is hryvnia and
             zloty added together as if they were the same money, so the
             converted figure is the only honest headline. */}
-        <Kpi label={t('Earned')} delta={summary.conversion === null ? delta(summary.total_earned, previous.total_earned) : null}>
+        <Tile
+          hero
+          icon="coins"
+          label={t('Earned')}
+          delta={summary.conversion === null ? delta(summary.total_earned, previous.total_earned) : null}
+        >
+          {/* Не earnedTone: на залитой акцентом плитке зелёный и красный —
+              пара нечитаемых тёмных пятен, а знак минуса перед суммой и так
+              говорит, куда ушёл месяц. */}
           {summary.conversion === null ? (
-            <CountUp
-              value={summary.total_earned}
-              className={`text-[1.25rem] font-bold ${earnedTone(summary.total_earned)}`}
-            />
+            <CountUp value={summary.total_earned} className="tile-value" />
           ) : (
-            <span
-              className={`text-[1.25rem] font-bold tabular ${earnedTone(summary.conversion.total_earned)}`}
-            >
+            <span className="tile-value">
               ≈ {formatWith(summary.conversion.base_currency, summary.conversion.total_earned)}
             </span>
           )}
-        </Kpi>
+        </Tile>
         {/* «Отработанные», not «Часы»: the calendar's tile counts the whole
             month including what is still booked, and the two screens naming
             the same word with different numbers is how a page stops being
             trusted. */}
-        <Kpi label={t('Hours worked')} delta={delta(summary.hours, previous.hours)}>
-          <CountUp value={summary.hours} format={(value) => num(Math.round(value))} className="text-[1.25rem] font-bold" />
-        </Kpi>
-        <Kpi label={t('Per working day')} delta={delta(averages.perDay, beforeAverages.perDay)}>
-          <FlowMoney value={averages.perDay} className="text-[1.25rem] font-bold" />
-        </Kpi>
-        <Kpi
+        <Tile icon="clock" label={t('Hours worked')} delta={delta(summary.hours, previous.hours)}>
+          <CountUp value={summary.hours} format={(value) => num(Math.round(value))} className="tile-value" />
+        </Tile>
+        <Tile icon="calendar" label={t('Per working day')} delta={delta(averages.perDay, beforeAverages.perDay)}>
+          <FlowMoney value={averages.perDay} className="tile-value" />
+        </Tile>
+        <Tile
+          icon="spark"
           label={t('Per hour')}
           delta={
             averages.perHour === null || beforeAverages.perHour === null
@@ -713,29 +816,29 @@ function Stats() {
           }
         >
           {averages.perHour === null ? (
-            <span className="text-[1.25rem] font-bold tabular">—</span>
+            <span className="tile-value">—</span>
           ) : (
-            <FlowMoney value={averages.perHour} className="text-[1.25rem] font-bold" />
+            <FlowMoney value={averages.perHour} className="tile-value" />
           )}
-        </Kpi>
-        <Kpi label={t('Median day')} delta={null}>
+        </Tile>
+        <Tile icon="chart" label={t('Median day')} delta={null}>
           {dayMedian === null ? (
-            <span className="text-[1.25rem] font-bold tabular">—</span>
+            <span className="tile-value">—</span>
           ) : (
-            <FlowMoney value={dayMedian} className="text-[1.25rem] font-bold" />
+            <FlowMoney value={dayMedian} className="tile-value" />
           )}
-        </Kpi>
-        <Kpi label={t('Days worked')} delta={delta(summary.days_worked, previous.days_worked)}>
-          <span className="text-[1.25rem] font-bold tabular">{summary.days_worked}</span>
-        </Kpi>
+        </Tile>
+        <Tile icon="check" label={t('Days worked')} delta={delta(summary.days_worked, previous.days_worked)}>
+          <span className="tile-value">{summary.days_worked}</span>
+        </Tile>
       </div>
 
-      {/* ==== Goal + cumulative ==== */}
+      {/* ==== The period's climb, and the goal beside it ==== */}
       {/* items-start: цель без заданной суммы — это одна строка подсказки, и
           растянутая под высокий график она превращалась в обведённую рамкой
           пустоту в треть экрана. Пусть будет своего роста. */}
-      <div className="grid items-start gap-3 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-        <Card
+      <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+        <Panel
           title={t('Earned over the period')}
           hint={
             forecast.live
@@ -746,6 +849,25 @@ function Stats() {
                   + ` · ${t('with the season')}: ${formatMoney(settings, forecast.seasonal)}`
               : undefined
           }
+          /* Легенда переехала в шапку карточки: под графиком она стояла
+             третьей строкой мелкого текста и читалась как подпись к оси. */
+          action={
+            <span className="field-hint flex flex-wrap items-center gap-x-3 gap-y-1">
+              <span className="flex items-center gap-1.5">
+                <span className="h-0.5 w-4 rounded bg-(--accent)" /> {t('This period')}
+              </span>
+              {cumulativePrevious.length > 1 && (
+                <span className="flex items-center gap-1.5">
+                  <span className="h-0.5 w-4 rounded bg-faint" /> {t('Previous period')}
+                </span>
+              )}
+              {active !== null && (
+                <span className="flex items-center gap-1.5">
+                  <span className="h-0.5 w-4 rounded bg-good" /> {t('Goal')}
+                </span>
+              )}
+            </span>
+          }
         >
           <AreaChart
             points={cumulative}
@@ -754,25 +876,15 @@ function Stats() {
             goal={active?.target ?? null}
             emptyNote={t('Nothing earned in this stretch yet.')}
           />
-          <p className="field-hint mt-1 flex flex-wrap gap-3">
-            <span className="flex items-center gap-1.5">
-              <span className="h-0.5 w-4 rounded bg-(--accent)" /> {t('This period')}
-            </span>
-            {cumulativePrevious.length > 1 && (
-              <span className="flex items-center gap-1.5">
-                <span className="h-0.5 w-4 rounded bg-faint" /> {t('Previous period')}
-              </span>
-            )}
-            {active !== null && (
-              <span className="flex items-center gap-1.5">
-                <span className="h-0.5 w-4 rounded bg-good" /> {t('Goal')}
-              </span>
-            )}
-          </p>
-        </Card>
+        </Panel>
 
-        <Card
+        <Panel
           title={t('Goal')}
+          /* Заданная цель тянется на всю высоту графика рядом — иначе под ней
+             остаётся полоса пустоты в треть экрана. Незаданная так и стоит
+             своего роста: растянутая подсказка в одну строку — это обведённая
+             рамкой пустота. */
+          className={goalProgress === null ? undefined : 'lg:self-stretch'}
           action={
             <button type="button" className="btn btn-quiet btn-sm" onClick={() => setGoalsOpen(true)}>
               <Icon name="target" size={13} />
@@ -791,7 +903,7 @@ function Stats() {
             <div className="relative flex flex-col gap-2">
               <GoalCheer periodFrom={range.from} reached={goalProgress.reached} />
               <div className="flex items-baseline gap-2">
-                <span className="text-[1.6rem] font-bold tabular">
+                <span className="text-[2.1rem] font-bold leading-none tabular">
                   {Math.round(goalProgress.percent)}%
                 </span>
                 <span className="field-hint">
@@ -826,50 +938,298 @@ function Stats() {
               </div>
             </div>
           )}
-        </Card>
+        </Panel>
       </div>
+
+      {/* ==== The year, square by square ==== */}
+      <YearHeat />
+
+      {/* ==== Where the money came from, and when in the day ==== */}
+      {(waterfallSteps.length > 0 || dialTotal > 0) && (
+        <div
+          className={`grid items-start gap-4 ${
+            waterfallSteps.length > 0 && dialTotal > 0 ? 'lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]' : ''
+          }`}
+        >
+          {waterfallSteps.length > 0 && (
+            <Panel title={t('How the money assembled')} hint={t('Every source in one bar; the cuts hang under it.')}>
+              <MoneyFlow steps={waterfallSteps} />
+              {(summary.tip_out > 0 || summary.deductions > 0 || summary.tax > 0) && (
+                <dl className="mt-3 flex flex-col gap-1 border-t border-border pt-2 text-[0.85rem]">
+                  {summary.tip_out > 0 && (
+                    <div className="flex justify-between">
+                      <dt className="text-muted">{t('Tip-out')}</dt>
+                      <dd className="text-danger-read">−<Money value={summary.tip_out} /></dd>
+                    </div>
+                  )}
+                  {summary.deductions > 0 && (
+                    <div className="flex justify-between">
+                      <dt className="text-muted">{t('Meals and fines')}</dt>
+                      <dd className="text-danger-read">−<Money value={summary.deductions} /></dd>
+                    </div>
+                  )}
+                  {/* What the fines were actually for. The total above says how
+                      much; only this says whether it is worth a conversation. */}
+                  {summary.deductions_by_reason.map((split) => (
+                    <div key={split.reason} className="flex justify-between pl-3">
+                      <dt className="text-muted text-[0.8rem]">
+                        {t(REASON_LABEL[split.reason])}
+                        {split.days > 1 && <span className="text-muted"> · {n(split.days, 'days')}</span>}
+                      </dt>
+                      <dd className="text-muted text-[0.8rem] tabular">
+                        −<Money value={split.amount} />
+                      </dd>
+                    </div>
+                  ))}
+                  {summary.tax > 0 && (
+                    <>
+                      <div className="flex justify-between">
+                        <dt className="text-muted">{t('Tax withheld')}</dt>
+                        <dd className="text-danger-read">−<Money value={summary.tax} /></dd>
+                      </div>
+                      <div className="flex justify-between font-bold">
+                        <dt>{t('Take-home')}</dt>
+                        <dd><Money value={summary.net_earned} /></dd>
+                      </div>
+                    </>
+                  )}
+
+                  {/* Below the take-home line on purpose: this money left after
+                      the wage arrived, and folding it in would stop the app
+                      agreeing with anybody's payslip. */}
+                  {summary.expenses > 0 && (
+                    <div className="mt-1 border-t border-border pt-1.5">
+                      <div className="flex justify-between">
+                        <dt className="text-muted">{t('And the work cost you')}</dt>
+                        <dd className="text-muted">−<Money value={summary.expenses} /></dd>
+                      </div>
+                      {summary.expenses_by_kind.map((split) => (
+                        <div key={split.kind} className="flex justify-between pl-3">
+                          <dt className="text-muted text-[0.8rem]">{t(EXPENSE_LABEL[split.kind])}</dt>
+                          <dd className="text-muted text-[0.8rem] tabular">
+                            −<Money value={split.amount} />
+                          </dd>
+                        </div>
+                      ))}
+                      {summary.travel_share_of_tips !== null && (
+                        <p className="field-hint mt-1">
+                          {t('The taxi home ate')} {summary.travel_share_of_tips}%{' '}
+                          {t('of your tips')}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </dl>
+              )}
+            </Panel>
+          )}
+
+          {dialTotal > 0 && (
+            <Panel
+              title={t('Around the clock')}
+              hint={t('Midnight on top; the brighter the hour, the more it brings.')}
+              action={<span className="field-hint tabular">{formatMoneyCompact(settings, dialTotal)}</span>}
+            >
+              <ClockRing hours={dial} />
+              {/* Подписанные полосы рядом с бубликом: сам круг отвечает про
+                  один лучший час, а эти четыре — про то, в какую половину
+                  суток вообще уходит смена. */}
+              <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2.5">
+                {dayParts.map((part) => (
+                  <div key={part.label}>
+                    <p className="flex items-baseline justify-between gap-1 text-[0.72rem] font-semibold">
+                      <span className="text-muted">{t(part.label)}</span>
+                      <span className="tabular">{Math.round((part.value / dialTotal) * 100)}%</span>
+                    </p>
+                    <span className="mt-1 block h-1.5 overflow-hidden rounded-full bg-surface-2">
+                      <i
+                        className="block h-full rounded-full"
+                        style={{
+                          width: `${(part.value / dialTotal) * 100}%`,
+                          background: 'var(--accent)',
+                          opacity: part.value === peakPart ? 1 : 0.45,
+                        }}
+                      />
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </Panel>
+          )}
+        </div>
+      )}
+
+      {/* ==== The seven days: one card, three questions ==== */}
+      {weekRows.length > 0 && (
+        <Panel
+          title={t('Weekdays')}
+          flush
+          action={
+            <div className="seg">
+              {WEEK_MODES.map((mode) => (
+                <button
+                  key={mode.id}
+                  type="button"
+                  className={`seg-btn ${weekMode === mode.id ? 'is-active' : ''}`}
+                  onClick={() => setWeekMode(mode.id)}
+                >
+                  {t(mode.label)}
+                </button>
+              ))}
+            </div>
+          }
+        >
+          <div className="overflow-x-auto">
+            <table className="w-full text-[0.9rem]">
+              <thead>
+                <tr className="border-b border-border bg-surface-2/40 text-left">
+                  <th className={TH}>{t('Weekday')}</th>
+                  <th className={TH}>{t('Distribution')}</th>
+                  <th className={`${TH} text-right`}>{t('Total')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {weekRows.map((row) => {
+                  const value = weekMode === 'money' ? row.money : weekMode === 'hours' ? row.hours : row.rate;
+
+                  return (
+                    <tr key={row.weekday} className="border-t border-border">
+                      <td className="px-4 py-2.5">
+                        <span className="font-semibold">{weekdayName(row.weekday)}</span>
+                        {/* Что осталось от «Формы вашей недели»: когда день
+                            обычно начинается и кончается и сколько раз он
+                            случился. Отдельная карточка под это спрашивала
+                            про те же семь строк. */}
+                        {/* На телефоне этой подписи нет: вместе с ней колонка
+                            «Итого» уезжала за правый край таблицы. */}
+                        {row.from !== null && row.to !== null && (
+                          <span className="ml-2 hidden whitespace-nowrap text-[0.74rem] text-faint tabular sm:inline">
+                            {clockAt(row.from)}–{clockAt(row.to)} ×{row.count}
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-2.5">
+                        <span className="block h-2 w-24 overflow-hidden rounded-full bg-surface-2 sm:w-32 md:w-48">
+                          <i
+                            className="block h-full rounded-full"
+                            style={{
+                              width: `${Math.max(2, Math.min(100, (value / weekPeak) * 100))}%`,
+                              background: 'var(--accent)',
+                              opacity: value === weekPeak ? 1 : 0.5,
+                            }}
+                          />
+                        </span>
+                      </td>
+                      <td className="px-4 py-2.5 text-right font-bold tabular">
+                        {weekMode === 'money' ? (
+                          <Money value={row.money} />
+                        ) : weekMode === 'hours' ? (
+                          <>
+                            {num(Math.round(row.hours * 10) / 10)} {t('h')}
+                          </>
+                        ) : row.hours >= 1 ? (
+                          <>
+                            <Money value={row.rate} />/{t('h')}
+                          </>
+                        ) : (
+                          <span className="text-faint">—</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </Panel>
+      )}
+
+      {/* ==== Twelve months, and what an hour of them paid ==== */}
+      {(months.length > 0 || rate.length > 1) && (
+        <div
+          className={`grid items-start gap-4 ${
+            months.length > 0 && rate.length > 1 ? 'lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]' : ''
+          }`}
+        >
+          {months.length > 0 && (
+            <Panel title={t('Twelve months')} hint={t('Is this month normal?')} flush>
+              <div className="overflow-x-auto">
+                <table className="w-full text-[0.9rem]">
+                  <thead>
+                    <tr className="border-b border-border bg-surface-2/40 text-left">
+                      <th className={TH}>{t('Month')}</th>
+                      <th className={TH}>{t('Distribution')}</th>
+                      <th className={`${TH} text-right`}>{t('Amount')}</th>
+                    </tr>
+                  </thead>
+                  {/* Месяц без записей не рисуется вовсе. Десять тонких
+                      линеек с точкой вместо суммы занимали всю карточку и
+                      сообщали ровно ничего — у человека может быть один
+                      отработанный месяц, и это нормально. */}
+                  <tbody>
+                    {months.map((month) => (
+                      <tr
+                        key={month.label}
+                        className={`border-t border-border ${month.current ? 'bg-surface-2/40' : ''}`}
+                      >
+                        <td className="px-4 py-2 font-semibold capitalize">{month.label}</td>
+                        <td className="px-4 py-2">
+                          <span className="block h-1.5 w-24 overflow-hidden rounded-full bg-surface-2 md:w-40">
+                            <i
+                              className="block h-full rounded-full"
+                              style={{
+                                width: `${Math.max(2, Math.min(100, (month.earned / monthPeak) * 100))}%`,
+                                background: 'var(--accent)',
+                                opacity: month.current ? 1 : 0.6,
+                              }}
+                            />
+                          </span>
+                        </td>
+                        <td className={`px-4 py-2 text-right tabular ${month.current ? 'font-bold' : 'text-muted'}`}>
+                          <Money value={month.earned} />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Panel>
+          )}
+
+          {/* Компактно, а не во весь рост: вопрос здесь один — сколько платит
+              час сейчас и куда он идёт, — и на него отвечают число, дельта и
+              линия в палец высотой. */}
+          {rate.length > 1 && (
+            <Panel title={t('Your hour, week by week')} hint={t('Where a raise — or a quiet cut — shows up first.')}>
+              <div className="flex items-baseline justify-between gap-2">
+                <FlowMoney value={Math.round(rate[rate.length - 1].value)} className="text-[1.6rem] font-bold" />
+                <Delta percent={delta(rate[rate.length - 1].value, rate[rate.length - 2].value)} />
+              </div>
+              <Spark values={rate.map((point) => point.value)} />
+              <div className="flex justify-between text-[0.66rem] font-semibold uppercase text-faint tabular">
+                <span>{rate[0].label}</span>
+                <span>{rate[rate.length - 1].label}</span>
+              </div>
+            </Panel>
+          )}
+        </div>
+      )}
 
       <WhatIfCard suggestedTarget={active?.target ?? null} />
 
-      <RhythmCard />
+      {/* ==== Что стоит дозаполнить и как спали между сменами ==== */}
+      {/* Кладка, а не сетка: карточки тут разной высоты, и в сетке короткая
+          получала полкарточки воздуха над своей единственной строкой. */}
+      <div className="deck">
+        <RhythmCard />
 
-      <YearHeat />
-
-      <CitiesCard />
-
-      <TrophyShelf />
-
-      <RecordsHealthCard />
-
-      {/* ==== Earnings + twelve months ==== */}
-      <div className="cards">
-        <Card title={t(buckets.grain === 'day' ? 'By day' : buckets.grain === 'week' ? 'By week' : 'By month')}>
-          <ColumnChart
-            columns={earningsColumns}
-            ticks={earningsTicks}
-            labelEvery={buckets.data.length > 14 ? 7 : 1}
-            emptyNote={t('Nothing worked in this stretch yet.')}
-          />
-        </Card>
-        <Card title={t('Twelve months')} hint={t('Is this month normal?')}>
-          <Bars
-            rows={trendRaw.map((month, index) => ({
-              label: month.label,
-              value: month.earned,
-              marked: index === trendRaw.length - 1,
-            }))}
-            format={(value) => formatMoney(settings, value)}
-            compact={(value) => formatMoneyCompact(settings, value)}
-            labelWidth="2.4rem"
-            thinWhenEmpty
-          />
-        </Card>
+        <RecordsHealthCard />
       </div>
 
-      {/* ==== Mix + sources ==== */}
+      {/* ==== Mix, shifts, raises, currencies ==== */}
       <div className="cards">
         {trendParts.filter((month) => month.shifts + month.sales + month.tips > 0).length >= 3 && (
-          <Card title={t('What each month was made of')}>
+          <Panel title={t('What each month was made of')}>
             <Plot max={mixMax} height="11rem">
               {trendParts.filter((month) => month.shifts + month.sales + month.tips > 0).map((month) => {
                 const total = month.shifts + month.sales + month.tips;
@@ -906,11 +1266,28 @@ function Stats() {
                 </span>
               ))}
             </p>
-          </Card>
+          </Panel>
+        )}
+
+        {/* Раньше эта карточка держала две разбивки — по дням недели и по
+            сменам. Дни недели теперь живут в своей таблице выше, а смены
+            остались здесь: это другой вопрос и другой список. */}
+        {topShifts.length > 0 && (
+          <Panel title={t('What feeds the month')} hint={t('Which shift brings the money, and how many hours it takes.')}>
+            <Bars
+              rows={topShifts.map((row) => ({
+                label: row.name,
+                value: row.value,
+                caption: `${Math.round(row.hours)} ${t('h')}`,
+              }))}
+              format={(value) => formatMoneyCompact(settings, value)}
+              scale
+            />
+          </Panel>
         )}
 
         {summary.raises.length > 0 && (
-          <Card
+          <Panel
             title={t('When the rate moved')}
             hint={t('Read out of the shifts themselves, so it is money that actually changed hands.')}
           >
@@ -946,11 +1323,11 @@ function Stats() {
                 </li>
               ))}
             </ul>
-          </Card>
+          </Panel>
         )}
 
         {summary.conversion !== null && (
-          <Card
+          <Panel
             title={t('All of it in one currency')}
             hint={t('At the National Bank’s published rate, so you can check it against your own.')}
           >
@@ -1011,156 +1388,57 @@ function Stats() {
                 {t('that money is not in the total above.')}
               </p>
             )}
-          </Card>
+          </Panel>
         )}
-
       </div>
 
-      {/* ==== Waterfall + punchcard ==== */}
+      {/* ==== Cities and the shelf ==== */}
       <div className="cards">
-        {waterfallSteps.length > 0 && (
-          <Card title={t('How the money assembled')} hint={t('Every source in one bar; the cuts hang under it.')}>
-            <MoneyFlow steps={waterfallSteps} />
-            {(summary.tip_out > 0 || summary.deductions > 0 || summary.tax > 0) && (
-              <dl className="mt-3 flex flex-col gap-1 border-t border-border pt-2 text-[0.85rem]">
-                {summary.tip_out > 0 && (
-                  <div className="flex justify-between">
-                    <dt className="text-muted">{t('Tip-out')}</dt>
-                    <dd className="text-danger-read">−<Money value={summary.tip_out} /></dd>
-                  </div>
-                )}
-                {summary.deductions > 0 && (
-                  <div className="flex justify-between">
-                    <dt className="text-muted">{t('Meals and fines')}</dt>
-                    <dd className="text-danger-read">−<Money value={summary.deductions} /></dd>
-                  </div>
-                )}
-                {/* What the fines were actually for. The total above says how
-                    much; only this says whether it is worth a conversation. */}
-                {summary.deductions_by_reason.map((split) => (
-                  <div key={split.reason} className="flex justify-between pl-3">
-                    <dt className="text-muted text-[0.8rem]">
-                      {t(REASON_LABEL[split.reason])}
-                      {split.days > 1 && <span className="text-muted"> · {n(split.days, 'days')}</span>}
-                    </dt>
-                    <dd className="text-muted text-[0.8rem] tabular">
-                      −<Money value={split.amount} />
-                    </dd>
-                  </div>
-                ))}
-                {summary.tax > 0 && (
-                  <>
-                    <div className="flex justify-between">
-                      <dt className="text-muted">{t('Tax withheld')}</dt>
-                      <dd className="text-danger-read">−<Money value={summary.tax} /></dd>
-                    </div>
-                    <div className="flex justify-between font-bold">
-                      <dt>{t('Take-home')}</dt>
-                      <dd><Money value={summary.net_earned} /></dd>
-                    </div>
-                  </>
-                )}
+        <CitiesCard />
 
-                {/* Below the take-home line on purpose: this money left after
-                    the wage arrived, and folding it in would stop the app
-                    agreeing with anybody's payslip. */}
-                {summary.expenses > 0 && (
-                  <div className="mt-1 border-t border-border pt-1.5">
-                    <div className="flex justify-between">
-                      <dt className="text-muted">{t('And the work cost you')}</dt>
-                      <dd className="text-muted">−<Money value={summary.expenses} /></dd>
-                    </div>
-                    {summary.expenses_by_kind.map((split) => (
-                      <div key={split.kind} className="flex justify-between pl-3">
-                        <dt className="text-muted text-[0.8rem]">{t(EXPENSE_LABEL[split.kind])}</dt>
-                        <dd className="text-muted text-[0.8rem] tabular">
-                          −<Money value={split.amount} />
-                        </dd>
-                      </div>
-                    ))}
-                    {summary.travel_share_of_tips !== null && (
-                      <p className="field-hint mt-1">
-                        {t('The taxi home ate')} {summary.travel_share_of_tips}%{' '}
-                        {t('of your tips')}
-                      </p>
-                    )}
-                  </div>
-                )}
-              </dl>
-            )}
-          </Card>
-        )}
-        {bands.length > 0 && (
-          <Card title={t('The shape of your week')} hint={t('When each weekday starts and ends, and what its hour pays.')}>
-            <WeekBandsChart bands={bands} />
-          </Card>
-        )}
+        <TrophyShelf />
       </div>
 
-      {/* ==== Clock face + rate trend ==== */}
-      {(dialTotal > 0 || rate.length > 1) && (
-        <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
-          {dialTotal > 0 && (
-            <Card title={t('Around the clock')} hint={t('Midnight on top; the brighter the hour, the more it brings.')}>
-              <ClockRing hours={dial} />
-            </Card>
-          )}
-          {rate.length > 1 && (
-            <Card title={t('Your hour, week by week')} hint={t('Where a raise — or a quiet cut — shows up first.')}>
-              <TrendLine points={rate} />
-            </Card>
-          )}
-        </div>
-      )}
-
-      {/* ==== Heatmap ==== */}
-
-      {/* ==== What feeds the month: days and shifts side by side ==== */}
-      <Card title={t('What feeds the month')} hint={t('The same money twice: by weekday and by shift.')}>
-        <div className="grid gap-4 md:grid-cols-2">
-          <Bars
-            rows={weekdays.map((day) => ({ label: t(day.name), value: day.value }))}
-            format={(value) => formatMoneyCompact(settings, value)}
-            scale
-          />
-          {topShifts.length > 0 && (
-            <Bars
-              rows={topShifts.map((row) => ({
-                label: row.name,
-                value: row.value,
-                caption: `${Math.round(row.hours)} ${t('h')}`,
-              }))}
-              format={(value) => formatMoneyCompact(settings, value)}
-              scale
-            />
-          )}
-        </div>
-      </Card>
-
-      {/* ==== Tips split + best day + overtime ==== */}
-      <div className="cards-tight">
-        {tipsSplit !== null && (
-          <Card title={t('Tips: cash against card')}>
-            <div className="mb-2 flex h-4 gap-[2px] overflow-hidden rounded-full">
-              <span style={{ width: `${tipsSplit.cashShare}%`, background: 'var(--s3)' }} title={t('Cash')} />
-              <span style={{ width: `${100 - tipsSplit.cashShare}%`, background: 'var(--s1)' }} title={t('Card')} />
-            </div>
-            <p className="flex justify-between text-[0.85rem]">
-              <span>
-                <span className="mr-1 inline-block h-2 w-2 rounded-full" style={{ background: 'var(--s3)' }} />
-                {t('Cash')} <Money value={tipsSplit.cash} className="font-semibold" />
-              </span>
-              <span>
-                <span className="mr-1 inline-block h-2 w-2 rounded-full" style={{ background: 'var(--s1)' }} />
-                {t('Card')} <Money value={tipsSplit.card} className="font-semibold" />
-              </span>
+      {/* ==== Мелкие факты плотной лентой ==== */}
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {summary.premium_earned > 0 && (
+          <Fact label={t('Premiums')} icon="spark">
+            <p className="tile-value text-good-read">
+              +<Money value={summary.premium_earned} />
             </p>
-          </Card>
+            <p className="field-hint">
+              {summary.night_hours > 0
+                ? `${num(Math.round(summary.night_hours * 10) / 10)} ${t('night hours and public holidays')}`
+                : t('public holidays')}
+            </p>
+          </Fact>
+        )}
+
+        {summary.overtime_hours > 0 && (
+          <Fact label={t('Overtime')} icon="flame">
+            <p className="tile-value">
+              +<Money value={summary.overtime_earned} />
+            </p>
+            <p className="field-hint">
+              {num(Math.round(summary.overtime_hours * 10) / 10)} {t('hours past the weekly threshold')}
+            </p>
+          </Fact>
+        )}
+
+        {summary.revenue_earned > 0 && (
+          <Fact label={t('Percentage')} icon="chart">
+            <p className="tile-value text-good-read">
+              +<Money value={summary.revenue_earned} />
+            </p>
+            <p className="field-hint">
+              {t('from takings of')} <Money value={summary.revenue_counted} />
+            </p>
+          </Fact>
         )}
 
         {bestDay !== null && (
-          <Card title={t('Best day')}>
-            <p className="text-[1.3rem] font-bold text-good-read">
+          <Fact label={t('Best day')} icon="trophy">
+            <p className="tile-value text-good-read">
               <Money value={bestDay.earned} />
             </p>
             <p className="field-hint">
@@ -1171,49 +1449,34 @@ function Stats() {
                 lang,
               )}
             </p>
-          </Card>
+          </Fact>
         )}
 
-        {summary.revenue_earned > 0 && (
-          <Card title={t('Percentage')}>
-            <p className="text-[1.5rem] font-extrabold text-good-read">
-              +<Money value={summary.revenue_earned} />
+        {tipsSplit !== null && (
+          <Fact label={t('Tips: cash against card')}>
+            <div className="mb-1.5 mt-1 flex h-2.5 gap-[2px] overflow-hidden rounded-full">
+              <span style={{ width: `${tipsSplit.cashShare}%`, background: 'var(--s3)' }} title={t('Cash')} />
+              <span style={{ width: `${100 - tipsSplit.cashShare}%`, background: 'var(--s1)' }} title={t('Card')} />
+            </div>
+            <p className="flex flex-wrap gap-x-3 text-[0.85rem]">
+              <span>
+                <span className="mr-1 inline-block h-2 w-2 rounded-full" style={{ background: 'var(--s3)' }} />
+                {t('Cash')} <Money value={tipsSplit.cash} className="font-semibold" />
+              </span>
+              <span>
+                <span className="mr-1 inline-block h-2 w-2 rounded-full" style={{ background: 'var(--s1)' }} />
+                {t('Card')} <Money value={tipsSplit.card} className="font-semibold" />
+              </span>
             </p>
-            <p className="field-hint">
-              {t('from takings of')} <Money value={summary.revenue_counted} />
-            </p>
-          </Card>
-        )}
-
-        {summary.premium_earned > 0 && (
-          <Card title={t('Premiums')}>
-            <p className="text-[1.3rem] font-bold text-good-read">
-              +<Money value={summary.premium_earned} />
-            </p>
-            <p className="field-hint">
-              {summary.night_hours > 0
-                ? `${num(Math.round(summary.night_hours * 10) / 10)} ${t('night hours and public holidays')}`
-                : t('public holidays')}
-            </p>
-          </Card>
-        )}
-
-        {summary.overtime_hours > 0 && (
-          <Card title={t('Overtime')}>
-            <p className="text-[1.3rem] font-bold">
-              +<Money value={summary.overtime_earned} />
-            </p>
-            <p className="field-hint">
-              {num(Math.round(summary.overtime_hours * 10) / 10)} {t('hours past the weekly threshold')}
-            </p>
-          </Card>
+          </Fact>
         )}
       </div>
 
       {/* ==== Places ==== */}
       {comparison !== null && (
-        <Card
+        <Panel
           title={t('Places side by side')}
+          flush
           hint={t(
             anyCommute
               ? 'Which hour is worth more once the journey counts — the question behind holding two jobs.'
@@ -1222,18 +1485,16 @@ function Stats() {
         >
           <div className="overflow-x-auto">
             <table className="w-full text-[0.85rem]">
-              <thead className="text-left text-muted">
-                <tr>
+              <thead>
+                <tr className="border-b border-border bg-surface-2/40 text-left">
                   {[t('Place of work'), t('Days worked'), t('Hours'), t('Earned'), t('Tips'), t('Per hour')].map((column) => (
-                    <th key={column} className="px-2 py-1.5 font-medium">
+                    <th key={column} className={TH}>
                       {column}
                     </th>
                   ))}
                   {/* Only where somebody has actually said how far a place is.
                       An empty column would read as "the journey is nothing". */}
-                  {anyCommute && (
-                    <th className="px-2 py-1.5 font-medium">{t('Per hour with travel')}</th>
-                  )}
+                  {anyCommute && <th className={TH}>{t('Per hour with travel')}</th>}
                 </tr>
               </thead>
               <tbody>
@@ -1241,34 +1502,34 @@ function Stats() {
                   .sort((a, b) => b.per_hour - a.per_hour)
                   .map((place) => (
                     <tr key={place.location_id} className="border-t border-border">
-                      <td className="px-2 py-1.5">
+                      <td className="px-4 py-2">
                         <span className="mr-1.5 inline-block h-2 w-2 rounded-full" style={{ background: place.colour }} />
                         {placeName(place, t('No place set'))}
                         {place.days_worked > 0 && place.days_worked < 3 && (
                           <span className="chip ml-1.5 chip-warn">{t('few shifts')}</span>
                         )}
                       </td>
-                      <td className="px-2 py-1.5 tabular">{place.days_worked}</td>
-                      <td className="px-2 py-1.5 tabular">{num(Math.round(place.hours * 10) / 10)}</td>
+                      <td className="px-4 py-2 tabular">{place.days_worked}</td>
+                      <td className="px-4 py-2 tabular">{num(Math.round(place.hours * 10) / 10)}</td>
                       {/* Where the range mixes currencies, each place is
                           labelled with its own: printing zloty with a hryvnia
                           mark makes the comparison this table exists for a
                           lie. */}
                       {summary.currencies.length > 1 ? (
                         <>
-                          <td className="px-2 py-1.5 tabular">{formatWith(currencyOf(place), place.earned)}</td>
-                          <td className="px-2 py-1.5 tabular">{formatWith(currencyOf(place), place.tips)}</td>
-                          <td className="px-2 py-1.5 font-semibold tabular">{formatWith(currencyOf(place), place.per_hour)}</td>
+                          <td className="px-4 py-2 tabular">{formatWith(currencyOf(place), place.earned)}</td>
+                          <td className="px-4 py-2 tabular">{formatWith(currencyOf(place), place.tips)}</td>
+                          <td className="px-4 py-2 font-semibold tabular">{formatWith(currencyOf(place), place.per_hour)}</td>
                         </>
                       ) : (
                         <>
-                          <td className="px-2 py-1.5"><Money value={place.earned} /></td>
-                          <td className="px-2 py-1.5"><Money value={place.tips} /></td>
-                          <td className="px-2 py-1.5 font-semibold"><Money value={place.per_hour} /></td>
+                          <td className="px-4 py-2"><Money value={place.earned} /></td>
+                          <td className="px-4 py-2"><Money value={place.tips} /></td>
+                          <td className="px-4 py-2 font-semibold"><Money value={place.per_hour} /></td>
                         </>
                       )}
                       {anyCommute && (
-                        <td className="px-2 py-1.5 tabular">
+                        <td className="px-4 py-2 tabular">
                           {place.commute == null ? (
                             <span className="text-muted">—</span>
                           ) : summary.currencies.length > 1 ? (
@@ -1283,7 +1544,7 @@ function Stats() {
               </tbody>
             </table>
           </div>
-        </Card>
+        </Panel>
       )}
 
       <GoalsModal open={goalsOpen} onClose={() => setGoalsOpen(false)} onSaved={loadGoals} />
@@ -1291,43 +1552,97 @@ function Stats() {
   );
 }
 
-function Kpi({ label, delta: change, children }: { label: string; delta: number | null; children: React.ReactNode }) {
+/**
+ * One figure in the band at the top of the page.
+ *
+ * Exactly one of them is filled with the accent — the money — and the other
+ * five stand quiet. Six identical outlined boxes gave the eye nowhere to
+ * land: the period's most important number looked the same as its least.
+ */
+function Tile({
+  label,
+  icon,
+  delta: change,
+  hero = false,
+  children,
+}: {
+  label: string;
+  icon: string;
+  delta: number | null;
+  hero?: boolean;
+  children: React.ReactNode;
+}) {
   return (
-    <div className="card reveal lift glow p-3">
-      <span className="field-hint block">{label}</span>
-      <span className="flex items-baseline gap-2">
+    <div className={`tile reveal lift glow ${hero ? 'tile--hero' : ''}`}>
+      <span className="tile-label !gap-2 justify-between">
+        <span className="truncate">{label}</span>
+        <Icon name={icon} size={15} className={hero ? '' : 'text-(--accent)'} />
+      </span>
+      <span className="flex flex-wrap items-baseline gap-2">
         {children}
-        <Delta percent={change} />
+        {/* На залитой плитке зелёная и красная дельта тонут в акценте, поэтому
+            там это чип на просвет: знак и цифра, цветом фона. */}
+        {hero
+          ? change !== null && (
+              <span
+                className="rounded px-1.5 py-0.5 text-[0.66rem] font-bold tabular"
+                style={{ background: 'color-mix(in srgb, var(--accent-ink) 22%, transparent)' }}
+              >
+                {change > 0 ? '+' : change < 0 ? '−' : ''}
+                {Math.abs(Math.round(change))}%
+              </span>
+            )
+          : <Delta percent={change} />}
       </span>
     </div>
   );
 }
 
-function Card({
-  title,
-  hint,
-  action,
-  children,
-}: {
-  title: string;
-  hint?: string;
-  action?: React.ReactNode;
-  children: React.ReactNode;
-}) {
-  // Колонка, а не просто блок: соседи в ряду растягивают карточку по самому
-  // высокому, и невысокий график оставлял под собой пустое поле в полкарточки.
-  // Теперь содержимое занимает остаток и стоит по центру этого остатка.
+/** One small true thing, for the dense ribbon the page finishes on. */
+function Fact({ label, icon, children }: { label: string; icon?: string; children: React.ReactNode }) {
   return (
-    <section className="card reveal flex flex-col p-4">
-      <header className="mb-2.5 flex items-baseline justify-between gap-2">
-        <div>
-          <h2 className="text-[0.98rem] font-bold">{title}</h2>
-          {hint && <p className="field-hint">{hint}</p>}
-        </div>
-        {action}
-      </header>
-      <div className="flex flex-1 flex-col justify-center">{children}</div>
-    </section>
+    <div className="card reveal lift flex items-start justify-between gap-2 p-3.5">
+      <div className="min-w-0">
+        <span className="tile-label">{label}</span>
+        {children}
+      </div>
+      {icon !== undefined && <Icon name={icon} size={20} className="mt-0.5 text-(--accent) opacity-45" />}
+    </div>
+  );
+}
+
+/**
+ * A line the size of a finger: enough to show which way the hourly rate is
+ * drifting, and nothing else. The full-height version of this chart took a
+ * third of the screen to answer a question the number above it already
+ * answers.
+ */
+function Spark({ values }: { values: number[] }) {
+  const W = 220;
+  const H = 64;
+  const low = Math.min(...values);
+  const high = Math.max(...values);
+  // Flat weeks would divide by nothing and draw the line off the top edge.
+  const span = high - low || 1;
+  const x = (index: number) => (values.length === 1 ? W / 2 : (W * index) / (values.length - 1));
+  const y = (value: number) => 6 + (H - 12) * (1 - (value - low) / span);
+  const path = values.map((value, index) => `${index === 0 ? 'M' : 'L'} ${x(index)} ${y(value)}`).join(' ');
+
+  // `h-16 w-full` рисовало линию в 220 точек по центру трёхсотпиксельной
+  // карточки: viewBox вписывается по меньшей стороне, и половина ширины
+  // оставалась пустой. Теперь высоту задаёт пропорция самого viewBox.
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="my-2 block aspect-[220/64] w-full" aria-hidden="true">
+      <path
+        d={path}
+        fill="none"
+        stroke="var(--accent)"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle cx={x(values.length - 1)} cy={y(values[values.length - 1])} r="4" fill="var(--accent)" />
+    </svg>
   );
 }
 

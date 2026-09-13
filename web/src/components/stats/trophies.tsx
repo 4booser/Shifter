@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { api } from '@/lib/api/http';
 import { useMoney } from '@/lib/settings/money';
 import { useI18n } from '@/lib/i18n';
+import { Panel } from './panel';
 
 interface Cheer {
   period: string;
@@ -50,19 +51,17 @@ export function TrophyShelf() {
     new Date(`${key}T12:00:00`).toLocaleDateString(lang, { day: 'numeric', month: 'short' });
 
   return (
-    <section className="card reveal p-4">
-      <div className="mb-2 flex items-baseline justify-between gap-2">
-        <h2 className="text-[0.98rem] font-bold">{t('The shelf')}</h2>
-        {shelf.weekly_streak >= 2 && (
+    <Panel
+      title={t('The shelf')}
+      hint={t('Crossed goals, kept as they stood — raising the bar later does not move a trophy already won.')}
+      action={
+        shelf.weekly_streak >= 2 ? (
           <span className="chip !border-transparent !bg-(--good-soft) !text-[0.78rem] !font-semibold chip-good">
             {n(shelf.weekly_streak, 'weeks')} {t('in a row')}
           </span>
-        )}
-      </div>
-      <p className="field-hint mb-3">
-        {t('Crossed goals, kept as they stood — raising the bar later does not move a trophy already won.')}
-      </p>
-
+        ) : undefined
+      }
+    >
       <div className="flex flex-wrap gap-1.5">
         {shelf.cheers.slice(0, 18).map((cheer) => (
           <span
@@ -77,6 +76,6 @@ export function TrophyShelf() {
           </span>
         ))}
       </div>
-    </section>
+    </Panel>
   );
 }

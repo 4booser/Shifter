@@ -428,16 +428,47 @@ export function ColumnChart({
   );
 }
 
+/**
+ * The five rungs of the heat ramp, coldest first. Exported because a legend
+ * drawn beside the grid has to be the same five colours as the grid, and a
+ * second hard-coded copy of them is how a legend starts lying.
+ */
+export const HEAT_LEVELS = [
+  'var(--surface-2)',
+  'color-mix(in srgb, var(--heat) 25%, var(--surface-2))',
+  'color-mix(in srgb, var(--heat) 45%, var(--surface-2))',
+  'color-mix(in srgb, var(--heat) 70%, var(--surface-2))',
+  'var(--heat)',
+];
+
 /** A year of work at a glance: sequential ramp of the accent, one hue. */
-export function Heatmap({ values, from, to }: { values: ReadonlyMap<string, number>; from: string; to: string }) {
+export function Heatmap({
+  values,
+  from,
+  to,
+  fill = false,
+  labels = false,
+}: {
+  values: ReadonlyMap<string, number>;
+  from: string;
+  to: string;
+  /**
+   * Тянуть недели по всей ширине родителя, а не стоять квадратами в 16 px.
+   * На годовой странице сетка из 37 колонок занимала седьмую часть карточки
+   * во всю ширину экрана — остальное было пустотой.
+   */
+  fill?: boolean;
+  /** Дни недели слева и месяцы сверху: без них колонка — просто колонка. */
+  labels?: boolean;
+}) {
   const { format } = useMoney();
   const { lang } = useI18n();
   const [hover, setHover] = useState<{ key: string; value: number } | null>(null);
 
-  const weeks = useMemo(() => {
+  const { weeks, months } = useMemo(() => {
     const keys = keysBetween(from, to);
 
-    if (keys.length === 0) return [];
+    if (keys.length === 0) return { weeks: [], months: [] };
 
     const peak = Math.max(1, ...keys.map((key) => values.get(key) ?? 0));
     const offset = (fromKey(keys[0]).getDay() + 6) % 7;
@@ -457,45 +488,110 @@ export function Heatmap({ values, from, to }: { values: ReadonlyMap<string, numb
 
     if (column.length > 0) columns.push(column);
 
-    return columns;
-  }, [values, from, to]);
+    // Месяц подписывается над той колонкой, в которой он начался.
+    const name = new Intl.DateTimeFormat(lang, { month: 'short' });
+    const marks: { index: number; label: string }[] = [];
+    let last = '';
 
-  const LEVELS = ['var(--surface-2)', 'color-mix(in srgb, var(--heat) 25%, var(--surface-2))', 'color-mix(in srgb, var(--heat) 45%, var(--surface-2))', 'color-mix(in srgb, var(--heat) 70%, var(--surface-2))', 'var(--heat)'];
+    columns.forEach((week, index) => {
+      const first = week.find((cell) => cell !== null);
+
+      if (first === undefined) return;
+
+      const month = first.key.slice(0, 7);
+
+      if (month === last) return;
+
+      last = month;
+      marks.push({ index, label: name.format(fromKey(first.key)) });
+    });
+
+    return { weeks: columns, months: marks };
+  }, [values, from, to, lang]);
+
+  /* Неделя — колонка, и колонки тянутся под ширину карточки: раньше
+     здесь стояли квадраты ровно в десять пикселей, и год из двенадцати
+     недель занимал полоску в середине карточки шириной в полторы
+     тысячи. Верхняя граница держит квадрат квадратом: на трёх неделях
+     он не должен раздуться в плитку. */
+  const template = fill
+    ? `repeat(${weeks.length}, minmax(6px, 1fr))`
+    : `repeat(${weeks.length}, 16px)`;
+  const cell = fill ? 'aspect-square w-full' : 'h-4 w-4';
+  // Высота подписи месяцев, на которую надо опустить колонку дней недели.
+  const gutter = '1.05rem';
 
   return (
     <div className="relative">
-      <div className="overflow-x-auto pb-1" onPointerLeave={() => setHover(null)}>
-        {/* Неделя — колонка, и колонки тянутся под ширину карточки: раньше
-            здесь стояли квадраты ровно в десять пикселей, и год из двенадцати
-            недель занимал полоску в середине карточки шириной в полторы
-            тысячи. Верхняя граница держит квадрат квадратом: на трёх неделях
-            он не должен раздуться в плитку. */}
-        <div
-          className="mx-auto grid gap-[4px]"
-          style={{ gridTemplateColumns: `repeat(${weeks.length}, 16px)` }}
-        >
-        {weeks.map((week, weekIndex) => (
-          <div key={weekIndex} className="fade-in grid gap-[4px]" style={{ ['--i' as string]: weekIndex % 30 }}>
-            {week.map((cell, dayIndex) =>
-              cell === null ? (
-                <span key={dayIndex} className="h-4 w-4" />
-              ) : (
-                /* A span cannot be tabbed to and has nothing to announce, so
-                   the whole year was mouse-only and silent. Each day is a
-                   button that says its own date and figure. */
-                <button
-                  type="button"
-                  key={cell.key}
-                  className="h-4 w-4 rounded-[3px]"
-                  style={{ background: LEVELS[cell.level] }}
-                  aria-label={`${formatDayLabelShort(cell.key, lang)} · ${format(cell.value)}`}
-                  onPointerEnter={() => setHover({ key: cell.key, value: cell.value })}
-                  onFocus={() => setHover({ key: cell.key, value: cell.value })}
-                />
-              ),
-            )}
+      <div className="flex gap-2" onPointerLeave={() => setHover(null)}>
+        {labels && (
+          <div className="flex flex-none flex-col text-[0.62rem] font-semibold leading-none text-faint">
+            <span aria-hidden style={{ height: gutter }} />
+            <div className="grid flex-1 gap-[4px]" style={{ gridTemplateRows: 'repeat(7, 1fr)' }}>
+              {[0, 1, 2, 3, 4, 5, 6].map((day) => (
+                <span key={day} className="flex items-center capitalize">
+                  {/* Семь подписей подряд не помещаются и сливаются; через одну
+                      читаются, а ряд всё равно угадывается. */}
+                  {day % 2 === 0
+                    ? new Intl.DateTimeFormat(lang, { weekday: 'short' }).format(new Date(2026, 0, 5 + day))
+                    : ''}
+                </span>
+              ))}
+            </div>
           </div>
-        ))}
+        )}
+        <div className="min-w-0 flex-1 overflow-x-auto pb-1">
+          {labels && months.length > 0 && (
+            <div
+              aria-hidden
+              className="grid gap-[4px] text-[0.62rem] font-semibold leading-none text-faint"
+              style={{ gridTemplateColumns: template, height: gutter }}
+            >
+              {months.map((month, index) => (
+                <span
+                  key={month.index}
+                  className="truncate capitalize"
+                  style={{
+                    gridColumn: `${month.index + 1} / ${
+                      months[index + 1] === undefined ? -1 : months[index + 1].index + 1
+                    }`,
+                  }}
+                >
+                  {month.label}
+                </span>
+              ))}
+            </div>
+          )}
+          <div
+            className="mx-auto grid gap-[4px]"
+            style={{ gridTemplateColumns: template }}
+          >
+            {weeks.map((week, weekIndex) => (
+              <div key={weekIndex} className="fade-in grid gap-[4px]" style={{ ['--i' as string]: weekIndex % 30 }}>
+                {week.map((day, dayIndex) =>
+                  day === null ? (
+                    <span key={dayIndex} className={cell} />
+                  ) : (
+                    /* A span cannot be tabbed to and has nothing to announce, so
+                       the whole year was mouse-only and silent. Each day is a
+                       button that says its own date and figure. */
+                    <button
+                      type="button"
+                      key={day.key}
+                      className={`${cell} rounded-[3px]`}
+                      style={{ background: HEAT_LEVELS[day.level] }}
+                      // Клетка в шесть пикселей не может нести число внутри
+                      // себя: величину говорит цвет, точную сумму — подсказка.
+                      title={`${formatDayLabelShort(day.key, lang)} · ${format(day.value)}`}
+                      aria-label={`${formatDayLabelShort(day.key, lang)} · ${format(day.value)}`}
+                      onPointerEnter={() => setHover({ key: day.key, value: day.value })}
+                      onFocus={() => setHover({ key: day.key, value: day.value })}
+                    />
+                  ),
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
       {hover && (

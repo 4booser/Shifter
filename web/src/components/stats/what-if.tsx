@@ -6,6 +6,7 @@ import { calendarApi } from '@/lib/api/calendar';
 import { formatDayLabel, keyOf, todayKey } from '@/lib/calendar/calendar-date';
 import { whatIfBaseline, whatIfProject, WhatIfBaseline } from '@/lib/calendar/whatif';
 import { useI18n } from '@/lib/i18n';
+import { Panel } from './panel';
 import { formatMoney } from '@/lib/settings/money';
 import { useSettings } from '@/lib/settings/store';
 import { Money } from '@/components/ui/bits';
@@ -72,12 +73,9 @@ export function WhatIfCard({ suggestedTarget }: { suggestedTarget: number | null
 
   if (baseline === null) {
     return (
-      <section className="card reveal p-4">
-        <h2 className="text-[0.98rem] font-bold">{t('What if')}</h2>
-        <p className="field-hint mt-1">
-          {t('Work a few shifts first — then this card can play with your pace.')}
-        </p>
-      </section>
+      <Panel title={t('What if')}>
+        <p className="field-hint">{t('Work a few shifts first — then this card can play with your pace.')}</p>
+      </Panel>
     );
   }
 
@@ -85,12 +83,7 @@ export function WhatIfCard({ suggestedTarget }: { suggestedTarget: number | null
   const sliderMax = Math.max(2000, round(baseline.perShift * 2.5, 50));
 
   return (
-    <section className="card reveal p-4">
-      <header className="mb-2.5">
-        <h2 className="text-[0.98rem] font-bold">{t('What if')}</h2>
-        <p className="field-hint">{t('Turn the dials — the money and the date follow.')}</p>
-      </header>
-
+    <Panel title={t('What if')} hint={t('Turn the dials — the money and the date follow.')}>
       <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <div className="grid content-start gap-3">
           <label>
@@ -178,6 +171,6 @@ export function WhatIfCard({ suggestedTarget }: { suggestedTarget: number | null
           )}
         </div>
       </div>
-    </section>
+    </Panel>
   );
 }

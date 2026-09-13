@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { api } from '@/lib/api/http';
 import { useMoney } from '@/lib/settings/money';
 import { useI18n } from '@/lib/i18n';
+import { Panel } from './panel';
 
 interface CityRow {
   city: string;
@@ -39,12 +40,10 @@ export function CitiesCard() {
   const top = rows[0].per_hour;
 
   return (
-    <section className="card reveal p-4">
-      <h2 className="mb-1 text-[0.98rem] font-bold">{t('Your cities')}</h2>
-      <p className="field-hint mb-3">
-        {t('Your own hourly rate, season against season. Set a city on a place to include it.')}
-      </p>
-
+    <Panel
+      title={t('Your cities')}
+      hint={t('Your own hourly rate, season against season. Set a city on a place to include it.')}
+    >
       <div className="flex flex-col gap-2">
         {rows.map((row) => (
           <div key={row.city} className="flex items-center gap-3">
@@ -81,6 +80,6 @@ export function CitiesCard() {
           </p>
         </div>
       )}
-    </section>
+    </Panel>
   );
 }

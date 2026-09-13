@@ -1,52 +1,202 @@
 {
-  "version": 1,
-  "projectId": "141bd797-477f-4791-b2d6-44db2486a45d",
-  "teamId": "b9c3fb0a-ce03-47b9-895a-713114e84083",
-  "canvas": "https://superdesign.dev/teams/b9c3fb0a-ce03-47b9-895a-713114e84083/projects/141bd797-477f-4791-b2d6-44db2486a45d",
-  "targets": {
-    "web:/dashboard": {
-      "route": "/dashboard",
-      "entry": "web/src/app/dashboard/page.tsx",
-      "baselineDraftId": "2b0e0b69-7678-4f1e-a345-eb3dc1fe8d09",
-      "baselineNote": "structurally right, content partly invented — not ground truth",
-      "activeDraftId": "de455758-c329-4f83-9e97-ce671f1e9898",
-      "branches": [
-        {
-          "id": "de455758-c329-4f83-9e97-ce671f1e9898",
-          "name": "Ведомость × Смена (выбрано)",
-          "note": "v1 = pure ledger; v2 = crossed with the hour strip. revert-design-draft --to-version 1 restores the pure ledger"
-        },
-        {
-          "id": "06023629-4e74-43d8-bd64-3c74c12d5298",
-          "name": "Смена",
-          "note": "time-first direction: day panel as an hour strip, serif display, dark ground"
-        }
-      ],
-      "contextBundle": [
-        ".superdesign/design-system.md",
-        ".superdesign/init/theme.md",
-        "web/src/app/dashboard/page.tsx",
-        "web/src/components/layout/shell.tsx",
-        "web/src/components/ui/bits.tsx",
-        "web/src/components/dashboard/tiles.tsx:95:420",
-        "web/src/components/dashboard/month-grid.tsx:72:120",
-        "web/src/components/dashboard/month-grid.tsx:490:700",
-        "web/src/components/dashboard/day-panel.tsx:70:520"
-      ],
-      "fingerprints": {
-        ".superdesign/design-system.md": "a33bc83119b59078439ebf15b8fd9c78a9ff7f71b0acb83743e61f850d9bd9b2",
-        ".superdesign/init/theme.md": "b81b279dec5891d7300cad33691a44fd7dcfec13c839c6539d931a45437fe926",
-        "web/src/app/dashboard/page.tsx": "4d6e25ba6936f4b4b3eeb7e4bb09c3150ab76ffb9f28fefecdde3c44d67fca84",
-        "web/src/components/layout/shell.tsx": "6c07575e8ebe4bb1a35ca26f7fc14485cbb6b202b385cbd0d96ccf9eb1947dde",
-        "web/src/components/ui/bits.tsx": "a5d6e3982b6741c232735fd4af65598509a904e5b28f038c1332ed4063c46d66",
-        "web/src/components/dashboard/tiles.tsx:95:420": "d04d672eee1bd10b80d1c035ba8e1221069c0f08e62a027e0b254d13c188a79a",
-        "web/src/components/dashboard/month-grid.tsx:72:120": "2a10c7f94c34b8aa56903ab006028e5ce36398636e0c90e2592278cfacc5bfd2",
-        "web/src/components/dashboard/month-grid.tsx:490:700": "2a10c7f94c34b8aa56903ab006028e5ce36398636e0c90e2592278cfacc5bfd2",
-        "web/src/components/dashboard/day-panel.tsx:70:520": "51f880603298c13e2d59dae2d9be0681ac46a135bf54074a42bef8afbcca3f80"
-      },
-      "activeNote": "Ведомость × Смена — leger type and rules, day panel as an hour strip, paper ground kept"
+ "version": 1,
+ "projectId": "141bd797-477f-4791-b2d6-44db2486a45d",
+ "teamId": "b9c3fb0a-ce03-47b9-895a-713114e84083",
+ "canvas": "https://superdesign.dev/teams/b9c3fb0a-ce03-47b9-895a-713114e84083/projects/141bd797-477f-4791-b2d6-44db2486a45d",
+ "targets": {
+  "web:/dashboard": {
+   "route": "/dashboard",
+   "entry": "web/src/app/dashboard/page.tsx",
+   "baselineDraftId": "2b0e0b69-7678-4f1e-a345-eb3dc1fe8d09",
+   "baselineNote": "structurally right, content partly invented — not ground truth",
+   "activeDraftId": "de455758-c329-4f83-9e97-ce671f1e9898",
+   "branches": [
+    {
+     "id": "de455758-c329-4f83-9e97-ce671f1e9898",
+     "name": "Ведомость × Смена (выбрано)",
+     "note": "v1 = pure ledger; v2 = crossed with the hour strip. revert-design-draft --to-version 1 restores the pure ledger"
+    },
+    {
+     "id": "06023629-4e74-43d8-bd64-3c74c12d5298",
+     "name": "Смена",
+     "note": "time-first direction: day panel as an hour strip, serif display, dark ground"
     }
+   ],
+   "contextBundle": [
+    ".superdesign/design-system.md",
+    ".superdesign/init/theme.md",
+    "web/src/app/dashboard/page.tsx",
+    "web/src/components/layout/shell.tsx",
+    "web/src/components/ui/bits.tsx",
+    "web/src/components/dashboard/tiles.tsx:95:420",
+    "web/src/components/dashboard/month-grid.tsx:72:120",
+    "web/src/components/dashboard/month-grid.tsx:490:700",
+    "web/src/components/dashboard/day-panel.tsx:70:520"
+   ],
+   "fingerprints": {
+    ".superdesign/design-system.md": "a33bc83119b59078439ebf15b8fd9c78a9ff7f71b0acb83743e61f850d9bd9b2",
+    ".superdesign/init/theme.md": "b81b279dec5891d7300cad33691a44fd7dcfec13c839c6539d931a45437fe926",
+    "web/src/app/dashboard/page.tsx": "4d6e25ba6936f4b4b3eeb7e4bb09c3150ab76ffb9f28fefecdde3c44d67fca84",
+    "web/src/components/layout/shell.tsx": "6c07575e8ebe4bb1a35ca26f7fc14485cbb6b202b385cbd0d96ccf9eb1947dde",
+    "web/src/components/ui/bits.tsx": "a5d6e3982b6741c232735fd4af65598509a904e5b28f038c1332ed4063c46d66",
+    "web/src/components/dashboard/tiles.tsx:95:420": "d04d672eee1bd10b80d1c035ba8e1221069c0f08e62a027e0b254d13c188a79a",
+    "web/src/components/dashboard/month-grid.tsx:72:120": "2a10c7f94c34b8aa56903ab006028e5ce36398636e0c90e2592278cfacc5bfd2",
+    "web/src/components/dashboard/month-grid.tsx:490:700": "2a10c7f94c34b8aa56903ab006028e5ce36398636e0c90e2592278cfacc5bfd2",
+    "web/src/components/dashboard/day-panel.tsx:70:520": "51f880603298c13e2d59dae2d9be0681ac46a135bf54074a42bef8afbcca3f80"
+   },
+   "activeNote": "Ведомость × Смена — leger type and rules, day panel as an hour strip, paper ground kept"
   },
-  "componentsExtracted": [],
-  "componentsNote": "deliberately skipped — extracting the current shell would pin the redesign to it; revisit once a direction is chosen"
+  "web:/stats": {
+   "route": "/stats",
+   "entry": "web/src/app/stats/page.tsx",
+   "baselineDraftId": "a5751b26-d11d-471f-8841-f3dd34765c7a",
+   "baselineNote": "pixel-perfect снимок нынешнего состояния на демо-данных",
+   "activeDraftId": "fd099eaa-9328-4df5-a57d-f5579d99c8e1",
+   "branches": [
+    {
+     "id": "fd099eaa-9328-4df5-a57d-f5579d99c8e1",
+     "name": "Приборная панель → перестроена под эталон Prismify (активная)"
+    },
+    {
+     "id": "9b120e38-ea01-47d8-bcc0-7798555a464e",
+     "name": "Ответы, а не графики: каждый блок начинается фразой-выводом"
+    }
+   ],
+   "contextBundle": [
+    ".superdesign/design-system.md",
+    ".superdesign/init/theme.md",
+    "web/src/components/layout/shell.tsx",
+    "web/src/app/stats/page.tsx:606:1353",
+    "web/src/components/charts/charts.tsx",
+    "web/src/components/charts/glass-charts.tsx"
+   ],
+   "fingerprints": {
+    ".superdesign/design-system.md": "a33bc83119b59078439ebf15b8fd9c78a9ff7f71b0acb83743e61f850d9bd9b2",
+    ".superdesign/init/theme.md": "fa3cf5fa5a17c0e3161db23b2f285d6f431a1f365ca3e47846c8cab3a762a8a4",
+    "web/src/components/layout/shell.tsx": "27690c4dd376dd905e43a07c2e4e81153ef144548c443a5f347af78c68b9ab54",
+    "web/src/app/stats/page.tsx:606:1353": "9836d52cbd24fb03a6dc20e00b07b56789a4a6aafe12978aff2db7c2ed978e4b",
+    "web/src/components/charts/charts.tsx": "24e26a72079a3e2218e5f3a9df87ceca2a13ad6da8d127c93c44818d412928ef",
+    "web/src/components/charts/glass-charts.tsx": "42157c424911d620c40c29f4edb3a4a6c30a7ea058371e78ed36a005c291b16e"
+   },
+   "references": {
+    "prismify-crm": "250a7b58-2c66-4138-924d-0d9107ee696d",
+    "current-screen": "4365abbb-f593-4305-927b-2057366a48b5"
+   },
+   "activeVersion": "v5",
+   "handRepairs": [
+    "выдуманные числа из эталона убраны (в банке бублик показывал «97% лимит»)",
+    "теплокарты рисовались на Math.random() и печатали случайное число в каждой клетке — заменены детерминированной сеткой без подписей",
+    "литералы #rrggbb заменены на токены; значения оставлены только в :root для предпросмотра",
+    "подписи оси стояли за пределами svg и обрезались; число в карточке-герое переносилось на две строки"
+   ],
+   "knownGaps": [
+    "на «Твоём годе» левая карточка короче соседней — под ней снова пусто",
+    "в банке столбцы занимают нижнюю треть графика, верх пустой",
+    "шапка приложения перерисована моделью: появились иконки у пунктов и глобус, которого в приложении нет"
+   ]
+  },
+  "web:/wrapped": {
+   "route": "/wrapped",
+   "entry": "web/src/app/wrapped/page.tsx",
+   "baselineDraftId": "cce7b1d0-42d9-46fa-b9d8-eec99415afd5",
+   "baselineNote": "pixel-perfect снимок нынешнего состояния на демо-данных",
+   "activeDraftId": "a7b9ebd3-3a8d-40ca-8dc9-40154161ae64",
+   "branches": [
+    {
+     "id": "a7b9ebd3-3a8d-40ca-8dc9-40154161ae64",
+     "name": "Приборная панель → перестроена под эталон (активная)"
+    },
+    {
+     "id": "9bfc4f80-f0f3-4d8e-81a7-3b49c133f0ce",
+     "name": "Findings: год как последовательность выводов"
+    }
+   ],
+   "contextBundle": [
+    ".superdesign/design-system.md",
+    ".superdesign/init/theme.md",
+    "web/src/components/layout/shell.tsx",
+    "web/src/app/wrapped/page.tsx",
+    "web/src/components/wrapped/year-charts.tsx",
+    "web/src/components/charts/charts.tsx"
+   ],
+   "fingerprints": {
+    ".superdesign/design-system.md": "a33bc83119b59078439ebf15b8fd9c78a9ff7f71b0acb83743e61f850d9bd9b2",
+    ".superdesign/init/theme.md": "fa3cf5fa5a17c0e3161db23b2f285d6f431a1f365ca3e47846c8cab3a762a8a4",
+    "web/src/components/layout/shell.tsx": "27690c4dd376dd905e43a07c2e4e81153ef144548c443a5f347af78c68b9ab54",
+    "web/src/app/wrapped/page.tsx": "6a401c015de1918aaee5998ec73f12f298a7a5d9040dee137b29466352871762",
+    "web/src/components/wrapped/year-charts.tsx": "f5fa874a98b86d71050e7b74adbc9d6e33e9ce0de3fffb29a6af4d2d1f16f5ba",
+    "web/src/components/charts/charts.tsx": "24e26a72079a3e2218e5f3a9df87ceca2a13ad6da8d127c93c44818d412928ef"
+   },
+   "references": {
+    "prismify-crm": "250a7b58-2c66-4138-924d-0d9107ee696d",
+    "current-screen": "7942b041-36f5-4768-bd85-3efa45751c03"
+   },
+   "activeVersion": "v4",
+   "handRepairs": [
+    "выдуманные числа из эталона убраны (в банке бублик показывал «97% лимит»)",
+    "теплокарты рисовались на Math.random() и печатали случайное число в каждой клетке — заменены детерминированной сеткой без подписей",
+    "литералы #rrggbb заменены на токены; значения оставлены только в :root для предпросмотра",
+    "подписи оси стояли за пределами svg и обрезались; число в карточке-герое переносилось на две строки"
+   ],
+   "knownGaps": [
+    "на «Твоём годе» левая карточка короче соседней — под ней снова пусто",
+    "в банке столбцы занимают нижнюю треть графика, верх пустой",
+    "шапка приложения перерисована моделью: появились иконки у пунктов и глобус, которого в приложении нет"
+   ]
+  },
+  "web:/bank": {
+   "route": "/bank",
+   "entry": "web/src/app/bank/page.tsx",
+   "baselineDraftId": "c90f74da-969a-48d3-8b65-bae178679dfb",
+   "baselineNote": "pixel-perfect снимок нынешнего состояния на демо-данных",
+   "activeDraftId": "9ca67e30-00f9-4408-9fb0-4e1d10d8de6e",
+   "branches": [
+    {
+     "id": "9ca67e30-00f9-4408-9fb0-4e1d10d8de6e",
+     "name": "Приборная панель → перестроена под эталон (активная)"
+    },
+    {
+     "id": "5ee42f84-2275-4719-ace4-d7ffb0985c4c",
+     "name": "Findings: банк как последовательность ответов"
+    }
+   ],
+   "contextBundle": [
+    ".superdesign/design-system.md",
+    ".superdesign/init/theme.md",
+    "web/src/app/bank/page.tsx",
+    "web/src/components/bank/hero.tsx",
+    "web/src/components/bank/forecast.tsx",
+    "web/src/components/bank/charts.tsx",
+    "web/src/components/bank/spending.tsx:100:721"
+   ],
+   "fingerprints": {
+    ".superdesign/design-system.md": "a33bc83119b59078439ebf15b8fd9c78a9ff7f71b0acb83743e61f850d9bd9b2",
+    ".superdesign/init/theme.md": "fa3cf5fa5a17c0e3161db23b2f285d6f431a1f365ca3e47846c8cab3a762a8a4",
+    "web/src/app/bank/page.tsx": "5b7c31fedbf6f1a372e968d3c0a61e5cfb837f2a423e94349cc996fbfad40536",
+    "web/src/components/bank/hero.tsx": "5cc17f444fd3a2bfdac66e308aab0ec46bc027839ca37434a840015de0a7da07",
+    "web/src/components/bank/forecast.tsx": "fa520b7e59bcae98a3e1fea66376b94ec98fe3eeeb7cbb352d51aae09a0b8a73",
+    "web/src/components/bank/charts.tsx": "318a7a511e92a3b70c8f0b7f72bf5e88f247e5b6b33fbb65274375245185f43a",
+    "web/src/components/bank/spending.tsx:100:721": "2b3bcf9b7a1fdf12528e73bad38f869b976f99424c77f0f4ed2e0a4fed549ab1"
+   },
+   "references": {
+    "prismify-crm": "250a7b58-2c66-4138-924d-0d9107ee696d",
+    "current-screen": "4a1fbadb-fbdc-499d-bfed-bdc870896af2"
+   },
+   "activeVersion": "v5",
+   "handRepairs": [
+    "выдуманные числа из эталона убраны (в банке бублик показывал «97% лимит»)",
+    "теплокарты рисовались на Math.random() и печатали случайное число в каждой клетке — заменены детерминированной сеткой без подписей",
+    "литералы #rrggbb заменены на токены; значения оставлены только в :root для предпросмотра",
+    "подписи оси стояли за пределами svg и обрезались; число в карточке-герое переносилось на две строки"
+   ],
+   "knownGaps": [
+    "на «Твоём годе» левая карточка короче соседней — под ней снова пусто",
+    "в банке столбцы занимают нижнюю треть графика, верх пустой",
+    "шапка приложения перерисована моделью: появились иконки у пунктов и глобус, которого в приложении нет"
+   ]
+  }
+ },
+ "componentsExtracted": [],
+ "componentsNote": "deliberately skipped — extracting the current shell would pin the redesign to it; revisit once a direction is chosen",
+ "designDirection": "Композиция и плотность — с эталона Prismify CRM (Dribbble), цвета и шрифт — свои токены. Верхнее меню приложения остаётся (в эталоне рельс иконок слева — не берём). Правила: карточка забита до краёв; одна карточка залита акцентом; у графиков настоящая ось, сетка, легенда; в теплокарте числа внутри клеток; пустые месяцы и дни недели не рисуются вовсе."
 }

@@ -6,6 +6,7 @@ import { FatigueVerdict, RestRead, rhythmApi } from '@/lib/api/rhythm';
 import { shiftDays, todayKey } from '@/lib/calendar/calendar-date';
 import { useMoney } from '@/lib/settings/money';
 import { useI18n } from '@/lib/i18n';
+import { Panel } from './panel';
 
 /**
  * The rota's rhythm: the sleep windows between shifts, and what long runs
@@ -51,12 +52,17 @@ export function RhythmCard() {
   };
 
   return (
-    <section className="card reveal p-4">
-      <h2 className="mb-1 text-[0.98rem] font-bold">{t('Nights between shifts')}</h2>
-      <p className="field-hint mb-3">
-        {t('From clocking out to clocking back in — measured on your own record, said without advice.')}
-      </p>
-
+    <Panel
+      title={t('Nights between shifts')}
+      hint={t('From clocking out to clocking back in — measured on your own record, said without advice.')}
+      action={
+        rest !== null && rest.short_count > 0 ? (
+          <span className={`chip ${rest.short_count >= 3 ? 'chip-danger' : 'chip-warn'}`}>
+            {rest.short_count} · {t('Nights shorter than')} {rest.threshold} {t('h')}
+          </span>
+        ) : undefined
+      }
+    >
       {windows.length > 0 && rest !== null && (
         <>
           <div className="flex flex-col gap-1.5">
@@ -125,6 +131,6 @@ export function RhythmCard() {
       <p className="field-hint mt-3">
         {t('Your rest threshold lives in the account settings; the app only measures against it.')}
       </p>
-    </section>
+    </Panel>
   );
 }

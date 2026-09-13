@@ -19,7 +19,7 @@ import { Shell } from '@/components/layout/shell';
 import { Stories, Story } from '@/components/wrapped/stories';
 import { BadgeWall } from '@/components/achievements/badges';
 import { useReveal } from '@/lib/fx';
-import { Heatmap } from '@/components/charts/charts';
+import { HEAT_LEVELS, Heatmap } from '@/components/charts/charts';
 import { Alert, CountUp, Delta, Money } from '@/components/ui/bits';
 import { SkeletonRows } from '@/components/ui/skeleton';
 import { Empty } from '@/components/ui/empty';
@@ -161,28 +161,54 @@ function Wrapped() {
       label: initial.format(new Date(year, index, 1)),
       title: full.format(new Date(year, index, 1)),
       value,
-      height: Math.max(2, (value / peak) * 100),
+      before: beforeTotals[index],
+      /** Доля от лучшего месяца — ширина полосы в строке. */
+      share: Math.max(2, (value / peak) * 100),
       peak: value === peak && value > 0,
       beforeHeight: beforeTotals[index] > 0 ? Math.max(2, (beforeTotals[index] / peak) * 100) : 0,
     }));
   }, [days, previous.days, year, lang]);
 
+  /*
+   * Три меры одного ритма, а не три разных блока.
+   *
+   * Деньги отвечают «какой день кормит», часы — «где я стою дольше всего», а
+   * ставка — «какой день стоит дороже». Это один и тот же вопрос с трёх
+   * сторон, и разводить их по карточкам значит просить человека собирать
+   * ответ самому.
+   */
+  const [rhythmBy, setRhythmBy] = useState<'money' | 'hours' | 'rate'>('money');
+
   const weekdayRhythm = useMemo(() => {
-    const totals = new Array(7).fill(0) as number[];
+    const money = new Array(7).fill(0) as number[];
+    const hours = new Array(7).fill(0) as number[];
 
-    for (const day of days) totals[(fromKey(day.date).getDay() + 6) % 7] += day.earned;
+    for (const day of days) {
+      const index = (fromKey(day.date).getDay() + 6) % 7;
 
-    const peak = Math.max(...totals, 1);
+      money[index] += day.earned;
+      hours[index] += day.hours;
+    }
+
     const names = new Intl.DateTimeFormat(lang, { weekday: 'short' });
+    // Час не считается там, где отработано меньше часа: две минуты делятся в
+    // ставку в тысячах и выигрывают «лучший день» на пустом месте.
+    const values = money.map((earned, index) =>
+      rhythmBy === 'money' ? earned
+      : rhythmBy === 'hours' ? hours[index]
+      : hours[index] >= 1 ? earned / hours[index] : 0,
+    );
 
-    return totals.map((value, index) => ({
+    const peak = Math.max(...values, 1);
+
+    return values.map((value, index) => ({
       // 2026-01-05 was a Monday, so index 0 lands on Monday in every locale.
       label: names.format(new Date(2026, 0, 5 + index)),
       value,
       share: Math.max(2, (value / peak) * 100),
       peak: value === peak && value > 0,
     }));
-  }, [days, lang]);
+  }, [days, lang, rhythmBy]);
 
   const nightShare = useMemo(() => {
     let nights = 0;
@@ -207,6 +233,9 @@ function Wrapped() {
   const week = bestWeek(days);
   const streak = longestStreak(days);
   const rest = restDays(days, `${year}-01-01`, isCurrentYear ? todayKey() : `${year}-12-31`);
+  /** Год в плюсе — герой заливается акцентом; год в минусе остаётся светлым. */
+  const filled = summary.total_earned >= 0;
+
   const heatValues = useMemo(() => new Map(days.map((day) => [day.date, day.earned])), [days]);
 
   const dayLabel = (key: string) =>
@@ -364,13 +393,30 @@ function Wrapped() {
         </Empty>
       ) : (
         <>
-          {/* ==== The poster: a year that fills the screen ==== */}
-          <section className="reveal relative flex min-h-[52dvh] flex-col items-center justify-center overflow-hidden rounded-[calc(var(--radius)*1.8)] border border-border bg-surface p-6 text-center">
+          {/*
+            ==== The poster: a year that fills the screen ====
+
+            Filled with the accent, and it swallowed the four summary tiles
+            that used to sit under it as separate cards. The year's biggest
+            number and the four figures explaining it were competing for the
+            same attention a hand's width apart; now the four are a quiet band
+            along the bottom edge of the one thing the page is about.
+
+            A year in the red keeps the plain surface: white-on-accent cannot
+            carry a loss, and colour here has to stay honest.
+          */}
+          <section
+            className={`reveal relative flex min-h-[52dvh] flex-col items-center justify-center overflow-hidden rounded-[calc(var(--radius)*1.8)] border p-6 pb-0 text-center ${
+              filled ? 'border-(--accent) bg-(--accent) text-(--accent-ink)' : 'border-border bg-surface'
+            }`}
+          >
             {/* The year itself is the wallpaper — enormous and half-there. */}
             <span
               aria-hidden
-              className="pointer-events-none absolute inset-0 grid select-none place-items-center font-extrabold leading-none tracking-tighter text-(--accent-read)"
-              style={{ fontSize: 'clamp(9rem, 32vw, 24rem)', opacity: 0.07 }}
+              className={`pointer-events-none absolute inset-0 grid select-none place-items-center font-extrabold leading-none tracking-tighter ${
+                filled ? 'text-(--accent-ink)' : 'text-(--accent-read)'
+              }`}
+              style={{ fontSize: 'clamp(9rem, 32vw, 24rem)', opacity: filled ? 0.12 : 0.07 }}
             >
               {year}
             </span>
@@ -382,86 +428,161 @@ function Wrapped() {
               className="pop mt-4 block"
               style={{ fontSize: 'clamp(3rem, 9vw, 5.5rem)', lineHeight: 1, ['--i' as string]: 3 } as React.CSSProperties}
             >
+              {/* На заливке тон по знаку не нужен: отрицательный год сюда не
+                  попадает вовсе — он остаётся на светлой подложке выше. */}
               <CountUp
                 value={summary.total_earned}
-                className={`font-extrabold tabular tracking-tight ${earnedTone(summary.total_earned)}`}
+                className={`font-extrabold tabular tracking-tight ${filled ? '' : earnedTone(summary.total_earned)}`}
               />
             </span>
-            <p className="pop mt-3 text-[1.05rem] text-muted" style={{ ['--i' as string]: 4 }}>
+            <p
+              className={`pop mt-3 text-[1.05rem] ${filled ? 'opacity-80' : 'text-muted'}`}
+              style={{ ['--i' as string]: 4 }}
+            >
               {n(totalShifts, 'shifts')} · {n(Math.round(summary.hours), 'hours')}
               {averages.perHour !== null && (
                 <>
                   {' · '}
-                  <Money value={averages.perHour} className="font-semibold text-ink" />/{t('hour')}
+                  <Money value={averages.perHour} className={`font-semibold ${filled ? '' : 'text-ink'}`} />/{t('hour')}
                 </>
               )}
             </p>
             {live && (
-              <p className="pop chip mt-4 !border-(--accent)/40 !bg-(--accent-soft) !text-(--accent-read)" style={{ ['--i' as string]: 5 }}>
+              <p
+                className={`pop chip mt-4 ${
+                  filled
+                    ? '!border-(--accent-ink)/45 !bg-(--accent-ink)/25 !text-(--accent-ink)'
+                    : '!border-(--accent)/40 !bg-(--accent-soft) !text-(--accent-read)'
+                }`}
+                style={{ ['--i' as string]: 5 }}
+              >
                 {t('On pace for')} {n(Math.round(projectedHours), 'hours')} {t('this year')}
               </p>
             )}
-            <span aria-hidden className="absolute bottom-4 animate-bounce text-faint">↓</span>
+            {/* Четыре числа, объяснявшие сумму, стояли отдельными карточками
+                на ладонь ниже и тянули внимание на себя. Теперь это полоса по
+                нижнему краю самого героя: та же информация, но она явно
+                принадлежит числу над ней. */}
+            <div className="grid w-full grid-cols-2 md:grid-cols-4">
+              <Big label={t('Earned')} delta={change(summary.total_earned, previous.total_earned)}>
+                <CountUp
+                  value={summary.total_earned}
+                  className={`text-[1.35rem] font-extrabold tracking-tight ${filled ? '' : earnedTone(summary.total_earned)}`}
+                />
+              </Big>
+              <Big label={t('Hours worked')} delta={change(summary.hours, previous.hours)}>
+                <CountUp value={Math.round(summary.hours)} format={(value) => `${Math.round(value).toLocaleString(lang)}`} className="text-[1.35rem] font-extrabold tracking-tight" />
+              </Big>
+              <Big label={t('Shifts')} delta={change(totalShifts, countShifts(previous.days))}>
+                <span className="text-[1.35rem] font-extrabold tabular tracking-tight">{totalShifts}</span>
+              </Big>
+              <Big
+                label={t('Per hour')}
+                delta={
+                  averages.perHour === null || before.perHour === null
+                    ? null
+                    : change(averages.perHour, before.perHour)
+                }
+              >
+                {averages.perHour === null ? (
+                  <span className="text-[1.35rem] font-extrabold tabular tracking-tight">—</span>
+                ) : (
+                  <Money value={averages.perHour} className="text-[1.35rem] font-extrabold tracking-tight" />
+                )}
+              </Big>
+            </div>
           </section>
 
-          {/* ==== Headline numbers, poster-sized ==== */}
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-            <Big label={t('Earned')} delta={change(summary.total_earned, previous.total_earned)}>
-              <CountUp
-                value={summary.total_earned}
-                className={`text-[1.9rem] font-extrabold tracking-tight ${earnedTone(summary.total_earned)}`}
-              />
-            </Big>
-            <Big label={t('Hours worked')} delta={change(summary.hours, previous.hours)}>
-              <CountUp value={Math.round(summary.hours)} format={(value) => `${Math.round(value).toLocaleString(lang)}`} className="text-[1.9rem] font-extrabold tracking-tight" />
-            </Big>
-            <Big label={t('Shifts')} delta={change(totalShifts, countShifts(previous.days))}>
-              <span className="text-[1.9rem] font-extrabold tabular tracking-tight">{totalShifts}</span>
-            </Big>
-            <Big
-              label={t('Per hour')}
-              delta={
-                averages.perHour === null || before.perHour === null
-                  ? null
-                  : change(averages.perHour, before.perHour)
-              }
-            >
-              {averages.perHour === null ? (
-                <span className="text-[1.9rem] font-extrabold tabular tracking-tight">—</span>
-              ) : (
-                <Money value={averages.perHour} className="text-[1.9rem] font-extrabold tracking-tight" />
-              )}
-            </Big>
-          </div>
+          {/*
+            ==== Twelve months, against last year ====
 
-          {/* ==== Twelve months, against last year ==== */}
-          <section className="card reveal p-4">
-            <h2 className="mb-2 text-[0.98rem] font-bold">{t('Month by month')}</h2>
-            <div className="flex h-56 items-end gap-1.5">
-              {monthBars.map((bar) => (
-                <div key={bar.title} className="group flex h-full flex-1 flex-col justify-end" title={bar.title}>
-                  <div className="relative flex h-full items-end">
-                    {/* Last year's same month, behind: the mark to beat. */}
-                    {bar.beforeHeight > 0 && (
-                      <span className="absolute bottom-0 left-0 w-full rounded-t bg-faint/30" style={{ height: `${bar.beforeHeight}%` }} />
-                    )}
-                    <span
-                      className="grow-y relative w-full rounded-t"
-                      style={{ height: `${bar.height}%`, background: bar.peak ? 'var(--accent)' : 'color-mix(in srgb, var(--accent) 55%, var(--surface-2))' }}
-                    />
-                  </div>
-                  <span className="mt-0.5 text-center text-[0.66rem] text-faint">{bar.label}</span>
+            Строками, а не столбиками. Двенадцать вертикальных полос под
+            одной буквой каждая не давали прочесть ни одной суммы, а месяцы
+            без записей рисовались двухпиксельными огрызками — двенадцать
+            намёков на данные, которых нет. Теперь месяц, полоса, сумма и
+            сравнение с тем же месяцем год назад стоят в строке, а пустые
+            месяцы не рисуются вовсе.
+          */}
+          <section className="card reveal">
+            <div className="card-head">
+              <h2 className="card-head-title">{t('Month by month')}</h2>
+              <span className="text-[0.72rem] font-semibold uppercase tracking-wide text-faint">
+                {t('against the same month last year')}
+              </span>
+            </div>
+            <div className="card-body">
+              {monthBars.every((bar) => bar.value === 0) ? (
+                <p className="field-hint">{t('Nothing recorded this year yet.')}</p>
+              ) : (
+                <div className="flex flex-col">
+                  {monthBars
+                    .filter((bar) => bar.value !== 0)
+                    .map((bar) => (
+                      <div
+                        key={bar.title}
+                        className="flex items-center gap-3 border-b border-border py-2 last:border-b-0"
+                      >
+                        <span className={`w-24 shrink-0 text-[0.85rem] ${bar.peak ? 'font-bold' : 'text-muted'}`}>
+                          {bar.title}
+                        </span>
+                        <span className="relative h-2.5 flex-1 overflow-hidden rounded-full bg-surface-2">
+                          {/* Тот же месяц год назад — отметка, которую видно
+                              сквозь полосу, а не второй столбик рядом. */}
+                          {bar.beforeHeight > 0 && (
+                            <span
+                              aria-hidden
+                              className="absolute inset-y-0 w-px bg-faint"
+                              style={{ left: `${bar.beforeHeight}%` }}
+                            />
+                          )}
+                          <span
+                            className="grow-x absolute inset-y-0 left-0 rounded-full"
+                            style={{
+                              width: `${bar.share}%`,
+                              background: bar.peak
+                                ? 'var(--accent)'
+                                : 'color-mix(in srgb, var(--accent) 55%, var(--surface-2))',
+                            }}
+                          />
+                        </span>
+                        <Money
+                          value={bar.value}
+                          className={`w-28 shrink-0 text-right text-[0.9rem] tabular ${bar.peak ? 'font-bold' : ''}`}
+                        />
+                        <span className="w-16 shrink-0 text-right">
+                          <Delta percent={bar.before > 0 ? change(bar.value, bar.before) : null} />
+                        </span>
+                      </div>
+                    ))}
                 </div>
-              ))}
+              )}
             </div>
           </section>
 
           {/* ==== The whole year as one grid — trimmed to the lived part.
                January-to-December on a March account is mostly desert, and
                the audit watched it bury the only month with anything in it. */}
-          <section className="card reveal p-4">
-            <h2 className="mb-2 text-[0.98rem] font-bold">{t('The shape of the year')}</h2>
+          <section className="card reveal">
+            <div className="card-head">
+              <h2 className="card-head-title">{t('The shape of the year')}</h2>
+              {/* Легенда теми же пятью ступенями, что и сетка: второй набор
+                  цветов рядом — это то, с чего легенда начинает врать. */}
+              <span className="flex items-center gap-1.5 text-[0.68rem] font-semibold uppercase tracking-wide text-faint">
+                {t('less')}
+                {HEAT_LEVELS.map((level) => (
+                  <span
+                    key={level}
+                    className="h-3 w-3 rounded-[3px] border border-border"
+                    style={{ background: level }}
+                  />
+                ))}
+                {t('more')}
+              </span>
+            </div>
+            <div className="card-body">
             <Heatmap
+              fill
+              labels
               values={heatValues}
               from={(() => {
                 const first = [...heatValues.keys()].sort()[0];
@@ -472,6 +593,7 @@ function Wrapped() {
               })()}
               to={year === currentMonth().year ? todayKey() : `${year}-12-31`}
             />
+            </div>
           </section>
 
           <YearStory year={year} summary={summary} previous={previous} />
@@ -479,7 +601,12 @@ function Wrapped() {
           <MadeOf summary={summary} />
 
           {/* ==== Superlatives ==== */}
-          <div className="cards-tight">
+          {/* Одной карточкой на весь список, а не семью подряд. */}
+          <section className="card reveal">
+            <div className="card-head">
+              <h2 className="card-head-title">{t('Best of the year')}</h2>
+            </div>
+            <div className="card-body pt-0">
             {best !== null && (
               <Superlative emoji="🏆" title={t('Best day')}>
                 <Money value={best.value} className="text-[1.15rem] font-bold" /> · {dayLabel(best.date)}
@@ -532,7 +659,8 @@ function Wrapped() {
             <Superlative emoji="🛌" title={t('Rest')}>
               {n(rest, 'days')} {t('of rest')}
             </Superlative>
-          </div>
+            </div>
+          </section>
 
           {/* ==== Разбор года — кладкой ====
 
@@ -543,10 +671,28 @@ function Wrapped() {
               предыдущая. */}
           <div className="deck">
           {/* ==== Weekday rhythm ==== */}
-          <section className="card reveal p-4">
-            <h2 className="mb-2 text-[0.98rem] font-bold">{t('Weekday rhythm')}</h2>
-            <ul className="flex flex-col gap-1.5">
-              {weekdayRhythm.map((day) => (
+          <section className="card reveal">
+            <div className="card-head">
+              <h2 className="card-head-title">{t('Weekday rhythm')}</h2>
+              <div className="seg">
+                {(['money', 'hours', 'rate'] as const).map((mode) => (
+                  <button
+                    key={mode}
+                    type="button"
+                    className={`seg-btn ${rhythmBy === mode ? 'is-active' : ''}`}
+                    onClick={() => setRhythmBy(mode)}
+                  >
+                    {/* Не 'Rate': этот ключ в словаре занят глаголом «оценить»,
+                        и переключатель показывал «Деньги · Часы · Оценить». */}
+                    {t(mode === 'money' ? 'Money' : mode === 'hours' ? 'Hours' : 'The rate')}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <ul className="card-body flex flex-col gap-1.5">
+              {/* Дни без записей не рисуются вовсе: строка с нулём и полоской
+                  в два пикселя — это намёк на данные, которых нет. */}
+              {weekdayRhythm.filter((day) => day.value > 0).map((day) => (
                 <li key={day.label} className="grid grid-cols-[2.6rem_1fr_auto] items-center gap-2 text-[0.85rem]">
                   <span className="capitalize text-muted">{day.label}</span>
                   <span className="h-2.5 overflow-hidden rounded-full bg-surface-2">
@@ -555,7 +701,11 @@ function Wrapped() {
                       style={{ width: `${day.share}%`, background: day.peak ? 'var(--accent)' : 'color-mix(in srgb, var(--accent) 50%, var(--surface-2))' }}
                     />
                   </span>
-                  <Money value={day.value} className="tabular" />
+                  {rhythmBy === 'hours' ? (
+                    <span className="tabular">{n(Math.round(day.value), 'hours')}</span>
+                  ) : (
+                    <Money value={day.value} className="tabular" />
+                  )}
                 </li>
               ))}
             </ul>
@@ -599,23 +749,37 @@ function Wrapped() {
   );
 }
 
+/**
+ * One of the four figures along the bottom edge of the hero.
+ *
+ * It used to be a card of its own; inside a filled hero a card border and a
+ * card background are two edges too many, so the cells are separated by a
+ * hairline of the ink colour instead and inherit the hero's white.
+ */
 function Big({ label, delta, children }: { label: string; delta: number | null; children: React.ReactNode }) {
   return (
-    <div className="card reveal p-3 text-center">
+    <div className="reveal border-t border-(--accent-ink)/15 px-3 py-3.5 text-center first:border-l-0 md:border-l md:border-l-(--accent-ink)/15 md:first:border-l-0">
       {children}
-      <span className="field-hint flex items-center justify-center gap-1.5">
+      <span className="mt-0.5 flex items-center justify-center gap-1.5 text-[0.72rem] font-semibold uppercase tracking-wide opacity-70">
         {label} <Delta percent={delta} />
       </span>
     </div>
   );
 }
 
+/**
+ * Одна строка в списке рекордов года.
+ *
+ * Было семь отдельных карточек с бордюром и тенью каждая: семь рамок ради
+ * семи коротких фраз, и между ними больше воздуха, чем текста. Теперь это
+ * строки одной таблицы — рамка одна, на весь список.
+ */
 function Superlative({ emoji, title, children }: { emoji: string; title: string; children: React.ReactNode }) {
   return (
-    <div className="card reveal lift flex items-center gap-3 p-3.5">
-      <span className="text-[1.6rem]">{emoji}</span>
-      <span className="min-w-0">
-        <span className="field-hint block">{title}</span>
+    <div className="flex items-center gap-3 border-b border-border py-2.5 last:border-b-0">
+      <span className="w-7 shrink-0 text-center text-[1.15rem]">{emoji}</span>
+      <span className="min-w-0 flex-1">
+        <span className="field-hint block leading-tight">{title}</span>
         <span className="text-[0.92rem]">{children}</span>
       </span>
     </div>

@@ -63,60 +63,62 @@ export function BankShape({
   return (
     <>
       {/* ==== The week's shape and the heat strip, one card ==== */}
-      <section className="card reveal p-4">
-        <div className="panel-head mb-3">
-          <span>{t('The shape of the spending')}</span>
+      <section className="card reveal overflow-hidden p-0">
+        <div className="card-head">
+          <h3 className="card-head-title">{t('The shape of the spending')}</h3>
         </div>
 
-        <div className="flex h-24 gap-1.5">
-          {week.map((row) => (
-            <div key={row.weekday} className="flex flex-1 flex-col items-center gap-1">
-              <div className="flex w-full flex-1 items-end" title={`${Math.round(row.average)}`}>
-                <div
-                  className="w-full rounded-t-[4px]"
-                  style={{
-                    height: `${Math.max(3, (row.average / weekPeak) * 100)}%`,
-                    background:
-                      row.average === weekPeak
-                        ? 'var(--accent)'
-                        : 'color-mix(in srgb, var(--accent) 35%, var(--surface-2))',
-                  }}
-                />
+        <div className="card-body">
+          <div className="flex h-24 gap-1.5">
+            {week.map((row) => (
+              <div key={row.weekday} className="flex flex-1 flex-col items-center gap-1">
+                <div className="flex w-full flex-1 items-end" title={`${Math.round(row.average)}`}>
+                  <div
+                    className="w-full rounded-t-[4px]"
+                    style={{
+                      height: `${Math.max(3, (row.average / weekPeak) * 100)}%`,
+                      background:
+                        row.average === weekPeak
+                          ? 'var(--accent)'
+                          : 'color-mix(in srgb, var(--accent) 35%, var(--surface-2))',
+                    }}
+                  />
+                </div>
+                <span className="text-[0.62rem] text-faint">{t(WEEKDAYS[row.weekday])}</span>
               </div>
-              <span className="text-[0.62rem] text-faint">{t(WEEKDAYS[row.weekday])}</span>
-            </div>
-          ))}
-        </div>
-        <p className="field-hint mt-1.5">
-          {t('Average for that weekday — five Saturdays in a month do not get to win by count.')}
-        </p>
-
-        {/* The heat strip: one cell per day that spent anything. */}
-        {heat.length > 0 && (
-          <div className="mt-3 flex gap-[3px]">
-            {heat.map((day) => (
-              <div
-                key={day.day}
-                className="h-6 flex-1 rounded-[3px]"
-                title={`${day.day.slice(8)}.${day.day.slice(5, 7)} · ${Math.round(day.spent)}`}
-                style={{
-                  background: `color-mix(in srgb, var(--danger) ${Math.round(day.heat * 82)}%, var(--surface-2))`,
-                }}
-              />
             ))}
           </div>
-        )}
+          <p className="field-hint mt-1.5">
+            {t('Average for that weekday — five Saturdays in a month do not get to win by count.')}
+          </p>
+
+          {/* The heat strip: one cell per day that spent anything. */}
+          {heat.length > 0 && (
+            <div className="mt-3 flex gap-[3px]">
+              {heat.map((day) => (
+                <div
+                  key={day.day}
+                  className="h-6 flex-1 rounded-[3px]"
+                  title={`${day.day.slice(8)}.${day.day.slice(5, 7)} · ${Math.round(day.spent)}`}
+                  style={{
+                    background: `color-mix(in srgb, var(--danger) ${Math.round(day.heat * 82)}%, var(--surface-2))`,
+                  }}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       </section>
 
       {/* ==== The days that carried the month ==== */}
       {heavy.length > 0 && monthSpent > 0 && (
-        <section className="card reveal p-4">
-          <div className="panel-head mb-2">
-            <span>{t('The days that carried the month')}</span>
-            <span className="text-faint">{heavyShare}% {t('of all spending')}</span>
+        <section className="card reveal overflow-hidden p-0">
+          <div className="card-head">
+            <h3 className="card-head-title">{t('The days that carried the month')}</h3>
+            <span className="field-hint tabular">{heavyShare}% {t('of all spending')}</span>
           </div>
 
-          <div className="flex flex-col gap-1.5">
+          <div className="card-body flex flex-col gap-1.5">
             {heavy.map((day) => (
               <div key={day.day} className="flex items-baseline justify-between gap-2 text-[0.88rem]">
                 <span className="tabular text-muted">
@@ -136,11 +138,11 @@ export function BankShape({
 
       {/* ==== Against last month ==== */}
       {delta !== null && (
-        <section className="card reveal p-4">
-          <div className="panel-head mb-2">
-            <span>{t('Against last month')}</span>
+        <section className="card reveal overflow-hidden p-0">
+          <div className="card-head">
+            <h3 className="card-head-title">{t('Against last month')}</h3>
             <span
-              className={`tabular font-semibold ${
+              className={`tabular text-[0.82rem] font-semibold ${
                 delta.now > delta.before ? 'text-danger-read' : 'text-good-read'
               }`}
             >
@@ -149,28 +151,30 @@ export function BankShape({
             </span>
           </div>
 
-          <div className="flex flex-col gap-1">
-            {delta.moves.map((move) => {
-              const grew = move.now > move.before;
+          <div className="card-body">
+            <div className="flex flex-col gap-1">
+              {delta.moves.map((move) => {
+                const grew = move.now > move.before;
 
-              return (
-                <div key={move.name} className="flex items-baseline justify-between gap-2 text-[0.86rem]">
-                  <span className="truncate" title={move.name}>{move.name}</span>
-                  <span className="tabular flex-none">
-                    <span className="text-faint"><Money value={Math.round(move.before)} /></span>
-                    {' → '}
-                    <span className={grew ? 'text-danger-read' : 'text-good-read'}>
-                      <Money value={Math.round(move.now)} />
+                return (
+                  <div key={move.name} className="flex items-baseline justify-between gap-2 text-[0.86rem]">
+                    <span className="truncate" title={move.name}>{move.name}</span>
+                    <span className="tabular flex-none">
+                      <span className="text-faint"><Money value={Math.round(move.before)} /></span>
+                      {' → '}
+                      <span className={grew ? 'text-danger-read' : 'text-good-read'}>
+                        <Money value={Math.round(move.now)} />
+                      </span>
                     </span>
-                  </span>
-                </div>
-              );
-            })}
-          </div>
+                  </div>
+                );
+              })}
+            </div>
 
-          <p className="field-hint mt-2">
-            {t('The categories that moved most. Totals say whether it got dearer; this says where.')}
-          </p>
+            <p className="field-hint mt-2">
+              {t('The categories that moved most. Totals say whether it got dearer; this says where.')}
+            </p>
+          </div>
         </section>
       )}
     </>

@@ -13,22 +13,25 @@ import { Alert, Money } from '@/components/ui/bits';
 import { BankConnect } from '@/components/bank/connect';
 import { BankHero } from '@/components/bank/hero';
 import { BankLock, bankLockEnabled, setBankLock } from '@/components/bank/lock';
-import { BankForecast } from '@/components/bank/forecast';
+import { BankForecast, NextMoneyTile, useRunway } from '@/components/bank/forecast';
 import { BankShape } from '@/components/bank/shape';
 import { BankWage } from '@/components/bank/wage';
 import {
   SpendCategories,
-  SpendHeadline,
+  SpendDonut,
   SpendOddities,
   SpendPlaces,
   SpendRhythm,
   SpendStanding,
+  SpentTile,
+  StatementDownloadButton,
 } from '@/components/bank/spending';
 import {
   CategoryMonthsCard,
   MonthlyFlowsCard,
-  ReserveCard,
+  ReserveTile,
   SpendPaceCard,
+  UsualDayTile,
 } from '@/components/bank/charts';
 import { StatementCard } from '@/components/bank/statement';
 import { BankWork } from '@/components/bank/work';
@@ -47,6 +50,13 @@ import { Icon } from '@/components/ui/icon';
  *
  * Every formula on this page is the phone's own file, imported — if the two
  * platforms ever disagree about a figure, that is a bug by definition.
+ *
+ * The shape of the page is a band of figures, then pairs of cards, then the
+ * statement. It used to be a two-column grid, and the columns had no way to
+ * agree on a height: «Счета» and «Хватит на» ran out in two hundred pixels
+ * while the charts beside them kept going, so the right-hand side of the page
+ * was empty rectangles a screen and a half tall. Small figures belong in
+ * tiles, and a card only shares a row with a card of its own size.
  */
 export default function BankPage() {
   const { t, lang } = useI18n();
@@ -117,6 +127,11 @@ export default function BankPage() {
 
   const account = (mono.client?.accounts ?? []).find((entry) => entry.id === mono.accountId);
 
+  // The walk forward, built once: the tile in the band and the card below it
+  // are the same forecast, and two answers to «когда следующие деньги» on one
+  // screen would be one answer too many.
+  const runway = useRunway(account ?? null, mono.items);
+
   // The month's real hour — earned minus what going to work took, per hour —
   // so a spend can be said in the unit this app exists to defend.
   const hourWorth = useMemo(() => {
@@ -149,20 +164,97 @@ export default function BankPage() {
                 </button>
               </Alert>
             )}
-            {/* ==== Row: the curve, with the accounts desk beside it ==== */}
-            <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-            <BankHero
-              account={account ?? null}
-              items={mono.items}
-              from={bounds.from}
-              to={bounds.to}
-            />
 
-            {/* ==== Accounts and the sync ==== */}
-            <section className="card reveal p-4">
-              <div className="panel-head mb-2">
-                <span>{t('Accounts')}</span>
-                <span className="flex gap-1.5">
+            {/* ==== The page's own head: which month, and the way out ====
+
+                The month arrows used to sit halfway down the page, between the
+                forward-looking cards and the backward-looking ones, which is
+                the one place a period picker cannot be seen from. */}
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h1 className="text-[1.3rem] font-bold tracking-tight">{t('Bank')}</h1>
+
+              {/* Wrapping: the month and the download button together are
+                  372 px, and a 390 px phone gave the page four pixels of
+                  sideways scroll for them. */}
+              <div className="flex flex-wrap items-center justify-end gap-2">
+                <span className="seg">
+                  {/* Two arrows that a screen reader announced as «button» and
+                      «button». The calendar's own month arrows have been named
+                      since they were drawn. */}
+                  <button
+                    type="button"
+                    className="seg-btn !px-2"
+                    aria-label={t('Previous month')}
+                    onClick={() => shiftMonth(-1)}
+                  >
+                    <Icon name="chevron-left" size={16} />
+                  </button>
+                  <span className="seg-btn is-active tabular">
+                    {new Intl.DateTimeFormat(lang, { month: 'long', year: 'numeric' })
+                      .format(new Date(`${monthAt}-15T12:00:00`))}
+                  </span>
+                  <button
+                    type="button"
+                    className="seg-btn !px-2"
+                    aria-label={t('Next month')}
+                    onClick={() => shiftMonth(1)}
+                  >
+                    <Icon name="chevron-right" size={16} />
+                  </button>
+                </span>
+
+                <StatementDownloadButton items={mono.items} from={bounds.from} to={bounds.to} />
+              </div>
+            </div>
+
+            {/* ==== The band of figures ====
+
+                One filled tile and four quiet ones. Everything in it is a
+                single number, and a single number in a card the size of a
+                chart is what left the old page full of holes. */}
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+              <BankHero
+                account={account ?? null}
+                items={mono.items}
+                from={bounds.from}
+                to={bounds.to}
+              />
+              <ReserveTile
+                account={account ?? null}
+                items={mono.items}
+                from={bounds.from}
+                to={bounds.to}
+              />
+              <UsualDayTile items={mono.items} to={bounds.to} />
+              <NextMoneyTile runway={runway} />
+              <SpentTile items={mono.items} from={bounds.from} to={bounds.to} />
+            </div>
+
+            {/* ==== Where the statement comes from ====
+
+                The accounts, the sync and the lock: about the data rather than
+                about the month. Full width on purpose — it is two rows tall
+                whatever happens, so it cannot leave a hole beside anything. */}
+            <section className="card reveal overflow-hidden p-0">
+              <div className="card-head">
+                <h3 className="card-head-title">{t('Accounts')}</h3>
+                <span className="flex flex-wrap gap-1.5">
+                  <button
+                    type="button"
+                    className="btn btn-sm"
+                    disabled={mono.busy || mono.demo}
+                    onClick={() => void mono.sync(35)}
+                  >
+                    {t('Refresh this month')}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-quiet btn-sm"
+                    disabled={mono.busy}
+                    onClick={() => void mono.sync(95)}
+                  >
+                    {t('Load three months')}
+                  </button>
                   <button
                     type="button"
                     className="btn btn-quiet btn-sm"
@@ -179,156 +271,125 @@ export default function BankPage() {
                 </span>
               </div>
 
-              <div className="flex flex-wrap gap-2">
-                {(mono.client?.accounts ?? []).map((entry) => (
-                  <button
-                    key={entry.id}
-                    type="button"
-                    className={`chip ${entry.id === mono.accountId ? 'chip-accent' : ''}`}
-                    onClick={() => mono.chooseAccount(entry.id)}
-                  >
-                    •••{entry.maskedPan[0]?.slice(-4) ?? entry.iban.slice(-4)}
-                    {' · '}
-                    <Money value={fromMinor(entry.balance - entry.creditLimit)} />
-                  </button>
-                ))}
-              </div>
+              <div className="card-body">
+                <div className="flex flex-wrap items-center gap-2">
+                  {(mono.client?.accounts ?? []).map((entry) => (
+                    <button
+                      key={entry.id}
+                      type="button"
+                      className={`chip ${entry.id === mono.accountId ? 'chip-accent' : ''}`}
+                      onClick={() => mono.chooseAccount(entry.id)}
+                    >
+                      •••{entry.maskedPan[0]?.slice(-4) ?? entry.iban.slice(-4)}
+                      {' · '}
+                      <Money value={fromMinor(entry.balance - entry.creditLimit)} />
+                    </button>
+                  ))}
 
-              <div className="mt-3 flex items-center gap-2">
-                <button
-                  type="button"
-                  className="btn btn-sm"
-                  disabled={mono.busy || mono.demo}
-                  onClick={() => void mono.sync(35)}
-                >
-                  {t('Refresh this month')}
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-quiet btn-sm"
-                  disabled={mono.busy}
-                  onClick={() => void mono.sync(95)}
-                >
-                  {t('Load three months')}
-                </button>
+                  {mono.waiting > 0 && (
+                    <span className="field-hint tabular">
+                      {t('the bank asks to wait')} {mono.waiting}s
+                    </span>
+                  )}
 
-                {mono.waiting > 0 && (
-                  <span className="field-hint tabular">
-                    {t('the bank asks to wait')} {mono.waiting}s
-                  </span>
+                  {mono.progress !== null && (
+                    <span className="field-hint tabular">
+                      {mono.progress.done}/{mono.progress.total}
+                    </span>
+                  )}
+                </div>
+
+                {/* The tab has to stay open for a deep sync — one request a
+                    minute is the bank's rule, and pretending otherwise would be
+                    a progress bar that lies. */}
+                {mono.busy && mono.progress !== null && mono.progress.total > 1 && (
+                  <p className="field-hint mt-2">
+                    {t('One window a minute is the bank’s limit. Keep the tab open; closing it pauses the load.')}
+                  </p>
                 )}
 
-                {mono.progress !== null && (
-                  <span className="field-hint tabular">
-                    {mono.progress.done}/{mono.progress.total}
-                  </span>
+                {mono.error === 'refused' && (
+                  <Alert kind="error">
+                    {t('The bank refused the token. It may have been revoked — issue a new one at api.monobank.ua.')}
+                  </Alert>
+                )}
+                {mono.error !== null && mono.error !== 'refused' && (
+                  <Alert kind="error">{mono.error}</Alert>
+                )}
+
+                {mono.items.length === 0 && !mono.busy && (
+                  <Alert kind="info">{t('Nothing loaded yet — press “Refresh this month”.')}</Alert>
                 )}
               </div>
-
-              {/* The tab has to stay open for a deep sync — one request a
-                  minute is the bank's rule, and pretending otherwise would be
-                  a progress bar that lies. */}
-              {mono.busy && mono.progress !== null && mono.progress.total > 1 && (
-                <p className="field-hint mt-2">
-                  {t('One window a minute is the bank’s limit. Keep the tab open; closing it pauses the load.')}
-                </p>
-              )}
-
-              {mono.error === 'refused' && (
-                <Alert kind="error">
-                  {t('The bank refused the token. It may have been revoked — issue a new one at api.monobank.ua.')}
-                </Alert>
-              )}
-              {mono.error !== null && mono.error !== 'refused' && (
-                <Alert kind="error">{mono.error}</Alert>
-              )}
             </section>
-            </div>
+
+            {/* ==== The wage, if one looks to have landed ====
+
+                Never inside the example: matching fictional credits against
+                the real reconciliation would offer to record fiction into a
+                real calendar. */}
+            {!mono.demo && <BankWage items={mono.items} />}
 
             {/* ==== Row: forward-looking ====
 
-                Соседи справа рисуются не всегда: зарплату видно не в каждом
-                месяце, запас — только когда есть с чего его считать. В сетке с
-                жёсткой правой колонкой она всё равно занимала треть ширины, и
-                рядом с высоким прогнозом висела пустота в пол-экрана. Здесь
-                колонки считаются по числу отрисованных карточек: осталась
-                одна — она и займёт ряд. Обёртки над ними нет намеренно, иначе
-                пустой div считался бы за карточку. */}
-            {/* The reserve card is a fifth of the forecast's height. As a
-                column grid this row had to choose between two bad answers —
-                hug the content and leave a quarter of the screen dark, or
-                stretch and put three hundred empty pixels inside a card,
-                which is what it did. The deck is the third answer and it was
-                already in the stylesheet: laid out in text columns, the next
-                card starts where the last one ended, so nothing stretches
-                and nothing is left dark. */}
-            <div className="deck">
-              {/* ==== Дожить до зарплаты: the forward-looking chart ==== */}
-              <BankForecast account={account ?? null} items={mono.items} />
+                Both cards read the same thirty days ahead and both go quiet
+                on an empty statement, so the row is drawn or not drawn whole
+                — that is why it can be a grid with a fixed ratio without
+                risking a column of nothing. */}
+            {mono.items.length > 0 && (
+              <div className="grid items-stretch gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+                <BankForecast account={account ?? null} runway={runway} />
+                <SpendStanding
+                  items={mono.items}
+                  from={bounds.from}
+                  to={bounds.to}
+                  hourWorth={hourWorth}
+                />
+              </div>
+            )}
 
-              {/* ==== The wage, if one looks to have landed ==== */}
-              {/* Never inside the example: matching fictional credits
-                  against the real reconciliation would offer to record
-                  fiction into a real calendar. */}
-              {!mono.demo && <BankWage items={mono.items} />}
-              <ReserveCard
-                account={account ?? null}
+            {/* ==== Row: where the month went ====
+                The table and the ring are two readings of one list: the ring
+                is for «сколько всего», the table for «а на что именно». */}
+            <div className="grid items-stretch gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+              <SpendCategories
                 items={mono.items}
                 from={bounds.from}
                 to={bounds.to}
+                hourWorth={hourWorth}
               />
+              <SpendDonut items={mono.items} from={bounds.from} to={bounds.to} />
             </div>
 
-            {/* ==== Month picker ==== */}
-            <div className="flex items-center justify-between">
-              {/* Two arrows that a screen reader announced as «button» and
-                  «button». The calendar's own month arrows have been named
-                  since they were drawn. */}
-              <button
-                type="button"
-                className="btn btn-sm !px-2"
-                aria-label={t('Previous month')}
-                onClick={() => shiftMonth(-1)}
-              >
-                <Icon name="chevron-left" size={16} />
-              </button>
-              <span className="text-[0.95rem] font-semibold">
-                {new Intl.DateTimeFormat(lang, { month: 'long', year: 'numeric' })
-                  .format(new Date(`${monthAt}-15T12:00:00`))}
-              </span>
-              <button
-                type="button"
-                className="btn btn-sm !px-2"
-                aria-label={t('Next month')}
-                onClick={() => shiftMonth(1)}
-              >
-                <Icon name="chevron-right" size={16} />
-              </button>
-            </div>
+            {/* ==== The charts, in pairs of equals ====
 
-            {mono.items.length === 0 && !mono.busy && (
-              <Alert kind="info">{t('Nothing loaded yet — press “Refresh this month”.')}</Alert>
-            )}
-
-            {/* ==== The headline and its bar, full width ==== */}
-            <SpendHeadline items={mono.items} from={bounds.from} to={bounds.to} />
-
-            {/* ==== Всё, что разбирает месяц, — одной кладкой ====
-
-                Рядами это не укладывается: карточки разной высоты и часть
-                из них в иные месяцы не рисуется вовсе, так что ряд из двух
-                постоянно оказывался рядом из одного, а рядом с ним — дыра
-                во всю его высоту. Кладка ставит следующую карточку туда,
-                где кончилась предыдущая. */}
-            <div className="deck">
-              <SpendCategories items={mono.items} from={bounds.from} to={bounds.to} hourWorth={hourWorth} />
+                `.cards` counts its columns by the number of cards actually
+                drawn, and these go quiet at different times: a month with one
+                loaded neighbour gets one full-width card instead of a card and
+                a hole. */}
+            <div className="cards items-stretch">
               <SpendRhythm items={mono.items} from={bounds.from} to={bounds.to} />
-              <SpendPaceCard items={mono.items} from={bounds.from} to={bounds.to} />
               <MonthlyFlowsCard items={mono.items} />
+            </div>
+
+            <div className="cards items-stretch">
+              <SpendPaceCard items={mono.items} from={bounds.from} to={bounds.to} />
               <CategoryMonthsCard items={mono.items} rules={mono.rules} />
+            </div>
+
+            <div className="cards items-stretch">
               <SpendPlaces items={mono.items} from={bounds.from} to={bounds.to} />
-              <SpendStanding items={mono.items} from={bounds.from} to={bounds.to} hourWorth={hourWorth} />
               <SpendOddities items={mono.items} from={bounds.from} to={bounds.to} />
+            </div>
+
+            {/* ==== The small answers, laid as bricks ====
+
+                Рядами это не укладывается: карточки разной высоты и часть из
+                них в иные месяцы не рисуется вовсе, так что ряд из двух
+                постоянно оказывался рядом из одного, а рядом с ним — дыра во
+                всю его высоту. Кладка ставит следующую карточку туда, где
+                кончилась предыдущая. */}
+            <div className="deck">
               <BankWork items={mono.items} days={days} from={bounds.from} to={bounds.to} />
               <BankShape items={mono.items} from={bounds.from} to={bounds.to} />
             </div>

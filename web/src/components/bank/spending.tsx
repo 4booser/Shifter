@@ -5,7 +5,7 @@ import { useMemo, useState } from 'react';
 import { todayKey } from '@/lib/calendar/calendar-date';
 import { useI18n } from '@/lib/i18n';
 import { useMoney } from '@/lib/settings/money';
-import { MonoAccount, MonoStatementItem, dayOf } from '@/lib/mono/mono';
+import { MonoStatementItem, dayOf } from '@/lib/mono/mono';
 import { statementCsv, statementFileName } from '@/lib/mono/mono-export';
 import { yearOfStanding } from '@/lib/mono/mono-shape';
 import { cashback, counterparties, flow, oddities, recurring } from '@/lib/mono/mono-insights';
@@ -13,18 +13,19 @@ import { budgetState, categorise, ruleFrom, spendingByRules } from '@/lib/mono/m
 import { categoryStyle, categoryDeltas, dailySpend, merchantsIn, usualDay } from '@/lib/mono/spend-viz';
 import { useMono } from '@/lib/mono/store';
 import { downloadBlob } from '@/lib/export/xlsx';
-import { CountUp } from '@/components/ui/motion';
 import { Money } from '@/components/ui/bits';
-import { earnedTone } from '@/lib/tone';
+import { Icon } from '@/components/ui/icon';
+import { BankTile } from '@/components/bank/hero';
+import { ColumnAxis } from '@/components/bank/charts';
 
 /**
  * «Куда уходят деньги» — the spending half of the bank tab, rebuilt to be
  * читаемо, not merely present.
  *
- * The grammar: one stacked bar that always sums to the month, category rows
- * that open into the actual shops, a daily rhythm with the usual day drawn
- * as a line, and last month standing next to everything as a signed percent.
- * Colour follows the category, never its rank. Every figure comes из
+ * The grammar: a ring that always sums to the month, a ranked table of
+ * categories that opens into the actual shops, a daily rhythm with the usual
+ * day drawn as a line, and last month standing next to everything as a signed
+ * percent. Colour follows the category, never its rank. Every figure comes из
  * выписки and nowhere else; estimates have no seat at this table.
  */
 /** Everything the spending cards read, computed once per card. */
@@ -53,10 +54,6 @@ function useSpend(items: MonoStatementItem[], from: string, to: string) {
   );
   const deltas = useMemo(() => categoryDeltas(categories, previous), [categories, previous]);
   const totals = useMemo(() => flow(items, from, to), [items, from, to]);
-  const previousTotals = useMemo(
-    () => flow(items, previousRange.from, previousRange.to),
-    [items, previousRange],
-  );
   const days = useMemo(() => dailySpend(items, from, to), [items, from, to]);
   const usual = useMemo(() => usualDay(days), [days]);
   const people = useMemo(() => counterparties(items, from, to), [items, from, to]);
@@ -96,107 +93,6 @@ function useSpend(items: MonoStatementItem[], from: string, to: string) {
   };
 }
 
-/** ==== The headline: what the stretch took, and the one bar ==== */
-export function SpendHeadline({
-  items,
-  from,
-  to,
-}: {
-  items: MonoStatementItem[];
-  from: string;
-  to: string;
-}) {
-  const { t } = useI18n();
-  const { deltas, totals, usual, back, spentAll, spentDelta } = useSpend(items, from, to);
-  // Гривна была вбита прямо здесь, а соседние карточки печатали валюту из
-  // настроек — на одном экране выходило «₴331» и «331 $» про одно и то же.
-  const { format, hideAmounts } = useMoney();
-
-  const shown = deltas.slice(0, 8);
-  const tail = deltas.slice(8).reduce((sum, row) => sum + row.total, 0);
-
-  // Проверять надо то, что рисуется, а не то, что загружено. Выписка за
-  // три месяца есть, а в выбранном месяце трат нет — и карточка выходила
-  // одним заголовком над пустотой, отодвигая соседей вниз.
-  if (shown.length === 0) return null;
-
-  return (
-    <>
-      {/* ==== The headline: what the month took ==== */}
-      <section className="card reveal p-4">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <span className="field-hint">{t('Spent over this stretch')}</span>
-            <div className="tabular text-[2rem] font-extrabold leading-tight text-danger-read">
-              <CountUp value={spentAll} format={(v) => (hideAmounts ? '•••' : format(Math.round(v)))} />
-            </div>
-            {spentDelta !== null && (
-              <span
-                className={`tabular text-[0.82rem] font-semibold ${
-                  spentDelta > 8 ? 'text-danger-read' : spentDelta < -8 ? 'text-good-read' : 'text-muted'
-                }`}
-              >
-                {spentDelta > 0 ? '▲' : spentDelta < 0 ? '▼' : '='} {Math.abs(spentDelta)}%{' '}
-                {t('vs the stretch before')}
-              </span>
-            )}
-          </div>
-          <div className="text-right">
-            <div className="text-[0.85rem]">
-              <span className="text-muted">{t('Came in')}</span>{' '}
-              <b className={`tabular ${earnedTone(totals.earned)}`}><Money value={totals.earned} /></b>
-            </div>
-            {usual > 0 && (
-              <div className="text-[0.85rem]">
-                {/* Not «a usual day» plain: the forecast and the reserve card
-                    above both say that about a two-month habit, and this one
-                    is about the stretch on screen. Three numbers under one
-                    name on one page is how a page stops being believed. */}
-                <span className="text-muted">{t('A day in this stretch costs')}</span>{' '}
-                <b className="tabular"><Money value={usual} /></b>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* One bar that always sums to the month. Colour belongs to the
-            category; the 2px gaps are what keep neighbours readable. */}
-        <div className="mt-4 flex h-7 w-full gap-[2px] overflow-hidden rounded-lg" role="img" aria-label={t('Spending by category, one bar')}>
-          {shown.map((row) => (
-            <div
-              key={row.name}
-              className="group relative h-full min-w-[6px]"
-              style={{ flexGrow: row.total, flexBasis: 0, background: categoryStyle(row.name).hue }}
-              title={`${row.name} — ${hideAmounts ? '•••' : format(Math.round(row.total))}`}
-            >
-              {row.total / spentAll > 0.14 && (
-                <span className="pointer-events-none absolute inset-0 grid place-items-center text-[0.7rem] font-bold text-white/95">
-                  {Math.round((row.total / spentAll) * 100)}%
-                </span>
-              )}
-            </div>
-          ))}
-          {tail > 0 && (
-            <div
-              className="h-full min-w-[6px]"
-              style={{ flexGrow: tail, flexBasis: 0, background: 'var(--surface-2)' }}
-              title={t('everything else')}
-            />
-          )}
-        </div>
-
-        {(back.total > 0 || totals.moved > 0 || totals.returned > 0) && (
-          <p className="field-hint mt-2">
-            {back.total > 0 && <>{t('Cashback returned')} <Money value={back.total} />. </>}
-            {totals.moved > 0 && <><Money value={totals.moved} /> {t('moved between your own accounts — neither income nor spending.')} </>}
-            {totals.returned > 0 && <><Money value={totals.returned} /> {t('came back — a purchase and its refund cancel out.')}</>}
-          </p>
-        )}
-      </section>
-    </>
-  );
-}
-
 /** A sum said in worked hours: the unit this app exists to defend. */
 function inHours(value: number, hourWorth: number | null | undefined): string | null {
   if (hourWorth === null || hourWorth === undefined || hourWorth <= 0) return null;
@@ -208,7 +104,162 @@ function inHours(value: number, hourWorth: number | null | undefined): string | 
   return hours >= 10 ? `${Math.round(hours)}` : `${(Math.round(hours * 2) / 2).toLocaleString('ru')}`;
 }
 
-/** ==== Categories, each one openable ==== */
+/** ==== The band's tile: what the stretch took ==== */
+export function SpentTile({
+  items,
+  from,
+  to,
+}: {
+  items: MonoStatementItem[];
+  from: string;
+  to: string;
+}) {
+  const { t } = useI18n();
+  const { spentAll, spentDelta } = useSpend(items, from, to);
+
+  return (
+    <BankTile
+      label={t('Went out')}
+      icon="flame"
+      tone={spentDelta === null ? 'quiet' : spentDelta > 8 ? 'danger' : spentDelta < -8 ? 'good' : 'quiet'}
+      value={spentAll <= 0 ? '—' : <Money value={Math.round(spentAll)} />}
+      hint={
+        spentDelta === null ? (
+          <span className="text-faint">{t('the stretch is not over yet')}</span>
+        ) : (
+          <>
+            {spentDelta > 0 ? '▲' : spentDelta < 0 ? '▼' : '='} {Math.abs(spentDelta)}%{' '}
+            {t('vs the stretch before')}
+          </>
+        )
+      }
+    />
+  );
+}
+
+/** ==== The ring: the whole month, and the shares it is made of ==== */
+export function SpendDonut({
+  items,
+  from,
+  to,
+}: {
+  items: MonoStatementItem[];
+  from: string;
+  to: string;
+}) {
+  const { t } = useI18n();
+  const { deltas, totals, usual, back, spentAll } = useSpend(items, from, to);
+
+  // Проверять надо то, что рисуется, а не то, что загружено. Выписка за
+  // три месяца есть, а в выбранном месяце трат нет — и карточка выходила
+  // одним заголовком над пустотой, отодвигая соседей вниз.
+  if (deltas.length === 0 || spentAll <= 0) return null;
+
+  const head = deltas.slice(0, 4);
+  const tail = deltas.slice(4).reduce((sum, row) => sum + row.total, 0);
+
+  const parts = [
+    ...head.map((row) => ({ name: row.name, total: row.total, hue: categoryStyle(row.name).hue })),
+    ...(tail > 0 ? [{ name: t('everything else'), total: tail, hue: 'var(--faint)' }] : []),
+  ];
+
+  // A ring drawn on a circumference of a hundred: every dash length is the
+  // share itself, so the arithmetic is the drawing and cannot drift from it.
+  let walked = 0;
+  const arcs = parts.map((part) => {
+    const share = (part.total / spentAll) * 100;
+    const arc = { ...part, share, offset: -walked };
+
+    walked += share;
+
+    return arc;
+  });
+
+  return (
+    <section className="card reveal flex h-full flex-col overflow-hidden p-0">
+      <div className="card-head">
+        <h3 className="card-head-title">{t('Where the month went')}</h3>
+      </div>
+
+      <div className="card-body flex flex-1 flex-col items-center">
+        <div className="relative h-40 w-40">
+          <svg viewBox="0 0 36 36" className="h-full w-full -rotate-90">
+            <circle cx="18" cy="18" r="15.9155" fill="none" stroke="var(--surface-2)" strokeWidth="3.6" />
+            {arcs.map((arc) => (
+              <circle
+                key={arc.name}
+                cx="18"
+                cy="18"
+                r="15.9155"
+                fill="none"
+                stroke={arc.hue}
+                strokeWidth="3.6"
+                strokeDasharray={`${Math.max(0, arc.share - 0.6)} ${100 - Math.max(0, arc.share - 0.6)}`}
+                strokeDashoffset={arc.offset}
+              />
+            ))}
+          </svg>
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            {/* Гривна была вбита прямо здесь, а соседние карточки печатали
+                валюту из настроек — на одном экране выходило «₴331» и
+                «331 $» про одно и то же. */}
+            <span className="tabular text-[1.3rem] font-bold leading-tight text-danger-read">
+              <Money value={Math.round(spentAll)} />
+            </span>
+            <span className="field-hint">{t('over this stretch')}</span>
+          </div>
+        </div>
+
+        <div className="mt-4 grid w-full grid-cols-2 gap-x-4 gap-y-2">
+          {arcs.map((arc) => (
+            <div key={arc.name} className="min-w-0">
+              <div className="flex justify-between gap-2 text-[0.74rem] font-semibold">
+                <span className="truncate" title={arc.name}>{arc.name}</span>
+                <span className="tabular flex-none text-muted">{Math.round(arc.share)}%</span>
+              </div>
+              <span className="mt-0.5 block h-1 rounded-full bg-(--surface-2)">
+                <span
+                  className="block h-1 rounded-full"
+                  style={{ width: `${arc.share}%`, background: arc.hue }}
+                />
+              </span>
+            </div>
+          ))}
+        </div>
+
+        {/* Pushed to the floor of the card: this one shares a row with the
+            ranked table, which is always the taller of the two, and a footer
+            that stops halfway leaves the card looking unfinished. */}
+        <div className="mt-auto w-full border-t border-border pt-3 text-[0.82rem]">
+          <div className="flex justify-between gap-2">
+            <span className="text-muted">{t('Came in')}</span>
+            <b className="tabular text-good-read"><Money value={totals.earned} /></b>
+          </div>
+          {usual > 0 && (
+            <div className="flex justify-between gap-2">
+              {/* Not «a usual day» plain: the forecast and the reserve tile
+                  above both say that about a two-month habit, and this one
+                  is about the stretch on screen. Three numbers under one
+                  name on one page is how a page stops being believed. */}
+              <span className="text-muted">{t('A day in this stretch costs')}</span>
+              <b className="tabular"><Money value={usual} /></b>
+            </div>
+          )}
+        </div>
+
+        {(back.total > 0 || totals.moved > 0 || totals.returned > 0) && (
+          <p className="field-hint mt-2 w-full">
+            {back.total > 0 && <>{t('Cashback returned')} <Money value={back.total} />. </>}
+            {totals.moved > 0 && <><Money value={totals.moved} /> {t('moved between your own accounts — neither income nor spending.')} </>}
+            {totals.returned > 0 && <><Money value={totals.returned} /> {t('came back — a purchase and its refund cancel out.')}</>}
+          </p>
+        )}
+      </div>
+    </section>
+  );
+}
+
+/** ==== Categories, ranked, each one openable ==== */
 export function SpendCategories({
   items,
   from,
@@ -222,7 +273,7 @@ export function SpendCategories({
   hourWorth?: number | null;
 }) {
   const { t } = useI18n();
-  const { rules, budgets, deltas, limits, spentAll } = useSpend(items, from, to);
+  const { rules, deltas, limits, spentAll } = useSpend(items, from, to);
   const setRules = useMono((state) => state.setRules);
   const setBudget = useMono((state) => state.setBudget);
 
@@ -238,8 +289,21 @@ export function SpendCategories({
   if (shown.length === 0) return null;
 
   return (
-      <section className="card reveal p-4">
-        <h3 className="mb-2 text-[0.98rem] font-bold">{t('Where it goes')}</h3>
+    <section className="card reveal flex h-full flex-col overflow-hidden p-0">
+      <div className="card-head">
+        <h3 className="card-head-title">{t('Where it goes')}</h3>
+        <span className="field-hint">{t('Tap a category for the shops in it')}</span>
+      </div>
+
+      <div className="card-body flex-1 !pt-0">
+        {/* The table's own head. Hidden on a phone, where the columns stack
+            and a header would name rows that are no longer beside it. */}
+        <div className="hidden items-center gap-3 border-b border-border py-2 sm:flex">
+          <span className="field-hint flex-1 font-semibold uppercase">{t('Category')}</span>
+          <span className="field-hint w-24 font-semibold uppercase">{t('Volume')}</span>
+          <span className="field-hint w-24 text-right font-semibold uppercase">{t('Amount')}</span>
+          <span className="field-hint w-12 text-right font-semibold uppercase">{t('Share of the month')}</span>
+        </div>
 
         <div className="flex flex-col">
           {shown.map((row) => {
@@ -249,41 +313,25 @@ export function SpendCategories({
             const isOpen = open === row.name;
 
             return (
-              <div key={row.name} className="border-b border-border py-2 last:border-0">
+              <div key={row.name} className="border-b border-border last:border-0">
                 <button
                   type="button"
-                  className="flex w-full items-center gap-2.5 rounded-md text-left focus-visible:outline-2 focus-visible:outline-(--accent)"
+                  className="flex w-full flex-wrap items-center gap-x-3 gap-y-1 py-2 text-left focus-visible:outline-2 focus-visible:outline-(--accent)"
                   aria-expanded={isOpen}
                   onClick={() => setOpen(isOpen ? null : row.name)}
                 >
-                  <span
-                    className="grid h-8 w-8 flex-none place-items-center rounded-lg text-[0.95rem]"
-                    style={{ background: `color-mix(in oklab, ${style.hue} 18%, transparent)` }}
-                  >
-                    {style.mark}
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="flex items-baseline justify-between gap-2">
-                      <span className="truncate text-[0.9rem] font-semibold" title={row.name}>{row.name}</span>
-                      <span className="flex-none text-right">
-                        <span className="tabular block text-[0.92rem] font-bold">
-                          <Money value={row.total} />
-                        </span>
-                        {inHours(row.total, hourWorth) !== null && (
-                          <span className="tabular block text-[0.68rem] leading-tight text-faint">
-                            ≈ {inHours(row.total, hourWorth)} {t('h of work')}
-                          </span>
-                        )}
-                      </span>
+                  <span className="flex min-w-0 flex-1 items-center gap-2.5">
+                    <span
+                      className="grid h-8 w-8 flex-none place-items-center rounded-lg text-[0.95rem]"
+                      style={{ background: `color-mix(in oklab, ${style.hue} 18%, transparent)` }}
+                    >
+                      {style.mark}
                     </span>
-                    <span className="mt-1 flex items-center gap-2">
-                      <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-(--surface-2)">
-                        <span
-                          className="block h-full rounded-full transition-[width] duration-500"
-                          style={{ width: `${share * 100}%`, background: limit?.over ? 'var(--danger)' : style.hue }}
-                        />
+                    <span className="min-w-0">
+                      <span className="block truncate text-[0.9rem] font-semibold" title={row.name}>
+                        {row.name}
                       </span>
-                      <span className="tabular flex-none text-[0.72rem] text-faint">
+                      <span className="tabular block text-[0.72rem] text-faint">
                         ×{row.count}
                         {row.percent !== null && (
                           <span className={row.percent > 10 ? 'text-danger-read' : row.percent < -10 ? 'text-good-read' : ''}>
@@ -293,8 +341,38 @@ export function SpendCategories({
                         {row.percent === null && row.previous === 0 && (
                           <span className="text-warn-read"> · {t('new')}</span>
                         )}
+                        {limit?.over === true && (
+                          <span className="text-danger-read"> · {t('over the limit')}</span>
+                        )}
                       </span>
                     </span>
+                  </span>
+
+                  {/* The bar is the ranking made visible, so on a phone it
+                      moves under the row rather than disappearing with the
+                      column it lived in. */}
+                  <span className="order-last w-full sm:order-none sm:w-24">
+                    <span className="block h-1.5 overflow-hidden rounded-full bg-(--surface-2)">
+                      <span
+                        className="block h-full rounded-full transition-[width] duration-500"
+                        style={{ width: `${share * 100}%`, background: limit?.over ? 'var(--danger)' : style.hue }}
+                      />
+                    </span>
+                  </span>
+
+                  <span className="w-24 flex-none text-right">
+                    <span className="tabular block text-[0.92rem] font-bold">
+                      <Money value={row.total} />
+                    </span>
+                    {inHours(row.total, hourWorth) !== null && (
+                      <span className="tabular block text-[0.68rem] leading-tight text-faint">
+                        ≈ {inHours(row.total, hourWorth)} {t('h of work')}
+                      </span>
+                    )}
+                  </span>
+
+                  <span className="tabular w-12 flex-none text-right text-[0.8rem] text-muted">
+                    {Math.round(share * 100)}%
                   </span>
                 </button>
 
@@ -303,31 +381,31 @@ export function SpendCategories({
                     the main thread; a panel that simply appears beats any
                     charm that can freeze at half-open. */}
                 {isOpen && (
-                    <div className="bank-open">
-                      <CategoryInside
-                        items={items}
-                        rules={rules}
-                        category={row.name}
-                        from={from}
-                        to={to}
-                        previous={row.previous}
-                        limit={limit?.limit ?? null}
-                        limitOver={limit?.over ?? false}
-                        editingLimit={limitFor === row.name}
-                        limitDraft={limitDraft}
-                        onLimitDraft={setLimitDraft}
-                        onEditLimit={() => {
-                          setLimitFor(row.name);
-                          setLimitDraft(limit === undefined ? '' : `${limit.limit}`);
-                        }}
-                        onSaveLimit={() => {
-                          setBudget(row.name, Number(limitDraft.replace(',', '.')) || 0);
-                          setLimitFor(null);
-                        }}
-                        onTeach={(item, category) => setRules([ruleFrom(item, category), ...rules])}
-                      />
-                    </div>
-                  )}
+                  <div className="bank-open">
+                    <CategoryInside
+                      items={items}
+                      rules={rules}
+                      category={row.name}
+                      from={from}
+                      to={to}
+                      previous={row.previous}
+                      limit={limit?.limit ?? null}
+                      limitOver={limit?.over ?? false}
+                      editingLimit={limitFor === row.name}
+                      limitDraft={limitDraft}
+                      onLimitDraft={setLimitDraft}
+                      onEditLimit={() => {
+                        setLimitFor(row.name);
+                        setLimitDraft(limit === undefined ? '' : `${limit.limit}`);
+                      }}
+                      onSaveLimit={() => {
+                        setBudget(row.name, Number(limitDraft.replace(',', '.')) || 0);
+                        setLimitFor(null);
+                      }}
+                      onTeach={(item, category) => setRules([ruleFrom(item, category), ...rules])}
+                    />
+                  </div>
+                )}
               </div>
             );
           })}
@@ -338,7 +416,8 @@ export function SpendCategories({
             {t('everything else')}: <Money value={tail} />
           </p>
         )}
-      </section>
+      </div>
+    </section>
   );
 }
 
@@ -377,25 +456,31 @@ export function SpendPlaces({
   if (items.length === 0 || people.length === 0) return null;
 
   return (
-      <section className="card reveal p-4">
-        <h3 className="mb-2 text-[0.98rem] font-bold">{t('Where you actually go')}</h3>
-        {/* В подсказке было только «×3» — то есть у обрезанного «Округлення
-            балансу «М…» не оставалось способа узнать, чем оно кончается.
-            Теперь там само название. */}
-        <div className="flex flex-wrap gap-1.5">
-          {people.slice(0, 14).map((row) => (
-            <span
-              key={row.key}
-              className="chip !py-1.5 !text-[0.82rem]"
-              title={`${row.name} · ×${row.count}`}
-            >
-              <span className="max-w-64 truncate" title={row.name}>{row.name}</span>
-              <b className="tabular"><Money value={row.total} /></b>
-              {row.count > 2 && <span className="text-faint">×{row.count}</span>}
+    <section className="card reveal flex h-full flex-col overflow-hidden p-0">
+      <div className="card-head">
+        <h3 className="card-head-title">{t('Where you actually go')}</h3>
+        <span className="field-hint">{t('most often first')}</span>
+      </div>
+
+      {/* Чипами это читалось как облако тегов: названия разной длины, суммы
+          вперемешку, и сравнить два места глазами нельзя. Строки с суммой у
+          одного края сравниваются сами. */}
+      <div className="card-body flex-1 !py-0">
+        {people.slice(0, 14).map((row) => (
+          <div key={row.key} className="flex items-baseline gap-3 border-b border-border py-2 last:border-0">
+            <span className="min-w-0 flex-1 truncate text-[0.86rem] font-semibold" title={row.name}>
+              {row.name}
             </span>
-          ))}
-        </div>
-      </section>
+            <span className="tabular w-24 flex-none text-[0.75rem] text-faint">
+              {row.count > 1 ? `×${row.count}` : ''}
+            </span>
+            <span className="tabular flex-none text-right text-[0.88rem] font-bold">
+              <Money value={row.total} />
+            </span>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -416,53 +501,74 @@ export function SpendStanding({
 
   if (items.length === 0) return null;
 
+  const yearly = yearOfStanding(standing.reduce((sum, row) => sum + row.amount, 0));
+  const heaviest = Math.max(1, ...standing.map((row) => row.amount));
+
   return (
-      <section className="card reveal p-4">
-        <h3 className="mb-1 text-[0.98rem] font-bold">{t('Comes round by itself')}</h3>
+    <section className="card reveal flex h-full flex-col overflow-hidden p-0">
+      <div className="card-head">
+        <h3 className="card-head-title">{t('Comes round by itself')}</h3>
+        {standing.length > 0 && (
+          <span className="field-hint tabular">
+            {t('next around')} {standing[0].next.slice(8)}.{standing[0].next.slice(5, 7)}
+          </span>
+        )}
+      </div>
+
+      <div className="card-body flex flex-1 flex-col">
         {standing.length === 0 ? (
           <p className="field-hint">{t('Nothing repeats month to month yet.')}</p>
         ) : (
-          <div className="flex flex-col gap-1.5">
-            {standing.map((row) => (
-              <div key={row.key} className="@container flex items-baseline justify-between gap-2 text-[0.88rem]">
-                <span className="min-w-0 flex-1 truncate" title={row.name}>
-                  {row.name}
-                  {row.fresh && <span className="ml-1.5 text-[0.72rem] font-bold text-(--accent-read)">{t('new')}</span>}
-                </span>
-                <span className="tabular flex-none">
-                  <Money value={row.amount} />
-                  <span className="ml-1 text-[0.72rem] text-faint">
-                    {/* Три величины справа съедали две трети строки, и от
-                        «Регулярне поповнення «Macbook»» оставалось «Регулярне
-                        поповнення…». Годовая сумма — самая необязательная из
-                        трёх и уходит первой, когда карточка узкая. */}
-                    <span className="hidden @[26rem]:inline">
-                      · <Money value={yearOfStanding(row.amount)} />/{t('yr')}
-                    </span>{' '}
-                    · {t('next around')} {row.next.slice(8)}.{row.next.slice(5, 7)}
+          <>
+            <div className="flex flex-col gap-2.5">
+              {standing.map((row) => (
+                <div key={row.key}>
+                  <div className="flex items-baseline justify-between gap-2 text-[0.85rem]">
+                    <span className="min-w-0 flex-1 truncate font-semibold" title={row.name}>
+                      {row.name}
+                      {row.fresh && <span className="ml-1.5 text-[0.72rem] font-bold text-(--accent-read)">{t('new')}</span>}
+                    </span>
+                    <span className="tabular flex-none font-semibold">
+                      <Money value={row.amount} />
+                    </span>
+                  </div>
+                  <span className="mt-1 block h-1.5 overflow-hidden rounded-full bg-(--surface-2)">
+                    <span
+                      className="block h-full rounded-full bg-(--accent)"
+                      style={{ width: `${(row.amount / heaviest) * 100}%` }}
+                    />
                   </span>
-                </span>
-              </div>
-            ))}
+                  <span className="tabular mt-0.5 block text-[0.7rem] text-faint">
+                    <Money value={yearOfStanding(row.amount)} />/{t('yr')} · {t('next around')}{' '}
+                    {row.next.slice(8)}.{row.next.slice(5, 7)}
+                  </span>
+                </div>
+              ))}
+            </div>
+
             {standing.length > 1 && (
-              <p className="field-hint mt-1">
-                {t('All of it together')}:{' '}
-                <strong className="tabular">
-                  <Money value={yearOfStanding(standing.reduce((sum, row) => sum + row.amount, 0))} />
-                </strong>{' '}
-                {t('a year')}
-                {inHours(yearOfStanding(standing.reduce((sum, row) => sum + row.amount, 0)), hourWorth) !== null && (
-                  <> — ≈ <strong className="tabular">{inHours(yearOfStanding(standing.reduce((sum, row) => sum + row.amount, 0)), hourWorth)}</strong> {t('h of work')}</>
+              <div className="mt-4 flex items-end justify-between gap-3 border-t border-border pt-3">
+                <div>
+                  <span className="field-hint block font-semibold uppercase">{t('A year of it')}</span>
+                  <strong className="tabular text-[1.15rem] font-bold">
+                    <Money value={yearly} />
+                  </strong>
+                </div>
+                {inHours(yearly, hourWorth) !== null && (
+                  <span className="field-hint text-right">
+                    ≈ <strong className="tabular">{inHours(yearly, hourWorth)}</strong> {t('h of work')}
+                  </span>
                 )}
-              </p>
+              </div>
             )}
-          </div>
+          </>
         )}
-      </section>
+      </div>
+    </section>
   );
 }
 
-/** ==== Oddities and the way out ==== */
+/** ==== Oddities ==== */
 export function SpendOddities({
   items,
   from,
@@ -473,49 +579,69 @@ export function SpendOddities({
   to: string;
 }) {
   const { t } = useI18n();
-  const { rules, odd } = useSpend(items, from, to);
+  const { odd } = useSpend(items, from, to);
 
-  if (items.length === 0) return null;
+  if (items.length === 0 || odd.length === 0) return null;
 
   return (
-    <>
-      {odd.length > 0 && (
-        <section className="card reveal p-4">
-          <div className="panel-head mb-2">
-            <span>{t('Unusual this month')}</span>
-          </div>
-          <div className="flex flex-col gap-1.5">
-            {odd.slice(0, 6).map((row) => (
-              <div key={row.item.id} className="flex items-baseline justify-between gap-2 text-[0.86rem]">
-                <span className="truncate" title={row.item.description}>{row.item.description}</span>
-                {/* `slice(5)` давал «09-01» — обрывок ISO, который читается
-                    как «9 января». Везде в приложении дата пишется днём и
-                    месяцем; здесь теперь так же. */}
-                <span className="tabular flex-none text-muted">
-                  {dayOf(row.item).slice(8)}.{dayOf(row.item).slice(5, 7)}
-                </span>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
+    <section className="card reveal flex h-full flex-col overflow-hidden p-0">
+      <div className="card-head">
+        <h3 className="card-head-title">{t('Unusual this month')}</h3>
+        <span className="field-hint">{t('a question, not a finding')}</span>
+      </div>
 
-      {/* ==== The way out ==== */}
-      <button
-        type="button"
-        className="btn w-full"
-        onClick={() => {
-          const csv = statementCsv(items, (item) => categorise(item, rules), from, to);
+      <div className="card-body flex-1 !py-0">
+        {odd.slice(0, 6).map((row) => (
+          <div key={row.item.id} className="flex items-baseline gap-3 border-b border-border py-2 last:border-0">
+            <span className="min-w-0 flex-1 truncate text-[0.86rem]" title={row.item.description}>
+              {row.item.description}
+            </span>
+            <span className="min-w-0 flex-1 truncate text-[0.76rem] text-faint" title={row.because}>
+              {row.because}
+            </span>
+            {/* `slice(5)` давал «09-01» — обрывок ISO, который читается
+                как «9 января». Везде в приложении дата пишется днём и
+                месяцем; здесь теперь так же. */}
+            <span className="tabular flex-none text-[0.78rem] text-muted">
+              {dayOf(row.item).slice(8)}.{dayOf(row.item).slice(5, 7)}
+            </span>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
 
-          downloadBlob(
-            statementFileName(from, to),
-            new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' }),
-          );
-        }}
-      >
-        {t('Download the statement')}
-      </button>
-    </>
+/** ==== The way out: the statement as a file ==== */
+export function StatementDownloadButton({
+  items,
+  from,
+  to,
+}: {
+  items: MonoStatementItem[];
+  from: string;
+  to: string;
+}) {
+  const { t } = useI18n();
+  const rules = useMono((state) => state.rules);
+
+  return (
+    <button
+      type="button"
+      className="btn btn-sm"
+      disabled={items.length === 0}
+      onClick={() => {
+        const csv = statementCsv(items, (item) => categorise(item, rules), from, to);
+
+        downloadBlob(
+          statementFileName(from, to),
+          new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' }),
+        );
+      }}
+    >
+      <Icon name="download" size={14} className="mr-1.5" />
+      {t('Download the statement')}
+    </button>
   );
 }
 
@@ -538,7 +664,6 @@ function CategoryInside({
   onLimitDraft,
   onEditLimit,
   onSaveLimit,
-  onTeach,
 }: {
   items: MonoStatementItem[];
   rules: ReturnType<typeof useMono.getState>['rules'];
@@ -563,7 +688,7 @@ function CategoryInside({
   );
 
   return (
-    <div className="mt-2 rounded-lg bg-(--surface-2)/60 p-3 pl-[2.9rem]">
+    <div className="mb-2 rounded-lg bg-(--surface-2)/60 p-3 pl-[2.9rem]">
       <div className="flex flex-col gap-1">
         {merchants.map((shop) => (
           <div key={shop.name} className="flex items-baseline justify-between gap-2 text-[0.84rem]">
@@ -627,7 +752,6 @@ function DayRhythm({
   days,
   usual,
   items,
-  rules,
 }: {
   days: { day: string; total: number }[];
   usual: number;
@@ -635,7 +759,7 @@ function DayRhythm({
   rules: ReturnType<typeof useMono.getState>['rules'];
 }) {
   const { t } = useI18n();
-  const { format, hideAmounts } = useMoney();
+  const { format } = useMoney();
 
   const peak = Math.max(1, ...days.map((day) => day.total));
   const heaviest = days.reduce((best, day) => (day.total > best.total ? day : best), days[0]);
@@ -651,71 +775,91 @@ function DayRhythm({
 
   if (days.every((day) => day.total === 0)) return null;
 
+  const said = (day: string) => `${day.slice(8)}.${day.slice(5, 7)}`;
+
   return (
-    <section className="card reveal p-4">
-      <h3 className="mb-1 text-[0.98rem] font-bold">{t('The month, day by day')}</h3>
-      {usual > 0 && (
-        <p className="field-hint mb-2">
-          {t('The line is your usual day')} — <Money value={usual} />.{' '}
-          {t('A median: one splurge cannot drag it.')}
-        </p>
-      )}
-
-      <div className="relative">
-        <div className="flex h-24 items-end gap-[2px]">
-          {days.map((day) => {
-            const weekend = [0, 6].includes(new Date(`${day.day}T12:00:00`).getDay());
-
-            return (
-              <div
-                key={day.day}
-                className="group relative flex-1 rounded-t-[3px]"
-                style={{
-                  height: `${Math.max(2, (day.total / peak) * 100)}%`,
-                  background:
-                    day.total === 0
-                      ? 'var(--surface-2)'
-                      : weekend
-                        ? 'color-mix(in oklab, var(--accent) 75%, var(--warn))'
-                        : 'var(--accent)',
-                  opacity: day.total === 0 ? 0.6 : day.day === heaviest?.day ? 1 : 0.78,
-                }}
-                title={`${day.day.slice(8)}.${day.day.slice(5, 7)} — ${hideAmounts ? '•••' : format(Math.round(day.total))}`}
-              />
-            );
-          })}
-        </div>
-        {usual > 0 && (
-          <div
-            className="pointer-events-none absolute inset-x-0 border-t border-dashed border-(--warn)"
-            style={{ bottom: `${Math.min(96, (usual / peak) * 96)}px` }}
-            aria-hidden
-          />
+    <section className="card reveal flex h-full flex-col overflow-hidden p-0">
+      <div className="card-head">
+        <h3 className="card-head-title">{t('The month, day by day')}</h3>
+        {heaviest !== undefined && heaviest.total > 0 && (
+          <span className="field-hint tabular">
+            {t('Peak')}: {format(Math.round(heaviest.total))} ({said(heaviest.day)})
+          </span>
         )}
       </div>
 
-      {heaviest !== undefined && heaviest.total > 0 && (
-        <p className="field-hint mt-2">
-          {t('Heaviest')} — {heaviest.day.slice(8)}.{heaviest.day.slice(5, 7)},{' '}
-          <b className="tabular"><Money value={heaviest.total} /></b>
-          {/* Две покупки в одном месте за день — это «Macbook ×2», а не
-              «Macbook + Macbook»: повторённое название читается как ошибка
-              вывода, а не как два похода. */}
-          {heaviestSpent.length > 0 && (
-            <>
-              :{' '}
-              {[...heaviestSpent.reduce((seen, item) => {
-                seen.set(item.description, (seen.get(item.description) ?? 0) + 1);
+      <div className="card-body flex-1">
+        <div className="relative h-44 pr-14">
+          <ColumnAxis peak={peak} headroom={100} />
 
-                return seen;
-              }, new Map<string, number>())]
-                .map(([name, times]) => (times > 1 ? `${name} ×${times}` : name))
-                .join(' + ')}
-            </>
+          <div className="relative flex h-full items-end gap-[2px]">
+            {days.map((day) => {
+              const weekend = [0, 6].includes(new Date(`${day.day}T12:00:00`).getDay());
+
+              return (
+                <div
+                  key={day.day}
+                  className="flex-1 rounded-t-[3px]"
+                  style={{
+                    height: `${Math.max(1, (day.total / peak) * 100)}%`,
+                    background:
+                      day.total === 0
+                        ? 'var(--surface-2)'
+                        : weekend
+                          ? 'color-mix(in oklab, var(--accent) 75%, var(--warn))'
+                          : 'var(--accent)',
+                    opacity: day.total === 0 ? 0.6 : day.day === heaviest?.day ? 1 : 0.78,
+                  }}
+                  title={`${said(day.day)} — ${format(Math.round(day.total))}`}
+                />
+              );
+            })}
+          </div>
+
+          {usual > 0 && (
+            <div
+              className="pointer-events-none absolute inset-x-0 border-t border-dashed border-(--warn)"
+              style={{ bottom: `${Math.min(98, (usual / peak) * 100)}%` }}
+              aria-hidden
+            />
           )}
-          . {t('A fact, not a reproach.')}
-        </p>
-      )}
+        </div>
+
+        <div className="flex justify-between border-t border-border pr-14 pt-1 text-[0.72rem] text-muted tabular">
+          <span>{said(days[0].day)}</span>
+          <span>{said(days[days.length - 1].day)}</span>
+        </div>
+
+        {usual > 0 && (
+          <p className="field-hint mt-1">
+            {t('The line is your usual day')} — <Money value={usual} />.{' '}
+            {t('A median: one splurge cannot drag it.')}
+          </p>
+        )}
+
+        {heaviest !== undefined && heaviest.total > 0 && (
+          <p className="field-hint mt-1">
+            {t('Heaviest')} — {said(heaviest.day)},{' '}
+            <b className="tabular"><Money value={heaviest.total} /></b>
+            {/* Две покупки в одном месте за день — это «Macbook ×2», а не
+                «Macbook + Macbook»: повторённое название читается как ошибка
+                вывода, а не как два похода. */}
+            {heaviestSpent.length > 0 && (
+              <>
+                :{' '}
+                {[...heaviestSpent.reduce((seen, item) => {
+                  seen.set(item.description, (seen.get(item.description) ?? 0) + 1);
+
+                  return seen;
+                }, new Map<string, number>())]
+                  .map(([name, times]) => (times > 1 ? `${name} ×${times}` : name))
+                  .join(' + ')}
+              </>
+            )}
+            . {t('A fact, not a reproach.')}
+          </p>
+        )}
+      </div>
     </section>
   );
 }

@@ -45,12 +45,12 @@ export function BankWork({
   return (
     <>
       {rate !== null && (
-        <section className="card reveal p-4">
-          <div className="panel-head mb-2">
-            <span>{t('What an hour really pays')}</span>
+        <section className="card reveal overflow-hidden p-0">
+          <div className="card-head">
+            <h3 className="card-head-title">{t('What an hour really pays')}</h3>
           </div>
 
-          <div className="flex flex-wrap items-baseline gap-x-5 gap-y-1">
+          <div className="card-body flex flex-wrap items-baseline gap-x-5 gap-y-1">
             <span className="tabular text-[1.35rem] font-bold">
               <Money value={Math.round(rate.real)} />/{t('h')}
             </span>
@@ -59,24 +59,24 @@ export function BankWork({
               {' · '}
               {t('work days cost')} <Money value={rate.costs} />
             </span>
-          </div>
 
-          <p className="field-hint mt-2">
-            {t('The paper rate, less what working days themselves cost — travel, food on shift, everything spent on days you worked.')}
-          </p>
+            <p className="field-hint w-full">
+              {t('The paper rate, less what working days themselves cost — travel, food on shift, everything spent on days you worked.')}
+            </p>
+          </div>
         </section>
       )}
 
       {closing.closings >= 3 && closing.ride > 0 && (
-        <section className="card reveal p-4">
-          <div className="panel-head mb-2">
-            <span>{t('The price of a close')}</span>
+        <section className="card reveal overflow-hidden p-0">
+          <div className="card-head">
+            <h3 className="card-head-title">{t('The price of a close')}</h3>
           </div>
 
           {/* The venue pays the night premium and the person pays the fare,
               and nobody had ever put the two numbers side by side because
               they live in different applications. */}
-          <p className="text-[0.92rem]">
+          <p className="card-body text-[0.92rem]">
             {closing.closings} {t('closes ended in')}{' '}
             <strong className="tabular"><Money value={closing.ride} /></strong>{' '}
             {t('of rides home — about')}{' '}
@@ -91,45 +91,47 @@ export function BankWork({
       )}
 
       {byKind !== null && (
-        <section className="card reveal p-4">
-          <div className="panel-head mb-2">
-            <span>{t('Work days against days off')}</span>
+        <section className="card reveal overflow-hidden p-0">
+          <div className="card-head">
+            <h3 className="card-head-title">{t('Work days against days off')}</h3>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <span className="field-hint">
-                {t('a worked day costs')} · {n(byKind.onShiftDays, 'days')}
-              </span>
-              <div className="tabular text-[1.1rem] font-bold">
-                <Money value={Math.round(byKind.onShift)} />
-              </div>
-            </div>
-            <div>
-              <span className="field-hint">
-                {t('a day off costs')} · {n(byKind.offDays, 'days')}
-              </span>
-              <div className="tabular text-[1.1rem] font-bold">
-                <Money value={Math.round(byKind.off)} />
-              </div>
-            </div>
-          </div>
-
-          {/* Where the two differ most — the categories that are really about
-              work, whatever they are called at the till. */}
-          {byKind.differences.length > 0 && (
-            <div className="mt-2 flex flex-col gap-0.5">
-              {byKind.differences.slice(0, 3).map((row) => (
-                <div key={row.kind} className="flex justify-between gap-2 text-[0.82rem] text-muted">
-                  <span>{row.kind}</span>
-                  <span className="tabular">
-                    <Money value={Math.round(row.onShift)} /> {t('vs')}{' '}
-                    <Money value={Math.round(row.off)} />
-                  </span>
+          <div className="card-body">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <span className="field-hint">
+                  {t('a worked day costs')} · {n(byKind.onShiftDays, 'days')}
+                </span>
+                <div className="tabular text-[1.1rem] font-bold">
+                  <Money value={Math.round(byKind.onShift)} />
                 </div>
-              ))}
+              </div>
+              <div>
+                <span className="field-hint">
+                  {t('a day off costs')} · {n(byKind.offDays, 'days')}
+                </span>
+                <div className="tabular text-[1.1rem] font-bold">
+                  <Money value={Math.round(byKind.off)} />
+                </div>
+              </div>
             </div>
-          )}
+
+            {/* Where the two differ most — the categories that are really about
+                work, whatever they are called at the till. */}
+            {byKind.differences.length > 0 && (
+              <div className="mt-2 flex flex-col gap-0.5">
+                {byKind.differences.slice(0, 3).map((row) => (
+                  <div key={row.kind} className="flex justify-between gap-2 text-[0.82rem] text-muted">
+                    <span>{row.kind}</span>
+                    <span className="tabular">
+                      <Money value={Math.round(row.onShift)} /> {t('vs')}{' '}
+                      <Money value={Math.round(row.off)} />
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </section>
       )}
     </>

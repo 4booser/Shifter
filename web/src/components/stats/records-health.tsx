@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 
 import { api } from '@/lib/api/http';
 import { useI18n } from '@/lib/i18n';
+import { Panel } from './panel';
 
 interface Gap {
   kind: string;
@@ -53,12 +54,10 @@ export function RecordsHealthCard() {
   if (gaps.length === 0) return null;
 
   return (
-    <section className="card reveal p-4">
-      <h2 className="mb-1 text-[0.98rem] font-bold">{t('Worth filling in')}</h2>
-      <p className="field-hint mb-3">
-        {t('Not homework — a map: each line names what the gap costs. The list shortens as you fill it.')}
-      </p>
-
+    <Panel
+      title={t('Worth filling in')}
+      hint={t('Not homework — a map: each line names what the gap costs. The list shortens as you fill it.')}
+    >
       <div className="flex flex-col gap-2.5">
         {gaps.map((gap) => {
           const known = KIND[gap.kind];
@@ -83,6 +82,6 @@ export function RecordsHealthCard() {
           );
         })}
       </div>
-    </section>
+    </Panel>
   );
 }

@@ -1,13 +1,4 @@
-/*
- * A deliberately small ICS reader.
- *
- * Half the trade keeps its rota in Google Calendar; this turns an exported
- * .ics into rows Shifter can preview and apply. RFC 5545 is bottomless, so
- * the reader takes the common shapes — folded lines, TZID/floating/UTC
- * times, VALUE=DATE, weekly and daily RRULEs with COUNT/UNTIL/BYDAY — and
- * reports everything else as «не разобрали» instead of guessing. An import
- * that quietly invents shifts is worse than one that honestly skips.
- */
+/* A deliberately small ICS reader. */
 
 export interface IcsOccurrence {
   summary: string;
@@ -37,11 +28,7 @@ interface Stamp {
   time: string | null;
 }
 
-/**
- * One DTSTART/DTEND value into wall-clock date+time. A trailing Z is UTC and
- * converts to the browser's clock — a rota means wall time, and the person
- * importing is standing in the timezone the rota is about.
- */
+/** One DTSTART/DTEND value into wall-clock date+time. */
 const parseStamp = (raw: string): Stamp | null => {
   const dateOnly = /^(\d{4})(\d{2})(\d{2})$/.exec(raw);
 

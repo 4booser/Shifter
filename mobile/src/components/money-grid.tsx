@@ -13,15 +13,7 @@ const CELL = 60;
 const SPAN = 24;
 const PAGES = Array.from({ length: SPAN * 2 + 1 }, (_, index) => index);
 
-/**
- * The month in money.
- *
- * The calendar answers "when did I work". This answers "what did the money do"
- * over exactly the same squares, which is the only way to see that the week
- * with three closes is also the week nothing was left by Sunday. Green is what
- * came in, and it wins the cell — a day the wage landed is a day about the
- * wage, whatever else was spent on it.
- */
+/** The month in money. */
 export function MoneyGrid({
   items,
   days,

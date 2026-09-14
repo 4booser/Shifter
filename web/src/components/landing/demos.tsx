@@ -19,11 +19,7 @@ const roll = (seed: number) => {
   };
 };
 
-/**
- * The hero's toy: a shift that actually runs. Money grows by the wall
- * clock at a believable bar rate — the exact feeling the product sells,
- * playable before sign-up.
- */
+/** The hero's toy: a shift that actually runs. */
 export function LiveShiftDemo() {
   const [startedAt, setStartedAt] = useState<number | null>(null);
   const [now, setNow] = useState(Date.now());
@@ -102,11 +98,7 @@ export function LiveShiftDemo() {
   );
 }
 
-/**
- * A month you build the way the app is built: pick a shift preset, paint
- * days with it. Presets are the product's real trick — a shift is described
- * once and then it is one tap per day — so the toy teaches the loop.
- */
+/** A month you build the way the app is built: pick a shift preset, paint days with it. */
 const PRESETS = [
   { id: 0, emoji: '🍸', name: 'Бар', pay: 1350, colour: '#4f46e5' },
   { id: 1, emoji: '☕', name: 'Кофейня', pay: 950, colour: '#0d9488' },
@@ -319,14 +311,9 @@ export function GigsDemo() {
   );
 }
 
-
 const STRETCH_DAYS = ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс'];
 
-/**
- * A week whose shifts you stretch. Drag a bar's edge (or just drag on the
- * bar) and the hours follow, the money follows the hours — the exact
- * feeling of pulling a shift's actual clock in the day panel.
- */
+/** A week whose shifts you stretch. */
 export function StretchWeekDemo() {
   const rate = 240;
   const [hours, setHours] = useState<number[]>([8, 0, 6, 8, 10, 12, 0]);

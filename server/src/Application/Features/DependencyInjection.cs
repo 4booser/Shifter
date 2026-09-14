@@ -17,11 +17,7 @@ namespace Shifter.Application.Features;
 
 public static class DependencyInjection
 {
-    /// <summary>
-    /// Only ever used by a Debug build with nothing configured. Fixed rather
-    /// than random so that a restart does not invalidate the token sitting in
-    /// the browser from a minute ago.
-    /// </summary>
+    /// <summary>Only ever used by a Debug build with nothing configured.</summary>
     private const string LocalKey = "shifter-local-development-key-not-for-any-real-use";
 
     public static IServiceCollection AddApplication(

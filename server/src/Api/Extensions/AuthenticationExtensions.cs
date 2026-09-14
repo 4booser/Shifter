@@ -8,10 +8,7 @@ namespace Shifter.Api.Extensions;
 
 public static class AuthenticationExtensions
 {
-    /// <summary>
-    /// Registers the JWT bearer scheme. The validation parameters mirror what
-    /// JwtService puts into the token; both sides read the same TokenOptions.
-    /// </summary>
+    /// <summary>Registers the JWT bearer scheme.</summary>
     public static IServiceCollection AddJwtAuthentication(this IServiceCollection services)
     {
         services

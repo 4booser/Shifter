@@ -9,18 +9,8 @@ import { t } from './i18n';
 import { CalendarDayData, DaysResponse, ShiftTemplate } from './types';
 import { useLive } from '../store/live';
 
-/**
- * Phone notifications, end to end: ask once, hand the address to the server,
- * and open the screen a tap was about. Nothing here nags — a refused
- * permission is simply a phone that will not be notified, which is a choice
- * the person is allowed to make.
- */
-/**
- * The token this phone registered with, for the screen that lets somebody
- * change what it is notified about. Null on a simulator, which has no push
- * service to register with — so the screen hides rather than offering
- * switches that would do nothing.
- */
+/** Phone notifications, end to end: ask once, hand the address to the server, and open the screen a tap was… */
+/** The token this phone registered with, for the screen that lets somebody change what it is notified about. */
 let registered: string | null = null;
 
 export const deviceToken = (): string | null => registered;
@@ -34,13 +24,7 @@ export interface DeviceSettings {
   notify_unclosed: boolean;
 }
 
-/**
- * Changes what this phone is notified about, and reads back what it is now.
- *
- * Everything is optional and null means "leave it alone", so a screen sends
- * only the switch that was touched — and the same call with nothing in it is
- * how that screen learns the current state without a second endpoint.
- */
+/** Changes what this phone is notified about, and reads back what it is now. */
 export async function deviceSettings(
   token: string,
   change: Partial<Omit<DeviceSettings, 'time_zone'>> = {},
@@ -85,8 +69,6 @@ export async function registerForPush(language: string): Promise<string | null> 
         platform: Platform.OS,
         language,
         // Where the phone is, so the evening nudge arrives in the evening.
-        // Sent every time it registers, because people move and phones
-        // follow them.
         time_zone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       },
     });
@@ -98,27 +80,14 @@ export async function registerForPush(language: string): Promise<string | null> 
   }
 }
 
-/**
- * The buttons a notification carries.
- *
- * A shift notification arrives an evening before and a payday one on the
- * morning. Both are moments when somebody is holding the phone and not
- * unlocking it, so the useful thing is a button on the lock screen rather
- * than a trip into the app to press the same button one screen deeper.
- *
- * Registered once, at startup. The server names the category on the push; a
- * notification whose category was never registered simply arrives without
- * buttons, which is the old behaviour and no worse than it was.
- */
+/** The buttons a notification carries. */
 async function registerActions(): Promise<void> {
   try {
     await Notifications.setNotificationCategoryAsync('shift', [
       {
         identifier: 'start',
         buttonTitle: t('Начать смену'),
-        // Foreground on purpose: starting a shift writes a running clock the
-        // person then wants to see, and a button that silently does something
-        // to their money is not a button anybody trusts.
+        // Foreground on purpose: starting a shift writes a running clock the person then wants to see, and a button…
         options: { opensAppToForeground: true },
       },
     ]);
@@ -132,13 +101,7 @@ async function registerActions(): Promise<void> {
   }
 }
 
-/**
- * Starts today's planned shift, the way the calendar's own button does.
- *
- * Asked for from the lock screen, so it has to fetch: the app may not have
- * been open since the rota changed, and starting yesterday's shift because
- * that is what was in memory would be worse than doing nothing.
- */
+/** Starts today's planned shift, the way the calendar's own button does. */
 async function startTodaysShift(): Promise<boolean> {
   const today = todayKey();
 
@@ -178,11 +141,7 @@ async function startTodaysShift(): Promise<boolean> {
   }
 }
 
-/**
- * Wires the three things a notification can do: arrive while the app is open,
- * be tapped from outside it, and have one of its buttons pressed. The payload
- * carries the web path, which maps one-to-one onto the app's own routes.
- */
+/** Wires the three things a notification can do: arrive while the app is open, be tapped from outside it, and… */
 export function wireNotificationTaps(): () => void {
   Notifications.setNotificationHandler({
     handleNotification: async () => ({

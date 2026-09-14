@@ -7,16 +7,7 @@ using Xunit;
 
 namespace Shifter.Tests;
 
-/// <summary>
-/// A travel pass, a locker, the whip-round for the staff room. Nobody records
-/// these, because recording something is what you do while thinking about it,
-/// and the nature of a standing cost is that you are not.
-///
-/// The occurrences are conjured from the rule at read time rather than written
-/// by a scheduler — the same choice the calendar makes for a repeating event,
-/// and for the same reasons: nothing to run, nothing to run twice, and a rule
-/// edited in June does not rewrite May.
-/// </summary>
+/// <summary>A travel pass, a locker, the whip-round for the staff room.</summary>
 public class ExpenseRuleTests
 {
     private static readonly DateOnly Today = new(2026, 8, 28);

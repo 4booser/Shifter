@@ -7,19 +7,7 @@ import { todayKey } from '@/lib/calendar/calendar-date';
 import { useI18n } from '@/lib/i18n';
 import { Money } from '@/components/ui/bits';
 
-/**
- * The one thing everybody in the trade believes and nobody has checked.
- *
- * "Дождь — и вечер мёртвый" is said in every kitchen on the continent. It is
- * also checkable, for nothing, against a record that has been sitting there
- * the whole time: their days, their place, and measurements from a public
- * archive that neither they nor we can nudge.
- *
- * The wording is the whole design. It says what the record shows and refuses
- * to say why — a wet month and a slow month can sit on top of each other
- * without one causing the other, and "rain costs you ₴300 a shift" is a claim
- * this data cannot support however much it looks like it can.
- */
+/** The one thing everybody in the trade believes and nobody has checked. */
 export function WeatherEffectCard() {
   const { t, n } = useI18n();
 
@@ -32,9 +20,7 @@ export function WeatherEffectCard() {
       .catch(() => setPlaces([]));
   }, []);
 
-  // Only the places where the gap is big enough to be worth a sentence. A
-  // card that appears to report a four per cent wobble teaches people that
-  // this card reports noise.
+  // Only the places where the gap is big enough to be worth a sentence.
   const worth = (places ?? []).filter((place) => place.worth);
 
   if (worth.length === 0) return null;
@@ -61,9 +47,7 @@ export function WeatherEffectCard() {
               </span>
             </div>
 
-            {/* Two rates side by side rather than one percentage on its own:
-                the percentage is the headline, the rates are what makes it
-                checkable by somebody who does not trust the headline. */}
+            {/* Two rates side by side rather than one percentage on its own: the percentage is the headline, the rates are… */}
             <div className="flex gap-4 text-[0.82rem] text-muted">
               <span>
                 🌧 <Money value={place.wet_per_hour} />/{t('h')} · {n(place.wet_days, 'days')}

@@ -4,13 +4,7 @@ import { ArrowUpRight, Download, Monitor, Plug, Smartphone, Trash2 } from 'lucid
 import { Head } from '@/components/screen';
 import { Button, Card, Field, Switch } from '@/components/ui/kit';
 
-/**
- * Данные и уведомления.
- *
- * Раньше здесь же жили состояние сервиса, новости и помощник — по кусочку
- * от каждого. Кусочки уехали на свои страницы: половина экрана, которую
- * нельзя открыть целиком, только дразнит.
- */
+/** Данные и уведомления. */
 const ELSEWHERE = [
   { to: '/status', title: 'Работает ли сервис', hint: 'Проверить до того, как писать в поддержку.' },
   { to: '/whats-new', title: 'Что нового', hint: 'Шесть последних выпусков.' },

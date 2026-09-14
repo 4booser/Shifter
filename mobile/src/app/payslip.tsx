@@ -11,15 +11,7 @@ import { shortDate } from '@/lib/calendar';
 import { t } from '@/lib/i18n';
 import { money } from '@/lib/types';
 
-/**
- * The payslip, line against line — now where the payslip actually is.
- *
- * A payslip is a piece of paper handed over at the bar; the site got this
- * screen first and the site is at home. Here it opens from the very period row
- * somebody is staring at when the figure looks wrong, and every line carries
- * the formula it came from, because "у нас вышло иначе" only wins arguments
- * when it can show its working.
- */
+/** The payslip, line against line — now where the payslip actually is. */
 
 interface PayslipLine {
   kind: string;

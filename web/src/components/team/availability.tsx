@@ -9,11 +9,7 @@ import { useI18n } from '@/lib/i18n';
 import { pluralWord } from '@/lib/i18n/plural';
 import { Alert } from '@/components/ui/bits';
 
-/**
- * "I cannot work these days." A block list rather than a list of free days:
- * most days are possible, a few are not, and the cheap gesture should be the
- * common one. The crew sees the days; the reason is optional and short.
- */
+/** "I cannot work these days." A block list rather than a list of free days: most days are possible, a few are… */
 export function AvailabilityStrip({
   teamId,
   from,

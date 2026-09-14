@@ -4,17 +4,7 @@ using Xunit;
 
 namespace Shifter.Tests;
 
-/// <summary>
-/// Saving a day must not reprice it.
-///
-/// A placement snapshots the terms it was made under — that is the whole
-/// reason it is an entity rather than a join row. But every save used to
-/// delete the placements and build new ones off the live template, so the
-/// snapshot protected nothing: reprice a template in April, open a March day
-/// to add a note, and March silently earned more. The raise vanished from the
-/// rate history at the same moment, because that history is read out of these
-/// very snapshots.
-/// </summary>
+/// <summary>Saving a day must not reprice it.</summary>
 public class DayShiftEditTests
 {
     private static Shift Template(decimal rate, string start = "09:00", string end = "17:00")

@@ -10,18 +10,7 @@ import { useI18n } from '@/lib/i18n';
 import { Alert } from '@/components/ui/bits';
 import { Icon } from '@/components/ui/icon';
 
-/**
- * The papers without which somebody is not allowed on shift.
- *
- * An expired медкнижка is not a fine — it is being turned away from a shift you
- * were counting on. And people remember it on the day it is needed, which is
- * the one day it cannot be fixed. The app already knows when every shift is;
- * knowing when the paper runs out costs one date and buys a month's warning.
- *
- * A date and a name, and nothing else. A photograph of somebody's medical book
- * is exactly the kind of thing that should not sit on a server: the reminder
- * needs the expiry, and the document itself belongs in a pocket.
- */
+/** The papers without which somebody is not allowed on shift. */
 const KINDS: { value: DocumentKind; label: string }[] = [
   { value: 'medical', label: 'Medical book' },
   { value: 'sanitary', label: 'Food hygiene' },

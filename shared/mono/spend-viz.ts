@@ -1,38 +1,11 @@
-/*
- * One copy, read by the web and by the phone.
- *
- * This file used to exist twice, and the header said parity between the
- * platforms was parity of files — keep them identical by hand. They did not
- * stay identical: the web learned that an hour priced on two worked minutes
- * is not a rate and the phone did not, the web's «what a day usually costs»
- * settled on one window and the phone kept two, and a comment here described
- * a rule the code stopped following. None of that is visible from either side
- * alone, which is the whole problem with parity by discipline.
- *
- * So it lives outside both clients now and neither owns it. The rule that
- * makes that possible: nothing in here may import from a platform. No
- * `@/`, no expo, no next, no react — statements in, numbers out. A test
- * holds that line.
- */
+/* One copy, read by the web and by the phone. */
 import { MonoStatementItem, dayOf, spent } from './mono';
 import { CategoryRule, categorise } from './mono-rules';
 import { isTransfer, merchantKey } from './mono-insights';
 
-/*
- * The visual grammar of «куда уходят деньги».
- *
- * Everything drawable is computed here, away from the markup, so the claims
- * a picture makes — shares that sum to the total, deltas against last month,
- * a peak day's actual receipts — are checkable without a renderer. The web
- * and the phone must tell one story; keeping this file portable (no DOM, no
- * React) is what keeps that cheap.
- */
+/* The visual grammar of «куда уходят деньги». */
 
-/**
- * A stable look per category: same colour and mark every month, whatever
- * rank the category lands at. Colour following the entity, never its rank,
- * is the difference between a chart people learn and one they re-read.
- */
+/** A stable look per category: same colour and mark every month, whatever rank the category lands at. */
 const KNOWN: Record<string, { hue: string; mark: string }> = {
   'Продукты': { hue: '#10b981', mark: '🛒' },
   'Кафе и бары': { hue: '#f59e0b', mark: '☕' },
@@ -107,13 +80,7 @@ export const usualDay = (days: DaySpend[]): number => {
   return spentDays[Math.floor(spentDays.length / 2)];
 };
 
-/**
- * This month's categories against last month's, matched by name.
- *
- * Null instead of a percent where last month had nothing: «новая трата» and
- * «выросла с нуля на бесконечность» are different sentences, and only one
- * of them is sayable.
- */
+/** This month's categories against last month's, matched by name. */
 export interface CategoryDelta {
   name: string;
   total: number;
@@ -181,10 +148,7 @@ export interface MonthFlow {
   spent: number;
 }
 
-/**
- * The last N months as money in against money out, transfers excluded on
- * both sides (the same isTransfer the flow card uses), oldest first.
- */
+/** The last N months as money in against money out, transfers excluded on both sides (the same isTransfer the… */
 export const monthlyFlows = (
   items: MonoStatementItem[],
   months: number,
@@ -259,9 +223,7 @@ export const categoryMonths = (
     overall.set(name, (overall.get(name) ?? 0) + value);
   }
 
-  // The kept names are chosen across the whole window, so a category keeps
-  // its slot (and its colour) from month to month instead of flickering in
-  // and out of «остальное».
+  // The kept names are chosen across the whole window, so a category keeps its slot (and its colour) from month…
   const kept = [...overall.entries()]
     .sort((one, two) => two[1] - one[1])
     .slice(0, keep)
@@ -282,11 +244,7 @@ export const categoryMonths = (
   });
 };
 
-/**
- * The month as a running total, day by day — the pace line. Two of these
- * side by side answer «я трачу быстрее прошлого месяца?» honestly, because
- * both are drawn from the same statement with the same rule.
- */
+/** The month as a running total, day by day — the pace line. */
 export const cumulativeSpend = (
   items: MonoStatementItem[],
   from: string,

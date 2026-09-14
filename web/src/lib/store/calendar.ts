@@ -85,19 +85,11 @@ interface CalendarState {
   /** Extra selected days beyond selectedDate; empty means single-day mode. */
   multiSelected: ReadonlySet<string>;
   pendingOffline: number;
-  /**
-   * A save refused because another device edited the day first. The map
-   * already holds their version (reloaded on refusal); mine waits here for
-   * the person to decide. Never merged.
-   */
+  /** A save refused because another device edited the day first. */
   conflict: { date: string; mine: DaySave } | null;
 }
 
-/**
- * The calendar's state and every write against it. A plain zustand store:
- * actions live beside it as functions, optimistic updates roll back together,
- * and the ranges reload from the server because it owns the money rules.
- */
+/** The calendar's state and every write against it. */
 export const useCalendar = create<CalendarState>(() => ({
   month: currentMonth(),
   selectedDate: todayKey(),
@@ -361,12 +353,7 @@ export function patternTemplateFor(key: string): ShiftTemplate | null {
 
 const UNDO_DEPTH = 20;
 
-/**
- * Keeps what the given days looked like before they are changed. A capped
- * stack: deep enough to walk back a whole painting session, shallow enough
- * that memory never notices. A fresh change forfeits whatever was redoable —
- * the timeline has branched and the old branch is gone.
- */
+/** Keeps what the given days looked like before they are changed. */
 function remember(label: string, keys: string[]): void {
   const days = get().days;
 
@@ -465,9 +452,7 @@ export async function saveDay(key: string, request: DaySave): Promise<void> {
   } catch (error) {
     set({ saving: false });
 
-    // Another device got there first. Their version is loaded so both can
-    // be looked at; mine is parked, and a person decides. Never merged —
-    // a silent merge of money is the worst outcome there is.
+    // Another device got there first.
     if (error instanceof HttpError && error.status === 409) {
       await loadGrid();
       set({ conflict: { date: key, mine: request } });
@@ -518,11 +503,7 @@ export async function flushOffline(): Promise<void> {
   if (sent > 0) reload();
 }
 
-/**
- * Applies a template across a set of dates in one request. Whether it adds or
- * removes follows the first date: dragging back over a filled run clears it.
- * Cells repaint immediately and roll back together if the call fails.
- */
+/** Applies a template across a set of dates in one request. */
 export async function applyToDates(keys: string[], template: ShiftTemplate): Promise<void> {
   if (keys.length === 0) return;
 
@@ -566,10 +547,7 @@ export async function applyToDates(keys: string[], template: ShiftTemplate): Pro
   }
 }
 
-/**
- * A drag in pattern mode: the dates go out grouped by which template lands on
- * them — one request per distinct shift rather than one per day.
- */
+/** A drag in pattern mode: the dates go out grouped by which template lands on them — one request per distinct… */
 export function paintPattern(keys: string[]): void {
   const byTemplate = new Map<number, { template: ShiftTemplate; dates: string[] }>();
 
@@ -667,10 +645,7 @@ export async function applyScheme(scheme: ColourScheme, keys: string[]): Promise
   }
 }
 
-/**
- * Repeats the week before the selected one onto it. Rotas often repeat by
- * habit rather than by formula, which no pattern generator can express.
- */
+/** Repeats the week before the selected one onto it. */
 export function copyPreviousWeek(): void {
   const anchor = get().selectedDate ?? todayKey();
   const target = weekBounds(anchor);
@@ -722,12 +697,7 @@ function replace<T extends { id: number }>(list: T[], item: T): T[] {
   return next;
 }
 
-/**
- * Carries one shift from a day to another — the drag-and-drop write. Both
- * days change under a single undo step; dropping onto a day that already
- * holds the shift just removes it from the source, so dragging twice cannot
- * mint duplicates. Copying leaves the source alone.
- */
+/** Carries one shift from a day to another — the drag-and-drop write. */
 export async function moveShift(
   from: string,
   to: string,
@@ -774,11 +744,7 @@ export async function moveShift(
   void loadSummary();
 }
 
-/**
- * Places specific templates on specific days — the import's write path. One
- * remember covers the lot, so a whole recognised month is one Cmd+Z. Days
- * already holding the template are left alone rather than doubled.
- */
+/** Places specific templates on specific days — the import's write path. */
 export async function placeShifts(entries: { date: string; templateId: number }[]): Promise<void> {
   const days = get().days;
   const fresh = entries.filter(
@@ -950,16 +916,7 @@ export const catalogueActions = {
     set((state) => ({ eventTemplates: state.eventTemplates.filter((item) => item.id !== id) }));
   },
 
-  /**
-   * Puts one palette entry on a run of days — or lifts it off again. Each day
-   * gets its own event rather than one spanning the range: «английский» on
-   * Tuesday and Thursday is two lessons and two prices, not a three-day event.
-   *
-   * A day that already carries this same entry is toggled off instead of
-   * doubled: the second tap with the same brush is how a person says «убери»,
-   * and answering it with a duplicate lesson was the app hearing the tap and
-   * ignoring the meaning.
-   */
+  /** Puts one palette entry on a run of days — or lifts it off again. */
   async paintEvent(keys: string[], template: EventTemplate) {
     if (keys.length === 0) return;
 
@@ -1083,10 +1040,7 @@ function blankDay(date: string): CalendarDayData {
   };
 }
 
-/**
- * A stand-in entry while the save is in flight. Hours and pay stay at zero
- * rather than guessed; the server's answer replaces it a moment later.
- */
+/** A stand-in entry while the save is in flight. */
 function placeholderFor(template: ShiftTemplate, key: string): DayShiftEntry {
   return {
     shift_id: template.id,

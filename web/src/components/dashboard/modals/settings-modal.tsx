@@ -158,9 +158,7 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
           </div>
           <Toggle on={settings.currencyBefore} onChange={(value) => update('currencyBefore', value)} label={t('Symbol before the amount')} />
 
-          {/* Separate from the symbol above, which is only how money is
-              printed. This is the currency two jobs in two countries get
-              added up in, and it has to be a code the bank quotes. */}
+          {/* Separate from the symbol above, which is only how money is printed. */}
           <label className="block">
             <span className="field-label">{t('Add different currencies up in')}</span>
             <div className="flex flex-wrap gap-1.5">

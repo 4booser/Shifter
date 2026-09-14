@@ -13,18 +13,7 @@ public sealed class ParsedReceiptDto
     [JsonPropertyName("currency")] public string? Currency { get; set; }
 }
 
-/// <summary>
-/// A photographed receipt turned into the beginnings of an expense.
-///
-/// An expense gets recorded when somebody remembers it, and two days later
-/// nobody does. The receipt is in a pocket exactly when it is worth asking
-/// about, which is the whole of why this exists.
-///
-/// Every field comes back nullable and the form stays editable whatever
-/// happens. Receipts are creased, faded, photographed at an angle in bad light,
-/// and a reader that fails by clearing the form is worse than no reader — the
-/// person came here to record a number and now has to start again.
-/// </summary>
+/// <summary>A photographed receipt turned into the beginnings of an expense.</summary>
 public static class ReceiptParse
 {
     public sealed record Read(decimal? Amount, DateOnly? Date, string? Merchant, string? Currency);
@@ -117,10 +106,7 @@ public static class ReceiptParse
         return name.Length > MerchantMax ? name[..MerchantMax] : name;
     }
 
-    /// <summary>
-    /// Three letters or nothing. A currency the app cannot name is better
-    /// left to the form's own default than guessed at from a symbol.
-    /// </summary>
+    /// <summary>Three letters or nothing.</summary>
     private static string? Currency(string? value)
     {
         var code = (value ?? string.Empty).Trim().ToUpperInvariant();

@@ -6,18 +6,7 @@ using Xunit;
 
 namespace Shifter.Api.Tests;
 
-/// <summary>
-/// The SQL counter, and the budgets it exists to hold.
-///
-/// The first assertion is on the instrument itself: a counter that reports
-/// zero for a request that certainly queried is broken, and the previous one
-/// was thrown away for exactly that. Only after the counter proves it counts
-/// do the budgets mean anything.
-///
-/// The budgets are next to the point, not the point: a month view that is
-/// fast beside its own database can be a hundred round trips over a real
-/// network, and milliseconds hide what a count shows.
-/// </summary>
+/// <summary>The SQL counter, and the budgets it exists to hold.</summary>
 [Collection("api")]
 public sealed class QueryBudgetTests(Api api)
 {

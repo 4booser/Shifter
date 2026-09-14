@@ -4,11 +4,7 @@ namespace Shifter.Application.Features.business.Services.Interfaces;
 
 public interface IDayHandler
 {
-    /// <summary>
-    /// The range and its totals. Pass a currency code to also get the whole
-    /// thing restated in it, which only means anything where more than one
-    /// currency was earned in.
-    /// </summary>
+    /// <summary>The range and its totals.</summary>
     Task<DaysDto> ListAsync(
         int userId, DateOnly from, DateOnly to, CancellationToken ct, string? baseCurrency = null);
     Task<DayDto> SaveAsync(DaySaveDto request, int userId, DateOnly date, CancellationToken ct);

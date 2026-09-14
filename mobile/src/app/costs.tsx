@@ -28,14 +28,7 @@ import {
 } from '@/lib/types';
 import { t } from '@/lib/i18n';
 
-/**
- * What the work costs, and the papers that gate a shift.
- *
- * Both belong on the phone. An expense is recorded in the moment the money
- * leaves — a taxi at four in the morning is not a thing anybody opens a laptop
- * for — and a medical book is remembered while standing in the clinic queue,
- * not while sitting at a desk.
- */
+/** What the work costs, and the papers that gate a shift. */
 export default function CostsScreen() {
   const router = useRouter();
   const scheme = useColorScheme();
@@ -57,9 +50,7 @@ export default function CostsScreen() {
   const [docUntil, setDocUntil] = useState('');
   const [addingDoc, setAddingDoc] = useState(false);
 
-  // The receipt reader, offered until the server says there is no model
-  // behind it. The pocket is where the receipt is, which is the entire reason
-  // the feature exists — the site got it first only by accident of order.
+  // The receipt reader, offered until the server says there is no model behind it.
   const [canScan, setCanScan] = useState(true);
   const [scanning, setScanning] = useState(false);
 
@@ -96,9 +87,7 @@ export default function CostsScreen() {
         merchant: string | null;
       }>(`/shifter/v1/import/receipt?today=${today}`, form);
 
-      // Only what was actually read; everything stays editable. A reader that
-      // failed by clearing the form would cost somebody the number they came
-      // here to record.
+      // Only what was actually read; everything stays editable.
       if (read.amount !== null) setAmount(`${read.amount}`);
       if (read.merchant !== null && note.trim() === '') setNote(read.merchant);
 

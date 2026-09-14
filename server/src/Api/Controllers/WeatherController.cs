@@ -7,9 +7,7 @@ using Shifter.Application.Features.Weather;
 
 namespace Shifter.Api.Controllers;
 
-/// <summary>
-/// Somebody's own record read against the sky over their own place.
-/// </summary>
+/// <summary>Somebody's own record read against the sky over their own place.</summary>
 [Authorize]
 [Route("shifter/v1/weather")]
 public class WeatherController : ControllerBase

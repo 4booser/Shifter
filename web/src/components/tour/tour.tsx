@@ -7,11 +7,7 @@ import { useCalendar } from '@/lib/store/calendar';
 import { useI18n } from '@/lib/i18n';
 import { remember } from '@/lib/api/http';
 
-/**
- * A one-time spotlight walk over what is new: shade everything, ring one
- * thing, say one sentence about it. Steps whose targets are not on the page
- * are skipped, so the tour survives layout changes without breaking.
- */
+/** A one-time spotlight walk over what is new: shade everything, ring one thing, say one sentence about it. */
 
 const SEEN_KEY = 'shifter.tour.v1';
 
@@ -80,10 +76,7 @@ export function FeatureTour() {
 
     if (localStorage.getItem(SEEN_KEY) === null) {
       handle = window.setTimeout(() => {
-        // Auto-run is for newcomers. A seasoned account on a fresh browser
-        // (new laptop, cleared storage) knows the page better than the tour
-        // does — the audit caught the spotlight sitting on top of a hundred
-        // shifts. The header's own button still starts it on demand.
+        // Auto-run is for newcomers.
         const seasoned = useCalendar.getState().summary.days_worked >= 3;
 
         if (!seasoned && document.querySelector('[data-tour="tiles"]') !== null) begin();

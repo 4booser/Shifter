@@ -5,14 +5,7 @@ using Shifter.Domain.Entities;
 
 namespace Shifter.Api.Controllers;
 
-/// <summary>
-/// What to ask before signing.
-///
-/// The text never leaves the request. It is not stored, not logged, and not
-/// sent anywhere: a contract carries somebody's name, their pay and their
-/// employer, and the whole feature is a keyword search that has no reason to
-/// keep any of it.
-/// </summary>
+/// <summary>What to ask before signing.</summary>
 [Authorize]
 [Route("shifter/v1/contract")]
 public class ContractController : ControllerBase

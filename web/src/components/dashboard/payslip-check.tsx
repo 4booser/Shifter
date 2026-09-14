@@ -11,18 +11,7 @@ import { Alert, Money } from '@/components/ui/bits';
 import { Modal } from '@/components/ui/modal';
 import { formatPeriod } from '@/lib/calendar/calendar-date';
 
-/**
- * The payslip, line against line.
- *
- * The payouts page already says whether a period came up short. That is an
- * argument: two totals that disagree, and no way to tell which of them is
- * wrong. This says *where* — every line carries the arithmetic that produced
- * it, in the units a payslip is written in, so "the night hours are missing:
- * 6 ч × 200 × 0,2" replaces "they owe me ₴1 440".
- *
- * A report is read; a checklist is walked. The difference is whether it ends
- * in a conversation with a manager.
- */
+/** The payslip, line against line. */
 const LABEL: Record<PayslipLine['kind'], string> = {
   base: 'Hours at the rate',
   extras: 'Salary, overtime and premiums',
@@ -68,11 +57,7 @@ export function PayslipCheckModal({
 
   const amount = (value: number) => formatIn(check?.currency ?? null, value);
 
-  /**
-   * Only the lines somebody has actually typed a figure into, and only where
-   * it differs. A blank field is not a claim of zero — that distinction is the
-   * whole reason this asks rather than assumes.
-   */
+  /** Only the lines somebody has actually typed a figure into, and only where it differs. */
   const gaps = (check?.lines ?? [])
     .map((line, index) => {
       const typed = said[`${index}`];

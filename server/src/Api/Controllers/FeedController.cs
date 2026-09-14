@@ -14,12 +14,7 @@ using System.Linq;
 
 namespace Shifter.Api.Controllers;
 
-/// <summary>
-/// The calendar-subscription feed: a secret URL Google or Apple Calendar
-/// polls on its own schedule, so shifts placed here appear on the phone
-/// without anyone exporting anything. Names and times travel; money never
-/// does — a subscribed calendar is shared far more casually than an account.
-/// </summary>
+/// <summary>The calendar-subscription feed: a secret URL Google or Apple Calendar polls on its own schedule, so shifts…</summary>
 [Route("")]
 public class FeedController : ControllerBase
 {
@@ -108,19 +103,7 @@ public class FeedController : ControllerBase
         return string.Join("\r\n", lines.Select(Fold)) + "\r\n";
     }
 
-    /// <summary>
-    /// RFC 5545 folds at 75 octets, not 75 characters.
-    ///
-    /// This feed did not fold at all. Cyrillic is two bytes a letter and an
-    /// emoji is four, so a shift called «Вечерняя смена в баре на Подоле
-    /// (второй этаж)» leaves here as a line of ninety-odd octets and a strict
-    /// reader is entitled to refuse the whole calendar. The app's own .ics
-    /// export learned this the hard way; the subscription feed, which is the
-    /// copy that lives in somebody's Google Calendar for months, had not.
-    ///
-    /// The walk is over whole characters: slicing by byte would emit half a
-    /// letter, which is worse than a long line.
-    /// </summary>
+    /// <summary>RFC 5545 folds at 75 octets, not 75 characters.</summary>
     private static string Fold(string line)
     {
         static int Octets(string text) => Encoding.UTF8.GetByteCount(text);

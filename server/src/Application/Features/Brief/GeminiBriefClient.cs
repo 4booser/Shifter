@@ -9,12 +9,7 @@ using Shifter.Application.Common.Text;
 
 namespace Shifter.Application.Features.Brief;
 
-/// <summary>
-/// Asks Gemini to say our numbers like a person would. Strictly bounded: the
-/// facts go in as text, a tiny JSON object comes back, and anything else —
-/// a timeout, a refusal, a malformed answer — falls through to the local
-/// writer. The model is a stylist here, never an accountant.
-/// </summary>
+/// <summary>Asks Gemini to say our numbers like a person would.</summary>
 public sealed class GeminiBriefClient
 {
     private readonly IHttpClientFactory _http;

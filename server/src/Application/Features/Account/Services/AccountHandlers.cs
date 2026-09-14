@@ -8,11 +8,7 @@ using Shifter.Infrastructure.Repositories.Interfaces;
 
 namespace Shifter.Application.Features.Account.Services;
 
-/// <summary>
-/// Everything the account page can do. Each handler takes the user id from the
-/// request record, which the controller fills from the token — never from the
-/// body, or one account could edit another.
-/// </summary>
+/// <summary>Everything the account page can do.</summary>
 public static class AccountRules
 {
     public const int NameMaxLength = 60;

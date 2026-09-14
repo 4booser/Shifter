@@ -15,11 +15,7 @@ import { calendarActions, useCalendar } from '@/lib/store/calendar';
 import { useMoney } from '@/lib/settings/money';
 import { Icon } from '@/components/ui/icon';
 
-/**
- * Cmd+K from anywhere: navigation, day search, appearance, the live shift —
- * one text box away. Fuzzy subsequence matching, ranked by how tight the
- * match is, so "wbh" still lands on Webhooks.
- */
+/** Cmd+K from anywhere: navigation, day search, appearance, the live shift — one text box away. */
 
 interface Command {
   id: string;

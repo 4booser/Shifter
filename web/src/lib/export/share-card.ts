@@ -47,10 +47,7 @@ const SPLIT_Y = 396;
 const CHART_Y = 470;
 const CHART_H = 96;
 
-/**
- * One slice of where the money came from. Kept out of the theme because these
- * have to stay distinguishable from each other rather than match the accent.
- */
+/** One slice of where the money came from. */
 const SPLIT_COLOURS = ['#4F46E5', '#0D9488', '#F59E0B', '#EC4899'];
 
 interface Slice {
@@ -59,16 +56,7 @@ interface Slice {
   colour: string;
 }
 
-/**
- * Draws the period's numbers onto a canvas and hands back a PNG. Painted
- * directly rather than screenshotting the DOM: an SVG lifted out of the page
- * loses every CSS variable it was coloured with, and a canvas gives a fixed,
- * predictable frame to share.
- *
- * The card carries what someone actually wants to show or check later — what
- * came in, what is left after tax, where it came from, and which days it was
- * earned on — rather than only the one headline figure it used to.
- */
+/** Draws the period's numbers onto a canvas and hands back a PNG. */
 export function drawShareCard(data: CardData, theme: CardTheme): Promise<Blob> {
   const canvas = document.createElement('canvas');
   const scale = 2; // Retina-sharp without depending on the current screen.
@@ -316,8 +304,6 @@ export function drawShareCard(data: CardData, theme: CardTheme): Promise<Blob> {
   });
 }
 
-
-
 function measure(ctx: CanvasRenderingContext2D, value: string, font: string): number {
   const previous = ctx.font;
 
@@ -353,11 +339,7 @@ function roundRect(
   ctx.closePath();
 }
 
-/**
- * The theme hands back whatever CSS holds — a hex, an rgb(), a colour name.
- * Canvas has no opacity on a fill style, so the alpha goes through a colour
- * the browser parses for us rather than through string surgery on the input.
- */
+/** The theme hands back whatever CSS holds — a hex, an rgb(), a colour name. */
 function withAlpha(colour: string, alpha: number): string {
   const probe = document.createElement('canvas').getContext('2d');
 

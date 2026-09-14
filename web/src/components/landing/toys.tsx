@@ -4,20 +4,13 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 
 const UAH = (value: number) => `₴${Math.round(value).toLocaleString('ru')}`;
 
-/**
- * The bank tab's forecast, as a toy: a balance line that has already
- * happened, then the dashed guess of where it goes — with rent day marked.
- * The dashes are the point: the app draws what it knows solid and what it
- * guesses dashed, and the toy teaches that distinction in one glance.
- */
+/** The bank tab's forecast, as a toy: a balance line that has already happened, then the dashed guess of where… */
 export function BankForecastDemo() {
   const [salaryDay, setSalaryDay] = useState(10);
   const [rent, setRent] = useState(9000);
 
   const { past, future, rentAt, thinnest, crosses } = useMemo(() => {
-    // Fourteen days behind us, sixteen ahead. The past wiggles like real
-    // spending; the future is usual-per-day spending, minus rent on its day,
-    // plus payday on its.
+    // Fourteen days behind us, sixteen ahead.
     const start = 12400;
     const wobble = [0, -420, -180, -640, -90, -380, -720, -150, -410, -260, -580, -120, -350, -290];
     const pastPoints: number[] = [];
@@ -130,11 +123,7 @@ export function BankForecastDemo() {
   );
 }
 
-/**
- * The papers desk, as a receipt that prints itself line by line. Thermal
- * tickets are the trade's own vernacular — every bar closes the night over
- * one — so the income statement gets to look like the thing it summarises.
- */
+/** The papers desk, as a receipt that prints itself line by line. */
 export function ReceiptDemo() {
   const LINES = [
     ['SHIFTER · СПРАВКА О ДОХОДЕ', ''],

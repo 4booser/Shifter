@@ -1,19 +1,6 @@
 namespace Shifter.Domain.Entities;
 
-/// <summary>
-/// Whether a long run of days shows up in somebody's tips.
-///
-/// The rain method, applied to streaks: tips per hour on the first and second
-/// day of a run against the sixth day and deeper. If the deep days run lower,
-/// that is the one argument for a day off that speaks money — and it is
-/// reported as a coincidence, because that is what a comparison of two piles
-/// of days is. Same sufficiency thresholds as the weather: too little data on
-/// either side and the answer is silence, not a smaller font.
-///
-/// Tips per hour and nothing else, for the same reason as the weather: wage
-/// does not move with tiredness, so folding it in would water down a real
-/// effect until it vanished.
-/// </summary>
+/// <summary>Whether a long run of days shows up in somebody's tips.</summary>
 public static class FatigueEffect
 {
     /// <summary>Same floor as WeatherEffect: fewer days than this is not a comparison.</summary>

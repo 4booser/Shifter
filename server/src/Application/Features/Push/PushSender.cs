@@ -7,12 +7,7 @@ using Entity = Shifter.Domain.Entities.PushSubscription;
 
 namespace Shifter.Application.Features.Push;
 
-/// <summary>
-/// The single place a notification physically leaves from. Wraps the VAPID
-/// client and owns the one piece of bookkeeping senders always forget: a
-/// push service answering 404 or 410 means the browser is gone, and the row
-/// must go with it or every later pass wastes a request on a corpse.
-/// </summary>
+/// <summary>The single place a notification physically leaves from.</summary>
 public sealed class PushSender
 {
     private readonly PushOptions _options;
@@ -26,10 +21,7 @@ public sealed class PushSender
 
     public bool Enabled => _options.Enabled;
 
-    /// <summary>
-    /// Sends one notification. Returns false when the subscription is dead
-    /// and should be deleted; transient failures just log and count as sent.
-    /// </summary>
+    /// <summary>Sends one notification.</summary>
     public async Task<bool> SendAsync(Entity subscription, string title, string body, string url)
     {
         if (!_options.Enabled) return true;

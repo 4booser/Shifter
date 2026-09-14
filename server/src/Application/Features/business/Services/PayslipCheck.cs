@@ -5,15 +5,7 @@ using Shifter.Domain.Entities;
 
 namespace Shifter.Application.Features.business.Services;
 
-/// <summary>
-/// A pay period at one place, taken apart into the lines a payslip has.
-///
-/// The reconciliation already says whether a period came up short. This says
-/// *where*, which is a different and more useful thing: a total that disagrees
-/// by ₴1 440 is an argument, and "the night hours were not paid: 6 × 200 × 0,2"
-/// is a question with an answer. Every line carries its own arithmetic in the
-/// units a payslip uses, so the two documents can be read side by side.
-/// </summary>
+/// <summary>A pay period at one place, taken apart into the lines a payslip has.</summary>
 public static class PayslipCheck
 {
     public static PayslipCheckDto For(

@@ -14,28 +14,13 @@ public static class TeamRules
     public const int NameMaxLength = 60;
     public const int MaxMembers = 60;
 
-    /// <summary>
-    /// The colours a crew is drawn in, in the order they are handed out.
-    ///
-    /// Validated for colour blindness rather than chosen by eye: no adjacent
-    /// pair separates by less than ΔE 10 under deuteranopia, and every one of
-    /// them clears 3:1 against both the light and the dark surface. The order
-    /// is the assignment order and must not be shuffled — re-stepping it would
-    /// change the CVD separation the list was picked for.
-    ///
-    /// A name is always drawn beside the colour, so nobody is ever identified
-    /// by colour alone; past seven people it wraps, and anyone can pick their
-    /// own instead.
-    /// </summary>
+    /// <summary>The colours a crew is drawn in, in the order they are handed out.</summary>
     public static readonly string[] MemberColours =
     [
         "#6366F1", "#D97706", "#0891B2", "#DB2777", "#65A30D", "#A855F7", "#059669",
     ];
 
-    /// <summary>
-    /// The first colour nobody in the team is using, so a crew of four is four
-    /// obviously different colours rather than whatever the counter landed on.
-    /// </summary>
+    /// <summary>The first colour nobody in the team is using, so a crew of four is four obviously different colours rather…</summary>
     public static string NextColour(Team team)
     {
         HashSet<string> taken = (team.Members ?? [])
@@ -46,10 +31,7 @@ public static class TeamRules
             ?? MemberColours[(team.Members?.Count ?? 0) % MemberColours.Length];
     }
 
-    /// <summary>
-    /// Six-digit hex only. The value is written into a style attribute on every
-    /// other member's screen, so anything else does not get stored.
-    /// </summary>
+    /// <summary>Six-digit hex only.</summary>
     public static string RequireColour(string? value)
     {
         string colour = (value ?? string.Empty).Trim();
@@ -63,10 +45,7 @@ public static class TeamRules
         return colour.ToUpperInvariant();
     }
 
-    /// <summary>
-    /// Six characters from an alphabet with no 0/O or 1/I/L in it: the code
-    /// gets read aloud across a bar, and those are the pairs people mishear.
-    /// </summary>
+    /// <summary>Six characters from an alphabet with no 0/O or 1/I/L in it: the code gets read aloud across a bar, and those…</summary>
     private const string CodeAlphabet = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 
     public static string NewCode()
@@ -279,11 +258,7 @@ public class RotateCodeHandler : IRequestHandler<RotateCodeDto, TeamDto>
     }
 }
 
-/// <summary>
-/// Your own membership: the name and colour the crew sees you as, and how much
-/// of yourself you show them. Nobody can edit anyone else's — not even the
-/// owner, who can remove a person but not decide what they share.
-/// </summary>
+/// <summary>Your own membership: the name and colour the crew sees you as, and how much of yourself you show them.</summary>
 public class UpdateMembershipHandler : IRequestHandler<UpdateMembershipDto, MembershipDto>
 {
     private readonly ITeamRepository _teams;
@@ -345,11 +320,7 @@ public class UpdateMembershipHandler : IRequestHandler<UpdateMembershipDto, Memb
     }
 }
 
-/// <summary>
-/// Marking one shift shown or hidden on every rota it appears on. Not scoped to
-/// a team on purpose: someone in two crews who hides a shift means it, and
-/// asking them to hide it once per team is how it ends up published by mistake.
-/// </summary>
+/// <summary>Marking one shift shown or hidden on every rota it appears on.</summary>
 public class SetShiftVisibilityHandler : IRequestHandler<SetShiftVisibilityDto, Unit>
 {
     private readonly ITeamRepository _teams;
@@ -564,14 +535,7 @@ public class GetRotaHandler : IRequestHandler<GetRotaDto, RotaDto>
             !guarded && members.Any(member => member.ShareEarnings && member.UserId != request.UserId));
     }
 
-    /// <summary>
-    /// Day by day across the whole team: how many are on, who is free, and how
-    /// many shifts are looking for cover.
-    ///
-    /// "Who is free" is the question a rota is actually opened to answer —
-    /// somebody dropped out, and the alternative is ringing round the group.
-    /// It names only people, never anything about them.
-    /// </summary>
+    /// <summary>Day by day across the whole team: how many are on, who is free, and how many shifts are looking for cover.</summary>
     private static RotaDayDto[] Days(
         GetRotaDto request,
         RotaMemberDto[] members,
@@ -617,10 +581,7 @@ public class GetRotaHandler : IRequestHandler<GetRotaDto, RotaDto>
         _ => false,
     };
 
-    /// <summary>
-    /// The same arithmetic DayShift uses, applied to the projected row: clock
-    /// time wrapping past midnight, less the unpaid break.
-    /// </summary>
+    /// <summary>The same arithmetic DayShift uses, applied to the projected row: clock time wrapping past midnight, less the…</summary>
     private static double PaidHours(RotaRow row)
     {
         TimeSpan span = row.EndTime - row.StartTime;

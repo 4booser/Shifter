@@ -1,13 +1,6 @@
 namespace Shifter.Domain.Entities;
 
-/// <summary>
-/// One crossed goal, kept.
-///
-/// CelebratedOn on the goal itself remembers only the latest period — enough
-/// to cheer once, useless as a history. This row is the trophy shelf's
-/// material: which period, what the bar was, when it was crossed. Nothing
-/// here is editable; a shelf you can rewrite is a story, not a record.
-/// </summary>
+/// <summary>One crossed goal, kept.</summary>
 public sealed class GoalCheer
 {
     public int Id { get; set; }

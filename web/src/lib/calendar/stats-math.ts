@@ -1,8 +1,4 @@
-/**
- * The statistics page's arithmetic, extracted pure so the page stays layout.
- * Ported 1:1 from the previous client — every block mirrors a server rule or
- * answers one question the totals alone cannot.
- */
+/** The statistics page's arithmetic, extracted pure so the page stays layout. */
 
 import { keysBetween, weekBounds } from './calendar-date';
 import { CalendarDayData, DaysResponse, Goal } from './models';
@@ -43,11 +39,7 @@ export function resolveGoal(
   return pinned ?? ofPeriod.find((goal) => goal.anchor === null) ?? null;
 }
 
-/**
- * The goal that governs a range, and what it asks for over it. Only whole
- * periods get a figure: half a month against a monthly goal is not half the
- * target in any sense a reader would accept.
- */
+/** The goal that governs a range, and what it asks for over it. */
 export function activeGoalFor(
   goals: Goal[],
   from: string,

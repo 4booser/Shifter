@@ -31,19 +31,7 @@ import { t } from '@/lib/i18n';
 
 const COLOURS = ['#6366F1', '#14B8A6', '#A855F7', '#FF5C7A', '#FFA53D', '#22C55E', '#38BDF8', '#64748B'];
 
-/**
- * Places of work, on the phone.
- *
- * Settings sent people to the website for this, which is a strange thing for
- * an app whose whole job is money: the place is what decides how the money is
- * counted. When the wage lands, what an hour past forty is worth, what the
- * night pays, what the till takes back for a meal — all of it lived behind a
- * browser somebody was never going to open.
- *
- * The fields the phone does not show are carried through untouched. A place is
- * saved whole, like a day, and sending a shorter object would quietly reset
- * the holiday calendar and the commission cycle to their defaults.
- */
+/** Places of work, on the phone. */
 export default function PlacesScreen() {
   const scheme = useColorScheme();
   const palette = Colors[scheme === 'dark' ? 'dark' : 'light'];

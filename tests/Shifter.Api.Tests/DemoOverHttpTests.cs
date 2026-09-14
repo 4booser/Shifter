@@ -6,15 +6,7 @@ using Xunit;
 
 namespace Shifter.Api.Tests;
 
-/// <summary>
-/// «Посмотреть на примере», asked of the running server.
-///
-/// The demonstration account is the only screen in this application a
-/// stranger can reach without typing a month of their own work in first, and
-/// the thing that makes it worth anything is that the numbers on it are
-/// worked out by the same code that works out everybody else's. So this asks
-/// for one and then reads what the calendar reads.
-/// </summary>
+/// <summary>«Посмотреть на примере», asked of the running server.</summary>
 [Collection("api")]
 public sealed class DemoOverHttpTests(Api api)
 {
@@ -29,9 +21,7 @@ public sealed class DemoOverHttpTests(Api api)
         return JsonDocument.Parse(body).RootElement.Clone();
     }
 
-    /// <summary>
-    /// A visitor with no account gets a signed-in one with work already in it.
-    /// </summary>
+    /// <summary>A visitor with no account gets a signed-in one with work already in it.</summary>
     [Fact]
     public async Task An_example_account_arrives_with_a_half_year_of_work_in_it()
     {
@@ -83,12 +73,7 @@ public sealed class DemoOverHttpTests(Api api)
         Assert.True(payouts.GetArrayLength() > 5);
     }
 
-    /// <summary>
-    /// Two visitors are looking at the same example, not at each other's.
-    ///
-    /// A shared account would show the last stranger's typing to the next
-    /// one; a per-visitor one must not leak either way.
-    /// </summary>
+    /// <summary>Two visitors are looking at the same example, not at each other's.</summary>
     [Fact]
     public async Task Two_visitors_get_their_own_copies()
     {

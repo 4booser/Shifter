@@ -15,14 +15,7 @@ interface CityRow {
   market: { median: number; low: number; high: number; employers: number; listings: number } | null;
 }
 
-/**
- * «Где мой час дороже» — the seasonal worker's own history, city by city.
- *
- * Rates come from their own worked hourly shifts at places they tagged with
- * a city; the market band appears only where the public sample clears the
- * same anonymity thresholds the gig board uses. One city or none tagged —
- * the card stays off the page.
- */
+/** «Где мой час дороже» — the seasonal worker's own history, city by city. */
 export function CitiesCard() {
   const { t, n } = useI18n();
   const { format } = useMoney();

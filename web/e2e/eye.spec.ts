@@ -2,13 +2,7 @@ import { expect, test } from '@playwright/test';
 
 import { apiPut, createShiftTemplate, registerUser, signIn } from './helpers';
 
-/**
- * The eye's warden. «Скрыть суммы» has been repaired by hand twice; this
- * walks the money pages with the eye shut and fails on any hryvnia figure
- * still visible. The dashboard is deliberately out of scope for now: the
- * brief embeds server-composed sentences with figures in them, and hiding
- * those is a different feature, not a leak of the client formatter.
- */
+/** The eye's warden. */
 test('the shut eye leaves no hryvnia figures behind', async ({ page }) => {
   const user = await registerUser();
   const shift = await createShiftTemplate(user.token);
@@ -60,9 +54,7 @@ test('the shut eye leaves no hryvnia figures behind', async ({ page }) => {
 
     const text = await page.evaluate(() => document.body.innerText);
 
-    // ₴ glued to digits on the same line, in either order — the client money
-    // formats. ₴••• is the eye doing its job and passes; \s would leap across
-    // newlines and marry a date to the next line's hryvnia, so spaces only.
+    // ₴ glued to digits on the same line, in either order — the client money formats.
     const leaks = text.match(/₴[  ]?\d|\d[  ]?₴/g) ?? [];
 
     expect(leaks, `${path} shows money with the eye shut: ${leaks.slice(0, 5).join(' | ')}`).toEqual([]);

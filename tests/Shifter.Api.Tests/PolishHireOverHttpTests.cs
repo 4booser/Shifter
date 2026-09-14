@@ -5,16 +5,7 @@ using Xunit;
 
 namespace Shifter.Api.Tests;
 
-/// <summary>
-/// The umowa-zlecenie story, walked whole: a PLN place with the person's own
-/// rate, their own deduction percent and their own minimum-wage floor — and
-/// not one legal number from the app's head.
-///
-/// The pieces were built by earlier waves (place currency, tax percent,
-/// MinimumHourly, below_floor); this test is the proof they compose into the
-/// Polish hire the plan describes, and the tripwire if a refactor uncouples
-/// them.
-/// </summary>
+/// <summary>The umowa-zlecenie story, walked whole: a PLN place with the person's own rate, their own deduction percent…</summary>
 [Collection("api")]
 public sealed class PolishHireOverHttpTests(Api api)
 {

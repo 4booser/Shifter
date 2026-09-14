@@ -1,14 +1,4 @@
-/*
- * The line that keeps one copy possible.
- *
- * ../shared holds the arithmetic the web and the phone both read. It can only
- * stay one copy while it depends on neither platform: the moment something in
- * there reaches for `@/`, for expo, or for next, one of the two clients stops
- * being able to compile it and the file goes back to being two files.
- *
- * Nothing about that is visible while editing — the web's own tsc is perfectly
- * happy with an `@/` import. This test is the only thing that notices.
- */
+/* The line that keeps one copy possible. */
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -40,9 +30,7 @@ describe('shared', () => {
 
     for (const file of filesUnder(SHARED)) {
       for (const specifier of importsOf(readFileSync(file, 'utf8'))) {
-        // A relative path inside shared/ is the only allowed shape. Anything
-        // else is a platform — there are no runtime dependencies here on
-        // purpose, not even a date library.
+        // A relative path inside shared/ is the only allowed shape.
         if (!specifier.startsWith('./') && !specifier.startsWith('../')) {
           strays.push(`${file.slice(SHARED.length + 1)} → ${specifier}`);
         }

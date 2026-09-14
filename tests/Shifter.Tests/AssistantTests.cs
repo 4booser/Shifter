@@ -5,21 +5,12 @@ using Xunit;
 
 namespace Shifter.Tests;
 
-/// <summary>
-/// The assistant's two halves that must not need a model: which blanks are
-/// worth asking about, and what a plain question gets answered with. Both are
-/// pure functions of figures we already computed, which is the point — the
-/// model dresses these answers, it never replaces them.
-/// </summary>
+/// <summary>The assistant's two halves that must not need a model: which blanks are worth asking about, and what a plain…</summary>
 public class AssistantTests
 {
     private static readonly DateOnly Today = new(2026, 3, 20);
 
-    /// <summary>
-    /// Money is grouped with a non-breaking space on purpose — "18 140" must
-    /// not wrap in the middle — so the assertions compare against text with
-    /// every kind of space flattened rather than pinning the codepoint.
-    /// </summary>
+    /// <summary>Money is grouped with a non-breaking space on purpose — "18 140" must not wrap in the middle — so the…</summary>
     private static string Flat(string text) =>
         new(text.Select(character => char.IsWhiteSpace(character) ? ' ' : character).ToArray());
 
@@ -230,11 +221,7 @@ public class AssistantTests
         Assert.DoesNotContain("₴ в час", answer);
     }
 
-    /// <summary>
-    /// The failure that made the floor an hour rather than nought: a shift
-    /// closed after fifty seconds, and the arithmetic was happy to divide by
-    /// two hundredths and call the answer a wage.
-    /// </summary>
+    /// <summary>The failure that made the floor an hour rather than nought: a shift closed after fifty seconds, and the…</summary>
     [Fact]
     public void PartOfAnHourIsNotAnHourlyRate()
     {

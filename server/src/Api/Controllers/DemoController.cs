@@ -15,22 +15,7 @@ using Shifter.Infrastructure.Persistence.DbContexts;
 
 namespace Shifter.Api.Controllers;
 
-/// <summary>
-/// «Посмотреть на примере» for the whole application.
-///
-/// The bank tab has had this for months and it is the only reason anybody
-/// can see that page without handing over a token; the rest of the
-/// application had nothing of the kind, so the only way to find out what it
-/// does was to register, type in a month of one's own work, and hope.
-///
-/// A visitor gets their own throwaway account with half a year of invented
-/// work in it, signed in immediately. Not a shared read-only account: a
-/// demonstration where nothing can be pressed teaches less than the
-/// screenshots it replaces, and a shared one that everybody can write to
-/// would show the last stranger's typing to the next. It deletes itself
-/// after two days, and the sweep runs here rather than in a background
-/// service — one query on a path that is already writing.
-/// </summary>
+/// <summary>«Посмотреть на примере» for the whole application.</summary>
 [AllowAnonymous]
 [Route("shifter/v1/demo")]
 public sealed class DemoController : ControllerBase
@@ -52,15 +37,7 @@ public sealed class DemoController : ControllerBase
         _logger = logger;
     }
 
-    /*
-     * Five a quarter of an hour from one address.
-     *
-     * This endpoint writes a user and roughly two hundred rows without asking
-     * anybody for anything, which is a thing worth counting. In process
-     * memory, like the login throttle beside it and for the same reason: the
-     * app runs as one instance, and a restart forgiving the counters costs
-     * less than a table nobody would ever read.
-     */
+    /* Five a quarter of an hour from one address. */
     // Five rather than three: the suite that proves this works asks for
     // three of them in a row from one address, and a limit a test trips over
     // is a limit somebody will quietly raise at the wrong moment.
@@ -135,12 +112,7 @@ public sealed class DemoController : ControllerBase
         }
     }
 
-    /// <summary>
-    /// Yesterday's visitors, removed. The cascade rules under these tables
-    /// take the days, shifts, places and payouts with the account — which
-    /// they did not do until this week, when deleting an account with a
-    /// break on a shift was still a database error.
-    /// </summary>
+    /// <summary>Yesterday's visitors, removed.</summary>
     private async Task SweepAsync(CancellationToken ct)
     {
         DateTime now = DateTime.UtcNow;

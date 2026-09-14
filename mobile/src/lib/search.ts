@@ -2,16 +2,7 @@ import { dayOf, fromMinor, MonoStatementItem, payerName } from '@/lib/mono';
 import { CalendarDayData } from './types';
 import { t } from '@/lib/i18n';
 
-/**
- * Finding one day out of two years of them.
- *
- * The only way back to a particular shift used to be scrolling the calendar,
- * which works until the thing being looked for is eight months back. What
- * people actually remember is not the date: it is the note they left, the name
- * of the shift, or the number — "the night I made three thousand". So all
- * three are searchable, and a number is searched as a number rather than as
- * text, because 3000 should find 2 995.
- */
+/** Finding one day out of two years of them. */
 export interface Hit {
   kind: 'day' | 'money';
   /** 'YYYY-MM-DD', which is also where tapping the hit goes. */
@@ -24,23 +15,14 @@ export interface Hit {
 
 const fold = (value: string) => value.toLowerCase().trim();
 
-/**
- * A query of digits might be money — and might be a year. "2026" is both a
- * plausible amount and the only way somebody would ask for a whole year, so
- * both are searched and the results joined rather than one of them being
- * guessed at.
- */
+/** A query of digits might be money — and might be a year. */
 const amountIn = (query: string): number | null => {
   const digits = query.replace(/[\s,.]/g, '');
 
   return /^\d{2,}$/.test(digits) ? Number(digits) : null;
 };
 
-/**
- * How close an amount has to be to count as the one somebody meant. Five per
- * cent, so "3000" finds 2 995 and 3 100 but not 3 400 — a search that returns
- * everything is a search nobody uses twice.
- */
+/** How close an amount has to be to count as the one somebody meant. */
 const NEAR = 0.05;
 
 const near = (value: number, wanted: number) =>

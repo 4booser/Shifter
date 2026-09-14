@@ -1,15 +1,10 @@
-/**
- * Inline SVG icons, stroke follows currentColor. Same set as before plus a few
- * the new layout needs; drawn on a 24-box at 1.8 stroke.
- */
+/** Inline SVG icons, stroke follows currentColor. */
 
 const PATHS: Record<string, React.ReactNode> = {
   plus: <path d="M12 5v14M5 12h14" />,
   close: <path d="M6 6l12 12M18 6L6 18" />,
   'chevron-left': <path d="M15 6l-6 6 6 6" />,
-  // Buttons that sat in a row of stroked icons wearing a colour emoji
-  // instead. An emoji is somebody else's drawing at somebody else's weight,
-  // and it changes shape between a Mac and a phone.
+  // Buttons that sat in a row of stroked icons wearing a colour emoji instead.
   phone: (
     <>
       <rect x="7" y="2.5" width="10" height="19" rx="2.5" />

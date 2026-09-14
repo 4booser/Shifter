@@ -81,10 +81,7 @@ export interface Membership {
   trial_ends_on: string | null;
 }
 
-/**
- * The colours a crew is drawn in, in the order the server hands them out.
- * Mirrors TeamRules.MemberColours: validated for colour blindness as a set.
- */
+/** The colours a crew is drawn in, in the order the server hands them out. */
 export const MEMBER_COLOURS = [
   '#6366F1',
   '#D97706',
@@ -120,11 +117,7 @@ export interface Rota {
   days: RotaDay[];
   /** Crew members out on the gig board that day — the fact, never the money. */
   gig_outings: RotaGig[];
-  /**
-   * This account has no second factor, so the crew's shared totals are
-   * withheld. Said out loud: figures that quietly went missing read as a
-   * broken app.
-   */
+  /** This account has no second factor, so the crew's shared totals are withheld. */
   needs_second_factor: boolean;
 }
 
@@ -167,10 +160,7 @@ export const teamApi = {
 
 export type AssignmentStatus = 'draft' | 'published' | 'accepted' | 'declined';
 
-/**
- * The stations a rota is counted by. Short on purpose: a vocabulary long
- * enough to name every job is long enough that nobody fills it in.
- */
+/** The stations a rota is counted by. */
 export type PlanRole = 'bar' | 'kitchen' | 'floor' | 'host' | 'support' | 'manager' | '';
 
 export const PLAN_ROLES: { value: PlanRole; label: string; emoji: string }[] = [
@@ -220,10 +210,7 @@ export interface Blocked {
   mine: boolean;
 }
 
-/**
- * One request for time off. Carries the decision as well as the ask, because
- * the state that matters most is the one in between: waiting.
- */
+/** One request for time off. */
 export interface Leave {
   id: number;
   user_id: number;
@@ -242,11 +229,7 @@ export interface Leave {
   can_decide: boolean;
 }
 
-/**
- * What the shift going home knows and the shift coming in does not. Written at
- * the end of a shift, read at the start of the next one — one note per crew per
- * day, because a chat scrolls and a handover has to be read once and acted on.
- */
+/** What the shift going home knows and the shift coming in does not. */
 export interface Handover {
   date: string;
   text: string;
@@ -266,11 +249,7 @@ export interface StopItem {
   cleared: boolean;
 }
 
-/**
- * The night's pool and how it divides. Everybody who worked the shift sees
- * every share — that is not a hole in the privacy rules, it is the exact
- * transparency a pool exists for. A pool nobody can check is just a promise.
- */
+/** The night's pool and how it divides. */
 export interface PoolShare {
   user_id: number;
   name: string;
@@ -376,7 +355,6 @@ export const plannerApi = {
   setManager: (teamId: number, userId: number, is_manager: boolean) =>
     api<void>(`${TEAMS}/${teamId}/planner/members/${userId}/manager`, { method: 'PUT', body: { is_manager } }),
 };
-
 
 // ==== Swaps: two shifts, two agreements ====
 

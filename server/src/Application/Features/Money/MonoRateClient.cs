@@ -4,23 +4,7 @@ using Serilog;
 
 namespace Shifter.Application.Features.Money;
 
-/// <summary>
-/// The rate somebody will actually be given, beside the rate the state
-/// publishes.
-///
-/// The national bank's number is the official one and the right basis for a
-/// report. It is not the number a person gets when they walk into a branch
-/// with euros, and the gap between the two is real money on a month's wages
-/// earned abroad.
-///
-/// So both are shown, each named. This one never replaces the other quietly:
-/// a figure that changed source without saying so is worse than a figure that
-/// is merely approximate.
-///
-/// Public endpoint, no token, and a hard limit of one call per five minutes on
-/// the bank's side — so the answer is held and shared rather than fetched per
-/// request. Registered as a singleton for exactly that reason.
-/// </summary>
+/// <summary>The rate somebody will actually be given, beside the rate the state publishes.</summary>
 public sealed class MonoRateClient
 {
     private readonly IHttpClientFactory _http;
@@ -31,16 +15,10 @@ public sealed class MonoRateClient
 
     public MonoRateClient(IHttpClientFactory http) => _http = http;
 
-    /// <summary>
-    /// The bank refuses more often than this, so asking more often than this
-    /// buys nothing but a rejection. Six minutes leaves room for clock drift.
-    /// </summary>
+    /// <summary>The bank refuses more often than this, so asking more often than this buys nothing but a rejection.</summary>
     private static readonly TimeSpan Hold = TimeSpan.FromMinutes(6);
 
-    /// <summary>
-    /// What the bank will buy a unit of this currency for, and sell it for,
-    /// in hryvnia.
-    /// </summary>
+    /// <summary>What the bank will buy a unit of this currency for, and sell it for, in hryvnia.</summary>
     public sealed record Quote(decimal Buy, decimal Sell, DateOnly On);
 
     /// <summary>ISO 4217 numbers for the currencies this app converts.</summary>
@@ -61,14 +39,7 @@ public sealed class MonoRateClient
 
     private const int Hryvnia = 980;
 
-    /// <summary>
-    /// Every quote the bank publishes against the hryvnia, or what is left
-    /// over from the last successful call.
-    ///
-    /// A stale quote is served rather than nothing: the alternative to a rate
-    /// from six minutes ago is no second opinion at all, and the date travels
-    /// with the number so nobody has to guess how old it is.
-    /// </summary>
+    /// <summary>Every quote the bank publishes against the hryvnia, or what is left over from the last successful call.</summary>
     public async Task<IReadOnlyDictionary<string, Quote>> QuotesAsync(CancellationToken ct)
     {
         if (DateTime.UtcNow - _heldAt < Hold) return _held;
@@ -132,14 +103,7 @@ public sealed class MonoRateClient
         }
     }
 
-    /// <summary>
-    /// One published pair, or nothing.
-    ///
-    /// Thinly traded currencies come with a single cross rate and no buy or
-    /// sell at all. One number is still an answer; a zero in its place would
-    /// be a lie with a decimal point in it, and it would be read as "the bank
-    /// will give you nothing for these".
-    /// </summary>
+    /// <summary>One published pair, or nothing.</summary>
     public static Quote? ReadQuote(JsonElement entry)
     {
         var buy = Read(entry, "rateBuy") ?? Read(entry, "rateCross");

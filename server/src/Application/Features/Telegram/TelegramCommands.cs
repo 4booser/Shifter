@@ -15,11 +15,7 @@ public enum TelegramCommand
     Help,
 }
 
-/// <summary>
-/// Turns whatever a person typed into one of the few things the bot does.
-/// Deliberately forgiving: slashes optional, three languages, a bare
-/// six-digit number reads as a link code.
-/// </summary>
+/// <summary>Turns whatever a person typed into one of the few things the bot does.</summary>
 public static class TelegramCommands
 {
     public static (TelegramCommand Command, string Argument) Parse(string? text)
@@ -59,10 +55,7 @@ public static class TelegramCommands
         };
     }
 
-    /// <summary>
-    /// Russian/Ukrainian three-way declension: 1 смена, 2 смены, 5 смен —
-    /// with the teens trap (11–14 always take the many-form).
-    /// </summary>
+    /// <summary>Russian/Ukrainian three-way declension: 1 смена, 2 смены, 5 смен — with the teens trap (11–14 always take the…</summary>
     public static string Plural(int count, string one, string few, string many)
     {
         var tens = count % 100;

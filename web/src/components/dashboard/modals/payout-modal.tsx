@@ -13,10 +13,7 @@ import { Modal } from '@/components/ui/modal';
 
 import type { PayoutKind } from '@/lib/calendar/models';
 
-/**
- * Recorded in the order they happen. The advance comes first because it is the
- * reason this control exists — the rest are here so it is not the odd one out.
- */
+/** Recorded in the order they happen. */
 const KINDS: { value: PayoutKind; label: string }[] = [
   { value: 'advance', label: 'Advance' },
   { value: 'settlement', label: 'Settlement' },
@@ -98,20 +95,7 @@ export function PayoutModal({
       return;
     }
 
-    /*
-     * A blank form opens on the period the place actually pays for.
-     *
-     * It used to open on whatever range the calendar's summary was showing —
-     * a calendar month — so a bar that pays twice a month offered «1 — 30
-     * сентября» every time, and the whole page it sits on is built out of
-     * «1 — 15» and «16 — 30». Either somebody corrected two dates on every
-     * payment, or a payment was filed against a period the reconciliation
-     * has never heard of.
-     *
-     * Only when the place is unambiguous. With several places and none
-     * chosen there is no period to prefer, and the summary range is as good
-     * a guess as any.
-     */
+    /* A blank form opens on the period the place actually pays for. */
     const only = locations.length === 1 ? locations[0] : null;
     const range = only === null
       ? summaryRange()

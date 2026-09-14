@@ -1,11 +1,6 @@
 @import 'tailwindcss';
 
-/*
- * The design system. Tailwind supplies layout utilities; identity lives in
- * these tokens. Every theme redefines the same dozen variables, so components
- * never know which of the ten palettes is active — including the accent,
- * which arrives from JS because the user picks it freely.
- */
+/* The design system. */
 
 :root {
   /* Written by the settings store; these are only the first-paint fallbacks. */
@@ -28,19 +23,7 @@
   --border-strong: #c9c4b6;
   --text: #1c1b18;
   --muted: #6d6a61;
-  /*
-   * Faint, not invisible.
-   *
-   * This is the colour of every hint in the app — a shift's times, a day's
-   * figure, the line under a heading — and at #9c988c it read 2.8 against the
-   * card behind it, where text this size needs 4.5. Faint is a rank in the
-   * hierarchy, not permission to be unreadable.
-   *
-   * Chosen against the secondary surface of the warmest palette, not the
-   * card of the coolest: hints sit inside inset panels as often as on a plain
-   * one, and «sand» insets are the lightest ground in the app. Everything
-   * else has room to spare from the same value.
-   */
+  /* Faint, not invisible. */
   --faint: #6b675b;
   --shadow: 0 1px 2px rgb(28 27 24 / 5%), 0 8px 24px -12px rgb(28 27 24 / 12%);
   --shadow-lg: 0 2px 6px rgb(28 27 24 / 7%), 0 24px 48px -16px rgb(28 27 24 / 22%);
@@ -70,14 +53,7 @@
 [data-theme='ocean'],
 [data-theme='plum'],
 [data-theme='gradient'] {
-  /* The indigo in :root is a light-theme colour and it was reaching every
-     dark theme untouched, at 2.6 to 1 against the surface — below the floor
-     for anything carrying meaning by colour. It is only ever seen by somebody
-     who has not picked their own accent, which is most people, and it went
-     unnoticed because whoever chose it was looking at the light theme.
-
-     A user's own accent is written inline on the root element and still wins
-     over this. */
+  /* The indigo in :root is a light-theme colour and it was reaching every dark theme untouched, at 2.6 to 1… */
   --accent: #8b8ef7;
   --accent-hover: #a0a3f9;
   --accent-soft: rgb(139 142 247 / 14%);
@@ -220,26 +196,11 @@
   --color-ink: var(--text);
   --color-muted: var(--muted);
   --color-faint: var(--faint);
-  /*
-   * The accent as text, rather than as a surface.
-   *
-   * The brand colour is chosen to carry white on top of it, which makes it a
-   * poor ink on the page's own ground: every «Сегодня», «Спросить об этом»
-   * and «Весь месяц в графиках» read 2.7 against the card behind it. Mixed
-   * toward the page's ink it keeps the hue and clears the bar on both
-   * palettes, and the solid accent — buttons, fills, rings — is untouched.
-   */
+  /* The accent as text, rather than as a surface. */
   --accent-read: color-mix(in srgb, var(--accent) 45%, var(--text));
   --color-accent-read: var(--accent-read);
 
-  /*
-   * The states as ink, rather than as a tint under one.
-   *
-   * Same reasoning as the accent: «−100%» in red read 4.18 on a light card,
-   * and the arrow beside a figure is text, not decoration. Mixed a fifth of
-   * the way toward the page's ink, they darken on a light ground and lighten
-   * on a dark one from one declaration.
-   */
+  /* The states as ink, rather than as a tint under one. */
   --good-read: color-mix(in srgb, var(--good) 80%, var(--text));
   --warn-read: color-mix(in srgb, var(--warn) 80%, var(--text));
   --danger-read: color-mix(in srgb, var(--danger) 80%, var(--text));
@@ -283,19 +244,7 @@ body {
 
 /* ==== Core components ==== */
 
-/*
- * Density.
- *
- * The setting has existed and the toggle has written data-density for months,
- * with nothing behind it — a switch that moves and changes nothing, which is
- * worse than not offering one. A small screen and a large one want different
- * amounts of air, and somebody who has laid out a whole month wants to see it
- * without scrolling.
- *
- * Expressed as tokens rather than as a second set of rules, so a component
- * that reads them is dense everywhere at once and one that does not is simply
- * unaffected.
- */
+/* Density. */
 :root {
   --pad-card: 1rem;
   --pad-cell: 0.375rem;
@@ -332,33 +281,14 @@ body {
   padding-block: 0.4rem;
 }
 
-/*
- * Ряд карточек, которых может оказаться меньше, чем колонок.
- *
- * `lg:grid-cols-2` держит вторую колонку даже когда сосед не отрисовался —
- * а соседи здесь сплошь условные: «когда ставка менялась» появляется только
- * при повышении, «всё в одной валюте» — только при второй валюте. Одна
- * карточка в такой сетке оставляла справа полэкрана пустоты.
- *
- * auto-fit считает колонки по числу детей: один — во всю ширину, двое —
- * пополам, на узком экране всегда столбиком.
- */
+/* Ряд карточек, которых может оказаться меньше, чем колонок. */
 .cards {
   display: grid;
   gap: 1rem;
   grid-template-columns: repeat(auto-fit, minmax(min(26rem, 100%), 1fr));
 }
 
-/*
- * Сетка, в которой последний ряд не бывает неполным.
- *
- * `.cards` раскладывает карточки по auto-fit: при трёх колонках и пяти
- * карточках последний ряд — две карточки и пустая треть ряда. На банке это
- * был прямоугольник пустоты в пол-экрана справа от «Формы трат», и кладка
- * не спасала: она равняет колонки по высоте и всё равно оставляет одну
- * короче. Здесь колонок ровно две, а нечётная последняя занимает ряд
- * целиком — незанятому месту просто неоткуда взяться.
- */
+/* Сетка, в которой последний ряд не бывает неполным. */
 .cards-fill {
   display: grid;
   gap: 1rem;
@@ -381,14 +311,7 @@ body {
   grid-template-columns: repeat(auto-fit, minmax(min(17rem, 100%), 1fr));
 }
 
-/*
- * Кладка: карточки разной высоты, которые надо уложить без дыр.
- *
- * Сетка из колонок равняет ряд по самой высокой карточке, и короткая
- * оставляет под собой пустое поле — на банке это была дыра в пол-экрана
- * слева от «Темпа». Колонки текста укладывают карточки подряд: следующая
- * начинается там, где кончилась предыдущая.
- */
+/* Кладка: карточки разной высоты, которые надо уложить без дыр. */
 .deck {
   column-gap: 1rem;
   columns: 1;
@@ -473,22 +396,8 @@ body {
   border-color: var(--accent-hover);
 }
 
-/*
- * A section heading with something on the far side of it: a count, an Add
- * button, the figure the section is about.
- *
- * It exists because this file is unlayered and Tailwind's utilities are not,
- * so `field-label` beat every `flex` it was paired with however the classes
- * were ordered — those headings rendered with the second half glued to the
- * text instead of pushed to the other end.
- */
-/*
- * A heading and the figure beside it, which wrap rather than truncate.
- *
- * In a panel two hundred and ninety pixels wide the right half had a
- * hundred and twenty-one, and a date was cut to «пусто · четверг, 3 сентя…».
- * A date that ends mid-word is worse than one on its own line.
- */
+/* A section heading with something on the far side of it: a count, an Add button, the figure the section is… */
+/* A heading and the figure beside it, which wrap rather than truncate. */
 .panel-head {
   display: flex;
   flex-wrap: wrap;
@@ -514,15 +423,7 @@ body {
   color: var(--text);
 }
 
-/*
- * Edit and archive on a list row. They used to be display:none until the
- * pointer arrived, so appearing cost width and the label beside them
- * reflowed — the row flinched under the cursor, exactly where somebody was
- * aiming. The space is theirs the whole time now; only the ink fades in.
- *
- * :focus-within earns its keep too: while they were hidden they could not be
- * reached by keyboard at all.
- */
+/* Edit and archive on a list row. */
 .row-actions {
   display: flex;
   opacity: 0;
@@ -553,11 +454,7 @@ body {
   border-color: transparent;
 }
 
-/*
- * A destructive control that has been cocked and will fire on the next press.
- * It stops looking quiet the moment it means something, because the button
- * that throws a running shift away shares a row with the one that banks it.
- */
+/* A destructive control that has been cocked and will fire on the next press. */
 .btn-armed {
   background: var(--danger-soft);
   border-color: color-mix(in srgb, var(--danger) 45%, transparent);
@@ -569,10 +466,7 @@ body {
   border-color: var(--danger);
 }
 
-/*
- * A break running is a state, not a preference, so the button that ends it
- * wears the same amber the header pill does.
- */
+/* A break running is a state, not a preference, so the button that ends it wears the same amber the header pill… */
 .btn-warn {
   background: var(--warn-soft);
   border-color: color-mix(in srgb, var(--warn) 50%, transparent);
@@ -598,14 +492,7 @@ body {
   margin-bottom: 0.3rem;
 }
 
-/*
- * The width here is a default, and beating it needs `!`.
- *
- * This file is not in a cascade layer and Tailwind's utilities are, so a
- * `w-40` written beside `field-input` silently loses: a six-character crew
- * code was given a 598-pixel box and pushed the field beside it onto a line
- * of its own. Every narrow field in the app carries the bang for this reason.
- */
+/* The width here is a default, and beating it needs `!`. */
 .field-input {
   width: 100%;
   padding: 0.5rem 0.7rem;
@@ -673,27 +560,8 @@ body {
   color: var(--muted);
 }
 
-/*
- * Chips that carry a state: accepted and declined, online and offline, linked
- * and not.
- *
- * These were written as `chip text-good` and every one of them rendered grey.
- * This file is not in a cascade layer and Tailwind's utilities are, and a
- * layer loses to unlayered CSS whatever its specificity — so `.chip`'s own
- * muted ink won, the soft background came through, and each status kept its
- * tint while losing its meaning. Anything a person reads at a glance gets a
- * class of its own here, where it can win.
- */
-/*
- * Each state's ink is pulled a fifth of the way toward the page's own.
- *
- * The tones are picked to be read on the page's ground, not on a tenth of
- * themselves: on the five light themes «paid», «late» and «underpaid» came out
- * at 4.1–4.3 against their own tint, under the 4.5 a chip's text size needs.
- * Mixing toward the ink darkens them on a light ground and lightens them on a
- * dark one, and the same declaration does both — 5.3 and up either way, with
- * the hue still saying which state it is.
- */
+/* Chips that carry a state: accepted and declined, online and offline, linked and not. */
+/* Each state's ink is pulled a fifth of the way toward the page's own. */
 .chip-good {
   border-color: color-mix(in srgb, var(--good) 40%, transparent);
   background: var(--good-soft);
@@ -712,16 +580,7 @@ body {
   color: color-mix(in srgb, var(--danger) 80%, var(--text));
 }
 
-/*
- * The accent chip's ink is pulled toward the page's own, not left as the
- * accent itself.
- *
- * The brand colour is picked to carry white on top of it, which is the
- * opposite of what a 12% tint of it needs underneath: «открыто», «приглашён»
- * and every selected filter came out at 2.7 against their own background,
- * where 4.5 is the floor for text this size. Mixed toward the ink they sit
- * on, they keep the hue and become readable.
- */
+/* The accent chip's ink is pulled toward the page's own, not left as the accent itself. */
 .chip-accent {
   border-color: color-mix(in srgb, var(--accent) 40%, transparent);
   background: var(--accent-soft);
@@ -742,11 +601,7 @@ body {
   transform: scale(1.14);
 }
 
-/*
- * The «pick your own» swatch is a native colour input, and WebKit paints its
- * colour as a square inside whatever box it is given. Sitting last in a row of
- * twenty-six circles, it read as a rendering fault rather than a control.
- */
+/* The «pick your own» swatch is a native colour input, and WebKit paints its colour as a square inside whatever… */
 input.swatch {
   appearance: none;
   -webkit-appearance: none;
@@ -826,10 +681,7 @@ dialog.modal[open] {
 
 /* ==== Motion system ==== */
 
-/* Cards and blocks announce themselves once, staggered by --i. A keyframe
-   rather than a transition: it needs no second frame to start from, so the
-   class can be added synchronously and throttled tabs still land on the end
-   state. */
+/* Cards and blocks announce themselves once, staggered by --i. */
 .reveal {
   opacity: 0;
 }
@@ -1109,14 +961,7 @@ body,
   color: var(--muted);
 }
 
-/*
- * The band of figures at the top of a screen, with exactly one card filled.
- *
- * Six identical outlined tiles give the eye nowhere to land — every screen's
- * most important number looked the same as its least. One filled card and
- * five quiet ones is the whole trick, and it is the one thing the reference
- * dashboard does that this app did not.
- */
+/* The band of figures at the top of a screen, with exactly one card filled. */
 .tile--hero {
   background: var(--accent);
   border-color: var(--accent);
@@ -1133,12 +978,7 @@ body,
   box-shadow: var(--shadow);
 }
 
-/*
- * A card's own header: what it is on the left, what you can do with it on the
- * right, a rule underneath. Cards used to carry a title and then jump straight
- * into a chart, so the control that belonged to the chart — a period picker, a
- * unit switch — had nowhere to sit and ended up outside the card or nowhere.
- */
+/* A card's own header: what it is on the left, what you can do with it on the right, a rule underneath. */
 .card-head {
   display: flex;
   flex-wrap: wrap;
@@ -1208,16 +1048,7 @@ body,
   transition: stroke-dashoffset calc(0.9s * var(--motion)) cubic-bezier(0.2, 0.85, 0.3, 1);
 }
 
-/*
- * The goal meter. A ring at a tile's width left the figures a column too
- * narrow to hold «₴0 of ₴40,000» in fewer than four lines, so the meter lies
- * flat and takes the whole tile instead.
- *
- * Two lengths, and the solid one is always the banked one: what the calendar
- * promises rides behind in the same hue at a third of the weight. A goal
- * filled by shifts that have not happened yet says «you made it» on the first
- * of the month, and somebody plans rent around it.
- */
+/* The goal meter. */
 .goal-bar {
   position: relative;
   height: 0.4rem;
@@ -1493,14 +1324,7 @@ body,
 }
 
 @media print {
-  /*
-   * Прячем оболочку приложения, а не всякий тег <header>.
-   *
-   * Правило `header { display: none }` било по любому заголовку на
-   * странице — включая шапку послужного списка и шапку расчётного листа.
-   * Оба печатают и отдают в руки: лист уходил к бухгалтеру без имени,
-   * без названия и без периода, одними цифрами.
-   */
+  /* Прячем оболочку приложения, а не всякий тег <header>. */
   .app-chrome,
   nav,
   .no-print,
@@ -1512,15 +1336,7 @@ body,
     display: inline;
   }
 
-  /*
-   * Paper is light, whatever the screen was.
-   *
-   * The body was painted white and nothing else was: on any of the five dark
-   * themes the ink stayed near-white, the cards kept a dark background most
-   * printers drop, and the payslip somebody hands to an accountant came out
-   * of the tray blank. The palette is pinned to the light one here so the
-   * page prints as the same document from every theme.
-   */
+  /* Paper is light, whatever the screen was. */
   :root {
     --bg: #ffffff;
     --bg-veil: none;
@@ -1624,7 +1440,6 @@ body,
   box-shadow: var(--shadow-lg);
   animation: toast-pop calc(0.3s * var(--motion)) cubic-bezier(0.34, 1.4, 0.64, 1) backwards;
 }
-
 
 /* The landing's trade ribbon: one slow loop, pausable by hover. */
 .landing-marquee {

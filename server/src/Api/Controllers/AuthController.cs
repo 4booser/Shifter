@@ -36,12 +36,7 @@ public class AuthController : Controller
         _environment = environment;
     }
 
-    /// <summary>
-    /// Always 202, known address or not: an endpoint that says "no such
-    /// account" is an endpoint that enumerates accounts. In development the
-    /// token comes back in the body so the flow can be exercised without a
-    /// mail provider; in production it lives only in the letter.
-    /// </summary>
+    /// <summary>Always 202, known address or not: an endpoint that says "no such account" is an endpoint that enumerates…</summary>
     [HttpPost]
     [AllowAnonymous]
     [Route("password/forgot")]
@@ -158,10 +153,7 @@ public class AuthController : Controller
         return userId;
     }
 
-    /// <summary>
-    /// Trades a refresh token for a new pair. Anonymous by design: it runs
-    /// precisely when the access token has already expired.
-    /// </summary>
+    /// <summary>Trades a refresh token for a new pair.</summary>
     [HttpPost]
     [AllowAnonymous]
     [Route("refresh")]
@@ -174,10 +166,7 @@ public class AuthController : Controller
         return Ok(result);
     }
 
-    /// <summary>
-    /// One button for both cases: an unknown Google account is created, a known
-    /// one is signed in. Anonymous, like the other entry points.
-    /// </summary>
+    /// <summary>One button for both cases: an unknown Google account is created, a known one is signed in.</summary>
     [HttpPost]
     [AllowAnonymous]
     [Route("google")]
@@ -190,11 +179,7 @@ public class AuthController : Controller
         return Ok(result);
     }
 
-    /// <summary>
-    /// Ends this session. Anonymous because it is the right thing to do with an
-    /// access token that has already expired: the refresh token in the body is
-    /// what identifies the session, and revoking it is never harmful.
-    /// </summary>
+    /// <summary>Ends this session.</summary>
     [HttpPost]
     [AllowAnonymous]
     [Route("logout")]
@@ -257,11 +242,7 @@ public class AuthController : Controller
 
     public record TipJarDto(decimal percent, decimal goal);
 
-    /// <summary>
-    /// A share of tips to put aside. Nothing is moved — the app has no
-    /// business touching anybody's account, and a counter saying what should
-    /// be in the jar by now is the whole of what it can honestly offer.
-    /// </summary>
+    /// <summary>A share of tips to put aside.</summary>
     [HttpPut]
     [Route("tip-jar")]
     public async Task<IActionResult> SetTipJar(
@@ -294,12 +275,7 @@ public class AuthController : Controller
         /// <summary>When the goal is reached at this pace, where that can be said.</summary>
         DateOnly? reaches);
 
-    /// <summary>
-    /// What the rule says should have been put aside by now.
-    ///
-    /// Computed from the tips already recorded rather than stored, so it can
-    /// never drift from them: correcting a Tuesday's tips corrects the jar.
-    /// </summary>
+    /// <summary>What the rule says should have been put aside by now.</summary>
     [HttpGet]
     [Route("tip-jar")]
     public async Task<ActionResult<TipJarStateDto>> GetTipJar(
@@ -333,13 +309,7 @@ public class AuthController : Controller
             Shifter.Domain.Entities.TipJar.Reaches(state, today)));
     }
 
-    /// <summary>
-    /// The colours somebody saved to reuse.
-    ///
-    /// On the account rather than in a browser: a palette picked on a laptop
-    /// should be there on the phone the same evening. Kept to twenty-four —
-    /// past that it is not a palette, it is a colour picker with extra steps.
-    /// </summary>
+    /// <summary>The colours somebody saved to reuse.</summary>
     [HttpPut]
     [Route("colours")]
     public async Task<IActionResult> SetColours(
@@ -364,14 +334,7 @@ public class AuthController : Controller
 
     public record PresetsDto(string[] colours);
 
-    /// <summary>
-    /// How much rest between shifts this person counts as enough.
-    ///
-    /// Somebody who works split doubles by arrangement should be able to stop
-    /// being told about them, and somebody who wants a stricter line than the
-    /// EU's eleven hours should get one. The bounds are only there to keep the
-    /// figure a figure: nothing under an hour and nothing over a day.
-    /// </summary>
+    /// <summary>How much rest between shifts this person counts as enough.</summary>
     [HttpPut]
     [Route("rest")]
     public async Task<IActionResult> SetRest(
@@ -388,10 +351,7 @@ public class AuthController : Controller
         return Ok(new { rest_hours = request.rest_hours });
     }
 
-    /// <summary>
-    /// The caller's id, straight from the token. Never taken from the body:
-    /// that would let anyone edit anyone else's data by changing a number.
-    /// </summary>
+    /// <summary>The caller's id, straight from the token.</summary>
     private int CurrentUserId()
     {
         if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int id))

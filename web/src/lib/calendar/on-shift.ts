@@ -1,16 +1,6 @@
 import { RotaEntry } from '@/lib/api/team';
 
-/**
- * Who is on right now, who is coming, who has gone home.
- *
- * The simplest question a crew asks and the one currently answered by a group
- * chat: somebody types "кто сегодня?" and three people answer, two of them
- * wrong. The rota already knows — it is only that nobody has ever read it at
- * the one moment it matters, which is now.
- *
- * Pure, and given the clock rather than reading it, so a night at 01:00 can be
- * tested rather than waited for.
- */
+/** Who is on right now, who is coming, who has gone home. */
 
 export interface OnShiftNow {
   /** On the floor at this moment. */
@@ -30,11 +20,7 @@ export interface OnShiftEntry {
 const minutesOf = (time: string): number =>
   Number(time.slice(0, 2)) * 60 + Number(time.slice(3, 5));
 
-/**
- * The shift as an interval on one continuous clock, in minutes from midnight
- * of its own date. A close that ends at 02:00 ends at 1560, not at 120 —
- * otherwise every night shift looks like it finished before it began.
- */
+/** The shift as an interval on one continuous clock, in minutes from midnight of its own date. */
 const spanOf = (entry: RotaEntry): { start: number; end: number } => {
   const start = minutesOf(entry.start_time);
   let end = minutesOf(entry.end_time);
@@ -94,21 +80,7 @@ export interface TightTurnaround {
   gap: number;
 }
 
-/**
- * Two shifts on one person with too little between them.
- *
- * The daily rest rule exists, a rota can break it by accident, and the person
- * building the rota is looking at a grid rather than at a clock. Worth saying
- * out loud while it is still a plan — which is the only time it can be moved
- * without a conversation.
- *
- * It says "looks like" and never "breaks". The app does not know somebody's
- * contract, their country's exemptions, or what they agreed to; it knows two
- * times and the distance between them, and that is what it reports.
- *
- * Nothing here touches pay. A rest rule is about hours, and reaching from it
- * into somebody's wage would be inventing an entitlement.
- */
+/** Two shifts on one person with too little between them. */
 export function tightTurnarounds(
   entries: RotaEntry[],
   /** Hours below which it is worth mentioning. Eleven is the EU daily rule. */

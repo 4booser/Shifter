@@ -40,11 +40,7 @@ const SPAN_LABEL: Record<Span, string> = {
   year: 'Year',
 };
 
-/**
- * The days a written-out period covers. Only the month is navigable: nobody
- * asks to have the third week of last April written out, and a picker for it
- * would cost more attention than it saves.
- */
+/** The days a written-out period covers. */
 function spanBounds(span: Span, month: YearMonth): { from: string; to: string } {
   if (span === 'day') return { from: todayKey(), to: todayKey() };
 
@@ -69,13 +65,7 @@ const OPENERS = [
   'Где я заработал больше?',
 ];
 
-/**
- * The assistant. Three things live here and they belong together: the thread,
- * the blanks it would like filled, and a written-out period on demand. Every
- * figure it quotes was counted by the same code the calendar uses — the model,
- * where there is one, only chooses the words, and each answer says which of
- * the two wrote it.
- */
+/** The assistant. */
 function Assistant() {
   const { t, lang } = useI18n();
 
@@ -158,9 +148,7 @@ function Assistant() {
   return (
     <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-start">
       {/* ==== The thread ==== */}
-      {/* The floor is there so the card stops jumping as answers arrive; before
-          the first question there is nothing to steady, and it left 179 pixels
-          of dark between the invitation and the buttons that answer it. */}
+      {/* The floor is there so the card stops jumping as answers arrive; before the first question there is nothing to… */}
       <section className={`card flex flex-col gap-3 p-4 ${thread.length > 0 ? 'min-h-[26rem]' : ''}`}>
         <header className="flex items-center justify-between gap-2">
           <h1 className="flex items-center gap-2 text-[1.05rem] font-bold">
@@ -348,11 +336,7 @@ function Assistant() {
   );
 }
 
-/**
- * The blanks, one card each. Answering one writes straight into the day it is
- * about, which is the whole reason to ask: a question that changes nothing is
- * an interruption, not an assistant.
- */
+/** The blanks, one card each. */
 function GapCards({ gaps, onAnswered }: { gaps: AssistantGap[]; onAnswered: (id: string) => void }) {
   const { t } = useI18n();
   const [values, setValues] = useState<Record<string, string>>({});

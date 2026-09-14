@@ -10,12 +10,7 @@ import { pushToast } from '@/lib/toast';
 import { loadCatalogues, reload, useCalendar } from '@/lib/store/calendar';
 import { Icon } from '@/components/ui/icon';
 
-/**
- * The person's half of the board: what the manager proposed, waiting for a
- * yes. Accepting picks one of their own shift templates — the assignment
- * plans the time, the template prices it — and lands on their calendar at
- * the assignment's hours.
- */
+/** The person's half of the board: what the manager proposed, waiting for a yes. */
 export function MyAssignments({ teamId, onAnswered }: { teamId: number; onAnswered?: () => void }) {
   const { t, lang } = useI18n();
   const templates = useCalendar((state) => state.templates);

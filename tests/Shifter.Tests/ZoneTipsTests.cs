@@ -6,11 +6,7 @@ using Xunit;
 
 namespace Shifter.Tests;
 
-/// <summary>
-/// Every waiter knows the terrace tips better than the bar, and none of them
-/// can say by how much — because nobody has ever written the zone down against
-/// the hours.
-/// </summary>
+/// <summary>Every waiter knows the terrace tips better than the bar, and none of them can say by how much — because…</summary>
 public class ZoneTipsTests
 {
     private readonly FakeShifterQuery _query = new();

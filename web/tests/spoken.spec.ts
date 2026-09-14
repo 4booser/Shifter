@@ -30,9 +30,7 @@ describe('a calendar day as one sentence', () => {
   });
 
   it('is the date alone on an empty day', () => {
-    // The gaps are where somebody is looking to put a shift, so they have to
-    // be audible — but they are audible as a bare date, not as a list of
-    // nothings.
+    // The gaps are where somebody is looking to put a shift, so they have to be audible — but they are audible as a…
     expect(day()).toEqual(['14 марта']);
   });
 

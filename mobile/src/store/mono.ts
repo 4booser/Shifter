@@ -16,15 +16,7 @@ import {
 } from '@/lib/mono';
 import { Budget, CategoryRule } from '@/lib/mono-rules';
 
-/**
- * The bank connection, on this phone and nowhere else.
- *
- * The token goes into the keychain beside the session and is never handed to
- * the Shifter server — not in a request, not in a crash report, not in a
- * backup that leaves the device. What the server eventually learns is what
- * the person confirmed: a payout of this much on this date, an expense of
- * that much. The same rows they could have typed by hand.
- */
+/** The bank connection, on this phone and nowhere else. */
 const TOKEN_KEY = 'shifter.mono.token';
 const CACHE_KEY = 'shifter.mono.cache';
 const SETUP_KEY = 'shifter.mono.setup';
@@ -33,53 +25,22 @@ const SETUP_KEY = 'shifter.mono.setup';
 interface Setup {
   /** The account the wage lands on. */
   accountId: string | null;
-  /**
-   * Accounts left out of the running total. Absent means counted — a card
-   * added at the bank after this was written should show up, not vanish.
-   */
+  /** Accounts left out of the running total. */
   hidden?: string[];
   /** Payer names confirmed for a place, so the next wage matches itself. */
   payers: Record<string, string[]>;
-  /**
-   * Unix seconds of the newest transaction already fetched, per account.
-   *
-   * Per account because switching cards used to throw the statement away and
-   * start the four-minute backfill again — which made looking at a second
-   * account something nobody did twice.
-   */
+  /** Unix seconds of the newest transaction already fetched, per account. */
   syncedTo: number | null;
   syncedPer?: Record<string, number>;
-  /**
-   * Transactions already turned into a Shifter row. Kept because a resync
-   * brings the same taxi back, and offering it again is how somebody records
-   * the same fare twice — the app would then be wrong about the one thing it
-   * exists to be right about.
-   */
+  /** Transactions already turned into a Shifter row. */
   used: string[];
-  /**
-   * Categories the person assigned, in the order they wrote them. Kept here
-   * rather than derived, because they are the corrections that make the
-   * breakdown theirs rather than the terminal's.
-   */
+  /** Categories the person assigned, in the order they wrote them. */
   rules: CategoryRule[];
   /** Monthly limits per category. Absent means no limit, which is not zero. */
   budgets?: Budget[];
-  /**
-   * The jar the tip rule saves into.
-   *
-   * The app can say what should have been put aside; the jar says what is
-   * actually in it. Putting the two side by side is the only way anybody
-   * finds out that the habit slipped in March.
-   */
+  /** The jar the tip rule saves into. */
   jarId?: string | null;
-  /**
-   * The wage the phone should watch for while the app is closed.
-   *
-   * Written by the bank screen whenever it works out what is owed, so the
-   * background task never has to call the Shifter server: a wake-up the
-   * system granted for a few seconds is the wrong place to be doing two
-   * round trips and an authentication.
-   */
+  /** The wage the phone should watch for while the app is closed. */
   watching?: {
     expected: ExpectedWage | null;
     payers: string[];
@@ -234,8 +195,6 @@ export const useMono = create<MonoState>((set, get) => ({
         const stored: unknown = JSON.parse(raw);
 
         // A phone that last ran the single-account version holds a bare array.
-        // It belongs to whichever account was selected then, and throwing it
-        // away would cost somebody a four-minute backfill for nothing.
         cache = Array.isArray(stored)
           ? (setup.accountId === null
               ? {}
@@ -283,9 +242,7 @@ export const useMono = create<MonoState>((set, get) => ({
     // The card's balance is whatever the statement ran up to.
     client.accounts[0].balance = items[0]?.balance ?? 0;
 
-    // Memory only, and deliberately so: nothing touches the keychain or the
-    // cache, so a person's real connection — if one ever existed — survives
-    // the fiction untouched, and an app restart forgets it.
+    // Memory only, and deliberately so: nothing touches the keychain or the cache, so a person's real connection …
     set({
       token: 'demo', demo: true, client, accountId: client.accounts[0].id,
       items, error: null, progress: null,
@@ -371,13 +328,7 @@ export const useMono = create<MonoState>((set, get) => ({
     await quietly(AsyncStorage.setItem(SETUP_KEY, JSON.stringify({ ...setup, hidden })));
   },
 
-  /**
-   * The bank's published rates, so one total can span three currencies.
-   *
-   * Public: no token goes anywhere near this, and the limit is five minutes
-   * rather than one. Failing is fine — a total the app cannot compute honestly
-   * is a total it does not show.
-   */
+  /** The bank's published rates, so one total can span three currencies. */
   loadRates: async () => {
     try {
       set({ rates: await publishedRates() });
@@ -386,13 +337,7 @@ export const useMono = create<MonoState>((set, get) => ({
     }
   },
 
-  /**
-   * Replaces the whole list rather than editing one rule.
-   *
-   * Order is part of what a rule means — first match wins — so moving one is
-   * as much of an edit as changing its text, and a per-rule API would need
-   * three verbs to say what one assignment says.
-   */
+  /** Replaces the whole list rather than editing one rule. */
   setRules: async (rules) => {
     set({ rules });
 
@@ -403,14 +348,7 @@ export const useMono = create<MonoState>((set, get) => ({
     await quietly(AsyncStorage.setItem(SETUP_KEY, JSON.stringify({ ...setup, rules })));
   },
 
-  /**
-   * Points the statement at another account, keeping what was already read.
-   *
-   * It used to empty the list and reset the clock, so looking at a second card
-   * cost a four-minute backfill and looking back at the first cost another. A
-   * bank app where switching accounts is expensive is a bank app with one
-   * account.
-   */
+  /** Points the statement at another account, keeping what was already read. */
   chooseAccount: async (accountId) => {
     // The demo's single account has no cache behind it; reading the empty
     // storage here would wipe the generated statement on a stray tap.
@@ -443,10 +381,7 @@ export const useMono = create<MonoState>((set, get) => ({
     let added = 0;
 
     try {
-      // Newest window first, so the wage that just landed shows up before a
-      // year of history has finished loading. Each one after the first waits
-      // out the bank's minute rather than being refused — a backfill of a year
-      // is twelve minutes and a progress bar, not twelve errors.
+      // Newest window first, so the wage that just landed shows up before a year of history has finished loading.
       for (const [at, window] of windows.entries()) {
         const pause = waitFor('statement');
 

@@ -10,11 +10,7 @@ import { catalogueActions } from '@/lib/store/calendar';
 import { Alert, SwatchRow } from '@/components/ui/bits';
 import { Modal } from '@/components/ui/modal';
 
-/**
- * Creates or edits one event. The end date defaults to the start and moves
- * with it while they match, so a single day stays a single field until
- * somebody actually wants a range.
- */
+/** Creates or edits one event. */
 export function EventModal({
   open,
   editing,
@@ -281,7 +277,6 @@ export function EventModal({
             </label>
           </div>
         )}
-
 
         <div>
           <span className="field-label">{t('Kind of day')}</span>

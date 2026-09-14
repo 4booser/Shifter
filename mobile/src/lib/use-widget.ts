@@ -7,33 +7,13 @@ import { CalendarDayData } from '@/lib/types';
 import { WidgetMoney, WidgetMonth, WidgetToday, buildSnapshot, nextShift } from '@/lib/widget';
 import { publishSnapshot } from '@/lib/widget-publish';
 
-/**
- * Keeps the widget fed from whatever the screens already know.
- *
- * The widget cannot ask anything — no server, no token, no network — so the
- * app leaves it everything in advance. That happens where the figures are
- * already computed, which is also the only place they are guaranteed to agree
- * with what the person is looking at. Nothing here fetches: a hook that went
- * to the network to feed a widget would cost somebody data every time they
- * opened the calendar, to redraw something they may not have installed.
- *
- * Two screens own different halves of one document. The calendar knows the
- * day and the month; only the bank tab knows what is in anybody's account. So
- * the halves are held here between visits — otherwise opening the calendar
- * would wipe the balance, and opening the bank would wipe the shift, and the
- * widget would say something different depending which screen was last open.
- */
+/** Keeps the widget fed from whatever the screens already know. */
 
 let lastToday: WidgetToday | null = null;
 let lastMonth: WidgetMonth | null = null;
 let lastMoney: WidgetMoney | null = null;
 
-/**
- * Publishes whatever is currently known, under both locks.
- *
- * The locks are read fresh every time rather than remembered: somebody who has
- * just switched one on expects the next thing the app does to respect it.
- */
+/** Publishes whatever is currently known, under both locks. */
 async function publish(): Promise<void> {
   // Nothing worth drawing yet. Publishing a half-empty snapshot would replace
   // a good one from the last session with a worse one.
@@ -48,9 +28,7 @@ async function publish(): Promise<void> {
     buildSnapshot({
       now: new Date(),
       hidden: shuttered,
-      // One sign for the whole widget. A person paid in two currencies has a
-      // bigger question than a home screen can answer, and the app's own
-      // headline figures already pick one.
+      // One sign for the whole widget.
       currency: '₴',
       bankHidden: bankLocked,
       today: lastToday,
@@ -79,9 +57,7 @@ export function useWidget(input: {
 
   const shift = today?.shifts.find((entry) => entry.worked) ?? today?.shifts[0] ?? null;
 
-  // One string rather than eight dependencies: publishing is cheap, and a
-  // dependency list of eight eventually goes stale in one of them and leaves
-  // the widget a day behind for a reason nobody ever finds.
+  // One string rather than eight dependencies: publishing is cheap, and a dependency list of eight eventually…
   const signature = JSON.stringify([
     today?.date,
     today?.earned,
@@ -103,9 +79,7 @@ export function useWidget(input: {
       start: shift?.start_time.slice(0, 5) ?? null,
       end: shift?.end_time.slice(0, 5) ?? null,
       worked: shift?.worked ?? false,
-      // Only a day that has happened has earned anything. A planned shift's
-      // figure is what it would pay, and a number on a home screen before the
-      // shift is a promise this trade breaks often enough without our help.
+      // Only a day that has happened has earned anything.
       earned: shift?.worked === true ? (today?.earned ?? null) : null,
       next,
     };

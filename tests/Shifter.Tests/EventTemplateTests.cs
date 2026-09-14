@@ -7,11 +7,7 @@ using Xunit;
 
 namespace Shifter.Tests;
 
-/// <summary>
-/// The palette for everything on the calendar that is not work — «английский»,
-/// «вождение», the gym — and the one thing it must never do, which is let the
-/// money it carries anywhere near the money a week earned.
-/// </summary>
+/// <summary>The palette for everything on the calendar that is not work — «английский», «вождение», the gym — and the one…</summary>
 public class EventTemplateTests
 {
     private static (EventTemplateHandler Handler, FakeShifterQuery Query, FakeShifterCommand Command) Made()

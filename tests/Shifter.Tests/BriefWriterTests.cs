@@ -83,11 +83,7 @@ public class BriefWriterTests
         Assert.Contains("25%", tip);
     }
 
-    /// <summary>
-    /// The first thing a new account is told. It used to be an accounting of
-    /// nothing — "0 смен, 0 ч и 0 ₴" — followed by advice to check whether the
-    /// week's shifts were marked, of which there were none.
-    /// </summary>
+    /// <summary>The first thing a new account is told.</summary>
     [Fact]
     public void An_empty_month_is_not_reported_as_three_zeros()
     {
@@ -120,12 +116,7 @@ public class BriefWriterTests
         Assert.DoesNotContain("Отметьте свои смены", tip);
     }
 
-    /// <summary>
-    /// The interface has been bilingual since the phone learned Ukrainian.
-    /// The brief is the most-read prose in the app and stayed Russian, which
-    /// is a worse state than not translating at all: the numbers were in one
-    /// language and the sentence about them in another.
-    /// </summary>
+    /// <summary>The interface has been bilingual since the phone learned Ukrainian.</summary>
     [Fact]
     public void The_brief_is_written_in_the_language_it_was_asked_for()
     {

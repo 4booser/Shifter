@@ -1,14 +1,4 @@
-/**
- * Public holidays, worked out here rather than fetched. The application is
- * offline-first — a month opened on a train has to render the same as one
- * opened at a desk — and a calendar that loses its holidays without a network
- * is a calendar nobody trusts.
- *
- * The cost of that choice is that moving feasts have to be computed. Only the
- * Easter-relative ones actually move, and they all hang off one calculation,
- * so it is a small amount of arithmetic rather than a table of dates that
- * silently runs out in a few years.
- */
+/** Public holidays, worked out here rather than fetched. */
 
 export interface Holiday {
   /** 'YYYY-MM-DD'. */
@@ -23,11 +13,7 @@ export interface HolidayCountry {
   label: string;
 }
 
-/**
- * Deliberately short. Each entry is a set of rules someone has to keep right,
- * and a list of forty countries nobody checks is worse than a list of six that
- * are correct.
- */
+/** Deliberately short. */
 export const HOLIDAY_COUNTRIES: HolidayCountry[] = [
   { code: '', label: 'None' },
   { code: 'UA', label: 'Ukraine' },
@@ -57,10 +43,7 @@ const shift = (date: string, days: number): string => {
 const fixed = (month: number, day: number, name: string, publicHoliday = true): Rule =>
   (year) => ({ date: key(year, month, day), name, publicHoliday });
 
-/**
- * The nth weekday of a month — "third Monday in January". A negative index
- * counts back from the end, which is how "last Monday in May" is written.
- */
+/** The nth weekday of a month — "third Monday in January". */
 const nth = (
   month: number,
   weekday: number,
@@ -87,10 +70,7 @@ const nth = (
     return { date: key(year, month, lastDay - back), name, publicHoliday };
   };
 
-/**
- * Gauss's algorithm for Gregorian Easter. Everything that moves in the Western
- * calendars below is expressed as a number of days from this one date.
- */
+/** Gauss's algorithm for Gregorian Easter. */
 const gregorianEaster = (year: number): string => {
   const a = year % 19;
   const b = Math.floor(year / 100);
@@ -110,11 +90,7 @@ const gregorianEaster = (year: number): string => {
   return key(year, month, day);
 };
 
-/**
- * Julian Easter, mapped onto the Gregorian calendar — the Orthodox date, and
- * the one Ukrainian holidays hang off. The thirteen-day offset holds for the
- * whole of the twenty-first century, which is as far as this needs to be right.
- */
+/** Julian Easter, mapped onto the Gregorian calendar — the Orthodox date, and the one Ukrainian holidays hang… */
 const julianEaster = (year: number): string => {
   const a = year % 4;
   const b = year % 7;
@@ -135,12 +111,7 @@ const fromEaster = (
 ): Rule =>
   (year) => ({ date: shift(easter(year), offset), name, publicHoliday });
 
-/**
- * A holiday landing on a weekend moves — but not the same way everywhere, and
- * the difference is not cosmetic. The United States takes a Saturday holiday
- * on the Friday before; the United Kingdom gives a substitute day after, so
- * the same date can be a Monday there and a Friday in the States.
- */
+/** A holiday landing on a weekend moves — but not the same way everywhere, and the difference is not cosmetic. */
 const weekendShift = (date: string, saturdayGoesBack: boolean): string => {
   const weekday = new Date(`${date}T00:00:00Z`).getUTCDay();
 
@@ -246,11 +217,7 @@ const RULES: Record<string, Rule[]> = {
   ],
 };
 
-/**
- * Every holiday of one year, keyed by date. A year at a time because that is
- * the unit the rules are written in; callers asking about a month take the
- * years it touches and merge them, which the cache below makes cheap.
- */
+/** Every holiday of one year, keyed by date. */
 const cache = new Map<string, ReadonlyMap<string, Holiday>>();
 
 export function holidaysForYear(country: string, year: number): ReadonlyMap<string, Holiday> {

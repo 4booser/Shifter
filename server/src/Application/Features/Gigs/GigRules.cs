@@ -64,10 +64,7 @@ public static class GigRules
         return string.Join(',', parsed);
     }
 
-    /// <summary>
-    /// Human names for the share preview — a chat card reading "bartender"
-    /// in a Russian sentence looks like a bug, because it is one.
-    /// </summary>
+    /// <summary>Human names for the share preview — a chat card reading "bartender" in a Russian sentence looks like a bug…</summary>
     public static readonly IReadOnlyDictionary<GigCategory, string> CategoryRu =
         new Dictionary<GigCategory, string>
         {
@@ -109,13 +106,7 @@ public static class GigRules
             [GigCategory.Promoter] = "промоутер",
         };
 
-    /// <summary>
-    /// The same list in Ukrainian, for the same reason. The share page is
-    /// public and has no client to tell it which language to write, so it
-    /// asks the reader — and a page that asked and then printed «повар
-    /// горячего цеха» in the middle of a Ukrainian sentence would have made
-    /// the asking pointless.
-    /// </summary>
+    /// <summary>The same list in Ukrainian, for the same reason.</summary>
     public static readonly IReadOnlyDictionary<GigCategory, string> CategoryUk =
         new Dictionary<GigCategory, string>
         {
@@ -201,11 +192,7 @@ public static class GigRules
         _ => throw new ValidationException("employment must be freelance or permanent."),
     };
 
-    /// <summary>
-    /// Three to six small JPEG data URLs, serialised for the row. The floor
-    /// is the rule that gives the board its face: nobody answers a listing
-    /// they cannot look at.
-    /// </summary>
+    /// <summary>Three to six small JPEG data URLs, serialised for the row.</summary>
     public static string CleanPhotos(string[]? photos)
     {
         var list = (photos ?? []).Where(entry => !string.IsNullOrWhiteSpace(entry)).ToArray();
@@ -234,15 +221,7 @@ public static class GigRules
         return System.Text.Json.JsonSerializer.Serialize(list);
     }
 
-    /// <summary>
-    /// The shorter side of a JPEG, read from its frame header.
-    ///
-    /// Only the dimensions are wanted, so nothing is decoded: walk the
-    /// markers to the start-of-frame and read the two shorts it carries.
-    /// Null where the bytes are not a JPEG this can read — the count and the
-    /// budget still hold, and a picture nobody can measure is not by itself a
-    /// reason to refuse a listing.
-    /// </summary>
+    /// <summary>The shorter side of a JPEG, read from its frame header.</summary>
     private static int? JpegSide(string dataUrl)
     {
         var comma = dataUrl.IndexOf(',');
@@ -301,10 +280,7 @@ public static class GigRules
         return (from, to);
     }
 
-    /// <summary>
-    /// The pay is a base, a percent of sales, or both — but never neither.
-    /// Pure so the arithmetic of what a listing may promise is testable.
-    /// </summary>
+    /// <summary>The pay is a base, a percent of sales, or both — but never neither.</summary>
     public static decimal? ValidatePay(decimal amount, decimal? percent)
     {
         if (amount < 0)
@@ -336,15 +312,7 @@ public static class GigRules
         return kept.Length == 0 ? null : string.Join(',', kept);
     }
 
-    /// <summary>
-    /// A response must carry at least one way to reach the person — a reply
-    /// the owner cannot answer is noise for both sides.
-    /// </summary>
-    /// <summary>
-    /// <paramref name="required"/> false is the venue's side of the handshake:
-    /// it may pick somebody without leaving a number, and then the person
-    /// simply has one fewer way to ask what time to come.
-    /// </summary>
+    /// <summary>A response must carry at least one way to reach the person — a reply the owner cannot answer is noise for…</summary>
     public static (string? Phone, string? Telegram) CleanContacts(
         string? phone, string? telegram, bool required = true)
     {

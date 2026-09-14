@@ -6,16 +6,7 @@ using Xunit;
 
 namespace Shifter.Tests;
 
-/// <summary>
-/// Decisions about what to build have been made by guessing, because nobody
-/// knows which screens people use. The usual answer is an analytics SDK —
-/// somebody else's code, watching everything, reporting to a third party — in
-/// an application whose whole argument is that it does not do that.
-///
-/// So the counter is one integer per screen per day, and this test is the
-/// promise: there is no identifier on it, and there is no way to add one
-/// without deleting this.
-/// </summary>
+/// <summary>Decisions about what to build have been made by guessing, because nobody knows which screens people use.</summary>
 public class ScreenCounterTests
 {
     private static readonly string[] Identifying =

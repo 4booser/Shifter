@@ -16,12 +16,7 @@ export default function JoinPage() {
   );
 }
 
-/**
- * The invite link a code becomes: shifter.ink/join?code=ABCDEF. Signed out,
- * it routes through login and comes back; signed in, one button joins. A
- * pinned QR of this URL on the staff-room wall replaces dictating six
- * letters to each new colleague.
- */
+/** The invite link a code becomes: shifter.ink/join?code=ABCDEF. */
 function Join() {
   const router = useRouter();
   const params = useSearchParams();
@@ -58,9 +53,7 @@ function Join() {
       });
   };
 
-  // A link that lost its code — copied out of a message that wrapped, or
-  // typed from a photograph — landed on a form with «Код: —» and a button
-  // that could never be pressed. Say what happened instead.
+  // A link that lost its code — copied out of a message that wrapped, or typed from a photograph — landed on a…
   if (code.length < 4) {
     return (
       <div className="auth-scene grid min-h-dvh place-items-center px-4 py-10">

@@ -4,12 +4,7 @@ import { clopenings } from './clopening';
 import { averagesFor } from './insights';
 import { shiftDays } from './calendar-date';
 
-/**
- * Automatic observations about the numbers — the things a person would
- * notice if they stared at their own calendar long enough. Each rule earns
- * its place by being actionable or at least satisfying; anything that would
- * print for everyone all the time is noise and does not belong here.
- */
+/** Automatic observations about the numbers — the things a person would notice if they stared at their own… */
 
 export type InsightTone = 'good' | 'info' | 'warn';
 
@@ -84,15 +79,7 @@ export function insightsFor(input: InsightInput): Insight[] {
     }
   }
 
-  /*
-   * On course to beat last month — but only once there is something to
-   * project from.
-   *
-   * On the first of a month nothing has been worked yet, the projection is
-   * near zero, and the chip announced "tracking 100% below last month" over
-   * an empty calendar. Nobody is behind on a month that has not started; a
-   * forecast drawn from two days is a guess wearing a percentage.
-   */
+  /* On course to beat last month — but only once there is something to project from. */
   if (forecast !== null && forecast.live && previous.total_earned > 0 && summary.days_worked >= 3) {
     const change = (forecast.projected / previous.total_earned - 1) * 100;
 
@@ -301,9 +288,7 @@ export function insightsFor(input: InsightInput): Insight[] {
     });
   }
 
-  // Clopenings: the industry's own word for closing at two and opening at
-  // eight. Worth a high weight — it is the one thing on this list that is
-  // about the person rather than the money.
+  // Clopenings: the industry's own word for closing at two and opening at eight.
   const closeOpen = clopenings(summary.days);
 
   if (closeOpen.length > 0) {

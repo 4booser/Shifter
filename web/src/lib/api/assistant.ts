@@ -38,13 +38,7 @@ export interface AssistantReport {
   source: string;
 }
 
-/**
- * The case for a raise at one place, assembled out of the person's own record.
- *
- * The honesty is the feature: a thin case is reported as thin, with the reason
- * spelled out, because an app that talks somebody into a conversation they will
- * lose has done them harm rather than a favour.
- */
+/** The case for a raise at one place, assembled out of the person's own record. */
 export interface RaiseCase {
   location_id: number;
   location_name: string;

@@ -1,8 +1,6 @@
 namespace Shifter.Domain.Entities;
 
-/// <summary>How one delivery ended. Every arrival gets a row, including the
-/// rejected ones — a webhook that silently drops what it does not like is
-/// impossible to debug from the sending side.</summary>
+/// <summary>How one delivery ended.</summary>
 public enum DeliveryStatus
 {
     /// <summary>Read, mapped and written to the calendar.</summary>
@@ -18,11 +16,6 @@ public enum DeliveryStatus
     /// <summary>Never got as far as the contents: bad signature, bad JSON.</summary>
     Failed = 3,
 
-    /// <summary>
-    /// Read and understood, and there was nothing in it: no positions, no
-    /// amounts. Its own status rather than "applied", because a sender's test
-    /// button produces exactly this, and reporting success for it sends people
-    /// looking through the calendar for a day that was never written.
-    /// </summary>
+    /// <summary>Read and understood, and there was nothing in it: no positions, no amounts.</summary>
     Empty = 4
 }

@@ -22,15 +22,7 @@ import { Listening, askToListen, listen, speechAvailable } from 'dictation';
 import { voiceLocale } from '@/lib/voice';
 import { Phrase, readPhrase } from '@/lib/phrase';
 
-/**
- * A day, without leaving the month.
- *
- * Tapping a square used to throw a full-screen editor over the calendar, and
- * the question being asked was almost never an editing one — it was "what is
- * that day". So the common answers live here: what is on it, what it paid,
- * and the two or three things anybody actually does next. The editor is still
- * one tap away for everything else.
- */
+/** A day, without leaving the month. */
 /** What each kind is called on the button that confirms it. */
 const KIND_WORDS: Record<Phrase['kind'], string> = {
   tips: 'Чаевые',
@@ -40,17 +32,7 @@ const KIND_WORDS: Record<Phrase['kind'], string> = {
   hours: 'Часы',
 };
 
-/**
- * One understood sentence, folded into the day.
- *
- * Only the field it named. A sentence about tips must not clear the fine
- * somebody recorded an hour ago, and the day is always sent whole, so
- * everything else is carried through untouched.
- *
- * Hours and expenses are deliberately absent: hours belong to a placement and
- * an expense is its own record, and writing either from here would put a
- * number somewhere the person did not look.
- */
+/** One understood sentence, folded into the day. */
 function applyPhrase(payload: DaySave, read: Phrase): DaySave {
   if (read.amount === null) return payload;
 
@@ -59,9 +41,7 @@ function applyPhrase(payload: DaySave, read: Phrase): DaySave {
     return {
       ...payload,
       shifts: payload.shifts.map((entry, index) =>
-        // The day's takings belong to the shift that was worked. With one
-        // shift there is no ambiguity; with two, the first is the honest
-        // guess and the person can move it.
+        // The day's takings belong to the shift that was worked.
         index === 0 ? { ...entry, revenue: read.amount } : entry,
       ),
     };
@@ -132,9 +112,7 @@ export function DayPeek({
 
       listening.current = listen(
         voiceLocale(lang),
-        // Written straight into the same box somebody would have typed into,
-        // so what the app heard is shown before anything is saved — and the
-        // words can be corrected by hand if it misheard.
+        // Written straight into the same box somebody would have typed into, so what the app heard is shown before…
         (text) => setSaid(text),
         () => {
           listening.current = null;
@@ -164,9 +142,7 @@ export function DayPeek({
       .finally(() => setBusy(null));
   };
 
-  // The same line the server draws for a painted stroke: a day behind us is
-  // worked, one ahead is a plan. Two ways of putting a shift on a day that
-  // disagreed about which was which is how a month ends up half wrong.
+  // The same line the server draws for a painted stroke: a day behind us is worked, one ahead is a plan.
   const addShift = (template: ShiftTemplate) =>
     write(`add-${template.id}`, (payload) => ({
       ...payload,
@@ -186,9 +162,7 @@ export function DayPeek({
 
   return (
     <Modal visible transparent animationType="slide" onRequestClose={onClose}>
-      {/* A full-screen «tap outside to close». Unnamed, a screen reader
-          announces it as a button and says nothing about what it does —
-          the first thing met on entering every sheet in this app. */}
+      {/* A full-screen «tap outside to close». */}
       <Pressable
         style={styles.backdrop}
         accessibilityRole="button"
@@ -270,9 +244,7 @@ export function DayPeek({
             <Text style={styles.note}>{day.note}</Text>
           )}
 
-          {/* Одной строкой: «чаевые 1200», «штраф 200 за бокал». Разобранное
-              показывается до сохранения — парсер, который записал 1 200
-              вместо 12 000, хуже, чем никакого. */}
+          {/* Одной строкой: «чаевые 1200», «штраф 200 за бокал». */}
           <View style={styles.quick}>
             {canHear && (
               <Press

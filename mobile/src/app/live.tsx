@@ -25,18 +25,7 @@ const minutesOf = (time: string) => {
   return hours * 60 + minutes;
 };
 
-/**
- * The shift, live.
- *
- * This is the one screen where the app is doing something rather than
- * recording something, and it used to look like a stopwatch demo: a big
- * monospace number and three links. What somebody wants at the fourth hour is
- * not how long has passed but how much is left and what it has come to, so
- * the ring answers the first and the money answers the second, and both move.
- *
- * Breaks are here because they are the number that decides paid hours, and
- * nobody remembers them at the end of a shift. The phone does.
- */
+/** The shift, live. */
 export default function LiveScreen() {
   const scheme = useColorScheme();
   const palette = Colors[scheme === 'dark' ? 'dark' : 'light'];
@@ -46,10 +35,7 @@ export default function LiveScreen() {
   const clear = useLive((state) => state.clear);
   const toggleBreak = useLive((state) => state.toggleBreak);
 
-  // A shift is hours long and the phone is on a bar. Letting it sleep is fine
-  // for the count — the clock is the wall clock — but this screen is also how
-  // people watch the money, and a screen that keeps going dark is one nobody
-  // leaves open.
+  // A shift is hours long and the phone is on a bar.
   useKeepAwake();
 
   const [now, setNow] = useState(Date.now());
@@ -66,14 +52,7 @@ export default function LiveScreen() {
   const styles = makeStyles(palette);
 
   if (live === null) {
-    /*
-     * The screen still has to be a screen when there is nothing running.
-     *
-     * It used to inherit the running layout — head at the top, controls at
-     * the bottom — so with a shift closed it read as one grey sentence in the
-     * corner and a «Назад» stranded at the foot of an empty phone, with no
-     * word about what this screen is or how to fill it.
-     */
+    /* The screen still has to be a screen when there is nothing running. */
     return (
       <View style={[styles.screen, styles.empty, { paddingTop: insets.top + 40 }]}>
         <Text style={styles.emptyMark}>⏱️</Text>
@@ -100,10 +79,7 @@ export default function LiveScreen() {
   const paid = Math.max(0, elapsed - paused);
   const earnedNow = live.hourlyRate !== null ? (paid / 3600) * live.hourlyRate : null;
 
-  // The planned length, wrapping midnight, so a 17:00–01:00 shift is eight
-  // hours rather than minus sixteen. Measured from when it was meant to
-  // start, not from when it did: turning up twenty minutes late shortens what
-  // is left, it does not lengthen the shift.
+  // The planned length, wrapping midnight, so a 17:00–01:00 shift is eight hours rather than minus sixteen.
   const planStart = minutesOf(
     live.plannedStart ?? `${pad(started.getHours())}:${pad(started.getMinutes())}`,
   );
@@ -135,9 +111,7 @@ export default function LiveScreen() {
         actual_start: clock(started),
         actual_end: endAt ?? clock(new Date()),
         worked: true,
-        // Minutes, because that is what the server prices in — and null
-        // rather than zero where nobody took one, so the template's own
-        // unpaid minutes are kept rather than overwritten with "none".
+        // Minutes, because that is what the server prices in — and null rather than zero where nobody took one, so the…
         break_minutes: paused > 30 ? Math.round(paused / 60) : null,
       };
 
@@ -214,11 +188,7 @@ export default function LiveScreen() {
                 style={[styles.earned, { color: resting ? palette.textSecondary : palette.good }]}
                 duration={900}
               />
-              {/* The rate times the clock, and nothing else: the night
-                  premium, the overtime and the tips all land on the day when
-                  it is recorded. The web tile says the same thing; teaching
-                  either one the server's rules would be a second copy of
-                  them. */}
+              {/* The rate times the clock, and nothing else: the night premium, the overtime and the tips all land on the day… */}
               <Text style={styles.noRate}>{t('по ставке')}</Text>
             </>
           ) : (

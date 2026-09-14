@@ -3,11 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { CalendarDayData, CalendarEvent } from '@/lib/calendar/models';
 import { buildIcs } from '@/lib/export/ics';
 
-/**
- * The parts of RFC 5545 that calendars actually reject a file over: line
- * endings, folding, escaping, and the exclusive end of an all-day entry. None
- * of it is visible until a phone silently imports nothing.
- */
+/** The parts of RFC 5545 that calendars actually reject a file over: line endings, folding, escaping, and the… */
 function day(overrides: Partial<CalendarDayData> = {}): CalendarDayData {
   return {
     date: '2026-03-10',
@@ -156,11 +152,7 @@ describe('ics export', () => {
     expect(uid(first)).toBe(uid(second));
   });
 
-  /*
-   * The limit in the spec is octets. Cyrillic is two bytes a letter, a shift
-   * symbol four, and folding by string length let a line leave at twice the
-   * size it was meant to be — and could cut an emoji in half on the way.
-   */
+  /* The limit in the spec is octets. */
   it('folds on bytes, not characters, and never through a code point', () => {
     const text = build([day({ shifts: [shift({ name: 'Вечер 🍸'.repeat(20) })] })]);
 

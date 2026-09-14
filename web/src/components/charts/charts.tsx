@@ -7,27 +7,14 @@ import { CHART_H, CHART_W, Column, PAD, PLOT_H, PLOT_W, Tick, niceCeiling, niceF
 import { useI18n } from '@/lib/i18n';
 import { useMoney } from '@/lib/settings/money';
 
-/*
- * The chart kit, following the dataviz method: thin marks with 4px rounded
- * data-ends, one axis, recessive grid, a hover layer on every plot, direct
- * labels only where they earn their place. Series colours ride --s1..--s3 and
- * the accent, all validated for both modes.
- */
+/* The chart kit, following the dataviz method: thin marks with 4px rounded data-ends, one axis, recessive grid… */
 
 export interface AreaPoint {
   label: string;
   value: number;
 }
 
-/**
- * The cumulative line, taken seriously.
- *
- * One simple idea — money climbing through the days — executed all the way:
- * a monotone curve instead of a polyline, a layered wash with a glow under
- * the line, the live end of the line breathing, «today» marked where fact
- * hands over to forecast, the goal flagged by name, and a crosshair that
- * answers with this period, the one before, and the gap between them.
- */
+/** The cumulative line, taken seriously. */
 export function AreaChart({
   points,
   projection = [],
@@ -47,14 +34,7 @@ export function AreaChart({
   const [hover, setHover] = useState<number | null>(null);
   const raw = useId().replace(/[«»:]/g, '');
 
-  /*
-   * The scale reaches wherever the money went, including down.
-   *
-   * Pinned at zero, a stretch that closed in the red — deductions outrunning
-   * a short shift — was drawn twelve thousand units below the canvas while
-   * the axis read «₴0 · ₴0.5 · ₴1». Both ends are rounded, and the zero line
-   * is drawn whenever the floor is under it.
-   */
+  /* The scale reaches wherever the money went, including down. */
   const values = useMemo(
     () => [
       ...points.map((point) => point.value),
@@ -92,14 +72,7 @@ export function AreaChart({
   const comparisonCoords = useMemo(() => {
     if (comparison.length < 2) return [];
 
-    /*
-     * This used to open with `const span = comparison.length - 1`, which
-     * shadowed the outer span — the value range — with a count of points.
-     * The comparison line was then divided by «how many days» instead of
-     * «how much money», and a month worth forty-seven thousand hryvnia was
-     * plotted some two thousand times above the canvas. Nobody saw a wrong
-     * line; they saw no line, which is why it survived.
-     */
+    /* This used to open with `const span = comparison.length - 1`, which shadowed the outer span — the value range… */
     const lastIndex = comparison.length - 1;
 
     return comparison.map((point, index) => ({
@@ -118,27 +91,12 @@ export function AreaChart({
   const before = hover === null ? null : (comparison[hover]?.value ?? null);
   const last = coords.at(-1);
 
-  /*
-   * A scale nobody earned is not a chart.
-   *
-   * The ceiling is at least 1, so a stretch with nothing in it drew a full
-   * plot labelled «₴0 · ₴0.5 · ₴1» — three amounts of money that do not
-   * exist, on a page people read to find out what they made. When there is
-   * nothing to plot, the card says so.
-   */
+  /* A scale nobody earned is not a chart. */
   const anything =
     [...points, ...projection, ...comparison].some((point) => point.value !== 0) ||
     (goal ?? 0) > 0;
 
-  /*
-   * A short stretch used to `return null` — no plot, no sentence, and a card
-   * left holding a heading and a legend over a hole. On the comparison page
-   * that was every September until somebody had worked two days of it, with
-   * a whole August sitting in the comparison series ready to be drawn.
-   *
-   * The two series are now asked separately. Either one can carry the card;
-   * only when neither has a shape does the card say so in words.
-   */
+  /* A short stretch used to `return null` — no plot, no sentence, and a card left holding a heading and a legend… */
   const hasLine = coords.length > 1;
   const hasComparison = comparisonCoords.length > 1;
 
@@ -190,9 +148,7 @@ export function AreaChart({
           <path d={smoothPath(comparisonCoords)} fill="none" stroke="var(--faint)" strokeWidth="1.6" opacity="0.5" />
         )}
 
-        {/* One worked day is a place on the scale, not a line. Drawn as a
-            point, so the legend's «this period» has something to point at
-            instead of promising a stroke that a single value cannot make. */}
+        {/* One worked day is a place on the scale, not a line. */}
         {!hasLine && coords.length === 1 && (
           <circle cx={coords[0].x} cy={coords[0].y} r="4" fill="var(--accent)" stroke="var(--surface)" strokeWidth="2" />
         )}
@@ -428,11 +384,7 @@ export function ColumnChart({
   );
 }
 
-/**
- * The five rungs of the heat ramp, coldest first. Exported because a legend
- * drawn beside the grid has to be the same five colours as the grid, and a
- * second hard-coded copy of them is how a legend starts lying.
- */
+/** The five rungs of the heat ramp, coldest first. */
 export const HEAT_LEVELS = [
   'var(--surface-2)',
   'color-mix(in srgb, var(--heat) 25%, var(--surface-2))',
@@ -452,11 +404,7 @@ export function Heatmap({
   values: ReadonlyMap<string, number>;
   from: string;
   to: string;
-  /**
-   * Тянуть недели по всей ширине родителя, а не стоять квадратами в 16 px.
-   * На годовой странице сетка из 37 колонок занимала седьмую часть карточки
-   * во всю ширину экрана — остальное было пустотой.
-   */
+  /** Тянуть недели по всей ширине родителя, а не стоять квадратами в 16 px. */
   fill?: boolean;
   /** Дни недели слева и месяцы сверху: без них колонка — просто колонка. */
   labels?: boolean;
@@ -509,11 +457,7 @@ export function Heatmap({
     return { weeks: columns, months: marks };
   }, [values, from, to, lang]);
 
-  /* Неделя — колонка, и колонки тянутся под ширину карточки: раньше
-     здесь стояли квадраты ровно в десять пикселей, и год из двенадцати
-     недель занимал полоску в середине карточки шириной в полторы
-     тысячи. Верхняя граница держит квадрат квадратом: на трёх неделях
-     он не должен раздуться в плитку. */
+  /* Неделя — колонка, и колонки тянутся под ширину карточки: раньше здесь стояли квадраты ровно в десять… */
   const template = fill
     ? `repeat(${weeks.length}, minmax(6px, 1fr))`
     : `repeat(${weeks.length}, 16px)`;
@@ -572,9 +516,7 @@ export function Heatmap({
                   day === null ? (
                     <span key={dayIndex} className={cell} />
                   ) : (
-                    /* A span cannot be tabbed to and has nothing to announce, so
-                       the whole year was mouse-only and silent. Each day is a
-                       button that says its own date and figure. */
+                    /* A span cannot be tabbed to and has nothing to announce, so the whole year was mouse-only and silent. */
                     <button
                       type="button"
                       key={day.key}
@@ -603,11 +545,7 @@ export function Heatmap({
   );
 }
 
-/**
- * The frame around a chart made of elements: a value axis down the left,
- * gridlines across, marks projected in. Shared so six div-charts share one
- * reading instead of six.
- */
+/** The frame around a chart made of elements: a value axis down the left, gridlines across, marks projected in. */
 export function Plot({
   max,
   scale = 'money',
@@ -661,7 +599,6 @@ export function Plot({
 
 /** The ceiling Plot uses, for callers that scale their own marks. */
 export { niceCeiling };
-
 
 /** A line that draws itself: the dash offset needs the real path length. */
 function DrawnPath({ d }: { d: string }) {

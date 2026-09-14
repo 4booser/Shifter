@@ -38,11 +38,7 @@ const OPENERS = [
   'Сколько принесли чаевые?',
 ];
 
-/**
- * The assistant in the pocket. Every figure it says was counted by the server
- * from the same days the calendar draws — the model, where there is one, only
- * chooses the words, and each answer says which of the two wrote it.
- */
+/** The assistant in the pocket. */
 export default function AssistantScreen() {
   const router = useRouter();
   const scheme = useColorScheme();
@@ -272,10 +268,7 @@ export default function AssistantScreen() {
   );
 }
 
-/**
- * The blanks, one card each. Answering writes straight into the day it is
- * about — a question that changes nothing is an interruption, not help.
- */
+/** The blanks, one card each. */
 function GapList({
   gaps,
   palette,

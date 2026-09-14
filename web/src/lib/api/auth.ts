@@ -46,17 +46,11 @@ export interface Profile {
   two_factor: boolean;
   /** Whether they asked for the month's letter. Off unless they did. */
   monthly_letter: boolean;
-  /**
-   * A throwaway account somebody pressed «look around» to get. Everything in
-   * it is invented and it sweeps itself after two days; the shell says so.
-   */
+  /** A throwaway account somebody pressed «look around» to get. */
   is_demo: boolean;
 }
 
-/**
- * Constraints enforced by RegisterHandler, mirrored so the form can reject bad
- * input before a round trip; the server remains the authority.
- */
+/** Constraints enforced by RegisterHandler, mirrored so the form can reject bad input before a round trip; the… */
 export const LOGIN_MIN_LENGTH = 4;
 export const LOGIN_MAX_LENGTH = 20;
 export const PASSWORD_MIN_LENGTH = 8;
@@ -105,12 +99,7 @@ export const authApi = {
     );
   },
 
-  /**
-   * The whole application, on invented work. Nobody is asked for anything:
-   * the server mints a throwaway account, seeds half a year into it and
-   * answers with the same envelope a login does — so the session is kept the
-   * same way, and everything downstream cannot tell the difference.
-   */
+  /** The whole application, on invented work. */
   async demo(): Promise<void> {
     saveSession(await api<AuthResponse>('/shifter/v1/demo', { method: 'POST' }));
   },
@@ -119,11 +108,7 @@ export const authApi = {
 
   me: () => api<CurrentUser>(`${AUTH}/me`),
 
-  /**
-   * Revokes the refresh token server-side, then clears the session. The local
-   * clear happens either way: a failed call must not leave someone stuck
-   * signed in on a shared machine.
-   */
+  /** Revokes the refresh token server-side, then clears the session. */
   /** The second half of a two-factor sign-in. */
   async loginSecondFactor(ticket: string, code: string): Promise<void> {
     saveSession(await api<AuthResponse>(`${AUTH}/user/login/2fa`, { body: { ticket, code } }));
@@ -190,10 +175,7 @@ export const accountApi = {
   linkGoogle: (credential: string) =>
     api<Profile>('/shifter/v1/account/google', { body: { credential } }),
   unlinkGoogle: () => api<Profile>('/shifter/v1/account/google', { method: 'DELETE' }),
-  /**
-   * A share of tips put aside on paper. Nothing is moved — the app has no
-   * business touching anybody's account.
-   */
+  /** A share of tips put aside on paper. */
   tipJar: () => api<TipJarState>('/shifter/v1/auth/tip-jar'),
   setTipJar: (percent: number, goal: number) =>
     api<{ percent: number; goal: number }>('/shifter/v1/auth/tip-jar', {

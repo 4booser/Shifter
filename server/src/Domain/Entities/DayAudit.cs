@@ -1,10 +1,6 @@
 namespace Shifter.Domain.Entities;
 
-/// <summary>
-/// One line of a day's history: when it changed, what changed it, and what
-/// it held afterwards. Append-only — the answer to "where did my tips go"
-/// is a list of moments, not a mutable record.
-/// </summary>
+/// <summary>One line of a day's history: when it changed, what changed it, and what it held afterwards.</summary>
 public sealed class DayAudit
 {
     public int Id { get; set; }

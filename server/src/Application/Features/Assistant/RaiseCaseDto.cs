@@ -1,12 +1,6 @@
 namespace Shifter.Application.Features.Assistant;
 
-/// <summary>
-/// The case for a raise at one place, and whether there is one yet.
-///
-/// The honesty is the feature: a thin case is reported as thin, with the reason
-/// spelled out, because an app that talks somebody into a conversation they
-/// will lose has done them harm rather than a favour.
-/// </summary>
+/// <summary>The case for a raise at one place, and whether there is one yet.</summary>
 public record RaiseCaseDto(
     int location_id,
     string location_name,

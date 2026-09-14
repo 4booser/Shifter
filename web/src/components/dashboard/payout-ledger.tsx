@@ -11,16 +11,7 @@ import { Alert } from '@/components/ui/bits';
 import { Icon } from '@/components/ui/icon';
 import { formatDate, formatPeriod } from '@/lib/calendar/calendar-date';
 
-/**
- * The ledger as rows: every recorded payment, each one fixable or removable.
- *
- * The reconciliation above answers «сходится ли». This section is for when
- * it does not because the records themselves went wrong — a sum mistyped, a
- * month attributed to the wrong place, or a ledger that went so crooked early
- * on that the honest fix is to wipe it and retype from the payslips. Deleting
- * everything is a real feature, asked for out loud with the word typed back,
- * because «начать с чистого листа» beats arguing with forty wrong rows.
- */
+/** The ledger as rows: every recorded payment, each one fixable or removable. */
 export function PayoutLedger({
   payouts,
   onEdit,

@@ -18,14 +18,7 @@ public record BriefLineDto(
 /// <summary>A section of the day page. Empty sections are never sent.</summary>
 public record BriefBlockDto(string kind, string emoji, string title, BriefLineDto[] lines);
 
-/// <summary>
-/// The day page: today, the month, and what the data noticed. Every line is
-/// arithmetic somebody could check against their own calendar — the model,
-/// where there is one, writes the paragraph at the top and never these.
-///
-/// Observations earn their place or are left out. A page that pads itself to
-/// a fixed length teaches people to stop reading it.
-/// </summary>
+/// <summary>The day page: today, the month, and what the data noticed.</summary>
 public static class BriefBlocks
 {
     private static readonly CultureInfo Ru = Figures.Ru;
@@ -74,11 +67,7 @@ public static class BriefBlocks
         BriefFacts facts,
         AheadFacts ahead,
         string? lang = null,
-        /// <summary>
-        /// The rest somebody counts as enough. Eleven is the EU daily rule
-        /// and the default nobody has to choose; a person who works split
-        /// doubles by arrangement can set their own and stop being told.
-        /// </summary>
+        /// <summary>The rest somebody counts as enough.</summary>
         double restHours = RestBetweenShifts.DefaultHours,
         int weeklyGoalStreak = 0)
     {
@@ -364,20 +353,7 @@ public static class BriefBlocks
             && day.date.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday;
     }
 
-    /// <summary>
-    /// Every worked shift as an interval on one continuous clock, so a night
-    /// ending at 04:00 and a morning starting at 09:00 is five hours apart
-    /// rather than nineteen.
-    /// </summary>
-    /// <summary>
-    /// «В 14 раз больше», never «в 14 раза».
-    ///
-    /// The multiple only appears past three, which is exactly where the word
-    /// stops taking the two-to-four form for whole numbers — and the comment
-    /// above this branch already said «в 14 раз» is what a person would
-    /// actually say, while the code wrote «раза». A fraction keeps «раза»:
-    /// «в 3,5 раза больше» is right and «в 3,5 раз» is not.
-    /// </summary>
+    /// <summary>Every worked shift as an interval on one continuous clock, so a night ending at 04:00 and a morning starting…</summary>
     private static string Multiple(decimal ratio, Say say)
     {
         var shown = Math.Round(ratio, 1);

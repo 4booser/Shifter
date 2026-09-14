@@ -1,10 +1,6 @@
 namespace Shifter.Domain.Entities;
 
-/// <summary>
-/// One password-reset ticket: a hash of the emailed secret, an hour to live,
-/// and a stamp of the moment it was spent. Only the hash is stored, so a
-/// database read cannot reset anybody's password.
-/// </summary>
+/// <summary>One password-reset ticket: a hash of the emailed secret, an hour to live, and a stamp of the moment it was…</summary>
 public sealed class PasswordReset
 {
     public int Id { get; set; }

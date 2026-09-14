@@ -7,13 +7,7 @@ import { runOnJS, useAnimatedReaction } from 'react-native-reanimated';
 
 import { Palette } from '@/constants/theme';
 
-/**
- * A cumulative line racing its own past: the generic climb every «pace»
- * card draws — earnings against last month, spending against last month.
- * Callers hand in two running totals; this draws the filled line, the grey
- * ghost, and reports which day a finger is on. What the day means — money
- * earned, money gone — is the caller's sentence to write.
- */
+/** A cumulative line racing its own past: the generic climb every «pace» card draws — earnings against last… */
 type Row = {
   at: number;
   fact: number | null;
@@ -59,14 +53,7 @@ export function SkiaClimb({
     if (onPick !== undefined && !isActive) onPick(null);
   }, [isActive, onPick]);
 
-  /*
-   * The finger's position, watched where it lives.
-   *
-   * This used to be a timer reading the shared value twelve times a second
-   * from the JS thread — which is both the thing Reanimated's strict mode
-   * warns about and a poll that keeps running between two frames that say
-   * the same thing. A reaction fires when the number changes, and only then.
-   */
+  /* The finger's position, watched where it lives. */
   useAnimatedReaction(
     () => Math.round(state.x.value.value),
     (at, before) => {

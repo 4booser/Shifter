@@ -10,11 +10,7 @@ import { t } from '@/lib/i18n';
 import { money } from '@/lib/types';
 import { tenth } from '../lib/format';
 
-/**
- * The statement itself, in the pocket — the rows every figure above is made
- * of. Day headers carry the day's signed total; the dot carries the
- * category's colour; search answers as you type. Forty rows, then «ещё».
- */
+/** The statement itself, in the pocket — the rows every figure above is made of. */
 export function BankStatement({
   items,
   rules,

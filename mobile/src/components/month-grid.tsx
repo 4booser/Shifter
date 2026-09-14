@@ -20,15 +20,7 @@ export interface PaintTarget {
   symbol: string | null;
 }
 
-/**
- * One month, drawn and painted.
- *
- * The grid does its own hit testing rather than handing every cell a press
- * handler, because a finger dragged across a row has to paint every cell it
- * crosses — and a Pressable only ever hears about the one it started in. Six
- * rows of seven, no gaps between the touch areas, so the arithmetic from a
- * coordinate to a day is exact.
- */
+/** One month, drawn and painted. */
 export function MonthGrid({
   month,
   days,
@@ -65,11 +57,7 @@ export function MonthGrid({
 
   for (let at = 0; at < 42; at += 7) rows.push(cells.slice(at, at + 7));
 
-  // Measured rather than assumed: the page is the window's width, but the
-  // padding around it is a style, and guessing it would put the finger a
-  // column off at the edges. Refs rather than locals — a re-render would
-  // otherwise wipe the measurement, and onLayout does not fire again to
-  // replace it.
+  // Measured rather than assumed: the page is the window's width, but the padding around it is a style, and…
   const width = useRef(0);
   const last = useRef<string | null>(null);
 
@@ -277,9 +265,7 @@ const makeStyles = (palette: Palette) =>
     weekDayRest: { color: palette.accent, opacity: 0.75 },
     grid: { height: GRID_HEIGHT },
     row: { flexDirection: 'row', height: CELL_HEIGHT },
-    // The touch area is the whole seventh; the card inside it is what you see,
-    // which is how two cells can look separated without leaving a dead gap
-    // between them for a dragging finger to fall into.
+    // The touch area is the whole seventh; the card inside it is what you see, which is how two cells can look…
     slot: { flex: 1, height: CELL_HEIGHT, padding: 2.5 },
     slotOutside: { opacity: 0.32 },
     card: {

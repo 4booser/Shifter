@@ -7,14 +7,7 @@ using Xunit;
 
 namespace Shifter.Api.Tests;
 
-/// <summary>
-/// A year carried in from another tracker, and what happens to the months
-/// already here.
-///
-/// The promise is that days somebody already has are left alone. Somebody
-/// importing a year on top of three months of real work must not lose the
-/// three months, and nothing had checked that beyond me watching it once.
-/// </summary>
+/// <summary>A year carried in from another tracker, and what happens to the months already here.</summary>
 [Collection("api")]
 public sealed class ImportOverHttpTests(Api api)
 {
@@ -42,11 +35,7 @@ public sealed class ImportOverHttpTests(Api api)
         return form;
     }
 
-    /// <summary>
-    /// The shape a foreign export actually arrives in: semicolons because the
-    /// machine was Russian-locale, a quoted venue with a comma in it, a
-    /// space-and-comma decimal, and one row whose date cannot be read.
-    /// </summary>
+    /// <summary>The shape a foreign export actually arrives in: semicolons because the machine was Russian-locale, a quoted…</summary>
     private const string Foreign =
         "Дата;Часы;Сумма чаевых;Сумма;Заведение;Заметка\r\n"
         + "01.03.2019;8;200;800;\"Bar, The\";обычный день\r\n"

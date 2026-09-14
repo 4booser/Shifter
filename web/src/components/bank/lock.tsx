@@ -6,19 +6,7 @@ import { accountApi, authApi } from '@/lib/api/auth';
 import { useI18n } from '@/lib/i18n';
 import { Alert } from '@/components/ui/bits';
 
-/**
- * The bank tab's own lock.
- *
- * What the calendar holds is how much somebody earns. What this tab holds is
- * where they were, what they bought and how much they have — a different
- * order of thing, worth its own door even on a machine where the app itself
- * is signed in.
- *
- * The browser has no Face ID, but it has the account password, and asking for
- * it once a session is the honest equivalent. Nothing new is stored: the
- * check is the same login call the front door uses, and the only thing kept
- * is a session flag that evaporates with the tab.
- */
+/** The bank tab's own lock. */
 
 const KEY = 'shifter.bank.lock';
 const OPENED = 'shifter.bank.opened';
@@ -84,9 +72,7 @@ export function BankLock({ children }: { children: React.ReactNode }) {
           setBusy(true);
           setWrong(false);
 
-          // The same call the front door makes. Nothing new to store and no
-          // second password to invent — a wrong guess fails exactly as a
-          // wrong login does, rate limit included.
+          // The same call the front door makes.
           void authApi
             .login({ login, password })
             .then(() => {

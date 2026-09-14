@@ -11,14 +11,7 @@ import { Money } from '@/components/ui/bits';
 
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-/**
- * The month's shape: which weekday eats, which days carried it, what moved
- * against last month.
- *
- * Three small answers to the one question every category chart dodges —
- * "куда всё делось" — each of them checkable down to the transactions it came
- * from.
- */
+/** The month's shape: which weekday eats, which days carried it, what moved against last month. */
 export function BankShape({
   items,
   from,

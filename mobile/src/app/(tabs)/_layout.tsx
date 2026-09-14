@@ -8,10 +8,7 @@ import { API_BASE } from '@/lib/api';
 import { Colors } from '@/constants/theme';
 import { t } from '@/lib/i18n';
 
-/**
- * Route to icon, in one place. The bar draws the outline for a tab you are
- * not on and the filled one for the tab you are.
- */
+/** Route to icon, in one place. */
 const ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
   index: 'calendar',
   schedule: 'people',
@@ -36,13 +33,7 @@ export default function TabsLayout() {
   const palette = Colors[scheme === 'dark' ? 'dark' : 'light'];
   const segment = useSegments();
 
-  /**
-   * One integer, so decisions about what to build next stop being guesses.
-   *
-   * The tab's own name and nothing else — no identifier of any kind reaches
-   * this, by design and by test. Failing is silent: a counter that can
-   * interrupt somebody's shift has its priorities backwards.
-   */
+  /** One integer, so decisions about what to build next stop being guesses. */
   useEffect(() => {
     const screen = SEEN[segment[segment.length - 1] ?? ''] ?? null;
 

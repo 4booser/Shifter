@@ -5,11 +5,7 @@ using Xunit;
 
 namespace Shifter.Api.Tests;
 
-/// <summary>
-/// The words a person reads at the worst moment now travel with a machine
-/// name, so each client can say them in its reader's language. The English
-/// sentence stays in the envelope as the fallback and the log's truth.
-/// </summary>
+/// <summary>The words a person reads at the worst moment now travel with a machine name, so each client can say them in…</summary>
 [Collection("api")]
 public sealed class ErrorCodesOverHttpTests
 {

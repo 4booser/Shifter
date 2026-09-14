@@ -8,15 +8,7 @@ using Xunit;
 
 namespace Shifter.Api.Tests;
 
-/// <summary>
-/// The promises this application makes about money, asked of the running
-/// server rather than of a fake.
-///
-/// Each one here is a sentence the product says out loud somewhere: overtime
-/// is paid at the premium above the ordinary rate; a meal is only deducted
-/// from a day somebody worked; an estimate is never mixed with a fact; nothing
-/// is said where there is not enough to say it with.
-/// </summary>
+/// <summary>The promises this application makes about money, asked of the running server rather than of a fake.</summary>
 [Collection("api")]
 public sealed class PromisesOverHttpTests(Api api)
 {

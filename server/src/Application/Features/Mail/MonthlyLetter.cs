@@ -4,18 +4,7 @@ using Shifter.Application.Common.Text;
 
 namespace Shifter.Application.Features.Mail;
 
-/// <summary>
-/// The month, in a letter.
-///
-/// Once a month is the only frequency at which a letter from an app is not an
-/// irritation, and the month's end is the only moment its figures are final.
-/// Everything in it is a fact the app already computed for a screen — nothing
-/// is written here that could not be checked by opening the app, because a
-/// letter that knows things the app does not is a letter nobody trusts.
-///
-/// Pure and given every figure, so what it says can be tested without a
-/// database, an SMTP server or a month passing.
-/// </summary>
+/// <summary>The month, in a letter.</summary>
 public static class MonthlyLetter
 {
     public sealed record Facts(
@@ -33,20 +22,11 @@ public static class MonthlyLetter
         /// <summary>Days worked but never closed off — the only nag in the letter.</summary>
         int Unclosed);
 
-    /// <summary>
-    /// The subject line: the figure, because that is what the letter is for
-    /// and burying it makes the letter look like marketing.
-    /// </summary>
+    /// <summary>The subject line: the figure, because that is what the letter is for and burying it makes the letter look…</summary>
     public static string Subject(Facts facts, string money)
         => $"{facts.Month}: {money}";
 
-    /// <summary>
-    /// Plain HTML with inline styles and no images.
-    ///
-    /// Mail clients strip stylesheets, block remote images by default, and
-    /// there are a dozen of them. A letter that renders as a broken layout in
-    /// Outlook is worse than a plain one everywhere.
-    /// </summary>
+    /// <summary>Plain HTML with inline styles and no images.</summary>
     public static string Html(
         Facts facts,
         Func<decimal, string> money,
@@ -118,19 +98,11 @@ public static class MonthlyLetter
         return $"{money(then)} · {sign}{Math.Abs(Math.Round(share * 100))}%";
     }
 
-    /// <summary>
-    /// The letter used to write «199.5 h» — an invariant decimal point and an
-    /// English unit, inside a letter that is Russian from the subject line
-    /// down. It goes out to somebody's inbox, where there is nothing to
-    /// compare it against and no way to ask.
-    /// </summary>
+    /// <summary>The letter used to write «199.5 h» — an invariant decimal point and an English unit, inside a letter that is…</summary>
     private static string Hours(double hours, Func<string, string> t)
         => $"{Figures.Hours(hours)} {t("h")}";
 
-    /// <summary>
-    /// A venue called "Bar &amp; Grill" must not become markup, and a note
-    /// somebody typed must never reach a mail client as a tag.
-    /// </summary>
+    /// <summary>A venue called "Bar &amp; Grill" must not become markup, and a note somebody typed must never reach a mail…</summary>
     private static string Escape(string value)
         => value
             .Replace("&", "&amp;")

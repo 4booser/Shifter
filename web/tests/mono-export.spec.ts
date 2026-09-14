@@ -1,8 +1,4 @@
-/*
- * The same tests as on the phone, over the same code. If a platform ever
- * needs its own copy of one of these, something upstream has already gone
- * wrong.
- */
+/* The same tests as on the phone, over the same code. */
 import { describe, expect, it } from 'vitest';
 
 import { MonoStatementItem } from '@/lib/mono/mono';
@@ -35,11 +31,7 @@ const category = () => 'Продукты';
 
 describe('the statement on the way out', () => {
   it('writes money as a spreadsheet reads it', () => {
-    // Minor units would export honestly and open as 80000, which is the sort
-    // of file somebody blames the app for. The decimal has to match the
-    // separator: the fields are split on semicolons because this reader's
-    // Excel expects that, and the same Excel wants «−800,00» — with a full
-    // stop every amount arrived as text and nothing could be summed.
+    // Minor units would export honestly and open as 80000, which is the sort of file somebody blames the app for.
     const csv = statementCsv([item({})], category, '2026-08-01', '2026-08-31');
 
     expect(csv.split('\n')[1]).toContain(';-800,00;UAH;16,00;42000,00;');
@@ -118,9 +110,7 @@ describe('the statement on the way out', () => {
   });
 
   it('marks what has not settled, and only when something has not', () => {
-    // A hold is money the bank has not taken yet. A row that looks final in a
-    // file nobody can re-check is the wrong kind of wrong — but an empty
-    // column in every export teaches people to ignore the one that matters.
+    // A hold is money the bank has not taken yet.
     const settled = statementCsv([item({})], category, '2026-08-01', '2026-08-31');
 
     expect(settled).not.toContain('Не проведено');

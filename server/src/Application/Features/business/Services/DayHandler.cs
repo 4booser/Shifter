@@ -344,23 +344,13 @@ public partial class DayHandler : IDayHandler
         return touched.Select(day => ToDto(day, byId)).ToArray();
     }
 
-    /// <summary>
-    /// The range in one currency, or null where there is nothing to convert.
-    /// The rate of the last day of the range is used for the whole of it and
-    /// said out loud: one stated rate is something a person can check against
-    /// their own bank, and a per-day reconstruction is not.
-    /// </summary>
+    /// <summary>The range in one currency, or null where there is nothing to convert.</summary>
     private async Task<ConversionDto?> ConvertAsync(
         LocationTotalDto[] byLocation,
         string[] currencies,
         string? baseCurrency,
         DateOnly on,
-        /// <summary>
-        /// What arrived, each carrying the rate of the day it arrived. Earnings
-        /// are restated at one stated rate — a per-day reconstruction of a
-        /// month's shifts is not something anybody can check — but a payment
-        /// happened on a day, and that day's rate is written beside it.
-        /// </summary>
+        /// <summary>What arrived, each carrying the rate of the day it arrived.</summary>
         Payout[] payouts,
         CancellationToken ct)
     {
@@ -435,13 +425,7 @@ public partial class DayHandler : IDayHandler
             PaidAt(payouts, wanted));
     }
 
-    /// <summary>
-    /// What arrived, at the rate of the day each payment landed.
-    ///
-    /// Null unless something in the range carries a stored rate: a payment
-    /// recorded before rates began being kept has none, and converting it at
-    /// today's would be the very thing this exists to stop.
-    /// </summary>
+    /// <summary>What arrived, at the rate of the day each payment landed.</summary>
     private static decimal? PaidAt(Payout[] payouts, string wanted)
     {
         var any = false;
@@ -470,10 +454,7 @@ public partial class DayHandler : IDayHandler
         return any ? Math.Round(total, 2) : null;
     }
 
-    /// <summary>
-    /// Empty and null both mean "no colour": the client clears the swatch by
-    /// sending either, and neither should reach the database as a value.
-    /// </summary>
+    /// <summary>Empty and null both mean "no colour": the client clears the swatch by sending either, and neither should…</summary>
     private static string? NormaliseColour(string? colour)
     {
         if (string.IsNullOrWhiteSpace(colour)) return null;
@@ -514,11 +495,7 @@ public partial class DayHandler : IDayHandler
         return touched.Select(day => ToDto(day, byId)).ToArray();
     }
 
-    /// <summary>
-    /// The person's cut of the day's pool, or null when nothing on the day is
-    /// pooled. Several pooled shifts on one day each take their own agreed
-    /// share of the same pool, which is what a double is: two slices, one hat.
-    /// </summary>
+    /// <summary>The person's cut of the day's pool, or null when nothing on the day is pooled.</summary>
     private static decimal? PooledTips(List<DayShift> shifts, decimal? pool)
     {
         if (pool is not decimal amount || amount <= 0m) return null;
@@ -648,24 +625,7 @@ public partial class DayHandler : IDayHandler
             .ToList();
     }
 
-    /// <summary>
-    /// Extra owed for hours past the weekly threshold. Only hourly rates take
-    /// part: a per-day or per-month wage has no hourly base to multiply, and
-    /// inventing one would put money on the screen that nobody agreed to.
-    ///
-    /// Hours are taken in date order, so the overtime is whatever was worked
-    /// after crossing the line — which is how it is actually paid.
-    /// </summary>
-    /// <summary>
-    /// Overtime, kept per place. It used to be returned as one pair, which is
-    /// why none of it ever reached the per-place figures — and therefore never
-    /// reached tax, holiday accrual or the reconciliation's "expected".
-    /// </summary>
-    /// <summary>
-    /// Public for the same reason PeriodSalary is: it is the only correct way
-    /// to count the premium, and the draft pricer needs to run it over a week
-    /// that is part real and part hypothetical.
-    /// </summary>
+    /// <summary>Extra owed for hours past the weekly threshold.</summary>
     public static Dictionary<int, (double Hours, decimal Extra)> OvertimeByPlace(
         Day[] days,
         Dictionary<int, Location> locations,
@@ -736,16 +696,7 @@ public partial class DayHandler : IDayHandler
         return byPlace;
     }
 
-    /// <summary>
-    /// What the night and public-holiday rules add across a range. Both are
-    /// off by default (multiplier 1.0), so a place that never agreed to them
-    /// is priced exactly as before.
-    /// </summary>
-    /// <summary>
-    /// Night and holiday premiums, kept per place for the same reason overtime
-    /// is: a figure that only exists in the headline is a figure the tax, the
-    /// holiday accrual and the reconciliation never see.
-    /// </summary>
+    /// <summary>What the night and public-holiday rules add across a range.</summary>
     private static Dictionary<int, (double Night, decimal Extra)> PremiumsByPlace(
         Day[] days,
         Dictionary<int, Location> locations)
@@ -800,12 +751,7 @@ public partial class DayHandler : IDayHandler
         return byPlace;
     }
 
-    /// <summary>
-    /// Whether a shift touches a public holiday, judged by the hours rather
-    /// than by the date it happens to be filed under. A shift running
-    /// 22:00 to 06:00 on the 31st spends most of itself on the 1st, and reading
-    /// only the 31st paid the holiday rate on exactly the wrong nights.
-    /// </summary>
+    /// <summary>Whether a shift touches a public holiday, judged by the hours rather than by the date it happens to be filed…</summary>
     private static bool HolidayHours(DayShift entry, DateOnly date, Location place)
     {
         if (Holidays.IsPublicHoliday(place.HolidayCountry, date)) return true;
@@ -818,10 +764,7 @@ public partial class DayHandler : IDayHandler
         return wraps && Holidays.IsPublicHoliday(place.HolidayCountry, date.AddDays(1));
     }
 
-    /// <summary>
-    /// Worked hours and pay per place of work. Shifts with no location are
-    /// grouped under id 0 rather than dropped, so the parts still sum.
-    /// </summary>
+    /// <summary>Worked hours and pay per place of work.</summary>
     internal static LocationTotalDto[] ByLocation(
         Day[] days,
         Dictionary<int, Location> locations,
@@ -957,10 +900,7 @@ public partial class DayHandler : IDayHandler
             .ToArray();
     }
 
-    /// <summary>
-    /// The bucket for a place, made if it is not there yet. A place can owe a
-    /// monthly wage in a range where the daily figures happen to be empty.
-    /// </summary>
+    /// <summary>The bucket for a place, made if it is not there yet.</summary>
     private static LocationAccumulator Bucket(
         Dictionary<int, LocationAccumulator> totals,
         int key,
@@ -1002,19 +942,7 @@ public partial class DayHandler : IDayHandler
         public int Days;
     }
 
-    /// <summary>
-    /// What the day owes support staff. The rule belongs to the place, so a day
-    /// with no located shifts tips out nothing.
-    /// </summary>
-    /// <summary>
-    /// Everything the day cost: the staff meal withheld by the place plus any
-    /// fine recorded on the day.
-    /// </summary>
-    /// <summary>
-    /// The reasons a day can cost money. Anything unrecognised — including
-    /// what an older client sends, which is nothing — reads as unsaid rather
-    /// than as "other": the app should not put words in anybody's mouth.
-    /// </summary>
+    /// <summary>What the day owes support staff.</summary>
     private static string? ParseDeductionReason(string? value) => value?.ToLowerInvariant() switch
     {
         "breakage" => "breakage",
@@ -1026,12 +954,7 @@ public partial class DayHandler : IDayHandler
         _ => null
     };
 
-    /// <summary>
-    /// Fines grouped by what caused them, largest first, over a range of days.
-    /// Meal withholding is deliberately absent: it is agreed in advance and
-    /// nothing went wrong, so putting it beside a till shortfall would blunt
-    /// the only number on the page worth arguing about.
-    /// </summary>
+    /// <summary>Fines grouped by what caused them, largest first, over a range of days.</summary>
     public static DeductionReasonDto[] ByReason(IEnumerable<Day> days)
         => days
             .Where(day => (day.Deductions ?? 0m) > 0m)
@@ -1056,16 +979,7 @@ public partial class DayHandler : IDayHandler
         return split.Weight.Keys.Sum(place => split.Deductions(place, locations));
     }
 
-    /// <summary>
-    /// How one day divides between the places worked on it.
-    ///
-    /// Written once because three separate readings of it disagreed. Tip-out
-    /// took the rule of whichever place happened to be listed first and applied
-    /// it to the whole day — including the other employer's tips — and the
-    /// order was not even stable. The staff meal was pooled across places and
-    /// then re-split by hours, so one bar's lunch was charged to the cafe next
-    /// door, and to that cafe's line in the reconciliation.
-    /// </summary>
+    /// <summary>How one day divides between the places worked on it.</summary>
     private sealed record DaySplit(
         Dictionary<int, double> Weight,
         double Hours,
@@ -1073,12 +987,7 @@ public partial class DayHandler : IDayHandler
         decimal Sales,
         decimal GrossSales,
         decimal Fine,
-        /// <summary>
-        /// The places actually worked today, which is not the same as the
-        /// places on today. A day holding nothing but a plan still has to be
-        /// attributed somewhere — see SplitOf — and that fallback names the
-        /// place, which is right for the money and wrong for the meal.
-        /// </summary>
+        /// <summary>The places actually worked today, which is not the same as the places on today.</summary>
         HashSet<int> Worked)
     {
         public double Total => Weight.Values.Sum();
@@ -1097,16 +1006,7 @@ public partial class DayHandler : IDayHandler
                 + GrossSales * share * rules.TipOutOfSalesPercent / 100m;
         }
 
-        /// <summary>
-        /// The fine follows the hours, because a fine belongs to the day. The
-        /// staff meal does not: it is a house rule of one place, charged once
-        /// for the day worked there.
-        ///
-        /// "Worked there" being the point. Charged on presence alone, a
-        /// Saturday with next week's shift pencilled in read as minus eighty:
-        /// the calendar showed a day in the red for a meal nobody has eaten
-        /// yet, on a shift nobody has been to.
-        /// </summary>
+        /// <summary>The fine follows the hours, because a fine belongs to the day.</summary>
         public decimal Deductions(int place, Dictionary<int, Location> locations)
             => Fine * Share(place)
                 + (Worked.Contains(place) && locations.TryGetValue(place, out Location? rules)
@@ -1125,11 +1025,7 @@ public partial class DayHandler : IDayHandler
         _ => "unset",
     };
 
-    /// <summary>
-    /// Anything unrecognised reads as "not said" rather than throwing. A zone
-    /// is a label on somebody's own evening; refusing a save over one would be
-    /// losing the shift to protect a category.
-    /// </summary>
+    /// <summary>Anything unrecognised reads as "not said" rather than throwing.</summary>
     private static ShiftZone ParseZone(string value) => value.Trim().ToLowerInvariant() switch
     {
         "hall" => ShiftZone.Hall,
@@ -1187,15 +1083,7 @@ public partial class DayHandler : IDayHandler
         return split.Weight.Keys.Sum(place => split.TipOut(place, locations));
     }
 
-    /// <summary>
-    /// A weekly or monthly wage is earned once per period, however many shifts
-    /// fall inside it. So each template is charged per distinct week or month
-    /// in which it was actually worked, not per day.
-    /// </summary>
-    /// <summary>
-    /// Which week or month a placement's wage belongs to. Weeks are ISO, so a
-    /// week straddling New Year still counts as one week.
-    /// </summary>
+    /// <summary>A weekly or monthly wage is earned once per period, however many shifts fall inside it.</summary>
     private static (int ShiftId, int Year, int Slot) SlotOf(DayShift entry, DateOnly date)
     {
         DateTime moment = date.ToDateTime(TimeOnly.MinValue);
@@ -1205,22 +1093,11 @@ public partial class DayHandler : IDayHandler
             : (entry.ShiftId, date.Year, date.Month);
     }
 
-    /// <summary>
-    /// Public because it is the only correct way to count a weekly or monthly
-    /// wage, and there is now more than one caller. Anything that sums
-    /// <see cref="DayShift.Pay"/> alone silently reports nothing for everybody
-    /// on a salary — see the remarks below for why the share is per worked day.
-    /// </summary>
+    /// <summary>Public because it is the only correct way to count a weekly or monthly wage, and there is now more than one…</summary>
     public static decimal PeriodSalary(Day[] days, bool workedOnly, Day[]? around = null)
         => PeriodSalaryByPlace(days, workedOnly, around).Values.Sum();
 
-    /// <summary>
-    /// Weekly and monthly wages, counted once per period they cover and
-    /// attributed to the place that owes them. Without the attribution the
-    /// whole of somebody's salary was missing from that place's tax, its
-    /// holiday accrual and — worst of all — from what the reconciliation says
-    /// it is owed.
-    /// </summary>
+    /// <summary>Weekly and monthly wages, counted once per period they cover and attributed to the place that owes them.</summary>
     // Public for the same reason PeriodSalary is: the chronicle needs each
     // place's share of the period wages, and reimplementing the split there
     // would fork the one formula this guard-tested file owns.
@@ -1282,10 +1159,7 @@ public partial class DayHandler : IDayHandler
         return byPlace;
     }
 
-    /// <summary>
-    /// Locations are needed for the tip-out, so the day-level view takes them
-    /// too; an empty map simply means no rule applies.
-    /// </summary>
+    /// <summary>Locations are needed for the tip-out, so the day-level view takes them too; an empty map simply means no rule…</summary>
     private static DayDto ToDto(Day day) => ToDto(day, []);
 
     private static DayDto ToDto(Day day, Dictionary<int, Location> locations)
@@ -1358,11 +1232,7 @@ public partial class DayHandler : IDayHandler
         );
     }
 
-    /// <summary>
-    /// Whether any worked shift on this day came out under the floor its place
-    /// is set to. Judged per shift rather than per day: a good evening does not
-    /// make an underpaid morning acceptable, and averaging them hides it.
-    /// </summary>
+    /// <summary>Whether any worked shift on this day came out under the floor its place is set to.</summary>
     private static bool BelowFloor(Day day, Dictionary<int, Location> locations)
     {
         foreach (var entry in day.Shifts ?? [])

@@ -8,12 +8,7 @@ using Serilog;
 
 namespace Shifter.Application.Features.Mail;
 
-/// <summary>
-/// Sends the handful of letters this product ever needs, through Resend's
-/// REST API. Failures are logged and swallowed: a letter that did not go
-/// out must never take a request down with it, and the caller is told
-/// nothing either way — an attacker learns nothing from timing.
-/// </summary>
+/// <summary>Sends the handful of letters this product ever needs, through Resend's REST API.</summary>
 public sealed class MailSender
 {
     private readonly IHttpClientFactory _http;

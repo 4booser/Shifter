@@ -9,18 +9,7 @@ import { Alert, Money } from '@/components/ui/bits';
 
 const SHARES = [5, 10, 15, 20, 30];
 
-/**
- * A share of tips, set aside on paper.
- *
- * Tips are the only money in this trade that arrives in cash and leaves
- * without a trace. "Save a bit" is advice nobody can follow — a bit of nothing
- * in particular is nothing — but a percent of a figure the app already knows
- * is a number somebody can act on tonight.
- *
- * Nothing here moves any money. The app has no business touching anybody's
- * account, and "you meant to have put aside 4 200 by now" turns out to be the
- * useful part anyway.
- */
+/** A share of tips, set aside on paper. */
 export function TipJar() {
   const { t } = useI18n();
 
@@ -114,9 +103,7 @@ export function TipJar() {
               </div>
               <p className="field-hint mt-1">
                 {Math.round(towards)}% {t('of')} <Money value={state.goal} />
-                {/* A date only where there is enough of a run behind it. Three
-                    days of tips extrapolated months out is arithmetic dressed
-                    as a promise. */}
+                {/* A date only where there is enough of a run behind it. */}
                 {state.reaches !== null && (
                   <>
                     {' · '}

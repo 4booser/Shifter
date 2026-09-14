@@ -32,16 +32,7 @@ export default function RootLayout() {
     if (session !== undefined) void SplashScreen.hideAsync();
   }, [session]);
 
-  /*
-   * Simulator convenience only, the sibling of EXPO_PUBLIC_AUTOLOGIN:
-   * EXPO_PUBLIC_START_AT="/(tabs)/stats" opens straight onto that screen.
-   *
-   * A screenshot of a phone screen is the only way to know what it actually
-   * looks like, and there is no way to tap one from here — iOS asks to
-   * confirm every deep link opened from the command line, and the
-   * confirmation itself needs a tap. Dev builds read env at bundle time;
-   * a store build never takes this path.
-   */
+  /* Simulator convenience only, the sibling of EXPO_PUBLIC_AUTOLOGIN: EXPO_PUBLIC_START_AT="/(tabs)/stats" opens… */
   const jumped = useRef(false);
 
   useEffect(() => {
@@ -85,11 +76,7 @@ export default function RootLayout() {
   if (session === undefined) return null;
 
   return (
-    // Gesture handler needs a root of its own, and the calendar's paint gesture
-    // is the first thing in the app to depend on it.
-    // Keyed on the language: choosing another one remounts the app, which is
-    // what changing language does anyway and saves threading a hook through
-    // four hundred call sites.
+    // Gesture handler needs a root of its own, and the calendar's paint gesture is the first thing in the app to…
     <GestureHandlerRootView key={`${lang}:${eyeIsShut ? 'shut' : 'open'}`} style={{ flex: 1 }}>
       <LockGate>
         <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />

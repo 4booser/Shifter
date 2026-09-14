@@ -5,21 +5,14 @@ import Constants from 'expo-constants';
 
 import { Palette } from '@/constants/theme';
 
-/**
- * A date the finger can pick. On iOS this is SwiftUI's own compact picker
- * via @expo/ui — the calendar people already know from Settings; anywhere
- * it cannot mount (Android for now, or a runtime without the native view)
- * the field falls back to the plain YYYY-MM-DD input it replaces.
- */
+/** A date the finger can pick. */
 let DatePicker: null | ((props: {
   selection?: Date;
   displayedComponents?: ('date' | 'hourAndMinute')[];
   onDateChange?: (date: Date) => void;
 }) => React.JSX.Element) = null;
 
-// Expo Go does not ship @expo/ui's native views — mounting one takes the
-// whole app down, and a JS try/catch never sees a native crash. The picker
-// therefore only exists in a dev/production build; Go keeps the text field.
+// Expo Go does not ship @expo/ui's native views — mounting one takes the whole app down, and a JS try/catch…
 const inExpoGo = Constants.appOwnership === 'expo';
 
 if (Platform.OS === 'ios' && !inExpoGo) {

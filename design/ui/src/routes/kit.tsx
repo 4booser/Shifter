@@ -2,12 +2,7 @@ import { Link, Outlet, createFileRoute, useRouterState } from '@tanstack/react-r
 
 import { cn } from '@/lib/utils';
 
-/**
- * Дизайн-система: то, из чего собран сайт.
- *
- * Живёт рядом с самим сайтом, а не внутри него — это справочник для тех, кто
- * строит, а не экран для тех, кто работает.
- */
+/** Дизайн-система: то, из чего собран сайт. */
 const PARTS = [
   { to: '/kit', label: 'Основа' },
   { to: '/kit/states', label: 'Состояния' },

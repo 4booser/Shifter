@@ -66,9 +66,7 @@ export const assistant = {
     api<AssistantGap[]>(`${BASE}/gaps?today=${today}&lang=${useLang.getState().lang}`),
   answerGap: (kind: string, date: string, shiftId: number | null, value: number) =>
     api<void>(`${BASE}/gaps`, { method: 'POST', body: { kind, date, shift_id: shiftId, value } }),
-  // The language goes with the request rather than being remembered on the
-  // account: the brief is cached per day and per language, and the phone is
-  // the only thing that knows which one its owner is reading right now.
+  // The language goes with the request rather than being remembered on the account: the brief is cached per day…
   brief: (today: string) =>
     api<Brief>(`/shifter/v1/brief/today?date=${today}&lang=${useLang.getState().lang}`),
   blocks: (today: string) =>

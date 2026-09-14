@@ -10,14 +10,7 @@ namespace Shifter.src.Infrastructure.Persistence.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            /*
-             * The residue of the rule that was missing. With the foreign key
-             * optional, EF answered a deleted shift two different ways: if the
-             * breaks were not loaded the database refused the delete outright,
-             * and if they were, it quietly set their shift to null instead.
-             * What is left are breaks belonging to nothing, which no screen can
-             * reach and no total counts. They go before the rule lands.
-             */
+            /* The residue of the rule that was missing. */
             migrationBuilder.Sql(@"DELETE FROM ""Break"" WHERE ""ShiftId"" IS NULL;");
 
             migrationBuilder.DropForeignKey(

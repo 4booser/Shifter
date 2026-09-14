@@ -8,19 +8,7 @@ import { todayKey } from '@/lib/calendar/calendar-date';
 import { useI18n } from '@/lib/i18n';
 import { Alert, Money } from '@/components/ui/bits';
 
-/**
- * The night's pool, entered once.
- *
- * Each person's share is already written on their own shift template, and each
- * of them currently types the pool in themselves — so by the morning five
- * people hold five slightly different numbers and an argument nobody can
- * settle, because there is nothing to settle it against.
- *
- * One number, entered by whoever counted the tin, and everybody's share falls
- * out of it. Who got what is visible to everyone who worked that shift: that is
- * not a hole in the privacy rules, it is the exact transparency a pool exists
- * for. A pool nobody can check is just a promise.
- */
+/** The night's pool, entered once. */
 export function PoolPanel({ teamId }: { teamId: number }) {
   const { t } = useI18n();
 

@@ -1,11 +1,4 @@
-/**
- * Number formatting that also runs on the animation thread.
- *
- * Everything here is marked as a worklet so Roll can call it sixty times a
- * second without crossing back to JavaScript — which also rules out
- * toLocaleString and Intl, neither of which exists there. Kept out of the
- * component file so it can be tested as what it is: string arithmetic.
- */
+/** Number formatting that also runs on the animation thread. */
 
 /** Groups a number the way this app writes money: 12 400, not 12,400. */
 export const spaced = (value: number): string => {
@@ -25,14 +18,7 @@ export const spaced = (value: number): string => {
   return `${sign}${rest}${tail}`;
 };
 
-/**
- * One decimal place, written the way both of this app's languages write it.
- *
- * Four screens reached for `toFixed(1)` and got a full stop — «★ 5.0», «9.5 ч»
- * — and two others patched the stop out with a string replace afterwards,
- * which is the same decision made twice in the wrong place. A whole number
- * keeps no tail: «9», not «9,0».
- */
+/** One decimal place, written the way both of this app's languages write it. */
 export const tenth = (value: number, places = 1): string => {
   'worklet';
 

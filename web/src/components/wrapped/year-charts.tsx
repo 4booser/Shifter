@@ -6,36 +6,14 @@ import { useMoney } from '@/lib/settings/money';
 import { Money } from '@/components/ui/bits';
 import { Bars } from '@/components/charts/glass-charts';
 
-/**
- * The year's other chapters, each one a question the page could not answer
- * before: what the money was made of, where the tips actually happened, what
- * the rate did, what the work cost and what was taken off it.
- *
- * Every card disappears when its fact is missing. A year with no fines should
- * not carry an empty «fines» card explaining that nothing happened.
- */
+/** The year's other chapters, each one a question the page could not answer before: what the money was made of… */
 
 /** What the year's money was made of, as one bar with its parts named. */
 export function MadeOf({ summary }: { summary: DaysResponse }) {
   const { t, lang } = useI18n();
   const { format } = useMoney();
 
-  /*
-   * The parts have to add up to the year.
-   *
-   * They did not. Two of the things the server folds into a year's earnings
-   * were missing — the overtime premium and the wage paid by period, both of
-   * them money — and so were the deductions and the tip-out, which are money
-   * going the other way. A card headed «из чего сложился год» summed to
-   * ₴362 886 beside a headline of ₴359 396, and then quoted percentages of
-   * its own wrong total. The gap was exactly the deductions less the
-   * overtime, which is to say: two mistakes that nearly hid each other.
-   *
-   * Grouped the way the report's own bar groups the same money, and into the
-   * five series slots the palette actually has. A premium is a premium
-   * whether the clock or the calendar earned it; a wage is a wage whether it
-   * arrived per shift or per month, and the row says which it was.
-   */
+  /* The parts have to add up to the year. */
   const wage = summary.shifts_earned - summary.revenue_earned;
   const premiums = summary.premium_earned + summary.overtime_earned;
 
@@ -227,18 +205,7 @@ export function CostOfWork({
   const spent = expenses.filter((row) => row.amount > 0);
   const taken = fines.filter((row) => row.amount > 0);
 
-  /*
-   * The bars have to add up to the figure above them.
-   *
-   * «Удержано · 16 770 ₴» sat over a list of fines summing to ₴3 250,
-   * because the server splits by reason only what somebody wrote a reason
-   * for. The rest of a withholding is the staff meal, charged by the place's
-   * own rule with nothing to explain — and it was the larger part of the
-   * two. A reader saw a total four times its own breakdown and concluded the
-   * chart was broken.
-   *
-   * The meal is a row now, worked out as what the reasons do not cover.
-   */
+  /* The bars have to add up to the figure above them. */
   const explained = taken.reduce((sum, row) => sum + row.amount, 0);
   const meals = Math.round((withheld - explained) * 100) / 100;
   const rows =
@@ -282,17 +249,13 @@ export function CostOfWork({
             <span className="field-label">{t('Withheld')} · {format(withheld)}</span>
             <Bars
               rows={rows.map((row) => ({
-                // A reason the map does not know still has to have a name:
-                // the fallback printed the raw key, and a blank key printed
-                // a bar with no label at all.
+                // A reason the map does not know still has to have a name: the fallback printed the raw key, and a blank key…
                 label: reasons[row.reason] ?? (row.reason.trim() === '' ? reasons.unsaid : row.reason),
                 value: row.amount,
                 caption: row.days > 0 ? `${row.days} ${t('d.')}` : '',
               }))}
               format={(value) => format(value)}
-              // Семи ремов не хватало на «Причина не записана»: подпись
-              // обрезалась до «Причина не за…», и строка про удержание
-              // переставала говорить, за что удержали.
+              // Семи ремов не хватало на «Причина не записана»: подпись обрезалась до «Причина не за…», и строка про…
               labelWidth="10rem"
             />
           </div>

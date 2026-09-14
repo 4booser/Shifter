@@ -14,12 +14,7 @@ interface CityRow {
   market: { median: number; low: number; high: number; employers: number } | null;
 }
 
-/**
- * «Где мой час дороже» — the same card the web stats page shows, with the
- * same silences: fewer than two tagged cities and it stays off the screen,
- * and the market line appears only where the public sample cleared the
- * anonymity bar on the server.
- */
+/** «Где мой час дороже» — the same card the web stats page shows, with the same silences: fewer than two tagged… */
 export function CitiesCard({ palette }: { palette: Palette }) {
   const styles = makeStyles(palette);
 

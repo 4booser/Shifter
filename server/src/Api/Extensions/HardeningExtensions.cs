@@ -6,11 +6,7 @@ using Shifter.Infrastructure.Persistence.DbContexts;
 
 namespace Shifter.Api.Extensions;
 
-/// <summary>
-/// The things that keep the API standing up in public: a limit on how fast
-/// credentials can be guessed, a health probe, and an explicit list of origins
-/// allowed to call it from a browser.
-/// </summary>
+/// <summary>The things that keep the API standing up in public: a limit on how fast credentials can be guessed, a health…</summary>
 public static class HardeningExtensions
 {
     /// <summary>Applied to the endpoints that accept or mint credentials.</summary>
@@ -19,26 +15,13 @@ public static class HardeningExtensions
     /// <summary>Everything else, so one client cannot monopolise the server.</summary>
     public const string ApiPolicy = "api";
 
-    /// <summary>
-    /// Actions that hand somebody's phone number to a stranger, or take one.
-    /// The general limit is sized for a calendar fanning out into parallel
-    /// reads and is far too generous for these.
-    /// </summary>
+    /// <summary>Actions that hand somebody's phone number to a stranger, or take one.</summary>
     public const string ContactPolicy = "contact";
 
-    /// <summary>
-    /// The assistant. Its ceiling is not about load — it is that a model call
-    /// costs money, and an account that has asked forty questions in an hour
-    /// is a loop, not a person.
-    /// </summary>
+    /// <summary>The assistant.</summary>
     public const string AssistantPolicy = "assistant";
 
-    /// <summary>
-    /// Crash reports from the browser. Anonymous by necessity — a white screen
-    /// can happen before anybody has logged in — so the ceiling has to assume
-    /// the caller is hostile. A page that is genuinely broken sends a handful;
-    /// anything past that is somebody using the log as a writing surface.
-    /// </summary>
+    /// <summary>Crash reports from the browser.</summary>
     public const string ClientErrorPolicy = "client-error";
 
     public const string CorsPolicy = "spa";
@@ -167,10 +150,7 @@ public static class HardeningExtensions
         return services;
     }
 
-    /// <summary>
-    /// Signed-in callers are limited per account, everyone else per address, so
-    /// one busy office network does not lock out its own staff.
-    /// </summary>
+    /// <summary>Signed-in callers are limited per account, everyone else per address, so one busy office network does not…</summary>
     private static string ClientKey(HttpContext context)
     {
         string? user = context.User.Identity?.IsAuthenticated == true

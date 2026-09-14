@@ -15,14 +15,7 @@ import {
 } from '@/lib/types';
 import { t } from '@/lib/i18n';
 
-/**
- * What the pencil is loaded with.
- *
- * Two of these draw something and two of them do something. They share a
- * sheet because they share a motion — you say which days, once — and keeping
- * "mark these worked" behind a modal per day is what made a week of shifts a
- * ten-minute job.
- */
+/** What the pencil is loaded with. */
 export type Brush =
   | { kind: 'shift'; template: ShiftTemplate }
   | {
@@ -67,14 +60,7 @@ export const brushSymbol = (brush: Brush): string | null => {
   }
 };
 
-/**
- * Picks what the pencil draws with.
- *
- * Shifts and events sit in the same sheet because from the calendar's side of
- * the screen they are the same act — you are saying what a day is. The server
- * keeps them apart for a good reason (shifts pay, events do not), and that
- * distinction shows up as two headings rather than two screens.
- */
+/** Picks what the pencil draws with. */
 export function PaintPicker({
   open,
   templates,
@@ -137,9 +123,7 @@ export function PaintPicker({
 
   return (
     <Modal visible={open} transparent animationType="slide" onRequestClose={onClose}>
-      {/* A full-screen «tap outside to close». Unnamed, a screen reader
-          announces it as a button and says nothing about what it does —
-          the first thing met on entering every sheet in this app. */}
+      {/* A full-screen «tap outside to close». */}
       <Pressable
         style={styles.backdrop}
         accessibilityRole="button"
@@ -180,10 +164,7 @@ export function PaintPicker({
 
           <Text style={styles.heading}>{t('События')}</Text>
 
-          {/*
-            The palette first, presets under it: somebody who set up
-            «английский» wants it at the top, not below four defaults.
-          */}
+          {/* The palette first, presets under it: somebody who set up «английский» wants it at the top, not below four… */}
           {kinds.map((entry) =>
             row(
               `type-${entry.id}`,

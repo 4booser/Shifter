@@ -1,11 +1,6 @@
 namespace Shifter.Domain.Entities;
 
-/// <summary>
-/// Which goal applies to a stretch of time, and what it is worth over it.
-///
-/// Pure, like <see cref="PayPeriodCalculator"/>, so the same answer comes out
-/// on the server and in a test without a database in between.
-/// </summary>
+/// <summary>Which goal applies to a stretch of time, and what it is worth over it.</summary>
 public static class GoalCalculator
 {
     /// <summary>The period a date falls in, as an inclusive pair.</summary>
@@ -21,13 +16,7 @@ public static class GoalCalculator
             _ => (new DateOnly(date.Year, 1, 1), new DateOnly(date.Year, 12, 31)),
         };
 
-    /// <summary>
-    /// The goal that governs <paramref name="date"/>, or null when none does.
-    ///
-    /// A goal set for one particular period beats a standing one: "45 000 this
-    /// December" is a deliberate exception to "30 000 a month", and the whole
-    /// reason for writing it down is that it should win.
-    /// </summary>
+    /// <summary>The goal that governs <paramref name="date"/>, or null when none does.</summary>
     public static Goal? ResolveFor(IEnumerable<Goal> goals, GoalPeriod period, DateOnly date)
     {
         var (from, to) = PeriodFor(period, date);
@@ -53,14 +42,7 @@ public static class GoalCalculator
         return standing;
     }
 
-    /// <summary>
-    /// What the goal asks for across a range that is not its own period — a
-    /// daily goal read over a month is that figure times the days in it.
-    ///
-    /// Whole periods only. Half a month against a monthly goal is not half the
-    /// target in any sense the reader would accept, so the caller is told there
-    /// is no comparable figure rather than handed a prorated fiction.
-    /// </summary>
+    /// <summary>What the goal asks for across a range that is not its own period — a daily goal read over a month is that…</summary>
     public static decimal? TargetOver(Goal goal, DateOnly from, DateOnly to)
     {
         if (from > to) return null;

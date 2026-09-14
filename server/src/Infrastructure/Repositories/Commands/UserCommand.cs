@@ -50,10 +50,7 @@ public class UserCommand : IUserCommand
         await _db.SaveChangesAsync(ct);
     }
 
-    /// <summary>
-    /// Passes on every team this person owns, or removes the ones nobody is
-    /// left to run.
-    /// </summary>
+    /// <summary>Passes on every team this person owns, or removes the ones nobody is left to run.</summary>
     private async Task HandOverTeamsAsync(int userId, CancellationToken ct)
     {
         Team[] owned = await _db.Teams

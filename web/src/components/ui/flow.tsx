@@ -4,15 +4,7 @@ import NumberFlow from '@number-flow/react';
 
 import { useSettings } from '@/lib/settings/store';
 
-/**
- * A KPI number that travels to its new value instead of teleporting.
- *
- * Big tiles only, on purpose: these are the figures that change while the
- * person watches — a period marked paid, a preset switched, a live shift
- * ticking — and the travel shows the change happening. Rows and tables
- * stay still; a page where every figure dances reads as a slot machine,
- * not a ledger.
- */
+/** A KPI number that travels to its new value instead of teleporting. */
 export function FlowMoney({
   value,
   className,
@@ -20,17 +12,7 @@ export function FlowMoney({
 }: {
   value: number | null | undefined;
   className?: string;
-  /**
-   * The mark this amount is actually in, where it is not the label the person
-   * picked for wages. A bank statement is in the account's own currency and
-   * must keep saying so.
-   *
-   * It used to force the mark in front of the figure as well, which is a
-   * separate question and one the person has already answered: «На карте
-   * ₴84 214» stood two lines above «минимум 84 214 ₴», the same number
-   * spelled two ways inside one card. Which currency is the statement's
-   * business; which side of the digits it stands on is the reader's.
-   */
+  /** The mark this amount is actually in, where it is not the label the person picked for wages. */
   mark?: string;
 }) {
   const settings = useSettings((state) => state.settings);

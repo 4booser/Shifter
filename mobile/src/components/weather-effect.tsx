@@ -7,11 +7,7 @@ import { todayKey } from '@/lib/calendar';
 import { t } from '@/lib/i18n';
 import { money } from '@/lib/types';
 
-/**
- * The web's rain card, in the pocket — same wording, same refusal to claim
- * cause. Only places where the gap is worth a sentence are shown at all:
- * a card reporting a four per cent wobble teaches people it reports noise.
- */
+/** The web's rain card, in the pocket — same wording, same refusal to claim cause. */
 interface WeatherEffect {
   location_id: number;
   place: string;

@@ -108,10 +108,7 @@ public class DayShiftTests
         Assert.True(monthly.IsPeriodSalary);
     }
 
-    /// <summary>
-    /// The whole reason DayShift exists: history must not move when the
-    /// template is repriced.
-    /// </summary>
+    /// <summary>The whole reason DayShift exists: history must not move when the template is repriced.</summary>
     [Fact]
     public void RepricingTheTemplateLeavesThePlacementAlone()
     {

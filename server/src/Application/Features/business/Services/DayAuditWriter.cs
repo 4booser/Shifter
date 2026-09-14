@@ -4,10 +4,7 @@ using Shifter.Infrastructure.Persistence.DbContexts;
 
 namespace Shifter.Application.Features.business.Services;
 
-/// <summary>
-/// Appends one history line after a day is written. Failures are logged and
-/// swallowed: history is a courtesy, and no save should ever die for it.
-/// </summary>
+/// <summary>Appends one history line after a day is written.</summary>
 public sealed class DayAuditWriter
 {
     private readonly ShifterDbContext _db;

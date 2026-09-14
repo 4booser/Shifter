@@ -1,33 +1,7 @@
-/*
- * One copy, read by the web and by the phone.
- *
- * This file used to exist twice, and the header said parity between the
- * platforms was parity of files — keep them identical by hand. They did not
- * stay identical: the web learned that an hour priced on two worked minutes
- * is not a rate and the phone did not, the web's «what a day usually costs»
- * settled on one window and the phone kept two, and a comment here described
- * a rule the code stopped following. None of that is visible from either side
- * alone, which is the whole problem with parity by discipline.
- *
- * So it lives outside both clients now and neither owns it. The rule that
- * makes that possible: nothing in here may import from a platform. No
- * `@/`, no expo, no next, no react — statements in, numbers out. A test
- * holds that line.
- */
+/* One copy, read by the web and by the phone. */
 import { MonoStatementItem, categoryOf, dayOf, spent } from './mono';
 
-/**
- * A category the person assigned, rather than one the terminal implied.
- *
- * An MCC is what a card terminal calls itself, not what the purchase was. A
- * petrol station with a shop shares a code with a supermarket; a coffee bar
- * inside an office block files itself as a canteen. A breakdown nobody can
- * correct is a tidy chart about somebody else's life, so the corrections are
- * the feature and the MCC is only the starting guess.
- *
- * Every condition present has to hold. An empty rule would match everything,
- * so a rule with no conditions matches nothing at all.
- */
+/** A category the person assigned, rather than one the terminal implied. */
 export interface CategoryRule {
   id: string;
   /** Case-insensitive substring of the description. */
@@ -69,27 +43,14 @@ const matches = (rule: CategoryRule, item: MonoStatementItem): boolean => {
   return true;
 };
 
-/**
- * The category for one line: the first rule that matches, or the MCC's own.
- *
- * First match wins rather than most specific, because "most specific" is a
- * judgement the app would be making on somebody's behalf. The order is theirs
- * and it is visible.
- */
+/** The category for one line: the first rule that matches, or the MCC's own. */
 export const categorise = (item: MonoStatementItem, rules: CategoryRule[]): string => {
   for (const rule of rules) if (matches(rule, item)) return rule.category;
 
   return categoryOf(item.mcc);
 };
 
-/**
- * How many lines each rule catches.
- *
- * A rule that catches nothing is a typo, not a setting, and the only way
- * anybody finds that out is by being told. Counted with the same first-match
- * precedence the breakdown uses, so a rule shadowed by an earlier one shows
- * the zero it really has.
- */
+/** How many lines each rule catches. */
 export const ruleHits = (
   items: MonoStatementItem[],
   rules: CategoryRule[],
@@ -137,14 +98,7 @@ export const spendingByRules = (
   return [...totals.values()].sort((one, two) => two.total - one.total);
 };
 
-/**
- * A rule made from one line, ready to be edited.
- *
- * The whole description rather than a guessed stem: shortening it is the app
- * deciding which half of "SILPO 4021 KYIV" is the name, and it would be wrong
- * about half the time. The person shortens it, sees the count change, and
- * keeps what works.
- */
+/** A rule made from one line, ready to be edited. */
 export const ruleFrom = (item: MonoStatementItem, category: string): CategoryRule => ({
   id: `${item.id}-${Date.now()}`,
   contains: item.description.trim(),
@@ -172,14 +126,7 @@ export interface BudgetState {
   heading: boolean;
 }
 
-/**
- * A limit is useless without the pace inside the month.
- *
- * "62% spent" means nothing on its own: it is comfortable on the 20th and
- * alarming on the 8th. The warning has to come while there is still a month
- * left to do something about it, which means comparing the two fractions
- * rather than waiting for one of them to reach a hundred.
- */
+/** A limit is useless without the pace inside the month. */
 export const budgetState = (
   budgets: Budget[],
   spending: { name: string; total: number }[],
@@ -202,9 +149,7 @@ export const budgetState = (
         through,
         projected,
         over: spent > budget.limit,
-        // Only once enough of the month has gone for a projection to mean
-        // anything. On the 2nd, one big shop projects to five times the limit
-        // and says nothing except that somebody bought a coat.
+        // Only once enough of the month has gone for a projection to mean anything.
         heading: spent <= budget.limit && through >= 0.25 && projected > budget.limit,
       };
     })

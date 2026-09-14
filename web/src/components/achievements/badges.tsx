@@ -32,16 +32,11 @@ async function allTimeStats(): Promise<AchievementStats> {
   return cachedStats;
 }
 
-/**
- * The quiet background check: any badge earned since the last visit gets a
- * toast and confetti, from whichever page the app opened on.
- */
+/** The quiet background check: any badge earned since the last visit gets a toast and confetti, from whichever… */
 export function useUnlockCheck(translate: (key: string) => string): void {
   latestTranslate = translate;
 
-  // Module-level scheduling, deliberately without a cleanup: the shell
-  // remounts on every route change, and a timer that dies with it would
-  // never survive the 2.5 seconds it needs.
+  // Module-level scheduling, deliberately without a cleanup: the shell remounts on every route change, and a…
   useEffect(() => {
     if (checkedThisSession) return;
 

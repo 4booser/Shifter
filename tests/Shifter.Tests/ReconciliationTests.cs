@@ -7,10 +7,7 @@ using Xunit;
 
 namespace Shifter.Tests;
 
-/// <summary>
-/// The payout calendar and the underpayment detector. Both answer questions
-/// people cannot answer by eye once two places pay on different cycles.
-/// </summary>
+/// <summary>The payout calendar and the underpayment detector.</summary>
 public class ReconciliationTests
 {
     private readonly FakeShifterQuery _query = new();

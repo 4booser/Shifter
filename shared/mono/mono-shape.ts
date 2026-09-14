@@ -1,29 +1,7 @@
-/*
- * One copy, read by the web and by the phone.
- *
- * This file used to exist twice, and the header said parity between the
- * platforms was parity of files — keep them identical by hand. They did not
- * stay identical: the web learned that an hour priced on two worked minutes
- * is not a rate and the phone did not, the web's «what a day usually costs»
- * settled on one window and the phone kept two, and a comment here described
- * a rule the code stopped following. None of that is visible from either side
- * alone, which is the whole problem with parity by discipline.
- *
- * So it lives outside both clients now and neither owns it. The rule that
- * makes that possible: nothing in here may import from a platform. No
- * `@/`, no expo, no next, no react — statements in, numbers out. A test
- * holds that line.
- */
+/* One copy, read by the web and by the phone. */
 import { MonoStatementItem, dayOf, fromMinor, spent } from './mono';
 
-/*
- * The shape of a month's money: curves, weekdays, heat and deltas.
- *
- * Everything here is drawing-ready arithmetic over the statement — no fetch,
- * no state, no guesses. Where the statement cannot support an answer, the
- * answer is null rather than a smaller lie, in the same voice as the rest of
- * the analysis: an estimate never mixes with a fact.
- */
+/* The shape of a month's money: curves, weekdays, heat and deltas. */
 
 export interface BalancePoint {
   /** 'YYYY-MM-DD'. */
@@ -32,17 +10,7 @@ export interface BalancePoint {
   balance: number;
 }
 
-/**
- * The balance, day by day, read rather than reconstructed.
- *
- * monobank stamps the running balance onto every transaction, so the curve is
- * the bank's own record — the one figure on this page nobody has to trust us
- * about. Days with no transactions carry the previous day forward, which is
- * not an estimate: a balance that nothing touched did not move.
- *
- * Null with fewer than two days of statement in range — a curve with one
- * point is a dot wearing a chart's clothes.
- */
+/** The balance, day by day, read rather than reconstructed. */
 export function balanceCurve(
   items: MonoStatementItem[],
   from: string,
@@ -95,13 +63,7 @@ export interface WeekdayShape {
   days: number;
 }
 
-/**
- * Which day of the week the money leaves on.
- *
- * Averages, not totals: a month holds five Saturdays and four Mondays, and
- * totals would crown Saturday for the calendar's sake rather than the
- * spending's.
- */
+/** Which day of the week the money leaves on. */
 export function weekdayShape(
   items: MonoStatementItem[],
   from: string,
@@ -179,12 +141,7 @@ export interface BigDay {
   mostlyAmount: number;
 }
 
-/**
- * The days that carried the month.
- *
- * Spending is lumpy: three days usually hold a third of a month, and knowing
- * which three answers "куда всё делось" better than any category chart.
- */
+/** The days that carried the month. */
 export function biggestDays(
   items: MonoStatementItem[],
   from: string,
@@ -230,15 +187,7 @@ export interface MonthDelta {
   moves: { name: string; now: number; before: number }[];
 }
 
-/**
- * This month against the one before, by category.
- *
- * The question behind every "почему так дорого" is which category moved.
- * Totals answer whether; this answers where.
- *
- * Null when the earlier range has nothing in it — against an empty month
- * every figure is an infinite increase, and that is a chart, not a finding.
- */
+/** This month against the one before, by category. */
 export function monthDelta(
   items: MonoStatementItem[],
   categoriseItem: (item: MonoStatementItem) => string,
@@ -289,10 +238,5 @@ export function monthDelta(
   };
 }
 
-/**
- * What the standing payments cost per year.
- *
- * A subscription is priced per month to sound small. Twelve of everything is
- * the honest figure, and it is the one that gets things cancelled.
- */
+/** What the standing payments cost per year. */
 export const yearOfStanding = (monthly: number): number => Math.round(monthly * 12);

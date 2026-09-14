@@ -39,25 +39,7 @@ import { realHourly } from '@/lib/mono/mono-work';
 import { useTitle } from '@/lib/use-title';
 import { Icon } from '@/components/ui/icon';
 
-/**
- * The bank, now on the site.
- *
- * The tab lived only in a pocket — five thousand lines of analysis the web
- * knew nothing about. The privacy model survives the move intact: monobank
- * answers browsers directly (checked: access-control-allow-origin: *), so the
- * token goes from this tab to api.monobank.ua and never touches the Shifter
- * server.
- *
- * Every formula on this page is the phone's own file, imported — if the two
- * platforms ever disagree about a figure, that is a bug by definition.
- *
- * The shape of the page is a band of figures, then pairs of cards, then the
- * statement. It used to be a two-column grid, and the columns had no way to
- * agree on a height: «Счета» and «Хватит на» ran out in two hundred pixels
- * while the charts beside them kept going, so the right-hand side of the page
- * was empty rectangles a screen and a half tall. Small figures belong in
- * tiles, and a card only shares a row with a card of its own size.
- */
+/** The bank, now on the site. */
 export default function BankPage() {
   const { t, lang } = useI18n();
 
@@ -87,13 +69,7 @@ export default function BankPage() {
     return { from: `${monthAt}-01`, to: `${monthAt}-${String(last).padStart(2, '0')}` };
   }, [monthAt]);
 
-  /*
-   * Первого числа «этот месяц» пуст, и весь банк — пустые карточки: выписка
-   * за три месяца загружена, а операций в текущем ещё ноль. Один раз после
-   * загрузки съезжаем на последний месяц, в котором что-то было. Дальше
-   * стрелки слушаются только человека: перепрыгивать под ним, пока он листает,
-   * — худшее, что можно сделать.
-   */
+  /* Первого числа «этот месяц» пуст, и весь банк — пустые карточки: выписка за три месяца загружена, а операций в… */
   const settled = useRef(false);
 
   useEffect(() => {
@@ -127,9 +103,7 @@ export default function BankPage() {
 
   const account = (mono.client?.accounts ?? []).find((entry) => entry.id === mono.accountId);
 
-  // The walk forward, built once: the tile in the band and the card below it
-  // are the same forecast, and two answers to «когда следующие деньги» on one
-  // screen would be one answer too many.
+  // The walk forward, built once: the tile in the band and the card below it are the same forecast, and two…
   const runway = useRunway(account ?? null, mono.items);
 
   // The month's real hour — earned minus what going to work took, per hour —
@@ -165,22 +139,14 @@ export default function BankPage() {
               </Alert>
             )}
 
-            {/* ==== The page's own head: which month, and the way out ====
-
-                The month arrows used to sit halfway down the page, between the
-                forward-looking cards and the backward-looking ones, which is
-                the one place a period picker cannot be seen from. */}
+            {/* ==== The page's own head: which month, and the way out ==== The month arrows used to sit halfway down the page */}
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h1 className="text-[1.3rem] font-bold tracking-tight">{t('Bank')}</h1>
 
-              {/* Wrapping: the month and the download button together are
-                  372 px, and a 390 px phone gave the page four pixels of
-                  sideways scroll for them. */}
+              {/* Wrapping: the month and the download button together are 372 px, and a 390 px phone gave the page four pixels… */}
               <div className="flex flex-wrap items-center justify-end gap-2">
                 <span className="seg">
-                  {/* Two arrows that a screen reader announced as «button» and
-                      «button». The calendar's own month arrows have been named
-                      since they were drawn. */}
+                  {/* Two arrows that a screen reader announced as «button» and «button». */}
                   <button
                     type="button"
                     className="seg-btn !px-2"
@@ -207,11 +173,7 @@ export default function BankPage() {
               </div>
             </div>
 
-            {/* ==== The band of figures ====
-
-                One filled tile and four quiet ones. Everything in it is a
-                single number, and a single number in a card the size of a
-                chart is what left the old page full of holes. */}
+            {/* ==== The band of figures ==== One filled tile and four quiet ones. Everything in it is a single number, and a */}
             <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
               <BankHero
                 account={account ?? null}
@@ -230,11 +192,7 @@ export default function BankPage() {
               <SpentTile items={mono.items} from={bounds.from} to={bounds.to} />
             </div>
 
-            {/* ==== Where the statement comes from ====
-
-                The accounts, the sync and the lock: about the data rather than
-                about the month. Full width on purpose — it is two rows tall
-                whatever happens, so it cannot leave a hole beside anything. */}
+            {/* ==== Where the statement comes from ==== The accounts, the sync and the lock: about the data rather than about */}
             <section className="card reveal overflow-hidden p-0">
               <div className="card-head">
                 <h3 className="card-head-title">{t('Accounts')}</h3>
@@ -299,9 +257,7 @@ export default function BankPage() {
                   )}
                 </div>
 
-                {/* The tab has to stay open for a deep sync — one request a
-                    minute is the bank's rule, and pretending otherwise would be
-                    a progress bar that lies. */}
+                {/* The tab has to stay open for a deep sync — one request a minute is the bank's rule, and pretending otherwise… */}
                 {mono.busy && mono.progress !== null && mono.progress.total > 1 && (
                   <p className="field-hint mt-2">
                     {t('One window a minute is the bank’s limit. Keep the tab open; closing it pauses the load.')}
@@ -323,19 +279,10 @@ export default function BankPage() {
               </div>
             </section>
 
-            {/* ==== The wage, if one looks to have landed ====
-
-                Never inside the example: matching fictional credits against
-                the real reconciliation would offer to record fiction into a
-                real calendar. */}
+            {/* ==== The wage, if one looks to have landed ==== Never inside the example: matching fictional credits against t */}
             {!mono.demo && <BankWage items={mono.items} />}
 
-            {/* ==== Row: forward-looking ====
-
-                Both cards read the same thirty days ahead and both go quiet
-                on an empty statement, so the row is drawn or not drawn whole
-                — that is why it can be a grid with a fixed ratio without
-                risking a column of nothing. */}
+            {/* ==== Row: forward-looking ==== Both cards read the same thirty days ahead and both go quiet on an empty statem */}
             {mono.items.length > 0 && (
               <div className="grid items-stretch gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
                 <BankForecast account={account ?? null} runway={runway} />
@@ -348,9 +295,7 @@ export default function BankPage() {
               </div>
             )}
 
-            {/* ==== Row: where the month went ====
-                The table and the ring are two readings of one list: the ring
-                is for «сколько всего», the table for «а на что именно». */}
+            {/* ==== Row: where the month went ==== The table and the ring are two readings of one list: the ring is for «скол */}
             <div className="grid items-stretch gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
               <SpendCategories
                 items={mono.items}
@@ -361,12 +306,7 @@ export default function BankPage() {
               <SpendDonut items={mono.items} from={bounds.from} to={bounds.to} />
             </div>
 
-            {/* ==== The charts, in pairs of equals ====
-
-                `.cards` counts its columns by the number of cards actually
-                drawn, and these go quiet at different times: a month with one
-                loaded neighbour gets one full-width card instead of a card and
-                a hole. */}
+            {/* ==== The charts, in pairs of equals ==== `.cards` counts its columns by the number of cards actually drawn, an */}
             <div className="cards-fill">
               <SpendRhythm items={mono.items} from={bounds.from} to={bounds.to} />
               <MonthlyFlowsCard items={mono.items} />
@@ -382,18 +322,8 @@ export default function BankPage() {
               <SpendOddities items={mono.items} from={bounds.from} to={bounds.to} />
             </div>
 
-            {/* ==== The small answers, laid as bricks ====
-
-                Рядами это не укладывается: карточки разной высоты и часть из
-                них в иные месяцы не рисуется вовсе, так что ряд из двух
-                постоянно оказывался рядом из одного, а рядом с ним — дыра во
-                всю его высоту. Кладка ставит следующую карточку туда, где
-                кончилась предыдущая. */}
-            {/* Сетка, а не кладка. Кладка на двух колонках раскладывает
-                карточки по высоте и всё равно оставляет одну колонку короче —
-                справа от «Формы трат» висел пустой прямоугольник в пол-экрана.
-                В `.cards` ряд равняет высоты, а одиночная карточка в конце
-                растягивается во всю ширину: дыре взяться неоткуда. */}
+            {/* ==== The small answers, laid as bricks ==== Рядами это не укладывается: карточки разной высоты и часть из них */}
+            {/* Сетка, а не кладка. */}
             <div className="cards-fill">
               <BankWork items={mono.items} days={days} from={bounds.from} to={bounds.to} />
               <BankShape items={mono.items} from={bounds.from} to={bounds.to} />

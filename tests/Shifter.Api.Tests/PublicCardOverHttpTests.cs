@@ -6,15 +6,7 @@ using Xunit;
 
 namespace Shifter.Api.Tests;
 
-/// <summary>
-/// The card a stranger opens.
-///
-/// It is the only page here with no client in front of it: nothing tells it
-/// which language to speak, and for a while it did not ask — an application
-/// that writes three languages handed a Ukrainian worker a Russian-only page
-/// to give an employer. It asks the reader now, who is the person the page
-/// exists for.
-/// </summary>
+/// <summary>The card a stranger opens.</summary>
 [Collection("api")]
 public sealed class PublicCardOverHttpTests(Api api)
 {
@@ -74,11 +66,7 @@ public sealed class PublicCardOverHttpTests(Api api)
         }
     }
 
-    /// <summary>
-    /// The board's own public page is the card's sibling and had the same
-    /// gap. A crawler is usually the first reader, and it carries whatever
-    /// the sharer's browser sent.
-    /// </summary>
+    /// <summary>The board's own public page is the card's sibling and had the same gap.</summary>
     [Fact]
     public async Task The_shared_listing_answers_in_the_readers_language()
     {
@@ -125,10 +113,7 @@ public sealed class PublicCardOverHttpTests(Api api)
     /// <summary>A JPEG frame header saying 320×320 — the board wants photos.</summary>
     private const string Pixel = "data:image/jpeg;base64,/9j/wAARCAFAAUADASIAAhEBAxEB/9k=";
 
-    /// <summary>
-    /// Switching the card off has to take the page with it — a link handed out
-    /// once and revoked later is the whole point of the switch.
-    /// </summary>
+    /// <summary>Switching the card off has to take the page with it — a link handed out once and revoked later is the whole…</summary>
     [Fact]
     public async Task A_card_switched_off_stops_answering()
     {
@@ -144,18 +129,7 @@ public sealed class PublicCardOverHttpTests(Api api)
 
         off.EnsureSuccessStatusCode();
 
-        /*
-         * It answers by sending the reader to the front door rather than by
-         * saying «this card is gone» — which would confirm to a stranger that
-         * it had been there. What matters is that the record is no longer on
-         * the other end of the link.
-         *
-         * Asked as a redirect rather than by following one. Following it goes
-         * on to «/», which is the built site — and the job that runs these
-         * over real HTTP never builds it, so this test failed on a 404 from
-         * the front door for as long as anybody has been looking: red for a
-         * reason that had nothing to do with cards.
-         */
+        /* It answers by sending the reader to the front door rather than by saying «this card is gone» — which would… */
         using var direct = api.CreateClient(
             new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions
             {

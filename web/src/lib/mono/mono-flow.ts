@@ -1,18 +1,5 @@
-/*
- * Carried over from the phone, verbatim where possible.
- *
- * The bank tab lived only in the pocket, and every formula here — what counts
- * as a transfer, how branches of one shop merge, what a day usually costs —
- * was already written and tested there. Parity between the platforms is
- * parity of files: if the web and the phone ever disagree about a figure,
- * that is a bug by definition, and keeping the code identical is the
- * cheapest way to make it a rare one.
- */
-/**
- * The three names this file invents. Injectable because the page owns the
- * translations; defaulted to the phone's words so the shared tests hold on
- * both platforms.
- */
+/* Carried over from the phone, verbatim where possible. */
+/** The three names this file invents. */
 export interface FlowWords {
   rest: string;
   fromBalance: string;
@@ -25,24 +12,14 @@ export const FLOW_WORDS: FlowWords = {
   leftOver: 'осталось',
 };
 
-/**
- * The arithmetic behind the flow picture, kept away from the drawing.
- *
- * This is the claim the picture makes — money in equals money out plus what
- * stayed — and a claim should be checkable without a renderer.
- */
+/** The arithmetic behind the flow picture, kept away from the drawing. */
 
 export interface FlowBand {
   name: string;
   total: number;
 }
 
-/**
- * The largest few, with everything else gathered rather than dropped.
- *
- * Dropping the tail would make the two sides stop adding up, which is the one
- * thing this picture must never do.
- */
+/** The largest few, with everything else gathered rather than dropped. */
 export const top = (bands: FlowBand[], keep: number, words: FlowWords = FLOW_WORDS): FlowBand[] => {
   const sorted = [...bands]
     .filter((band) => band.total > 0)
@@ -55,13 +32,7 @@ export const top = (bands: FlowBand[], keep: number, words: FlowWords = FLOW_WOR
   return [...sorted.slice(0, keep), { name: words.rest, total: rest }];
 };
 
-/**
- * The two columns, made to add to the same number.
- *
- * Spend more than came in and the shortfall appears on the left as money taken
- * out of the balance, named — rather than the picture quietly failing to add
- * up and leaving the reader to work out why.
- */
+/** The two columns, made to add to the same number. */
 export function balance(
   sources: FlowBand[],
   categories: FlowBand[],

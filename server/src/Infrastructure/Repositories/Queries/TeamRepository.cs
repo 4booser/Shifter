@@ -128,12 +128,7 @@ public class TeamRepository : ITeamRepository
         return [.. rows.Select(row => row.Row with { Pay = PayFor(row.Row, row.Period, row.Amount) })];
     }
 
-    /// <summary>
-    /// The same arithmetic <see cref="DayShift.Pay"/> does, on the projected
-    /// row. Weekly and monthly wages earn nothing per shift — they are paid once
-    /// per period — so a rota cannot say what those days were worth and does not
-    /// pretend to.
-    /// </summary>
+    /// <summary>The same arithmetic <see cref="DayShift.Pay"/> does, on the projected row.</summary>
     private static decimal? PayFor(RotaRow row, SalaryPeriod? period, decimal? amount)
     {
         if (period is null) return null;

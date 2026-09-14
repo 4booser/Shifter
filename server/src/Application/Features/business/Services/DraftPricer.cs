@@ -6,20 +6,7 @@ using Shifter.Infrastructure.Persistence.DbContexts;
 
 namespace Shifter.Application.Features.business.Services;
 
-/// <summary>
-/// «Если возьму эти смены» — a week priced before anybody commits to it.
-///
-/// The one calculation people do in their heads before agreeing to a
-/// подработка, and the head gets it wrong in exactly one place: the fifth
-/// shift of a week does not pay what the first four did, because somewhere in
-/// it the overtime line is crossed. That crossing depends on the real shifts
-/// already worked that week, so a client cannot price a draft honestly — only
-/// the server holds both halves.
-///
-/// Nothing is written. The synthetic days live for one request, priced by the
-/// same static arithmetic the calendar itself uses — the whole point is that
-/// the draft and the eventual reality cannot disagree.
-/// </summary>
+/// <summary>«Если возьму эти смены» — a week priced before anybody commits to it.</summary>
 public sealed class DraftPricer
 {
     private readonly ShifterDbContext _db;

@@ -1,10 +1,6 @@
 namespace Shifter.Application.Features.business.DTOs;
 
-/// <summary>
-/// A shift template as it goes out to the palette. salary_period is a word
-/// rather than the enum's number so the payload stays readable: "hour", "day",
-/// "week" or "month".
-/// </summary>
+/// <summary>A shift template as it goes out to the palette.</summary>
 public record ShiftDto(
     int id,
     string name,
@@ -44,16 +40,9 @@ public record ShiftCreateDto(
     string salary_period,
     decimal? salary_amount,
     int break_minutes,
-    /// <summary>
-    /// "#RRGGBB", or null to go back to borrowing the place's colour. Defaulted
-    /// so a client that predates the field does not clear it on every save.
-    /// </summary>
+    /// <summary>"#RRGGBB", or null to go back to borrowing the place's colour.</summary>
     string? colour = null,
-    /// <summary>
-    /// A share of the takings on top of the rate. Defaulted, like the fields
-    /// below it, so a client written before the pay constructor existed keeps
-    /// saving templates rather than silently clearing their terms.
-    /// </summary>
+    /// <summary>A share of the takings on top of the rate.</summary>
     decimal? revenue_percent = null,
     /// <summary>"personal" or "pool"; anything else reads as personal.</summary>
     string? tip_source = null,

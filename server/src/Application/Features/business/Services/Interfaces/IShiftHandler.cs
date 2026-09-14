@@ -2,10 +2,7 @@ using Shifter.Application.Features.business.DTOs;
 
 namespace Shifter.Application.Features.business.Services.Interfaces;
 
-/// <remarks>
-/// userId is always a parameter, never a field on the request: taking it from
-/// the payload would let a caller act on another user's data.
-/// </remarks>
+/// userId is always a parameter, never a field on the request: taking it from the payload would let a caller act…
 public interface IShiftHandler
 {
     Task<ShiftDto[]> ListAsync(int userId, bool includeArchived, CancellationToken ct);

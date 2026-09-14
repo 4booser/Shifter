@@ -9,12 +9,7 @@ using Shifter.Application.Common.Text;
 
 namespace Shifter.Application.Features.Brief;
 
-/// <summary>
-/// The daily brief: our numbers, said in words. Facts are gathered from the
-/// same handlers the screens use — so the page can never disagree with the
-/// calendar — then either dressed by the model or written locally. Cached
-/// per person per day; asking again the same day returns the same words.
-/// </summary>
+/// <summary>The daily brief: our numbers, said in words.</summary>
 public sealed class BriefService
 {
     private readonly ShifterDbContext _db;
@@ -97,12 +92,7 @@ public sealed class BriefService
         return brief;
     }
 
-    /// <summary>
-    /// The day page: the same brief, plus everything the figures noticed,
-    /// arranged in blocks. The paragraph at the top may be the model's; not
-    /// one line below it is — those are arithmetic against the same days the
-    /// calendar draws.
-    /// </summary>
+    /// <summary>The day page: the same brief, plus everything the figures noticed, arranged in blocks.</summary>
     public async Task<BriefBlockDto[]> BlocksAsync(
         int userId,
         DateOnly today,

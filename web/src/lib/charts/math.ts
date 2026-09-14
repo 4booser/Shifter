@@ -2,9 +2,7 @@
 
 export const CHART_W = 640;
 export const CHART_H = 190;
-/* The left gutter holds the money labels of the y axis. Compact notation keeps
-   them short, but a currency mark still follows the number, so the gutter is
-   wider than the bare digits need. */
+/* The left gutter holds the money labels of the y axis. */
 export const PAD = { top: 12, right: 6, bottom: 22, left: 60 };
 export const PLOT_W = CHART_W - PAD.left - PAD.right;
 export const PLOT_H = CHART_H - PAD.top - PAD.bottom;
@@ -37,14 +35,7 @@ export interface ColumnDatum {
   hours: number;
 }
 
-/**
- * Solid earned from the baseline, planned wash above with a 2px surface gap.
- *
- * `maxWidth` caps the thickness. The default suits a month of days; a chart of
- * six months over the same plot leaves slots four times as wide, and a 24px
- * column stranded in the middle of one reads as a missing bar rather than a
- * deliberately thin mark.
- */
+/** Solid earned from the baseline, planned wash above with a 2px surface gap. */
 export function buildColumns(data: ColumnDatum[], maxWidth = 30): Column[] {
   if (data.length === 0) return [];
 
@@ -89,32 +80,8 @@ export function buildTicks(data: ColumnDatum[]): Tick[] {
   }));
 }
 
-/**
- * The same rounding, downwards, for a scale that has to reach below zero.
- *
- * A month can close in the red — deductions outrunning a short shift is an
- * ordinary week in this trade — and a floor pinned at zero drew that month
- * twelve thousand units below its own canvas while labelling the axis «₴0 ·
- * ₴0.5 · ₴1». Money that went the wrong way still has to be drawable.
- */
-/**
- * The window a *level* series is drawn in: its own range, with a little air.
- *
- * A cumulative climb starts at nought — that is what makes it a climb. A
- * level does not: an hourly rate drifting between ₴230 and ₴250, drawn from
- * zero, is a flat line at the ceiling and every number the chart was asked
- * to show is thrown away. The round-number ladder `niceCeiling` climbs is
- * chosen against the magnitude of a number rather than the width of a band,
- * which makes it exactly the wrong tool here.
- *
- * `floorAtZero` for a quantity that has no negative half-plane — a rate, a
- * count of hours — so a low value near nought does not open a window below
- * it that can never be filled.
- *
- * The second front has had this since its balance chart was a straight line
- * over a block of colour; this is the same function, and now there is one of
- * it per client rather than one hand-rolled copy per chart.
- */
+/** The same rounding, downwards, for a scale that has to reach below zero. */
+/** The window a *level* series is drawn in: its own range, with a little air. */
 export function levelWindow(
   values: number[],
   { floorAtZero = false }: { floorAtZero?: boolean } = {},
@@ -143,11 +110,7 @@ export function niceCeiling(value: number): number {
   return 10 * power;
 }
 
-/**
- * A monotone curve through the points: smooth to read, honest to the data —
- * cubic segments whose slopes never overshoot a value they pass through
- * (Fritsch–Carlson), so the curve cannot invent a peak the month never had.
- */
+/** A monotone curve through the points: smooth to read, honest to the data — cubic segments whose slopes never… */
 export function smoothPath(list: { x: number; y: number }[]): string {
   if (list.length < 2) return '';
   if (list.length === 2) return `M ${list[0].x} ${list[0].y} L ${list[1].x} ${list[1].y}`;

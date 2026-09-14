@@ -1,17 +1,6 @@
-/**
- * The rules of the queue, with nothing native in them.
- *
- * Kept apart from the store so they can be tested: the order in which held
- * writes go out is the only thing that makes a queue safe, and it is not the
- * kind of thing anybody notices by reading.
- */
+/** The rules of the queue, with nothing native in them. */
 
-/**
- * One write that has not reached the server yet.
- *
- * Kept as the request itself rather than as an intention, so replaying it
- * needs no knowledge of what it meant.
- */
+/** One write that has not reached the server yet. */
 export interface Pending {
   id: string;
   /** When it was queued, so a banner can say how old the backlog is. */
@@ -25,11 +14,7 @@ export interface Pending {
   label: string;
 }
 
-/**
- * What happened to one attempt. "refused" is the server saying no — a template
- * deleted since, a day that will not take this — and "offline" is never having
- * asked it.
- */
+/** What happened to one attempt. */
 export type SendResult = 'sent' | 'refused' | 'offline';
 
 export interface Drained {
@@ -40,13 +25,7 @@ export interface Drained {
   left: Pending[];
 }
 
-/**
- * Empties the queue as far as the network allows.
- *
- * The stop on the first dropped request is the point. Skipping past it and
- * carrying on would let a later edit of the same day arrive before an earlier
- * one, and the day would end up holding whichever lost the race.
- */
+/** Empties the queue as far as the network allows. */
 export async function drain(
   pending: Pending[],
   send: (entry: Pending) => Promise<SendResult>,

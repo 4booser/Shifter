@@ -9,15 +9,7 @@ using Xunit;
 
 namespace Shifter.Tests;
 
-/// <summary>
-/// The unauthenticated write, end to end: who is allowed to make it, what it
-/// is allowed to touch, and what happens when the same night arrives twice.
-///
-/// The rules being defended are that a delivery can only ever write to the
-/// account that made the endpoint, can only write the one kind of thing the
-/// endpoint is for, and cannot quietly delete anything the person entered by
-/// hand.
-/// </summary>
+/// <summary>The unauthenticated write, end to end: who is allowed to make it, what it is allowed to touch, and what…</summary>
 public class WebhookIngestTests
 {
     private readonly FakeShifterQuery _query = new();
@@ -103,10 +95,7 @@ public class WebhookIngestTests
             CancellationToken.None));
     }
 
-    /// <summary>
-    /// A switched-off endpoint answers exactly as an unknown one does. Any other
-    /// answer turns the address into a way of asking which tokens are real.
-    /// </summary>
+    /// <summary>A switched-off endpoint answers exactly as an unknown one does.</summary>
     [Fact]
     public async Task Answers_a_switched_off_endpoint_as_if_it_did_not_exist()
     {
@@ -154,10 +143,7 @@ public class WebhookIngestTests
             CancellationToken.None));
     }
 
-    /// <summary>
-    /// The plain secret header, for software that cannot be made to sign
-    /// anything. Weaker, and deliberately still allowed.
-    /// </summary>
+    /// <summary>The plain secret header, for software that cannot be made to sign anything.</summary>
     [Fact]
     public async Task Accepts_the_secret_presented_in_a_header()
     {
@@ -196,12 +182,7 @@ public class WebhookIngestTests
         Assert.Contains("window", error.Message);
     }
 
-    /// <summary>
-    /// A sender signing under its own header names is refused exactly like one
-    /// that sent nothing, and from the outside the two are identical. The names
-    /// that did arrive go into the answer — and so into the log the owner
-    /// reads — because that is the whole diagnosis.
-    /// </summary>
+    /// <summary>A sender signing under its own header names is refused exactly like one that sent nothing, and from the…</summary>
     [Fact]
     public async Task Names_the_credentials_the_sender_did_send()
     {
@@ -220,12 +201,7 @@ public class WebhookIngestTests
         Assert.Contains("svix-signature", Assert.Single(_webhooks.Deliveries).Error);
     }
 
-    /// <summary>
-    /// What a sender's own "test" button produces: a well-formed report of a
-    /// day on which nothing was sold. Writing it would put a blank day on the
-    /// calendar and call it a success, which is worse than saying plainly that
-    /// the delivery was empty.
-    /// </summary>
+    /// <summary>What a sender's own "test" button produces: a well-formed report of a day on which nothing was sold.</summary>
     [Fact]
     public async Task Reports_a_delivery_that_carries_nothing_and_writes_nothing()
     {
@@ -247,12 +223,7 @@ public class WebhookIngestTests
         Assert.Null(logged.AppliedDate);
     }
 
-    /// <summary>
-    /// The failure that hides itself: the sender's fields are under names the
-    /// endpoint was never told about, so nothing matches — and a 2xx makes the
-    /// sender's own dashboard report "delivered". A week later somebody asks
-    /// why the calendar is empty. It is an error, and it answers as one.
-    /// </summary>
+    /// <summary>The failure that hides itself: the sender's fields are under names the endpoint was never told about, so…</summary>
     [Fact]
     public async Task Refuses_a_payload_where_nothing_matched_at_all()
     {
@@ -268,10 +239,7 @@ public class WebhookIngestTests
         Assert.Equal(DeliveryStatus.Rejected, Assert.Single(_webhooks.Deliveries).Status);
     }
 
-    /// <summary>
-    /// And the case it must not be confused with: the positions were there to
-    /// read and there were none of them. That is a quiet day, not a mistake.
-    /// </summary>
+    /// <summary>And the case it must not be confused with: the positions were there to read and there were none of them.</summary>
     [Fact]
     public async Task Accepts_a_day_that_really_did_sell_nothing()
     {
@@ -300,13 +268,7 @@ public class WebhookIngestTests
 
     // ==== A sender that signs its own way ====
 
-    /// <summary>
-    /// The shape Stripe made common and half the industry copied: the timestamp
-    /// travels inside the signature rather than beside it, under whatever header
-    /// the sender happens to use. Refusing those senders would make this useless
-    /// against exactly the software people need it for — a till's webhook page
-    /// offers a URL and a key, never a choice of scheme.
-    /// </summary>
+    /// <summary>The shape Stripe made common and half the industry copied: the timestamp travels inside the signature rather…</summary>
     private WebhookEndpoint GivenSender(string header = "X-Syrve-Signature", string secret = "whsec_c2VjcmV0")
     {
         WebhookEndpoint endpoint = Given();
@@ -366,10 +328,7 @@ public class WebhookIngestTests
         Assert.Equal("applied", result.status);
     }
 
-    /// <summary>
-    /// A sender rotating its key signs with both for a while, and dropping the
-    /// deliveries in that window is the one thing rotation exists to avoid.
-    /// </summary>
+    /// <summary>A sender rotating its key signs with both for a while, and dropping the deliveries in that window is the one…</summary>
     [Fact]
     public async Task Accepts_a_signature_carrying_more_than_one_element()
     {
@@ -428,12 +387,7 @@ public class WebhookIngestTests
         Assert.Contains("window", error.Message);
     }
 
-    /// <summary>
-    /// The two conventions that share this format differ on one thing: whether
-    /// a whsec_-prefixed key is the string itself or the bytes it encodes.
-    /// Nothing in the request says which, so both are tried — they come from
-    /// one secret, so accepting either widens nothing.
-    /// </summary>
+    /// <summary>The two conventions that share this format differ on one thing: whether a whsec_-prefixed key is the string…</summary>
     [Fact]
     public async Task Accepts_a_key_signed_as_the_bytes_behind_its_prefix()
     {
@@ -457,11 +411,7 @@ public class WebhookIngestTests
         Assert.Equal("applied", result.status);
     }
 
-    /// <summary>
-    /// The endpoint keeps its own key working alongside the sender's: a script
-    /// or a second integration can still be told what to send, and configuring
-    /// one sender must not lock everything else out.
-    /// </summary>
+    /// <summary>The endpoint keeps its own key working alongside the sender's: a script or a second integration can still be…</summary>
     [Fact]
     public async Task Still_accepts_its_own_key_when_a_sender_scheme_is_configured()
     {
@@ -514,10 +464,7 @@ public class WebhookIngestTests
         Assert.Equal(10m, wine.Percentage);
     }
 
-    /// <summary>
-    /// A till lists an item once per order, not once per night, so the same
-    /// name arriving three times is one position sold three times over.
-    /// </summary>
+    /// <summary>A till lists an item once per order, not once per night, so the same name arriving three times is one…</summary>
     [Fact]
     public async Task Adds_up_a_position_the_delivery_lists_more_than_once()
     {
@@ -557,11 +504,7 @@ public class WebhookIngestTests
         Assert.Empty(_command.Merges);
     }
 
-    /// <summary>
-    /// A nightly report names everything sold, and half of it may be missing
-    /// from the catalogue the first time. One name per attempt would turn that
-    /// into an evening of add-one, replay, read the next name.
-    /// </summary>
+    /// <summary>A nightly report names everything sold, and half of it may be missing from the catalogue the first time.</summary>
     [Fact]
     public async Task Names_every_position_the_catalogue_is_missing_at_once()
     {
@@ -584,11 +527,7 @@ public class WebhookIngestTests
         Assert.Equal(DeliveryStatus.Rejected, Assert.Single(_webhooks.Deliveries).Status);
     }
 
-    /// <summary>
-    /// Nothing said is not nothing meant. A payload of tips alone must reach the
-    /// merge with every other field still null, or a note somebody typed would
-    /// be erased by a till that has never heard of notes.
-    /// </summary>
+    /// <summary>Nothing said is not nothing meant.</summary>
     [Fact]
     public async Task Carries_only_the_fields_the_delivery_actually_sent()
     {
@@ -659,10 +598,7 @@ public class WebhookIngestTests
         Assert.Single(_webhooks.Deliveries);
     }
 
-    /// <summary>
-    /// Without an id of the sender's own there is nothing to recognise, and a
-    /// correction is far likelier than a retry — so the second one is applied.
-    /// </summary>
+    /// <summary>Without an id of the sender's own there is nothing to recognise, and a correction is far likelier than a…</summary>
     [Fact]
     public async Task Applies_a_repeated_delivery_that_carries_no_id()
     {
@@ -713,11 +649,7 @@ public class WebhookIngestTests
         Assert.Equal(100m, placement.SalaryAmount);
     }
 
-    /// <summary>
-    /// A count of hours says how long, not when. The break is added back on so
-    /// the paid time comes out as the sender meant it — six paid hours after a
-    /// half-hour break is a shift of six and a half.
-    /// </summary>
+    /// <summary>A count of hours says how long, not when.</summary>
     [Fact]
     public async Task Turns_a_count_of_hours_into_paid_time_from_the_templates_start()
     {
@@ -746,11 +678,7 @@ public class WebhookIngestTests
         Assert.Equal(7, Assert.Single(_command.Placed).Placement.ShiftId);
     }
 
-    /// <summary>
-    /// Strict even with a default sitting there: a name that matches nothing is
-    /// a typo or a template nobody has made, and filing those hours under the
-    /// fallback would look like it worked.
-    /// </summary>
+    /// <summary>Strict even with a default sitting there: a name that matches nothing is a typo or a template nobody has…</summary>
     [Fact]
     public async Task Refuses_a_named_template_that_does_not_exist()
     {
@@ -784,14 +712,7 @@ public class WebhookIngestTests
             """));
     }
 
-    /// <summary>
-    /// Regression: the catalogue and the templates are read without tracking,
-    /// and a day a delivery creates is added to the context as a whole graph.
-    /// A navigation pointing at one of those read-only copies makes EF insert
-    /// it a second time, which fails on the primary key — every delivery to a
-    /// day that did not exist yet came back a 500. What a write needs is the
-    /// foreign key and the copied terms, so that is all it is given.
-    /// </summary>
+    /// <summary>Regression: the catalogue and the templates are read without tracking, and a day a delivery creates is added…</summary>
     [Fact]
     public async Task Writes_bare_foreign_keys_rather_than_the_rows_it_read()
     {
@@ -822,11 +743,7 @@ public class WebhookIngestTests
 
     // ==== One delivery carrying both ====
 
-    /// <summary>
-    /// The shape a real nightly report takes: what was sold and how long the
-    /// shift ran, in one body. Splitting that across two endpoints means two
-    /// keys and two schedules to keep in step for one report.
-    /// </summary>
+    /// <summary>The shape a real nightly report takes: what was sold and how long the shift ran, in one body.</summary>
     [Fact]
     public async Task Writes_the_takings_and_the_hours_out_of_one_delivery()
     {
@@ -859,10 +776,7 @@ public class WebhookIngestTests
         Assert.NotNull(result.preview.shift);
     }
 
-    /// <summary>
-    /// A report of takings alone must not invent a shift out of the fallback
-    /// template. The endpoint reads hours; the payload simply had none.
-    /// </summary>
+    /// <summary>A report of takings alone must not invent a shift out of the fallback template.</summary>
     [Fact]
     public async Task Does_not_invent_a_shift_when_the_delivery_carries_no_time()
     {
@@ -893,11 +807,7 @@ public class WebhookIngestTests
         Assert.Empty(_command.Merges);
     }
 
-    /// <summary>
-    /// The hours-only endpoint keeps its older, looser rule: "I worked today,
-    /// the usual shift" is a complete statement, and the template supplies the
-    /// times. Only the combined kind requires the payload to say so.
-    /// </summary>
+    /// <summary>The hours-only endpoint keeps its older, looser rule: "I worked today, the usual shift" is a complete…</summary>
     [Fact]
     public async Task An_hours_endpoint_still_places_the_template_with_no_time_given()
     {
@@ -912,13 +822,7 @@ public class WebhookIngestTests
         Assert.Equal(new TimeOnly(22, 0), placement.EndTime);
     }
 
-    /// <summary>
-    /// A report on a schedule arrives every day, including the days nobody
-    /// worked, and on those it says zero — hours, and a quantity against every
-    /// position. That is a statement about the day, not a broken delivery: it
-    /// used to answer 400, which would have turned every day off into a red
-    /// line in the sender's dashboard.
-    /// </summary>
+    /// <summary>A report on a schedule arrives every day, including the days nobody worked, and on those it says zero …</summary>
     [Fact]
     public async Task Reads_a_day_off_as_a_day_off_rather_than_a_failure()
     {
@@ -967,11 +871,7 @@ public class WebhookIngestTests
         Assert.Empty(_command.Placed);
     }
 
-    /// <summary>
-    /// A shift that starts and ends at the same moment says the same thing as
-    /// zero hours. A break longer than the shift does not — that is a delivery
-    /// nobody can act on, and it still says so.
-    /// </summary>
+    /// <summary>A shift that starts and ends at the same moment says the same thing as zero hours.</summary>
     [Fact]
     public async Task Separates_a_shift_of_no_length_from_a_break_that_outlasts_it()
     {
@@ -1027,10 +927,7 @@ public class WebhookIngestTests
         Assert.Equal(DeliveryStatus.Failed, Assert.Single(_webhooks.Deliveries).Status);
     }
 
-    /// <summary>
-    /// The reason the bodies are kept at all: a mapping corrected the next
-    /// morning turns yesterday's rejection into yesterday's takings.
-    /// </summary>
+    /// <summary>The reason the bodies are kept at all: a mapping corrected the next morning turns yesterday's rejection into…</summary>
     [Fact]
     public async Task A_replay_ignores_the_id_it_has_already_seen()
     {

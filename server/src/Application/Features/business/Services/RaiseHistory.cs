@@ -3,23 +3,10 @@ using Shifter.Domain.Entities;
 
 namespace Shifter.Application.Features.business.Services;
 
-/// <summary>
-/// When the rate moved, and what it has been worth since.
-///
-/// Derived from the shifts themselves rather than kept in a log: every
-/// placement already carries a snapshot of what it paid, so the history is a
-/// record of money that actually changed hands, not of what a template said at
-/// some point. A log could drift from the days; this cannot.
-///
-/// What it buys is not really the list. It is the last line of it — the date
-/// somebody last got a raise, which almost nobody can name off the top of their
-/// head and everybody feels.
-/// </summary>
+/// <summary>When the rate moved, and what it has been worth since.</summary>
 public static class RaiseHistory
 {
-    /// <summary>
-    /// Every change of rate on every shift worked in the range, newest first.
-    /// </summary>
+    /// <summary>Every change of rate on every shift worked in the range, newest first.</summary>
     public static RaiseDto[] Of(IEnumerable<Day> days, DateOnly today)
     {
         List<RaiseDto> found = [];
@@ -73,11 +60,7 @@ public static class RaiseHistory
             .ToArray();
     }
 
-    /// <summary>
-    /// What the change has come to since it happened: the difference in rate
-    /// against the work actually done at the new one. Negative where the rate
-    /// went down, which is the case worth naming out loud.
-    /// </summary>
+    /// <summary>What the change has come to since it happened: the difference in rate against the work actually done at the…</summary>
     private static decimal Worth(
         DayShift before,
         DayShift after,

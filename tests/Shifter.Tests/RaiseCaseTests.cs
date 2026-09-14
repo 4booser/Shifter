@@ -6,15 +6,7 @@ using Xunit;
 
 namespace Shifter.Tests;
 
-/// <summary>
-/// The case for a raise, assembled out of somebody's own record.
-///
-/// People do not fail to ask because they lack nerve. They fail because when
-/// the moment comes they have nothing but a feeling, and a feeling loses to
-/// "business has been slow" every time. The honesty is the feature: a thin case
-/// has to be reported as thin, because an app that talks somebody into a
-/// conversation they will lose has done them harm.
-/// </summary>
+/// <summary>The case for a raise, assembled out of somebody's own record.</summary>
 public class RaiseCaseTests
 {
     private static readonly DateOnly Today = new(2026, 8, 28);

@@ -1,7 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-// Through expo-router rather than from @react-navigation directly: the router
-// re-exports the navigator it actually mounts, and the two can be different
-// copies with incompatible types.
+// Through expo-router rather than from @react-navigation directly: the router re-exports the navigator it…
 import type { BottomTabBarProps } from 'expo-router/build/react-navigation/bottom-tabs';
 import { useEffect } from 'react';
 import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
@@ -13,15 +11,7 @@ import { buzz } from '@/lib/haptics';
 
 const PILL_HEIGHT = 30;
 
-/**
- * The bar that is on screen the whole time.
- *
- * The default one is five grey icons that turn blue, and it is the single
- * most-looked-at piece of the app. A pill that travels to the tab you picked
- * says where you are with a shape rather than with a colour, which survives
- * being glanced at, and it answers the thumb: a tab that taps back is a tab
- * people trust they hit.
- */
+/** The bar that is on screen the whole time. */
 export function TabBar({
   state,
   descriptors,

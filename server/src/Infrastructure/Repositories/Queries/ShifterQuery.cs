@@ -16,12 +16,7 @@ public class ShifterQuery : IShifterQuery
     private readonly ShifterDbContext _db;
     public ShifterQuery(ShifterDbContext db) => _db = db;
 
-    /// <summary>
-    /// One round trip for a whole set of ids, scoped to the owner and to live
-    /// templates. Someone else's shift, or an archived one, simply does not
-    /// come back, so the caller's count check rejects it the same way it
-    /// rejects an id that never existed.
-    /// </summary>
+    /// <summary>One round trip for a whole set of ids, scoped to the owner and to live templates.</summary>
     public async Task<Shift[]> GetShiftsByIdsAsync(int userId, int[] ids, CancellationToken ct)
     {
         return await _db.Shifts
@@ -81,10 +76,7 @@ public class ShifterQuery : IShifterQuery
             .ToArrayAsync(ct);
     }
 
-    /// <summary>
-    /// A month of the calendar in one query. Shifts and sale entries are
-    /// included because every cell needs them to render.
-    /// </summary>
+    /// <summary>A month of the calendar in one query.</summary>
     public async Task<Day[]> GetDaysInRangeAsync(
         int userId,
         DateOnly from,
@@ -203,11 +195,7 @@ public class ShifterQuery : IShifterQuery
             .FirstOrDefaultAsync(l => l.UserId == userId && l.Id == id, ct);
     }
 
-    /// <summary>
-    /// Payments whose period ends inside the range. Attributing by the end date
-    /// keeps the rule unambiguous: a payment lands in exactly one range rather
-    /// than being split across two when its period straddles a boundary.
-    /// </summary>
+    /// <summary>Payments whose period ends inside the range.</summary>
     public async Task<WorkExpense[]> GetExpensesAsync(
         int userId,
         DateOnly from,

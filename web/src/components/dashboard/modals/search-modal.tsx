@@ -10,11 +10,7 @@ import { ALL_TIME, calendarActions } from '@/lib/store/calendar';
 import { Money } from '@/components/ui/bits';
 import { Modal } from '@/components/ui/modal';
 
-/**
- * Finds a day by what was written on it. Notes are where people put the things
- * the schema has no column for, and the only other way back to one is
- * scrolling the calendar.
- */
+/** Finds a day by what was written on it. */
 export function SearchModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { t, n, lang } = useI18n();
 

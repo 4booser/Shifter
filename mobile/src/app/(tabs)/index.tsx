@@ -88,15 +88,7 @@ interface MonthData {
   aheadDays: number;
 }
 
-/**
- * The month, on the platform this app is actually for.
- *
- * Two things drive the whole screen. Months are swiped, not stepped: a chevron
- * asks for a decision and a thumb does not, and moving between months is the
- * single most common thing anybody does here. And the pencil paints — pick a
- * shift, drag across the days you are working, done. Filling a rota used to be
- * one modal per day, which is why nobody ever filled one in past the first week.
- */
+/** The month, on the platform this app is actually for. */
 export default function CalendarScreen() {
   const scheme = useColorScheme();
   const palette = Colors[scheme === 'dark' ? 'dark' : 'light'];
@@ -231,9 +223,7 @@ export default function CalendarScreen() {
         }),
       );
 
-      // Separately and forgivingly: the templates are the pencil's palette and
-      // the live shift's rate, and the calendar must not refuse to draw
-      // because a second request failed.
+      // Separately and forgivingly: the templates are the pencil's palette and the live shift's rate, and the…
       api<ShiftTemplate[]>('/shifter/v1/shifts')
         .then(setTemplates)
         .catch(() => undefined);
@@ -244,9 +234,7 @@ export default function CalendarScreen() {
         .then(setEventTypes)
         .catch(() => undefined);
 
-      // Only for the weekly threshold, which is a property of the place. A
-      // calendar that cannot say "you are at 38 of 40" lets somebody find out
-      // on the payslip.
+      // Only for the weekly threshold, which is a property of the place.
       api<WorkPlace[]>('/shifter/v1/locations')
         .then(setPlaces)
         .catch(() => undefined);
@@ -255,12 +243,7 @@ export default function CalendarScreen() {
 
   const here = months[monthKeyOf(month)];
 
-  // Everything the widget is allowed to know, written from the figures this
-  // screen has already computed — so what somebody sees on their home screen
-  // and what they see when they open the app cannot disagree.
-  //
-  // Only from the month that actually contains today: swiping to March must
-  // not leave a widget claiming March is the current month.
+  // Everything the widget is allowed to know, written from the figures this screen has already computed — so what…
   const thisMonth = months[monthKeyOf(currentMonth())];
 
   useWidget({
@@ -272,10 +255,7 @@ export default function CalendarScreen() {
     monthDays: thisMonth?.worked ?? 0,
   });
 
-  // A page shows the neighbouring months' days in its corners, so it reads
-  // from all three. The totals above it never do — they are the server's
-  // answer for this month, and summing days would quietly disagree with the
-  // payslip once overtime or a monthly wage is in play.
+  // A page shows the neighbouring months' days in its corners, so it reads from all three.
   const byDate = useMemo(() => {
     const map = new Map<string, CalendarDayData>();
 
@@ -302,13 +282,7 @@ export default function CalendarScreen() {
 
   const waiting = useMemo(() => heldDays(held), [held]);
 
-  /**
-   * Hours already worked this week, against the place's own threshold.
-   *
-   * The site has warned about overtime before the line for months; the phone,
-   * which is what somebody has in their hand when a manager asks them to stay
-   * on, said nothing at all.
-   */
+  /** Hours already worked this week, against the place's own threshold. */
   const week = useMemo(() => {
     const keys = weekOf(today);
     const hours = keys.reduce((sum, key) => sum + (byDate.get(key)?.hours ?? 0), 0);
@@ -331,10 +305,6 @@ export default function CalendarScreen() {
   }, [byDate, today, templates, places]);
 
   // The shifts that start themselves, checked on focus and on a slow tick.
-  //
-  // A tick rather than a timer to the exact second: the app may be closed at
-  // 18:00 and opened at 18:20, and the same check answers both — the decision
-  // logic backdates the clock to the chosen hour either way.
   const autoRules = useAutoStart((state) => state.rules);
   const autoFired = useAutoStart((state) => state.fired);
   const hydrateAuto = useAutoStart((state) => state.hydrate);
@@ -399,9 +369,7 @@ export default function CalendarScreen() {
 
     if (plan === undefined) return null;
 
-    // Only an hourly rate ticks up by the second; a day or a month has no
-    // per-second meaning, and inventing one would put a number on screen
-    // nobody agreed to.
+    // Only an hourly rate ticks up by the second; a day or a month has no per-second meaning, and inventing one…
     const template = templates.find((entry) => entry.id === plan.shift_id);
     const rate =
       template !== undefined && template.salary_period === 'hour'
@@ -432,7 +400,6 @@ export default function CalendarScreen() {
     pager.current?.scrollToIndex({ index: at, animated: !far });
   };
 
-
   // ---- the pencil ----
 
   const clearPaint = () => {
@@ -444,9 +411,7 @@ export default function CalendarScreen() {
   const onPaint = useCallback((key: string, first: boolean) => {
     const set = chosenAt.current;
 
-    // The cell the finger lands on decides what the whole stroke does. Toggling
-    // per cell instead would make a drag back across your own line erase it,
-    // which is not what a pencil does.
+    // The cell the finger lands on decides what the whole stroke does.
     if (first) stroke.current = set.has(key) ? 'remove' : 'add';
 
     if (stroke.current === 'add') {
@@ -461,14 +426,7 @@ export default function CalendarScreen() {
     setChosen(new Set(set));
   }, []);
 
-  /**
-   * Sends a run of writes, and puts aside whatever the network would not take.
-   *
-   * The order matters more than the speed: stopping at the first dropped
-   * request and holding the rest keeps two edits of one day in the order they
-   * were made. A refusal from the server is a different thing and is thrown,
-   * because holding a 400 means retrying it forever.
-   */
+  /** Sends a run of writes, and puts aside whatever the network would not take. */
   const post = useCallback(
     async (writes: Omit<Pending, 'id' | 'at'>[]) => {
       const left: Omit<Pending, 'id' | 'at'>[] = [];
@@ -508,9 +466,7 @@ export default function CalendarScreen() {
     return ensure(indexAt.current, true);
   }, [ensure]);
 
-  // …and the shifts that close themselves. The same slow tick: a phone in a
-  // locker until noon still records the shift as ending at the chosen hour,
-  // because the end is backdated exactly like the start.
+  // …and the shifts that close themselves.
   useEffect(() => {
     const check = () => {
       const live = useLive.getState().live;
@@ -570,19 +526,12 @@ export default function CalendarScreen() {
     const keys = [...chosen].sort();
     const label = `${brushName(brush)} · ${keys.length} ${dayWord(keys.length)}`;
     const writes: Omit<Pending, 'id' | 'at'>[] = [];
-    // What these days looked like before the stroke, captured before anything
-    // is mutated. It is the whole of the undo for the brushes that change a
-    // day rather than add to it.
+    // What these days looked like before the stroke, captured before anything is mutated.
     const before: { key: string; payload: DaySave }[] = [];
     const wiped: EventSave[] = [];
 
     if (brush.kind === 'event') {
-      // Contiguous days become one event each: a fortnight of leave reads as
-      // "Отпуск, 14 дней" and comes off in one tap rather than fourteen.
-      //
-      // Unless it costs. Two lessons on Monday and Tuesday are two lessons at
-      // 400 apiece, not one two-day event at 400 — so a priced brush writes a
-      // row per day and the arithmetic stays what anybody means by it.
+      // Contiguous days become one event each: a fortnight of leave reads as "Отпуск, 14 дней" and comes off in one…
       const runs = (brush.cost ?? 0) > 0
         ? keys.map((key) => ({ from: key, to: key }))
         : runsOf(keys);
@@ -611,10 +560,7 @@ export default function CalendarScreen() {
         });
       }
     } else if (brush.kind === 'shift') {
-      // The server has taken a whole stroke in one request since the site
-      // learned to drag, and it draws the line between worked and planned
-      // itself — behind us is worked, ahead of us is a plan. Twenty separate
-      // saves also meant twenty chances for the signal to go.
+      // The server has taken a whole stroke in one request since the site learned to drag, and it draws the line…
       writes.push({
         method: 'POST',
         path: '/shifter/v1/days/bulk',
@@ -643,9 +589,7 @@ export default function CalendarScreen() {
             continue;
           }
 
-          // Only what was planned turns over. A day with nothing on it is
-          // left alone rather than invented — the pencil says a shift
-          // happened, it does not say which one.
+          // Only what was planned turns over.
           payload.shifts = payload.shifts.map((entry) => ({ ...entry, worked: true }));
         }
 
@@ -701,10 +645,7 @@ export default function CalendarScreen() {
       void refresh();
       buzz.won();
 
-      // Offered only when the whole stroke went. Undoing something still
-      // sitting in the queue would mean unpicking the queue, and a button
-      // that sometimes means one thing and sometimes another is worse than
-      // no button.
+      // Offered only when the whole stroke went.
       setUndo(kept > 0 ? null : undoFor(brush, keys, before, wiped, answers, label));
 
       // The bar above already counts the days; this only has to say why they
@@ -737,9 +678,7 @@ export default function CalendarScreen() {
 
   const painted = chosen.size;
 
-  // "Каждый вторник и четверг" is the commonest shape a rota takes, and it is
-  // the one the pencil is worst at: eight separate touches spread across the
-  // month. One chip does the whole of it.
+  // "Каждый вторник и четверг" is the commonest shape a rota takes, and it is the one the pencil is worst at…
   const spread = useMemo(() => {
     if (brush === null || chosen.size === 0) return null;
 
@@ -762,9 +701,7 @@ export default function CalendarScreen() {
     buzz.touch();
   };
 
-  // What this stroke is about to do, before it does it. Painting a fortnight
-  // of evenings is a decision about money, and the number that makes it one
-  // was previously only visible after the fact.
+  // What this stroke is about to do, before it does it.
   const preview = useMemo(() => {
     if (brush === null) return null;
 
@@ -811,8 +748,6 @@ export default function CalendarScreen() {
     const hours = templateHours(brush.template) * adds.length;
     const hourly = brush.template.salary_period === 'hour';
     // The server files a day behind us as worked and one ahead as a plan.
-    // Saying so before the stroke lands is the difference between a surprise
-    // and a decision.
     const behind = adds.filter((key) => key <= today).length;
 
     return {
@@ -1260,23 +1195,14 @@ function Stat({
   );
 }
 
-/**
- * What one stroke did, in the form that puts it back.
- *
- * A stroke across twenty days with the wrong template used to cost twenty
- * passes with the eraser. Adding is exactly reversible through the same bulk
- * call; the brushes that change a day instead carry the day as it was.
- */
+/** What one stroke did, in the form that puts it back. */
 type Undo =
   | { kind: 'shift'; templateId: number; dates: string[]; label: string }
   | { kind: 'event'; ids: number[]; label: string }
   | {
       kind: 'days';
       before: { key: string; payload: DaySave }[];
-      /**
-       * Events the eraser took off. Put back as new ones rather than restored:
-       * the id is gone, and nobody has ever looked at one.
-       */
+      /** Events the eraser took off. */
       events: EventSave[];
       label: string;
     };

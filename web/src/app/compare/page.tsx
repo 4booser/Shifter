@@ -29,11 +29,7 @@ interface Range {
   label: string;
 }
 
-/**
- * Two stretches of time side by side — the page that answers "did changing
- * jobs actually pay", which is the question all this record-keeping exists
- * for. A is the earlier period, B the later; every delta reads B against A.
- */
+/** Two stretches of time side by side — the page that answers "did changing jobs actually pay", which is the… */
 function Compare() {
   const { t, lang, num } = useI18n();
   const { format } = useMoney();
@@ -102,10 +98,7 @@ function Compare() {
 
     let running = 0;
 
-    // A worked day, not a profitable one. Filtering on `earned > 0` dropped
-    // any day that closed in the red — deductions over a short shift — and
-    // the running total then disagreed with the «Заработано» row of the very
-    // table underneath it.
+    // A worked day, not a profitable one.
     return sorted
       .filter((day) => day.shifts.some((entry) => entry.worked))
       .map((day, index) => ({ label: `${index + 1}`, value: (running += day.earned) }));
@@ -114,13 +107,7 @@ function Compare() {
   const seriesA = useMemo(() => cumulative(a), [a]);
   const seriesB = useMemo(() => cumulative(b), [b]);
 
-  /*
-   * `unset` marks a figure that is missing rather than nought. The hourly
-   * rate is suppressed under an hour of work — there is no rate to quote —
-   * and the suppression arrives here as a plain 0, which the table then
-   * printed as «0 ₴» beside «↓ −100%»: the hour did not collapse to nothing,
-   * it was never counted.
-   */
+  /* `unset` marks a figure that is missing rather than nought. */
   const facts: { label: string; a: number; b: number; money?: boolean; unset?: (value: number) => boolean }[] = [
     { label: 'Earned', a: a.total_earned, b: b.total_earned, money: true },
     { label: 'Hours', a: a.hours, b: b.hours },

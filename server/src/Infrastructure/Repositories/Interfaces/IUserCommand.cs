@@ -6,11 +6,7 @@ public interface IUserCommand
 {
     public Task<bool> AddAsync(User user, CancellationToken ct);
 
-    /// <summary>
-    /// Undoes a registration whose token could not be stored. The user and the
-    /// token live in separate databases, so there is no transaction spanning
-    /// both and the first write has to be taken back by hand.
-    /// </summary>
+    /// <summary>Undoes a registration whose token could not be stored.</summary>
     public Task DeleteAsync(User user, CancellationToken ct);
 
     public Task SetMonthlyGoalAsync(int userId, decimal? goal, CancellationToken ct);
@@ -21,11 +17,7 @@ public interface IUserCommand
     /// <summary>The colours this person saved to reuse, as a JSON array.</summary>
     public Task SetColourPresetsAsync(int userId, string presets, CancellationToken ct);
 
-    /// <summary>
-    /// A share of tips to put aside, and what for. Starting the rule stamps
-    /// the day: tips earned before it are not counted, because a counter that
-    /// opens by declaring somebody already behind is a counter they close.
-    /// </summary>
+    /// <summary>A share of tips to put aside, and what for.</summary>
     public Task SetTipJarAsync(int userId, decimal percent, decimal goal, CancellationToken ct);
 
     /// <summary>Persists changes to a user the query layer handed back tracked.</summary>

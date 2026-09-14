@@ -73,13 +73,7 @@ describe('averagesFor', () => {
     expect(Number.isFinite(result.perShift)).toBe(true);
   });
 
-  /*
-   * The rate says nothing rather than nought.
-   *
-   * Zero is a figure, and every screen printed it as one — «В час 0 ₴»
-   * beside «↓ 100%», which reads as an hour that collapsed rather than an
-   * hour nobody could count. Under an hour of work there is no answer.
-   */
+  /* The rate says nothing rather than nought. */
   it('has no hourly rate under an hour of work', () => {
     expect(averagesFor(EMPTY_SUMMARY).perHour).toBeNull();
     expect(averagesFor({ ...EMPTY_SUMMARY, days_worked: 1, hours: 0.02, total_earned: -156 }).perHour).toBeNull();

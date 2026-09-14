@@ -1,11 +1,6 @@
 namespace Shifter.Application.Features.Brief;
 
-/// <summary>
-/// Everything the brief is allowed to know, already computed by us. The model
-/// never counts: it is handed finished numbers and asked only to say them
-/// like a person would. A model that does arithmetic writes beautiful lies
-/// about somebody's wages.
-/// </summary>
+/// <summary>Everything the brief is allowed to know, already computed by us.</summary>
 public sealed record BriefFacts(
     string Date,
     string Weekday,

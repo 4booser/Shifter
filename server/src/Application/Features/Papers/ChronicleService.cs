@@ -7,18 +7,7 @@ using Shifter.Infrastructure.Persistence.DbContexts;
 
 namespace Shifter.Application.Features.Papers;
 
-/// <summary>
-/// The private chronicle: each place as a chapter, derived from the record.
-///
-/// The public CV already exists and is deliberately shaped for showing. This
-/// is the other document — first day, last day, the rate at each end, what
-/// the whole place came to — plus one field the record cannot derive: why it
-/// ended, in the person's own words, for the person's own eyes.
-///
-/// It is the memory that makes the next negotiation honest. «Я уходил с 220»
-/// is a sentence that needs a source, and two years later the app is the only
-/// one left.
-/// </summary>
+/// <summary>The private chronicle: each place as a chapter, derived from the record.</summary>
 public sealed class ChronicleService
 {
     private readonly ShifterDbContext _db;

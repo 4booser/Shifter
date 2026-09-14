@@ -11,11 +11,7 @@ import { Alert } from '@/components/ui/bits';
 import { Modal } from '@/components/ui/modal';
 import { TimeAgo } from '@/components/ui/time-ago';
 
-/**
- * Swaps, from the rota page: what is waiting for an answer, and the button
- * that starts a new trade. A cover asks somebody to take a shift; a swap
- * asks them to trade one — different promise, its own panel.
- */
+/** Swaps, from the rota page: what is waiting for an answer, and the button that starts a new trade. */
 export function SwapsPanel({ teamId, rota, onChanged }: { teamId: number; rota: Rota; onChanged: () => void }) {
   const { t, lang } = useI18n();
   const [swaps, setSwaps] = useState<Swap[]>([]);

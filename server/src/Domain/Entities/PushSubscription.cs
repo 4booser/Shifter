@@ -1,11 +1,6 @@
 namespace Shifter.Domain.Entities;
 
-/// <summary>
-/// One browser that asked to be told things. The endpoint is the push
-/// service's address for that browser; the two keys encrypt payloads to it.
-/// Preferences live here rather than on the user because they are per-device
-/// facts: a phone wants the evening nudge, the desk machine does not.
-/// </summary>
+/// <summary>One browser that asked to be told things.</summary>
 public sealed class PushSubscription
 {
     public int Id { get; set; }
@@ -37,17 +32,10 @@ public sealed class PushSubscription
     /// <summary>The week in one line, Sunday evening.</summary>
     public bool NotifyDigest { get; set; }
 
-    /// <summary>
-    /// Warns while the week can still be changed: "38 of 40 hours". After the
-    /// threshold the information is only useful for arguing about it.
-    /// </summary>
+    /// <summary>Warns while the week can still be changed: "38 of 40 hours".</summary>
     public bool NotifyOvertime { get; set; }
 
-    /// <summary>
-    /// Papers running out. On by default for nobody — but the first document
-    /// somebody enters is a statement that they want to be told, and the
-    /// settings screen says so.
-    /// </summary>
+    /// <summary>Papers running out.</summary>
     public bool NotifyDocuments { get; set; }
 
     /// <summary>Local "HH:mm" both nudges are sent at.</summary>
@@ -55,10 +43,7 @@ public sealed class PushSubscription
 
     public DateTime CreatedAt { get; set; }
 
-    /// <summary>
-    /// The local date each kind last went out, so a scheduler pass never
-    /// repeats itself inside one day however often it runs.
-    /// </summary>
+    /// <summary>The local date each kind last went out, so a scheduler pass never repeats itself inside one day however often…</summary>
     public DateOnly? TomorrowSentOn { get; set; }
 
     public DateOnly? UnclosedSentOn { get; set; }

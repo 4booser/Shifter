@@ -1,9 +1,4 @@
-/**
- * A minimal .xlsx writer. An xlsx file is a ZIP of XML parts, so this builds
- * both by hand rather than pulling in a spreadsheet library for what amounts to
- * a few hundred bytes of markup. Entries are stored uncompressed, which is
- * valid ZIP and keeps the code to one readable pass.
- */
+/** A minimal .xlsx writer. */
 
 export type CellValue = string | number | null;
 

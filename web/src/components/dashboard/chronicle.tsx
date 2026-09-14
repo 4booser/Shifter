@@ -8,17 +8,7 @@ import { useMoney } from '@/lib/settings/money';
 import { useI18n } from '@/lib/i18n';
 import { Alert } from '@/components/ui/bits';
 
-/**
- * The private chronicle: the CV's other half, the one that never prints.
- *
- * The public record is shaped for showing. This is shaped for remembering —
- * first day, last day, what the whole place came to, the rate at each end,
- * and one line the record cannot derive: why it ended, in your own words.
- * «Ушёл из-за штрафов» is exactly the sentence a person needs back two years
- * later and exactly the sentence that must never reach a stranger, so the
- * server keeps it off the card endpoint entirely rather than trusting a
- * checkbox to hide it.
- */
+/** The private chronicle: the CV's other half, the one that never prints. */
 export function Chronicle() {
   const { t, n, lang } = useI18n();
   const { formatIn } = useMoney();
@@ -48,12 +38,7 @@ export function Chronicle() {
       .catch((caught) => setError(apiErrorMessage(caught)));
   };
 
-  /*
-   * Month and year apart, the way the page around this one already does it.
-   * Asked for together, Russian and Ukrainian append «г.» — so one card read
-   * «авг. 2025 г. — сейчас» directly under a heading that said «август 2025 —
-   * сентябрь 2026». One date, two manners, on one page.
-   */
+  /* Month and year apart, the way the page around this one already does it. */
   const said = (key: string | null) => {
     if (key === null) return '';
 

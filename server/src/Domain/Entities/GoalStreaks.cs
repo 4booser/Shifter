@@ -1,17 +1,9 @@
 namespace Shifter.Domain.Entities;
 
-/// <summary>
-/// Runs of closed weekly goals, counted and nothing else — the same tone as
-/// WorkStreaks: «третья неделя подряд» is a constatation, never advice.
-/// </summary>
+/// <summary>Runs of closed weekly goals, counted and nothing else — the same tone as WorkStreaks: «третья неделя подряд»…</summary>
 public static class GoalStreaks
 {
-    /// <summary>
-    /// The current run of consecutive closed weeks, counted back from the
-    /// week containing <paramref name="today"/>. The current week counts
-    /// when closed; an open current week does not break the run — the streak
-    /// is alive until a whole week passes unclosed.
-    /// </summary>
+    /// <summary>The current run of consecutive closed weeks, counted back from the week containing <paramref name="today"/>.</summary>
     public static int Weekly(IEnumerable<DateOnly> closedWeekStarts, DateOnly today)
     {
         var closed = closedWeekStarts.ToHashSet();

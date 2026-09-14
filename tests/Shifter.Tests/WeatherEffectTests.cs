@@ -4,10 +4,7 @@ using Xunit;
 
 namespace Shifter.Tests;
 
-/// <summary>
-/// The rain question, which everybody in the trade has an opinion about and
-/// nobody has ever checked. The rules here are all about refusing to answer.
-/// </summary>
+/// <summary>The rain question, which everybody in the trade has an opinion about and nobody has ever checked.</summary>
 public class WeatherEffectTests
 {
     private static WeatherEffect.DayFigures Day(int index, decimal tips, bool wet, double hours = 8)
@@ -119,10 +116,7 @@ public class WeatherEffectTests
     }
 }
 
-/// <summary>
-/// Where the line between a wet day and a dry one is drawn. It lives in one
-/// place so that two screens cannot disagree about what counts as rain.
-/// </summary>
+/// <summary>Where the line between a wet day and a dry one is drawn.</summary>
 public class WetDayTests
 {
     [Theory]

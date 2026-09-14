@@ -11,15 +11,7 @@ import { useCalendar } from '@/lib/store/calendar';
 import { Alert, Money } from '@/components/ui/bits';
 import { Icon } from '@/components/ui/icon';
 
-/**
- * What the work cost, as opposed to what the venue took off somebody.
- *
- * It lives on the payouts page rather than on a day because that is where
- * people think about money leaving and arriving in the same breath — and
- * because it must never look like part of the day's earnings. Nothing here is
- * subtracted from anything: take-home is what arrived, and a taxi home happened
- * after that.
- */
+/** What the work cost, as opposed to what the venue took off somebody. */
 const KINDS: { value: ExpenseKind; label: string }[] = [
   { value: 'transport', label: 'Getting there' },
   { value: 'uniform', label: 'Uniform' },
@@ -104,9 +96,7 @@ export function ExpensesPanel({
       .catch((caught) => setError(apiErrorMessage(caught)));
   };
 
-  // Kept apart, because one is what happened and the other is what a rule
-  // says will. Adding them and calling the sum "spent" would be the app
-  // reporting a prediction as a receipt.
+  // Kept apart, because one is what happened and the other is what a rule says will.
   const total = rows.reduce((sum, row) => (row.expected ? sum : sum + row.amount), 0);
   const coming = rows.reduce((sum, row) => (row.expected ? sum + row.amount : sum), 0);
 
@@ -173,10 +163,7 @@ export function ExpensesPanel({
                       }
 
                       if (!response.ok) {
-                        // The form keeps whatever is in it. A reader that
-                        // fails by emptying the form is worse than no reader:
-                        // somebody came here to record a number and would have
-                        // to start again.
+                        // The form keeps whatever is in it.
                         setError(t('Could not read the receipt. Type it in instead.'));
 
                         return;
@@ -320,9 +307,7 @@ export function ExpensesPanel({
                   {row.location_name ?? ''}
                   {row.note !== null && (row.location_name !== null ? ' · ' : '') + row.note}
                 </span>
-                {/* An estimate never mixes with a fact: the ones nobody has
-                    confirmed say so, rather than sitting in the total as
-                    though somebody had. */}
+                {/* An estimate never mixes with a fact: the ones nobody has confirmed say so, rather than sitting in the total… */}
                 {row.expected && <span className="chip">{t('expected')}</span>}
                 <Money value={row.amount} className={row.expected ? 'text-muted' : 'font-semibold'} />
                 {row.expected && row.rule_id !== null ? (
@@ -361,17 +346,7 @@ export function ExpensesPanel({
   );
 }
 
-/**
- * The costs that come round.
- *
- * A travel pass, a locker, the monthly whip-round. They are not recorded
- * because recording something is what you do while thinking about it, and the
- * nature of a standing cost is that you are not — it leaves, and it is noticed
- * at the end of the month when the number does not add up.
- *
- * Folded away by default: this is a list somebody sets up once and then wants
- * to stop seeing, which is the whole point of it.
- */
+/** The costs that come round. */
 function StandingCosts({
   rules,
   open,
@@ -536,10 +511,7 @@ function StandingCosts({
               </select>
             )}
 
-            {/* Both of the labels below named the field beside them: the
-                kind picker announced itself as «день месяца», the place
-                picker as «каждые N месяцев». Sighted people never saw it;
-                a screen reader read nothing else. */}
+            {/* Both of the labels below named the field beside them: the kind picker announced itself as «день месяца», the… */}
             <select
               aria-label={t('Kind')}
               className="field-input !w-auto"

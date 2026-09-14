@@ -1,11 +1,6 @@
 namespace Shifter.Application.Features.business.DTOs;
 
-/// <summary>
-/// A document and how long it has left. The days are computed on the server so
-/// the phone and the site cannot disagree about whether something has expired
-/// — which, on a medical book, is the difference between working a shift and
-/// being sent home from it.
-/// </summary>
+/// <summary>A document and how long it has left.</summary>
 public record DocumentDto(
     int id,
     /// <summary>medical, sanitary, certificate, licence, permit or other.</summary>

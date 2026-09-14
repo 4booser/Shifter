@@ -4,10 +4,7 @@ using Xunit;
 
 namespace Shifter.Tests;
 
-/// <summary>
-/// The number people install the app for, and the one that must refuse to
-/// appear more often than it appears. Nearly every test here is about silence.
-/// </summary>
+/// <summary>The number people install the app for, and the one that must refuse to appear more often than it appears.</summary>
 public class MarketRateTests
 {
     private static MarketRate.Sample[] Board(params (int Employer, decimal Rate)[] rows)
@@ -123,12 +120,7 @@ public class MarketStandingTests
     }
 }
 
-/// <summary>
-/// The arithmetic that turns a shift price into an hourly one rests on a
-/// language behaviour worth pinning: subtracting two times of day wraps past
-/// midnight by itself. Read as minus sixteen hours, a close would produce a
-/// negative rate for half the board.
-/// </summary>
+/// <summary>The arithmetic that turns a shift price into an hourly one rests on a language behaviour worth pinning…</summary>
 public class ShiftPriceTests
 {
     [Fact]

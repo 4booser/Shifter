@@ -49,17 +49,7 @@ interface CellEntry {
   time: string | null;
 }
 
-/*
- * Three is what a month's cell can hold without the grid outgrowing a screen,
- * and a fourth shift hides behind «+1». A week is one row where a month is
- * six, so the same day can simply be taller there: the minimum height stays
- * the floor it always was, and a busy day grows the row rather than being
- * summarised at it.
- *
- * Giving the week row a tall fixed height instead was tried and was worse —
- * seven boxes of empty is the same fault as a card stretched past its
- * content, which this project has already fixed once on the bank page.
- */
+/* Three is what a month's cell can hold without the grid outgrowing a screen, and a fourth shift hides behind… */
 const MAX_CELL_ENTRIES = 3;
 const MAX_CELL_ENTRIES_WEEK = 8;
 
@@ -111,10 +101,7 @@ export function MonthGrid({
     [settings.view, state.month.year, settings.mondayFirst, lang],
   );
 
-  // The standing payments, laid over the rota. Rent on the 25th and the
-  // wage on the 27th are two facts a person holds side by side in their head
-  // and the app kept in different corners. Bank recurring is client-side and
-  // free to read; a calendar without a connected bank simply shows nothing.
+  // The standing payments, laid over the rota.
   const bankItems = useMono((state) => state.items);
   const hydrateMono = useMono((state) => state.hydrate);
 
@@ -149,11 +136,7 @@ export function MonthGrid({
     );
   }, [settings.holidayCountry, settings.view, weeks, state.month.year]);
 
-  /**
-   * Events spread across every day they cover, built once per change: a month
-   * grid asks forty-two times, and a fortnight of leave would be scanned each
-   * time otherwise.
-   */
+  /** Events spread across every day they cover, built once per change: a month grid asks forty-two times, and a… */
   const eventsByDate = useMemo(() => {
     const spread = new Map<string, { symbol: string; name: string; colour: string; time: string | null }[]>();
 
@@ -638,15 +621,7 @@ export function MonthGrid({
       {settings.view === 'year' ? (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
           {yearMonths.map((month) => (
-            /*
-             * The card is not a button any more.
-             *
-             * The days inside it are the useful targets, and a button cannot
-             * hold a button — which is why they were spans with role="button"
-             * and no way to focus them: announced as buttons, impossible to
-             * press without a mouse. The month name is its own button now, and
-             * every day is one too.
-             */
+            /* The card is not a button any more. */
             <div key={month.month} className="card p-3 text-left">
               <button
                 type="button"
@@ -664,9 +639,7 @@ export function MonthGrid({
                   const earned = state.days.get(day.key)?.earned ?? 0;
 
                   return (
-                    /* A role of «button» that cannot be focused announces
-                       itself as one and then refuses to be pressed. It is a
-                       button, so it says so by being one. */
+                    /* A role of «button» that cannot be focused announces itself as one and then refuses to be pressed. */
                     <button
                       type="button"
                       key={day.key}
@@ -736,9 +709,7 @@ export function MonthGrid({
                 key={day.key}
                 type="button"
                 title={holiday ?? undefined}
-                // The whole day in one sentence. A screen reader used to read
-                // the painted fragments in whatever order they landed, which
-                // is a decoration of a day rather than a day.
+                // The whole day in one sentence.
                 aria-label={spokenDay({
                   date: new Intl.DateTimeFormat(lang, { day: 'numeric', month: 'long' }).format(
                     new Date(`${day.key}T12:00:00`),
@@ -759,11 +730,7 @@ export function MonthGrid({
                 aria-selected={picked || selected}
                 data-day={day.key}
                 tabIndex={selected ? 0 : -1}
-                /* @container: содержимое меряется шириной клетки, а не окна.
-                   Время пряталось по `sm:` — по ширине экрана, — и на широком
-                   мониторе лезло в клетку шириной в девяносто пикселей: там
-                   «13:00–23:00» переносилось на две строки, а название смены
-                   ужималось до «Вых…». */
+                /* @container: содержимое меряется шириной клетки, а не окна. */
                 className={`group cell-in @container relative flex min-h-[4.6rem] flex-col gap-0.5 overflow-hidden rounded-(--radius) border p-1 text-left transition-all sm:p-(--pad-cell) sm:min-h-(--cell-min) ${
                   day.inCurrentMonth ? '' : 'opacity-45'
                 } ${dragged ? 'scale-[0.97] border-(--accent) ring-2 ring-(--ring)' : picked ? 'border-(--accent) bg-(--accent-soft)' : selected ? 'ring-pulse border-(--accent)' : 'border-transparent hover:border-border-strong'} ${
@@ -827,10 +794,7 @@ export function MonthGrid({
 
                   {hours > 0 && (
                     <span className="ml-auto hidden text-[0.66rem] font-medium text-muted tabular @[5rem]:inline">
-                      {/* «9.5ч»: a machine's decimal point and no space
-                          before the unit, in the grid this app is most
-                          looked at through. The tooltip on the very same
-                          cell already wrote «9,5 ч». */}
+                      {/* «9.5ч»: a machine's decimal point and no space before the unit, in the grid this app is most looked at… */}
                       {round1(hours).toLocaleString(lang, { maximumFractionDigits: 1 })}
                       {'\u2009'}
                       {t('h')}

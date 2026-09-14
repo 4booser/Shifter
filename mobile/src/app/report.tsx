@@ -13,14 +13,7 @@ import { t } from '@/lib/i18n';
 import { CalendarDayData, money } from '@/lib/types';
 import { shareIncomePdf } from '@/lib/papers-share';
 
-/**
- * The month, day by day — the site's report in the pocket.
- *
- * Every row is a day that happened: the shifts on it, the hours, what came
- * in tips and what the day earned, with the month's totals under them. The
- * one screen somebody opens when a manager says «and what did you actually
- * work in August», which is exactly why it also offers the paper.
- */
+/** The month, day by day — the site's report in the pocket. */
 interface Range {
   days: CalendarDayData[];
   total_earned: number;

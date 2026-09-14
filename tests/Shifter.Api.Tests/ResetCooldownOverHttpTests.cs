@@ -6,11 +6,7 @@ using Xunit;
 
 namespace Shifter.Api.Tests;
 
-/// <summary>
-/// The forgot-password form is the last anonymous door, and it sends mail.
-/// The promise here: a second ask inside ten minutes sends nothing new and
-/// betrays nothing — while the first letter keeps working.
-/// </summary>
+/// <summary>The forgot-password form is the last anonymous door, and it sends mail.</summary>
 [Collection("api")]
 public sealed class ResetCooldownOverHttpTests
 {

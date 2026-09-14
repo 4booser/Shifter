@@ -3,13 +3,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { Head } from '@/components/screen';
 import { cn } from '@/lib/utils';
 
-/**
- * Планы.
- *
- * Один столбец, снизу вверх: что уже стоит, что делается, что задумано.
- * Не таблица со сроками — сроки в такой таблице всегда врут, а порядок
- * работ честен и без них.
- */
+/** Планы. */
 const STAGE = {
   done: { label: 'готово', dot: 'bg-money', ring: 'border-money/35' },
   now: { label: 'в работе', dot: 'bg-brass', ring: 'border-brass/45' },

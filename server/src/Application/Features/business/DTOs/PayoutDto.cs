@@ -16,23 +16,13 @@ public record PayoutDto(
     string kind = "settlement",
     /// <summary>The currency it arrived in. Empty is the app's own.</summary>
     string currency = "",
-    /// <summary>
-    /// Hryvnia per unit on the day it arrived, fixed when it was recorded.
-    /// Null in the app's own currency, and null where nothing was published —
-    /// which is said rather than filled in.
-    /// </summary>
+    /// <summary>Hryvnia per unit on the day it arrived, fixed when it was recorded.</summary>
     decimal? rate_to_base = null,
     /// <summary>The day that rate was published for. Weekends look back.</summary>
     DateOnly? rate_on = null
     );
 
-/// <summary>
-/// The dates are nullable so that "not sent" and "sent wrong" stay different
-/// answers. As plain DateOnly they deserialised to 0001-01-01 when a client
-/// left one out, and the handler stored it: a payment recorded on a day that
-/// does not exist, invisible to every reconciliation because its period sits
-/// two thousand years before any work.
-/// </summary>
+/// <summary>The dates are nullable so that "not sent" and "sent wrong" stay different answers.</summary>
 public record PayoutCreateDto(
     DateOnly? period_from,
     DateOnly? period_to,

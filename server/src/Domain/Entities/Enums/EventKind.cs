@@ -1,10 +1,6 @@
 namespace Shifter.Domain.Entities;
 
-/// <summary>
-/// The shapes a non-working day comes in. Only these four, because each one
-/// has to mean something to the forecast, and a list nobody can explain is
-/// worse than a short one.
-/// </summary>
+/// <summary>The shapes a non-working day comes in.</summary>
 public enum EventKind
 {
     /// <summary>A course, a birthday, a doctor's appointment — no effect on pace.</summary>

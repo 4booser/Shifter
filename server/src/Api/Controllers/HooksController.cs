@@ -8,24 +8,12 @@ using Shifter.Application.Features.Webhooks.Services.Interfaces;
 
 namespace Shifter.Api.Controllers;
 
-/// <summary>
-/// Where the outside world posts. The only unauthenticated write in the
-/// application, so everything about it is deliberately narrow: one verb, one
-/// route, a body it will not read past a fixed size, and an endpoint that has
-/// to prove it knows its own secret before a single field is looked at.
-///
-/// Nothing here decides anything. It reads the request and hands it on; who may
-/// write, to what, and what the payload means all live in the ingest handler.
-/// </summary>
+/// <summary>Where the outside world posts.</summary>
 [AllowAnonymous]
 [Route(WebhookRoutes.Hooks)]
 public class HooksController : ControllerBase
 {
-    /// <summary>
-    /// A generous day of line items is a few tens of kilobytes. Past this the
-    /// sender is looping or misconfigured, and reading it all into memory to
-    /// find that out is the thing worth avoiding.
-    /// </summary>
+    /// <summary>A generous day of line items is a few tens of kilobytes.</summary>
     private const int MaxBodyBytes = 256 * 1024;
 
     private readonly IWebhookIngestHandler _ingest;
@@ -60,20 +48,11 @@ public class HooksController : ControllerBase
         return Ok(new { status = result.status, date = result.date });
     }
 
-    /// <summary>
-    /// Words that mark a header as an attempt to authenticate. A sender signing
-    /// under its own names — svix-signature, X-Hub-Signature, Webhook-Signature
-    /// — is refused exactly like one that sent nothing, and from the outside
-    /// those two look identical. Reporting which of these arrived costs nothing
-    /// and ends the guessing.
-    /// </summary>
+    /// <summary>Words that mark a header as an attempt to authenticate.</summary>
     private static readonly string[] AuthWords =
         ["sign", "secret", "hmac", "digest", "webhook", "svix", "timestamp", "token"];
 
-    /// <summary>
-    /// Names only, never values: whatever the sender is presenting as its
-    /// credential is the one thing that must not end up in a log.
-    /// </summary>
+    /// <summary>Names only, never values: whatever the sender is presenting as its credential is the one thing that must not…</summary>
     private string[] AuthHeaderNames()
     {
         return Request.Headers.Keys

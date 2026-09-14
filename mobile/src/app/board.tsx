@@ -90,11 +90,7 @@ const weekOf = (key: string): string[] => {
   });
 };
 
-/**
- * The manager's board, in a hand. A week scrolls sideways with a person per
- * row, because that is the shape a rota is argued about in — and because the
- * argument happens on the way to work, not at a desk.
- */
+/** The manager's board, in a hand. */
 export default function BoardScreen() {
   const router = useRouter();
   const scheme = useColorScheme();
@@ -449,11 +445,7 @@ export default function BoardScreen() {
   );
 }
 
-/**
- * Handing one slot out. The board decides who — that is the whole reason to
- * ask it rather than tap seven cells — so this collects only what the slot is
- * and how many of it are needed.
- */
+/** Handing one slot out. */
 function FillSheet({
   open,
   days,
@@ -503,9 +495,7 @@ function FillSheet({
 
   return (
     <Modal visible={open} animationType="slide" transparent onRequestClose={onClose}>
-      {/* A full-screen «tap outside to close». Unnamed, a screen reader
-          announces it as a button and says nothing about what it does —
-          the first thing met on entering every sheet in this app. */}
+      {/* A full-screen «tap outside to close». */}
       <Pressable
         style={styles.backdrop}
         accessibilityRole="button"
@@ -597,11 +587,7 @@ function FillSheet({
   );
 }
 
-/**
- * One cell. A template fills the hours in a tap, because a manager laying out
- * a week is placing the same three shifts over and over and typing them out
- * each time is how boards stop getting filled in.
- */
+/** One cell. */
 function CellEditor({
   editing,
   teamId,
@@ -671,9 +657,7 @@ function CellEditor({
 
   return (
     <Modal visible={editing !== null} animationType="slide" transparent onRequestClose={onClose}>
-      {/* A full-screen «tap outside to close». Unnamed, a screen reader
-          announces it as a button and says nothing about what it does —
-          the first thing met on entering every sheet in this app. */}
+      {/* A full-screen «tap outside to close». */}
       <Pressable
         style={styles.backdrop}
         accessibilityRole="button"

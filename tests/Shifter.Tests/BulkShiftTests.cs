@@ -8,15 +8,7 @@ using Xunit;
 
 namespace Shifter.Tests;
 
-/// <summary>
-/// Painting one template across many days.
-///
-/// The rule that matters is where the line between "worked" and "planned"
-/// falls, and it used to be drawn on the UTC date. Between nine at night and
-/// midnight in Kyiv that is still yesterday — so a bartender laying out the
-/// week at the end of a shift had today filed as a plan, and the money for it
-/// went missing from the month until somebody noticed and flipped it by hand.
-/// </summary>
+/// <summary>Painting one template across many days.</summary>
 public class BulkShiftTests
 {
     private readonly FakeShifterQuery _query = new();

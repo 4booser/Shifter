@@ -175,11 +175,7 @@ finally
     Log.CloseAndFlush();
 }
 
-/// <summary>
-/// Hides a secret that travels in a path. Two routes are authenticated by the
-/// path itself — the calendar feed and the webhook receiver — so logging the
-/// path logs the credential, and logs outlive the token by years.
-/// </summary>
+/// <summary>Hides a secret that travels in a path.</summary>
 static string Redact(string path)
 {
     foreach (string prefix in new[] { "/feed/", "/shifter/v1/hooks/" })
@@ -192,13 +188,5 @@ static string Redact(string path)
     return path;
 }
 
-/// <summary>
-/// Named so a test host can boot the real application.
-///
-/// Top-level statements produce an internal Program, which
-/// WebApplicationFactory cannot reach. Everything this app does about money
-/// happens across HTTP, EF and Postgres together, and until now nothing
-/// exercised the three of them at once — every defect found this week was
-/// found by hand.
-/// </summary>
+/// <summary>Named so a test host can boot the real application.</summary>
 public partial class Program;

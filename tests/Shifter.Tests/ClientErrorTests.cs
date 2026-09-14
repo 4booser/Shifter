@@ -4,12 +4,7 @@ using Xunit;
 
 namespace Shifter.Tests;
 
-/// <summary>
-/// What a crash report is allowed to carry. Everything here is about what the
-/// scrubber removes: a stack trace from a live page can hold an address, a
-/// token, or a whole response pasted into an error message, and a log file is
-/// read casually and kept in backups for months.
-/// </summary>
+/// <summary>What a crash report is allowed to carry.</summary>
 public class ClientErrorTests
 {
     [Fact]

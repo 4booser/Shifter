@@ -6,11 +6,7 @@ using Xunit;
 
 namespace Shifter.Tests;
 
-/// <summary>
-/// A rate and a percentage are two halves of one deal in hospitality, and
-/// pooled tips are a slice of a number nobody types in per person. The tests
-/// here pin the arithmetic that turns those agreements into money.
-/// </summary>
+/// <summary>A rate and a percentage are two halves of one deal in hospitality, and pooled tips are a slice of a number…</summary>
 public class PayConstructorTests
 {
     private static Shift Stacked(decimal? percent, decimal amount = 200m) =>

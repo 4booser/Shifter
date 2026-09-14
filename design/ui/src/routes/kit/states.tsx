@@ -5,13 +5,7 @@ import { Plate, Sheet } from '@/components/frame';
 import { Button, Card, Field } from '@/components/ui/kit';
 import { cn } from '@/lib/utils';
 
-/**
- * Состояния.
- *
- * То, чем платный продукт отличается от макета: что происходит, пока грузится,
- * когда сорвалось, когда нечего показать и когда человек ошибся. Дизайн, у
- * которого нарисовано только «всё хорошо», в проде разваливается именно здесь.
- */
+/** Состояния. */
 
 /** Ряд одного примитива во всех его состояниях сразу. */
 function Rank({ what, children }: { what: string; children: React.ReactNode }) {

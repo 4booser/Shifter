@@ -14,20 +14,7 @@ using Shifter.Application.Common.Text;
 
 namespace Shifter.Api.Controllers;
 
-/// <summary>
-/// The pages a stranger opens: a shared shift at shifter.ink/g/{slug} and
-/// somebody's record at /c/{slug}. A chat's link preview crawler reads the
-/// Open Graph tags — venue, trade, pay, date — and a person reads the page
-/// itself, which is a page now rather than a redirect that threw away
-/// everything it had just written. Both are drawn into the one shell in
-/// Pages/PublicPage.cs.
-///
-/// Nothing here needs a token, and nothing here leaks: the gig shows what is
-/// already public to every signed-in person on the board, minus the contacts,
-/// which never live on a listing in the first place; the record shows months,
-/// shifts and hours, with venue names and money only where their owner said
-/// so.
-/// </summary>
+/// <summary>The pages a stranger opens: a shared shift at shifter.ink/g/{slug} and somebody's record at /c/{slug}.</summary>
 [AllowAnonymous]
 [Route("g")]
 public class ShareController : ControllerBase
@@ -36,13 +23,7 @@ public class ShareController : ControllerBase
 
     public ShareController(ShifterDbContext db) => _db = db;
 
-    /// <summary>
-    /// A numeric link is no longer a preview. It used to be, and counting from
-    /// one walked the entire board — every open listing's venue, city, date,
-    /// hours and pay — without an account, which is the one party the board's
-    /// own rules say must not have it. Links already in circulation land on the
-    /// board itself rather than nowhere.
-    /// </summary>
+    /// <summary>A numeric link is no longer a preview.</summary>
     [HttpGet("{id:int}")]
     public IActionResult Numeric(int id) => Redirect("/gigs");
 
@@ -160,15 +141,7 @@ public class ShareController : ControllerBase
 
     private static string Escape(string value) => WebUtility.HtmlEncode(value);
 
-    /// <summary>
-    /// Somebody's work history, at a link they chose to hand out.
-    ///
-    /// Anonymous by necessity: it exists to be sent to a manager who does not
-    /// have an account and is not going to make one. Keyed on an unguessable
-    /// slug rather than a user id, so it reaches only the people it was given
-    /// to — and it shows exactly what its owner switched on, which by default
-    /// is months, shifts and hours, with no venue names and no money.
-    /// </summary>
+    /// <summary>Somebody's work history, at a link they chose to hand out.</summary>
     [HttpGet("~/c/{slug:length(12)}")]
     public async Task<IActionResult> Card(
         [FromServices] Shifter.Infrastructure.Repositories.Interfaces.IShifterQuery query,

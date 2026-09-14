@@ -7,12 +7,7 @@ import { Brief, BriefBlock, assistant } from '@/lib/assistant';
 import { todayKey } from '@/lib/calendar';
 import { t } from '@/lib/i18n';
 
-/**
- * The day in words, under the month where the screen used to trail off. The
- * numbers behind it are the app's own; the model, when configured, only picks
- * the sentences. Tapping it opens the thread, because the commonest reaction
- * to a sentence about your money is a question about it.
- */
+/** The day in words, under the month where the screen used to trail off. */
 export function DailyBrief({ palette, onOpen }: { palette: Palette; onOpen: () => void }) {
   const styles = makeStyles(palette);
   const [brief, setBrief] = useState<Brief | null>(null);

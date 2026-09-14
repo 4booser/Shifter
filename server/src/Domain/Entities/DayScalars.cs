@@ -2,24 +2,10 @@ using System.Reflection;
 
 namespace Shifter.Domain.Entities;
 
-/// <summary>
-/// Copies the plain values of a day from a save onto the row already in the
-/// database.
-///
-/// This exists because the same bug happened three times: a field was added to
-/// <see cref="Day"/>, the save built it correctly, the response showed it back,
-/// and it was gone by the next reload — because nobody remembered to add a line
-/// to the upsert. Cash tips went that way, then deductions, then the tip pool
-/// and the fine's reason. Reflection is used deliberately rather than a list of
-/// assignments: a list is exactly the thing that was being forgotten.
-/// </summary>
+/// <summary>Copies the plain values of a day from a save onto the row already in the database.</summary>
 public static class DayScalars
 {
-    /// <summary>
-    /// What identifies the row rather than describing it. These belong to the
-    /// existing record and must survive the copy, or a save would move a day to
-    /// another date, or to another person.
-    /// </summary>
+    /// <summary>What identifies the row rather than describing it.</summary>
     private static readonly HashSet<string> Identity =
         [nameof(Day.Id), nameof(Day.UserId), nameof(Day.Date),
         // The version is the row's own history, not part of any save: the
@@ -40,15 +26,7 @@ public static class DayScalars
             && !IsNavigation(property.PropertyType))
         .ToArray();
 
-    /// <summary>
-    /// Anything that points at another row rather than holding a value: an
-    /// owned collection, or a reference to another entity. Copying one of
-    /// those would hand EF a second instance of something it is already
-    /// tracking. Tested against a shape rather than "is enumerable", because a
-    /// string is enumerable too and dropping every string on the day would
-    /// silently lose the note and the colour — which is what the first version
-    /// of this did.
-    /// </summary>
+    /// <summary>Anything that points at another row rather than holding a value: an owned collection, or a reference to…</summary>
     private static bool IsNavigation(Type type)
         => (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>))
             || type.Namespace == typeof(Day).Namespace;

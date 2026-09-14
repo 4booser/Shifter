@@ -8,12 +8,7 @@ using Shifter.Application.Features.Webhooks.Services.Interfaces;
 
 namespace Shifter.Api.Controllers;
 
-/// <summary>
-/// The manager: the owner's side of the webhooks. Every route works on the
-/// caller's own endpoints, and the address anyone actually posts to lives in
-/// <see cref="HooksController"/>, which is the only part of this that answers
-/// without a token of ours.
-/// </summary>
+/// <summary>The manager: the owner's side of the webhooks.</summary>
 [Authorize]
 [Route("shifter/v1/webhooks")]
 public class WebhooksController : ControllerBase
@@ -43,11 +38,7 @@ public class WebhooksController : ControllerBase
         CancellationToken ct)
         => Ok(await _webhooks.UpdateAsync(request, CurrentUserId(), id, ct));
 
-    /// <summary>
-    /// New address and new key together, for when either has been somewhere it
-    /// should not have been. Deliveries signed with the old one stop arriving
-    /// the moment this returns.
-    /// </summary>
+    /// <summary>New address and new key together, for when either has been somewhere it should not have been.</summary>
     [HttpPost]
     [Route("{id:int}/token")]
     public async Task<ActionResult<WebhookDto>> Rotate(int id, CancellationToken ct)
@@ -68,11 +59,7 @@ public class WebhooksController : ControllerBase
     public async Task<ActionResult<DeliveryDto[]>> Deliveries(int id, CancellationToken ct)
         => Ok(await _webhooks.DeliveriesAsync(CurrentUserId(), id, ct));
 
-    /// <summary>
-    /// Runs a stored body through the endpoint again, which is what makes a
-    /// corrected mapping worth anything: the night that failed can be recovered
-    /// without asking the sender to send it twice.
-    /// </summary>
+    /// <summary>Runs a stored body through the endpoint again, which is what makes a corrected mapping worth anything: the…</summary>
     [HttpPost]
     [Route("deliveries/{deliveryId:int}/replay")]
     public async Task<ActionResult<IngestResultDto>> Replay(
@@ -80,11 +67,7 @@ public class WebhooksController : ControllerBase
         CancellationToken ct)
         => Ok(await _webhooks.ReplayAsync(CurrentUserId(), deliveryId, ct));
 
-    /// <summary>
-    /// Reads a pasted payload and reports what it would write. Writes nothing
-    /// unless asked, so a mapping can be worked out against a real example
-    /// without a calendar filling up with attempts.
-    /// </summary>
+    /// <summary>Reads a pasted payload and reports what it would write.</summary>
     [HttpPost]
     [Route("{id:int}/test")]
     public async Task<ActionResult<IngestResultDto>> Test(
@@ -113,11 +96,7 @@ public class WebhooksController : ControllerBase
         return Encoding.UTF8.GetString(buffer, 0, filled);
     }
 
-    /// <summary>
-    /// Read from the token, never from the request — the same rule as
-    /// everywhere else, and the reason an endpoint can only ever be reached by
-    /// the account that made it.
-    /// </summary>
+    /// <summary>Read from the token, never from the request — the same rule as everywhere else, and the reason an endpoint…</summary>
     private int CurrentUserId()
     {
         var id = User.FindFirstValue(ClaimTypes.NameIdentifier);

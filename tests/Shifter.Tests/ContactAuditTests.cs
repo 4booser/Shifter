@@ -4,10 +4,7 @@ using Xunit;
 
 namespace Shifter.Tests;
 
-/// <summary>
-/// The board asks people for a phone number and then goes quiet about where
-/// it went. These are the rules for the answer it gives back.
-/// </summary>
+/// <summary>The board asks people for a phone number and then goes quiet about where it went.</summary>
 public class ContactAuditTests
 {
     private static readonly DateTime Now = new(2026, 3, 14, 20, 0, 0, DateTimeKind.Utc);

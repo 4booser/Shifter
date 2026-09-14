@@ -51,11 +51,7 @@ export default function ReportPage() {
 
 const firstOf = ({ year, month }: YearMonth) => `${year}-${`${month}`.padStart(2, '0')}-01`;
 
-/**
- * One month, in full: every worked day on its own line, the money's assembly,
- * the deltas against the month before — the page you would hand to yourself
- * as an accountant. Prints clean: the shell chrome stays on screen.
- */
+/** One month, in full: every worked day on its own line, the money's assembly, the deltas against the month… */
 function Report() {
   const { t, n, num, lang } = useI18n();
   const { format, formatIn } = useMoney();
@@ -78,14 +74,7 @@ function Report() {
         ? monthBounds(firstOf(addMonths(month, -1)))
         : { from: `${month.year - 1}-01-01`, to: `${month.year - 1}-12-31` };
 
-    /*
-     * Период, который ещё не кончился, не с чем сравнивать.
-     *
-     * Первого числа в месяце один день, а в прошлом — тридцать один, и
-     * `delta` честно выдавала «−100%» шестью плитками подряд над надписью
-     * «в этом месяце ничего не записано». Падения не было: месяц просто не
-     * начался. Пока он идёт, процент не показываем и говорим почему.
-     */
+    /* Период, который ещё не кончился, не с чем сравнивать. */
     setRunning(bounds.to >= todayKey());
 
     setLoading(true);
@@ -308,9 +297,7 @@ function Report() {
           ))}
         </div>
 
-        {/* flex-wrap: месяц, стрелки, печать, XLSX и «поделиться» одной
-            строкой не влезают в телефон — панель уезжала за край и тянула
-            за собой горизонтальную прокрутку всей страницы. */}
+        {/* flex-wrap: месяц, стрелки, печать, XLSX и «поделиться» одной строкой не влезают в телефон — панель уезжала за… */}
         <div className="ml-auto flex flex-wrap items-center gap-1 no-print">
           <button
             type="button"
@@ -465,11 +452,7 @@ function Report() {
             <section className="card reveal p-4">
               <h2 className="mb-2 text-[0.98rem] font-bold">{t('By place')}</h2>
               <div className="grid items-center gap-3 lg:grid-cols-2">
-                {/* Bars, not a donut. This sits beside a table that already
-                    lists every one of these numbers, so the shape's only job
-                    is «which is biggest», and a donut answers that by asking
-                    somebody to compare arc angles. Each place keeps the
-                    colour its owner gave it — that is identity, not rank. */}
+                {/* Bars, not a donut. */}
                 <Bars
                   rows={summary.by_location.map((place, index) => ({
                     label: placeName(place, t('No place set')),
@@ -497,9 +480,7 @@ function Report() {
                           {placeName(place, t('No place set'))}
                         </td>
                         <td className="py-1.5 pr-2 text-right tabular">{num(Math.round(place.hours * 10) / 10)}</td>
-                        {/* Each place in its own currency: a month in Kraków
-                            printed with a hryvnia mark reads as a tenfold
-                            overstatement of somebody's wages. */}
+                        {/* Each place in its own currency: a month in Kraków printed with a hryvnia mark reads as a tenfold… */}
                         <td className="py-1.5 pr-2 text-right tabular">{formatIn(place.currency, place.per_hour)}</td>
                         <td className="py-1.5 text-right font-semibold tabular">{formatIn(place.currency, place.earned)}</td>
                       </tr>

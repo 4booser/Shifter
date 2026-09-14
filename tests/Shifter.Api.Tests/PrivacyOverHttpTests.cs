@@ -5,26 +5,13 @@ using Xunit;
 
 namespace Shifter.Api.Tests;
 
-/// <summary>
-/// What one person can see of another, asked of the running server.
-///
-/// The unit tests here pin a list of field names in a DTO. That is worth
-/// having and it is not the same question: what matters is what comes back
-/// over the wire to a second account, and nothing has ever asked.
-///
-/// A crew's rates are the most sensitive thing this application holds about
-/// anybody other than the person holding the phone.
-/// </summary>
+/// <summary>What one person can see of another, asked of the running server.</summary>
 [Collection("api")]
 public sealed class PrivacyOverHttpTests(Api api)
 {
     private static string Day(int day) => $"2026-05-{day:00}";
 
-    /// <summary>
-    /// A JPEG frame header saying 320×320, because the board wants three
-    /// photos of the venue
-    /// and will only take JPEGs the client has already shrunk.
-    /// </summary>
+    /// <summary>A JPEG frame header saying 320×320, because the board wants three photos of the venue and will only take…</summary>
     private const string Pixel = "data:image/jpeg;base64,/9j/wAARCAFAAUADASIAAhEBAxEB/9k=";
 
     private static async Task<JsonElement> Read(HttpResponseMessage response)

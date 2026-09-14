@@ -34,11 +34,7 @@ const TAB_LABEL: Record<Tab, string> = {
   mine: 'Мои отклики',
 };
 
-/**
- * The board in a pocket. Freelance covers are pinned to an evening, a
- * permanent seat is not, so the two are separate tabs rather than one list
- * with a filter people have to notice.
- */
+/** The board in a pocket. */
 export default function GigsScreen() {
   const router = useRouter();
   const scheme = useColorScheme();
@@ -63,13 +59,7 @@ export default function GigsScreen() {
     return { from: todayKey(), to: monthBounds(addMonths(now, 2)).to };
   }, []);
 
-  /**
-   * The trades actually on the board, not the whole trade.
-   *
-   * A filter listing thirty-six jobs when four are hiring is a filter that
-   * mostly answers "nothing here" — so the row is built from the listings
-   * themselves, and disappears entirely when there is only one kind of work.
-   */
+  /** The trades actually on the board, not the whole trade. */
   const trades = useMemo(() => {
     const counted = new Map<string, number>();
 
@@ -260,10 +250,7 @@ function GigCard({
 
         <Text style={styles.cardPay}>{payLine(gig)}</Text>
 
-        {/* What the rate is worth to this reader. A board full of numbers tells
-            nobody anything on its own: 250 an hour is generous in one city and
-            a pay cut in another, and the app already knows which. Not on your
-            own listings — that would answer a question nobody asked. */}
+        {/* What the rate is worth to this reader. */}
         {!gig.is_mine && gig.worth !== null && (
           <Text
             style={[
@@ -290,10 +277,7 @@ function GigCard({
 
         <View style={styles.cardFoot}>
           <Text style={styles.cardAge}>{postedAgo(gig.created_at)}</Text>
-          {/* «★ 5,0 (1)» said nothing about what the 1 was, and painted one
-              person's evening in the same ink as a settled reputation. Below
-              three verdicts the star is ordinary ink, and the count says what
-              it counts. */}
+          {/* «★ 5,0 (1)» said nothing about what the 1 was, and painted one person's evening in the same ink as a settled… */}
           {gig.employer_rating !== null && (
             <Text
               style={[
@@ -312,11 +296,7 @@ function GigCard({
   );
 }
 
-/**
- * The whole vacancy and the one button that matters. Contacts are shared
- * only by replying, never listed on the board, so a phone number does not
- * become a public directory entry.
- */
+/** The whole vacancy and the one button that matters. */
 function GigSheet({
   gig,
   palette,
@@ -344,10 +324,7 @@ function GigSheet({
     setPhoto(0);
     setFailed(null);
     setAdded(false);
-    // The contact fields have to go with the rest. A draft left in one listing
-    // survived into the next, so the "Позвонить" button on a listing you had
-    // been accepted for dialled your own number, and a few words about
-    // yourself arrived at a venue you never wrote them for.
+    // The contact fields have to go with the rest.
     setPhone('');
     setTelegram('');
     setMessage('');
@@ -405,12 +382,7 @@ function GigSheet({
     }
   };
 
-  /**
-   * The outing, on the calendar, priced by the deal that was struck. The
-   * vacancy already says the hours and the pay, so nothing about it needs
-   * typing a second time — and a percentage-only gig arrives as a percentage
-   * shift rather than a shift worth nothing.
-   */
+  /** The outing, on the calendar, priced by the deal that was struck. */
   const addToCalendar = async () => {
     setBusy(true);
     setFailed(null);
@@ -656,10 +628,7 @@ function GigSheet({
           </>
         )}
 
-        {/*
-          The venue's own side of the exchange. This used to dial the number
-          in the form above — your own, and only if you had just typed it.
-        */}
+        {/* The venue's own side of the exchange. */}
         {gig.my_response?.venue_phone !== null &&
           gig.my_response?.venue_phone !== undefined && (
             <Press

@@ -26,16 +26,7 @@ const KIND_NAMES: Record<string, string> = {
   other: 'прочее',
 };
 
-/**
- * What the work brought and what it cost, side by side with what the month
- * actually did with the money.
- *
- * The left-hand figures are Shifter's — computed from shifts and rates. The
- * right-hand ones are the bank's. They are never added together and never
- * averaged: one is what should have happened and the other is what did, and
- * the whole point of putting them on one screen is that a person can see the
- * gap for themselves.
- */
+/** What the work brought and what it cost, side by side with what the month actually did with the money. */
 export function BankAnalysis({
   items,
   days,
@@ -143,10 +134,7 @@ export function BankAnalysis({
                 <Text style={styles.rateLabel}>{t('после трат на работу')}</Text>
               </View>
             </View>
-            {/* Only spending that lands on a working day and in a category
-                that can plausibly be about work. Counting the supermarket
-                would make every job look ruinous and would be about
-                groceries. */}
+            {/* Only spending that lands on a working day and in a category that can plausibly be about work. */}
             <Text style={styles.cardNote}>
               {t('За')} {Math.round(rate.hours)} {t('ч работа принесла')} {money(rate.earned)}
               {rate.costs > 0
@@ -194,12 +182,7 @@ export function BankAnalysis({
         </Appear>
       )}
 
-      {/*
-        What was written down against what reached the card. Not an accusation
-        in either direction: cash gets spent before it is banked, and money
-        gets banked that was never a tip. Somebody who has been rounding their
-        cash tips down out of habit will see it here first.
-      */}
+      {/* What was written down against what reached the card. */}
       {cash.declared + cash.bankedAfterShifts > 0 && (
         <Appear index={5}>
           <View style={styles.card}>

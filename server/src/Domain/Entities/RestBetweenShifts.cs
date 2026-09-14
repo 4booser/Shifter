@@ -3,33 +3,13 @@ namespace Shifter.Domain.Entities;
 /// <summary>One gap that fell short, and how short.</summary>
 public readonly record struct ShortRest(DateOnly After, double Hours);
 
-/// <summary>
-/// The hours between clocking out and clocking back in.
-///
-/// The app already spotted the habit and counted it. Counting is not the
-/// useful part — by the third one in a fortnight it stops feeling unusual,
-/// and a number nobody attaches a size to is a number nobody argues with.
-/// So this returns the gaps themselves: how many, and how short the shortest
-/// was, which is the sentence somebody repeats to a manager.
-///
-/// Deliberately says nothing about health. It is somebody's own rota read
-/// back to them; what that means for them is theirs to decide, and an app
-/// that starts diagnosing has stopped being a calendar.
-/// </summary>
+/// <summary>The hours between clocking out and clocking back in.</summary>
 public static class RestBetweenShifts
 {
     /// <summary>The EU daily rest rule, and the default nobody has to choose.</summary>
     public const double DefaultHours = 11;
 
-    /// <summary>
-    /// Gaps at or under <paramref name="threshold"/>, newest last.
-    ///
-    /// Spans are taken as intervals on one continuous clock, so a shift
-    /// ending at 04:00 and the next starting at 09:00 is five hours apart
-    /// rather than nineteen. Overlapping spans — a double recorded across two
-    /// places — are not a short rest at all and are skipped: there is no gap
-    /// between them to be short.
-    /// </summary>
+    /// <summary>Gaps at or under <paramref name="threshold"/>, newest last.</summary>
     public static IReadOnlyList<ShortRest> Find(
         IEnumerable<(DateTime Start, DateTime End)> spans,
         double threshold = DefaultHours)

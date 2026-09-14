@@ -2,16 +2,7 @@
 
 import { RefObject, useEffect } from 'react';
 
-/**
- * The things a native <dialog> gives you and a <div> does not.
- *
- * Most overlays in the app are real dialogs and get focus trapping, Escape and
- * an inert page behind them for free. A few cannot be — the command palette,
- * the year-in-review, the tour — because they overlay in ways the element does
- * not allow. Those were left with Escape at best, which means somebody on a
- * keyboard could tab straight out of an open overlay into the page behind it
- * and operate a form they cannot see.
- */
+/** The things a native <dialog> gives you and a <div> does not. */
 
 /** Everything focusable, in the order the browser would visit it. */
 export const focusable = (root: HTMLElement): HTMLElement[] =>
@@ -21,13 +12,7 @@ export const focusable = (root: HTMLElement): HTMLElement[] =>
     ),
   ].filter((element) => element.offsetParent !== null || element === document.activeElement);
 
-/**
- * Where Tab should land, wrapping at both ends.
- *
- * Returns null where the trap has nothing to do — no focusable elements, or
- * focus is in the middle of the list and the browser's own behaviour is
- * already right. Pure, so the wrap can be tested without a browser.
- */
+/** Where Tab should land, wrapping at both ends. */
 export function nextFocus(
   elements: HTMLElement[],
   current: HTMLElement | null,
@@ -47,15 +32,7 @@ export function nextFocus(
   return null;
 }
 
-/**
- * Escape closes what a click outside closes.
- *
- * A popover is not a dialog and does not want a focus trap — but it does have
- * to be dismissible without a pointer. The account menu, the tile picker and
- * the live-shift panel each had a full-screen backdrop to click on and
- * nothing at all for a keyboard, so opening one and changing your mind meant
- * tabbing through it to the end.
- */
+/** Escape closes what a click outside closes. */
 export function useEscape(open: boolean, onClose: () => void): void {
   useEffect(() => {
     if (!open) return;
@@ -73,13 +50,7 @@ export function useEscape(open: boolean, onClose: () => void): void {
   }, [open, onClose]);
 }
 
-/**
- * Escape, a focus trap, and focus back where it came from.
- *
- * Restoring focus matters as much as trapping it: an overlay that closes and
- * drops focus onto the document body leaves a keyboard user at the top of the
- * page, having lost the place they spent twenty presses reaching.
- */
+/** Escape, a focus trap, and focus back where it came from. */
 export function useDialogKeys(
   open: boolean,
   ref: RefObject<HTMLElement | null>,

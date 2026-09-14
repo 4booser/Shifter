@@ -12,10 +12,7 @@ using Shifter.Application.Features.Account.DTOs;
 
 namespace Shifter.Api.Controllers;
 
-/// <summary>
-/// The account itself, as opposed to signing in and out. Every route reads the
-/// user id from the token: the body carries what to change, never whose.
-/// </summary>
+/// <summary>The account itself, as opposed to signing in and out.</summary>
 [Authorize]
 [EnableRateLimiting(HardeningExtensions.AuthPolicy)]
 [Route("shifter/v1/account")]
@@ -49,10 +46,7 @@ public class AccountController : Controller
         => Ok(await _mediator.Send(
             new ChangePasswordDto(UserId(), request.current_password, request.new_password), ct));
 
-    /// <summary>
-    /// Attaches a Google account to this one. Afterwards either the password
-    /// or the Google button reaches the same data.
-    /// </summary>
+    /// <summary>Attaches a Google account to this one.</summary>
     [HttpPost]
     [Route("google")]
     public async Task<ActionResult<ProfileDto>> LinkGoogle(
@@ -65,9 +59,7 @@ public class AccountController : Controller
     public async Task<ActionResult<ProfileDto>> UnlinkGoogle(CancellationToken ct)
         => Ok(await _mediator.Send(new UnlinkGoogleDto(UserId()), ct));
 
-    /// <summary>
-    /// What the public card shows, and whether there is one at all.
-    /// </summary>
+    /// <summary>What the public card shows, and whether there is one at all.</summary>
     [HttpGet]
     [Route("card")]
     public async Task<ActionResult<CardSettingsDto>> GetCard(CancellationToken ct)
@@ -78,15 +70,7 @@ public class AccountController : Controller
             user.CardSlug is not null, user.CardShowsPlaces, user.CardShowsMoney, user.CardSlug));
     }
 
-    /// <summary>
-    /// Switches the card on or off and decides what it shows.
-    ///
-    /// Turning it off drops the slug rather than hiding the page, so the link
-    /// somebody already sent stops resolving — a link that still works is not
-    /// a revocation anybody believes. Turning it back on mints a new one,
-    /// because whoever switched it off decided the people holding the old link
-    /// should not have it.
-    /// </summary>
+    /// <summary>Switches the card on or off and decides what it shows.</summary>
     [HttpPut]
     [Route("card")]
     public async Task<ActionResult<CardSettingsDto>> SetCard(
@@ -133,9 +117,5 @@ public class AccountController : Controller
     }
 }
 
-/// <summary>
-/// What somebody chooses to show on their public card. The slug comes back on
-/// a read so the screen can print the link; it is never accepted on a write —
-/// choosing your own would let somebody claim a link they were told about.
-/// </summary>
+/// <summary>What somebody chooses to show on their public card.</summary>
 public record CardSettingsDto(bool on, bool show_places, bool show_money, string? slug = null);

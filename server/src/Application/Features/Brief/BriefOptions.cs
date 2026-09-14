@@ -1,10 +1,6 @@
 namespace Shifter.Application.Features.Brief;
 
-/// <summary>
-/// The daily brief's model. Same contract as every other optional feature:
-/// no key, no model — but unlike the others, the feature itself still works,
-/// because the facts are ours and only the wording was ever the model's.
-/// </summary>
+/// <summary>The daily brief's model.</summary>
 public sealed class BriefOptions
 {
     public const string Section = "Brief";

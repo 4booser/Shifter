@@ -7,18 +7,7 @@ using Xunit;
 
 namespace Shifter.Tests;
 
-/// <summary>
-/// The shared rota shows when people work. What they earn is theirs to publish,
-/// and reaches the rota only through the three fields named in
-/// <see cref="Earnings"/> — every one of which is null unless its owner
-/// switched sharing on for that team.
-///
-/// These tests read the shape of the contract rather than a sample payload: a
-/// field that does not exist cannot leak, and a future edit that adds one fails
-/// here instead of in production. The rule they enforce is not "no money on the
-/// rota" — it is "no money except the little that was deliberately let in, and
-/// never the rate, the tips or the sales behind it".
-/// </summary>
+/// <summary>The shared rota shows when people work.</summary>
 public class RotaPrivacyTests
 {
     /// <summary>Words that would mean money reached a screen it should not.</summary>
@@ -29,15 +18,7 @@ public class RotaPrivacyTests
         "cost", "total", "percent", "currency", "goal", "payout",
     ];
 
-    /// <summary>
-    /// The whole of what a member can choose to publish: a total per shift, a
-    /// total per person, a total per day, and the flag saying they agreed to.
-    ///
-    /// Deliberately short, and deliberately only totals. A rate would say what
-    /// somebody is worth per hour rather than what one night came to, and the
-    /// server does not read it for anyone. Adding to this list is a decision
-    /// about what a whole crew gets to see about each other.
-    /// </summary>
+    /// <summary>The whole of what a member can choose to publish: a total per shift, a total per person, a total per day, and…</summary>
     private static readonly string[] Earnings = ["pay", "earned", "shares_earnings"];
 
     public static TheoryData<Type> RotaTypes =>
@@ -85,12 +66,7 @@ public class RotaPrivacyTests
             $"{type.Name} exposes {string.Join(", ", offenders)} on the shared rota.");
     }
 
-    /// <summary>
-    /// Decimal is the type money is kept in throughout this codebase, so its
-    /// presence anywhere on the rota is the strongest single signal that an
-    /// amount has crept in. The opt-in totals are decimals by necessity; every
-    /// other decimal is a mistake.
-    /// </summary>
+    /// <summary>Decimal is the type money is kept in throughout this codebase, so its presence anywhere on the rota is the…</summary>
     [Theory]
     [MemberData(nameof(RotaTypes))]
     public void TheOnlyDecimalsOnTheRotaAreTheOptInTotals(Type type)
@@ -109,11 +85,7 @@ public class RotaPrivacyTests
             $"{type.Name} carries a decimal ({string.Join(", ", offenders)}) on the shared rota.");
     }
 
-    /// <summary>
-    /// Sharing is per shift and per person. A cover offer, a handover receipt
-    /// and the rota envelope itself have no owner to have agreed to anything,
-    /// so nothing about money belongs on them under any setting.
-    /// </summary>
+    /// <summary>Sharing is per shift and per person.</summary>
     [Theory]
     [MemberData(nameof(MoneylessTypes))]
     public void SomeTypesMayNotMentionMoneyAtAll(Type type)
@@ -128,11 +100,7 @@ public class RotaPrivacyTests
             $"{type.Name} mentions {string.Join(", ", offenders)} and may not.");
     }
 
-    /// <summary>
-    /// Every opt-in total is nullable, because null is how "not shared" is
-    /// said. A non-nullable decimal would have to carry zero instead, and zero
-    /// is a real answer — a quiet month — not the absence of one.
-    /// </summary>
+    /// <summary>Every opt-in total is nullable, because null is how "not shared" is said.</summary>
     [Fact]
     public void EveryOptInTotalCanBeNull()
     {
@@ -207,11 +175,7 @@ public class RotaPrivacyTests
             Fields(typeof(RotaMemberDto)));
     }
 
-    /// <summary>
-    /// The per-day view names who is free so a gap can be filled. Names only —
-    /// nothing about what any of them would be paid for taking it. Its one
-    /// total is the sum across whoever opted in, and null when nobody has.
-    /// </summary>
+    /// <summary>The per-day view names who is free so a gap can be filled.</summary>
     [Fact]
     public void ADayReportsCoverageSpareHandsAndSharedTakings()
     {
@@ -220,11 +184,7 @@ public class RotaPrivacyTests
             Fields(typeof(RotaDayDto)));
     }
 
-    /// <summary>
-    /// The row the database hands back. It may carry a total but never the rate
-    /// it came from: the multiplication happens in the repository and the rate
-    /// does not leave it, so no widening of a DTO can reach one.
-    /// </summary>
+    /// <summary>The row the database hands back.</summary>
     [Fact]
     public void TheDatabaseRowCarriesNoRate()
     {

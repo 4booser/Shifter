@@ -18,13 +18,7 @@ import { Colors, Palette } from '@/constants/theme';
 import { api } from '@/lib/api';
 import { t } from '@/lib/i18n';
 
-/**
- * What to ask before signing — on the device that is in the room.
- *
- * A contract is handed across a table, and the site is at home. The rules are
- * the site's exactly: every line is a question, nothing is a finding, and the
- * text is not kept anywhere.
- */
+/** What to ask before signing — on the device that is in the room. */
 
 const QUESTIONS: Record<string, string> = {
   rate: 'Ставка не написана. Спросите, сколько за час или смену и в каком пункте это сказано.',

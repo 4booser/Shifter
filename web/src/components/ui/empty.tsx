@@ -4,12 +4,7 @@ import Link from 'next/link';
 
 import { Icon } from '@/components/ui/icon';
 
-/**
- * What a tab says before it has anything to say. Every empty screen answers
- * the same two questions — what is this for, and what do I press — because a
- * blank panel with one grey sentence teaches nobody anything and reads like
- * something failed to load.
- */
+/** What a tab says before it has anything to say. */
 export function Empty({
   icon,
   title,
@@ -23,15 +18,7 @@ export function Empty({
   action?: { label: string; href?: string; onClick?: () => void };
 }) {
   return (
-    /*
-     * In a block with room, not clinging to the top of one.
-     *
-     * The screenshots showed it: on the rota and the report the card sat
-     * under the tab bar with four hundred pixels of nothing beneath it, which
-     * reads as a page that failed to finish loading rather than a page with
-     * nothing on it yet. Twenty-four rem is enough to centre in and short
-     * enough that a phone still sees the card without scrolling.
-     */
+    /* In a block with room, not clinging to the top of one. */
     <div className="grid min-h-[24rem] place-items-center">
     <div className="card reveal flex w-full flex-col items-center gap-2 p-8 text-center">
       <span className="grid size-11 place-items-center rounded-full bg-(--accent-soft) text-(--accent-read)">

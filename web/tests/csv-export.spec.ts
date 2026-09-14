@@ -4,13 +4,7 @@ import { CalendarDayData } from '@/lib/calendar/models';
 import { daysToCsv } from '@/lib/calendar/csv-export';
 import { parseCsv } from '@/lib/export/import';
 
-/**
- * The file people press «выгрузить» on and open in a spreadsheet.
- *
- * A note is the one free-text field in the app — it is where people put what
- * the schema has no column for — and a spreadsheet reads a leading «=» as a
- * formula and evaluates it on open.
- */
+/** The file people press «выгрузить» on and open in a spreadsheet. */
 function day(note: string): CalendarDayData {
   return {
     date: '2026-09-01',

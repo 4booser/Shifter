@@ -1,10 +1,6 @@
 namespace Shifter.Application.Common.Options;
 
-/// <summary>
-/// Bound from the "TokenOptions" configuration section. Both token issuing
-/// (JwtService) and token validation (the JWT bearer scheme) read these, so the
-/// two cannot drift apart.
-/// </summary>
+/// <summary>Bound from the "TokenOptions" configuration section.</summary>
 public class TokenOptions
 {
     public const string SectionName = "TokenOptions";

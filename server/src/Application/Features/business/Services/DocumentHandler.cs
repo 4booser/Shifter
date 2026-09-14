@@ -8,11 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Shifter.Application.Features.business.Services;
 
-/// <summary>
-/// The papers without which somebody is not allowed on shift. Small on
-/// purpose: a date, a name, and the arithmetic that turns them into a warning
-/// a month before it matters rather than on the morning it does.
-/// </summary>
+/// <summary>The papers without which somebody is not allowed on shift.</summary>
 public class DocumentHandler
 {
     private readonly ShifterDbContext _db;

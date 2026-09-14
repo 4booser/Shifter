@@ -6,10 +6,7 @@ using Xunit;
 
 namespace Shifter.Tests;
 
-/// <summary>
-/// Tax withheld at source, holiday pay accrued for later, and what happens when
-/// two places pay in different currencies.
-/// </summary>
+/// <summary>Tax withheld at source, holiday pay accrued for later, and what happens when two places pay in different…</summary>
 public class DayHandlerTaxTests
 {
     private readonly FakeShifterQuery _query = new();

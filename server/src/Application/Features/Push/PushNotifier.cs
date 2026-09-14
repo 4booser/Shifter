@@ -4,10 +4,7 @@ using Shifter.Infrastructure.Persistence.DbContexts;
 
 namespace Shifter.Application.Features.Push;
 
-/// <summary>
-/// Push as a side effect: any handler can tell a user something without
-/// learning how subscriptions work.
-/// </summary>
+/// <summary>Push as a side effect: any handler can tell a user something without learning how subscriptions work.</summary>
 public interface IPushNotifier
 {
     Task NotifyAsync(
@@ -18,10 +15,7 @@ public interface IPushNotifier
         string? category = null);
 }
 
-/// <summary>
-/// The real thing. Failures are logged and swallowed — a swap must never
-/// die because a phone's push endpoint did.
-/// </summary>
+/// <summary>The real thing.</summary>
 public sealed class PushNotifier : IPushNotifier
 {
     private readonly ShifterDbContext _db;
@@ -42,12 +36,6 @@ public sealed class PushNotifier : IPushNotifier
     }
 
     /// <summary>Sends to every device the user has; text is built per language.</summary>
-    /// <param name="category">
-    /// Names the buttons the phone should draw on this notification. Only the
-    /// phones get it: a browser notification has no equivalent, and pretending
-    /// otherwise would mean two code paths that disagree about what a category
-    /// means.
-    /// </param>
     public async Task NotifyAsync(
         int userId,
         Func<string, (string Title, string Body)> text,

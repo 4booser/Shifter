@@ -45,16 +45,7 @@ const CATEGORY_CHOICES = [
   'Другое',
 ];
 
-/**
- * Where the money went, read three ways: by category, by who took it, and by
- * what takes it again every month.
- *
- * The three answer the same question at different distances. A category tells
- * somebody they spend on food; a counterparty tells them which place; a
- * standing charge tells them about the money that leaves whether they think
- * about it or not — which is the only one of the three nobody can see by
- * remembering.
- */
+/** Where the money went, read three ways: by category, by who took it, and by what takes it again every month. */
 export function BankSpending({
   items,
   rules,
@@ -116,9 +107,7 @@ export function BankSpending({
   const days = useMemo(() => dailySpend(items, from, to), [items, from, to]);
   const usual = useMemo(() => usualDay(days), [days]);
 
-  // One denominator for bar, shares and headline: everything that left the
-  // card. flow() keeps transfers out of its totals — right for «пришло»,
-  // wrong for a bar that must sum to its own category list.
+  // One denominator for bar, shares and headline: everything that left the card.
   const spentAll = useMemo(() => deltas.reduce((sum, row) => sum + row.total, 0), [deltas]);
   const previousAll = useMemo(() => previous.reduce((sum, row) => sum + row.total, 0), [previous]);
   const spentDelta = previousAll > 0 ? Math.round(((spentAll - previousAll) / previousAll) * 100) : null;
@@ -234,9 +223,7 @@ export function BankSpending({
         )}
       </Appear>
 
-      {/* What cannot be exported does not belong to the person holding it.
-          It takes the window and the rules that are on the screen, so the
-          file cannot disagree with the page it came from. */}
+      {/* What cannot be exported does not belong to the person holding it. */}
       <Press
         style={styles.export}
         onPress={() => {

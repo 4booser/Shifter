@@ -8,18 +8,7 @@ import { useReveal } from '@/lib/fx';
 import { Shell } from '@/components/layout/shell';
 import { Alert } from '@/components/ui/bits';
 
-/**
- * What to ask before signing.
- *
- * People sign these without reading them, and the reason is not laziness: four
- * pages of somebody else's lawyer, and no way to know which of it matters.
- * What matters in this trade is a short unchanging list, and the useful thing
- * is not an opinion about the document but a list of what it is silent about.
- *
- * Every line here is a question. Nothing on this page says a term is unfair,
- * unusual or unlawful — the app cannot know that, and being wrong about it
- * costs somebody their job rather than costing us a bug report.
- */
+/** What to ask before signing. */
 
 const QUESTIONS: Record<string, string> = {
   rate: 'The rate is not written down. Ask what it is per hour or per shift, and where in the contract it says so.',
@@ -34,15 +23,7 @@ const QUESTIONS: Record<string, string> = {
   holiday: 'No holiday. Ask how many days a year and how they are booked.',
 };
 
-/**
- * The ten, named plainly.
- *
- * The page opened as a box and a button over half a screen of nothing, and
- * said only that it looks for «те несколько вещей» — a promise a person has
- * to paste four pages of somebody else's lawyer into it to have kept. The
- * list is short, fixed and the whole point; there is no reason to keep it
- * secret until after the paste.
- */
+/** The ten, named plainly. */
 const LOOKS_FOR: string[] = [
   'The rate',
   'The day the money comes',

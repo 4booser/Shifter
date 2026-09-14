@@ -10,12 +10,7 @@ import { Window, Windows } from '@/components/windows';
 import { MONTH, MONTH_TOTALS, TILES } from '@/mock/data';
 import { cn } from '@/lib/utils';
 
-/**
- * Сколько принёс каждый день месяца — для полосы под сводкой.
- *
- * Ряд снят с той же сетки, что рисуется ниже: полоса, нарисованная по
- * отдельному массиву, рано или поздно начинает показывать другой месяц.
- */
+/** Сколько принёс каждый день месяца — для полосы под сводкой. */
 const BY_DAY = MONTH.filter((day) => day.blank !== true).map((day) =>
   day.amount === undefined ? 0 : Number(day.amount.replace(/\s/g, '')),
 );
@@ -70,9 +65,7 @@ function Calendar() {
         }
       />
 
-      {/* Одно крупное число и ниже плитки. Раньше здесь та же четвёрка стояла
-          трижды — под суммой, в строке чаевых и в плитках; повторённая цифра
-          не запоминается лучше, она просто отодвигает календарь вниз. */}
+      {/* Одно крупное число и ниже плитки. */}
       <div>
         <span className="lbl">Заработано</span>
         <p className="mt-1.5 text-5xl font-extrabold tracking-[-0.05em] tabular">

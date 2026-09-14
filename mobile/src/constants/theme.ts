@@ -1,9 +1,6 @@
 import { Platform } from 'react-native';
 
-/**
- * Shifter's own palette — the same tokens the web client draws with, so the
- * app is recognisably the same product from the first screen.
- */
+/** Shifter's own palette — the same tokens the web client draws with, so the app is recognisably the same… */
 export interface Palette {
   text: string;
   textSecondary: string;

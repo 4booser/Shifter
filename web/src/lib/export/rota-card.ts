@@ -24,11 +24,7 @@ const DAY_H = 40;
 const ROW_H = 64;
 const FOOTER_H = 64;
 
-/**
- * The week as one PNG, sized for a group chat. Painted on canvas for the same
- * reason the stats card is: a DOM screenshot loses its CSS variables, a canvas
- * is pixel-stable everywhere, including the dark theme it inherits.
- */
+/** The week as one PNG, sized for a group chat. */
 export function drawRotaCard(data: RotaCardData, theme: CardTheme): Promise<Blob> {
   const height = HEADER_H + DAY_H + data.rows.length * ROW_H + FOOTER_H;
   const canvas = document.createElement('canvas');

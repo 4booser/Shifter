@@ -9,20 +9,7 @@ import { useDialogKeys } from '@/lib/a11y';
 import { useI18n } from '@/lib/i18n';
 import { Icon } from '@/components/ui/icon';
 
-/**
- * The year, one fact at a time.
- *
- * The page below already says all of this, and nobody has ever shared a page.
- * People share cards — one number, full bleed, thumb-sized to advance — and a
- * year of somebody's work is worth more than a screenshot of a dashboard with
- * a browser bar across the top.
- *
- * Every card can be saved as an image on its own, so the one worth posting can
- * go without the five that are nobody's business. And money can be taken off
- * all of them before any of that happens: plenty of people will happily post
- * that they worked 212 shifts and would never post what they were paid for
- * them.
- */
+/** The year, one fact at a time. */
 export interface Story {
   /** The eyebrow: "2026", "Лучший день". */
   label: string;
@@ -157,9 +144,7 @@ export function Stories({
         </button>
       </div>
 
-      {/* The whole middle is the advance control, which is how a story works
-          on a phone. The arrow keys and the buttons above cover everybody who
-          is not holding one. */}
+      {/* The whole middle is the advance control, which is how a story works on a phone. */}
       <button
         type="button"
         className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center"

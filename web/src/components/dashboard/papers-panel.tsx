@@ -9,12 +9,7 @@ import { downloadBlob } from '@/lib/export/xlsx';
 import { useI18n } from '@/lib/i18n';
 import { Alert } from '@/components/ui/bits';
 
-/**
- * The papers desk: an income statement for a person, a CSV for their
- * accountant. Both are drawn from the same worked days the calendar shows —
- * the PDF opens by saying exactly that, because a figure without its source
- * named is how documents start lying.
- */
+/** The papers desk: an income statement for a person, a CSV for their accountant. */
 export function PapersPanel() {
   const { t, lang } = useI18n();
 

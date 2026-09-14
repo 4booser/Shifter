@@ -47,10 +47,7 @@ export default function WrappedPage() {
   );
 }
 
-/**
- * The year in review: a handful of superlatives, each given a whole card, and
- * — while the year still runs — where it is heading at today's pace.
- */
+/** The year in review: a handful of superlatives, each given a whole card, and — while the year still runs … */
 function Wrapped() {
   const { t, n, lang, num } = useI18n();
 
@@ -169,14 +166,7 @@ function Wrapped() {
     }));
   }, [days, previous.days, year, lang]);
 
-  /*
-   * Три меры одного ритма, а не три разных блока.
-   *
-   * Деньги отвечают «какой день кормит», часы — «где я стою дольше всего», а
-   * ставка — «какой день стоит дороже». Это один и тот же вопрос с трёх
-   * сторон, и разводить их по карточкам значит просить человека собирать
-   * ответ самому.
-   */
+  /* Три меры одного ритма, а не три разных блока. */
   const [rhythmBy, setRhythmBy] = useState<'money' | 'hours' | 'rate'>('money');
 
   const weekdayRhythm = useMemo(() => {
@@ -241,11 +231,7 @@ function Wrapped() {
   const dayLabel = (key: string) =>
     new Intl.DateTimeFormat(lang, { day: 'numeric', month: 'short' }).format(fromKey(key));
 
-  /**
-   * The year as a poster. The same 9:16 card the month already draws, because
-   * the thing people actually post at the end of December is a picture, not a
-   * screenshot of a dashboard with a browser bar across the top.
-   */
+  /** The year as a poster. */
   const poster = () => {
     setPosting(true);
     setError(null);
@@ -280,10 +266,7 @@ function Wrapped() {
       .finally(() => setPosting(false));
   };
 
-  /**
-   * The year as a sequence rather than a page. One fact per card, because the
-   * thing people share is a card and the thing they scroll past is a page.
-   */
+  /** The year as a sequence rather than a page. */
   const stories: Story[] = [
     {
       label: `${year}`,
@@ -334,9 +317,7 @@ function Wrapped() {
   ].filter((card): card is Story => card !== null);
 
   return (
-    /* Во всю ширину оболочки, как остальные страницы. `max-w-3xl` держал
-       годовой отчёт в колонке 768 px посреди полутора тысяч: на мониторе он
-       выглядел уже и беднее статистики, хотя рассказывает про целый год. */
+    /* Во всю ширину оболочки, как остальные страницы. */
     <div ref={revealHost} className="mx-auto flex max-w-[1380px] flex-col gap-4">
       {storiesOpen && (
         <Stories
@@ -393,18 +374,7 @@ function Wrapped() {
         </Empty>
       ) : (
         <>
-          {/*
-            ==== The poster: a year that fills the screen ====
-
-            Filled with the accent, and it swallowed the four summary tiles
-            that used to sit under it as separate cards. The year's biggest
-            number and the four figures explaining it were competing for the
-            same attention a hand's width apart; now the four are a quiet band
-            along the bottom edge of the one thing the page is about.
-
-            A year in the red keeps the plain surface: white-on-accent cannot
-            carry a loss, and colour here has to stay honest.
-          */}
+          {/* ==== The poster: a year that fills the screen ==== Filled with the accent, and it swallowed the four summary t */}
           <section
             className={`reveal relative flex min-h-[52dvh] flex-col items-center justify-center overflow-hidden rounded-[calc(var(--radius)*1.8)] border p-6 pb-0 text-center ${
               filled ? 'border-(--accent) bg-(--accent) text-(--accent-ink)' : 'border-border bg-surface'
@@ -459,10 +429,7 @@ function Wrapped() {
                 {t('On pace for')} {n(Math.round(projectedHours), 'hours')} {t('this year')}
               </p>
             )}
-            {/* Четыре числа, объяснявшие сумму, стояли отдельными карточками
-                на ладонь ниже и тянули внимание на себя. Теперь это полоса по
-                нижнему краю самого героя: та же информация, но она явно
-                принадлежит числу над ней. */}
+            {/* Четыре числа, объяснявшие сумму, стояли отдельными карточками на ладонь ниже и тянули внимание на себя. */}
             <div className="grid w-full grid-cols-2 md:grid-cols-4">
               <Big label={t('Earned')} delta={change(summary.total_earned, previous.total_earned)}>
                 <CountUp
@@ -493,16 +460,7 @@ function Wrapped() {
             </div>
           </section>
 
-          {/*
-            ==== Twelve months, against last year ====
-
-            Строками, а не столбиками. Двенадцать вертикальных полос под
-            одной буквой каждая не давали прочесть ни одной суммы, а месяцы
-            без записей рисовались двухпиксельными огрызками — двенадцать
-            намёков на данные, которых нет. Теперь месяц, полоса, сумма и
-            сравнение с тем же месяцем год назад стоят в строке, а пустые
-            месяцы не рисуются вовсе.
-          */}
+          {/* ==== Twelve months, against last year ==== Строками, а не столбиками. Двенадцать вертикальных полос под одной */}
           <section className="card reveal">
             <div className="card-head">
               <h2 className="card-head-title">{t('Month by month')}</h2>
@@ -559,9 +517,7 @@ function Wrapped() {
             </div>
           </section>
 
-          {/* ==== The whole year as one grid — trimmed to the lived part.
-               January-to-December on a March account is mostly desert, and
-               the audit watched it bury the only month with anything in it. */}
+          {/* ==== The whole year as one grid — trimmed to the lived part. January-to-December on a March account is mostly */}
           <section className="card reveal">
             <div className="card-head">
               <h2 className="card-head-title">{t('The shape of the year')}</h2>
@@ -662,13 +618,7 @@ function Wrapped() {
             </div>
           </section>
 
-          {/* ==== Разбор года — кладкой ====
-
-              Ниже идут карточки, половина которых в конкретном году не
-              рисуется вовсе: у кого-то не было зон, у кого-то не менялась
-              ставка. Одна под другой во всю ширину они оставляли полосы
-              пустоты; кладка ставит следующую там, где кончилась
-              предыдущая. */}
+          {/* ==== Разбор года — кладкой ==== Ниже идут карточки, половина которых в конкретном году не рисуется вовсе: у ко */}
           <div className="deck">
           {/* ==== Weekday rhythm ==== */}
           <section className="card reveal">
@@ -749,13 +699,7 @@ function Wrapped() {
   );
 }
 
-/**
- * One of the four figures along the bottom edge of the hero.
- *
- * It used to be a card of its own; inside a filled hero a card border and a
- * card background are two edges too many, so the cells are separated by a
- * hairline of the ink colour instead and inherit the hero's white.
- */
+/** One of the four figures along the bottom edge of the hero. */
 function Big({ label, delta, children }: { label: string; delta: number | null; children: React.ReactNode }) {
   return (
     <div className="reveal border-t border-(--accent-ink)/15 px-3 py-3.5 text-center first:border-l-0 md:border-l md:border-l-(--accent-ink)/15 md:first:border-l-0">
@@ -767,13 +711,7 @@ function Big({ label, delta, children }: { label: string; delta: number | null; 
   );
 }
 
-/**
- * Одна строка в списке рекордов года.
- *
- * Было семь отдельных карточек с бордюром и тенью каждая: семь рамок ради
- * семи коротких фраз, и между ними больше воздуха, чем текста. Теперь это
- * строки одной таблицы — рамка одна, на весь список.
- */
+/** Одна строка в списке рекордов года. */
 function Superlative({ emoji, title, children }: { emoji: string; title: string; children: React.ReactNode }) {
   return (
     <div className="flex items-center gap-3 border-b border-border py-2.5 last:border-b-0">

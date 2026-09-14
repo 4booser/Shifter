@@ -6,11 +6,7 @@ using Xunit;
 
 namespace Shifter.Tests;
 
-/// <summary>
-/// Fines split by what caused them. Five broken glasses and one till shortfall
-/// add up the same and mean completely different things — the first is the job,
-/// the second is a question for somebody.
-/// </summary>
+/// <summary>Fines split by what caused them.</summary>
 public class DeductionReasonTests
 {
     private static Day Cost(string date, decimal amount, string? reason)

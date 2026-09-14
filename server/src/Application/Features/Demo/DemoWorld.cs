@@ -4,27 +4,7 @@ using Shifter.Infrastructure.Persistence.DbContexts;
 
 namespace Shifter.Application.Features.Demo;
 
-/// <summary>
-/// Half a year of somebody's work, invented.
-///
-/// The point of a demonstration account is that a stranger can see what the
-/// application does before typing anything into it, and every screen here is
-/// worth nothing against an empty month: the calendar has no shape, the
-/// statistics have no shape, and the report says «в этом месяце ничего не
-/// записано», which is exactly the picture the screenshots were defending
-/// for months without anybody noticing.
-///
-/// It is seeded on the server rather than invented in the browser, and that
-/// is the whole design decision. Every figure a visitor sees — the hourly
-/// rate, the overtime, the night multiplier, the tax withheld, what the
-/// payday owes — is worked out by the same code that works it out for a
-/// paying person. A generator in the client would have had to reproduce that
-/// arithmetic, which is the fault this codebase has spent its time removing,
-/// not adding.
-///
-/// Deterministic from a seed so two visitors are looking at the same thing
-/// when one of them asks a question about it.
-/// </summary>
+/// <summary>Half a year of somebody's work, invented.</summary>
 public static class DemoWorld
 {
     /// <summary>How long a demonstration account is allowed to exist.</summary>
@@ -52,7 +32,10 @@ public static class DemoWorld
 
     public static async Task SeedAsync(ShifterDbContext db, User user, DateOnly today, CancellationToken ct)
     {
-        var dice = new Dice((uint)(user.Id * 2654435761L % uint.MaxValue));
+        // Одно и то же зерно для всех: посев от идентификатора аккаунта
+        // давал каждому посетителю свой год, и снимок «Твоего года» в воротах
+        // расходился с эталоном на каждом прогоне.
+        var dice = new Dice(20260101);
 
         // Two places, because one place teaches nothing about a screen whose
         // whole job is telling two apart. A café that pays by the hour twice a

@@ -10,10 +10,7 @@ import { t } from '@/lib/i18n';
 import { DaysResponse, money } from '@/lib/types';
 import { HeatCell, heatGrid } from '@/lib/year-heat';
 
-/**
- * The web's year heat strip, in the pocket. No cursor — a tap answers with
- * «дата · сумма» under the grid; the year rides a horizontal scroll.
- */
+/** The web's year heat strip, in the pocket. */
 export function YearHeatCard({ palette }: { palette: Palette }) {
   const styles = makeStyles(palette);
   const router = useRouter();

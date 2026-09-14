@@ -45,11 +45,7 @@ function loadScript(hl: string): Promise<void> {
   return loading;
 }
 
-/**
- * Google draws its own button into the host. The client id comes from the
- * server, so the same build works against any deployment and an unconfigured
- * server simply keeps the button hidden.
- */
+/** Google draws its own button into the host. */
 export function GoogleButton({ onCredential }: { onCredential: (credential: string) => void }) {
   const { lang } = useI18n();
   const host = useRef<HTMLDivElement>(null);
@@ -97,10 +93,7 @@ export function GoogleButton({ onCredential }: { onCredential: (credential: stri
     return () => {
       cancelled = true;
     };
-    // onCredential is stable enough per page; re-rendering the Google iframe
-    // on every parent render would flicker it.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // onCredential is stable enough per page; re-rendering the Google iframe on every parent render would flicker…
   }, [lang]);
 
   return <div ref={host} className={available ? 'flex justify-center' : 'hidden'} />;

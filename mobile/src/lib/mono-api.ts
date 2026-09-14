@@ -1,16 +1,7 @@
 import { MonoClientInfo, MonoStatementItem } from '@/lib/mono';
 import { t } from '@/lib/i18n';
 
-/**
- * The only place in this app that holds a monobank token, and the only place
- * that talks to monobank.
- *
- * Nothing here touches the Shifter server. That separation is the whole
- * privacy design: the token reads somebody's entire bank statement, so it
- * lives on the phone, goes to api.monobank.ua and nowhere else, and never
- * appears in a log or an error message. The rest of the app receives
- * transactions, never credentials.
- */
+/** The only place in this app that holds a monobank token, and the only place that talks to monobank. */
 const BASE = 'https://api.monobank.ua';
 
 /** The bank is asking us to slow down. Not an error to retry blindly. */
@@ -27,12 +18,7 @@ export class MonoRefused extends Error {
   }
 }
 
-/**
- * monobank allows one call a minute per endpoint. Asked for more, it answers
- * 429 and a client that retries is a client that stays blocked. So the wait
- * is tracked here and exposed, because "try again in 43 seconds" is something
- * a screen can say and a spinner is not.
- */
+/** monobank allows one call a minute per endpoint. */
 const LIMIT_MS = 60_000;
 const lastCall = new Map<string, number>();
 
@@ -45,12 +31,7 @@ export const waitFor = (endpoint: string): number => {
   return Math.max(0, Math.ceil((LIMIT_MS - (Date.now() - last)) / 1000));
 };
 
-/**
- * The bank's own explanation, when it gave one worth repeating.
- *
- * Kept to one short field and capped: the message goes on somebody's screen,
- * and a bank error body is not a place to be trusting about length or shape.
- */
+/** The bank's own explanation, when it gave one worth repeating. */
 async function because(response: Response): Promise<string> {
   try {
     const body = (await response.json()) as { errorDescription?: unknown };
@@ -83,11 +64,7 @@ async function ask<T>(token: string, endpoint: string, path: string): Promise<T>
   if (response.status === 401 || response.status === 403) throw new MonoRefused();
 
   if (!response.ok) {
-    // The status alone was all this used to say, and "monobank ответил 400"
-    // is not something anybody can act on. The bank's own errorDescription is
-    // one short sentence and it names the cause — so that field, and only
-    // that field, is passed on: never the body, which can echo the request
-    // back including the path, and never anything else it might carry.
+    // The status alone was all this used to say, and "monobank ответил 400" is not something anybody can act on.
     throw new Error(`monobank ${t('ответил')} ${response.status}${await because(response)}`);
   }
 
@@ -98,10 +75,7 @@ async function ask<T>(token: string, endpoint: string, path: string): Promise<T>
 export const clientInfo = (token: string) =>
   ask<MonoClientInfo>(token, 'client-info', '/personal/client-info');
 
-/**
- * One window of a statement. `from` and `to` are unix seconds and the window
- * must be inside monobank's limit — statementWindows() cuts a range to size.
- */
+/** One window of a statement. */
 export const statement = (token: string, account: string, from: number, to: number) =>
   ask<MonoStatementItem[]>(
     token,

@@ -4,21 +4,9 @@ import { ActivityState, endActivity, startActivity, updateActivity } from 'shift
 import { lockStore } from '@/lib/lock';
 import { LiveShift, breakSeconds, onBreak, useLive } from '@/store/live';
 
-/**
- * The running shift, as the lock screen needs to hear about it.
- *
- * Kept apart from the store so the store stays what it is — a record of a
- * shift — and so this can be tested without a phone.
- */
+/** The running shift, as the lock screen needs to hear about it. */
 
-/**
- * What the shift has earned so far.
- *
- * Only hourly shifts, and only from hours actually worked. A day rate does not
- * accumulate through the evening and a monthly wage belongs to the month, so
- * both come back as nothing rather than as a number that would be wrong all
- * evening in a place somebody cannot correct it.
- */
+/** What the shift has earned so far. */
 export function earnedSoFar(shift: LiveShift, now: number): number | null {
   if (shift.hourlyRate === null || shift.hourlyRate <= 0) return null;
 
@@ -42,20 +30,12 @@ export function activityState(
     endsAt: shift.plannedEnd,
     breakSeconds: breakSeconds(shift, now),
     onBreak: onBreak(shift),
-    // A lock screen is the most public surface this app has: it is visible to
-    // anybody who picks the phone up, without unlocking it. Somebody who put a
-    // lock on the app has already said what they think about that.
+    // A lock screen is the most public surface this app has: it is visible to anybody who picks the phone up…
     earned: locked || eyeShut() ? null : earnedSoFar(shift, now),
   };
 }
 
-/**
- * Tells the lock screen where the shift has got to.
- *
- * Every failure is swallowed inside the module. A clock-in is a fact about
- * somebody's working day and must never fail because a decoration could not be
- * drawn.
- */
+/** Tells the lock screen where the shift has got to. */
 export async function showShift(shift: LiveShift, now = Date.now()): Promise<void> {
   const locked = await lockStore.enabled();
 
@@ -71,17 +51,7 @@ export async function refreshShift(shift: LiveShift, now = Date.now()): Promise<
 /** The shift is over. The card goes at once rather than lingering. */
 export const hideShift = (): Promise<void> => endActivity();
 
-/**
- * Keeps the lock screen in step with the store, for the app's whole life.
- *
- * Subscribed rather than called from the four places a shift changes — start,
- * break on, break off, finish. Those four are easy to add a fifth to and hard
- * to remember, and a lock screen that disagrees with the app about whether
- * somebody is on a break is worse than one that was never there.
- *
- * Also refreshes on a slow tick while the app is open, because the money is a
- * figure the system cannot recompute for itself.
- */
+/** Keeps the lock screen in step with the store, for the app's whole life. */
 export function watchLiveShift(): () => void {
   let last: string | null = null;
 
@@ -106,9 +76,7 @@ export function watchLiveShift(): () => void {
 
   reflect(useLive.getState().live);
 
-  // A minute is fine: at any rate in this trade the figure moves by a few
-  // units a minute, and a lock screen redrawn every second would cost more
-  // battery than the number is worth.
+  // A minute is fine: at any rate in this trade the figure moves by a few units a minute, and a lock screen…
   const tick = setInterval(() => {
     const shift = useLive.getState().live;
 

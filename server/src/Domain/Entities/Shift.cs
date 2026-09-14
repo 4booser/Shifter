@@ -16,61 +16,29 @@ public sealed class Shift
 
     public required string Name { get; set; }
     
-    /// <summary>
-    /// A short badge for the calendar. A string rather than a char so it can
-    /// hold an emoji: most sit outside the BMP and need two UTF-16 units.
-    /// </summary>
+    /// <summary>A short badge for the calendar.</summary>
     public string? Symbol { get; set; }
 
-    /// <summary>
-    /// The template's own colour, as "#RRGGBB". Null means it borrows its
-    /// place's, which is where every shift's colour used to come from — fine
-    /// while one place meant one kind of work, useless the moment a bar has an
-    /// opening shift and a close that want telling apart at a glance.
-    /// </summary>
+    /// <summary>The template's own colour, as "#RRGGBB".</summary>
     public string? Colour { get; set; }
 
-    /// <summary>
-    /// Whether a day carrying this shift paints itself in the shift's colour.
-    ///
-    /// The day has always had a colour of its own, set by hand — good for the
-    /// one day somebody wants to mark, useless for "every вечер should be
-    /// violet". A template that paints says it once and the calendar obeys
-    /// forever; a day coloured by hand still wins, because a person saying
-    /// something about one day outranks a standing rule.
-    /// </summary>
+    /// <summary>Whether a day carrying this shift paints itself in the shift's colour.</summary>
     public bool PaintsDay { get; set; }
 
-    /// <summary>
-    /// Explicit foreign key alongside the Location navigation below, so the
-    /// template can be assigned a place without loading one first.
-    /// </summary>
+    /// <summary>Explicit foreign key alongside the Location navigation below, so the template can be assigned a place without…</summary>
     public int? LocationId { get; set; }
 
-    /// <summary>
-    /// One rate and the period it covers, replacing four nullable amounts where
-    /// nothing said which of them applied.
-    /// </summary>
+    /// <summary>One rate and the period it covers, replacing four nullable amounts where nothing said which of them applied.</summary>
     public SalaryPeriod SalaryPeriod { get; set; } = SalaryPeriod.Hour;
     public decimal? SalaryAmount { get; set; }
 
-    /// <summary>
-    /// A share of what the shift takes, paid on top of the rate rather than
-    /// instead of it. Hospitality stacks the two far more often than it picks
-    /// one — an hourly bartender on 3% of the bar is the ordinary case, not
-    /// the exotic one — so this is a second field and not another
-    /// SalaryPeriod. Null means the shift has no percentage at all.
-    /// </summary>
+    /// <summary>A share of what the shift takes, paid on top of the rate rather than instead of it.</summary>
     public decimal? RevenuePercent { get; set; }
 
     /// <summary>Where this shift's tips come from.</summary>
     public TipSource TipSource { get; set; } = TipSource.Personal;
 
-    /// <summary>
-    /// This person's slice of the day's pool, in percent, when the tips are
-    /// pooled. Null with a pooled source means the split is not agreed yet,
-    /// and nothing is counted rather than a wrong number being invented.
-    /// </summary>
+    /// <summary>This person's slice of the day's pool, in percent, when the tips are pooled.</summary>
     public decimal? TipPoolPercent { get; set; }
     
     public required TimeOnly StartTime { get; set; }
@@ -90,10 +58,7 @@ public sealed class Shift
 
     public void Restore() => Archived = false;
 
-    /// <summary>
-    /// Clock time between start and end. A night shift ends before it starts on
-    /// the clock, so the span wraps into the next day.
-    /// </summary>
+    /// <summary>Clock time between start and end.</summary>
     [NotMapped]
     public TimeSpan Duration
     {
@@ -121,11 +86,7 @@ public sealed class Shift
         }
     }
 
-    /// <summary>
-    /// What this shift adds to the day it sits on. Weekly and monthly wages
-    /// earn nothing per shift — they are paid once per period regardless of how
-    /// many shifts fall inside it, so they are added to the range summary.
-    /// </summary>
+    /// <summary>What this shift adds to the day it sits on.</summary>
     [NotMapped]
     public decimal Pay => SalaryPeriod switch
     {

@@ -2,13 +2,7 @@ import { create } from 'zustand';
 
 import { api } from '@/lib/api';
 
-/**
- * The colours this person saved to reuse.
- *
- * Mirrors the web store: the palette lives on the account, so one picked on
- * a laptop is waiting here the same evening. Optimistic on purpose — a
- * swatch that blinks out for a second while a request lands reads as a bug.
- */
+/** The colours this person saved to reuse. */
 interface PaletteState {
   colours: string[];
   loaded: boolean;

@@ -4,11 +4,7 @@ using Xunit;
 
 namespace Shifter.Tests;
 
-/// <summary>
-/// A photographed receipt turned into the beginnings of an expense. Receipts
-/// are creased and photographed in bad light, so nearly every rule here is
-/// about what to do when the read went wrong.
-/// </summary>
+/// <summary>A photographed receipt turned into the beginnings of an expense.</summary>
 public class ReceiptParseTests
 {
     private static readonly DateOnly Today = new(2026, 8, 29);

@@ -5,12 +5,7 @@ using Serilog;
 
 namespace Shifter.Application.Features.Push;
 
-/// <summary>
-/// Notifications to phones through Expo's push service — one endpoint for
-/// both stores, no APNs certificates or FCM projects to keep alive. No key
-/// is needed: the token itself is the address, which is why a dead token has
-/// to be recognised and dropped rather than retried forever.
-/// </summary>
+/// <summary>Notifications to phones through Expo's push service — one endpoint for both stores, no APNs certificates or…</summary>
 public sealed class ExpoPushSender
 {
     private readonly IHttpClientFactory _http;
@@ -18,12 +13,6 @@ public sealed class ExpoPushSender
     public ExpoPushSender(IHttpClientFactory http) => _http = http;
 
     /// <summary>True while the token is worth keeping; false once Expo disowns it.</summary>
-    /// <param name="category">
-    /// Names a set of buttons the phone has registered — "shift" carries
-    /// "start the shift", "payday" carries "record the payment". Null sends a
-    /// notification with no buttons, which is what every one of these was
-    /// until now.
-    /// </param>
     public async Task<bool> SendAsync(
         string token,
         string title,

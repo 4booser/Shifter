@@ -7,31 +7,11 @@ import { t } from '@/lib/i18n';
 import { FlowBand, balance, spareNames } from '@/lib/mono-flow';
 import { money } from '@/lib/types';
 
-/**
- * The month as one picture: what came in, what went out, what stayed.
- *
- * Two lists and two totals is what every banking app shows, and it is exactly
- * the shape that hides the answer — a person can read "доход 42 000" and
- * "расход 39 000" all month without once noticing that a third of the income
- * was a friend paying them back.
- *
- * The middle bar is the honest part. Money is fungible: nobody can say which
- * hryvnia of the wage went on rent, so no ribbon runs from a source straight
- * to a category. Everything pools in the middle and fans out again, which is
- * the only claim the data supports.
- *
- * The two sides always balance. Spend more than came in and the shortfall
- * appears on the left as money taken out of the balance, named, rather than
- * the picture quietly not adding up.
- */
+/** The month as one picture: what came in, what went out, what stayed. */
 
 const CURVE = 0.42;
 
-/**
- * A ribbon from one edge to the other: two cubics with mirrored handles, so it
- * leaves horizontal and arrives horizontal and the eye reads it as a flow
- * rather than as a shape.
- */
+/** A ribbon from one edge to the other: two cubics with mirrored handles, so it leaves horizontal and arrives… */
 const ribbon = (
   x1: number, y1: number, h1: number,
   x2: number, y2: number, h2: number,
@@ -78,19 +58,13 @@ export function BankFlow({
   const [width, setWidth] = useState(0);
   const styles = useMemo(() => sheet(palette), [palette]);
 
-  // Both sides are made to add to the same number. Where more went out than
-  // came in, the difference is money taken out of the balance and it is drawn
-  // and named — a picture that silently failed to balance would be worse than
-  // no picture.
+  // Both sides are made to add to the same number.
   const sides = useMemo(
     () => balance(sources, categories, earned, spent),
     [sources, categories, earned, spent],
   );
 
-  // The made-up bands are drawn in the status colours, which here mean what
-  // they mean everywhere else: money kept, and money that had to come out of
-  // the balance. Marked by name rather than by position so a reordering
-  // cannot quietly repaint a category green.
+  // The made-up bands are drawn in the status colours, which here mean what they mean everywhere else: money…
   const spare = spareNames();
   const left = sides.left;
   const right = sides.right;
@@ -251,10 +225,7 @@ export function BankFlow({
   );
 }
 
-/**
- * A second hue, as far from the accent as this palette goes and on the blue–
- * yellow axis, which is the one axis colour blindness leaves alone.
- */
+/** A second hue, as far from the accent as this palette goes and on the blue– yellow axis, which is the one axis… */
 const OUTWARD = '#a8761b';
 
 const sheet = (palette: Palette) =>

@@ -50,17 +50,8 @@ const ZONES: { value: ShiftZone; label: string }[] = [
   { value: 'takeaway', label: 'На вынос' },
 ];
 
-/**
- * One day, editable: which templates are on it, whether they were worked,
- * the tips and the fines. The same PUT the web sends — one server, one
- * truth, whichever pocket the edit came from.
- */
-/**
- * How long the screen waits after the last change before it saves. Four
- * seconds, matching the web panel: the delay only decides how chatty the
- * network is, and every way of leaving — the back gesture, backgrounding the
- * app, «Готово» — flushes anyway.
- */
+/** One day, editable: which templates are on it, whether they were worked, the tips and the fines. */
+/** How long the screen waits after the last change before it saves. */
 const QUIET_BEFORE_SAVE = 4_000;
 
 export default function DayScreen() {
@@ -148,9 +139,7 @@ export default function DayScreen() {
           // What it will be worth once the server prices it; shown here only
           // so the row reads the same before and after the save.
           hours: templateHours(template),
-          // Local, not UTC: at half past midnight in Kyiv the UTC date is still
-          // yesterday, so a bartender who had just closed added their shift as
-          // a plan and the night's money was missing from the month.
+          // Local, not UTC: at half past midnight in Kyiv the UTC date is still yesterday, so a bartender who had just…
           worked: date <= todayKey(),
           needs_cover: false,
           actual_start: null,
@@ -166,10 +155,7 @@ export default function DayScreen() {
     });
   };
 
-  /**
-   * The share of the pool this day is owed, or null when nothing on it is
-   * pooled. Several pooled shifts on one day each take their own slice.
-   */
+  /** The share of the pool this day is owed, or null when nothing on it is pooled. */
   const pooledShares = (day?.shifts ?? [])
     .map((entry) => templates.find((template) => template.id === entry.shift_id))
     .filter((template) => template?.tip_source === 'pool')
@@ -191,12 +177,7 @@ export default function DayScreen() {
     });
   };
 
-  /**
-   * How many the shift served.
-   *
-   * Empty is "nobody counted", which is a different evening from one with no
-   * guests — and only one of the two is a zero.
-   */
+  /** How many the shift served. */
   const setGuests = (shiftId: number, value: string) => {
     if (day === null) return;
 
@@ -210,10 +191,7 @@ export default function DayScreen() {
     });
   };
 
-  /**
-   * Where in the venue. Tapping the one already chosen clears it back to
-   * "nobody said", which is a real answer and not the same as the hall.
-   */
+  /** Where in the venue. */
   const setZone = (shiftId: number, zone: ShiftZone) => {
     if (day === null) return;
 
@@ -266,17 +244,7 @@ export default function DayScreen() {
     });
   };
 
-  /*
-   * Saving without being asked to, the same rule as the web day panel.
-   *
-   * This screen's button did double duty — it saved and it closed — so
-   * anybody who left by the back gesture lost what they had typed, and
-   * anybody who wanted to stay had to press save and then come back in.
-   * The day keeps itself now and the button only closes.
-   *
-   * As on the web: the draft is fingerprinted and compared against what was
-   * loaded, rather than thirty setters each remembering to raise a flag.
-   */
+  /* Saving without being asked to, the same rule as the web day panel. */
   const fingerprint = (payload: DaySave) => JSON.stringify({ ...payload, version: 0 });
   const sent = useRef<string | null>(null);
 
@@ -509,10 +477,7 @@ export default function DayScreen() {
                       </View>
                     </View>
 
-                    {/* The clock, where it differed from the template. Written
-                        by the live screen and, until now, correctable nowhere:
-                        a shift that ran an hour over was an hour nobody could
-                        put back. */}
+                    {/* The clock, where it differed from the template. */}
                     {entry.worked && (
                       <View style={styles.actualRow}>
                         <View style={styles.actualField}>
@@ -592,9 +557,7 @@ export default function DayScreen() {
                           onChangeText={(value) => setRevenue(entry.shift_id, value)}
                         />
 
-                        {/* Takings alone do not describe an evening: twelve
-                            thousand off forty covers is a different night from
-                            twelve thousand off a hundred and twenty. */}
+                        {/* Takings alone do not describe an evening: twelve thousand off forty covers is a different night from twelve… */}
                         <Text style={styles.fieldLabel}>{t('Гостей')}</Text>
                         <TextInput
                           style={styles.input}
@@ -761,12 +724,7 @@ export default function DayScreen() {
                   : t('Сохранено')}
             </Text>
 
-            {/* `Press`, not a raw `Pressable`: NativeWind's transform drops
-                the resolved style when `style` is a function, so this button
-                — and the one on the sign-in screen — rendered as white text
-                on the cream ground with no fill at all, left-aligned, on
-                every light palette. It has been invisible for as long as it
-                has existed. */}
+            {/* `Press`, not a raw `Pressable`: NativeWind's transform drops the resolved style when `style` is a function… */}
             <Press style={styles.saveButton} disabled={busy} onPress={() => void save(true)}>
               <Text style={styles.saveText}>{t('Готово')}</Text>
             </Press>

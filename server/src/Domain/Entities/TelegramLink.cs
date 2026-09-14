@@ -1,10 +1,6 @@
 namespace Shifter.Domain.Entities;
 
-/// <summary>
-/// One Telegram chat bound to one account. The bridge for "что у меня
-/// завтра" without opening the app — and for clocking in from the chat,
-/// which is where shift workers already live.
-/// </summary>
+/// <summary>One Telegram chat bound to one account.</summary>
 public sealed class TelegramLink
 {
     public int Id { get; set; }

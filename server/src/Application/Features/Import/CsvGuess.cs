@@ -2,15 +2,7 @@ using System.Globalization;
 
 namespace Shifter.Application.Features.Import;
 
-/// <summary>
-/// Which column is which, guessed and then shown to a person for correction.
-///
-/// The guess is a convenience and never an authority. Every mapping this
-/// produces lands on a preview screen where somebody can change it, because
-/// the failure mode of a confident guess here is a year of somebody's records
-/// written into the wrong fields — tips filed as wages, and no way to tell
-/// afterwards which is which.
-/// </summary>
+/// <summary>Which column is which, guessed and then shown to a person for correction.</summary>
 public static class CsvGuess
 {
     /// <summary>The things a row can be understood as. Everything else is ignored.</summary>
@@ -27,13 +19,7 @@ public static class CsvGuess
         ["note"] = ["замет", "коммент", "note", "comment", "примеч"],
     };
 
-    /// <summary>
-    /// A column index per field, or −1 where nothing looked like it.
-    ///
-    /// One column can only be one thing: a header called "сумма чаевых"
-    /// matches both money words, and letting it be both would silently double
-    /// somebody's month.
-    /// </summary>
+    /// <summary>A column index per field, or −1 where nothing looked like it.</summary>
     public static Dictionary<string, int> Map(string[] header)
     {
         var lowered = header.Select(name => name.Trim().ToLowerInvariant()).ToArray();
@@ -64,14 +50,7 @@ public static class CsvGuess
         return map;
     }
 
-    /// <summary>
-    /// A date in whatever the other app wrote.
-    ///
-    /// Day-first before month-first, because everywhere this app is used
-    /// writes 03.04 meaning the third of April, and an American reading of the
-    /// same file moves a whole year of shifts by up to eleven months without
-    /// producing a single obviously wrong row.
-    /// </summary>
+    /// <summary>A date in whatever the other app wrote.</summary>
     public static DateOnly? Date(string value)
     {
         var text = value.Trim();
@@ -94,13 +73,7 @@ public static class CsvGuess
         return null;
     }
 
-    /// <summary>
-    /// A number in whatever the other app wrote: spaces inside it, a comma for
-    /// the decimal point, a currency symbol stuck to the end.
-    ///
-    /// Null rather than zero for anything unreadable. A row whose wage could
-    /// not be read is a row to show somebody, not a day that earned nothing.
-    /// </summary>
+    /// <summary>A number in whatever the other app wrote: spaces inside it, a comma for the decimal point, a currency symbol…</summary>
     public static decimal? Number(string value)
     {
         var text = new string(value

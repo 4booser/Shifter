@@ -4,11 +4,7 @@ import { useMemo } from 'react';
 
 import { useI18n } from '@/lib/i18n';
 
-/**
- * A slow ribbon of things worth knowing, riding between the tiles and the
- * insights. Product tips first — the features people miss for months —
- * shuffled per mount so the ribbon never opens on the same advice twice.
- */
+/** A slow ribbon of things worth knowing, riding between the tiles and the insights. */
 const TIPS = [
   ['⌘K', 'The palette opens with Cmd+K — every page and action is three keystrokes away.'],
   ['📸', 'A photo of the wall schedule imports itself: Import from photo on the calendar.'],

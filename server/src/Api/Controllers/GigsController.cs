@@ -11,11 +11,7 @@ using Shifter.Application.Features.Gigs;
 
 namespace Shifter.Api.Controllers;
 
-/// <summary>
-/// The freelance shift board. Reading and posting both require an account:
-/// contact details move through here, and an anonymous scraper is exactly
-/// who they must not move to.
-/// </summary>
+/// <summary>The freelance shift board.</summary>
 [Authorize]
 [Route("shifter/v1/gigs")]
 public class GigsController : ControllerBase
@@ -31,11 +27,7 @@ public class GigsController : ControllerBase
         _cities = cities;
     }
 
-    /// <summary>
-    /// What the board pays for a job in a city, and where the caller sits in
-    /// it. Absent rather than zeroed where the sample cannot carry a figure.
-    /// </summary>
-    /// <summary>«Где мой час дороже»: own history city by city, market alongside.</summary>
+    /// <summary>What the board pays for a job in a city, and where the caller sits in it.</summary>
     [HttpGet("cities")]
     public async Task<IActionResult> Cities(CancellationToken ct)
         => Ok((await _cities.ReadAsync(UserId(), ct)).Select(row => new
@@ -113,12 +105,7 @@ public class GigsController : ControllerBase
     public async Task<IActionResult> Review(int id, [FromBody] ReviewSaveDto request, CancellationToken ct)
         => Ok(await _gigs.ReviewAsync(UserId(), id, request, ct));
 
-    /// <summary>
-    /// Somebody's standing on the board. Readable about people who have put
-    /// themselves in front of you — a card, an open listing, a conversation
-    /// you have already had — and about yourself. Not about anybody whose id
-    /// you can guess.
-    /// </summary>
+    /// <summary>Somebody's standing on the board.</summary>
     [HttpGet("reputation/{userId:int}")]
     public async Task<IActionResult> Reputation(int userId, CancellationToken ct)
         => Ok(await _gigs.ReputationAsync(userId, UserId(), ct));
@@ -127,12 +114,7 @@ public class GigsController : ControllerBase
     public async Task<IActionResult> PendingReviews(CancellationToken ct)
         => Ok(await _gigs.PendingReviewsAsync(UserId(), ct));
 
-    /// <summary>
-    /// The people looking for work. This is the read that actually hands over
-    /// phone numbers, so it carries the same ceiling as the three writes that
-    /// take one — it had none, and two hundred cards a call at the general
-    /// limit is a harvesting tool rather than a job search.
-    /// </summary>
+    /// <summary>The people looking for work.</summary>
     [HttpGet("seekers")]
     [EnableRateLimiting(HardeningExtensions.ContactPolicy)]
     public async Task<IActionResult> Seekers(
@@ -161,10 +143,7 @@ public class GigsController : ControllerBase
     public async Task<IActionResult> Respond(int id, [FromBody] GigRespondDto request, CancellationToken ct)
         => Ok(await _gigs.RespondAsync(UserId(), id, request, ct));
 
-    /// <summary>
-    /// The person's yes on a quiet reply: their contacts go to the venue now.
-    /// Rate-limited like the reply itself — it carries the same data.
-    /// </summary>
+    /// <summary>The person's yes on a quiet reply: their contacts go to the venue now.</summary>
     [HttpPost("{id:int}/respond/open")]
     [EnableRateLimiting(HardeningExtensions.ContactPolicy)]
     public async Task<IActionResult> Open(int id, [FromBody] GigRespondDto request, CancellationToken ct)

@@ -12,18 +12,7 @@ public readonly record struct TipJarState(
     /// <summary>Days since the rule started, so a pace can be read off it.</summary>
     int Days);
 
-/// <summary>
-/// A share of tips, set aside on paper.
-///
-/// Tips are the only money in this trade that arrives in cash and leaves
-/// without a trace. "Save a bit" is advice nobody can follow, because a bit of
-/// nothing in particular is nothing; a percent of a figure the app already
-/// knows is a number somebody can act on.
-///
-/// Nothing here moves any money. The app has no business touching anybody's
-/// account, and "you meant to have put aside 4 200 by now" is the whole of
-/// what it can honestly offer — which turns out to be the useful part.
-/// </summary>
+/// <summary>A share of tips, set aside on paper.</summary>
 public static class TipJar
 {
     public static TipJarState Since(
@@ -46,10 +35,7 @@ public static class TipJar
             days);
     }
 
-    /// <summary>
-    /// When the goal is reached at this pace, or null when there is no goal,
-    /// no pace, or not enough of a run to say anything but a guess.
-    /// </summary>
+    /// <summary>When the goal is reached at this pace, or null when there is no goal, no pace, or not enough of a run to say…</summary>
     public static DateOnly? Reaches(TipJarState state, DateOnly today)
     {
         // A fortnight at least. Extrapolating three days of tips into a date

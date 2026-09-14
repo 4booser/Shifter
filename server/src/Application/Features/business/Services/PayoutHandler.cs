@@ -13,11 +13,7 @@ public class PayoutHandler : IPayoutHandler
     private readonly IShifterCommand _shifterCommand;
     private readonly IShifterQuery _shifterQuery;
 
-    /// <summary>
-    /// Optional: without it a payment is still recorded, it simply carries no
-    /// rate. A payment that cannot be written down because a rate service is
-    /// unavailable would be the worst of both worlds.
-    /// </summary>
+    /// <summary>Optional: without it a payment is still recorded, it simply carries no rate.</summary>
     private readonly Money.RateService? _rates;
 
     public PayoutHandler(
@@ -41,16 +37,7 @@ public class PayoutHandler : IPayoutHandler
         return payouts.Select(ToDto).ToArray();
     }
 
-
-    /// <summary>
-    /// The three dates a payment cannot do without, and a floor under them.
-    ///
-    /// A missing one used to arrive as 0001-01-01 — the zero of the type, not
-    /// an answer — and was stored. The payment then existed and did nothing:
-    /// no period it covers contains any work, so no reconciliation ever
-    /// matched it, and the list showed 01.01.0001 as though somebody had been
-    /// paid in the first century.
-    /// </summary>
+    /// <summary>The three dates a payment cannot do without, and a floor under them.</summary>
     private static (DateOnly From, DateOnly To, DateOnly Received) Dates(PayoutCreateDto request)
     {
         // Nothing in this product happened before the millennium. The point is
@@ -142,13 +129,7 @@ public class PayoutHandler : IPayoutHandler
         return ToDto(await _shifterQuery.GetPayoutAsync(userId, payout.Id, ct) ?? payout);
     }
 
-    /// <summary>
-    /// Fixing a payment in place instead of delete-and-retype. The same
-    /// checks as recording it the first time — an edit is not a licence to
-    /// store what a create would refuse — and the currency and rate are
-    /// resolved again, because both belong to the place and the day, and the
-    /// edit may have moved either.
-    /// </summary>
+    /// <summary>Fixing a payment in place instead of delete-and-retype.</summary>
     public async Task<PayoutDto> UpdateAsync(
         PayoutCreateDto request,
         int userId,
@@ -236,10 +217,7 @@ public class PayoutHandler : IPayoutHandler
         payout.RateOn
     );
 
-    /// <summary>
-    /// Anything unrecognised is read as covering everything, which is what a
-    /// client that has never heard of the split will send.
-    /// </summary>
+    /// <summary>Anything unrecognised is read as covering everything, which is what a client that has never heard of the…</summary>
     private static string ParseStream(string? value) => value?.ToLowerInvariant() switch
     {
         "wage" => "wage",
@@ -247,11 +225,7 @@ public class PayoutHandler : IPayoutHandler
         _ => "all"
     };
 
-    /// <summary>
-    /// Same rule as the stream: an older client sends nothing and means the
-    /// payment that closes the period, which is what every payment was before
-    /// the advance existed.
-    /// </summary>
+    /// <summary>Same rule as the stream: an older client sends nothing and means the payment that closes the period, which is…</summary>
     private static string ParseKind(string? value) => value?.ToLowerInvariant() switch
     {
         "advance" => "advance",

@@ -7,11 +7,7 @@ import { useI18n } from '@/lib/i18n';
 import { pluralWord } from '@/lib/i18n/plural';
 import { pushToast } from '@/lib/toast';
 
-/**
- * The invite link, and how many people came through it. A referral here is
- * a thank-you rather than a funnel: it counts arrivals and nothing about
- * them, and the link is minted only when somebody actually asks for one.
- */
+/** The invite link, and how many people came through it. */
 export function ReferralSection() {
   const { t, lang } = useI18n();
   const [state, setState] = useState<{ code: string; invited: number } | null>(null);

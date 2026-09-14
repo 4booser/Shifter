@@ -3,15 +3,7 @@ using Shifter.Infrastructure.Repositories.Interfaces;
 
 namespace Shifter.Tests;
 
-/// <summary>
-/// In-memory stand-in for the team repository, in the same spirit as the ones
-/// in Fakes.cs: the handlers only ask it for lists and rows, so a plain object
-/// reads better than a chain of setup calls.
-///
-/// The membership rule is reproduced rather than stubbed, because it is the
-/// boundary the cover handlers rely on for their access control — a fake that
-/// handed back a team to anyone who asked would make those tests meaningless.
-/// </summary>
+/// <summary>In-memory stand-in for the team repository, in the same spirit as the ones in Fakes.cs: the handlers only ask…</summary>
 public sealed class FakeTeamRepository : ITeamRepository
 {
     public List<Team> Teams { get; } = [];
@@ -110,12 +102,7 @@ public sealed class FakeTeamRepository : ITeamRepository
 
     public Task SaveAsync(CancellationToken ct) => Task.CompletedTask;
 
-    /// <summary>
-    /// Placements the caller owns, for the visibility handler to edit.
-    /// Keyed the way the real lookup is — by shift and owner together — so a
-    /// fake cannot hand back somebody else's shift and make the ownership
-    /// check untestable.
-    /// </summary>
+    /// <summary>Placements the caller owns, for the visibility handler to edit.</summary>
     public List<DayShift> OwnedShifts { get; } = [];
 
     /// <summary>Who the last rota query was told shares their earnings.</summary>

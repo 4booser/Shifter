@@ -3,13 +3,7 @@ import { isAvailableAsync, shareAsync } from 'expo-sharing';
 
 import { statementFileName } from '@/lib/mono-export';
 
-/**
- * Handing the file over.
- *
- * The cache directory rather than documents: this file exists to be passed to
- * another app and then forgotten, and a statement lingering in the app's own
- * storage is a copy of somebody's spending that nobody asked for.
- */
+/** Handing the file over. */
 export async function shareStatement(
   csv: string,
   from: string,

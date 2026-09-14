@@ -4,34 +4,13 @@ using Xunit;
 
 namespace Shifter.Tests;
 
-/// <summary>
-/// A deploy runs the migrations and then swaps the container, in that order.
-/// For the length of that window — a minute, sometimes several — the release
-/// that is still serving traffic is talking to the new schema.
-///
-/// So a migration that renames or drops anything is a migration that makes the
-/// running application answer 500 to every request touching it, and there is
-/// no way to arrange the deploy such that it does not. The fix is not in the
-/// deploy: it is three releases instead of one.
-///
-///   1. Add the new column and write to both. Nothing is removed.
-///   2. Release the code that reads the new one.
-///   3. Remove the old column, once nothing is left that reads it.
-///
-/// This test is the rule. The seven that shipped before it are listed by name
-/// so that the rule is enforced going forwards without pretending the past was
-/// clean — every one of them took the site down for the length of a deploy,
-/// which nobody noticed because nobody was looking.
-/// </summary>
+/// <summary>A deploy runs the migrations and then swaps the container, in that order.</summary>
 public class MigrationSafetyTests
 {
     private static readonly string[] Narrowing =
         ["RenameColumn", "RenameTable", "DropColumn", "DropTable"];
 
-    /// <summary>
-    /// Already shipped, and unfixable now: a migration that has run somewhere
-    /// cannot be edited. Listed rather than ignored so the count cannot creep.
-    /// </summary>
+    /// <summary>Already shipped, and unfixable now: a migration that has run somewhere cannot be edited.</summary>
     private static readonly HashSet<string> Shipped =
     [
         "20260815105837_SalaryPeriod.cs: RenameColumn SalaryPerWeek",

@@ -11,15 +11,7 @@ import { Icon } from '@/components/ui/icon';
 import { CalendarDemo, GigsDemo, LiveShiftDemo, StretchWeekDemo, WhatIfDemo } from '@/components/landing/demos';
 import { BankForecastDemo, ReceiptDemo } from '@/components/landing/toys';
 
-/**
- * The public face, staged as the thing the product is about: one shift.
- *
- * The page runs like a working night — dusk at the top (the hero commits to
- * dark whatever the theme, because shifts start when the light goes), then
- * the counting hours, then the morning the money lands, then the month, the
- * crew, the papers and the year. Every claim below the fold wears the app's
- * own tokens: the landing is still the first screenshot.
- */
+/** The public face, staged as the thing the product is about: one shift. */
 const TRADE_RU: Record<string, string> = {
   managing: 'Управляющий', 'floor-manager': 'Менеджер зала', chef: 'Шеф-повар', 'sous-chef': 'Су-шеф',
   'shift-lead': 'Старший смены', bartender: 'Бармен', barback: 'Барбек', barista: 'Бариста',
@@ -65,12 +57,7 @@ const THEMES = [
   },
 ] as const;
 
-/**
- * The night sky of the hero: a fixed dark palette, deliberately NOT the
- * theme tokens — the hero is a scene, not a surface, and it must hold
- * whatever theme the rest of the page wears. Colours echo the app's own
- * night theme so the scene still smells like the product.
- */
+/** The night sky of the hero: a fixed dark palette, deliberately NOT the theme tokens — the hero is a scene, not… */
 const NIGHT = {
   bg: 'radial-gradient(120% 90% at 70% -10%, #232043 0%, #14121f 48%, #0d0c14 100%)',
   ink: '#f0eff7',
@@ -255,10 +242,7 @@ export function Landing() {
                 <a href="#shift" className="btn !border-0 !px-5 !py-3 !text-[0.95rem]" style={{ background: 'rgb(240 239 247 / 9%)', color: NIGHT.ink }}>
                   Прожить смену за минуту ↓
                 </a>
-                {/* Полгода чужой работы одним нажатием. Всё, что ниже на этой
-                    странице, — рассказ о приложении; это единственная кнопка,
-                    которая показывает само приложение, и она не просит ни
-                    почты, ни пароля. */}
+                {/* Полгода чужой работы одним нажатием. */}
                 <button
                   type="button"
                   className="btn !border-0 !px-5 !py-3 !text-[0.95rem]"
@@ -611,11 +595,7 @@ export function Landing() {
   );
 }
 
-/**
- * The contact rows. `value: null` renders an honest «скоро» chip instead of
- * a dead link — the addresses get filled in when they exist, and the section
- * never pretends otherwise.
- */
+/** The contact rows. */
 const CONTACTS: { icon: string; label: string; hint: string; value: string | null; href: string | null }[] = [
   { icon: '✉️', label: 'Почта', hint: 'на длинные вопросы', value: null, href: null },
   { icon: '📨', label: 'Telegram', hint: 'быстрее всего', value: null, href: null },
@@ -657,10 +637,7 @@ function ContactCard({ entry }: { entry: (typeof CONTACTS)[number] }) {
   );
 }
 
-/**
- * Store badges in the native dark style. Honest ones: the apps are being
- * built, so the badge says "скоро" instead of pretending to link anywhere.
- */
+/** Store badges in the native dark style. */
 function StoreBadge({ kind }: { kind: 'apple' | 'play' }) {
   return (
     <span

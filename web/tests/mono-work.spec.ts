@@ -1,8 +1,4 @@
-/*
- * The same tests as on the phone, over the same code. If a platform ever
- * needs its own copy of one of these, something upstream has already gone
- * wrong.
- */
+/* The same tests as on the phone, over the same code. */
 import { describe, expect, it } from 'vitest';
 
 import { MonoStatementItem } from '@/lib/mono/mono';

@@ -1,11 +1,6 @@
 namespace Shifter.Domain.Entities;
 
-/// <summary>
-/// Turns a repeating event's rule into concrete dates inside a window.
-/// Pure on purpose: the calendar, the ICS feed and the tests all ask the
-/// same function, so they can never disagree about what "every Tuesday"
-/// means.
-/// </summary>
+/// <summary>Turns a repeating event's rule into concrete dates inside a window.</summary>
 public static class EventRecurrence
 {
     public static IEnumerable<DateOnly> Occurrences(Event item, DateOnly from, DateOnly to)

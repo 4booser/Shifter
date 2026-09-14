@@ -8,18 +8,7 @@ import { loadCatalogues, reload } from '@/lib/store/calendar';
 import { Alert } from '@/components/ui/bits';
 import { Modal } from '@/components/ui/modal';
 
-/**
- * A year of records carried in from whatever somebody used before.
- *
- * Nobody retypes a year. The alternative to importing is not a tidier
- * database — it is the person deciding this app starts empty and theirs does
- * not, and going back to theirs.
- *
- * Two steps, and the first writes nothing. The file goes up, the server
- * guesses which column is which, and the guess arrives here to be corrected.
- * A confident import that filed tips as wages would be indistinguishable from
- * a correct one a month later, which is why the guess is never trusted.
- */
+/** A year of records carried in from whatever somebody used before. */
 
 interface Preview {
   header: string[];
@@ -107,9 +96,7 @@ export function ForeignImportModal({ open, onClose }: { open: boolean; onClose: 
 
       setDone((await send('csv', body)) as { days: number; skipped: number; places: number });
 
-      // The import can create places, so the catalogues are reloaded too —
-      // a calendar full of days pointing at templates the sidebar has never
-      // heard of looks broken in a way nobody can act on.
+      // The import can create places, so the catalogues are reloaded too — a calendar full of days pointing at…
       await loadCatalogues();
       reload();
     } catch (caught) {
@@ -169,9 +156,7 @@ export function ForeignImportModal({ open, onClose }: { open: boolean; onClose: 
             ))}
           </div>
 
-          {/* The file has hours but no clock. The app does not invent an
-              evening out of a row that only says eight hours — the person
-              picks the hour and owns that choice. */}
+          {/* The file has hours but no clock. */}
           <label className="mb-3 flex items-center gap-2">
             <span className="w-28 flex-none text-[0.82rem] text-muted">{t('Day starts at')}</span>
             <input

@@ -3,33 +3,7 @@ using Shifter.Application.Common.Exceptions;
 
 namespace Shifter.Application.Features.Webhooks.Services;
 
-/// <summary>
-/// The endpoint's translation table, turning whatever a sender calls its fields
-/// into the names this application reads.
-///
-/// It exists because every till and every rota exporter has its own shape, and
-/// the alternative — a parser per provider, shipped in a release — means nobody
-/// can connect anything the day they need to. A mapping is configuration: the
-/// person pastes one example payload, names the fields, and it works.
-///
-/// The table is flat and its keys are canonical field names:
-///
-/// <code>
-/// {
-///   "$root": "data.object",          // where the useful part of the body starts
-///   "date": "closed_at",
-///   "tips": "totals.tip_money",
-///   "sales": "line_items",           // the array
-///   "sales.name": "catalogue.name",  // read inside each element of it
-///   "sales.quantity": "qty",
-///   "$divide": { "tips": 100 },      // the sender counts in cents
-///   "worked": "=true"                // a literal, for what it never sends
-/// }
-/// </code>
-///
-/// A field with no entry falls back to its canonical name, so a sender that
-/// already speaks the shape needs no mapping at all.
-/// </summary>
+/// <summary>The endpoint's translation table, turning whatever a sender calls its fields into the names this application…</summary>
 public sealed class PayloadMapping
 {
     /// <summary>A sender that already speaks the canonical shape.</summary>
@@ -116,11 +90,7 @@ public sealed class PayloadMapping
         return new PayloadMapping(from, paths, divide);
     }
 
-    /// <summary>
-    /// Where reading starts. Providers habitually wrap the interesting object in
-    /// an envelope of event ids and types, and $root skips past it once instead
-    /// of prefixing every single path.
-    /// </summary>
+    /// <summary>Where reading starts.</summary>
     public JsonElement Root(JsonElement body)
     {
         if (string.IsNullOrWhiteSpace(_root)) return body;
@@ -129,12 +99,7 @@ public sealed class PayloadMapping
             $"The payload has nothing at $root '{_root}'.");
     }
 
-    /// <summary>
-    /// The value for a canonical field, or null when the payload does not carry
-    /// it. <paramref name="fallback"/> is the path used when the mapping says
-    /// nothing — the field's own name for a top-level field, the bare name for
-    /// one read inside an array element.
-    /// </summary>
+    /// <summary>The value for a canonical field, or null when the payload does not carry it.</summary>
     public JsonElement? Read(JsonElement source, string field, string? fallback = null)
     {
         if (!_paths.TryGetValue(field, out string? path))
@@ -149,18 +114,11 @@ public sealed class PayloadMapping
         return Resolve(source, path);
     }
 
-    /// <summary>
-    /// Applies the field's scale, if it has one. Cents are the case this exists
-    /// for: a payment provider sends 4250 and the calendar means 42.50.
-    /// </summary>
+    /// <summary>Applies the field's scale, if it has one.</summary>
     public decimal Scale(string field, decimal value)
         => _divide.TryGetValue(field, out decimal by) ? value / by : value;
 
-    /// <summary>
-    /// Walks a dotted path, with [n] for array elements: "data.items[0].total".
-    /// Missing is null rather than an error — most fields are optional, and the
-    /// caller knows which of its own are not.
-    /// </summary>
+    /// <summary>Walks a dotted path, with [n] for array elements: "data.items[0].total".</summary>
     private static JsonElement? Resolve(JsonElement source, string path)
     {
         if (string.IsNullOrWhiteSpace(path)) return null;
@@ -198,10 +156,7 @@ public sealed class PayloadMapping
         return current.ValueKind == JsonValueKind.Null ? null : current;
     }
 
-    /// <summary>
-    /// A constant written into the mapping. Parsed as JSON first so "=true" and
-    /// "=30" arrive as a boolean and a number; anything else stays a string.
-    /// </summary>
+    /// <summary>A constant written into the mapping.</summary>
     private static JsonElement Literal(string value)
     {
         try

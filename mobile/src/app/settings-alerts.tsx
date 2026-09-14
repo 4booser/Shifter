@@ -47,11 +47,7 @@ function NudgeRow(props: {
   );
 }
 
-/**
- * Everything that arrives on its own: the three pushes and the month's
- * letter. On a simulator there is no push service — the screen says so
- * instead of showing switches that would do nothing.
- */
+/** Everything that arrives on its own: the three pushes and the month's letter. */
 export default function SettingsAlertsScreen() {
   const router = useRouter();
   const scheme = useColorScheme();

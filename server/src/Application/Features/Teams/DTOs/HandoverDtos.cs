@@ -1,9 +1,6 @@
 namespace Shifter.Application.Features.Teams.DTOs;
 
-/// <summary>
-/// The note the shift going home leaves for the shift coming in, and who wrote
-/// it. A handover with no name on it is a rumour.
-/// </summary>
+/// <summary>The note the shift going home leaves for the shift coming in, and who wrote it.</summary>
 public record HandoverDto(
     string date,
     string text,
@@ -12,11 +9,7 @@ public record HandoverDto(
 
 public record HandoverSaveDto(string? date, string? text);
 
-/// <summary>
-/// Something the room does not have, or something that is broken. Carries the
-/// day it was raised, because a grinder broken for three weeks is a different
-/// conversation from one broken this morning.
-/// </summary>
+/// <summary>Something the room does not have, or something that is broken.</summary>
 public record StopItemDto(
     int id,
     /// <summary>stop or broken.</summary>

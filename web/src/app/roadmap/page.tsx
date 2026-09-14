@@ -9,11 +9,7 @@ const BUILT_ON: string | null = process.env.NEXT_PUBLIC_BUILT_ON
 
 import { useReveal } from '@/lib/fx';
 
-/**
- * Open development, as a page: what shipped, what is being built, what is
- * queued — with the honest score up top. Hand-updated with each release
- * wave; the counts are the plan's real counts, not marketing.
- */
+/** Open development, as a page: what shipped, what is being built, what is queued — with the honest score up top. */
 const SHIPPED: { icon: string; title: string; note: string }[] = [
   { icon: '📅', title: 'Календарь смен с деньгами', note: 'шаблоны, undo-стек, drag&drop, мультивыбор, клавиатура' },
   { icon: '⏱️', title: 'Живая смена', note: 'фактические часы, перерывы, автозавершение, гео-подсказка' },
@@ -42,14 +38,7 @@ const BUILDING: { icon: string; title: string; note: string }[] = [
   { icon: '⭐', title: 'Рейтинги глубже', note: 'отзывы в анкетах и профилях, «позвать снова»' },
 ];
 
-/*
- * Что ещё не сделано — и только оно.
- *
- * Четыре пункта отсюда уже стояли выше, среди сделанного: сброс пароля по
- * почте, обмен сменами, ночные надбавки и отпуск с больничным. Публичная
- * карта, обещающая то, что человек может открыть прямо сейчас, читается как
- * заброшенная — и портит процент, который сама же считает.
- */
+/* Что ещё не сделано — и только оно. */
 const QUEUED: string[] = [
   'Виджеты и живая смена на локскрине',
   'Сторис-карточка недели 9:16',

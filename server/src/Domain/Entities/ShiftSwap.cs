@@ -9,12 +9,7 @@ public enum SwapStatus
     Cancelled = 3,
 }
 
-/// <summary>
-/// "I take your Wednesday, you take my Friday." A cover hands a shift one
-/// way; a swap trades two, and only when both people agree. Each half is
-/// copied onto the row at proposal time, so the offer still reads correctly
-/// after the placements themselves are gone.
-/// </summary>
+/// <summary>"I take your Wednesday, you take my Friday." A cover hands a shift one way; a swap trades two, and only when…</summary>
 public sealed class ShiftSwap
 {
     public int Id { get; set; }

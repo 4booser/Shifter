@@ -1,9 +1,6 @@
 namespace Shifter.Application.Features.business.DTOs;
 
-/// <summary>
-/// An amount to aim for. `anchor` is null for a standing goal — every month,
-/// every day, whichever `period` says — and set to name one period alone.
-/// </summary>
+/// <summary>An amount to aim for.</summary>
 public record GoalItemDto(
     int id,
     string period,
@@ -18,10 +15,7 @@ public record GoalItemDto(
 public record GoalSaveDto(
     string period,
     decimal amount,
-    /// <summary>
-    /// Any date inside the period being named; absent means the standing goal
-    /// for that period.
-    /// </summary>
+    /// <summary>Any date inside the period being named; absent means the standing goal for that period.</summary>
     DateOnly? anchor,
     string? note
     );

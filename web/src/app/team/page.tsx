@@ -22,11 +22,7 @@ export default function TeamPage() {
   );
 }
 
-/**
- * Team membership: create, join, invite, leave. The rota itself lives on the
- * schedule page — a grid that wide deserves the width, and the things people
- * do rarely do not.
- */
+/** Team membership: create, join, invite, leave. */
 function TeamAdmin() {
   const revealHost = useReveal<HTMLDivElement>();
   const { t, n } = useI18n();
@@ -203,24 +199,7 @@ function TeamAdmin() {
         <p className="field-hint mt-1.5">{t('Ask whoever runs the rota for the six-letter code.')}</p>
       </section>
 
-      {/* ==== The second factor, offered where it becomes relevant ====
-
-          A team owner sees the hours and — where a colleague has chosen to
-          share it — the rate of everybody on the rota. That is the most
-          sensitive thing this app holds about anybody but its owner, and
-          two-factor is optional for an ordinary account and should not be
-          for that.
-
-          The wording used to promise «увидите чужой заработок» flat out, to
-          every owner, including one whose whole crew shares nothing. Nobody
-          on that rota had agreed to any such thing. The rota screen already
-          says the conditional version, off a flag the server computes; this
-          one now says what is true before anybody has decided anything.
-
-          Offered here rather than enforced: the rota still works without it,
-          and only other people's money waits. Shutting somebody out of a team
-          they own to make a point about security makes the point at the wrong
-          person. */}
+      {/* ==== The second factor, offered where it becomes relevant ==== A team owner sees the hours and — where a colle */}
       {twoFactor === false && teams.some((team) => team.is_owner) && (
         <Alert kind="info">
           <span className="flex flex-wrap items-center gap-2">

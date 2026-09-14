@@ -1,15 +1,6 @@
 import { CalendarDayData, CalendarEvent } from '../calendar/models';
 
-/**
- * Builds an iCalendar file from the shifts and events on screen, so a rota can
- * be opened in whatever calendar the phone already uses. Generated in the
- * browser like the CSV: the data is loaded, and a download endpoint would need
- * the token in a query string to work from a plain link.
- *
- * This is a file, not a subscription — it is a snapshot, and re-exporting after
- * a change replaces the entries rather than updating them in place. That is
- * what the stable UIDs below are for.
- */
+/** Builds an iCalendar file from the shifts and events on screen, so a rota can be opened in whatever calendar… */
 
 export interface IcsOptions {
   days: CalendarDayData[];
@@ -27,21 +18,9 @@ function escapeText(value: string): string {
     .replace(/\r?\n/g, '\\n');
 }
 
-/**
- * RFC 5545 lines are folded at 75 octets, continued with a leading space. Long
- * shift names in Cyrillic reach that in about thirty characters, so this is not
- * an edge case — an unfolded file is simply rejected by some calendars.
- */
+/** RFC 5545 lines are folded at 75 octets, continued with a leading space. */
 function fold(line: string): string {
-  /*
-   * Octets, not characters — and never through the middle of one.
-   *
-   * The limit in RFC 5545 is bytes, and this counted string length: «Вечер в
-   * баре» is two bytes a letter and a shift symbol is four, so a line this
-   * called seventy-five could leave as a hundred and fifty and be refused by
-   * a strict reader. Slicing by code unit could also cut an emoji in half and
-   * emit broken UTF-8 — so the walk is over whole code points.
-   */
+  /* Octets, not characters — and never through the middle of one. */
   const bytes = (text: string) => new TextEncoder().encode(text).length;
 
   if (bytes(line) <= 75) return line;
@@ -98,9 +77,7 @@ export function buildIcs({ days, events, calendarName }: IcsOptions): string {
 
   for (const day of days) {
     for (const shift of day.shifts) {
-      // A night shift ends on the clock before it starts, so its end belongs to
-      // the next day. Without this the entry collapses to a negative span and
-      // calendars either drop it or draw it backwards.
+      // A night shift ends on the clock before it starts, so its end belongs to the next day.
       const overnight = shift.end_time <= shift.start_time;
       const endDate = overnight ? dayAfter(day.date).replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3') : day.date;
 

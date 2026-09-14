@@ -2,11 +2,7 @@ import { CalendarDayData } from './models';
 import { shiftDays } from './calendar-date';
 import { remember } from '@/lib/api/http';
 
-/**
- * Achievements are computed, never stored: the calendar is the source of
- * truth and a badge is just a question asked of it. Only the celebration is
- * remembered locally, so the same unlock never fires twice on one browser.
- */
+/** Achievements are computed, never stored: the calendar is the source of truth and a badge is just a question… */
 
 export interface AchievementStats {
   shifts: number;
@@ -132,10 +128,7 @@ export function unlockedIds(stats: AchievementStats): string[] {
   return ACHIEVEMENTS.filter((def) => def.progressOf(stats) >= def.target).map((def) => def.id);
 }
 
-/**
- * Which unlocks have never been celebrated on this browser. Recording them
- * immediately means a burst of confetti fires once, not on every visit.
- */
+/** Which unlocks have never been celebrated on this browser. */
 export function claimNewUnlocks(stats: AchievementStats): AchievementDef[] {
   if (typeof localStorage === 'undefined') return [];
 

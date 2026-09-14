@@ -1,15 +1,6 @@
 namespace Shifter.Domain.Entities;
 
-/// <summary>
-/// The arithmetic on a tax profile: what has come in, what that costs by the
-/// person's own figures, and when their own stated ceiling runs out.
-///
-/// Pure, and it never invents a rate. Given no percentage it reports no
-/// percentage tax; given no ceiling it says nothing about a ceiling. The whole
-/// value of the feature is in the second half — a running total against a limit
-/// is the one thing nobody can keep in their head, and the one thing people
-/// find out too late.
-/// </summary>
+/// <summary>The arithmetic on a tax profile: what has come in, what that costs by the person's own figures, and when…</summary>
 public static class TaxYear
 {
     public sealed record Reading(
@@ -22,19 +13,10 @@ public static class TaxYear
         decimal Total,
         /// <summary>Share of their stated ceiling used, 0..1. Null without one.</summary>
         decimal? LimitUsed,
-        /// <summary>
-        /// Roughly when the ceiling is reached at the pace so far. Null where
-        /// there is no ceiling, no pace, or the year ends first.
-        /// </summary>
+        /// <summary>Roughly when the ceiling is reached at the pace so far.</summary>
         DateOnly? LimitOn);
 
-    /// <summary>
-    /// Below this many days of the year, a pace is not a pace.
-    ///
-    /// Two weeks of January projected across twelve months is arithmetic, not
-    /// a forecast, and it would announce a ceiling breach to somebody who had
-    /// one good fortnight.
-    /// </summary>
+    /// <summary>Below this many days of the year, a pace is not a pace.</summary>
     public const int PaceDays = 45;
 
     public static Reading Read(TaxProfile profile, decimal income, DateOnly today)
@@ -71,14 +53,7 @@ public static class TaxYear
             Crossing(profile, income, today));
     }
 
-    /// <summary>
-    /// When the ceiling is reached if the year carries on as it has.
-    ///
-    /// A straight line through the pace so far, which is the only projection
-    /// this data supports and is said as such wherever it is shown. Null once
-    /// the date would fall outside the year: "you will not reach it" is the
-    /// answer, and a date in the following March would read as a threat.
-    /// </summary>
+    /// <summary>When the ceiling is reached if the year carries on as it has.</summary>
     private static DateOnly? Crossing(TaxProfile profile, decimal income, DateOnly today)
     {
         if (profile.AnnualLimit is not decimal limit || limit <= 0m) return null;

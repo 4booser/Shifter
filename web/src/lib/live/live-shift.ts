@@ -7,12 +7,7 @@ import { ShiftTemplate, toSavePayload } from '../calendar/models';
 import { saveDay, useCalendar } from '../store/calendar';
 import { remember } from '@/lib/api/http';
 
-/**
- * A shift being worked right now. It lives in the browser, not on the server:
- * until the person clocks out nothing has been earned yet, and the calendar
- * only records days that happened. Surviving a reload matters more than
- * syncing across devices — a shift is worked on one phone.
- */
+/** A shift being worked right now. */
 
 const STORAGE_KEY = 'shifter.liveShift';
 
@@ -26,16 +21,7 @@ export interface LiveShift {
   breakMs: number;
   /** Epoch of the pause running right now; null while on the clock. */
   pausedAt: number | null;
-  /**
-   * When a timed break is due to end, in epoch milliseconds.
-   *
-   * A break nobody started on time is a break nobody takes. Set alongside the
-   * pause so the screen can count down to it rather than asking somebody to
-   * watch a clock in a room where nobody is watching a clock.
-   *
-   * Null during an untimed pause: stopping for a minute is not a break with a
-   * length, and pretending it has one would end it with an alarm.
-   */
+  /** When a timed break is due to end, in epoch milliseconds. */
   breakUntil?: number | null;
 }
 
@@ -103,13 +89,7 @@ export function pauseLiveShift(): void {
   write({ ...live, pausedAt: Date.now(), breakUntil: null });
 }
 
-/**
- * A break of a stated length, counted down.
- *
- * A break nobody started on time is a break nobody takes, and a break nobody
- * ended on time is a break somebody gets shouted at for. The clock is the
- * whole feature; the pause underneath it already existed.
- */
+/** A break of a stated length, counted down. */
 export function startTimedBreak(minutes: number): void {
   const live = useLive.getState().live;
 
@@ -172,11 +152,7 @@ export interface ShiftDone {
 /** Fired on window after a live shift lands on its day. */
 export const SHIFT_DONE_EVENT = 'shifter:shift-done';
 
-/**
- * Clocks out: the shift lands on its day as worked, on top of whatever the
- * day already holds. The server then prices it — the live counter was only
- * ever a preview — and the result goes out as an event for the done-card.
- */
+/** Clocks out: the shift lands on its day as worked, on top of whatever the day already holds. */
 export async function finishLiveShift(template: ShiftTemplate): Promise<void> {
   const live = useLive.getState().live;
 
@@ -243,12 +219,7 @@ export interface LiveTick {
   planned: number;
 }
 
-/**
- * What the counter shows at a moment in time. Hourly pay meters by the
- * clock with pauses taken out; a fixed day rate fills in proportionally to
- * the planned hours; a weekly or monthly wage cannot honestly tick
- * per-minute, so it does not.
- */
+/** What the counter shows at a moment in time. */
 export function liveTick(template: ShiftTemplate, live: LiveShift | number, now: number): LiveTick {
   const elapsed =
     typeof live === 'number' ? Math.max(0, now - live) : workedMs(live, now);

@@ -30,31 +30,14 @@ export function addMonths({ year, month }: YearMonth, delta: number): YearMonth 
   return { year: shifted.getFullYear(), month: shifted.getMonth() + 1 };
 }
 
-/* These are plain functions, so they cannot reach the settings the way a
-   component can; the caller passes the language it already holds. English is the
-   default because it is the app's own fallback language, and because the tests
-   call these directly. */
+/* These are plain functions, so they cannot reach the settings the way a component can; the caller passes the… */
 
-/**
- * A locale string with its first letter lifted, and only its first.
- *
- * `text-transform: capitalize` lifts every word, which in Russian and
- * Ukrainian turns «сентябрь 2026 г.» into «Сентябрь 2026 Г.» and «вторник,
- * 1 сентября» into «Вторник, 1 Сентября». A sentence starts once.
- */
+/** A locale string with its first letter lifted, and only its first. */
 export function sentenceCase(text: string, locale = 'en'): string {
   return text.charAt(0).toLocaleUpperCase(locale) + text.slice(1);
 }
 
-/**
- * «Сентябрь 2026 г.» — capitalised here, not by CSS.
- *
- * Russian and Ukrainian name a month in lower case and abbreviate the year to
- * «г.», and every heading in the app used `text-transform: capitalize` to
- * lift the first letter. That rule lifts every word: eleven headings across
- * the app read «Сентябрь 2026 Г.», with a capital on an abbreviation that
- * has no business carrying one. A sentence starts once.
- */
+/** «Сентябрь 2026 г.» — capitalised here, not by CSS. */
 export function monthLabel({ year, month }: YearMonth, locale = 'en'): string {
   const said = new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' })
     .format(new Date(year, month - 1, 1));
@@ -77,13 +60,7 @@ export function formatDayLabel(key: string, locale = 'en'): string {
   );
 }
 
-/**
- * The same day, short: «вт, 1 сент.».
- *
- * The long form runs to a hundred and fifty pixels, and in a panel heading
- * beside a sum it was being cut to «пусто · вторник, 1 сентя…». A date that
- * ends mid-word is worse than an abbreviated one.
- */
+/** The same day, short: «вт, 1 сент.». */
 export function formatDayLabelShort(key: string, locale = 'en'): string {
   return sentenceCase(
     new Intl.DateTimeFormat(locale, {
@@ -95,26 +72,12 @@ export function formatDayLabelShort(key: string, locale = 'en'): string {
   );
 }
 
-/**
- * A month's short name in the reader's language, from its number.
- *
- * The seasonality chart carried its own list of «Jan, Feb, Mar» and passed
- * them through the dictionary, which had never been given translations for
- * them — so a year's shape was labelled in English under a Russian heading.
- * The platform knows the twelve names in every language it has.
- */
+/** A month's short name in the reader's language, from its number. */
 export function monthShort(month: number, locale = 'en'): string {
   return new Intl.DateTimeFormat(locale, { month: 'short' }).format(new Date(2000, month - 1, 1));
 }
 
-/**
- * One date as a person says it: «15 сент. 2026», «3 марта» when it is this year.
- *
- * The database's own spelling reached the screen in eleven places — a payout
- * received on «2026-08-31», a medical book expiring on «2027-04-02», the
- * period line on the card people post. Same rule as the range below it: the
- * year appears only when it is not the current one.
- */
+/** One date as a person says it: «15 сент. */
 export function formatDate(key: string, locale = 'en'): string {
   const date = fromKey(key);
   const dated = date.getFullYear() !== new Date().getFullYear();
@@ -126,13 +89,7 @@ export function formatDate(key: string, locale = 'en'): string {
   }).format(date);
 }
 
-/**
- * A pay period as a person says it: «1 — 15 марта», «16 марта — 2 апреля».
- *
- * The payout list printed «2026-03-01 — 2026-03-15», which is how a database
- * says it. The year appears only when the period is not in this one, because
- * on a screen about money owed this month it is four characters of noise.
- */
+/** A pay period as a person says it: «1 — 15 марта», «16 марта — 2 апреля». */
 export function formatPeriod(from: string, to: string, locale = 'en'): string {
   const start = fromKey(from);
   const end = fromKey(to);
@@ -150,10 +107,7 @@ export function formatPeriod(from: string, to: string, locale = 'en'): string {
   return `${(sameMonth ? day : dayMonth).format(start)} — ${dayMonth.format(end)}`;
 }
 
-/**
- * Always six weeks, so the grid keeps its height when the month changes and
- * the layout below it does not jump.
- */
+/** Always six weeks, so the grid keeps its height when the month changes and the layout below it does not jump. */
 export function buildMonthGrid(
   { year, month }: YearMonth,
   mondayFirst = true,
@@ -190,10 +144,7 @@ export function buildMonthGrid(
   return weeks;
 }
 
-/**
- * Built from local components on purpose. toISOString() converts to UTC first,
- * which turns the 1st into the 31st for anyone east of Greenwich.
- */
+/** Built from local components on purpose. */
 function toKey(date: Date): string {
   const year = date.getFullYear();
   const month = `${date.getMonth() + 1}`.padStart(2, '0');
@@ -228,10 +179,7 @@ export function keysBetween(a: string, b: string): string[] {
   return keys;
 }
 
-/**
- * A rotating rota: `on` days worked, then `off` days free, repeating from the
- * start date for the given number of days.
- */
+/** A rotating rota: `on` days worked, then `off` days free, repeating from the start date for the given number… */
 export function rotationKeys(start: string, on: number, off: number, span: number): string[] {
   const cycle = on + off;
 

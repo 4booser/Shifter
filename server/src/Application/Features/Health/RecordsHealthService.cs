@@ -5,16 +5,7 @@ using Shifter.Infrastructure.Persistence.DbContexts;
 
 namespace Shifter.Application.Features.Health;
 
-/// <summary>
-/// The holes in the record, said out loud as a map — not a moral.
-///
-/// The analytics are exactly as good as the records under them: a worked day
-/// with no tips figure quietly understates every «чай по дням недели»; a
-/// place without a city never reaches the cities comparison; a shift without
-/// actual times feeds the sleep windows its planned hours. Nobody sees these
-/// gaps in one place, so nobody closes them. This lists each kind, how many,
-/// a few examples, and which feature is undercounting because of it.
-/// </summary>
+/// <summary>The holes in the record, said out loud as a map — not a moral.</summary>
 public sealed class RecordsHealthService
 {
     private readonly ShifterDbContext _db;

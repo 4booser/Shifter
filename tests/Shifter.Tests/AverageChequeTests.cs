@@ -6,12 +6,7 @@ using Xunit;
 
 namespace Shifter.Tests;
 
-/// <summary>
-/// Takings on their own do not describe an evening. Twelve thousand off forty
-/// covers is a different night from twelve thousand off a hundred and twenty,
-/// and the average cheque — not the total — is the language a manager and a
-/// bartender actually argue in.
-/// </summary>
+/// <summary>Takings on their own do not describe an evening.</summary>
 public class AverageChequeTests
 {
     private readonly FakeShifterQuery _query = new();

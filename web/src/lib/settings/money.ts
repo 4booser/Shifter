@@ -25,12 +25,7 @@ export function formatMoney(settings: Settings, amount: number): string {
   return currencyBefore ? `${sign}${currency}${text}` : `${sign}${text} ${currency}`;
 }
 
-/**
- * An amount labelled with an ISO code rather than the person's own symbol.
- * Used where two currencies sit side by side: printing both with the same
- * mark would make the comparison meaningless, which is the whole reason the
- * two figures are next to each other.
- */
+/** An amount labelled with an ISO code rather than the person's own symbol. */
 export function formatMoneyIn(settings: Settings, code: string, amount: number): string {
   const { hideAmounts } = settings;
 
@@ -51,9 +46,7 @@ export function formatMoneyCompact(settings: Settings, amount: number): string {
 
   if (hideAmounts) return currencyBefore ? `${currency}•••` : `••• ${currency}`;
 
-  // The same sign the long form uses. An axis that reached below zero printed
-  // «-100 ₴» beside «−77 ₴» in the tile above it — two minus signs for one
-  // idea, a hyphen standing in for the real one.
+  // The same sign the long form uses.
   const sign = amount < 0 ? '−' : '';
 
   const text = Math.abs(amount).toLocaleString(settings.language, {
@@ -72,12 +65,7 @@ export function useMoney() {
 
   return {
     format: (amount: number | null | undefined) => formatMoney(settings, amount ?? 0),
-    /**
-     * An amount in the currency it is actually in. A place carries its own
-     * code, and printing every place's earnings with the app's symbol made a
-     * month in Kraków read as a tenfold overstatement of somebody's wages.
-     * An empty or unset code means "the same as the app's".
-     */
+    /** An amount in the currency it is actually in. */
     formatIn: (code: string | null | undefined, amount: number | null | undefined) =>
       code != null && code.length === 3
         ? formatMoneyIn(settings, code, amount ?? 0)

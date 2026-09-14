@@ -14,10 +14,7 @@ public interface IShifterCommand
     Task<int> CountShiftsAtLocationAsync(int locationId, CancellationToken ct);
     Task DeleteLocationAsync(Location location, CancellationToken ct);
 
-    /// <summary>
-    /// Clears the place off every template pointing at it, so the place can go
-    /// without taking the templates — or the days they sit on — with it.
-    /// </summary>
+    /// <summary>Clears the place off every template pointing at it, so the place can go without taking the templates — or the…</summary>
     Task DetachShiftsFromLocationAsync(int locationId, CancellationToken ct);
 
     /// <summary>How many recorded days used this position.</summary>
@@ -27,10 +24,7 @@ public interface IShifterCommand
     Task<bool> AddPayoutAsync(Payout payout, CancellationToken ct);
     Task DeletePayoutAsync(Payout payout, CancellationToken ct);
 
-    /// <summary>
-    /// Deletes every payment and period settlement the account has. Returns
-    /// how many payments went, so the caller can say what happened out loud.
-    /// </summary>
+    /// <summary>Deletes every payment and period settlement the account has.</summary>
     Task<int> WipePayoutsAsync(int userId, CancellationToken ct);
     Task<bool> AddExpenseAsync(WorkExpense expense, CancellationToken ct);
     Task DeleteExpenseAsync(WorkExpense expense, CancellationToken ct);
@@ -48,10 +42,7 @@ public interface IShifterCommand
     Task DeleteExpenseRuleAsync(ExpenseRule rule, CancellationToken ct);
 
     Task<bool> AddEventTemplateAsync(EventTemplate item, CancellationToken ct);
-    /// <summary>
-    /// Detaches the events that came from it, then removes the row. The days
-    /// keep their own copy of everything, so they survive the palette entry.
-    /// </summary>
+    /// <summary>Detaches the events that came from it, then removes the row.</summary>
     Task DeleteEventTemplateAsync(EventTemplate item, CancellationToken ct);
 
     Task<bool> AddGoalAsync(Goal item, CancellationToken ct);
@@ -64,50 +55,26 @@ public interface IShifterCommand
     /// <summary>Appends one trophy row; the shelf is append-only by design.</summary>
     Task AddGoalCheerAsync(GoalCheer cheer, CancellationToken ct);
 
-    /// <summary>
-    /// Creates the day or replaces its contents. Keyed on (UserId, Date), which
-    /// carries a unique index, so a day cannot end up split across two rows.
-    /// </summary>
+    /// <summary>Creates the day or replaces its contents.</summary>
     Task<Day> UpsertDayAsync(Day incoming, CancellationToken ct);
 
-    /// <summary>
-    /// Colours many days at once, each with its own value, creating the days
-    /// that do not exist yet. A month painted a day at a time is thirty round
-    /// trips and thirty chances for one of them to fail halfway.
-    /// </summary>
+    /// <summary>Colours many days at once, each with its own value, creating the days that do not exist yet.</summary>
     Task<Day[]> ApplyColourAsync(
         int userId,
         Dictionary<DateOnly, string?> colours,
         CancellationToken ct);
 
-    /// <summary>
-    /// Writes what a delivery brought into one day without disturbing the rest
-    /// of it. The day endpoint replaces wholesale because the client always
-    /// sends the day entire; a till knows only about its own takings, and
-    /// letting it save the same way would delete the shifts sitting under them.
-    /// </summary>
+    /// <summary>Writes what a delivery brought into one day without disturbing the rest of it.</summary>
     Task<Day> MergeDaySalesAsync(int userId, DaySalesMerge incoming, CancellationToken ct);
 
-    /// <summary>
-    /// Places or corrects one shift on one day, leaving the day's other
-    /// placements and its sales alone. Matched on the template, so the same
-    /// hours delivered twice correct the placement rather than doubling it.
-    /// </summary>
+    /// <summary>Places or corrects one shift on one day, leaving the day's other placements and its sales alone.</summary>
     Task<Day> MergeDayShiftAsync(
         int userId,
         DateOnly date,
         DayShift placement,
         CancellationToken ct);
 
-    /// <summary>
-    /// Adds or removes one template across many dates, creating the missing
-    /// days, in a single save. Returns the affected days.
-    /// </summary>
-    /// <param name="today">
-    /// Where the line between "worked" and "planned" falls. Passed in rather
-    /// than read here: what day it is is a question about the people using the
-    /// app, and this layer has no business answering it in UTC.
-    /// </param>
+    /// <summary>Adds or removes one template across many dates, creating the missing days, in a single save.</summary>
     Task<Day[]> ApplyShiftAsync(
         int userId,
         DateOnly[] dates,
@@ -117,19 +84,11 @@ public interface IShifterCommand
         CancellationToken ct);
 }
 
-/// <summary>
-/// One day's worth of an incoming delivery. Every scalar is nullable and null
-/// means "not sent" rather than "set to nothing": a payload carrying only tips
-/// must not erase a note somebody typed.
-/// </summary>
+/// <summary>One day's worth of an incoming delivery.</summary>
 public sealed record DaySalesMerge(
     DateOnly Date,
     List<DaySale> Sales,
-    /// <summary>
-    /// True makes the delivery the whole truth for the day: positions it does
-    /// not mention are removed. False, the default, only touches what it names,
-    /// which leaves anything entered by hand where it was.
-    /// </summary>
+    /// <summary>True makes the delivery the whole truth for the day: positions it does not mention are removed.</summary>
     bool Replace,
     decimal? Tips,
     decimal? TipsCash,

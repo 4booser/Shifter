@@ -1,8 +1,4 @@
-/*
- * The same tests as on the phone, over the same code. If a platform ever
- * needs its own copy of one of these, something upstream has already gone
- * wrong.
- */
+/* The same tests as on the phone, over the same code. */
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -46,10 +42,7 @@ const item = (over: Partial<MonoStatementItem>): MonoStatementItem => ({
 
 const at = (iso: string) => Math.floor(new Date(iso).getTime() / 1000);
 
-/**
- * The bank sends hundredths and a sign. Getting either wrong is not a rounding
- * error — it is a wage a hundred times too big, or a purchase counted as pay.
- */
+/** The bank sends hundredths and a sign. */
 describe('money as the bank sends it', () => {
   it('reads hundredths as whole money', () => {
     expect(fromMinor(2590000)).toBe(25900);
@@ -240,12 +233,7 @@ describe('finding the wage in a statement', () => {
   });
 });
 
-/**
- * One venue pays from more than one place: the official wage from a company,
- * the remainder from a sole trader or the manager's own card. Everything here
- * exists because remembering a single payer per place would have matched half
- * of somebody's money and left the other half looking like a stranger.
- */
+/** One venue pays from more than one place: the official wage from a company, the remainder from a sole trader… */
 describe('a venue that pays from several payers', () => {
   const expected = {
     locationId: 1,

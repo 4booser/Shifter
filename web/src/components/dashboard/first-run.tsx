@@ -10,20 +10,7 @@ import { useMoney } from '@/lib/settings/money';
 import { loadCatalogues, reload } from '@/lib/store/calendar';
 import { Alert } from '@/components/ui/bits';
 
-/**
- * Three questions, and then a real number.
- *
- * The old first run was a checklist: it told somebody to add a place, make a
- * shift and paint the calendar, and then left them to do all three. Between
- * registering and seeing anything worth seeing there were half a dozen screens,
- * and people leave in that gap — not because the app is hard, but because it
- * has not yet shown them a single thing they did not already know.
- *
- * So it asks the three things it cannot guess, does the rest itself, and lands
- * on what the month comes to. Everything else — tip-out, meals, night rates,
- * the pay period — is a setting they can find later, once the app has earned
- * the right to ask.
- */
+/** Three questions, and then a real number. */
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 export function FirstRun() {
@@ -40,11 +27,7 @@ export function FirstRun() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  /**
-   * The days left in this month that fall on the chosen weekdays. Only the
-   * rest of the month: filling in days somebody has already worked would be
-   * inventing their past on their behalf.
-   */
+  /** The days left in this month that fall on the chosen weekdays. */
   const dates = useMemo(() => {
     const today = todayKey();
     const bounds = monthBounds(today);
@@ -81,9 +64,7 @@ export function FirstRun() {
     setError(null);
 
     try {
-      // Everything at its default except the three answers. A place has two
-      // dozen settings and not one of them is worth a question before the app
-      // has shown somebody a number.
+      // Everything at its default except the three answers.
       const place = await calendarApi.createLocation({
         name: venue.trim(),
         address: null,
@@ -274,9 +255,7 @@ export function FirstRun() {
             </div>
           </div>
 
-          {/* The point of the whole flow: a number, before anybody has done any
-              work. Rounded and labelled as what is left of the month, because
-              it is a forecast rather than a wage. */}
+          {/* The point of the whole flow: a number, before anybody has done any work. */}
           {forecast > 0 && (
             <p className="rounded-(--radius) bg-(--accent-soft) px-3 py-2.5 text-[0.95rem]">
               {t('Rest of the month:')} <b>{format(forecast)}</b>{' '}

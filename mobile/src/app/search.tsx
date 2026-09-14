@@ -22,14 +22,7 @@ import { Hit, searchDays, searchStatement } from '@/lib/search';
 import { CalendarDayData, DaysResponse, money } from '@/lib/types';
 import { useMono } from '@/store/mono';
 
-/**
- * One day out of two years of them.
- *
- * The only way back to a particular shift was scrolling the calendar, which
- * works right up until the thing being looked for is eight months back. What
- * people remember is the note they left, the name of the shift, or the number
- * — and now also who the money came from, because the bank is here too.
- */
+/** One day out of two years of them. */
 export default function SearchScreen() {
   const scheme = useColorScheme();
   const palette = Colors[scheme === 'dark' ? 'dark' : 'light'];

@@ -3,15 +3,7 @@ import { create } from 'zustand';
 
 const KEY = 'shifter.eye';
 
-/**
- * «Скрыть суммы», phone edition.
- *
- * Same construction as the language for the same reason: money() is a plain
- * function called from thirty modules, half of them not components, so the
- * shutter has to be readable synchronously at module load — and flipping it
- * remounts the root (the layout keys on it), which repaints every figure at
- * once instead of asking thirty screens to subscribe.
- */
+/** «Скрыть суммы», phone edition. */
 const stored = (): boolean => {
   try {
     return SecureStore.getItem(KEY) === 'shut';

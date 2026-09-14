@@ -61,12 +61,7 @@ export default function WebhooksPage() {
   );
 }
 
-/**
- * The webhook manager: addresses other software can post to, and what it is
- * allowed to write when it does. Built around the two things that actually go
- * wrong — a sender's fields never match ours, and a refused delivery at three
- * in the morning needs its body kept for the morning's replay.
- */
+/** The webhook manager: addresses other software can post to, and what it is allowed to write when it does. */
 function Webhooks() {
   const revealHost = useReveal<HTMLDivElement>();
   const { t, lang, num } = useI18n();

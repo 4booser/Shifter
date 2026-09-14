@@ -7,16 +7,7 @@ export interface Clopening {
   gap: number;
 }
 
-/**
- * "Clopening": closing at two and opening at eight. The industry's own word
- * for its most quietly damaging habit, and the one thing a schedule can spot
- * that a person living it often cannot — by the third one in a fortnight it
- * stops feeling unusual.
- *
- * Pure and independent of the insight engine so it can be tested against
- * real overnight arithmetic: the gap is measured from the end of one shift
- * to the start of the next, both taken as actually worked when recorded.
- */
+/** "Clopening": closing at two and opening at eight. */
 export function clopenings(
   days: readonly CalendarDayData[],
   /** A gap at or below this many hours counts. Eleven is the EU rest rule. */

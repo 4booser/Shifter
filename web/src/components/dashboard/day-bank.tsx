@@ -8,12 +8,7 @@ import { useMono } from '@/lib/mono/store';
 import { fromMinor } from '@/lib/mono/mono';
 import { Money } from '@/components/ui/bits';
 
-/**
- * What the card saw on this day — the statement's half of the story, under
- * the shift's half. The two rarely meet anywhere else: a person records a
- * shift here and reads the bank there, and the day is the natural joint.
- * Only where the bank is already connected; the panel never asks for it.
- */
+/** What the card saw on this day — the statement's half of the story, under the shift's half. */
 export function DayBank({ dayKey }: { dayKey: string }) {
   const { t } = useI18n();
   const items = useMono((state) => state.items);

@@ -10,20 +10,13 @@ public record PoolShareDto(
     /// <summary>Whether this is the caller.</summary>
     bool mine);
 
-/// <summary>
-/// The night's pool and how it divides. Everybody who worked the shift sees
-/// every share: that is not a hole in the privacy rules, it is the exact
-/// transparency a pool exists for.
-/// </summary>
+/// <summary>The night's pool and how it divides.</summary>
 public record PoolDto(
     string date,
     decimal amount,
     string? entered_by,
     PoolShareDto[] shares,
-    /// <summary>
-    /// What the percentages do not add up to. Not an error — a house often
-    /// keeps a slice — but it should be visible rather than quietly absorbed.
-    /// </summary>
+    /// <summary>What the percentages do not add up to.</summary>
     decimal unallocated);
 
 public record PoolSaveDto(string? date, decimal amount);

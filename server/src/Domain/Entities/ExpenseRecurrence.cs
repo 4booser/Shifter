@@ -1,11 +1,6 @@
 namespace Shifter.Domain.Entities;
 
-/// <summary>
-/// Turns a standing cost into the days it actually falls on.
-///
-/// Pure, so the list, the month's totals and the tests all ask the same
-/// function and cannot disagree about what "every month on the 5th" means.
-/// </summary>
+/// <summary>Turns a standing cost into the days it actually falls on.</summary>
 public static class ExpenseRecurrence
 {
     public static IEnumerable<DateOnly> Occurrences(ExpenseRule rule, DateOnly from, DateOnly to)

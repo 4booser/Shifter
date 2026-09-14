@@ -7,26 +7,10 @@ using Shifter.Infrastructure.Repositories.Interfaces;
 
 namespace Shifter.Application.Features.Teams.Services;
 
-/// <summary>
-/// The other half of a cover request. Someone could already raise a hand and
-/// say "I need this taken"; nobody could answer. These three handlers are the
-/// answer, the retraction of it, and the handover.
-///
-/// The handover deliberately does not place the shift on the other person's
-/// calendar. It could copy the times across, but the rate travels with a
-/// placement, and the rate is exactly what a team is not allowed to see about
-/// its members. So the shift leaves the owner's calendar and the person who
-/// took it puts it on their own, where their own terms apply.
-/// </summary>
+/// <summary>The other half of a cover request.</summary>
 public static class CoverRules
 {
-    /// <summary>
-    /// Whether the crew is allowed to see a shift at all — the same rule the
-    /// rota reads. Offering to cover one used to skip it, so walking ids
-    /// confirmed which hidden shifts exist and whether they were worked; where
-    /// the owner had asked for cover on a hidden shift, the offer went through
-    /// and named it back to them.
-    /// </summary>
+    /// <summary>Whether the crew is allowed to see a shift at all — the same rule the rota reads.</summary>
     public static bool Shown(CoverShift shift, Team team)
     {
         var owner = (team.Members ?? [])
@@ -36,11 +20,7 @@ public static class CoverRules
             && RotaVisibility.Allows(shift.TeamVisible, owner.PrivateByDefault);
     }
 
-    /// <summary>
-    /// Members of the team the caller belongs to. Membership is the boundary
-    /// for every operation here: a shift belonging to someone outside it is not
-    /// refused, it is not found.
-    /// </summary>
+    /// <summary>Members of the team the caller belongs to.</summary>
     public static async Task<(Team team, TeamMember caller, int[] userIds)> ContextAsync(
         ITeamRepository teams,
         int teamId,

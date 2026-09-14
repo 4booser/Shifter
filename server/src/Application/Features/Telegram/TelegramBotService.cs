@@ -26,11 +26,7 @@ public sealed class TelegramOptions
     public bool Enabled => BotToken != "";
 }
 
-/// <summary>
-/// The bot, long-polling getUpdates: no webhook, no public endpoint, one
-/// outbound connection — the shape that works from behind any NAT and
-/// needs nothing but the token. Without a token it never starts.
-/// </summary>
+/// <summary>The bot, long-polling getUpdates: no webhook, no public endpoint, one outbound connection — the shape that…</summary>
 public sealed class TelegramBotService : BackgroundService
 {
     /// <summary>Six-digit link codes, five minutes each, one node.</summary>
@@ -278,11 +274,7 @@ public sealed class TelegramBotService : BackgroundService
         return $"{label} ({date:dd.MM}):\n" + string.Join('\n', lines);
     }
 
-    /// <summary>
-    /// «Закончил»: the remembered clock-in and now become the actual edges
-    /// of the person's one template, merged onto today. More than one
-    /// template and the bot honestly refuses — it will not guess a rate.
-    /// </summary>
+    /// <summary>«Закончил»: the remembered clock-in and now become the actual edges of the person's one template, merged onto…</summary>
     private async Task<string> ClockOutAsync(
         IServiceProvider services,
         ShifterDbContext db,

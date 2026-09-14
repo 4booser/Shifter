@@ -3,13 +3,7 @@ import { ReactNode } from 'react';
 import { Button, Field, Modal, Over, Pills, Switch } from '@/components/ui/kit';
 import { cn } from '@/lib/utils';
 
-/**
- * Окна приложения.
- *
- * Собраны в одном месте, потому что собираются из одного набора частей:
- * заголовок, строка пояснения, поля, одно латунное действие. Экран, который
- * их открывает, знает только имя окна — что внутри, решается здесь.
- */
+/** Окна приложения. */
 export type Window =
   | null
   | 'goal'

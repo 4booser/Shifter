@@ -26,11 +26,7 @@ import { t } from '@/lib/i18n';
 
 type Status = 'open' | 'due' | 'overdue' | 'partial' | 'paid' | 'short' | 'over';
 
-/**
- * The аванс arrives mid-month and the расчёт closes it. Recorded as one kind of
- * payment the advance reads as an underpayment every single month, which is how
- * a warning stops being read.
- */
+/** The аванс arrives mid-month and the расчёт closes it. */
 type PayoutKind = 'settlement' | 'advance' | 'bonus' | 'cash';
 
 const KINDS: { value: PayoutKind; label: string }[] = [
@@ -106,12 +102,7 @@ const STREAM_LABEL: Record<PayPeriodRow['stream'], string> = {
   commission: 'процент',
 };
 
-
-/**
- * Money owed, money late, money in hand. The site's payouts page in the
- * pocket: the server does the reconciliation, the phone only asks and draws,
- * so "you are owed ₴N" is the same sentence in both places.
- */
+/** Money owed, money late, money in hand. */
 export default function PayoutsScreen() {
   const scheme = useColorScheme();
   const palette = Colors[scheme === 'dark' ? 'dark' : 'light'];
@@ -135,9 +126,7 @@ export default function PayoutsScreen() {
     const now = currentMonth();
     return {
       from: monthBounds(addMonths(now, -6)).from,
-      // Two months ahead, matching the web: a period due next month is money
-      // this screen exists to name, and the two clients answering «what am I
-      // owed» over different windows gave the same account two totals.
+      // Two months ahead, matching the web: a period due next month is money this screen exists to name, and the two…
       to: monthBounds(addMonths(now, 2)).to,
     };
   }, []);
@@ -227,9 +216,7 @@ export default function PayoutsScreen() {
           </View>
         )}
 
-        {/* Where an account is not connected, the shortfall above is still only
-            the app's own arithmetic. Offered here rather than anywhere else
-            because this is the screen somebody is on when they doubt it. */}
+        {/* Where an account is not connected, the shortfall above is still only the app's own arithmetic. */}
         {data !== null && bankToken == null && (data?.shortfalls.length ?? 0) > 0 && (
           <Press style={styles.connect} onPress={() => router.push('/(tabs)/bank')}>
             <Ionicons name="card-outline" size={18} color={palette.accent} />
@@ -307,9 +294,7 @@ export default function PayoutsScreen() {
               </View>
             ))}
 
-            {/* The clean slate, asked for out loud. Everything, everywhere —
-                not just the half-year on screen — because a ledger that went
-                wrong early is easier to retype than to argue with. */}
+            {/* The clean slate, asked for out loud. */}
             <Press
               style={styles.wipeAll}
               onPress={() => {
@@ -376,14 +361,7 @@ function Section({
   );
 }
 
-/**
- * What the bank already sees against this period.
- *
- * The reconciliation screen has always been able to say what a place owes.
- * Now, where somebody has connected an account, it can say whether the money
- * is sitting there — which is a different sentence entirely from "we think
- * you are owed this".
- */
+/** What the bank already sees against this period. */
 const bankSees = (
   row: PayPeriodRow,
   statement: MonoStatementItem[],
@@ -404,9 +382,7 @@ const bankSees = (
     payers[`${row.location_id}`] ?? [],
   );
 
-  // Only worth mentioning where it is recognisably this wage. A credit half
-  // the size is a different conversation, and this line is not the place for
-  // it — the bank tab is.
+  // Only worth mentioning where it is recognisably this wage.
   if (best === undefined || Math.abs(best.difference) > 0.15) return null;
 
   return {
@@ -523,11 +499,7 @@ function PeriodCard({
   );
 }
 
-/**
- * Recording a payment is one number and one date. Everything else is already
- * known from the period the person tapped, so the form is prefilled and a
- * thumb can finish it.
- */
+/** Recording a payment is one number and one date. */
 function PayoutModal({
   row,
   editing,
@@ -604,9 +576,7 @@ function PayoutModal({
             location_id: row.location_id,
             note: null,
             kind,
-            // The row knows which payment it is and showed it on screen; not
-            // sending it booked a commission against the wage, so the commission
-            // stayed overdue and the wage flipped to overpaid.
+            // The row knows which payment it is and showed it on screen; not sending it booked a commission against the…
             stream: row.stream,
           },
         });
@@ -621,9 +591,7 @@ function PayoutModal({
 
   return (
     <Modal visible={row !== null || editing !== null} animationType="slide" transparent onRequestClose={onClose}>
-      {/* A full-screen «tap outside to close». Unnamed, a screen reader
-          announces it as a button and says nothing about what it does —
-          the first thing met on entering every sheet in this app. */}
+      {/* A full-screen «tap outside to close». */}
       <Pressable
         style={styles.backdrop}
         accessibilityRole="button"

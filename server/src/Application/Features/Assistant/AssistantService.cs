@@ -8,12 +8,7 @@ using Shifter.Infrastructure.Persistence.DbContexts;
 
 namespace Shifter.Application.Features.Assistant;
 
-/// <summary>
-/// The assistant. Facts come from the same handler the calendar uses, so a
-/// figure it quotes and a figure on screen can never disagree; the model, when
-/// there is one, only chooses the words. Everything works without a key —
-/// worse prose, identical numbers.
-/// </summary>
+/// <summary>The assistant.</summary>
 public sealed class AssistantService
 {
     /// <summary>Long enough to hold a conversation, short enough to load at once.</summary>
@@ -147,11 +142,7 @@ public sealed class AssistantService
         return AssistantGaps.Find(range.days, today, lang);
     }
 
-    /// <summary>
-    /// Writes one answer back where it belongs. The day is re-read and sent
-    /// whole, so answering a question about tips cannot quietly drop the
-    /// shifts that were already on it.
-    /// </summary>
+    /// <summary>Writes one answer back where it belongs.</summary>
     public async Task AnswerGapAsync(
         int userId, string kind, DateOnly date, int? shiftId, decimal value, CancellationToken ct)
     {

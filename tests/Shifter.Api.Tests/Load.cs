@@ -6,18 +6,7 @@ using Xunit;
 
 namespace Shifter.Api.Tests;
 
-/// <summary>
-/// A few years of somebody's working life, and a stopwatch.
-///
-/// Nobody has ever measured this application against an amount of data a real
-/// person accumulates. Everything anybody has looked at was a fresh account
-/// with a handful of days in it, where a query that fans out per day and a
-/// query that does not are indistinguishable.
-///
-/// Three years is not an extreme case. It is a bartender who has had the app
-/// since it launched, which is exactly who matters most: the person with the
-/// most in it is the person least able to leave.
-/// </summary>
+/// <summary>A few years of somebody's working life, and a stopwatch.</summary>
 public static class Load
 {
     /// <summary>Shifts a week, which is what this trade actually works.</summary>
@@ -25,14 +14,7 @@ public static class Load
 
     public sealed record Seeded(int Place, int[] Shifts, int Days);
 
-    /// <summary>
-    /// Writes a working life through the real API.
-    ///
-    /// Through the API rather than straight into the tables, so what is
-    /// measured afterwards is measured against rows the application itself
-    /// produced — including every default and every derived figure it fills
-    /// in, which is where a surprise would hide.
-    /// </summary>
+    /// <summary>Writes a working life through the real API.</summary>
     public static async Task<Seeded> SeedAsync(HttpClient client, DateOnly from, DateOnly to)
     {
         var place = await CreatePlaceAsync(client);

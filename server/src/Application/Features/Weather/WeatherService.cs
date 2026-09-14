@@ -7,13 +7,7 @@ using Shifter.Infrastructure.Persistence.DbContexts;
 
 namespace Shifter.Application.Features.Weather;
 
-/// <summary>
-/// Reads somebody's own record against the sky over their own place.
-///
-/// The whole feature rests on a coincidence being checkable: the days are
-/// already recorded, the coordinates are already there for the "start a shift
-/// here?" nudge, and the archive is free. Nothing new is asked of anybody.
-/// </summary>
+/// <summary>Reads somebody's own record against the sky over their own place.</summary>
 public sealed class WeatherService
 {
     private readonly ShifterDbContext _db;
@@ -25,11 +19,7 @@ public sealed class WeatherService
         _archive = archive;
     }
 
-    /// <summary>
-    /// How far back the comparison looks. Two years is enough to hold two of
-    /// every season, and short enough that a job somebody left in 2021 does
-    /// not sit inside the average.
-    /// </summary>
+    /// <summary>How far back the comparison looks.</summary>
     private const int Years = 2;
 
     public sealed record PlaceWeather(
@@ -37,13 +27,7 @@ public sealed class WeatherService
         string Place,
         WeatherEffect.Verdict Verdict);
 
-    /// <summary>
-    /// One reading per place with enough recorded weather to support one.
-    ///
-    /// Per place rather than pooled: a terrace bar and a basement kitchen have
-    /// opposite relationships with rain, and averaging them together produces a
-    /// number that is true of neither.
-    /// </summary>
+    /// <summary>One reading per place with enough recorded weather to support one.</summary>
     public async Task<IReadOnlyList<PlaceWeather>> ReadAsync(
         int userId, DateOnly today, CancellationToken ct)
     {
@@ -124,13 +108,7 @@ public sealed class WeatherService
         return readings;
     }
 
-    /// <summary>
-    /// The weather already known, plus whatever is missing, fetched once.
-    ///
-    /// A gap in the middle of a range costs one request for the whole range
-    /// rather than one per day, and the unique index makes a repeat harmless.
-    /// The past does not change, so nothing already stored is ever re-asked.
-    /// </summary>
+    /// <summary>The weather already known, plus whatever is missing, fetched once.</summary>
     private async Task<Dictionary<DateOnly, bool>> FillAsync(
         int locationId,
         double latitude,

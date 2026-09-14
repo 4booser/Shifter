@@ -6,11 +6,7 @@ import { Palette } from '@/constants/theme';
 import { api, ApiError } from '@/lib/api';
 import { t } from '@/lib/i18n';
 
-/**
- * The debt collector, in the friendliest sense: after a worked gig both
- * sides owe each other a verdict, and this card keeps offering until every
- * one is settled. Empty — invisible; the board owes nobody a banner.
- */
+/** The debt collector, in the friendliest sense: after a worked gig both sides owe each other a verdict, and… */
 interface PendingReview {
   listing_id: number;
   listing_title: string;

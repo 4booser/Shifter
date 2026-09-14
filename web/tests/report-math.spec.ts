@@ -19,12 +19,7 @@ describe('waterfall', () => {
     expect(steps.map((step) => step.key)).toEqual(['Shifts', 'Tips', 'Tip-out', 'Gross', 'Tax', 'Net']);
   });
 
-  /*
-   * The landing the cuts hang off is the sum of the sources, not the figure
-   * that already has them taken out. Hung off `total_earned`, a month of
-   * ₴4 in shifts and ₴80 of withholding read «earned −₴76, minus ₴80,
-   * net −₴77» — three numbers that cannot all be true.
-   */
+  /* The landing the cuts hang off is the sum of the sources, not the figure that already has them taken out. */
   it('lands on the gross, so the cuts have something to come out of', () => {
     const steps = waterfall(summary);
     const gross = steps.find((step) => step.key === 'Gross');
@@ -164,11 +159,7 @@ describe('hourDial', () => {
 });
 
 describe('rateTrend', () => {
-  /*
-   * The rule the chart above it depends on. A week of two worked minutes
-   * priced the hour at −7 805 ₴ and dragged the window from «around 230» out
-   * to 1 443, flattening a year of drift onto the floor.
-   */
+  /* The rule the chart above it depends on. */
   it('needs an hour before a week has a rate', () => {
     const week = (date: string, hours: number, earned: number) => ({
       date,
@@ -282,14 +273,7 @@ describe('weekBands', () => {
   });
 });
 
-/**
- * The window a level series gets, shared with the second front.
- *
- * A rate drifting between ₴230 and ₴250 drawn from nought is a flat line at
- * the ceiling; the round-number ladder that suits a column chart is chosen
- * against a number's magnitude rather than a band's width, which is the
- * wrong tool. This was hand-rolled inside the trend line before.
- */
+/** The window a level series gets, shared with the second front. */
 describe('levelWindow', () => {
   it('opens a window around the band, not around nought', () => {
     const { base, peak } = levelWindow([230, 250]);
@@ -304,9 +288,7 @@ describe('levelWindow', () => {
     // The flag is «do not go under zero», not «always start at zero»: a band
     // with room beneath it keeps its air.
     expect(levelWindow([10, 20], { floorAtZero: true }).base).toBeGreaterThan(0);
-    // A band sitting near nought is where the clamp earns its place: the air
-    // is never less than one unit, so a small band would otherwise open a
-    // window under zero that an hourly rate can never fill.
+    // A band sitting near nought is where the clamp earns its place: the air is never less than one unit, so a…
     expect(levelWindow([0.5, 1]).base).toBeLessThan(0);
     expect(levelWindow([0.5, 1], { floorAtZero: true }).base).toBe(0);
   });

@@ -16,11 +16,7 @@ export function Money({
 }: {
   value: number | null | undefined;
   className?: string;
-  /**
-   * The code this amount is actually in, where it is not the app's own. A
-   * place keeps its own currency, and stamping ₴ on złoty is the one kind of
-   * mistake about money this app must never make.
-   */
+  /** The code this amount is actually in, where it is not the app's own. */
   currency?: string | null;
 }) {
   const { format, formatIn } = useMoney();
@@ -32,11 +28,7 @@ export function Money({
   );
 }
 
-/**
- * The small arrow beside a number: up in green, down in red, a dash when there
- * is nothing to compare against. Arrow and sign both carry the direction, so
- * the meaning survives without the colour.
- */
+/** The small arrow beside a number: up in green, down in red, a dash when there is nothing to compare against. */
 export function Delta({ percent, invert = false }: { percent: number | null; invert?: boolean }) {
   if (percent === null) {
     return <span className="text-[0.72rem] text-faint" aria-hidden="true">—</span>;
@@ -46,9 +38,7 @@ export function Delta({ percent, invert = false }: { percent: number | null; inv
   const rounded = Math.round(percent);
   const up = rounded > 0 !== invert && rounded !== 0;
   const down = rounded < 0 !== invert && rounded !== 0;
-  // Past a thousand per cent the figure stops being a comparison, and the cap
-  // printed «−999%» as though somebody had measured it. It reads «>999%» now,
-  // with the arrow carrying the direction the sign gave up.
+  // Past a thousand per cent the figure stops being a comparison, and the cap printed «−999%» as though somebody…
   const size = Math.abs(rounded);
   const offScale = size >= 1000;
 
@@ -65,13 +55,7 @@ export function Delta({ percent, invert = false }: { percent: number | null; inv
   );
 }
 
-/**
- * Counts a number up to its value when it changes — the motion says "this just
- * recalculated". Money by default; a custom format keeps hours and counters
- * honest. One animation engine for the whole app: the framer CountUp in
- * ui/motion.tsx does the travelling, this wrapper only adds the money default
- * (a second rAF implementation lived here once and the two drifted).
- */
+/** Counts a number up to its value when it changes — the motion says "this just recalculated". */
 export function CountUp({
   value,
   format,

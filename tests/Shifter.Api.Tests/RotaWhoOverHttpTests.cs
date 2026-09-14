@@ -6,10 +6,7 @@ using Xunit;
 
 namespace Shifter.Api.Tests;
 
-/// <summary>
-/// The board that knows who can: the day's cast in three piles, and the
-/// collision a manager cannot make silently.
-/// </summary>
+/// <summary>The board that knows who can: the day's cast in three piles, and the collision a manager cannot make silently.</summary>
 [Collection("api")]
 public sealed class RotaWhoOverHttpTests(Api api)
 {

@@ -2,14 +2,7 @@
 
 import { useCallback, useRef, useState } from 'react';
 
-/**
- * The hover layer every bank chart shares.
- *
- * A chart that answers only to the eyes is a picture; these answer to the
- * cursor. The mechanics are one hook: track the pointer over a container,
- * let the chart snap it to the nearest datum, and float one tooltip. No
- * library — the freeze hunt taught this page to own its moving parts.
- */
+/** The hover layer every bank chart shares. */
 export interface HoverPoint<T> {
   /** Horizontal position inside the container, px. */
   x: number;
@@ -43,10 +36,7 @@ export function useChartHover<T>() {
   return { ref, hover, onMove, onLeave };
 }
 
-/**
- * The floating answer. Positioned by the snapped x, clamped to the box, and
- * pointer-events-none so it never steals the hover it explains.
- */
+/** The floating answer. */
 export function ChartTip({
   x,
   children,

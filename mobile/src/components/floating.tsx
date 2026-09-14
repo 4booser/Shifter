@@ -4,22 +4,10 @@ import { GlassView, isGlassEffectAPIAvailable, isLiquidGlassAvailable } from 'ex
 
 import { Palette } from '@/constants/theme';
 
-/**
- * Asked once, at load. Both checks matter: the second exists because some iOS
- * 26 betas ship the component without the API behind it, and finding that out
- * at render time means finding it out as a crash.
- */
+/** Asked once, at load. */
 const GLASS = isLiquidGlassAvailable() && isGlassEffectAPIAvailable();
 
-/**
- * A bar that floats over the calendar.
- *
- * On iOS 26 it is real glass and the month moves underneath it, which is the
- * whole reason to float something rather than dock it. Everywhere else it is
- * the card it always was — the same shape, the same shadow, an opaque
- * background — because a translucent panel with nothing behind it to refract
- * is just a washed-out card.
- */
+/** A bar that floats over the calendar. */
 export function Floating({
   children,
   style,

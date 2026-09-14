@@ -17,27 +17,9 @@ import { ChartTip, CrossHair, useChartHover } from '@/components/charts/hover';
 import { Money } from '@/components/ui/bits';
 import { BankTile } from '@/components/bank/hero';
 
-/**
- * Дожить до зарплаты — the one chart in the app that looks forward.
- *
- * The balance walked ahead day by day: standing charges land on their dates,
- * the expected wage lands on the reconciliation's own due date, and ordinary
- * days cost their median. The pinch — the day it gets thinnest — is the
- * number nobody else shows and everybody computes on their fingers.
- *
- * It is drawn as a forecast: dashed, with the assumption written under it in
- * the words «обычный день». The known events are dots with names; the future
- * between them is habit, and the card never pretends otherwise.
- */
+/** Дожить до зарплаты — the one chart in the app that looks forward. */
 
-/**
- * The walk itself, built once for the page.
- *
- * Both the top band's «ближайшее поступление» tile and the card below it are
- * reading the same walk. Computing it twice meant asking the server for the
- * same reconciliation twice and — worse — risking two answers to one question
- * on one screen.
- */
+/** The walk itself, built once for the page. */
 export function useRunway(account: MonoAccount | null, items: MonoStatementItem[]): Runway | null {
   const [owed, setOwed] = useState<Reconciliation | null>(null);
 
@@ -74,16 +56,11 @@ export function useRunway(account: MonoAccount | null, items: MonoStatementItem[
       .map((row) => ({
         name: row.location_name,
         amount: row.expected - row.paid,
-        // A wage already overdue is expected any day; it lands on the first
-        // projected day rather than being left in the past where the curve
-        // cannot see it.
+        // A wage already overdue is expected any day; it lands on the first projected day rather than being left in the…
         on: row.due_on < tomorrow ? tomorrow : row.due_on,
       }));
 
-    // The account names the credit limit; failing that, the newest
-    // transaction's own stamped balance is the bank's word for where things
-    // stand. client-info being briefly unreachable must not blank the one
-    // forward-looking chart.
+    // The account names the credit limit; failing that, the newest transaction's own stamped balance is the bank's…
     const newest = [...items].sort((one, two) => two.time - one.time)[0];
     const balance =
       account !== null
@@ -162,32 +139,13 @@ export function BankForecast({
   const width = 640;
   const height = 150;
   const inset = 8;
-  /*
-   * Полоса справа под подписи оси — и графику о ней надо сказать.
-   *
-   * SVG без заданной высоты в абсолютном позиционировании берёт её из
-   * пропорций viewBox, а `bottom` в переспецифицированной раскладке
-   * игнорируется: кривая рисовалась на 105 пикселях внутри стапятидесяти, и
-   * линии сетки стояли не там, где их же значения на кривой. Ширину и высоту
-   * теперь задаём прямо, и курсор считается по той же ширине, что и линия.
-   */
+  /* Полоса справа под подписи оси — и графику о ней надо сказать. */
   const gutter = 56;
 
   const lowest = Math.min(...runway.days.map((day) => day.balance));
   const high = Math.max(1, ...runway.days.map((day) => day.balance));
 
-  /*
-   * Ноль на оси нужен тогда, когда до него можно дойти.
-   *
-   * Ось, насильно начинающаяся с нуля, при остатке в восемьдесят тысяч и
-   * просадке до шестидесяти прижимала всю линию к верхней кромке, а под ней
-   * оставляла три четверти пустого поля. Читать там нечего: кривая выглядит
-   * прямой, хотя за месяц теряет пятую часть.
-   *
-   * Если за окно прогноза остаток не подходит к нулю, растягиваем ось по
-   * данным — и тогда обязаны подписать нижнюю отметку, иначе низ графика
-   * прочитают как ноль и решат, что деньги кончились.
-   */
+  /* Ноль на оси нужен тогда, когда до него можно дойти. */
   const nearZero = lowest < high * 0.25;
   const room = Math.max((high - lowest) * 0.35, high * 0.05);
   const low = nearZero ? Math.min(0, lowest) : lowest - room;
@@ -273,9 +231,7 @@ export function BankForecast({
             }}
             onMouseLeave={hoverKit.onLeave}
           >
-            {/* The axis, as HTML rather than SVG text: the plot is stretched
-                to the box and stretched letters are the one thing an axis
-                must not do. */}
+            {/* The axis, as HTML rather than SVG text: the plot is stretched to the box and stretched letters are the one… */}
             <div className="pointer-events-none absolute inset-0 z-10" aria-hidden>
               <span className="absolute right-0 top-0 text-[0.66rem] text-faint tabular">
                 {compact(Math.round(high))}
@@ -332,11 +288,7 @@ export function BankForecast({
                 transition={{ delay: 0.6, duration: 0.5 }}
               />
 
-              {/* Dashed on purpose: this line is a forecast and dresses like
-                  one. Faded in rather than drawn in — framer's pathLength trick
-                  drives stroke-dasharray itself, and fighting it for the dashes
-                  left the curve stuck at a stub. The dashes win; they carry
-                  meaning and the draw-in only carried charm. */}
+              {/* Dashed on purpose: this line is a forecast and dresses like one. */}
               <motion.path
                 d={line}
                 fill="none"

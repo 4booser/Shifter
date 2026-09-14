@@ -4,18 +4,7 @@ import { DaysResponse } from '@/lib/calendar/models';
 import { useI18n } from '@/lib/i18n';
 import { useMoney } from '@/lib/settings/money';
 
-/**
- * The year, written out.
- *
- * Every number on this page is a fact standing alone; a person reading their
- * own year wants the sentences those facts make together — «столько часов, из
- * них столько ночью, и час стоил вот столько, а к концу года — вот столько».
- * Composed here rather than on the server because it is the same arithmetic
- * the cards below already did, and a paragraph is not worth a round trip.
- *
- * Nothing is invented and nothing is advice: where a figure is missing the
- * sentence about it simply does not appear.
- */
+/** The year, written out. */
 export function YearStory({
   year,
   summary,
@@ -53,9 +42,7 @@ export function YearStory({
     summary.days.filter((day) => day.shifts.some((entry) => entry.worked)).map((day) => day.date),
   ).size;
 
-  // The sentences, each guarded by the fact it needs. Joined with spaces so
-  // the paragraph reads as prose rather than as a list wearing a paragraph's
-  // clothes.
+  // The sentences, each guarded by the fact it needs.
   const lines: string[] = [];
 
   lines.push(

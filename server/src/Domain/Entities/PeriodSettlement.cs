@@ -1,12 +1,6 @@
 namespace Shifter.Domain.Entities;
 
-/// <summary>
-/// A shortfall somebody has drawn a line under. The reconciliation keeps
-/// finding it — the arithmetic has not changed — so without this the same
-/// underpayment nags for the rest of the account's life. Closing it is an
-/// act with a date and a reason, not a number quietly edited until the
-/// complaint goes away.
-/// </summary>
+/// <summary>A shortfall somebody has drawn a line under.</summary>
 public sealed class PeriodSettlement
 {
     public const int NoteMax = 200;
@@ -24,11 +18,7 @@ public sealed class PeriodSettlement
     /// <summary>"all", "wage" or "commission": which payment was closed.</summary>
     public required string Stream { get; set; }
 
-    /// <summary>
-    /// "paid" where the money arrived off the books, "written-off" where it
-    /// never will. Both stop the nagging; only one of them is good news, and
-    /// a year later the difference is the whole story.
-    /// </summary>
+    /// <summary>"paid" where the money arrived off the books, "written-off" where it never will.</summary>
     public required string Kind { get; set; }
 
     public string? Note { get; set; }

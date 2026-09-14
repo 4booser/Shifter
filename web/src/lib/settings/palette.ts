@@ -4,14 +4,7 @@ import { create } from 'zustand';
 
 import { accountApi } from '@/lib/api/auth';
 
-/**
- * The colours somebody saved to reuse.
- *
- * Kept on the account rather than in this browser: a palette picked on a
- * laptop should be waiting on the phone the same evening. The store is
- * optimistic — a swatch appears the moment it is saved and steps back if the
- * server refuses, because a colour that vanishes for a second reads as a bug.
- */
+/** The colours somebody saved to reuse. */
 interface PaletteState {
   colours: string[];
   loaded: boolean;

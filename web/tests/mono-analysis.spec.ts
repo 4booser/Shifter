@@ -1,8 +1,4 @@
-/*
- * The same tests as on the phone, over the same code. If a platform ever
- * needs its own copy of one of these, something upstream has already gone
- * wrong.
- */
+/* The same tests as on the phone, over the same code. */
 import { describe, expect, it } from 'vitest';
 
 import { MonoAccount, MonoRate, MonoStatementItem, convert, ratesDay, wealth } from '@/lib/mono/mono';
@@ -143,9 +139,7 @@ describe('who the money went to', () => {
   });
 
   it('keeps two differently-named shops apart rather than guessing', () => {
-    // Stripping a trailing word would merge these, and would also merge every
-    // pair of shops whose names happen to start alike. Being wrong quietly is
-    // worse here than showing one shop on two rows.
+    // Stripping a trailing word would merge these, and would also merge every pair of shops whose names happen to…
     expect(merchantKey('COFFEE HOUSE')).not.toBe(merchantKey('COFFEE SHOP'));
     expect(merchantKey('SILPO KYIV')).not.toBe(merchantKey('SILPO'));
   });
@@ -234,8 +228,6 @@ describe('standing charges', () => {
 
   it('keeps a monthly charge alive while its next beat is still ahead', () => {
     // Viewing September on the 1st: the window's edge is a month of future.
-    // Netflix last charged August 3rd — 29 days ago, right on rhythm — and
-    // must not be declared dead against September 30th.
     const alive = monthly('NETFLIX', 199, ['2026-06-03', '2026-07-03', '2026-08-03']);
 
     expect(recurring(alive, '2026-09-30')).toHaveLength(1);
@@ -530,9 +522,7 @@ describe('where the money came from', () => {
   });
 
   it('does not merge two payers whose names merely start alike', () => {
-    // Branch numbers fold together; extra words do not. "ТОВ БАР" and
-    // "ТОВ БАР ЛТД" could be one company or two, and guessing wrong here
-    // sums two employers into one wage.
+    // Branch numbers fold together; extra words do not.
     const sources = incomeSources(
       [
         item({ day: '2026-08-05', amount: 100_000, description: 'ТОВ БАР ЛТД' }),

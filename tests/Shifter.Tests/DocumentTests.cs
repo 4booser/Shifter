@@ -5,13 +5,7 @@ using Xunit;
 
 namespace Shifter.Tests;
 
-/// <summary>
-/// The papers without which somebody is not allowed on shift.
-///
-/// An expired медкнижка is not a fine — it is being turned away from a shift
-/// you were counting on, and people remember it on the day it is needed, which
-/// is the one day it cannot be fixed.
-/// </summary>
+/// <summary>The papers without which somebody is not allowed on shift.</summary>
 public class DocumentTests
 {
     private static readonly DateOnly Today = new(2026, 6, 1);

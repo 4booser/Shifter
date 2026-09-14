@@ -10,15 +10,7 @@ import { applyToDates, useCalendar } from '@/lib/store/calendar';
 import { CountUp } from '@/components/ui/motion';
 import { Money } from '@/components/ui/bits';
 
-/**
- * «Если возьму эти смены» — the calculation everybody does in their head
- * before saying yes to a подработка, done by the server instead.
- *
- * Ghost days on a fortnight strip, priced live by /days/price. Nothing is
- * saved while the ghosts are ghosts, and the price is the server's own
- * arithmetic over the real week the ghosts would join — which is the only way
- * the fifth shift can honestly come out dearer than the fourth.
- */
+/** «Если возьму эти смены» — the calculation everybody does in their head before saying yes to a подработка… */
 
 interface Priced {
   base_pay: number;

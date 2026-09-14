@@ -5,11 +5,7 @@ using Xunit;
 
 namespace Shifter.Tests;
 
-/// <summary>
-/// Time off. Not the same thing as blocking a day: blocking says "I cannot work
-/// Tuesday" and obliges nobody, while a leave request covers a stretch and needs
-/// an answer — an unanswered one is a cancelled flight.
-/// </summary>
+/// <summary>Time off.</summary>
 public class LeaveTests
 {
     private static LeaveRequest Asked(string from, string to, LeaveStatus status = LeaveStatus.Pending)

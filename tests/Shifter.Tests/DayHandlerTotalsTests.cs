@@ -6,10 +6,7 @@ using Xunit;
 
 namespace Shifter.Tests;
 
-/// <summary>
-/// Everything the range summary adds up: period wages, tips, sales, tip-out,
-/// meals and how they are split between places.
-/// </summary>
+/// <summary>Everything the range summary adds up: period wages, tips, sales, tip-out, meals and how they are split…</summary>
 public class DayHandlerTotalsTests
 {
     private readonly FakeShifterQuery _query = new();
@@ -248,11 +245,7 @@ public class DayHandlerTotalsTests
         Assert.Equal(2, cafeTotal.hours);
     }
 
-    /// <summary>
-    /// Two days at the same place must land in one bucket. They used to be
-    /// grouped by the Location object, and a no-tracking read hands back a new
-    /// instance per day, so the same bar appeared twice.
-    /// </summary>
+    /// <summary>Two days at the same place must land in one bucket.</summary>
     [Fact]
     public async Task TheSamePlaceOnTwoDaysIsOneRow()
     {

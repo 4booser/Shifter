@@ -8,11 +8,7 @@ using Shifter.Application.Common.Exceptions;
 
 namespace Shifter.Application.Features.Import;
 
-/// <summary>
-/// Sends the photographed rota to the model and returns the rows it read.
-/// One plain HttpClient call — the contract is a page of JSON, and a full
-/// SDK would be more moving parts than the feature.
-/// </summary>
+/// <summary>Sends the photographed rota to the model and returns the rows it read.</summary>
 public sealed class PhotoImportService
 {
     private static readonly ConcurrentDictionary<string, int> Spent = new();
@@ -69,13 +65,7 @@ public sealed class PhotoImportService
         return ScheduleParse.FromModelText(await AskAsync(payload, ct));
     }
 
-    /// <summary>
-    /// Reads a photographed receipt into the beginnings of an expense.
-    ///
-    /// Shares the daily ledger with the rota reader, because they share the
-    /// bill: a per-feature limit would let ten photographs of each cost twice
-    /// what a limit of ten was meant to cap.
-    /// </summary>
+    /// <summary>Reads a photographed receipt into the beginnings of an expense.</summary>
     public async Task<ReceiptParse.Read> ReadReceiptAsync(
         int userId,
         byte[] image,
@@ -110,13 +100,7 @@ public sealed class PhotoImportService
         return ReceiptParse.FromModelText(await AskAsync(payload, ct), today);
     }
 
-    /// <summary>
-    /// Takes today's slot, or refuses.
-    ///
-    /// Reserved before the call and never counted after it: reading the ledger
-    /// at the top and writing it at the bottom is a check-then-act, and a
-    /// hundred uploads at once all read zero and all became billed calls.
-    /// </summary>
+    /// <summary>Takes today's slot, or refuses.</summary>
     private void Reserve(int userId)
     {
         var key = $"{userId}:{DateOnly.FromDateTime(DateTime.UtcNow.Date):yyyyMMdd}";
@@ -167,11 +151,7 @@ public sealed class PhotoImportService
             .FirstOrDefault("");
     }
 
-    /// <summary>
-    /// Drops every key that is not today's. The ledger is a static dictionary
-    /// with a process-long life, so without this it accumulates one entry per
-    /// person per day until the app restarts.
-    /// </summary>
+    /// <summary>Drops every key that is not today's.</summary>
     private static void Forget(string todayKey)
     {
         string today = todayKey[(todayKey.IndexOf(':') + 1)..];

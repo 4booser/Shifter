@@ -8,11 +8,7 @@ using EventHandler = Shifter.Application.Features.business.Services.EventHandler
 
 namespace Shifter.Tests;
 
-/// <summary>
-/// Events mark time and never pay for it. These cover the range arithmetic —
-/// which is where an off-by-one turns a fortnight of leave into thirteen days —
-/// and the validation that stops a bad record reaching the calendar at all.
-/// </summary>
+/// <summary>Events mark time and never pay for it.</summary>
 public class EventHandlerTests
 {
     private readonly FakeShifterQuery _query = new();

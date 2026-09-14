@@ -5,13 +5,7 @@ using Xunit;
 
 namespace Shifter.Api.Tests;
 
-/// <summary>
-/// One payday for everybody. The brief's facts used to answer "when the pay
-/// period closes" while the blocks answered "when the money lands" — and the
-/// chart drew its amber tick from the first under a legend about the second.
-/// The invariant: facts agree with the payouts page, to the day and to the
-/// hryvnia.
-/// </summary>
+/// <summary>One payday for everybody.</summary>
 [Collection("api")]
 public sealed class PaydayAgreementOverHttpTests
 {

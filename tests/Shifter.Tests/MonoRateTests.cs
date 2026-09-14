@@ -6,10 +6,7 @@ using Xunit;
 
 namespace Shifter.Tests;
 
-/// <summary>
-/// The rate a person is actually handed, beside the one the state publishes.
-/// These are the shapes the bank's own list comes in.
-/// </summary>
+/// <summary>The rate a person is actually handed, beside the one the state publishes.</summary>
 public class MonoRateTests
 {
     private static JsonElement Row(string json) => JsonDocument.Parse(json).RootElement;

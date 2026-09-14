@@ -8,12 +8,7 @@ using Shifter.Infrastructure.Persistence.DbContexts;
 
 namespace Shifter.Application.Features.Auth.Services;
 
-/// <summary>
-/// The second factor's whole life: setting it up, proving it, standing at
-/// the door during sign-in, and the backup codes for the day the phone is
-/// gone. Tickets are in-memory — one node, five minutes, nothing worth a
-/// table.
-/// </summary>
+/// <summary>The second factor's whole life: setting it up, proving it, standing at the door during sign-in, and the…</summary>
 public sealed class TwoFactorService
 {
     private static readonly ConcurrentDictionary<string, (int UserId, DateTime Expires)> Tickets = new();

@@ -32,12 +32,7 @@ interface Brief {
   source: string;
 }
 
-/**
- * The day in words, under the calendar where the page used to trail off.
- * The numbers behind it are the app's own — the model, when configured,
- * only chooses the sentences — and the card says plainly which of the two
- * wrote it, because a reader deserves to know whose voice they are hearing.
- */
+/** The day in words, under the calendar where the page used to trail off. */
 export function DailyBrief() {
   const { t, lang } = useI18n();
   const [brief, setBrief] = useState<Brief | null>(null);

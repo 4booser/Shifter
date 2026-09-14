@@ -1,18 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
-/**
- * Every theme, checked against the surface it is painted on.
- *
- * The palettes were designed one at a time and eight of them now exist. A
- * warning colour that reads on paper can vanish on plum, and the person it
- * vanishes for is the one being warned. Nobody notices, because whoever picked
- * the colour was looking at a different theme.
- *
- * This reads the stylesheet rather than a copy of it, so it cannot drift: a
- * new theme is checked the moment somebody adds it, and a token quietly
- * darkened fails here before it reaches anybody.
- */
+/** Every theme, checked against the surface it is painted on. */
 
 const CSS = readFileSync(new URL('../src/app/globals.css', import.meta.url), 'utf8');
 
@@ -32,11 +21,7 @@ const contrast = (one: string, two: string): number => {
   return (light + 0.05) / (dark + 0.05);
 };
 
-/**
- * Every block in the stylesheet, as a map of the tokens it sets. Later blocks
- * override earlier ones, which is how the cascade already works — a theme that
- * only redefines the surface keeps the shared accents above it.
- */
+/** Every block in the stylesheet, as a map of the tokens it sets. */
 function themes(): Map<string, Record<string, string>> {
   const found = new Map<string, Record<string, string>>();
   const base: Record<string, string> = {};
@@ -85,11 +70,7 @@ function themes(): Map<string, Record<string, string>> {
   return found;
 }
 
-/**
- * Three to one. The WCAG floor for large text and for anything that carries
- * meaning by colour — which is what these tokens do: they are the difference
- * between a figure that is fine and one that is not.
- */
+/** Three to one. */
 const FLOOR = 3;
 
 const CARRIERS = ['danger', 'good', 'warn', 'accent'];

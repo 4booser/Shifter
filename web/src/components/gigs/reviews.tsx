@@ -11,12 +11,7 @@ import { Modal } from '@/components/ui/modal';
 import { nWord } from '@/lib/i18n/plural';
 
 /** ★★★★☆ 4.6 · 12 — the standing, wherever a person or venue appears. */
-/**
- * Below this many verdicts a rating is one person's evening, not a
- * reputation. It is still shown — hiding it would be its own kind of lie —
- * but it is not painted gold, because five gold stars are read as a settled
- * fact and this app holds a sample floor everywhere else it quotes a figure.
- */
+/** Below this many verdicts a rating is one person's evening, not a reputation. */
 const ENOUGH = 3;
 
 export function Stars({ rating, count, small = false }: { rating: number | null; count: number; small?: boolean }) {
@@ -43,11 +38,7 @@ export function Stars({ rating, count, small = false }: { rating: number | null;
   );
 }
 
-/**
- * The debt collector, in the friendliest sense: after a worked shift both
- * sides owe each other a verdict, and this banner keeps offering until
- * every one is settled.
- */
+/** The debt collector, in the friendliest sense: after a worked shift both sides owe each other a verdict, and… */
 export function PendingReviews({ onChanged }: { onChanged?: () => void }) {
   const { t } = useI18n();
   const [pending, setPending] = useState<PendingReview[]>([]);

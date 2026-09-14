@@ -9,15 +9,7 @@ import { byDay, categoryOf, fromMinor, MonoStatementItem, payerName } from '@/li
 import { CalendarDayData, money, tint } from '@/lib/types';
 import { t } from '@/lib/i18n';
 
-/**
- * The statement, day by day, with the shift standing beside it.
- *
- * This is where the two halves of the app meet. A bank app shows what left
- * the account on Tuesday; a shift app shows that Tuesday was a twelve-hour
- * close. Together they answer questions neither could: the taxi was after the
- * night shift, the money went the day after the wage landed, the week with no
- * shifts is also the week the balance did not move.
- */
+/** The statement, day by day, with the shift standing beside it. */
 export function BankLedger({
   items,
   days,
@@ -39,9 +31,7 @@ export function BankLedger({
   const needle = query.trim().toLocaleLowerCase();
   const floor = Number(least.replace(',', '.')) || 0;
 
-  // Three months of statement is a thousand lines. Without a search that is an
-  // archive rather than data, and the answer people want is usually a sum
-  // rather than a list — so the sum is above it.
+  // Three months of statement is a thousand lines.
   const matching = useMemo(
     () =>
       items.filter((item) => {

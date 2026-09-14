@@ -4,23 +4,10 @@ using Xunit;
 
 namespace Shifter.Tests;
 
-/// <summary>
-/// Saving a day that already exists must carry every value it holds. This has
-/// gone wrong three separate times — cash tips, then deductions, then the tip
-/// pool and the fine's reason — each in the same way: the number came back
-/// correct in the response and was gone by the next reload, because a line was
-/// missing from the upsert. These tests fail the moment a fourth one is added
-/// without being carried.
-/// </summary>
+/// <summary>Saving a day that already exists must carry every value it holds.</summary>
 public class DayScalarsTests
 {
-    /// <summary>
-    /// Named rather than derived, on purpose. The copy works out its own field
-    /// list by reflection, so a test that also derives one would agree with it
-    /// even when both are wrong — which is exactly what happened when "not a
-    /// collection" was written as "not enumerable" and silently dropped every
-    /// string on the day, the note and the colour included.
-    /// </summary>
+    /// <summary>Named rather than derived, on purpose.</summary>
     private static readonly string[] Expected =
     [
         nameof(Day.Tips),

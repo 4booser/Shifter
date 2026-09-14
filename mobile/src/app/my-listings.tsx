@@ -20,11 +20,7 @@ import { Gig, payLine, tradeOf } from '@/lib/gigs';
 import { plural, t } from '@/lib/i18n';
 import { tenth } from '../lib/format';
 
-/**
- * The employer's half of the board, finally in the pocket. The reply already
- * arrives as a push; taking the person used to require finding a laptop —
- * and a candidate not answered by evening is a candidate somewhere else.
- */
+/** The employer's half of the board, finally in the pocket. */
 interface Reply {
   id: number;
   user_id: number;

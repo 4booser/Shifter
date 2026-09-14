@@ -6,15 +6,7 @@ import { useMoney } from '@/lib/settings/money';
 import { useI18n } from '@/lib/i18n';
 import { Modal } from '@/components/ui/modal';
 
-/**
- * Two devices edited one day; a person decides which evening survives.
- *
- * Both versions are shown whole and neither is merged: a silent merge of
- * money is the worst outcome there is, so the app refuses to be clever
- * exactly here. «Их» version is already on screen behind this modal — the
- * store reloaded it on refusal; «моё» waits in the store until chosen or
- * dropped.
- */
+/** Two devices edited one day; a person decides which evening survives. */
 export function ConflictModal() {
   const { t } = useI18n();
   const { format } = useMoney();

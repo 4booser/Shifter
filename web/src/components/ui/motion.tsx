@@ -3,23 +3,9 @@
 import { animate, motion, useReducedMotion } from 'framer-motion';
 import { useEffect, useRef } from 'react';
 
-/**
- * The app's motion vocabulary, kept deliberately small.
- *
- * Numbers roll to their values, cards rise once, charts draw themselves in.
- * Three verbs, used consistently, read as one product; a different easing on
- * every screen reads as a template. Everything here collapses to stillness
- * under prefers-reduced-motion, because motion is seasoning and some people
- * have asked the OS to hold it.
- */
+/** The app's motion vocabulary, kept deliberately small. */
 
-/**
- * A number that rolls to its value.
- *
- * The rolling is presentation only: the DOM lands on the exact figure, and
- * anyone copying it copies the truth. Formatting is injected so this stays
- * ignorant of currencies and locales.
- */
+/** A number that rolls to its value. */
 export function CountUp({
   value,
   format,
@@ -33,15 +19,7 @@ export function CountUp({
   const still = useReducedMotion();
   const previous = useRef(0);
 
-  /*
-   * `format` держим в ref, а не в зависимостях.
-   *
-   * Вызывающие передают его стрелкой прямо в JSX, и на каждом рендере это
-   * новая функция — эффект перезапускался постоянно. Отменённая анимация
-   * успевала дописать своё число поверх нового, и на отчёте за август
-   * «Заработано» показывало 0 ₴ при 22 отработанных днях и ₴39 638 на руки:
-   * React передавал 47 485,9, а в узел попадал ноль от прошлого месяца.
-   */
+  /* `format` держим в ref, а не в зависимостях. */
   const shape = useRef(format);
 
   shape.current = format;
@@ -51,14 +29,7 @@ export function CountUp({
 
     if (node === null) return;
 
-    /*
-     * Ни анимации, ни половины числа в фоновой вкладке.
-     *
-     * Скрытая вкладка не получает кадров rAF: прогон замирает там, где его
-     * застали, и на панели остаётся «10 679 ₴» вместо 22 230 и «59.3» вместо
-     * 123.5 — ровно 48% пути у всех тайлов разом. Пока никто не смотрит,
-     * катиться незачем, а вот показывать середину пути нельзя никогда.
-     */
+    /* Ни анимации, ни половины числа в фоновой вкладке. */
     if (still === true || document.visibilityState === 'hidden') {
       node.textContent = shape.current(value);
       previous.current = value;

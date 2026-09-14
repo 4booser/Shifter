@@ -12,11 +12,7 @@ import { Avatar } from '@/components/ui/avatar';
 import { Modal } from '@/components/ui/modal';
 import { Stars } from '@/components/gigs/reviews';
 
-/**
- * The shortcut every venue actually wants: skip the board, call the person
- * who already worked out. It only invites — the person still answers for
- * themselves, so nobody is booked behind their back.
- */
+/** The shortcut every venue actually wants: skip the board, call the person who already worked out. */
 export function CallBack({ gig, onClose }: { gig: Gig; onClose: () => void }) {
   const { t, lang } = useI18n();
   const [known, setKnown] = useState<KnownWorker[] | null>(null);

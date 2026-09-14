@@ -4,10 +4,7 @@ using Xunit;
 
 namespace Shifter.Tests;
 
-/// <summary>
-/// What to ask before signing. Every test here is about the feature staying a
-/// list of questions and never becoming an opinion.
-/// </summary>
+/// <summary>What to ask before signing.</summary>
 public class ContractQuestionsTests
 {
     /// <summary>A contract long enough to be one, saying nothing useful.</summary>

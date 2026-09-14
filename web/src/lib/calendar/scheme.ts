@@ -1,10 +1,6 @@
 import { ColourScheme } from '../settings/settings';
 
-/**
- * What a scheme puts on a given date, or undefined when it says nothing about
- * it — which is different from saying "no colour". A weekday with nothing
- * assigned is left exactly as it was; only an explicit null clears.
- */
+/** What a scheme puts on a given date, or undefined when it says nothing about it — which is different from… */
 export function schemeColourFor(scheme: ColourScheme, date: string): string | null | undefined {
   if (scheme.kind === 'weekday') {
     const weekday = new Date(`${date}T00:00:00`).getDay();

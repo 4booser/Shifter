@@ -10,14 +10,7 @@ import { useI18n } from '@/lib/i18n';
 import { Alert } from '@/components/ui/bits';
 import { Modal } from '@/components/ui/modal';
 
-/**
- * Google Calendar → the rota, with a preview and choices.
- *
- * Every distinct summary becomes one row: this many days, this usual time —
- * and the person says what it is: a shift (pick the template), an event, or
- * skip. Nothing applies until they press the button, and what the reader
- * refused to parse is named out loud instead of quietly missing.
- */
+/** Google Calendar → the rota, with a preview and choices. */
 type Fate = { kind: 'skip' } | { kind: 'shift'; templateId: number } | { kind: 'event' };
 
 export function IcsImportModal({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -41,7 +34,6 @@ export function IcsImportModal({ open, onClose }: { open: boolean; onClose: () =
   }, [parsed]);
 
   const input = useRef<HTMLInputElement>(null);
-
 
   const pick = (file: File) => {
     setError(null);
@@ -137,13 +129,7 @@ export function IcsImportModal({ open, onClose }: { open: boolean; onClose: () =
           {t('Export your Google/Apple calendar as .ics and drop it here. Nothing applies until you say so.')}
         </p>
 
-        {/*
-          The line above says «бросьте сюда» and there was nothing here to
-          drop onto — so a browser did what a browser does with a file dropped
-          on a page that does not want it: opened the file and navigated away
-          from the app. Following the instruction lost your place. The photo
-          import has had this zone since it was written; this is the same one.
-        */}
+        {/* The line above says «бросьте сюда» and there was nothing here to drop onto — so a browser did what a browser… */}
         <input
           ref={input}
           aria-label={t('Choose a file')}

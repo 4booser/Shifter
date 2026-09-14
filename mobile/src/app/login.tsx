@@ -40,10 +40,7 @@ export default function LoginScreen() {
   const [letterSent, setLetterSent] = useState(false);
   const autoTried = useRef(false);
 
-  // Simulator convenience only: EXPO_PUBLIC_AUTOLOGIN="login:password"
-  // signs straight in, because AppleScript cannot tap a simulator without
-  // accessibility grants. Dev builds read env at bundle time; stores never
-  // see this path taken.
+  // Simulator convenience only: EXPO_PUBLIC_AUTOLOGIN="login:password" signs straight in, because AppleScript…
   useEffect(() => {
     const auto = process.env.EXPO_PUBLIC_AUTOLOGIN;
 
@@ -83,9 +80,7 @@ export default function LoginScreen() {
     try {
       await completeTwoFactor(ticket, code);
     } catch (caught) {
-      // The wave-54 lock answers 429 with its own words; show them rather
-      // than a generic shrug. An expired ticket lands here too and its
-      // message says to sign in again.
+      // The wave-54 lock answers 429 with its own words; show them rather than a generic shrug.
       setError(caught instanceof ApiError ? caught.message : t('Сеть молчит. Сервер доступен?'));
     } finally {
       setBusy(false);
@@ -248,21 +243,7 @@ export default function LoginScreen() {
 
           {error !== null && <Text style={styles.error}>{error}</Text>}
 
-          {/*
-            * `Press`, not a raw `Pressable`.
-            *
-            * NativeWind's transform drops the resolved style when `style` is a
-            * function, so this button rendered as white text on the cream card
-            * with no fill under it and no centring — on the first screen of the
-            * app, the only thing to press was invisible. I first read that as
-            * the disabled state and dimmed it, which was treating a symptom of
-            * something else: the original «Сохранить день» in the day screen
-            * was broken the same way, and the two of them were the only raw
-            * Pressables with a function style in the codebase.
-            *
-            * The disabled tone stays, because a button that cannot be pressed
-            * should still say so.
-            */}
+          {/* `Press`, not a raw `Pressable`. */}
           <Press
             style={[
               styles.button,

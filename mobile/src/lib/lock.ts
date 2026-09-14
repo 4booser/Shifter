@@ -4,12 +4,7 @@ import * as SecureStore from 'expo-secure-store';
 const KEY = 'shifter.lock';
 const BANK_KEY = 'shifter.lock.bank';
 
-/**
- * The app lock. What it protects is not a secret in the usual sense — it is
- * how much somebody earns, which people hand their unlocked phone to a
- * colleague without thinking about. So the lock is off by default and worth
- * offering, rather than on by default and worth resenting.
- */
+/** The app lock. */
 export const lockStore = {
   async enabled(): Promise<boolean> {
     return (await SecureStore.getItemAsync(KEY)) === 'on';
@@ -21,14 +16,7 @@ export const lockStore = {
   },
 };
 
-/**
- * The bank tab's own lock, separate from the app's.
- *
- * What the calendar holds is how much somebody earns. What the bank tab holds
- * is where they were, what they bought and how much they have — which is a
- * different order of thing, and worth locking even by somebody who leaves the
- * rest of the app open.
- */
+/** The bank tab's own lock, separate from the app's. */
 export const bankLock = {
   async enabled(): Promise<boolean> {
     return (await SecureStore.getItemAsync(BANK_KEY)) === 'on';
@@ -46,9 +34,7 @@ export async function lockKind(): Promise<'face' | 'finger' | 'code' | null> {
 
   const types = await LocalAuthentication.supportedAuthenticationTypesAsync();
 
-  // Enrolment matters more than hardware: a phone with Face ID and no face
-  // registered can still fall back to the passcode, and offering a lock that
-  // cannot open is worse than not offering one.
+  // Enrolment matters more than hardware: a phone with Face ID and no face registered can still fall back to the…
   if (!(await LocalAuthentication.isEnrolledAsync())) {
     return (await LocalAuthentication.getEnrolledLevelAsync())
       === LocalAuthentication.SecurityLevel.SECRET
@@ -67,10 +53,7 @@ export type LockKind = 'face' | 'finger' | 'code' | null;
 export const lockName = (kind: LockKind): string =>
   kind === 'face' ? 'Face ID' : kind === 'finger' ? 'отпечаток' : kind === 'code' ? 'код' : 'замок';
 
-/**
- * The same word after "по". Russian declines and English does not, so the two
- * forms have to be written out rather than glued together at the call site.
- */
+/** The same word after "по". */
 export const lockNameBy = (kind: LockKind): string =>
   kind === 'face' ? 'Face ID' : kind === 'finger' ? 'отпечатку' : kind === 'code' ? 'коду' : 'замку';
 

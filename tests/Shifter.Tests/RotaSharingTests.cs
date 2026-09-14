@@ -6,12 +6,7 @@ using Xunit;
 
 namespace Shifter.Tests;
 
-/// <summary>
-/// Which people the rota handler classifies as sharing, and which as hiding by
-/// default. The filtering those two lists drive is SQL and is verified against
-/// a real database; the classification is a decision made here, and getting it
-/// backwards would publish somebody's wages without them touching anything.
-/// </summary>
+/// <summary>Which people the rota handler classifies as sharing, and which as hiding by default.</summary>
 public class RotaSharingTests
 {
     private const int Caller = 1;
@@ -57,11 +52,7 @@ public class RotaSharingTests
         new GetRotaDto(Caller, TeamId, new DateOnly(2026, 9, 1), new DateOnly(2026, 9, 30)),
         CancellationToken.None);
 
-    /// <summary>
-    /// You are in the sharing set whether or not you share, because it is your
-    /// own money and a rota that hid your totals from you would be a strange
-    /// thing to open. Everyone else has to have said yes.
-    /// </summary>
+    /// <summary>You are in the sharing set whether or not you share, because it is your own money and a rota that hid your…</summary>
     [Fact]
     public async Task PayIsReadForYouAndForWhoeverOptedIn()
     {
@@ -78,10 +69,7 @@ public class RotaSharingTests
         Assert.DoesNotContain(Quiet, _teams.LastSharingUserIds);
     }
 
-    /// <summary>
-    /// Switching sharing off has to take the person back out of the set — a
-    /// flag read once and cached would keep publishing them.
-    /// </summary>
+    /// <summary>Switching sharing off has to take the person back out of the set — a flag read once and cached would keep…</summary>
     [Fact]
     public async Task TurningSharingOffClosesTheBooksAgain()
     {

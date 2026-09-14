@@ -4,12 +4,7 @@ using Xunit;
 
 namespace Shifter.Tests;
 
-/// <summary>
-/// Closing at two and opening at eight. The app already spotted the habit and
-/// counted it, and counting is the part that stops working — by the third one
-/// in a fortnight it stops feeling unusual. What a person repeats out loud is
-/// the size of the shortest one.
-/// </summary>
+/// <summary>Closing at two and opening at eight.</summary>
 public class RestBetweenShiftsTests
 {
     private static (DateTime Start, DateTime End) Span(string start, string end)

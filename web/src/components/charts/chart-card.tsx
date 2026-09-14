@@ -2,12 +2,7 @@
 
 import { ReactNode } from 'react';
 
-/**
- * The one container every chart lives in — the fix for "графики по размеру
- * не подходят". A chart never chooses its own size again: the card names an
- * aspect, the plot fills it, headers and legends sit on one grid, and an
- * empty window collapses to a single quiet line instead of a page of air.
- */
+/** The one container every chart lives in — the fix for "графики по размеру не подходят". */
 export type ChartAspect = 'strip' | 'wide' | 'column' | 'square';
 
 const ASPECT: Record<ChartAspect, string> = {
@@ -35,11 +30,7 @@ export function ChartCard({
   /** A figure or an action pinned to the header's right edge. */
   right?: ReactNode;
   aspect?: ChartAspect;
-  /**
-   * A sentence when there is nothing honest to draw. Non-null collapses the
-   * card to the header plus this line — 40px of truth instead of 300px of
-   * skeleton bars.
-   */
+  /** A sentence when there is nothing honest to draw. */
   empty?: string | null;
   footer?: ReactNode;
   children?: ReactNode;

@@ -3,24 +3,10 @@ using Shifter.Domain.Entities;
 
 namespace Shifter.Application.Features.business.Services;
 
-/// <summary>
-/// What a place costs to get to, folded back into the hourly rate.
-///
-/// Kept apart from earnings on purpose. The commute is an estimate — a typical
-/// journey, not a measured one — and estimates must never be added into money
-/// that actually arrived. So it produces its own figures that sit beside the
-/// real ones and are labelled as a comparison, not a total.
-/// </summary>
+/// <summary>What a place costs to get to, folded back into the hourly rate.</summary>
 public static class CommuteMath
 {
-    /// <summary>
-    /// The place's hourly rate once the journey is counted as part of the job:
-    /// take-home less the fares, over hours plus the travelling.
-    ///
-    /// Null where nobody has said how far it is. An unstated commute is not a
-    /// commute of zero — printing "the same" for a place whose journey is
-    /// simply unknown would be the app inventing a comparison.
-    /// </summary>
+    /// <summary>The place's hourly rate once the journey is counted as part of the job: take-home less the fares, over hours…</summary>
     public static CommuteDto? For(Location place, LocationTotalDto total)
     {
         if (place.CommuteMinutes <= 0 && place.CommuteCost <= 0m) return null;

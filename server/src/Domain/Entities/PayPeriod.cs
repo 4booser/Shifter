@@ -1,9 +1,6 @@
 namespace Shifter.Domain.Entities;
 
-/// <summary>
-/// How often a job pays out. Totals are cut along these boundaries because a
-/// calendar month is useless to someone paid on the 10th and the 25th.
-/// </summary>
+/// <summary>How often a job pays out.</summary>
 public enum PayPeriod
 {
     Monthly = 0,

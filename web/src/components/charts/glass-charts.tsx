@@ -10,25 +10,13 @@ import { useMoney } from '@/lib/settings/money';
 import { levelWindow, smoothPath } from '@/lib/charts/math';
 import { earnedTone } from '@/lib/tone';
 
-/*
- * The second-generation chart kit: fewer axes, bigger marks, direct labels,
- * one gradient language. Every form here was redrawn for the sparse case —
- * one month of data, one working slot — because that is what a new account
- * looks at for weeks.
- */
+/* The second-generation chart kit: fewer axes, bigger marks, direct labels, one gradient language. */
 
 const GRAD_TOP = 'var(--accent)';
 const GRAD_BOTTOM = 'color-mix(in srgb, var(--accent) 45%, var(--surface))';
 
 /** A shared vertical gradient; the id is per-instance so charts can coexist. */
-/**
- * The vertical wash under a line's area, and the line's own stroke.
- *
- * Named for bars because it used to paint them; it does not any more — a
- * horizontal fade across a bar claimed an encoding the bar did not have. Top
- * to bottom under an area is the other thing entirely: it reads as a fill
- * fading out, not as a value changing.
- */
+/** The vertical wash under a line's area, and the line's own stroke. */
 function useLineWash(): [string, React.ReactNode] {
   const id = useId().replace(/[«»:]/g, '');
 
@@ -43,22 +31,7 @@ function useLineWash(): [string, React.ReactNode] {
 
 // ==== Twelve months, readable with one month of data ====
 
-/**
- * One horizontal bar chart, for every «which of these is biggest» question.
- *
- * There were two of these, ninety per cent identical: `MonthBars` for a year
- * of months and `RankBars` for ranked categories. They differed in the width
- * of the label gutter, in which row counts as the important one, and in
- * whether the scale was drawn — three props, not two components. Between them
- * they answered five questions on three pages, and every fix to one had to be
- * remembered for the other.
- *
- * The gradient is gone. A left-to-right fade across each bar encoded nothing
- * — the bar's length already carries the number — and a fill that means
- * nothing is decoration competing with the one thing on the row that does.
- * The marked row and the peak carry full accent; the rest stand slightly
- * back, which is a real difference about real values.
- */
+/** One horizontal bar chart, for every «which of these is biggest» question. */
 export interface BarRow {
   label: string;
   value: number;
@@ -66,14 +39,7 @@ export interface BarRow {
   caption?: string;
   /** The row this chart is about — the current month, the chosen place. */
   marked?: boolean;
-  /**
-   * The row's own colour, where the thing being measured has one.
-   *
-   * Places carry a colour their owner chose, and it is identity rather than
-   * rank — the same place keeps the same colour whether it earned most or
-   * least this month. Rows without one take the accent, which is the normal
-   * case: a month or a weekday has no colour of its own to honour.
-   */
+  /** The row's own colour, where the thing being measured has one. */
   colour?: string;
 }
 
@@ -187,16 +153,9 @@ export function Bars({
   );
 }
 
-
 // ==== How the money assembled — a flow, not a staircase ====
 
-/**
- * The waterfall, retold in one sentence: sources stack into one wide bar,
- * deductions hang under it as chips, and the two numbers that matter stand
- * at full size. Small components stay visible because the bar enforces a
- * minimum share — a 105 of sales next to 16 000 of shifts is a sliver, but
- * a visible one.
- */
+/** The waterfall, retold in one sentence: sources stack into one wide bar, deductions hang under it as chips… */
 export function MoneyFlow({ steps }: { steps: WaterfallStep[] }) {
   const { t } = useI18n();
   const { format } = useMoney();
@@ -253,9 +212,7 @@ export function MoneyFlow({ steps }: { steps: WaterfallStep[] }) {
       {/* Gross, the cuts, net — the sentence itself. */}
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-border pt-3">
         <span>
-          {/* Not «Earned»: the page's own headline uses that word for the
-              figure with the cuts already taken out, and this one is the
-              figure they come out of. */}
+          {/* Not «Earned»: the page's own headline uses that word for the figure with the cuts already taken out, and this… */}
           <span className="field-hint block">{t('Before cuts')}</span>
           <span className="text-[1.35rem] font-bold tracking-tight tabular">{format(gross.value)}</span>
         </span>
@@ -269,12 +226,7 @@ export function MoneyFlow({ steps }: { steps: WaterfallStep[] }) {
           </span>
         ))}
 
-        {/*
-          * Only where something was actually taken. A month with no tip-out,
-          * no fines and no tax showed «₴3 450 → ₴3 450»: an arrow is a
-          * promise that the number on the right is different, and here it
-          * was the same number twice with a full stop between them.
-          */}
+        {/* Only where something was actually taken. */}
         {net !== undefined && (cuts.length > 0 || net.value !== gross.value) && (
           <>
             <span className="text-faint">→</span>
@@ -353,9 +305,7 @@ export function WeekBandsChart({ bands }: { bands: WeekBand[] }) {
                     ['--i' as string]: weekday,
                     left: `${(band.from / span) * 100}%`,
                     width: `${Math.max(3, ((band.to - band.from) / span) * 100)}%`,
-                    // Flat, like the bars: this band's left edge and width
-                    // already say when the shift ran, and its opacity says
-                    // how often. A fade across it said nothing at all.
+                    // Flat, like the bars: this band's left edge and width already say when the shift ran, and its opacity says how…
                     background: 'var(--accent)',
                     opacity: (hover === null || hover === weekday ? 1 : 0.35) * (0.55 + 0.45 * (band.count / maxCount)),
                   }}
@@ -482,10 +432,7 @@ export function TrendLine({ points }: { points: TrendPoint[] }) {
   const H = 200;
   const PAD = { top: 30, right: 76, bottom: 34, left: 46 };
 
-  // A zoomed window shows drift, but a window without a scale reads as
-  // nonsense — so the frame carries real ticks, and the floor never dips
-  // below zero: an hourly rate has no negative half-plane. The window itself
-  // is the shared one, not a third hand-rolled copy of the same arithmetic.
+  // A zoomed window shows drift, but a window without a scale reads as nonsense — so the frame carries real…
   const { base: floor, peak: ceiling } = levelWindow(
     points.map((point) => point.value),
     { floorAtZero: true },
@@ -498,15 +445,7 @@ export function TrendLine({ points }: { points: TrendPoint[] }) {
   const path = smoothPath(points.map((point, index) => ({ x: x(index), y: y(point.value) })));
   const last = points.at(-1);
   const first = points[0];
-  /*
-   * A fall cannot exceed everything there was.
-   *
-   * This printed «↓ 1851%» — arithmetically what you get when the last point
-   * is negative and the first is small, and nonsense as a sentence. Both ends
-   * have to be real positive rates before a change between them means
-   * anything; the source now keeps minute-long weeks off the chart, and this
-   * refuses to quote a figure it cannot stand behind even if one arrives.
-   */
+  /* A fall cannot exceed everything there was. */
   const change =
     first !== undefined && last !== undefined && first.value > 0 && last.value > 0
       ? ((last.value - first.value) / first.value) * 100
@@ -519,12 +458,7 @@ export function TrendLine({ points }: { points: TrendPoint[] }) {
   const area = `${path} L ${x(points.length - 1)} ${H - PAD.bottom} L ${x(0)} ${H - PAD.bottom} Z`;
   // Labels near the top edge would leave the frame; flip them under the dot.
   const labelY = (value: number) => (y(value) < PAD.top + 16 ? y(value) + 20 : y(value) - 12);
-  /*
-   * Ticks counted back from the newest week, not forward from the oldest.
-   * Forward plus «always label the last one» put 36 and 37 side by side and
-   * printed «17.0Д4.08» — two dates in one place. Counting back keeps the
-   * spacing even and anchors the end everybody reads first.
-   */
+  /* Ticks counted back from the newest week, not forward from the oldest. */
   const every = Math.max(1, Math.ceil(points.length / 10));
   const marked = new Set<number>();
   for (let index = points.length - 1; index >= 0; index -= every) marked.add(index);

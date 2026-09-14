@@ -53,10 +53,7 @@ interface PlaceTotal {
   tips: number;
   per_hour: number;
   currency: string;
-  /**
-   * Null where nobody has said how far the place is. An unstated commute is
-   * not a commute of zero, and printing "the same" would invent a comparison.
-   */
+  /** Null where nobody has said how far the place is. */
   commute: { travel_hours: number; fares: number; per_hour_with_travel: number } | null;
 }
 
@@ -77,12 +74,7 @@ interface Summary extends DaysResponse {
 
 type Span = 'month' | 'year';
 
-/**
- * Statistics in the hand: the four numbers people actually quote, then the
- * shape of the money and the shape of the day. Everything is priced by the
- * server — the phone only draws — so the figures here and on the site can
- * never drift apart.
- */
+/** Statistics in the hand: the four numbers people actually quote, then the shape of the money and the shape of… */
 export default function StatsScreen() {
   const scheme = useColorScheme();
   const palette = Colors[scheme === 'dark' ? 'dark' : 'light'];
@@ -99,23 +91,13 @@ export default function StatsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  /**
-   * A place's hourly rate in the currency it is actually paid in. Where the
-   * range touches only one currency the app's own symbol is right and reads
-   * better; where it touches several, stamping ₴ on złoty is exactly the
-   * confident lie about money this app does not tell.
-   */
+  /** A place's hourly rate in the currency it is actually paid in. */
   const rate = (place: { currency: string }, value: number) =>
     (summary?.currencies ?? []).length > 1
       ? moneyIn(place.currency === '' ? (summary?.conversion?.base_currency ?? 'UAH') : place.currency, value)
       : money(value);
 
-  /**
-   * An amount in the currency the totals are actually in. Where the range
-   * touches one currency the app's own symbol is right and reads better; where
-   * it touches several, everything is already converted and printing ₴ on it
-   * would be the confident lie this app does not tell.
-   */
+  /** An amount in the currency the totals are actually in. */
   const amount = (value: number) =>
     (summary?.currencies ?? []).length > 1
       ? moneyIn(summary?.conversion?.base_currency ?? 'UAH', value)
@@ -196,11 +178,7 @@ export default function StatsScreen() {
         const start = Number(shift.start_time.slice(0, 2));
         const end = Number(shift.end_time.slice(0, 2));
 
-        // How many hours the shift spans, wrapping midnight. Counted first
-        // rather than walked until the end hour comes round: a handover that
-        // starts and ends in the same hour never met that condition until all
-        // twenty-four had been marked, so the dial lit up completely and
-        // "лучший час" reported midnight.
+        // How many hours the shift spans, wrapping midnight.
         const span = end === start ? 1 : (end - start + 24) % 24;
 
         for (let step = 0; step < span; step++) hours[(start + step) % 24] += 1;
@@ -213,9 +191,7 @@ export default function StatsScreen() {
   const parts = summary === null
     ? []
     : [
-        // The percentage comes out of the shifts figure it already sits
-        // inside: hidden there it cannot be seen to be working, which is the
-        // whole reason somebody agreed to it.
+        // The percentage comes out of the shifts figure it already sits inside: hidden there it cannot be seen to be…
         { name: t('Смены'), value: summary.shifts_earned - summary.revenue_earned, colour: palette.accent },
         { name: t('Процент'), value: summary.revenue_earned, colour: '#B5449C' },
         { name: t('Надбавки'), value: summary.premium_earned + summary.overtime_earned, colour: palette.good },
@@ -223,23 +199,13 @@ export default function StatsScreen() {
         { name: t('Чаевые'), value: summary.tips_earned, colour: '#0891B2' },
       ].filter((part) => part.value > 0);
 
-  // Converted where the range mixes currencies: adding złoty to hryvnia and
-  // dividing by hours is a number with no meaning at all.
-  // An hourly rate divided out of minutes is not a rate. A shift closed after
-  // fifty seconds priced the hour at −₴3 805 on the web pages and in the
-  // assistant before both learned to hold an hour as the floor; this guarded
-  // only against dividing by nought.
-  // Null, not nought: under an hour of work there is no rate to quote, and a
-  // «₴0» beside «↓ 100%» says the hour collapsed rather than that it was
-  // never counted.
+  // Converted where the range mixes currencies: adding złoty to hryvnia and dividing by hours is a number with no…
   const perHour =
     summary === null || summary.hours < 1
       ? null
       : (summary.conversion?.total_earned ?? summary.total_earned) / summary.hours;
 
-  // The same period a year or a month back, cut to the same length where this
-  // one is still running. A comparison is the only thing on this screen that
-  // answers "is it going well", and until now nothing here answered it.
+  // The same period a year or a month back, cut to the same length where this one is still running.
   const earnedBefore = before === null
     ? null
     : (before.conversion?.total_earned ?? before.total_earned);
@@ -254,9 +220,7 @@ export default function StatsScreen() {
     setMonth((at) => (span === 'month' ? addMonths(at, by) : { ...at, year: at.year + by }));
   };
 
-  // Sideways changes the period, the way it does on the calendar. The offset
-  // keeps a vertical scroll vertical: a list that jumps to last month because
-  // a thumb drifted is worse than no gesture at all.
+  // Sideways changes the period, the way it does on the calendar.
   const swipe = Gesture.Pan()
     .activeOffsetX([-24, 24])
     .failOffsetY([-16, 16])
@@ -320,9 +284,7 @@ export default function StatsScreen() {
 
       <Appear>
       <View style={styles.kpis}>
-        {/* Where the range mixes currencies the plain sum is hryvnia and
-            zloty added together as if they were the same money. The converted
-            figure is the only honest headline. */}
+        {/* Where the range mixes currencies the plain sum is hryvnia and zloty added together as if they were the same… */}
         <Kpi
           palette={palette}
           label={t("Заработано")}
@@ -338,9 +300,7 @@ export default function StatsScreen() {
           sign={summary?.conversion?.total_earned ?? summary?.total_earned ?? 0}
           strong
         />
-        {/* Every other figure on this screen is guarded; this one stamped a
-            hryvnia sign on a sum of hryvnia and złoty, directly above the card
-            that exists to say the range mixes currencies. */}
+        {/* Every other figure on this screen is guarded; this one stamped a hryvnia sign on a sum of hryvnia and złoty… */}
         <Kpi
           palette={palette}
           label={t("В час")}
@@ -368,10 +328,7 @@ export default function StatsScreen() {
       </View>
       </Appear>
 
-      {/* The comparison as a shape rather than a percentage: whether the month
-          started slowly and caught up, or started well and stalled, are two
-          completely different conversations and one number cannot tell them
-          apart. */}
+      {/* The comparison as a shape rather than a percentage: whether the month started slowly and caught up, or… */}
       {summary !== null && summary.days.some((day) => day.earned > 0) && (
         <Appear index={1}>
           <View style={styles.card}>
@@ -485,9 +442,7 @@ export default function StatsScreen() {
             </View>
           ))}
 
-          {/* The rate is part of the answer: a converted wage nobody can
-              check against their own bank is one they will act on and later
-              find was invented. */}
+          {/* The rate is part of the answer: a converted wage nobody can check against their own bank is one they will act… */}
           <Text style={styles.convertRate}>
             {summary.conversion.rates
               .map((rate) => `1 ${rate.code} = ${rate.rate} UAH · ${rate.on}`)
@@ -534,7 +489,6 @@ export default function StatsScreen() {
 
       <WeekStoryCard palette={palette} />
 
-
       <CitiesCard palette={palette} />
 
       <YearHeatCard palette={palette} />
@@ -564,13 +518,7 @@ function Kpi({
   value?: string;
   /** A plain count, which can be rolled rather than swapped. */
   amount?: number;
-  /**
-   * The headline's own sign, where it has one.
-   *
-   * `strong` used to mean «paint it green», and a month that finished at
-   * −₴156 printed the loss in the good colour with a red «↓ 104%» directly
-   * underneath it — the two halves of one tile disagreeing.
-   */
+  /** The headline's own sign, where it has one. */
   sign?: number;
   /** Per cent against the same period before. Null where there is none. */
   change?: number | null;

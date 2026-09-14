@@ -6,11 +6,7 @@ using Xunit;
 
 namespace Shifter.Tests;
 
-/// <summary>
-/// The invariants a review found broken, each pinned by the scenario that
-/// broke it. The one that matters most is the last: the parts have to sum to
-/// the whole. Every defect here was a place where they did not.
-/// </summary>
+/// <summary>The invariants a review found broken, each pinned by the scenario that broke it.</summary>
 public class MoneyIntegrityTests
 {
     private readonly FakeShifterQuery _query = new();
@@ -322,13 +318,7 @@ public class MoneyIntegrityTests
 
     // ==== A meal is charged for a shift somebody went to ====
 
-    /// <summary>
-    /// A place that withholds for a staff meal charged it on presence rather
-    /// than on work, and a day holding nothing but next week's plan came out
-    /// at minus eighty: a day in the red for a meal nobody has eaten, on a
-    /// shift nobody has been to. Anybody scrolling forward through their own
-    /// rota saw it on every planned day.
-    /// </summary>
+    /// <summary>A place that withholds for a staff meal charged it on presence rather than on work, and a day holding nothing…</summary>
     [Fact]
     public async Task A_planned_day_is_not_charged_for_a_meal_nobody_has_eaten()
     {

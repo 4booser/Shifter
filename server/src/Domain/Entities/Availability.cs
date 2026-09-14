@@ -1,14 +1,6 @@
 namespace Shifter.Domain.Entities;
 
-/// <summary>
-/// "I cannot work that day." One row per person per day they have blocked,
-/// scoped to a team because availability is a promise to a particular crew,
-/// not a fact about the person.
-///
-/// Deliberately a block list rather than a list of free days: a rota where
-/// silence means "unavailable" is a rota nobody fills in, and the common
-/// case — most days possible, a few not — should be the cheap one.
-/// </summary>
+/// <summary>"I cannot work that day." One row per person per day they have blocked, scoped to a team because availability…</summary>
 public sealed class Availability
 {
     public const int ReasonMax = 80;

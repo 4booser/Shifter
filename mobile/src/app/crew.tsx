@@ -18,14 +18,7 @@ import { dayLabel, todayKey } from '@/lib/calendar';
 import { money, plural } from '@/lib/types';
 import { t } from '@/lib/i18n';
 
-/**
- * The two things a shift needs from the shift before it: what the room took,
- * and what went wrong.
- *
- * Both belong on the phone rather than the site, because both are entered
- * while standing up — the tin is counted at the bar, and the note about the
- * grinder is written on the way out of the door.
- */
+/** The two things a shift needs from the shift before it: what the room took, and what went wrong. */
 interface PoolShare {
   user_id: number;
   name: string;

@@ -2,12 +2,7 @@ using Shifter.Domain.Entities.Enums;
 
 namespace Shifter.Domain.Entities;
 
-/// <summary>
-/// One cell of the manager's board: this person, this day, these hours.
-/// Deliberately not a shift — rates are private, so a manager plans time
-/// and the person turns it into a shift on their own calendar, at their own
-/// terms, by accepting it.
-/// </summary>
+/// <summary>One cell of the manager's board: this person, this day, these hours.</summary>
 public sealed class PlannedAssignment
 {
     public int Id { get; set; }
@@ -19,9 +14,7 @@ public sealed class PlannedAssignment
     public int UserId { get; set; }
     public User? User { get; set; }
 
-    /// <summary>
-    /// Nullable so a planner can leave without deleting the rota they built.
-    /// </summary>
+    /// <summary>Nullable so a planner can leave without deleting the rota they built.</summary>
     public int? CreatedByUserId { get; set; }
     public User? CreatedBy { get; set; }
 
@@ -30,12 +23,7 @@ public sealed class PlannedAssignment
     /// <summary>What the board calls it: "Bar", "Открытие", a code.</summary>
     public required string Title { get; set; }
 
-    /// <summary>
-    /// Which station this cell covers. A title is what a house calls the
-    /// shift and differs between houses; the role is the thing a rota is
-    /// actually short of — "two bars and nobody in the kitchen" cannot be
-    /// read off free text.
-    /// </summary>
+    /// <summary>Which station this cell covers.</summary>
     public PlanRole Role { get; set; } = PlanRole.Unset;
 
     public TimeOnly StartTime { get; set; }

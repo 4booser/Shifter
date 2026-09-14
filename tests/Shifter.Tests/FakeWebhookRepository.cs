@@ -3,11 +3,7 @@ using Shifter.Infrastructure.Repositories.Interfaces;
 
 namespace Shifter.Tests;
 
-/// <summary>
-/// In-memory endpoints and their log. Hand-written like the other fakes: the
-/// receiving side asks it three questions, and a plain list answers all three
-/// without pretending to be a database.
-/// </summary>
+/// <summary>In-memory endpoints and their log.</summary>
 public sealed class FakeWebhookRepository : IWebhookRepository
 {
     public List<WebhookEndpoint> Endpoints { get; } = [];

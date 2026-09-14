@@ -6,15 +6,7 @@ import { useI18n } from '@/lib/i18n';
 import { useMono } from '@/lib/mono/store';
 import { Alert } from '@/components/ui/bits';
 
-/**
- * Connecting the bank, and saying plainly where the token lives.
- *
- * The token reads somebody's entire statement, so the connect screen owes them
- * the exact truth: it goes from this browser to api.monobank.ua directly, the
- * Shifter server never sees it — and it is kept in this browser's storage,
- * which is not a phone's keychain, and that difference is stated rather than
- * papered over.
- */
+/** Connecting the bank, and saying plainly where the token lives. */
 export function BankConnect() {
   const { t } = useI18n();
 
@@ -77,14 +69,7 @@ export function BankConnect() {
         <Alert kind="error">{t('Could not reach the bank. Try again in a minute.')}</Alert>
       )}
 
-      {/*
-        Looking costs nothing: the demo draws a statement in this browser and
-        involves no bank, which is the whole pitch of it — and it is the only
-        way to see any of this without handing over a token. As a quiet
-        button it had no background, no border and muted ink, so on the one
-        screen that asks for a bank credential the safe path read as a
-        caption. It is an outlined button now.
-      */}
+      {/* Looking costs nothing: the demo draws a statement in this browser and involves no bank, which is the whole… */}
       <button
         type="button"
         className="btn mt-3"
@@ -96,9 +81,7 @@ export function BankConnect() {
         {t('Ninety made-up days, drawn right here. No bank involved, nothing saved.')}
       </p>
 
-      {/* The honest paragraph. Browser storage is not a keychain, and the
-          person deciding whether to paste a bank token here is entitled to
-          that sentence before they do it, not after. */}
+      {/* The honest paragraph. */}
       <div className="mt-4 flex flex-col gap-1.5 text-[0.82rem] text-muted">
         <p>— {t('The safest home for the statement is the phone app — there the token lives in the keychain. Pasting it here works too; it will not leave this browser.')}</p>
         <p>— {t('The token can only read. Nobody can move money with it.')}</p>

@@ -5,13 +5,7 @@ using Shifter.Infrastructure.Persistence.DbContexts;
 
 namespace Shifter.Application.Features.Rhythm;
 
-/// <summary>
-/// The rota's rhythm, read back to its owner: the sleep windows between
-/// shifts, and whether a long run of days shows up in the tips.
-///
-/// Deliberately not health advice. It is somebody's own record with the gaps
-/// made visible; what that means for them is theirs to decide.
-/// </summary>
+/// <summary>The rota's rhythm, read back to its owner: the sleep windows between shifts, and whether a long run of days…</summary>
 public sealed class RhythmService
 {
     private readonly ShifterDbContext _db;
@@ -30,11 +24,7 @@ public sealed class RhythmService
         int ShortCount,
         double? Shortest);
 
-    /// <summary>
-    /// The gaps between one worked span ending and the next beginning.
-    /// Only gaps up to a day long count as windows: a longer gap is a day
-    /// off, which is rest of a different kind and not this page's subject.
-    /// </summary>
+    /// <summary>The gaps between one worked span ending and the next beginning.</summary>
     public async Task<RestRead> RestAsync(int userId, DateOnly from, DateOnly to, CancellationToken ct)
     {
         var threshold = (await _db.Users.AsNoTracking()
@@ -109,11 +99,7 @@ public sealed class RhythmService
             shortOnes.Length == 0 ? null : shortOnes.Min(window => window.Hours));
     }
 
-    /// <summary>
-    /// The fatigue comparison over the last year. A year holds enough runs
-    /// to fill both piles for anybody working long stretches at all — and
-    /// anybody not working them has nothing to compare and gets silence.
-    /// </summary>
+    /// <summary>The fatigue comparison over the last year.</summary>
     public async Task<FatigueEffect.Verdict?> FatigueAsync(int userId, DateOnly today, CancellationToken ct)
     {
         var from = today.AddDays(-365);

@@ -5,11 +5,7 @@ using Xunit;
 
 namespace Shifter.Tests;
 
-/// <summary>
-/// In-memory stand-ins for the repositories. Hand-written rather than mocked:
-/// the handlers only ever ask these for lists, so a plain object reads better
-/// than a chain of setup calls and never lies about what the query returns.
-/// </summary>
+/// <summary>In-memory stand-ins for the repositories.</summary>
 public sealed class FakeShifterQuery : IShifterQuery
 {
     public Task<int?> GetDayVersionAsync(int userId, DateOnly date, CancellationToken ct)
@@ -144,12 +140,7 @@ public sealed class FakeShifterQuery : IShifterQuery
 
 public sealed class FakeShifterCommand : IShifterCommand
 {
-    /// <summary>
-    /// The query side, when a test has one. The handlers re-read what they have
-    /// just written — that is how a response gets its location name and colour
-    /// — so without somewhere for a write to land, the read finds nothing and
-    /// the fake quietly answers a different question than the database would.
-    /// </summary>
+    /// <summary>The query side, when a test has one.</summary>
     private readonly FakeShifterQuery? _query;
 
     public FakeShifterCommand(FakeShifterQuery? query = null) => _query = query;
@@ -413,9 +404,7 @@ public sealed class FakeShifterCommand : IShifterCommand
 
     public Task SaveAsync(CancellationToken ct) => Task.CompletedTask;
 
-    /// <summary>Every merge a delivery asked for, in order. What the ingest
-    /// handler resolved is the thing under test — the database's own merge is
-    /// tested where it lives.</summary>
+    /// <summary>Every merge a delivery asked for, in order.</summary>
     public List<DaySalesMerge> Merges { get; } = [];
 
     /// <summary>Placements written by an hours delivery, with their date.</summary>
@@ -472,11 +461,7 @@ public sealed class FakeShifterCommand : IShifterCommand
         return Task.FromResult(day);
     }
 
-    /// <summary>
-    /// The day already on the calendar, or a new one. Kept in the query fake
-    /// where there is one, so a test can assert that a delivery left the rest
-    /// of the day alone.
-    /// </summary>
+    /// <summary>The day already on the calendar, or a new one.</summary>
     private Day Existing(int userId, DateOnly date)
     {
         Day? day = _query?.Days.FirstOrDefault(item => item.UserId == userId && item.Date == date);

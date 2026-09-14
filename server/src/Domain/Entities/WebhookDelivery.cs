@@ -1,10 +1,6 @@
 namespace Shifter.Domain.Entities;
 
-/// <summary>
-/// One arrival at an endpoint, kept with its body. The body is the point: when
-/// a night's takings land on the wrong date, the only way to find out why is to
-/// read what was actually sent, and the sender rarely keeps a copy.
-/// </summary>
+/// <summary>One arrival at an endpoint, kept with its body.</summary>
 public sealed class WebhookDelivery
 {
     public int Id { get; set; }
@@ -16,11 +12,7 @@ public sealed class WebhookDelivery
 
     public DeliveryStatus Status { get; set; }
 
-    /// <summary>
-    /// The sender's own id for this event, when it sends one. Unique per
-    /// endpoint, which is what makes a retry after a timeout harmless: the
-    /// second copy is recognised rather than added to the first.
-    /// </summary>
+    /// <summary>The sender's own id for this event, when it sends one.</summary>
     public string? ExternalId { get; set; }
 
     /// <summary>The day this touched, once the payload has been read.</summary>
@@ -29,10 +21,7 @@ public sealed class WebhookDelivery
     /// <summary>Why it did not apply, in the words the sender should see.</summary>
     public string? Error { get; set; }
 
-    /// <summary>
-    /// The raw body, truncated. A till that sends a whole day of line items can
-    /// send a lot, and the log is for diagnosis, not for storage.
-    /// </summary>
+    /// <summary>The raw body, truncated.</summary>
     public required string Payload { get; set; }
 
     /// <summary>Longest body kept. Anything past this is cut with an ellipsis.</summary>

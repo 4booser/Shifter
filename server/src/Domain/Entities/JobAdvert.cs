@@ -3,24 +3,7 @@ using System.Text.RegularExpressions;
 
 namespace Shifter.Domain.Entities;
 
-/// <summary>
-/// A job advert read into the beginnings of a shift template.
-///
-/// The terms are already written down — "бармен, 250 грн/год, зміни 10:00–22:00,
-/// 5% з бару" — and copying them into a form by hand is work nobody enjoys and
-/// half of people skip, which is how a shift ends up recorded at a rate nobody
-/// checked.
-///
-/// Rules rather than a model. Adverts in this trade are written in a handful of
-/// shapes and the shapes are stable, so a regular expression gets most of them
-/// and gets them for nothing — no key, no per-call cost, no request leaving the
-/// server with somebody's job hunt in it. What it cannot read it leaves blank
-/// rather than guessing, because a blank field is a question and a wrong rate
-/// is an answer.
-///
-/// Nothing here is saved. Every value goes to a form the person edits, which is
-/// the only honest place for a figure a machine read off an advert.
-/// </summary>
+/// <summary>A job advert read into the beginnings of a shift template.</summary>
 public static class JobAdvert
 {
     public sealed record Read(
@@ -36,19 +19,7 @@ public static class JobAdvert
 
     private static readonly TimeSpan Timeout = TimeSpan.FromMilliseconds(200);
 
-    /// <summary>
-    /// A match, or nothing, but never an exception.
-    ///
-    /// Every pattern here carries a 200 ms guard against a pathological
-    /// advert, and nothing caught what the guard throws. A
-    /// <see cref="RegexMatchTimeoutException"/> came straight out of
-    /// <see cref="Parse"/> — so a busy moment turned «we could not read the
-    /// hours out of this advert» into a failed request, on the one screen
-    /// where somebody is pasting a stranger's text and the whole design is
-    /// to read what can be read and leave the rest null. Found when a
-    /// compiled pattern's first match, JIT and all, went over the guard
-    /// under a loaded test run.
-    /// </summary>
+    /// <summary>A match, or nothing, but never an exception.</summary>
     private static Match? Scan(Regex pattern, string body)
     {
         try
@@ -63,23 +34,12 @@ public static class JobAdvert
         }
     }
 
-    /// <summary>
-    /// "10:00–22:00", "з 10.00 до 22.00", "10-22".
-    ///
-    /// The bare "10-22" form is deliberately last and deliberately narrow: it
-    /// is also how a wage range is written, and reading "250-300 грн" as a
-    /// shift from half past two in the morning would be worse than reading
-    /// nothing.
-    /// </summary>
+    /// <summary>"10:00–22:00", "з 10.00 до 22.00", "10-22".</summary>
     private static readonly Regex Span = new(
         @"(?<h1>[0-2]?\d)[:.](?<m1>[0-5]\d)\s*(?:-|–|—|до|to|по)\s*(?<h2>[0-2]?\d)[:.](?<m2>[0-5]\d)",
         RegexOptions.IgnoreCase | RegexOptions.Compiled, Timeout);
 
-    /// <summary>
-    /// The wage and what it is per. The unit is taken from the words beside
-    /// the number, never assumed: "300" next to nothing could be an hour or a
-    /// shift, and picking one turns a five-fold error into a plausible one.
-    /// </summary>
+    /// <summary>The wage and what it is per.</summary>
     private static readonly Regex Pay = new(
         // The low end of a range is captured too, and it is the one used. An
         // advert's upper figure is the marketing one; the lower is what a new
@@ -91,15 +51,7 @@ public static class JobAdvert
         + @"(?<unit>годину|годин|година|год|час(?:ов|а)?|hour|hr|зміну|зміна|смену|смена|shift|день|day|місяць|месяц|month)",
         RegexOptions.IgnoreCase | RegexOptions.Compiled, Timeout);
 
-    /// <summary>
-    /// A share of the till, and only that.
-    ///
-    /// An advert is full of percentages that are not somebody's cut: VAT, the
-    /// social contribution, a discount for staff. So the number has to sit
-    /// beside a word that means sales, and a bare "20%" is left alone — which
-    /// is the difference between offering a waiter a fifth of the bar and
-    /// offering them the tax rate.
-    /// </summary>
+    /// <summary>A share of the till, and only that.</summary>
     private static readonly Regex Share = new(
         @"(?<percent>\d{1,2}(?:[.,]\d)?)\s*%[^.\n]{0,30}?"
         + @"(?:продаж|прода[её]|вируч|выруч|товарооб|обіг|оборот|бар\b|бару|кухн|чек|каси|касс|sales|turnover|revenue|bar\b)",

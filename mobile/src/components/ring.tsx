@@ -4,15 +4,7 @@ import Svg, { Circle } from 'react-native-svg';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
-/**
- * How far through the shift you are, as a ring.
- *
- * A number saying "02:14:37" tells you what has passed; only a shape tells
- * you what is left, and what is left is the question anybody actually has at
- * the fourth hour. Past the planned end it fills and stays filled — the
- * overtime is said in words below rather than by a ring that would have to
- * wrap around and lie about the first lap.
- */
+/** How far through the shift you are, as a ring. */
 export function Ring({
   progress,
   size = 268,
@@ -33,10 +25,7 @@ export function Ring({
   const circumference = 2 * Math.PI * radius;
   const at = useSharedValue(progress);
 
-  // In an effect, not in the render body. Writing to a shared value while
-  // React is rendering is a rule this app breaks at its peril: the React
-  // Compiler is on, and a render it decides to throw away would still have
-  // moved the ring.
+  // In an effect, not in the render body.
   useEffect(() => {
     at.value = withTiming(progress, { duration: 900 });
   }, [progress, at]);

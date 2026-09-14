@@ -6,23 +6,10 @@ using Shifter.Infrastructure.Persistence.DbContexts;
 
 namespace Shifter.Application.Features.Gigs;
 
-/// <summary>
-/// Telling the right few people that somebody has not turned up.
-///
-/// This is the only notification in the app that reaches anybody without a
-/// subscription, and it is defensible for one reason: every person it reaches
-/// has published a card saying they are looking for work, in this trade, in
-/// this city — and their own calendar says the day is free. All of those have
-/// to be true. A push that fails any of them is the kind that gets an app
-/// uninstalled, and there is no second chance at that.
-/// </summary>
+/// <summary>Telling the right few people that somebody has not turned up.</summary>
 public sealed class UrgentAlerts
 {
-    /// <summary>
-    /// Nobody is told about more than this many at once, however busy a night
-    /// gets. A phone that buzzes six times in an evening is a phone with
-    /// notifications turned off tomorrow.
-    /// </summary>
+    /// <summary>Nobody is told about more than this many at once, however busy a night gets.</summary>
     private const int MostPerDay = 2;
 
     private readonly ShifterDbContext _db;

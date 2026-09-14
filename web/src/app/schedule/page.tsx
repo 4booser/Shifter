@@ -50,13 +50,7 @@ import { SkeletonRows } from '@/components/ui/skeleton';
 
 type Span = 'week' | 'month';
 
-/**
- * «6–8, 13–15, 20–30» rather than seventeen numbers in a row.
- *
- * A month with a thin second half listed every bare day, and the eye has to
- * count a comma-separated run to see that it is a run. Consecutive days are
- * a stretch, and a stretch is what a person is actually looking at.
- */
+/** «6–8, 13–15, 20–30» rather than seventeen numbers in a row. */
 function runsOf(days: number[]): string {
   const sorted = [...days].sort((one, two) => one - two);
   const runs: string[] = [];
@@ -89,11 +83,7 @@ export default function SchedulePage() {
   );
 }
 
-/**
- * The shared rota. What anyone is paid reaches this page only for people who
- * deliberately switched sharing on; the server does not read the column for
- * anybody else, and nothing here can flip somebody else's switch.
- */
+/** The shared rota. */
 function Schedule() {
   const revealHost = useReveal<HTMLDivElement>();
   const { t, lang, n, num } = useI18n();
@@ -104,9 +94,7 @@ function Schedule() {
   const [selected, setSelected] = useState<number | null>(null);
   const [rota, setRota] = useState<Rota | null>(null);
 
-  // The rest threshold this person actually set. Warning a crew at eleven
-  // hours when their own account says twelve makes the board argue with the
-  // settings page, and people believe the settings page.
+  // The rest threshold this person actually set.
   const [restHours, setRestHours] = useState<number | null>(null);
   const [month, setMonth] = useState(currentMonth());
   const [span, setSpan] = useState<Span>('month');
@@ -205,12 +193,7 @@ function Schedule() {
     [rota],
   );
 
-  /**
-   * Days where everybody rostered is still learning.
-   *
-   * Only where somebody is actually on: a day nobody is working is not a day
-   * short of experience.
-   */
+  /** Days where everybody rostered is still learning. */
   const greenDays = useMemo(() => {
     if (rota === null) return [];
 
@@ -238,9 +221,7 @@ function Schedule() {
     void accountApi
       .get()
       .then((profile) => setRestHours(profile.rest_hours))
-      // Falling back to the EU daily rule rather than to silence: a board
-      // that stops warning because one request failed is worse than one
-      // warning at a threshold somebody has to correct.
+      // Falling back to the EU daily rule rather than to silence: a board that stops warning because one request…
       .catch(() => setRestHours(11));
   }, []);
 
@@ -351,9 +332,7 @@ function Schedule() {
 
   if (!loading && teams.length === 0) {
     return (
-      // The shared one. This screen wrote its own version of the same card —
-      // same icon, same three lines, same button — and so kept none of the
-      // improvements the shared one got.
+      // The shared one.
       <div ref={revealHost} className="mx-auto max-w-md">
         <Empty
           icon="users"
@@ -407,12 +386,7 @@ function Schedule() {
           </select>
         )}
 
-        {/*
-          The planner brings its own week stepper, so this whole toolbar drove
-          nothing there: «Месяц» sat highlighted over a board showing one
-          week, and «Сегодня» and the arrows moved a range nobody could see. A
-          control that looks chosen and does nothing is worse than no control.
-        */}
+        {/* The planner brings its own week stepper, so this whole toolbar drove nothing there: «Месяц» sat highlighted… */}
         <div className="ml-auto flex flex-wrap items-center gap-1.5">
           {mode === 'rota' && (
             <>
@@ -455,11 +429,7 @@ function Schedule() {
       {/* ==== The manager's board replaces the rota entirely ==== */}
       {mode === 'planner' && selected !== null && <PlannerBoardView teamId={selected} />}
 
-      {/*
-        A Friday night with two new people on it and nobody who has closed
-        before is a thing the crew finds out at eleven o'clock. The rota knows
-        in advance and has never said.
-      */}
+      {/* A Friday night with two new people on it and nobody who has closed before is a thing the crew finds out at… */}
       {mode === 'rota' && greenDays.length > 0 && (
         <Alert kind="info">
           <span className="flex flex-col gap-0.5">
@@ -471,11 +441,7 @@ function Schedule() {
         </Alert>
       )}
 
-      {/*
-        Said rather than shown as an empty column. Somebody whose colleagues'
-        figures have quietly gone missing will conclude the app is broken, and
-        they would be reasonable to.
-      */}
+      {/* Said rather than shown as an empty column. */}
       {mode === 'rota' && rota?.needs_second_factor === true && (
         <Alert kind="info">
           <span className="flex flex-wrap items-center gap-2">
@@ -487,14 +453,7 @@ function Schedule() {
         </Alert>
       )}
 
-      {/*
-        Two shifts on one person with too little between them, while it is
-        still a plan — the only moment it can be moved without a conversation.
-
-        "Looks like" and never "breaks". The app does not know anybody's
-        contract, their country's exemptions, or what they agreed to; it knows
-        two times and the distance between them.
-      */}
+      {/* Two shifts on one person with too little between them, while it is still a plan — the only moment it can be… */}
       {mode === 'rota' && tight.length > 0 && (
         <Alert kind="info">
           <span className="flex flex-col gap-0.5">
@@ -767,9 +726,7 @@ function Schedule() {
                 <button
                   key={colour}
                   type="button"
-                  /* Seven buttons with nothing in them: a reader heard
-                     «кнопка» seven times and could not tell which colour was
-                     which, nor which one was already chosen. */
+                  /* Seven buttons with nothing in them: a reader heard «кнопка» seven times and could not tell which colour was… */
                   aria-label={colour}
                   aria-pressed={you.colour.toUpperCase() === colour.toUpperCase()}
                   className={`swatch ${you.colour.toUpperCase() === colour.toUpperCase() ? 'is-active' : ''}`}
@@ -845,36 +802,14 @@ function Schedule() {
           </section>
         )}
 
-        {/*
-          What this week costs, before it is published rather than after.
-          The decision about a shift is made in advance, and after publishing
-          it is awkward to unmake.
-
-          Counted only from the people who share their rate, and signed as
-          exactly that. Estimating a payroll from guessed rates is precisely
-          the confident lie about money this project does not tell anywhere
-          else, and a manager quoting a made-up number at a meeting is worse
-          than a manager with no number.
-        */}
+        {/* What this week costs, before it is published rather than after. */}
         {sharers.length > 0 && (
           <section className="card reveal p-4">
             {/* The card prices whatever span is on screen, and said «эта
                 неделя» over a month's total whenever the month was chosen. */}
-            {/*
-              The total lives once, in the panel above that computes it.
-
-              This card printed its own — summed from a different source than
-              the panel's — so one screen carried the same figure twice under
-              two names, and two independent sums that have to agree are a
-              disagreement waiting for a month odd enough to cause one. What
-              is only here is the breakdown, so that is what it is.
-            */}
+            {/* The total lives once, in the panel above that computes it. */}
             <h2 className="mb-1 text-[0.98rem] font-bold">{t('Who shares their earnings')}</h2>
-            {/* The count said «0 / 1 делятся» directly above a list with a
-                person in it, because the list also carries your own row —
-                you always see your own money. Counting the sharers while
-                showing yourself made the card argue with itself, so the
-                line counts the rows that are there and says why they are. */}
+            {/* The count said «0 / 1 делятся» directly above a list with a person in it, because the list also carries your… */}
             <p className="field-hint mb-3">
               {sharers.length} / {rota?.members.length} — {t('you and whoever shares their rate')}
             </p>

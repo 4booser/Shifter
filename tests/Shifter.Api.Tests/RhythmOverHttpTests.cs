@@ -8,11 +8,7 @@ using Xunit;
 
 namespace Shifter.Api.Tests;
 
-/// <summary>
-/// The rhythm endpoints over real HTTP: the sleep windows between shifts,
-/// the fatigue comparison's silence-first sufficiency, and the streak said
-/// out loud in the brief.
-/// </summary>
+/// <summary>The rhythm endpoints over real HTTP: the sleep windows between shifts, the fatigue comparison's silence-first…</summary>
 [Collection("api")]
 public sealed class RhythmOverHttpTests(Api api)
 {

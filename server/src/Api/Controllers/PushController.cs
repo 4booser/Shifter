@@ -10,10 +10,7 @@ using Entity = Shifter.Domain.Entities.PushSubscription;
 
 namespace Shifter.Api.Controllers;
 
-/// <summary>
-/// Web push subscriptions: the browser hands over its endpoint and keys, the
-/// scheduler does the rest. Everything here works on the caller's own rows.
-/// </summary>
+/// <summary>Web push subscriptions: the browser hands over its endpoint and keys, the scheduler does the rest.</summary>
 [Authorize]
 [Route("shifter/v1/push")]
 public class PushController : ControllerBase
@@ -35,11 +32,7 @@ public class PushController : ControllerBase
         _logger = logger;
     }
 
-    /// <summary>
-    /// A phone registering its push address. Idempotent by token, so a reopen
-    /// refreshes the row rather than growing the table.
-    /// </summary>
-    /// <summary>A zone the server actually has, or Kyiv. Never what was sent, unchecked.</summary>
+    /// <summary>A phone registering its push address.</summary>
     private static string Zone(string? name)
     {
         if (string.IsNullOrWhiteSpace(name)) return "Europe/Kyiv";
@@ -253,10 +246,7 @@ public record DeviceTokenDto(
     string? token,
     string? platform,
     string? language,
-    /// <summary>
-    /// Where the phone is, so an evening nudge arrives in the evening. Absent
-    /// keeps whatever the row already had.
-    /// </summary>
+    /// <summary>Where the phone is, so an evening nudge arrives in the evening.</summary>
     string? time_zone = null,
     /// <summary>"HH:mm" the evening nudge is wanted at, on that clock.</summary>
     string? notify_at = null,

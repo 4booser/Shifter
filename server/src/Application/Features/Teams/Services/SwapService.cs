@@ -8,16 +8,7 @@ using Shifter.Infrastructure.Persistence.DbContexts;
 
 namespace Shifter.Application.Features.Teams.Services;
 
-/// <summary>
-/// Swaps: two shifts traded between two people who both said yes. A cover
-/// hands a shift one way and needs one agreement; a swap moves two and needs
-/// both, so it lives apart rather than being bolted onto covers.
-///
-/// Accepting removes both placements and asks each person to place the one
-/// they took — the same rule covers already follow, and for the same reason:
-/// a shift is priced by whoever works it, so nobody's rate can be written
-/// into somebody else's calendar.
-/// </summary>
+/// <summary>Swaps: two shifts traded between two people who both said yes.</summary>
 public sealed class SwapService
 {
     private readonly ShifterDbContext _db;
@@ -231,12 +222,7 @@ public sealed class SwapService
         return swap;
     }
 
-    /// <summary>
-    /// The placement and the day it sits on. The day is fetched by its own
-    /// id rather than through the navigation: the graph does not always
-    /// arrive populated here, and a swap that guesses whose shift it is
-    /// would be a swap that trades the wrong person's Friday.
-    /// </summary>
+    /// <summary>The placement and the day it sits on.</summary>
     private static bool Visible(DayShift placement, Team team, int ownerUserId)
     {
         var owner = (team.Members ?? []).FirstOrDefault(member => member.UserId == ownerUserId);

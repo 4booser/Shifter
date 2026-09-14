@@ -4,13 +4,7 @@ import { api } from './http';
 
 const API = '/shifter/v1/tax';
 
-/**
- * Somebody's own tax arrangement, in their own numbers.
- *
- * Every field here was typed by the person off their own registration. The app
- * knows no rates and ships none: a figure that is right for most people and
- * wrong for some, with no way to tell which, is worse than no figure.
- */
+/** Somebody's own tax arrangement, in their own numbers. */
 export interface TaxProfile {
   name: string;
   year: number;

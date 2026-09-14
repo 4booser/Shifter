@@ -5,11 +5,7 @@ export interface StoryCardData {
   period: string;
   /** Already formatted with the person's currency. */
   earned: string;
-  /**
-   * The line under the money — "19 смен · 153 ч". Built by the caller because
-   * only it knows the language: counting words decline, and "ч" is not what
-   * an hour is called in English.
-   */
+  /** The line under the money — "19 смен · 153 ч". */
   meta: string;
   /** Up to three lines of bragging: "Лучший день — ₴2 615", … */
   lines: string[];
@@ -22,11 +18,7 @@ export interface StoryCardData {
 const W = 1080;
 const H = 1920;
 
-/**
- * The month as a story: 9:16, big numbers, the week's rhythm as a row of
- * bars. Hospitality lives on Instagram, and a screenshot of a dashboard is
- * not something anybody posts — this is.
- */
+/** The month as a story: 9:16, big numbers, the week's rhythm as a row of bars. */
 export function drawStoryCard(data: StoryCardData, theme: CardTheme): Promise<Blob> {
   const canvas = document.createElement('canvas');
 

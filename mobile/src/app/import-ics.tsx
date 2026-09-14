@@ -20,11 +20,7 @@ import { IcsOccurrence, readIcs } from '@/lib/ics';
 import { t } from '@/lib/i18n';
 import { CalendarDayData, ShiftTemplate, toSavePayload } from '@/lib/types';
 
-/**
- * Google Calendar → the rota, on the phone: the same small reader the web
- * uses (mirrored, tested), the same preview, the same honesty about rules
- * it refused to parse. Nothing applies until the button.
- */
+/** Google Calendar → the rota, on the phone: the same small reader the web uses (mirrored, tested), the same… */
 type Fate = { kind: 'skip' } | { kind: 'shift'; templateId: number } | { kind: 'event' };
 
 export default function ImportIcsScreen() {

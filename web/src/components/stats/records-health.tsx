@@ -13,14 +13,7 @@ interface Gap {
   hurts: string;
 }
 
-/**
- * «Дозаполнить» — the record's own health, as a map and not a moral.
- *
- * Each line names the hole, how many, a few examples, and which feature is
- * undercounting because of it. The list shortens as holes are filled, which
- * makes it the one progress bar that cannot lie — and when it is empty the
- * card is not here at all.
- */
+/** «Дозаполнить» — the record's own health, as a map and not a moral. */
 const KIND: Record<string, { title: string; hurts: string }> = {
   tips_unsaid: {
     title: 'Смены без записанных чаевых',

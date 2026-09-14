@@ -1,12 +1,6 @@
 namespace Shifter.Domain.Entities;
 
-/// <summary>
-/// One currency on one day, as the National Bank published it: how many
-/// hryvnia one unit was worth. Stored rather than fetched on demand because
-/// a rate is a fact about a past day and must not change under a report —
-/// a month that was worth one figure yesterday and another today is not a
-/// month anybody can check.
-/// </summary>
+/// <summary>One currency on one day, as the National Bank published it: how many hryvnia one unit was worth.</summary>
 public sealed class ExchangeRate
 {
     public int Id { get; set; }

@@ -4,11 +4,7 @@ using Xunit;
 
 namespace Shifter.Tests;
 
-/// <summary>
-/// A job advert read into the beginnings of a shift. The rule throughout: what
-/// it cannot read it leaves blank, because a blank field is a question and a
-/// wrong rate is an answer.
-/// </summary>
+/// <summary>A job advert read into the beginnings of a shift.</summary>
 public class JobAdvertTests
 {
     [Fact]
@@ -61,14 +57,7 @@ public class JobAdvertTests
         Assert.Equal(250m, read.PayAmount);
     }
 
-    /// <summary>
-    /// Reading nothing is an answer; throwing is not.
-    ///
-    /// Every pattern carries a 200 ms guard, and for a long time nothing
-    /// caught what the guard throws — so a slow match came out of Parse as a
-    /// RegexMatchTimeoutException, on the one screen where somebody is
-    /// pasting a stranger's text.
-    /// </summary>
+    /// <summary>Reading nothing is an answer; throwing is not.</summary>
     [Fact]
     public void AnAdvertItCannotReadIsStillAnAnswer()
     {

@@ -3,13 +3,7 @@ import { isAvailableAsync, shareAsync } from 'expo-sharing';
 
 import { API_BASE, getSession } from '@/lib/api';
 
-/**
- * The papers, handed over as files.
- *
- * Same rule as the bank statement: written to cache, overwritten on repeat,
- * because these files exist to be passed to another app — a bank clerk's
- * inbox, an accountant's spreadsheet — and then forgotten.
- */
+/** The papers, handed over as files. */
 async function pull(path: string, name: string, mime: string, uti: string, title: string):
   Promise<'shared' | 'unavailable' | 'failed'> {
   if (!(await isAvailableAsync())) return 'unavailable';
@@ -38,11 +32,7 @@ export interface PaperRange {
   to: string;
 }
 
-/**
- * The stretches people are actually asked for. A bank wants «за полгода»,
- * an accountant wants a закрытый quarter or month — the default stays the
- * year to date, which is what a clerk means by «справку».
- */
+/** The stretches people are actually asked for. */
 export function paperRanges(): { label: string; range: PaperRange }[] {
   const today = new Date();
   const iso = (date: Date) => date.toISOString().slice(0, 10);

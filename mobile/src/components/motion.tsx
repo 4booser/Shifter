@@ -15,26 +15,12 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-/**
- * The app's movement, in three pieces.
- *
- * There was none: every screen appeared fully formed and every button was a
- * rectangle that changed opacity. Motion is not decoration here — a control
- * that answers the finger is a control people trust, and a number that travels
- * to its new value is a number people notice changed. Kept to three primitives
- * on purpose, because an app where everything moves is an app where nothing
- * reads.
- */
+/** The app's movement, in three pieces. */
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 const AnimatedInput = Animated.createAnimatedComponent(TextInput);
 
-/**
- * A control that gives way under a thumb and springs back.
- *
- * The scale is deliberately small: past about four percent it reads as a
- * gimmick rather than as the surface yielding.
- */
+/** A control that gives way under a thumb and springs back. */
 export function Press({
   children,
   style,
@@ -86,12 +72,7 @@ export function Press({
   );
 }
 
-/**
- * A card that arrives rather than being there already.
- *
- * The stagger is capped: past eight rows the delay is longer than anybody
- * waits, and a list that unrolls slowly reads as a slow app.
- */
+/** A card that arrives rather than being there already. */
 export function Appear({
   children,
   index = 0,
@@ -114,14 +95,7 @@ export function Appear({
   );
 }
 
-/**
- * The shape of what is coming, while it comes.
- *
- * A spinner says "wait" and nothing else, and the screen it sits on jumps
- * when the answer lands. A block the size of the thing being fetched says
- * what is on its way and leaves the layout where it will end up — which is
- * the difference between an app that is loading and an app that is stuck.
- */
+/** The shape of what is coming, while it comes. */
 export function Skeleton({
   width,
   height,
@@ -150,12 +124,7 @@ export function Skeleton({
   );
 }
 
-/**
- * A stack of card-shaped placeholders, for a list that is on its way.
- *
- * The count is small on purpose: three blocks read as "a list is coming" and
- * ten read as a list, which is a lie the moment the real one is shorter.
- */
+/** A stack of card-shaped placeholders, for a list that is on its way. */
 export function Loading({
   colour,
   rows = 3,
@@ -176,14 +145,7 @@ export function Loading({
   );
 }
 
-/**
- * A number that travels to its new value.
- *
- * Driven entirely on the UI thread through an uneditable TextInput, which is
- * the only text in React Native whose content an animation can reach. A
- * setState every frame would work and would re-render the screen sixty times
- * a second to move four digits.
- */
+/** A number that travels to its new value. */
 export function Roll({
   value,
   prefix = '',

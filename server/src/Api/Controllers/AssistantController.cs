@@ -18,11 +18,7 @@ using Shifter.Application.Features.Assistant;
 
 namespace Shifter.Api.Controllers;
 
-/// <summary>
-/// The assistant: a thread you can ask about your own months, the blanks it
-/// would like filled, and a written-out period on demand. Every figure it
-/// quotes is one the calendar already computed.
-/// </summary>
+/// <summary>The assistant: a thread you can ask about your own months, the blanks it would like filled, and a written-out…</summary>
 [Authorize]
 [Route("shifter/v1/assistant")]
 public class AssistantController : ControllerBase
@@ -31,15 +27,7 @@ public class AssistantController : ControllerBase
 
     public AssistantController(AssistantService assistant) => _assistant = assistant;
 
-    /// <summary>
-    /// The case for a raise at one place, assembled out of the person's own
-    /// record: how long the rate has stood still, how this place compares to
-    /// the others they actually work, how many shifts they covered for
-    /// somebody else.
-    ///
-    /// It answers "not yet" out loud when that is the answer. An app that
-    /// talks somebody into a conversation they will lose has done them harm.
-    /// </summary>
+    /// <summary>The case for a raise at one place, assembled out of the person's own record: how long the rate has stood…</summary>
     [HttpGet("raise")]
     public async Task<ActionResult<RaiseCaseDto[]>> Raise(
         [FromServices] IShifterQuery query,

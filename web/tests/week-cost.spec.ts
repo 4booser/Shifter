@@ -46,9 +46,7 @@ describe('what a week of rota costs', () => {
   });
 
   it('never guesses the part it was not told', () => {
-    // The tempting move is covered/coveredHours × uncoveredHours, printed as a
-    // total. That number is a rumour about somebody's wage, and nothing here
-    // returns it — there is no total field to misread.
+    // The tempting move is covered/coveredHours × uncoveredHours, printed as a total.
     const cost = weekCost(
       [entry(1, '2026-03-02', 8, 800), entry(2, '2026-03-02', 8, null)],
       [member(1, true), member(2, false)],
@@ -59,9 +57,7 @@ describe('what a week of rota costs', () => {
   });
 
   it('does not count a salaried person as costing nothing', () => {
-    // A rota cannot attribute a monthly wage to a Tuesday, so it prices those
-    // shifts as null. Counting them as covered made a rota look cheaper the
-    // more salaried people were on it — which is exactly backwards.
+    // A rota cannot attribute a monthly wage to a Tuesday, so it prices those shifts as null.
     const cost = weekCost(
       [entry(1, '2026-03-02', 8, 800), entry(2, '2026-03-02', 10, null)],
       [member(1, true), member(2, true)],
@@ -74,9 +70,7 @@ describe('what a week of rota costs', () => {
   });
 
   it('counts sharers among the people on this rota, not the whole team', () => {
-    // A crew of twenty where four are rostered and all four share is fully
-    // covered. Counting against the team roll would print "4 of 20" over a
-    // figure that is complete.
+    // A crew of twenty where four are rostered and all four share is fully covered.
     const cost = weekCost(
       [entry(1, '2026-03-02', 8, 800), entry(2, '2026-03-02', 8, 800)],
       [member(1, true), member(2, true), member(3, true), member(4, false)],

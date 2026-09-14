@@ -11,21 +11,7 @@ import { MonoBusy, MonoRefused, clientInfo, statement, waitFor } from '@/lib/mon
 import { Budget, CategoryRule } from '@/lib/mono/mono-rules';
 import { demoClient, demoStatement } from '@/lib/mono/demo';
 
-/**
- * The bank, in the browser.
- *
- * The same privacy design as the phone, and the reason it works at all:
- * monobank answers browsers directly — checked, `access-control-allow-origin:
- * *` — so the token goes from this tab to api.monobank.ua and nowhere else.
- * The Shifter server never sees it, never proxies it, and cannot leak it.
- *
- * What differs from the phone is the container. localStorage is not a
- * keychain: any script on this origin can read it, and "this origin" is
- * exactly the code we ship. That is worth a plain sentence on the connect
- * screen rather than a claim of bank-grade anything — the honest mitigations
- * are that the token is read-only, revocable in one tap at the bank, and
- * erased here by one button that also wipes the statement.
- */
+/** The bank, in the browser. */
 
 const TOKEN_KEY = 'shifter.mono.token';
 const SETUP_KEY = 'shifter.mono.setup';
@@ -58,14 +44,7 @@ const readJson = <T,>(key: string, fallback: T): T => {
   }
 };
 
-/**
- * The statement cache, capped.
- *
- * localStorage holds five megabytes on a good day, and three years of
- * statement is more. The newest items win, because every screen reads
- * recency first — history beyond the cap re-fetches on demand rather than
- * silently not existing.
- */
+/** The statement cache, capped. */
 const CACHE_ITEMS = 4_000;
 const DEMO_KEY = 'shifter.mono.demo';
 
@@ -114,9 +93,7 @@ export const useMono = create<MonoState>((set, get) => ({
   hydrate: () => {
     if (get().demo) return;
 
-    // A demo lives for the tab: sessionStorage remembers the choice, the
-    // deterministic generator rebuilds the same ninety days on any screen
-    // that hydrates, and closing the tab forgets the whole fiction.
+    // A demo lives for the tab: sessionStorage remembers the choice, the deterministic generator rebuilds the same…
     if (window.sessionStorage.getItem(DEMO_KEY) === '1') {
       get().enterDemo();
 
@@ -187,9 +164,7 @@ export const useMono = create<MonoState>((set, get) => ({
   },
 
   disconnect: () => {
-    // The token and everything fetched with it, gone together. A statement
-    // left behind after the token is removed is somebody's spending sitting
-    // in a browser they thought they had disconnected.
+    // The token and everything fetched with it, gone together.
     quietly(() => {
       window.localStorage.removeItem(TOKEN_KEY);
       window.localStorage.removeItem(SETUP_KEY);
@@ -241,9 +216,7 @@ export const useMono = create<MonoState>((set, get) => ({
       set({ progress: { done: 0, total: windows.length } });
 
       for (const [index, window_] of windows.entries()) {
-        // The bank allows one statement call a minute. The wait is shown as a
-        // countdown rather than swallowed, because a tab has to stay open for
-        // it and the person deserves to know why.
+        // The bank allows one statement call a minute.
         for (;;) {
           const wait = waitFor('statement');
 

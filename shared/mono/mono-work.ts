@@ -1,24 +1,5 @@
-/*
- * One copy, read by the web and by the phone.
- *
- * This file used to exist twice, and the header said parity between the
- * platforms was parity of files — keep them identical by hand. They did not
- * stay identical: the web learned that an hour priced on two worked minutes
- * is not a rate and the phone did not, the web's «what a day usually costs»
- * settled on one window and the phone kept two, and a comment here described
- * a rule the code stopped following. None of that is visible from either side
- * alone, which is the whole problem with parity by discipline.
- *
- * So it lives outside both clients now and neither owns it. The rule that
- * makes that possible: nothing in here may import from a platform. No
- * `@/`, no expo, no next, no react — statements in, numbers out. A test
- * holds that line.
- */
-/**
- * The four fields of a day this file actually reads. Both platforms' own day
- * models satisfy it structurally, which is the point: this library must not
- * import either of them.
- */
+/* One copy, read by the web and by the phone. */
+/** The four fields of a day this file actually reads. */
 export interface WorkedDay {
   date: string;
   earned: number;
@@ -35,17 +16,7 @@ export interface WorkedDay {
 }
 import { MonoStatementItem, dayOf, kindForMcc, spent } from './mono';
 
-/**
- * The questions only this app can answer.
- *
- * A bank app knows what left the account on Tuesday. A rota app knows Tuesday
- * was a twelve-hour close. Neither of them can tell somebody what an hour of
- * their work is actually worth, or what going to work costs before it pays
- * anything, because each holds exactly half of the arithmetic.
- *
- * Everything here is a pure function of the two halves. Nothing goes to a
- * server, and nothing is written back without somebody saying so.
- */
+/** The questions only this app can answer. */
 
 /** The days with a shift somebody actually worked. */
 export const workedDays = (days: WorkedDay[]): Set<string> =>
@@ -72,18 +43,7 @@ export interface DayKindSpending {
   differences: { kind: string; onShift: number; off: number }[];
 }
 
-/**
- * What a working day costs before it has paid anything.
- *
- * Going to work is expensive in a way that never shows up in a wage: the
- * lunch bought because there was no time to make one, the taxi because the
- * shift ended after the last tram. Comparing the two kinds of day is the only
- * way to see it, and it needs both halves of the data.
- *
- * Returns nothing where there is not enough of either kind. Two shifts is not
- * a sample, and an average of two numbers presented as a habit is a lie with
- * a decimal point in it.
- */
+/** What a working day costs before it has paid anything. */
 export const spendingByDayKind = (
   items: MonoStatementItem[],
   days: WorkedDay[],
@@ -155,18 +115,7 @@ export interface RealRate {
   real: number;
 }
 
-/**
- * What an hour is actually worth, once getting there has been paid for.
- *
- * Only spending that lands on a day somebody worked, and only in the
- * categories that can plausibly be about work at all — a supermarket run on a
- * shift day is not a work cost, and counting it would make every job look
- * ruinous. The list of plausible categories is the one the expense matcher
- * already uses, so the two cannot disagree.
- *
- * Null where there are no hours: an hourly rate of nothing divided by nothing
- * is not a figure to print.
- */
+/** What an hour is actually worth, once getting there has been paid for. */
 export const realHourly = (
   items: MonoStatementItem[],
   days: WorkedDay[],
@@ -181,9 +130,7 @@ export const realHourly = (
     0,
   );
 
-  // A whole hour before an hourly figure: a shift closed inside a minute
-  // leaves a hundredth of one, and dividing a day's spending by that prices
-  // the hour in the thousands.
+  // A whole hour before an hourly figure: a shift closed inside a minute leaves a hundredth of one, and dividing…
   if (hours < 1) return null;
 
   const earned = within.reduce((sum, day) => sum + day.earned, 0);
@@ -194,9 +141,7 @@ export const realHourly = (
     if (!inRange(item, from, to)) continue;
     if (!worked.has(dayOf(item))) continue;
 
-    // "sure" is the matcher's own word for a category that really does mean
-    // work when it lands on a working day. The unsure ones are offered to a
-    // person for confirmation elsewhere; they are not quietly counted here.
+    // "sure" is the matcher's own word for a category that really does mean work when it lands on a working day.
     if (kindForMcc(item.mcc)?.sure !== true) continue;
 
     costs += spent(item);
@@ -222,13 +167,7 @@ export interface ClosingCost {
 /** Transport, in the codes the card writes for it. */
 const RIDE_HOME_HOURS = 3;
 
-/**
- * What closing costs.
- *
- * A close ends after the last tram, so it ends in a taxi. The venue pays the
- * night premium and the person pays the fare, and nobody has ever put the two
- * numbers next to each other because they live in different applications.
- */
+/** What closing costs. */
 export const closingCosts = (
   items: MonoStatementItem[],
   days: WorkedDay[],
@@ -281,8 +220,6 @@ export const closingCosts = (
   }
 
   // What those nights brought, so the fare has something to be read against.
-  // Not the night premium alone: the day's earnings are what the rota is sure
-  // of, and a premium split out per shift is not.
   const nights = new Set(closings.map((closing) => closing.day));
   const earned = days
     .filter((day) => nights.has(day.date))
@@ -304,16 +241,7 @@ export interface UntilPayday {
   usual: number;
 }
 
-/**
- * How much there is per day until the next money lands.
- *
- * The calendar knows when the wage comes and roughly how much. The bank knows
- * what is left and what still has to leave. Neither application computes this
- * on its own, and it is the question people actually ask on the 22nd.
- *
- * No advice attached. Somebody who is told they have three hundred a day for
- * nine days already knows what to do with that sentence.
- */
+/** How much there is per day until the next money lands. */
 export const untilPayday = (
   balance: number,
   daysToPay: number,
@@ -333,16 +261,7 @@ export const untilPayday = (
   };
 };
 
-/**
- * What a day usually costs, over the two months behind a given day.
- *
- * The one place that stretch is decided. The forecast read it over two months
- * and the reserve card took a median of whatever the month on screen had
- * lived, so the same row of the bank page carried «an ordinary day costs
- * ₴588» beside «÷ ₴532/day» — two answers to one question, a finger's width
- * apart. Long enough to even out a heavy week, short enough to still be this
- * person.
- */
+/** What a day usually costs, over the two months behind a given day. */
 export const habitualDay = (items: MonoStatementItem[], today: string): number => {
   const [year, month, day] = today.split('-').map(Number);
   const start = new Date(year, month - 3, day);
@@ -389,18 +308,7 @@ export interface Punctuality {
   short: number;
 }
 
-/**
- * Whether a place pays when it says it will.
- *
- * The promised day is in the place's own settings. The day the money arrived
- * is in the payouts. Between them is the whole history of somebody's
- * relationship with an employer, and nobody keeps it — so the argument is
- * always about the last time, which the manager remembers differently.
- *
- * Lateness and shortfall are counted apart. They are different complaints and
- * different conversations, and rolling them together makes a number that
- * supports neither.
- */
+/** Whether a place pays when it says it will. */
 export const punctuality = (
   periods: {
     location_id: number;
@@ -453,14 +361,7 @@ export const punctuality = (
     .sort((one, two) => two.averageLate - one.averageLate);
 };
 
-/**
- * The day before, read locally.
- *
- * Not via toISOString: east of Greenwich, midnight local is the previous
- * evening in UTC, so stepping a day back through it lands two days back. The
- * test caught it; a phone in Kyiv would have offered the cash-in against the
- * wrong shift and nobody would have known why.
- */
+/** The day before, read locally. */
 const dayBefore = (day: string): string => {
   const at = new Date(`${day}T12:00:00`);
 
@@ -471,15 +372,7 @@ const dayBefore = (day: string): string => {
   return `${at.getFullYear()}-${pad(at.getMonth() + 1)}-${pad(at.getDate())}`;
 };
 
-/**
- * A credit that looks like somebody putting their own cash onto the card.
- *
- * Deliberately a guess, and used only to ask. monobank writes a cash-in a
- * dozen ways depending on which machine took it, so the test is the code the
- * terminal used plus the words the bank tends to use — and anything it gets
- * wrong costs a question that gets answered "no" rather than a wrong row in
- * somebody's earnings.
- */
+/** A credit that looks like somebody putting their own cash onto the card. */
 const CASH_IN_MCCS = new Set([6010, 6011]);
 
 const CASH_WORDS = ['попов', 'готів', 'готов', 'cash', 'внесен'];
@@ -500,16 +393,7 @@ export interface CashTipOffer {
   amount: number;
 }
 
-/**
- * Cash going onto the card the day after a shift.
- *
- * Half the earnings in this trade are cash, and the bank is blind to all of
- * it — but the cash almost always reaches a card within a day or two, and at
- * that moment the app can ask a question nobody else is in a position to ask.
- *
- * It asks. It never records: this is the one kind of money the app knows less
- * about than the person does, and it does not forget that.
- */
+/** Cash going onto the card the day after a shift. */
 export const cashTipOffers = (
   items: MonoStatementItem[],
   days: WorkedDay[],
@@ -551,14 +435,7 @@ export interface CashGap {
   bankedAfterShifts: number;
 }
 
-/**
- * What was written down against what reached the card.
- *
- * Not an accusation in either direction: cash gets spent before it is banked,
- * and tips get banked that were never tips. The gap is shown and nobody is
- * asked to explain it — but somebody who has been rounding their cash tips
- * down out of habit will see it here first.
- */
+/** What was written down against what reached the card. */
 export const cashGap = (
   items: MonoStatementItem[],
   days: WorkedDay[],

@@ -2,17 +2,7 @@ using Shifter.Infrastructure;
 
 namespace Shifter.Api.Middlewares;
 
-/// <summary>
-/// Measures a request's SQL on demand: ask with X-Count-Queries and the
-/// response carries X-Query-Count.
-///
-/// Opt-in per request rather than always-on, because the number is a
-/// diagnostic, not telemetry — the budget tests ask for it, and a person
-/// with curl can ask for it against production when a page feels heavier
-/// than it should. Started here, inside the pipeline, so the AsyncLocal
-/// actually flows into the handlers being measured — starting it outside
-/// the server was how the previous instrument read zero forever.
-/// </summary>
+/// <summary>Measures a request's SQL on demand: ask with X-Count-Queries and the response carries X-Query-Count.</summary>
 public sealed class QueryCountMiddleware
 {
     public const string Ask = "X-Count-Queries";

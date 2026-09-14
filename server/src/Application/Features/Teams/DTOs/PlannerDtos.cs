@@ -12,10 +12,7 @@ public record AssignmentDto(
     string? note,
     /// <summary>draft, published, accepted or declined.</summary>
     string status,
-    /// <summary>
-    /// The station this cell covers: "bar", "kitchen", "floor", "host",
-    /// "support", "manager", or "" where nobody said.
-    /// </summary>
+    /// <summary>The station this cell covers: "bar", "kitchen", "floor", "host", "support", "manager", or "" where nobody…</summary>
     string role = ""
     );
 
@@ -26,18 +23,11 @@ public record AssignmentSaveDto(
     string start,
     string end,
     string? note,
-    /// <summary>
-    /// Defaulted so a client written before roles existed keeps drafting
-    /// rather than silently clearing the station on every edit.
-    /// </summary>
+    /// <summary>Defaulted so a client written before roles existed keeps drafting rather than silently clearing the station…</summary>
     string? role = null
     );
 
-/// <summary>
-/// One day's coverage, station by station. The number a manager is actually
-/// looking for on a board is not "how many people" but "how many bars", and
-/// nothing else on the screen answers it.
-/// </summary>
+/// <summary>One day's coverage, station by station.</summary>
 public record CoverageDayDto(string date, CoverageRoleDto[] roles, int unset);
 
 public record CoverageRoleDto(string role, int count);
@@ -60,11 +50,7 @@ public record PlannerBoardDto(
     bool can_grant,
     /// <summary>Days the crew has blocked inside the window.</summary>
     AvailabilityDto[] blocked,
-    /// <summary>
-    /// Station counts per day across the window. Only days with something
-    /// planned appear — an empty day is short of everything, and saying so
-    /// seven times is noise rather than information.
-    /// </summary>
+    /// <summary>Station counts per day across the window.</summary>
     CoverageDayDto[] coverage
     );
 
@@ -79,10 +65,7 @@ public record AvailabilitySaveDto(string? date, string? reason);
 
 public record AcceptAssignmentDto(int template_id);
 
-/// <summary>
-/// One request for time off. Carries the decision as well as the ask, because
-/// the state that matters most is the one in between: waiting.
-/// </summary>
+/// <summary>One request for time off.</summary>
 public record LeaveDto(
     int id,
     int user_id,
@@ -105,10 +88,7 @@ public record LeaveSaveDto(string? from, string? to, string? reason);
 
 public record LeaveDecisionDto(bool approve, string? note);
 
-/// <summary>
-/// One slot to hand out: this shift, on this day, to this many people. Who
-/// gets it is the planner's job — that is the whole point of asking.
-/// </summary>
+/// <summary>One slot to hand out: this shift, on this day, to this many people.</summary>
 public record FillSlotDto(
     string date,
     string title,
@@ -117,9 +97,5 @@ public record FillSlotDto(
     string? role,
     int count);
 
-/// <summary>
-/// What the fill did and, more usefully, what it could not do. A planner that
-/// silently hands out three of the four shifts asked for is worse than one
-/// that says which one has nobody left.
-/// </summary>
+/// <summary>What the fill did and, more usefully, what it could not do.</summary>
 public record FillResultDto(AssignmentDto[] placed, int wanted, string? shortfall);

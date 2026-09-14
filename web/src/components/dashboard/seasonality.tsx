@@ -9,16 +9,7 @@ import { sameMonthLastYear, seasonalCushion, seasonalIndex, yearShape } from '@/
 import { useI18n } from '@/lib/i18n';
 import { Money } from '@/components/ui/bits';
 
-/**
- * The shape of somebody's own year.
- *
- * "December is always plus forty" is knowledge everybody with two years in the
- * trade has and nobody with one year does. It has been sitting in the records
- * unread, and it is the single most useful thing a second year contains.
- *
- * Their own months only. A bar on a ski slope and a canteen in an office block
- * have opposite Decembers, and no industry average knows which is which.
- */
+/** The shape of somebody's own year. */
 export function Seasonality() {
   const { t, lang } = useI18n();
 
@@ -45,9 +36,7 @@ export function Seasonality() {
   const thisMonth = Number(today.slice(5, 7));
   const index = seasonalIndex(shape, thisMonth);
 
-  // Nothing to say yet is better said by saying nothing. A first-year record
-  // has no seasons in it, and inventing some would be inventing the very
-  // knowledge this exists to hand over.
+  // Nothing to say yet is better said by saying nothing.
   if (shape.length === 0 && lastYear === null) return null;
 
   const peak = Math.max(1, ...shape.map((row) => row.average));
@@ -79,24 +68,8 @@ export function Seasonality() {
         </p>
       )}
 
-      {/* The row must stay stretched: items-end on it once stopped the
-          columns inheriting a height, and every bar quietly collapsed to its
-          2px floor. Found by eye on the bank's copy of this pattern. */}
-      {/*
-        Two things were wrong with this row and both were about what a bar
-        means.
-
-        It had no scale. Twelve bars and not one number: a reader could see
-        that August beat June and could not see whether the gap was two
-        hundred or twenty thousand. The peak now carries its own figure on a
-        dashed rule, with the floor named, so the shape has a size.
-
-        And a month with fewer than two years behind it drew a two-pixel
-        stub in the border colour, which on a screen is exactly what «earned
-        almost nothing» looks like. Those months are not low, they are
-        unknown, and the card says so in its own subtitle. Unknown draws
-        nothing at all now — an empty slot under a dimmed name.
-      */}
+      {/* The row must stay stretched: items-end on it once stopped the columns inheriting a height, and every bar… */}
+      {/* Two things were wrong with this row and both were about what a bar means. */}
       {shape.length > 0 && (
         <div className="mb-1 flex items-baseline justify-between text-[0.62rem] text-faint">
           <span>{t('Average per month')}</span>
@@ -144,9 +117,7 @@ export function Seasonality() {
         </p>
       )}
 
-      {/* The cushion: the one actionable sentence a second year of records
-          buys. Strictly a transfer between a person's own months — no yield,
-          no products, no advice. */}
+      {/* The cushion: the one actionable sentence a second year of records buys. */}
       {(() => {
         const cushion = seasonalCushion(shape);
 

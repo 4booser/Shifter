@@ -32,10 +32,7 @@ import { Icon } from '@/components/ui/icon';
 
 import type { DeductionReason } from '@/lib/calendar/models';
 
-/**
- * Why a day cost money. Kept short on purpose — a list nobody scrolls is a list
- * people answer honestly, and the note is there for the rest.
- */
+/** Why a day cost money. */
 const REASONS: { value: DeductionReason; label: string }[] = [
   { value: 'shortfall', label: 'Till came up short' },
   { value: 'breakage', label: 'Breakage' },
@@ -61,20 +58,8 @@ const ZONES: { value: ShiftZone; label: string }[] = [
 const QUANTITY_STEPS = [1, 3, 5, 10];
 const TIP_STEPS = [50, 100, 200, 500];
 
-/**
- * Editing one day as a draft, so typing does not fire a request per keystroke.
- * The draft refills when the date changes, and — the regression the old client
- * shipped a fix for — also picks up a day that arrives after the panel opened
- * on it, filling only what the draft has no answer for.
- */
-/**
- * How long the panel waits after the last change before it saves.
- *
- * Four seconds, not the ten it is tempting to give it: the delay buys nothing
- * but fewer requests, and every way of leaving the panel flushes anyway, so a
- * longer wait only widens the window where a phone locking mid-thought has
- * something in hand that the server has not been told about.
- */
+/** Editing one day as a draft, so typing does not fire a request per keystroke. */
+/** How long the panel waits after the last change before it saves. */
 const QUIET_BEFORE_SAVE = 4_000;
 
 export function DayPanel() {
@@ -95,9 +80,7 @@ export function DayPanel() {
   const allEvents = useCalendar((state) => state.events);
   const events =
     key === null ? [] : allEvents.filter((event) => event.start_date <= key && event.end_date >= key);
-  // What the day's events took. The figure is per occurrence, so a fortnight
-  // of leave that cost something cost it once — on the day it started, not on
-  // every day it covers. Repeating events arrive already split per occurrence.
+  // What the day's events took.
   const spent = events.reduce(
     (total, event) => total + (event.start_date === key ? event.cost : 0),
     0,
@@ -116,9 +99,7 @@ export function DayPanel() {
   const [tipPool, setTipPool] = useState<number | null>(null);
   const [revenue, setRevenue] = useState<Record<number, number | null>>({});
 
-  // Minutes a break timer actually counted, added to what the placement
-  // already had. A second break on a double is a second break, not a
-  // replacement for the first.
+  // Minutes a break timer actually counted, added to what the placement already had.
   const [breaks, setBreaks] = useState<Record<number, number>>({});
   const [guests, setGuests] = useState<Record<number, number | null>>({});
   const [zone, setZone] = useState<Record<number, ShiftZone>>({});
@@ -215,7 +196,6 @@ export function DayPanel() {
     );
   }
 
-
   const holiday = holidaysInRange(settings.holidayCountry, key, key).get(key)?.name ?? null;
   const belowFloor = day?.below_floor === true;
 
@@ -238,16 +218,8 @@ export function DayPanel() {
     return total + quantity * position.price * ((position.percentage ?? 0) / 100);
   }, 0);
 
-  // The break override exists because a break must be recorded when it ends,
-  // not when somebody later remembers to press Save. React state has not
-  // settled by then, so the finished figure is handed straight in.
-  /**
-   * The day as it currently stands in this panel, ready to send.
-   *
-   * Pulled out of `save` so the autosave below can compare it against what
-   * was loaded without a second copy of these rules drifting away from this
-   * one.
-   */
+  // The break override exists because a break must be recorded when it ends, not when somebody later remembers to…
+  /** The day as it currently stands in this panel, ready to send. */
   const draftOf = (breakOverride?: Record<number, number>) => {
     const breaksNow = breakOverride ?? breaks;
 
@@ -295,24 +267,7 @@ export function DayPanel() {
     void saveDay(key, payload);
   };
 
-  /*
-   * Saving without a button.
-   *
-   * There was one «Сохранить день» at the foot of the panel, and everything
-   * above it — every tick, every figure, the colour, the note — waited for
-   * somebody to remember to press it. A day edited and left unpressed was a
-   * day that silently did not happen.
-   *
-   * It saves itself now: a few seconds after the last change, and at once on
-   * any of the moments where the panel is about to stop being looked at —
-   * the day switching, the tab going away, the page closing. The delay only
-   * decides how chatty the network is; nothing waits on it to survive,
-   * because every exit flushes.
-   *
-   * `fingerprint` is the whole trick: rather than teach thirty setters to
-   * raise a dirty flag, the draft is compared against the day it was loaded
-   * from. Nothing to forget when a thirty-first field is added.
-   */
+  /* Saving without a button. */
   const fingerprint = (payload: ReturnType<typeof draftOf>) =>
     JSON.stringify({ ...payload, version: 0 });
 
@@ -357,14 +312,9 @@ export function DayPanel() {
     };
   }, []);
 
-  // A column of cards, the same shape as the sidebar opposite it. It was one
-  // tall card that stuck to the top and scrolled inside itself, which meant
-  // two scrollbars fighting over the same wheel and a panel that unpinned
-  // halfway down the page.
+  // A column of cards, the same shape as the sidebar opposite it.
   return (
-    // The screenshot test needs to find this and only this: the sidebar
-    // beside it is an <aside> too, and matching on the word «Смена»
-    // shot the sidebar instead.
+    // The screenshot test needs to find this and only this: the sidebar beside it is an <aside> too, and matching…
     <aside key={key} data-testid="day-panel" className="flex w-full flex-col gap-4">
       <section className="card rise p-4">
         {/* Not capitalize: it lifts «сентября» too, and the panel headed
@@ -485,13 +435,7 @@ export function DayPanel() {
                       {t(isWorked ? 'Worked' : 'Planned')}
                     </button>
                   </div>
-                  {/*
-                    Beside the button this line had 106 of the 240 pixels and
-                    broke in the middle, leaving a row that opened «· 1 710 ₴».
-                    It gets the width under the name instead, and each dot is
-                    tied to the figure in front of it so a line can never start
-                    with a separator.
-                  */}
+                  {/* Beside the button this line had 106 of the 240 pixels and broke in the middle, leaving a row that opened «· 1… */}
                   <span className="field-hint block">
                     {entry.start_time}–{entry.end_time}
                     {'\u00A0· '}
@@ -500,9 +444,7 @@ export function DayPanel() {
                     <Money value={entry.earned} />
                   </span>
 
-                  {/* Only a shift that is actually paid a share asks what it
-                      took: everybody else would be typing a number nothing
-                      reads. */}
+                  {/* Only a shift that is actually paid a share asks what it took: everybody else would be typing a number nothing… */}
                   {entry.revenue_percent !== null && (
                     <div className="mt-1.5 grid grid-cols-2 gap-2">
                       <label className="block">
@@ -525,9 +467,7 @@ export function DayPanel() {
                         />
                       </label>
 
-                      {/* Takings alone do not describe an evening. Twelve
-                          thousand off forty covers is a different night from
-                          twelve thousand off a hundred and twenty. */}
+                      {/* Takings alone do not describe an evening. */}
                       <label className="block">
                         <span className="field-label">{t('Guests')}</span>
                         <input
@@ -559,9 +499,7 @@ export function DayPanel() {
                     ) : null;
                   })()}
 
-                  {/* Where in the venue. Every waiter knows the terrace tips
-                      better than the bar and none of them can say by how much,
-                      because nobody has written it down against the hours. */}
+                  {/* Where in the venue. */}
                   {isWorked && (
                     <div className="mt-1.5">
                       <span className="field-label">{t('Where')}</span>
@@ -591,9 +529,7 @@ export function DayPanel() {
                     </div>
                   )}
 
-                  {/* The break, counted while it happens — offered only on
-                      the day it is, since a countdown on a past day would be
-                      writing history. */}
+                  {/* The break, counted while it happens — offered only on the day it is, since a countdown on a past day would be… */}
                   {isWorked && key === todayKey() && (
                     <div className="mt-1.5 flex items-center gap-2">
                       <BreakTimer
@@ -609,10 +545,7 @@ export function DayPanel() {
                               ? breaks[entry.shift_id]
                               : entry.break_minutes;
 
-                          // The first timed break replaces what the template
-                          // assumed; a second one adds. Adding to the
-                          // assumption would cost an hour of paid time for a
-                          // half-hour break.
+                          // The first timed break replaces what the template assumed; a second one adds.
                           const next = {
                             ...breaks,
                             [entry.shift_id]: foldBreak(had, minutes, alreadyTimed),
@@ -669,11 +602,7 @@ export function DayPanel() {
         )}
       </section>
 
-      {/*
-        Everything one Save writes, in one card: what sold, the tips, what the
-        day cost, the note. They were four sections and a button floating
-        under them, and nothing said which of them the button was for.
-      */}
+      {/* Everything one Save writes, in one card: what sold, the tips, what the day cost, the note. */}
       <section className="card flex flex-col gap-4 p-4">
       {/* Sales */}
       {positions.length > 0 && (
@@ -918,9 +847,7 @@ export function DayPanel() {
         </p>
       </section>
 
-      {/* Where the day stands, instead of something to press. Removing the
-          button without saying anything would only move the doubt: a person
-          who no longer presses «Сохранить» needs to see that it happened. */}
+      {/* Where the day stands, instead of something to press. */}
       <p className="field-hint flex items-center justify-center gap-1.5">
         {saving ? (
           <>
@@ -964,11 +891,7 @@ export function DayPanel() {
             <dt>{t('Earned')}</dt>
             <dd className={earnedTone(day.earned)}><Money value={day.earned} /></dd>
           </div>
-          {/*
-            What the day cost, kept beside what it earned rather than inside
-            it. Netting the two would quietly change what "заработано" means,
-            and the number people check every evening is that one.
-          */}
+          {/* What the day cost, kept beside what it earned rather than inside it. */}
           {spent > 0 && (
             <>
               <div className="flex justify-between gap-2">
@@ -1007,11 +930,7 @@ export function DayPanel() {
   );
 }
 
-/**
- * The panel's other personality: several days at once. Everything here acts
- * on the whole selection in one write and one undo step, which is the whole
- * point of selecting several days.
- */
+/** The panel's other personality: several days at once. */
 function BulkPanel({ keys }: { keys: string[] }) {
   const [showAllColours, setShowAllColours] = useState(false);
   const { t, n, num } = useI18n();
@@ -1120,11 +1039,7 @@ function BulkPanel({ keys }: { keys: string[] }) {
   );
 }
 
-/**
- * The recorded clock of a worked shift: came at 10:47, left at 22:30. Both
- * edges or neither — the maths refuses half a truth — and the little delta
- * shows what the honesty is worth against the plan.
- */
+/** The recorded clock of a worked shift: came at 10:47, left at 22:30. */
 function ActualClockRow({
   entry,
   start,
@@ -1157,16 +1072,8 @@ function ActualClockRow({
   return (
     <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[0.8rem]">
       <span className="field-hint flex-none">{t('Actually')}</span>
-      {/* Начало и конец — одна величина, и переносить их порознь нельзя: в
-          панели шириной в двести тридцать пикселей «16:00 –» оставалось на
-          строке с подписью, а «02:00» уезжало вниз, и промежуток переставал
-          читаться промежутком. */}
-      {/* И ширина по содержимому, а не 5.2rem намертво. Поле времени рисует
-          себя по часам системы, и там, где они двенадцатичасовые, браузер
-          дописывает «PM» — на что в жёстких 5.2rem места не было. Здесь
-          часы двадцатичетырёхчасовые и проверить это вживую нечем, так что
-          это защита, а не починка увиденного: минимум оставлен прежним,
-          поэтому при 24 часах всё выглядит ровно как раньше. */}
+      {/* Начало и конец — одна величина, и переносить их порознь нельзя: в панели шириной в двести тридцать пикселей… */}
+      {/* И ширина по содержимому, а не 5.2rem намертво. */}
       <span className="flex flex-none items-center gap-1.5">
       <input
         type="time"
@@ -1208,16 +1115,7 @@ function ActualClockRow({
   );
 }
 
-
-
-/**
- * The week this day sits in, day by day.
- *
- * "How is this day" and "how is this week" are asked in the same breath and
- * the panel could only answer the first. Every row is a link, so the week is
- * also how you move around it — which is what the column at the far right of
- * a calendar should have been all along.
- */
+/** The week this day sits in, day by day. */
 function DayWeek({ dayKey }: { dayKey: string }) {
   const { t, num } = useI18n();
   const { format } = useMoney();
@@ -1316,18 +1214,7 @@ const WEEK_LETTERS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 /** Monday-first, the shape the rest of the calendar speaks. */
 const weekdayOf = (key: string): number => (fromKey(key).getDay() + 6) % 7;
 
-/**
- * The day, put next to the days around it.
- *
- * The panel used to end at the earnings line and leave the column short of
- * the calendar beside it — an open corner, and worse, a dead end: the figure
- * for one day means nothing without the fortnight it sits in. This is that
- * fortnight, the same weekday's average, and the day's own paper trail, in
- * the space that was empty.
- *
- * Everything here is read from days already in the store. No request, so it
- * is there the moment the panel opens, and it cannot fail on its own.
- */
+/** The day, put next to the days around it. */
 function DayContext({ dayKey }: { dayKey: string }) {
   const { t, lang } = useI18n();
   const { format, compact } = useMoney();
@@ -1380,10 +1267,7 @@ function DayContext({ dayKey }: { dayKey: string }) {
         </span>
       </h3>
 
-      {/*
-        pt-2 is the top tick's room. Without it the ceiling label sits half
-        above the plot and lands on the heading.
-      */}
+      {/* pt-2 is the top tick's room. */}
       <div className="flex h-24 gap-1.5 pt-2">
         {/* The scale gets its own gutter rather than sitting over the bars. */}
         <div className="relative w-9 flex-none">
@@ -1456,9 +1340,7 @@ function DayContext({ dayKey }: { dayKey: string }) {
             <dd className="tabular"><Money value={Math.round(average)} /></dd>
           </div>
         )}
-        {/* «В среднем по вторникам ₴0» is not an average anybody wants to
-            read; it means no Tuesday has paid yet, which the row above
-            already says. */}
+        {/* «В среднем по вторникам ₴0» is not an average anybody wants to read; it means no Tuesday has paid yet, which… */}
         {weekdayAverage !== null && weekdayAverage > 0 && (
           <div className="flex justify-between gap-2">
             <dt className="text-muted">
@@ -1466,9 +1348,7 @@ function DayContext({ dayKey }: { dayKey: string }) {
             </dt>
             <dd className="tabular">
               <Money value={Math.round(weekdayAverage)} />
-              {/* The average has to be something before a day can be a
-                  percentage of it: past Tuesdays that all earned nothing gave
-                  this day «+Infinity%». */}
+              {/* The average has to be something before a day can be a percentage of it: past Tuesdays that all earned nothing… */}
               {here.earned > 0 && weekdayAverage > 0 && (
                 <span
                   className={`ml-1.5 text-[0.72rem] ${here.earned >= weekdayAverage ? 'text-good-read' : 'text-danger-read'}`}
@@ -1496,14 +1376,7 @@ interface HistoryEntry {
   sales_units: number;
 }
 
-/**
- * The day's paper trail.
- *
- * It used to be a collapsed <details> at the very bottom — a line of grey
- * text that answered "where did my tips go" only for somebody who already
- * suspected the answer was there. It is open now, because the panel has the
- * room and because the question it answers is one people ask in a hurry.
- */
+/** The day's paper trail. */
 function DayHistory({ dayKey }: { dayKey: string }) {
   const { t, lang, num } = useI18n();
   const { format } = useMoney();

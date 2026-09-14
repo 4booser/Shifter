@@ -1,7 +1,4 @@
-/**
- * Mirrors the contracts in src/Application/Features/business/DTOs. Money and
- * hours are computed server-side; the client only displays what it is given.
- */
+/** Mirrors the contracts in src/Application/Features/business/DTOs. */
 
 export type SalaryPeriod = 'hour' | 'day' | 'week' | 'month';
 
@@ -12,11 +9,7 @@ export const SALARY_PERIODS: { value: SalaryPeriod; label: string }[] = [
   { value: 'month', label: 'Month' },
 ];
 
-/**
- * Where a shift's tips come from. Personal tips are what this person was
- * handed; a pool share is a slice of what the room took, and the two cannot
- * be the same field without one of them being a lie.
- */
+/** Where a shift's tips come from. */
 export type TipSource = 'personal' | 'pool';
 
 export interface ShiftTemplate {
@@ -106,11 +99,7 @@ export interface WorkLocation {
   /** Empty means "whatever the app is set to". */
   currency: string;
   archived: boolean;
-  /**
-   * Empty where the sales commission arrives with everything else. Set where it
-   * settles on its own cycle — the common case being a wage paid twice a month
-   * against a percentage paid once.
-   */
+  /** Empty where the sales commission arrives with everything else. */
   sales_pay_period: PayPeriodKind | '';
   sales_pay_day: number;
   sales_pay_anchor: string;
@@ -179,10 +168,7 @@ export interface LocationTotal {
   deductions: number;
   /** Everything the place produced per paid hour. */
   per_hour: number;
-  /**
-   * The same place with the journey counted in. Null where nobody has said how
-   * far it is — an unstated commute is not a commute of zero.
-   */
+  /** The same place with the journey counted in. */
   commute: Commute | null;
   tax: number;
   /** earned minus tax. */
@@ -215,13 +201,7 @@ export interface DaySale {
   earned: number;
 }
 
-/**
- * Where in the venue a shift was worked.
- *
- * Every waiter knows the terrace tips better than the bar and none of them can
- * say by how much. "unset" is an answer — nobody said — and it is counted on
- * its own rather than folded into whichever zone is commonest.
- */
+/** Where in the venue a shift was worked. */
 export type ShiftZone = 'unset' | 'hall' | 'bar' | 'terrace' | 'banquet' | 'takeaway';
 
 export interface ZoneTotal {
@@ -244,10 +224,7 @@ export interface DayShiftEntry {
   earned: number;
   /** What the shift took, where it was recorded. Null is "not counted". */
   revenue: number | null;
-  /**
-   * How many it served. Null is "nobody counted", which is not the same as an
-   * evening with no guests.
-   */
+  /** How many it served. */
   guests: number | null;
   /** Where in the venue. "unset" is an answer: nobody said. */
   zone: ShiftZone;
@@ -264,11 +241,7 @@ export interface DayShiftEntry {
   break_minutes: number;
 }
 
-/**
- * Something that occupies days without being work. Mirrors EventDto: the only
- * money on it points outward — events mark time and sometimes cost, shifts are
- * what pays.
- */
+/** Something that occupies days without being work. */
 export type EventKind = 'ordinary' | 'vacation' | 'sick' | 'dayoff';
 
 export interface CalendarEvent {
@@ -297,11 +270,7 @@ export interface CalendarEvent {
   template_id: number | null;
 }
 
-/**
- * A palette entry for the calendar's non-working side: «английский»,
- * «вождение», the gym. The money here points outward — it is what the thing
- * costs, and it is never added to what a week earned.
- */
+/** A palette entry for the calendar's non-working side: «английский», «вождение», the gym. */
 export interface EventTemplate {
   id: number;
   name: string;
@@ -366,10 +335,7 @@ export interface CalendarDayData {
   hours: number;
   earned: number;
   planned: number;
-  /**
-   * Bumped by the server on every save; echo it in DaySave.version. Optional
-   * only because a dozen chart tests build partial days that never save.
-   */
+  /** Bumped by the server on every save; echo it in DaySave.version. */
   version?: number;
 }
 
@@ -380,11 +346,7 @@ export interface RateUsed {
   /** The national bank's published rate — what every figure above is built on. */
   rate: string;
   on: string;
-  /**
-   * What a commercial bank will actually buy this currency for. Beside the
-   * official rate, never instead of it: nothing on the page is computed from
-   * this. Null where the bank was unreachable or does not quote it.
-   */
+  /** What a commercial bank will actually buy this currency for. */
   market: string | null;
   market_on: string | null;
 }
@@ -406,11 +368,7 @@ export interface Conversion {
   rates: RateUsed[];
   /** Currencies the bank had no rate for, named rather than counted as one-to-one. */
   unconverted: string[];
-  /**
-   * What actually arrived, converted at the rate of the day each payment
-   * landed rather than at today's. Null where no payment in the range carried
-   * a stored rate.
-   */
+  /** What actually arrived, converted at the rate of the day each payment landed rather than at today's. */
   paid: number | null;
 }
 
@@ -435,30 +393,15 @@ export interface DaysResponse {
   tip_out: number;
   /** Meals withheld plus fines across the range. */
   deductions: number;
-  /**
-   * The fines alone, split by what caused them, largest first. Five broken
-   * glasses and one till shortfall add up the same and mean completely
-   * different things.
-   */
+  /** The fines alone, split by what caused them, largest first. */
   deductions_by_reason: DeductionSplit[];
-  /**
-   * Every time the rate moved on a shift worked in the range, newest first.
-   * Read out of the placements, so it records money that actually changed
-   * hands rather than what a template said at some point.
-   */
+  /** Every time the rate moved on a shift worked in the range, newest first. */
   raises: Raise[];
-  /**
-   * What the work cost, split by kind. Never subtracted from anything above
-   * it: take-home is what arrived, and these happened after that.
-   */
+  /** What the work cost, split by kind. */
   expenses_by_kind: ExpenseSplit[];
   /** Everything the work cost across the range. */
   expenses: number;
-  /**
-   * What share of the tips the travelling ate, as a percentage. Null where
-   * there were no tips, or no fares — a percentage of nothing is undefined,
-   * not large.
-   */
+  /** What share of the tips the travelling ate, as a percentage. */
   travel_share_of_tips: number | null;
   tax: number;
   /** total_earned minus tax. */
@@ -467,12 +410,7 @@ export interface DaysResponse {
   holiday_accrued: number;
   /** More than one entry means the totals mix currencies. */
   currencies: string[];
-  /**
-   * The range restated in one currency. Present only where more than one was
-   * earned in and the client asked for it — converting a range already in one
-   * currency is noise, and noise beside money is how people stop reading
-   * totals.
-   */
+  /** The range restated in one currency. */
   conversion: Conversion | null;
   by_location: LocationTotal[];
   overtime_hours: number;
@@ -491,10 +429,7 @@ export interface DaysResponse {
   average_cheque: number | null;
   /** Tips and hours by zone, for every zone anybody named. */
   by_zone: ZoneTotal[];
-  /**
-   * Everything overlapping the range, once each rather than repeated on every
-   * day it covers. The store spreads them across the cells.
-   */
+  /** Everything overlapping the range, once each rather than repeated on every day it covers. */
   events: CalendarEvent[];
 }
 
@@ -529,11 +464,7 @@ export interface Raise {
   days_ago: number;
 }
 
-/**
- * What getting to a place costs, and what it does to the hourly rate. An
- * estimate throughout, which is why it sits beside the earnings rather than
- * inside them.
- */
+/** What getting to a place costs, and what it does to the hourly rate. */
 export interface Commute {
   /** One way, in minutes. */
   minutes: number;
@@ -565,21 +496,13 @@ export interface Expense {
   /** Null where it belongs to the trade rather than to an employer. */
   location_id: number | null;
   location_name: string | null;
-  /**
-   * True where nobody has confirmed it: a standing cost says it happens, and
-   * the day has not come or has not been checked. An estimate never mixes
-   * with a fact, so it is labelled rather than quietly counted as one.
-   */
+  /** True where nobody has confirmed it: a standing cost says it happens, and the day has not come or has not been… */
   expected: boolean;
   /** The standing cost it came from, where it came from one. */
   rule_id: number | null;
 }
 
-/**
- * A cost that comes round: a travel pass, a locker, the whip-round for the
- * staff room. Nobody records these — recording something is what you do while
- * thinking about it, and the nature of a standing cost is that you are not.
- */
+/** A cost that comes round: a travel pass, a locker, the whip-round for the staff room. */
 export interface ExpenseRule {
   id: number;
   amount: number;
@@ -615,12 +538,7 @@ export interface ExpenseRuleSave {
   location_id: number | null;
 }
 
-/**
- * One line somebody can check against a payslip: what the app worked out, how
- * it got there, and room for what the paper says. The formula is the point —
- * a total that disagrees is an argument, and "6 ч × 200 × 1,2" is a question
- * with an answer.
- */
+/** One line somebody can check against a payslip: what the app worked out, how it got there, and room for what… */
 export interface PayslipLine {
   kind: 'base' | 'extras' | 'revenue' | 'tips' | 'tip_out' | 'meals' | 'fines' | 'tax';
   amount: number;
@@ -644,12 +562,7 @@ export interface PayslipCheck {
   holiday_accrued: number;
 }
 
-/**
- * A piece of paper without which somebody is not allowed on shift. The days
- * left are computed on the server, so the phone and the site cannot disagree
- * about whether something has expired — which, on a medical book, is the
- * difference between working a shift and being sent home from it.
- */
+/** A piece of paper without which somebody is not allowed on shift. */
 export type DocumentKind = 'medical' | 'sanitary' | 'certificate' | 'licence' | 'permit' | 'other';
 
 export interface WorkDocument {
@@ -670,11 +583,7 @@ export interface DocumentSave {
   note: string | null;
 }
 
-/**
- * A biography made of shifts. Every figure comes from days that were actually
- * recorded, which is what makes it worth showing to somebody with no reason to
- * believe you.
- */
+/** A biography made of shifts. */
 export interface WorkHistoryPlace {
   name: string;
   /** yyyy-MM. */
@@ -729,21 +638,13 @@ export interface Payout {
   kind: PayoutKind;
   /** The currency it arrived in. Empty is the app's own. */
   currency: string;
-  /**
-   * Hryvnia per unit on the day it arrived, fixed when it was recorded — so
-   * last August's wage stops changing every morning with the rate. Null in
-   * the app's own currency, and null where nothing was published.
-   */
+  /** Hryvnia per unit on the day it arrived, fixed when it was recorded — so last August's wage stops changing… */
   rate_to_base: number | null;
   /** The day that rate was published for. Weekends look back. */
   rate_on: string | null;
 }
 
-/**
- * The аванс arrives mid-month and the расчёт closes it. Recorded as one kind of
- * payment they look like an underpayment every single month, which is how a
- * warning stops being read.
- */
+/** The аванс arrives mid-month and the расчёт closes it. */
 export type PayoutKind = 'settlement' | 'advance' | 'bonus' | 'cash';
 
 export interface PayoutCreate {
@@ -761,11 +662,7 @@ export interface PayoutCreate {
 /** How long a goal covers. */
 export type GoalPeriod = 'day' | 'week' | 'month' | 'year';
 
-/**
- * An amount to aim for. A null anchor is a standing goal — every month, every
- * day, whichever the period is; an anchor names one period alone, and beats the
- * standing goal for that period.
- */
+/** An amount to aim for. */
 export interface Goal {
   id: number;
   period: GoalPeriod;
@@ -800,23 +697,12 @@ export interface PayPeriodRow {
   /** paid minus expected; negative is a shortfall. */
   difference: number;
   hours: number;
-  /**
-   * 'partial' is an advance with the settlement still to come: money is
-   * outstanding, but nobody has done anything wrong yet.
-   */
+  /** 'partial' is an advance with the settlement still to come: money is outstanding, but nobody has done anything… */
   status: 'open' | 'due' | 'overdue' | 'partial' | 'paid' | 'short' | 'over';
   days_late: number;
-  /**
-   * Which payment this row is. 'all' where a place settles everything at once;
-   * 'wage' and 'commission' where the percentage runs on its own cycle, in
-   * which case two rows can cover overlapping days without being duplicates.
-   */
+  /** Which payment this row is. */
   stream: 'all' | 'wage' | 'commission';
-  /**
-   * Set where this shortfall has been closed: 'paid' if the money arrived off
-   * the books, 'written-off' if it never will. Both stop it counting as owed;
-   * only one of them is good news.
-   */
+  /** Set where this shortfall has been closed: 'paid' if the money arrived off the books, 'written-off' if it… */
   settled: 'paid' | 'written-off' | null;
   settled_note: string | null;
   /** How much of what arrived was an advance. */
@@ -870,10 +756,7 @@ export interface DaySave {
   note: string | null;
   /** '#RRGGBB', or null to clear it. */
   colour: string | null;
-  /**
-   * The version this client loaded, echoed back so the server can refuse a
-   * save over an edit made on another device. Absent keeps last-write-wins.
-   */
+  /** The version this client loaded, echoed back so the server can refuse a save over an edit made on another… */
   version?: number;
 }
 
@@ -918,18 +801,8 @@ export const EMPTY_SUMMARY: DaysResponse = {
   events: [],
 };
 
-/**
- * The swatches offered for days and events. Bright on purpose: these sit as
- * small marks on a pale grid, and a muted colour at that size reads as grey.
- * Each one holds its own against both themes rather than only against white.
- */
-/**
- * Two rows of hues, then a deep step under each. A mark is a few millimetres
- * across, so the hues stay far apart round the wheel — the point is telling two
- * shifts apart at a glance, not covering the spectrum. The deep row exists
- * because the bright row disappears against a light ground when a whole day is
- * filled rather than outlined.
- */
+/** The swatches offered for days and events. */
+/** Two rows of hues, then a deep step under each. */
 export const MARK_COLOURS: { label: string; value: string }[] = [
   { label: 'Coral', value: '#FF5C7A' },
   { label: 'Amber', value: '#FFA53D' },
@@ -970,10 +843,7 @@ export function toSavePayload(day: CalendarDayData | undefined): DaySave {
       actual_end: entry.actual_end,
       break_minutes: entry.break_minutes,
       revenue: entry.revenue,
-      // The covers counted and the section worked survive too. A save
-      // replaces the day — the server builds each shift row from scratch —
-      // so a field left out of here is not "unchanged", it is deleted. Every
-      // bulk edit, undo and clock-out goes through this function.
+      // The covers counted and the section worked survive too.
       guests: entry.guests,
       zone: entry.zone,
     })),
@@ -991,18 +861,8 @@ export function toSavePayload(day: CalendarDayData | undefined): DaySave {
   };
 }
 
-/**
- * "350 / hour + 3%", or just the half that exists. A stacked deal is the
- * ordinary case in hospitality, so the label has to be able to say both.
- */
-/**
- * «180 / час» — ставка словами читателя.
- *
- * Период приходит с сервера как `hour` / `day` / `week` / `month`, и раньше
- * подставлялся в строку как есть: в русском интерфейсе рядом со сменой стояло
- * «180 / hour». Переводчик передаётся снаружи — этот файл про данные, а не
- * про язык.
- */
+/** "350 / hour + 3%", or just the half that exists. */
+/** «180 / час» — ставка словами читателя. */
 export function rateLabel(template: ShiftTemplate, t: (key: string) => string = (key) => key): string {
   const amount = template.salary_amount;
   const period = t(`per ${template.salary_period}`);
@@ -1022,11 +882,7 @@ export interface EmojiGroup {
   emojis: string[];
 }
 
-/**
- * Grouped by the kind of work rather than thrown together, so picking one is a
- * glance instead of a scan. Everything here reads at 10px in a calendar cell —
- * busy glyphs turn to mush at that size and are left out.
- */
+/** Grouped by the kind of work rather than thrown together, so picking one is a glance instead of a scan. */
 export const EMOJI_GROUPS: EmojiGroup[] = [
   {
     label: 'Time of day',
@@ -1065,10 +921,6 @@ export const EMOJI_GROUPS: EmojiGroup[] = [
 /** Flat list, kept for anything that just needs "is this one of ours". */
 export const SHIFT_EMOJIS = EMOJI_GROUPS.flatMap((group) => group.emojis);
 
-/**
- * What to call a place in a sentence. Shifts with no place land in a
- * synthetic bucket the server names in English; that name is a placeholder,
- * not a title, and no localised screen should read it out loud.
- */
+/** What to call a place in a sentence. */
 export const placeName = (total: { location_id: number; name: string }, unplaced: string): string =>
   total.location_id === 0 ? unplaced : total.name;

@@ -24,10 +24,7 @@ export default function AccountPage() {
   );
 }
 
-/**
- * Everything about the account rather than the calendar: who you are, how you
- * sign in, and the two irreversible buttons behind a typed confirmation.
- */
+/** Everything about the account rather than the calendar: who you are, how you sign in, and the two irreversible… */
 function Account() {
   const revealHost = useReveal<HTMLDivElement>();
   const router = useRouter();
@@ -83,10 +80,7 @@ function Account() {
       : new Intl.DateTimeFormat(lang, { year: 'numeric', month: 'long' }).format(new Date(profile.created_at));
 
   return (
-    /* Четырнадцать карточек в колонке 576 px давали три тысячи пикселей
-       прокрутки, пока по бокам простаивало по четыреста пятьдесят. Кладка в
-       две колонки складывает ту же страницу вдвое короче; шире тысячи ста не
-       растягиваем — поля ввода во весь монитор читаются хуже, а не лучше. */
+    /* Четырнадцать карточек в колонке 576 px давали три тысячи пикселей прокрутки, пока по бокам простаивало по… */
     <div ref={revealHost} className="mx-auto flex max-w-[1100px] flex-col gap-4">
       <h1 className="text-[1.3rem] font-bold tracking-tight">{t('Account')}</h1>
 
@@ -327,11 +321,7 @@ function Account() {
   );
 }
 
-/**
- * The calendar-subscription block: one secret URL that Google or Apple
- * Calendar polls on its own. Money never travels through it, only names and
- * times — a subscribed calendar gets shared far more casually than a login.
- */
+/** The calendar-subscription block: one secret URL that Google or Apple Calendar polls on its own. */
 function FeedSection() {
   const { t } = useI18n();
   const [token, setToken] = useState<string | null>(null);
@@ -458,14 +448,7 @@ function ExportSection() {
   );
 }
 
-/**
- * The month's letter.
- *
- * Once a month is the only frequency at which post from an app is not an
- * irritation. It is off until somebody switches it on: an address given to
- * recover a password is not permission to write to them, and treating it as
- * one is how a product loses the address it actually needed.
- */
+/** The month's letter. */
 function LetterSection({ email, on }: { email: string | null; on: boolean }) {
   const { t } = useI18n();
 
@@ -513,11 +496,7 @@ function LetterSection({ email, on }: { email: string | null; on: boolean }) {
   );
 }
 
-/**
- * The second lock on the door. Setup shows a QR the authenticator scans and
- * asks for one code as proof; enabling mints eight one-time backup codes for
- * the day the phone is gone. Money history deserves at least this much.
- */
+/** The second lock on the door. */
 function TwoFactorSection({ hasPassword, on }: { hasPassword: boolean; on: boolean }) {
   const { t } = useI18n();
   const [stage, setStage] = useState<'idle' | 'setup' | 'backup'>('idle');
@@ -529,10 +508,7 @@ function TwoFactorSection({ hasPassword, on }: { hasPassword: boolean; on: boole
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  // The profile says whether it is on, so nothing here has to find out by
-  // trying to switch it on and reading the failure. A 409 from setup still
-  // means "already enabled" and is still handled — two tabs, one of them
-  // stale, is an ordinary Tuesday.
+  // The profile says whether it is on, so nothing here has to find out by trying to switch it on and reading the…
   const begin = async () => {
     setBusy(true);
     setError(null);
@@ -676,10 +652,7 @@ function TwoFactorSection({ hasPassword, on }: { hasPassword: boolean; on: boole
   );
 }
 
-/**
- * The bot bridge: a six-digit code carried by hand from here to the chat.
- * Hidden entirely on servers that run without a bot token.
- */
+/** The bot bridge: a six-digit code carried by hand from here to the chat. */
 function TelegramSection() {
   const { t } = useI18n();
   const [state, setState] = useState<{ linked: boolean; bot: string } | null | 'off'>(null);
@@ -753,14 +726,7 @@ interface SessionRow {
   user_agent: string | null;
 }
 
-/**
- * "Chrome on a Mac, ×214, last Tuesday" — the keys out there, grouped.
- *
- * Every sign-in mints a session, and a person who lives in the app mints
- * hundreds from one browser; listing each one was a wall nobody could read
- * or act on. One row per device now, carrying its count, its newest date
- * and one button that throws the whole pile out.
- */
+/** "Chrome on a Mac, ×214, last Tuesday" — the keys out there, grouped. */
 function SessionsSection() {
   const { t, lang } = useI18n();
   const [rows, setRows] = useState<SessionRow[] | null>(null);
@@ -870,18 +836,7 @@ function SessionsSection() {
   );
 }
 
-/**
- * How long between shifts counts as enough.
- *
- * Eleven is the EU daily rest rule and the default nobody has to choose. It
- * is a setting because rest belongs to the person: somebody who works split
- * doubles by arrangement should be able to stop being told about them, and
- * somebody who wants a stricter line than the law's should get one.
- *
- * The app says how many and how short. It does not say what that means for
- * anybody's health — that is theirs, and a calendar that starts diagnosing
- * has stopped being a calendar.
- */
+/** How long between shifts counts as enough. */
 function RestSection({ hours }: { hours: number }) {
   const { t } = useI18n();
   const [value, setValue] = useState(hours);

@@ -6,19 +6,7 @@ import { TaxProfile, TaxReading, taxApi } from '@/lib/api/tax';
 import { useI18n } from '@/lib/i18n';
 import { Money } from '@/components/ui/bits';
 
-/**
- * The year against the ceiling somebody entered themselves.
- *
- * Simplified-tax rates change by law, by year, by group and by region, and a
- * wrong number here is not an inaccuracy — it is a confident statement about
- * somebody's obligations to the state, made by an app that has never seen
- * their registration. So the app ships no rates at all. Every figure below is
- * multiplication on numbers the person typed off their own paperwork.
- *
- * What it adds is the running total against their own ceiling and roughly when
- * it runs out. Nobody keeps that in their head, and it is exactly the thing
- * people find out about in December.
- */
+/** The year against the ceiling somebody entered themselves. */
 export function TaxCard() {
   const { t, lang } = useI18n();
 

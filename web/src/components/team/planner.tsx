@@ -22,12 +22,7 @@ import { useCalendar } from '@/lib/store/calendar';
 import { Alert } from '@/components/ui/bits';
 import { Icon } from '@/components/ui/icon';
 
-/**
- * People × days, one week at a time. A manager sketches assignments as
- * drafts nobody else sees, then publishes the week: every person gets one
- * push and the cells wait for their answers — green when accepted, red
- * when declined and needing replanning. Money never appears here.
- */
+/** People × days, one week at a time. */
 export function PlannerBoardView({ teamId }: { teamId: number }) {
   const { t, lang, n } = useI18n();
   const templates = useCalendar((state) => state.templates);
@@ -41,11 +36,7 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  /*
-   * The cell editor is a real modal — a backdrop and one job — so it takes
-   * Escape, keeps Tab inside itself, and hands focus back to the cell that
-   * opened it. Before this it could only be dismissed with a pointer.
-   */
+  /* The cell editor is a real modal — a backdrop and one job — so it takes Escape, keeps Tab inside itself, and… */
   const fillingBox = useRef<HTMLDivElement>(null);
 
   /** The cell being edited: who and which day, plus the form. */
@@ -152,11 +143,7 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
     return map;
   }, [board]);
 
-  /**
-   * The same days counted by station, straight from the server. "Two bars and
-   * nobody in the kitchen" is the sentence a manager is reading the board for,
-   * and a head count never says it.
-   */
+  /** The same days counted by station, straight from the server. */
   const stations = useMemo(
     () => new Map((board?.coverage ?? []).map((day) => [day.date, day])),
     [board],
@@ -255,18 +242,11 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
     }
   };
 
-  /**
-   * The timesheet accounting asks for on the first of the month: people down
-   * the side, days across, hours in the cells, totals on both edges. Built
-   * from the board that is already on screen, so it can never disagree with
-   * what the manager published.
-   */
+  /** The timesheet accounting asks for on the first of the month: people down the side, days across, hours in the… */
   const exportTimesheet = () => {
     if (board === null) return;
 
-    // The three words this file writes itself, in the language of whoever
-    // pressed the button — «Итого», «Всего» and the sheet's own name were
-    // Russian for everybody, in the one export a manager forwards onward.
+    // The three words this file writes itself, in the language of whoever pressed the button — «Итого», «Всего» and…
     const header = ['', ...days.map((day) => day.slice(8))];
     const rows: (string | number)[][] = [[...header, t('Total')]];
 
@@ -431,12 +411,7 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
                       {new Date(`${day}T00:00:00`).toLocaleDateString(lang, { weekday: 'short' })}
                     </span>
                     <span className={`text-[0.82rem] font-bold tabular ${isToday ? 'text-(--accent-read)' : ''}`}>{day.slice(8)}</span>
-                    {/* «пусто» under every date of a week the rota shows five
-                        shifts in. The count is right — it counts what this
-                        board has handed out — but the word claims the day is
-                        empty, and a manager reads that against a calendar
-                        saying otherwise. Zero of the same unit the other
-                        columns show says only what is true. */}
+                    {/* «пусто» under every date of a week the rota shows five shifts in. */}
                     <span className={`block text-[0.64rem] tabular ${covered === 0 ? 'text-danger-read' : 'text-faint'}`}>
                       ×{covered}
                     </span>
@@ -444,9 +419,7 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
 
                     {/* Stations, in the order the enum declares them, so a
                         Friday and a Saturday read down the same columns. */}
-                    {/* Shown when anything is planned at all: a day whose only
-                        cell has no station is exactly the one worth fixing, and
-                        hiding the count hides that. */}
+                    {/* Shown when anything is planned at all: a day whose only cell has no station is exactly the one worth fixing… */}
                     {((stations.get(day)?.roles.length ?? 0) > 0 ||
                       (stations.get(day)?.unset ?? 0) > 0) && (
                       <span className="mt-0.5 flex flex-wrap justify-center gap-x-1 gap-y-0.5 text-[0.62rem] leading-none">
@@ -547,10 +520,7 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
                         <button
                           type="button"
                           aria-label={t('Add a shift here')}
-                          // Shown on hover and on focus, and never removed from
-                          // the page: `hidden` is display:none, so this was not
-                          // focusable at all — assigning a shift to a person on
-                          // a day was unreachable without a pointer.
+                          // Shown on hover and on focus, and never removed from the page: `hidden` is display:none, so this was not…
                           className="rounded-(--radius) border border-dashed border-border-strong px-1.5 py-0.5 text-[0.72rem] text-faint opacity-0 transition-opacity hover:border-(--accent) hover:text-(--accent-read) focus-visible:opacity-100 group-hover:opacity-100"
                           onClick={() =>
                             setEditing({
@@ -560,9 +530,7 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
                               title: editing?.title ?? templates[0]?.name ?? '',
                               start: editing?.start ?? templates[0]?.start_time ?? '11:00',
                               end: editing?.end ?? templates[0]?.end_time ?? '22:00',
-                              // The station carries over from the last cell:
-                              // a manager filling a Friday is filling one row
-                              // of the same station, not seven different ones.
+                              // The station carries over from the last cell: a manager filling a Friday is filling one row of the same…
                               role: editing?.role ?? '',
                             })
                           }

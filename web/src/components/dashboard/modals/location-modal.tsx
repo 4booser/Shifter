@@ -14,11 +14,7 @@ import { confirmDeleteLocation } from './location-delete';
 
 const today = () => todayKey();
 
-/**
- * The place manager: the list, the form, and every rule that lives on a place
- * — pay cycle, overtime, tip-out, meals, tax, holiday, currency, and the
- * separate commission cycle.
- */
+/** The place manager: the list, the form, and every rule that lives on a place — pay cycle, overtime, tip-out… */
 export function LocationModal({
   open,
   editLocation,
@@ -208,9 +204,7 @@ export function LocationModal({
                 <span className="h-2.5 w-2.5 flex-none rounded-full" style={{ background: location.colour }} />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-[0.88rem] font-medium" title={location.name}>{location.name}</span>
-                  {/* «2026-09-01 – 2026-09-15» is how a database says it.
-                      The payout list learned this months ago; this list, on
-                      the same fact, had not. */}
+                  {/* «2026-09-01 – 2026-09-15» is how a database says it. */}
                   <span className="field-hint tabular">
                     {formatPeriod(location.current_period_from, location.current_period_to, lang)}
                   </span>

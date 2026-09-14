@@ -1,11 +1,4 @@
-/**
- * The year as a heat grid: which weeks fed the month and which starved it.
- *
- * Mirrored verbatim in mobile/src/lib/year-heat.ts — the figure disagreeing
- * across platforms is a bug by definition. Buckets are quartiles of the
- * *non-zero* earned days: most rows in a part-time year are zeros, and
- * letting them into the thresholds would paint every worked day "hottest".
- */
+/** The year as a heat grid: which weeks fed the month and which starved it. */
 
 export interface HeatDay {
   date: string;
@@ -53,11 +46,7 @@ const key = (date: Date): string => {
   return `${date.getFullYear()}-${mm}-${dd}`;
 };
 
-/**
- * The grid: 53 Monday-first week columns ending in the week of `today`.
- * A date with no record is level null — unsaid, not zero; a future date
- * inside the last column is null too.
- */
+/** The grid: 53 Monday-first week columns ending in the week of `today`. */
 export const heatGrid = (
   days: HeatDay[],
   today: string,

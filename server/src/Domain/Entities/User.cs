@@ -11,10 +11,7 @@ public sealed class User
     public string? LastName { get; set; }
     
     public required string Login { get; set; }
-    /// <summary>
-    /// Null for accounts that only ever signed in with Google — there is no
-    /// password to hash, and inventing one would be a lie about how they log in.
-    /// </summary>
+    /// <summary>Null for accounts that only ever signed in with Google — there is no password to hash, and inventing one…</summary>
     public string? PasswordHash { get; set; }
 
     /// <summary>Google's stable user id ("sub"), unique when present.</summary>
@@ -25,60 +22,26 @@ public sealed class User
     /// <summary>Income the user aims for in a month; null means no goal set.</summary>
     public decimal? MonthlyGoal { get; set; }
 
-    /// <summary>
-    /// The rest between shifts this person counts as enough, in hours.
-    ///
-    /// Eleven is the EU daily rule and the default nobody has to choose. It is
-    /// theirs to set because rest is theirs, not the employer's: somebody who
-    /// works split doubles by arrangement should be able to stop being told
-    /// about it, and somebody who wants a stricter line should get one.
-    /// </summary>
+    /// <summary>The rest between shifts this person counts as enough, in hours.</summary>
     public double RestHours { get; set; } = RestBetweenShifts.DefaultHours;
 
-    /// <summary>
-    /// Colours this person saved to reuse, as a JSON array of "#RRGGBB".
-    ///
-    /// On the account rather than in a browser: somebody who picked their
-    /// venue's colours on a laptop should find the same swatches on the phone
-    /// the same evening. Empty until they save one.
-    /// </summary>
+    /// <summary>Colours this person saved to reuse, as a JSON array of "#RRGGBB".</summary>
     public string ColourPresets { get; set; } = "[]";
 
-    /// <summary>
-    /// A share of tips to put aside, as a percent. Zero is off.
-    ///
-    /// Tips are the only money in this trade that arrives in cash and leaves
-    /// without a trace, and the usual advice — "save a bit" — is useless
-    /// because a bit of nothing in particular is nothing. A percent of a
-    /// figure the app already knows is a number somebody can act on.
-    ///
-    /// Nothing is moved. The app has no business touching anybody's money,
-    /// and a counter that says "you meant to have put aside 4 200 by now" is
-    /// the whole of what it can honestly offer.
-    /// </summary>
+    /// <summary>A share of tips to put aside, as a percent.</summary>
     public decimal TipSavePercent { get; set; }
 
     /// <summary>What the saving is for. Zero means no target, only a total.</summary>
     public decimal TipSaveGoal { get; set; }
 
-    /// <summary>
-    /// When the rule started. Tips earned before it are not counted — a
-    /// counter that begins by declaring somebody already behind is a counter
-    /// they close.
-    /// </summary>
+    /// <summary>When the rule started.</summary>
     public DateOnly? TipSaveFrom { get; set; }
     public List<Sales>? Sales {get; set;}
     
-    /// <summary>
-    /// The secret in the calendar-subscription URL. Null until the person
-    /// turns the feed on; rotating it is how a leaked link is put down.
-    /// </summary>
+    /// <summary>The secret in the calendar-subscription URL.</summary>
     public string? FeedToken { get; set; }
 
-    /// <summary>
-    /// The short code in this person's invite link. Minted on first use, so
-    /// accounts that never invite anybody carry nothing extra.
-    /// </summary>
+    /// <summary>The short code in this person's invite link.</summary>
     public string? ReferralCode { get; set; }
 
     /// <summary>Who brought them in; null for everyone who arrived on their own.</summary>
@@ -86,15 +49,7 @@ public sealed class User
 
     // ==== The record, if they choose to show it ====
 
-    /// <summary>
-    /// The unguessable half of a link to somebody's own work history: how long
-    /// in the trade, where, how many shifts. Null until they ask for one, and
-    /// null again the moment they turn it off — a link that stops working is
-    /// the only revocation anybody believes.
-    ///
-    /// Off by default, and it stays off. A work history is not a thing to
-    /// publish on somebody's behalf, however useful it would be to them.
-    /// </summary>
+    /// <summary>The unguessable half of a link to somebody's own work history: how long in the trade, where, how many shifts.</summary>
     public string? CardSlug { get; set; }
 
     /// <summary>Whether the card names the places. Off unless asked for.</summary>
@@ -103,37 +58,16 @@ public sealed class User
     /// <summary>Whether the card shows rates. Off unless asked for.</summary>
     public bool CardShowsMoney { get; set; }
 
-    /// <summary>
-    /// The address a lost password is recovered through. Optional and
-    /// private: it is never shown to anyone else and never travels with a
-    /// gig response — the contacts below do that job.
-    /// </summary>
+    /// <summary>The address a lost password is recovered through.</summary>
     public string? Email { get; set; }
 
-    /// <summary>
-    /// Whether they asked for the month's letter. Off until somebody switches
-    /// it on: an address given to recover a password is not permission to
-    /// write to somebody, and treating it as one is how a product loses the
-    /// address it actually needed.
-    /// </summary>
+    /// <summary>Whether they asked for the month's letter.</summary>
     public bool MonthlyLetter { get; set; }
 
-    /// <summary>
-    /// The last month a letter went out for, as "2026-08".
-    ///
-    /// Stamped rather than counted from a schedule, so a process restarted
-    /// four times on the first of the month sends one letter and not four.
-    /// </summary>
+    /// <summary>The last month a letter went out for, as "2026-08".</summary>
     public string? MonthlyLetterSent { get; set; }
 
-    /// <summary>
-    /// The half of the unsubscribe link that cannot be guessed.
-    ///
-    /// Unsubscribing must work from the letter, in one click, with nobody
-    /// signed in — that is the whole difference between a letter people
-    /// tolerate and one they mark as spam. Which means the link carries proof,
-    /// and the proof has to be unguessable rather than an account id.
-    /// </summary>
+    /// <summary>The half of the unsubscribe link that cannot be guessed.</summary>
     public string? LetterKey { get; set; }
 
     // ==== Reachability, shared only through an explicit gig response ====
@@ -146,16 +80,10 @@ public sealed class User
     /// <summary>"photo" | "preset" | "weave" | null (initials fallback).</summary>
     public string? AvatarKind { get; set; }
 
-    /// <summary>
-    /// photo: a small JPEG data URL (≤48KB after client-side crop);
-    /// preset: "emoji|#colour"; weave: the seed the canvas is drawn from.
-    /// </summary>
+    /// <summary>photo: a small JPEG data URL (≤48KB after client-side crop); preset: "emoji|#colour"; weave: the seed the…</summary>
     public string? AvatarData { get; set; }
 
-    /// <summary>
-    /// The TOTP secret. Set at setup, meaningful only once
-    /// <see cref="TotpEnabledAt"/> confirms the person proved they hold it.
-    /// </summary>
+    /// <summary>The TOTP secret.</summary>
     public string? TotpSecret { get; set; }
 
     public DateTime? TotpEnabledAt { get; set; }
@@ -165,13 +93,7 @@ public sealed class User
 
     public bool IsActive { get; set; } = true;
 
-    /// <summary>
-    /// When this account stops being a demonstration and starts being
-    /// rubbish. Null on every real account, which is what the flag is for as
-    /// much as the date: the application has to be able to say «this is an
-    /// example» out loud on every screen, and the sweep has to be able to
-    /// find these and only these.
-    /// </summary>
+    /// <summary>When this account stops being a demonstration and starts being rubbish.</summary>
     public DateTime? DemoUntil { get; set; }
 
     public DateTime CreatedAt { get; set; }

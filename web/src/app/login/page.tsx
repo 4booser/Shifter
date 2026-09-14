@@ -34,14 +34,7 @@ function LoginForm() {
   const [ticket, setTicket] = useState<string | null>(null);
   const [code, setCode] = useState('');
 
-  /*
-   * Looking costs nothing.
-   *
-   * The bank tab has had this for months and it is the only reason anybody
-   * can see that page without handing over a token; the rest of the
-   * application had no such door, so the only way to find out what it does
-   * was to register and type in a month of one's own work first.
-   */
+  /* Looking costs nothing. */
   const [showing, setShowing] = useState(false);
 
   const show = async () => {

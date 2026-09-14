@@ -1,30 +1,7 @@
-/*
- * One copy, read by the web and by the phone.
- *
- * This file used to exist twice, and the header said parity between the
- * platforms was parity of files — keep them identical by hand. They did not
- * stay identical: the web learned that an hour priced on two worked minutes
- * is not a rate and the phone did not, the web's «what a day usually costs»
- * settled on one window and the phone kept two, and a comment here described
- * a rule the code stopped following. None of that is visible from either side
- * alone, which is the whole problem with parity by discipline.
- *
- * So it lives outside both clients now and neither owns it. The rule that
- * makes that possible: nothing in here may import from a platform. No
- * `@/`, no expo, no next, no react — statements in, numbers out. A test
- * holds that line.
- */
+/* One copy, read by the web and by the phone. */
 import { MonoStatementItem, dayOf, fromMinor, income, spent } from './mono';
 
-/**
- * Cyrillic to Latin, for names only.
- *
- * A card statement writes the same shop both ways depending on which terminal
- * took the money — «МАКДОНАЛЬДЗ №42» one week, «MCDONALDS 42» the next — and
- * two rows for one shop is the difference between a list somebody reads and a
- * list somebody scrolls past. This is not transliteration for humans: it only
- * has to map both spellings of a name onto the same key.
- */
+/** Cyrillic to Latin, for names only. */
 const LATIN: Record<string, string> = {
   а: 'a', б: 'b', в: 'v', г: 'g', ґ: 'g', д: 'd', е: 'e', є: 'e', ж: 'zh', з: 'z',
   и: 'i', і: 'i', ї: 'i', й: 'i', к: 'k', л: 'l', м: 'm', н: 'n', о: 'o', п: 'p',
@@ -32,14 +9,7 @@ const LATIN: Record<string, string> = {
   щ: 'sch', ь: '', ю: 'iu', я: 'ia', ъ: '', ы: 'i', э: 'e', ё: 'e',
 };
 
-/**
- * One counterparty's key: the name with everything that varies taken out.
- *
- * Branch numbers, city names appended by the terminal, punctuation and case
- * all vary between two payments to the same till. Digits go entirely — a shop
- * whose name is a number is rarer than a shop with a branch number, and the
- * second mistake is the one that fills the screen.
- */
+/** One counterparty's key: the name with everything that varies taken out. */
 export const merchantKey = (description: string): string => {
   const lowered = description.trim().toLocaleLowerCase();
 
@@ -66,12 +36,7 @@ export interface Counterparty {
   last: string;
 }
 
-/**
- * Who the money went to, biggest first.
- *
- * Forty lines saying "coffee" is not knowledge. "Four thousand two hundred
- * went to this one place in three months" is.
- */
+/** Who the money went to, biggest first. */
 export const counterparties = (
   items: MonoStatementItem[],
   from: string,
@@ -142,10 +107,7 @@ const median = (values: number[]): number => {
 };
 
 const addDays = (day: string, days: number): string => {
-  // Parsed and rendered in the same clock (UTC), deliberately: parsing local
-  // and rendering toISOString loses a day everywhere east of Greenwich —
-  // which is where every user of this app lives. Found when CI (UTC) and a
-  // Kyiv laptop disagreed about when Netflix comes round.
+  // Parsed and rendered in the same clock (UTC), deliberately: parsing local and rendering toISOString loses a…
   const at = new Date(`${day}T00:00:00Z`);
 
   at.setUTCDate(at.getUTCDate() + days);
@@ -159,29 +121,15 @@ const daysBetween = (one: string, two: string): number =>
     / (24 * 60 * 60 * 1000),
   );
 
-/**
- * Standing charges, found rather than declared.
- *
- * A travel pass, a gym, a locker, subscriptions: they leave silently and are
- * noticed when the money runs out. Nobody writes them down, because writing
- * them down is a thing you do exactly when you are not thinking about them.
- *
- * Three charges minimum. Two is a coincidence and calling it a subscription
- * would put an invented figure into somebody's forecast.
- */
+/** Standing charges, found rather than declared. */
 export const recurring = (
   items: MonoStatementItem[],
   to: string,
 ): Recurring[] => {
-  // Detection always looks back 120 days from the edge, whatever window the
-  // caller is showing. A monthly charge seen through a one-month window is
-  // one line — which is why this list sat empty on the web for months while
-  // Netflix came round like clockwork.
+  // Detection always looks back 120 days from the edge, whatever window the caller is showing.
   const from = addDays(to, -120);
   const groups = new Map<string, { name: string; days: string[]; amounts: number[] }>();
-  // The statement's real edge. A caller viewing the current month passes a
-  // `to` that is mostly future; measuring staleness against September 30th
-  // on September 1st declared every monthly charge dead for a month.
+  // The statement's real edge.
   let newest = from;
 
   for (const item of items) {
@@ -215,9 +163,7 @@ export const recurring = (
 
     if (typical <= 0) continue;
 
-    // The same money each time, near enough. A shop somebody visits weekly
-    // for whatever it costs is not a subscription, and the amount is what
-    // separates the two.
+    // The same money each time, near enough.
     const steady = group.amounts.every((amount) => Math.abs(amount - typical) <= typical * 0.1);
 
     if (!steady) continue;
@@ -243,9 +189,7 @@ export const recurring = (
 
     const last = days[days.length - 1];
 
-    // A rhythm that stopped is not a standing charge with a future: the last
-    // charge more than one-and-a-half beats ago means the series ended, and
-    // predicting «next around» a date already past is the tell of a dead row.
+    // A rhythm that stopped is not a standing charge with a future: the last charge more than one-and-a-half beats…
     const edge = newest < to ? newest : to;
 
     if (daysBetween(last, edge) > step * 1.5) continue;
@@ -277,14 +221,7 @@ export interface Refund {
   purchase: MonoStatementItem;
 }
 
-/**
- * A refund and the purchase it undoes.
- *
- * The money comes back as its own line, so a month with one returned coat
- * reads as both a spend and an income. Neither happened. Paired, the two
- * cancel; unpaired, the credit is left alone and says so — a guess here is
- * worse than "I do not know".
- */
+/** A refund and the purchase it undoes. */
 export const refunds = (items: MonoStatementItem[]): Refund[] => {
   const outgoing = items
     .filter((item) => item.amount < 0 && !item.hold)
@@ -319,14 +256,7 @@ export const refunds = (items: MonoStatementItem[]): Refund[] => {
   return pairs;
 };
 
-/**
- * Money moved between the person's own accounts.
- *
- * Counted as income and spending it makes a month look twice as rich and
- * twice as wasteful, and both figures are false. Monobank marks its own
- * transfers with the transfer MCCs; topping up a jar is the same act by
- * another name.
- */
+/** Money moved between the person's own accounts. */
 const TRANSFER_MCCS = new Set([4829, 6012, 6051, 6536, 6537, 6538, 6540]);
 
 export const isTransfer = (item: MonoStatementItem): boolean => TRANSFER_MCCS.has(item.mcc);
@@ -351,18 +281,7 @@ export interface IncomeSource {
   count: number;
 }
 
-/**
- * Where the money came from, named.
- *
- * "Доход 42 000" answers nothing a person did not already know. The useful
- * shape is which part was wages, which was a transfer from a friend, and which
- * was the cash they banked themselves — three arrivals that feel identical in
- * a total and mean completely different things about the month.
- *
- * Transfers between somebody's own accounts are not income here for the same
- * reason they are not spending: money moved from savings would otherwise show
- * up as a good month.
- */
+/** Where the money came from, named. */
 export const incomeSources = (
   items: MonoStatementItem[],
   from: string,
@@ -445,14 +364,7 @@ export interface Oddity {
   because: string;
 }
 
-/**
- * Lines worth a second look — as questions, never as findings.
- *
- * The app can see what somebody scrolls past: a charge three times the usual
- * at a shop they know, a new name taking a round number twice. It does not
- * know whether any of it was wrong, and saying so would be inventing an
- * accusation against a bank, a shop, or the person themselves.
- */
+/** Lines worth a second look — as questions, never as findings. */
 export const oddities = (items: MonoStatementItem[], from: string, to: string): Oddity[] => {
   const inRange = items.filter((item) => {
     const day = dayOf(item);
@@ -501,14 +413,7 @@ export interface Cashback {
   byCategory: { name: string; earned: number; spent: number }[];
 }
 
-/**
- * What came back, and off what.
- *
- * monobank puts a cashback figure on every line and the app has been throwing
- * it away. It is small money that adds up, and — more usefully — it is the
- * only way to tell whether the category somebody picked this month was the
- * right one, which is a question the bank's own app asks nobody.
- */
+/** What came back, and off what. */
 export const cashback = (
   items: MonoStatementItem[],
   categoryOfItem: (item: MonoStatementItem) => string,
@@ -545,19 +450,7 @@ export const cashback = (
   };
 };
 
-/**
- * Standing charges projected onto the concrete days they will land on.
- *
- * A monthly charge lands once inside a month's horizon; a weekly one lands
- * every week that fits. The rhythm comes from the statement's own history, so
- * this adds no guesses of its own. A «next» already behind the window start
- * still lands: rent due yesterday is not cancelled by being late, it comes
- * out of the very first projected day.
- *
- * It stood twice too — here for the phone's month grid, and in the web's
- * runway.ts for the forecast, the same body with the day-shifting helper
- * named differently in each. One body now, on the one `addDays` above.
- */
+/** Standing charges projected onto the concrete days they will land on. */
 export interface PlannedCharge {
   name: string;
   amount: number;

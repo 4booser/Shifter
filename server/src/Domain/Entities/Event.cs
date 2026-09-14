@@ -1,19 +1,6 @@
 namespace Shifter.Domain.Entities;
 
-/// <summary>
-/// Something that occupies days without being work: leave, sickness, a course,
-/// a birthday. Outside the earning model — no rate, no hours, no place of
-/// work — because the moment an event could pay, every total in the
-/// application would have to account for it.
-///
-/// It may cost, though, which is not the same thing. Money that leaves is
-/// kept beside money that arrives and never inside it: the day still earned
-/// what it earned, and what the driving lesson took is a second figure the
-/// reader adds up themselves if they want to.
-///
-/// Stored as a range rather than a row per day: a fortnight off is one record,
-/// and moving it is one edit instead of fourteen.
-/// </summary>
+/// <summary>Something that occupies days without being work: leave, sickness, a course, a birthday.</summary>
 public sealed class Event
 {
     public int Id { get; set; }
@@ -23,18 +10,10 @@ public sealed class Event
 
     public required string Name { get; set; }
 
-    /// <summary>
-    /// What kind of non-working day this is. Ordinary events stay Ordinary and
-    /// behave exactly as they always did; the named kinds are the ones the
-    /// forecast has to treat differently — a fortnight of leave is not a
-    /// fortnight of laziness, and averaging it in slanders the person's pace.
-    /// </summary>
+    /// <summary>What kind of non-working day this is.</summary>
     public EventKind Kind { get; set; } = EventKind.Ordinary;
 
-    /// <summary>
-    /// A short badge for the calendar, same idea as on a shift template: a
-    /// string rather than a char so it can hold an emoji.
-    /// </summary>
+    /// <summary>A short badge for the calendar, same idea as on a shift template: a string rather than a char so it can hold…</summary>
     public string? Symbol { get; set; }
 
     /// <summary>"#RRGGBB". Always set — an event with no colour is invisible.</summary>
@@ -42,46 +21,23 @@ public sealed class Event
 
     public required DateOnly StartDate { get; set; }
 
-    /// <summary>
-    /// Inclusive, and equal to <see cref="StartDate"/> for a single day. Both
-    /// ends are stored even then, so nothing has to special-case the one-day
-    /// case when reading.
-    /// </summary>
+    /// <summary>Inclusive, and equal to <see cref="StartDate"/> for a single day.</summary>
     public required DateOnly EndDate { get; set; }
 
-    /// <summary>
-    /// Optional: an event may be all day. Times are shown but never counted —
-    /// hours belong to shifts.
-    /// </summary>
+    /// <summary>Optional: an event may be all day.</summary>
     public TimeOnly? StartTime { get; set; }
     public TimeOnly? EndTime { get; set; }
 
     public string? Note { get; set; }
 
-    /// <summary>
-    /// What this event cost, per occurrence. A repeating lesson at 400 costs
-    /// 400 each time it comes round, which is what anybody means by it.
-    ///
-    /// Never subtracted from anything automatically. Earned is earned.
-    /// </summary>
+    /// <summary>What this event cost, per occurrence.</summary>
     public decimal Cost { get; set; }
 
-    /// <summary>
-    /// The palette entry it came from, kept for grouping — "how much did
-    /// English cost me this year" is the question this answers. The event
-    /// holds its own copy of name, colour, times and cost, so editing the
-    /// template never rewrites a day that already happened.
-    /// </summary>
+    /// <summary>The palette entry it came from, kept for grouping — "how much did English cost me this year" is the question…</summary>
     public int? TemplateId { get; set; }
     public EventTemplate? Template { get; set; }
 
-    /// <summary>
-    /// Weekday numbers the event repeats on, comma-joined, Monday = 0. Null
-    /// means an ordinary one-off. A repeating event is stored as its anchor
-    /// day plus this rule, and the occurrences are conjured at read time —
-    /// "physio every Tue/Thu until December" stays one row however long it
-    /// runs.
-    /// </summary>
+    /// <summary>Weekday numbers the event repeats on, comma-joined, Monday = 0.</summary>
     public string? RepeatWeekdays { get; set; }
 
     /// <summary>Inclusive end of the repetition; null repeats indefinitely.</summary>

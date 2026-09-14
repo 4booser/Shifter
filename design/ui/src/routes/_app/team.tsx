@@ -6,13 +6,7 @@ import { Head } from '@/components/screen';
 import { Button, Card, Empty, Field, Modal, Over, Pills } from '@/components/ui/kit';
 import { cn } from '@/lib/utils';
 
-/**
- * Команда.
- *
- * Здесь заводят смену и раздают код. Всё, что видит команда, перечислено
- * списком — и рядом сказано, чего она не видит: обещание «заработок ваш»
- * стоит ровно столько, сколько стоит место, где его написали.
- */
+/** Команда. */
 function Team() {
   const [none, setNone] = useState(false);
   const [leaving, setLeaving] = useState(false);

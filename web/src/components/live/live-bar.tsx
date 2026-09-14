@@ -20,11 +20,7 @@ import { pushToast } from '@/lib/toast';
 import { useCalendar } from '@/lib/store/calendar';
 import { Money } from '@/components/ui/bits';
 
-/**
- * The header's live-shift pill: proof the clock is running from any page.
- * Ticks once a second — the money creeping up while you pour drinks is the
- * whole point.
- */
+/** The header's live-shift pill: proof the clock is running from any page. */
 export function LiveBar() {
   const { t } = useI18n();
   const live = useLive((state) => state.live);
@@ -48,13 +44,7 @@ export function LiveBar() {
   const left = breakLeft(live, Date.now());
   const breakNudged = useRef(false);
 
-  /**
-   * One nudge when a timed break runs out.
-   *
-   * The point of a timed break is the end of it, and the person taking one is
-   * in a staff room with their phone face down. A toast is what the app has;
-   * it does not ask for notification permission for this.
-   */
+  /** One nudge when a timed break runs out. */
   useEffect(() => {
     if (left === null || left > 0) {
       if (left === null) breakNudged.current = false;
@@ -165,16 +155,7 @@ export function LiveBar() {
               <div className="min-w-0">
                 <strong className="block truncate text-[0.95rem]" title={template.name}>{template.name}</strong>
                 <span className="field-hint block tabular">{formatElapsed(tick.elapsed)}</span>
-                {/*
-                  Said for what it is. The counter is the rate multiplied by
-                  the clock — it knows nothing of the night premium, the
-                  overtime the week is heading for, the tips not yet counted
-                  or a percentage of the till, all of which the recorded day
-                  will carry. Teaching it those rules would be a second copy
-                  of arithmetic the server owns, which is the fault this
-                  project has spent a week removing; naming the figure costs
-                  nothing and claims nothing.
-                */}
+                {/* Said for what it is. */}
                 {tick.earned !== null && (
                   <span className="block text-[1.15rem] font-bold text-good-read tabular">
                     <Money value={tick.earned} />{' '}
@@ -188,12 +169,7 @@ export function LiveBar() {
                 {t('Breaks')}: {formatElapsed(live.breakMs + (live.pausedAt === null ? 0 : Date.now() - live.pausedAt))}
               </p>
             )}
-            {/*
-              A break of a stated length, counted down. A break nobody started
-              on time is a break nobody takes, and one nobody ended on time is
-              one somebody gets shouted at for — and a room with a rush on has
-              nobody watching a clock.
-            */}
+            {/* A break of a stated length, counted down. */}
             {left !== null && (
               <p
                 className={`mt-1.5 text-[0.92rem] font-semibold tabular ${
@@ -226,13 +202,7 @@ export function LiveBar() {
               </div>
             )}
 
-            {/*
-              Three controls abreast never fitted the panel: the word on the
-              primary button was clipped by its own border. Finishing the shift
-              is what this panel is for, so it gets the width, and throwing the
-              shift away drops to a row of its own where a thumb aiming for
-              «finish» cannot land on it.
-            */}
+            {/* Three controls abreast never fitted the panel: the word on the primary button was clipped by its own border. */}
             <div className="mt-3 flex gap-1.5">
               <button
                 type="button"

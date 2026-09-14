@@ -13,10 +13,7 @@ public interface IShifterQuery
     Task<Shift[]> GetShiftsAsync(int userId, bool includeArchived, CancellationToken ct);
     Task<Sales[]> GetSalesAsync(int userId, bool includeArchived, CancellationToken ct);
 
-    /// <summary>
-    /// Owner-scoped single fetch for editing. Archived rows come back too,
-    /// otherwise they could never be restored.
-    /// </summary>
+    /// <summary>Owner-scoped single fetch for editing.</summary>
     Task<Shift?> GetShiftAsync(int userId, int id, CancellationToken ct);
     Task<Sales?> GetSalesItemAsync(int userId, int id, CancellationToken ct);
 

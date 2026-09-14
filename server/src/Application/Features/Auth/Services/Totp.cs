@@ -2,12 +2,7 @@ using System.Security.Cryptography;
 
 namespace Shifter.Application.Features.Auth.Services;
 
-/// <summary>
-/// RFC 6238 time-based one-time passwords, SHA-1/6-digit/30-second — the
-/// dialect every authenticator app speaks. Hand-rolled because the whole
-/// algorithm is smaller than a package reference, and pinned by the RFC's
-/// own test vectors in the suite.
-/// </summary>
+/// <summary>RFC 6238 time-based one-time passwords, SHA-1/6-digit/30-second — the dialect every authenticator app speaks.</summary>
 public static class Totp
 {
     private const string Base32Alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";

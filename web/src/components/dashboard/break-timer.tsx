@@ -16,18 +16,7 @@ import {
 import { useI18n } from '@/lib/i18n';
 import { Icon } from '@/components/ui/icon';
 
-/**
- * The break, counted while it is happening.
- *
- * A break nobody started on time is a break nobody takes; the shift swallows
- * it and the hours quietly stop matching the day. One button and a countdown
- * are the whole fix.
- *
- * It writes down the minutes that passed and not the minutes that were meant
- * to — an overrun shows in the open and lands in the record. It is offered only
- * on the day it is, because a countdown started on a day in the past would be
- * writing history.
- */
+/** The break, counted while it is happening. */
 export function BreakTimer({
   dayKey,
   shiftId,
@@ -49,9 +38,7 @@ export function BreakTimer({
   const [run, setRun] = useState<BreakRun | null>(null);
   const [now, setNow] = useState(() => Date.now());
 
-  // Read back out of the browser rather than out of React state: somebody on
-  // a break has certainly closed the tab, and a countdown that dies with it
-  // is a countdown nobody starts twice.
+  // Read back out of the browser rather than out of React state: somebody on a break has certainly closed the…
   useEffect(() => {
     setRun(readRun(window.localStorage.getItem(BREAK_KEY), dayKey));
   }, [dayKey]);
@@ -66,9 +53,7 @@ export function BreakTimer({
 
   const mine = run !== null && run.shiftId === shiftId;
 
-  // The whole point of the countdown is the moment it ends, which is exactly
-  // the moment nobody is looking at the screen. Fired once — a notification
-  // that repeats every second is a reason to switch notifications off.
+  // The whole point of the countdown is the moment it ends, which is exactly the moment nobody is looking at the…
   const [told, setTold] = useState(false);
 
   useEffect(() => {
@@ -78,9 +63,7 @@ export function BreakTimer({
     setTold(true);
 
     if ('Notification' in window && Notification.permission === 'granted') {
-      // The wording says the break is over and stops there. It does not tell
-      // anybody to go back — that is not the app's place, and the timer keeps
-      // counting either way.
+      // The wording says the break is over and stops there.
       new Notification(t('Break is over'), { body: t('The timer keeps counting until you say you are back.') });
     }
   }, [run, now, told, t]);

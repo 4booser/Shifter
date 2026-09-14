@@ -4,13 +4,7 @@ import { Plus } from 'lucide-react';
 import { Head } from '@/components/screen';
 import { Bars, Button, Card } from '@/components/ui/kit';
 
-/**
- * Расходы.
- *
- * Не вычитаются из заработка: такси домой — это деньги, ушедшие после того,
- * как зарплата пришла. Сложить их в одну цифру значит перестать сходиться с
- * расчёткой, а это единственное, ради чего приложение и заводят.
- */
+/** Расходы. */
 function Costs() {
   return (
     <>

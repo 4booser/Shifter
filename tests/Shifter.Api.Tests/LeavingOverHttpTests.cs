@@ -6,19 +6,7 @@ using Xunit;
 
 namespace Shifter.Api.Tests;
 
-/// <summary>
-/// Leaving: deleting a place, and deleting an account.
-///
-/// Both are the last thing a person does, so both are the least exercised
-/// paths in the application — and both answered 500 for ordinary histories.
-/// What happens to a child row when its parent goes was written down in one
-/// place (gigs) and left to chance everywhere else: a break held its shift
-/// hostage, and a payout or an expense rule held its place hostage, because
-/// the handler detached only shifts and nothing checked the rest.
-///
-/// These ask over HTTP, because the fault was in the database's answer and
-/// no unit test on a handler can see it.
-/// </summary>
+/// <summary>Leaving: deleting a place, and deleting an account.</summary>
 [Collection("api")]
 public sealed class LeavingOverHttpTests(Api api)
 {
@@ -62,14 +50,7 @@ public sealed class LeavingOverHttpTests(Api api)
         return place.GetProperty("id").GetInt32();
     }
 
-    /// <summary>
-    /// A place somebody has been paid at can still be deleted, and the payment
-    /// survives it.
-    ///
-    /// Money already received is a fact about the past; the place it happened
-    /// at is a label on that fact. Deleting the label must not delete the
-    /// fact — and must not fail either, which is what it did.
-    /// </summary>
+    /// <summary>A place somebody has been paid at can still be deleted, and the payment survives it.</summary>
     [Fact]
     public async Task A_place_that_has_paid_you_can_still_be_deleted()
     {
@@ -103,13 +84,7 @@ public sealed class LeavingOverHttpTests(Api api)
         Assert.Equal(18_400m, kept.GetProperty("amount").GetDecimal());
     }
 
-    /// <summary>
-    /// An account whose shifts have breaks can be deleted.
-    ///
-    /// Every hourly template with an unpaid stretch holds a Break row, which
-    /// is to say: almost everybody. The foreign key under it was left at NO
-    /// ACTION, so the delete reached the database and the database said no.
-    /// </summary>
+    /// <summary>An account whose shifts have breaks can be deleted.</summary>
     [Fact]
     public async Task An_account_with_a_break_on_a_shift_can_be_deleted()
     {

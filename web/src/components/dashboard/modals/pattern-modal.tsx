@@ -28,11 +28,7 @@ const WEEKDAYS = [
   { day: 0, label: 'Sunday' },
 ];
 
-/**
- * Which shift belongs on which weekday — the shape most people actually
- * describe when asked what they work. With a pattern set, the calendar's
- * paint mode stops needing a template picked first.
- */
+/** Which shift belongs on which weekday — the shape most people actually describe when asked what they work. */
 export function PatternModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { t, n } = useI18n();
   const allTemplates = useCalendar((state) => state.templates);

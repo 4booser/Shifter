@@ -13,12 +13,7 @@ import { toSavePayload } from '@/lib/calendar/models';
 import { CountUp, Money } from '@/components/ui/bits';
 import { Icon } from '@/components/ui/icon';
 
-/**
- * The clock-out moment, given the screen it deserves: the number, the day's
- * rank in the month, and the two things people actually do right after a
- * shift — write down the tips and show somebody. Closing it is the only way
- * on; nothing here blocks the save, which already happened.
- */
+/** The clock-out moment, given the screen it deserves: the number, the day's rank in the month, and the two… */
 export function ShiftDoneOverlay() {
   const { t, lang, num } = useI18n();
   const { format } = useMoney();

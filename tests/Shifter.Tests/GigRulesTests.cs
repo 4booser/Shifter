@@ -127,11 +127,7 @@ public class GigRulesTests
         return "data:image/jpeg;base64," + Convert.ToBase64String(bytes.ToArray());
     }
 
-    /// <summary>
-    /// A listing was posted whose three photos were one black pixel each, and
-    /// every client filled its card with a black slab. The count was checked;
-    /// whether the pictures were pictures was not.
-    /// </summary>
+    /// <summary>A listing was posted whose three photos were one black pixel each, and every client filled its card with a…</summary>
     [Fact]
     public void A_photo_of_one_pixel_is_not_a_photo_of_a_place()
     {

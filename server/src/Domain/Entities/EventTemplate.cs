@@ -1,17 +1,6 @@
 namespace Shifter.Domain.Entities;
 
-/// <summary>
-/// A kind of event somebody has again and again: «английский», «вождение»,
-/// the gym on Tuesdays. The same idea as a shift template and for the same
-/// reason — the calendar is filled by picking a thing and putting it on days,
-/// and typing "английский, 19:00–20:30, 400" out afresh every week is exactly
-/// the friction that makes people stop filling it in.
-///
-/// It carries money, which an <see cref="Event"/> deliberately did not. The
-/// direction is the whole difference: a shift is what the week pays, an event
-/// is what the week costs, and the two are never added together — a lesson
-/// worth stating here because the temptation to net them off is constant.
-/// </summary>
+/// <summary>A kind of event somebody has again and again: «английский», «вождение», the gym on Tuesdays.</summary>
 public sealed class EventTemplate
 {
     public const int NameMax = 60;
@@ -35,20 +24,10 @@ public sealed class EventTemplate
     public TimeOnly? StartTime { get; set; }
     public TimeOnly? EndTime { get; set; }
 
-    /// <summary>
-    /// What one of these usually costs. Null means it costs nothing worth
-    /// recording, which is different from zero: zero is somebody saying the
-    /// lesson was free this week.
-    /// </summary>
+    /// <summary>What one of these usually costs.</summary>
     public decimal? Cost { get; set; }
 
-    /// <summary>
-    /// Kept rather than deleted, like a shift template: the events already on
-    /// the calendar carry their own copy of everything, so removing the row
-    /// would be safe — but the palette is a list of choices, and somebody who
-    /// stops taking lessons in June wants the option gone, not the spring
-    /// rewritten.
-    /// </summary>
+    /// <summary>Kept rather than deleted, like a shift template: the events already on the calendar carry their own copy of…</summary>
     public bool Archived { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

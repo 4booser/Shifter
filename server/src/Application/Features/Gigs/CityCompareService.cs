@@ -5,18 +5,7 @@ using Shifter.Infrastructure.Persistence.DbContexts;
 
 namespace Shifter.Application.Features.Gigs;
 
-/// <summary>
-/// «Где мой час дороже» — the seasonal worker's question, answered from
-/// their own history city by city, with the public market band alongside
-/// where the sample clears the anonymity thresholds.
-///
-/// Own rates come only from the person's own worked hourly placements at
-/// places they tagged with a city. Market bands reuse MarketRate whole —
-/// same five-employers floor, same loudest-voice guard — filtered to the
-/// trade the person says they work (their seeker profile's first category).
-/// No profile, no market column: a band for «any trade at all» would mix a
-/// chef into a runner's median and mean nothing.
-/// </summary>
+/// <summary>«Где мой час дороже» — the seasonal worker's question, answered from their own history city by city, with the…</summary>
 public sealed class CityCompareService
 {
     private readonly ShifterDbContext _db;

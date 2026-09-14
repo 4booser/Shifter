@@ -3,19 +3,7 @@ using Shifter.Domain.Entities;
 
 namespace Shifter.Application.Features.business.Services;
 
-/// <summary>
-/// A biography made of shifts.
-///
-/// Somebody who has used this app for two years is carrying a proven work
-/// history — how long, where, how many shifts, what an hour was worth — and at
-/// an interview they recite it from memory and round it wrong in both
-/// directions. Nothing here is invented: every figure comes from days that were
-/// actually recorded, which is exactly what makes it worth showing to somebody
-/// who has no reason to believe you.
-///
-/// What it deliberately leaves out is money, unless asked. A CV that opens with
-/// what you were paid is a CV that argues about the wrong thing first.
-/// </summary>
+/// <summary>A biography made of shifts.</summary>
 public static class WorkHistory
 {
     public static WorkHistoryDto Of(
@@ -114,11 +102,7 @@ public static class WorkHistory
             byMonth);
     }
 
-    /// <summary>
-    /// How long somebody has been at it, in months, counting both ends. A
-    /// career of one shift is one month rather than none — the alternative
-    /// reads as an error.
-    /// </summary>
+    /// <summary>How long somebody has been at it, in months, counting both ends.</summary>
     private static int Months(DateOnly first, DateOnly last)
         => ((last.Year - first.Year) * 12) + last.Month - first.Month + 1;
 }

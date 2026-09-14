@@ -1,11 +1,6 @@
 namespace Shifter.Application.Features.Assistant;
 
-/// <summary>
-/// The period, already counted. Like the brief's facts, this exists so the
-/// model never does arithmetic: it is handed finished figures and asked only
-/// to say them like a person would. A model that adds up wages writes
-/// beautiful lies about somebody's month.
-/// </summary>
+/// <summary>The period, already counted.</summary>
 public sealed record AssistantFacts(
     string From,
     string To,
@@ -51,9 +46,5 @@ public sealed record AssistantPlace(
     string Name,
     double Hours,
     decimal Earned,
-    /// <summary>
-    /// What this place pays in. Carried so a list of places never prints one
-    /// currency's amount with another's mark, which is the same lie as adding
-    /// them together, said one level quieter.
-    /// </summary>
+    /// <summary>What this place pays in.</summary>
     string Currency);

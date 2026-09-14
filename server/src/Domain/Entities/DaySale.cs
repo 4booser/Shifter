@@ -2,10 +2,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Shifter.Domain.Entities;
 
-/// <summary>
-/// How much of one catalogue position was sold on one day. Quantity lives here
-/// rather than on Sales, which is the price list and stays the same every day.
-/// </summary>
+/// <summary>How much of one catalogue position was sold on one day.</summary>
 public sealed class DaySale
 {
     public int Id { get; set; }
@@ -23,11 +20,7 @@ public sealed class DaySale
     public decimal UnitPrice { get; set; }
     public decimal Percentage { get; set; }
 
-    /// <summary>
-    /// Worker's cut for this position on this day. NotMapped: it is derived
-    /// from columns that are stored, and EF cannot materialise a get-only
-    /// property with no backing field.
-    /// </summary>
+    /// <summary>Worker's cut for this position on this day.</summary>
     [NotMapped]
     public decimal Earned => Quantity * UnitPrice * Percentage / 100m;
 }

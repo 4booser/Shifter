@@ -16,13 +16,7 @@ const KINDS: { value: EventKind; label: string }[] = [
   { value: 'dayoff', label: 'Day off' },
 ];
 
-/**
- * A repeatable thing that is not work: «английский», «вождение», the gym.
- *
- * The money here runs the other way from everywhere else in the app, and the
- * form says so in as many words — what the lesson costs is never added to
- * what the week earned, it sits beside it.
- */
+/** A repeatable thing that is not work: «английский», «вождение», the gym. */
 export function EventTemplateModal({
   open,
   editing,

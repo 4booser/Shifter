@@ -51,9 +51,7 @@ export function ShiftModal({
   const [poolShare, setPoolShare] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // The advert somebody is copying the terms out of. Only offered on a new
-  // shift: pasting one over an existing template would overwrite terms that
-  // have already been agreed with figures a regex read off a listing.
+  // The advert somebody is copying the terms out of.
   const [advert, setAdvert] = useState('');
   const [reading, setReading] = useState(false);
 
@@ -115,9 +113,7 @@ export function ShiftModal({
       <div className="flex flex-col gap-3.5">
         {error && <Alert>{error}</Alert>}
 
-        {/* The terms are already written down in the advert. Copying them into
-            this form by hand is work half of people skip, and then the shift
-            is recorded at a rate nobody checked. */}
+        {/* The terms are already written down in the advert. */}
         {editing === null && (
           <details className="rounded-(--radius) border border-border p-2.5">
             <summary className="cursor-pointer text-[0.86rem] font-semibold">
@@ -145,10 +141,7 @@ export function ShiftModal({
                   break_minutes: number | null;
                 }>('/shifter/v1/advert/read', { body: { text: advert } })
                   .then((read) => {
-                    // Only what the advert actually said. Anything it was
-                    // silent about keeps whatever is in the form, because a
-                    // blank left blank is a question and a blank filled in
-                    // with a guess is an answer.
+                    // Only what the advert actually said.
                     if (read.pay_amount !== null) setAmount(read.pay_amount);
                     if (read.pay_period !== null) setPeriod(read.pay_period as SalaryPeriod);
                     if (read.percent !== null) setPercent(read.percent);
@@ -307,9 +300,7 @@ export function ShiftModal({
           <span className="field-hint mt-1 block">{t(PERIOD_HINTS[period])}</span>
         </label>
 
-        {/* A rate and a percentage are two halves of one deal far more often
-            than they are alternatives, so this sits beside the amount rather
-            than replacing it. */}
+        {/* A rate and a percentage are two halves of one deal far more often than they are alternatives, so this sits… */}
         <label>
           <span className="field-label">{t('Plus a share of the takings')}</span>
           <div className="flex items-center gap-2">

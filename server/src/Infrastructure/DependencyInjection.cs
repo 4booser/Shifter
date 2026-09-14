@@ -76,12 +76,7 @@ public static class DependencyInjection
         return string.Format(LocalTemplate, database);
     }
 
-    /// <summary>
-    /// What each context is allowed to take from the database, and how it
-    /// behaves when the connection wobbles. Thirty apiece leaves headroom on a
-    /// hundred-connection server for the migration job and for a person with
-    /// psql open.
-    /// </summary>
+    /// <summary>What each context is allowed to take from the database, and how it behaves when the connection wobbles.</summary>
     private static void Tuning(Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure.NpgsqlDbContextOptionsBuilder options)
     {
         options.MaxBatchSize(100);

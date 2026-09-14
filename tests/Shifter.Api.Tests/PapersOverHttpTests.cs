@@ -7,15 +7,7 @@ using Xunit;
 
 namespace Shifter.Api.Tests;
 
-/// <summary>
-/// The papers, fetched as a person would fetch them.
-///
-/// A worker without papers is the weak side of every negotiation, and these
-/// three endpoints are the application's answer. Each walks a whole account,
-/// so each is tested against an account with a real month in it — and against
-/// the one privacy rule that matters most here: the archive holds one
-/// person's life and nobody else's.
-/// </summary>
+/// <summary>The papers, fetched as a person would fetch them.</summary>
 [Collection("api")]
 public sealed class PapersOverHttpTests(Api api)
 {

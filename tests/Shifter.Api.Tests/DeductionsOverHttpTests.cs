@@ -5,16 +5,7 @@ using Xunit;
 
 namespace Shifter.Api.Tests;
 
-/// <summary>
-/// What comes off a wage, and what each figure means once several of them
-/// stack.
-///
-/// This is where arithmetic errors compound quietly: a tip-out, a meal, income
-/// tax and a holiday accrual all touch the same day, and each of them has a
-/// different relationship with the total. Tax comes out of take-home; a
-/// holiday accrual is owed later and is never part of it; an expense happened
-/// after the money arrived and is subtracted from nothing at all.
-/// </summary>
+/// <summary>What comes off a wage, and what each figure means once several of them stack.</summary>
 [Collection("api")]
 public sealed class DeductionsOverHttpTests(Api api)
 {

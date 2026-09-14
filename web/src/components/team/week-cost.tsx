@@ -7,17 +7,7 @@ import { costIsLegible, weekCost } from '@/lib/calendar/week-cost';
 import { useI18n } from '@/lib/i18n';
 import { Money } from '@/components/ui/bits';
 
-/**
- * What the rota on screen costs, while it is still a draft.
- *
- * The decision is made here — before publication, when a shift can still be
- * moved without a conversation. Everything after that is bookkeeping.
- *
- * It reports a covered figure and the hours it does not cover, and never a
- * total. Estimating the missing wages from the known ones would put a number
- * on somebody's pay that they specifically chose not to share, and it would be
- * wrong besides.
- */
+/** What the rota on screen costs, while it is still a draft. */
 export function WeekCostPanel({ rota }: { rota: Rota }) {
   const { t, lang, num } = useI18n();
 

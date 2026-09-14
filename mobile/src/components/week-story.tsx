@@ -12,14 +12,7 @@ import { eyeShut } from '@/lib/eye';
 import { t } from '@/lib/i18n';
 import { CalendarDayData, money } from '@/lib/types';
 
-/**
- * The week as a story card: a dark 9:16 picture for wherever pictures go.
- *
- * Safe by its nature — hours, shifts and the shape of the week. Money is a
- * switch that starts off, and stays off while the eye is shut: a story is
- * the one screen guaranteed to be looked at by people who were never meant
- * to see a wage.
- */
+/** The week as a story card: a dark 9:16 picture for wherever pictures go. */
 interface WeekFacts {
   from: string;
   to: string;

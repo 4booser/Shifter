@@ -10,10 +10,7 @@ public record DaySaleDto(
     decimal earned
     );
 
-/// <summary>
-/// One shift placed on a day, with the terms it was placed under rather than
-/// the template's current ones.
-/// </summary>
+/// <summary>One shift placed on a day, with the terms it was placed under rather than the template's current ones.</summary>
 public record DayShiftDto(
     int shift_id,
     string name,
@@ -27,10 +24,7 @@ public record DayShiftDto(
     decimal? revenue,
     /// <summary>How many the shift served, where anybody counted.</summary>
     int? guests,
-    /// <summary>
-    /// Where in the venue: "hall", "bar", "terrace", "banquet", "takeaway",
-    /// or "unset" where nobody said.
-    /// </summary>
+    /// <summary>Where in the venue: "hall", "bar", "terrace", "banquet", "takeaway", or "unset" where nobody said.</summary>
     string zone,
     /// <summary>The agreed share of it, already inside earned.</summary>
     decimal? revenue_percent,
@@ -62,11 +56,7 @@ public record DayDto(
     string? note,
     /// <summary>Set by hand, as "#RRGGBB". Null means the cell colours itself.</summary>
     string? colour,
-    /// <summary>
-    /// A worked shift here paid less per hour than the floor its place is set
-    /// to. Reported rather than corrected: the app cannot pay the difference,
-    /// but it can stop the day passing unnoticed.
-    /// </summary>
+    /// <summary>A worked shift here paid less per hour than the floor its place is set to.</summary>
     bool below_floor,
     /// <summary>Paid hours of the shifts marked worked.</summary>
     double hours,
@@ -75,17 +65,10 @@ public record DayDto(
     /// <summary>Money from shifts still only planned.</summary>
     decimal planned
     ,
-    /// <summary>
-    /// Bumped on every save. Echo it back in the save to be told — with a
-    /// 409 — when another device got there first. Not sending it keeps the
-    /// old last-write-wins, which is what an old client expects.
-    /// </summary>
+    /// <summary>Bumped on every save.</summary>
     int version = 0);
 
-/// <summary>
-/// A range of days plus its totals. The breakdown is computed here rather than
-/// on the client so the pay rules live in exactly one place.
-/// </summary>
+/// <summary>A range of days plus its totals.</summary>
 public record DaysDto(
     DayDto[] days,
     double hours,
@@ -109,29 +92,15 @@ public record DaysDto(
     decimal tip_out,
     /// <summary>Meals withheld plus fines across the range.</summary>
     decimal deductions,
-    /// <summary>
-    /// The fines alone, split by what caused them. Five broken glasses and one
-    /// till shortfall add up the same and mean completely different things.
-    /// </summary>
+    /// <summary>The fines alone, split by what caused them.</summary>
     DeductionReasonDto[] deductions_by_reason,
-    /// <summary>
-    /// Every time the rate moved on a shift worked in the range, newest first.
-    /// Read out of the placements, so it records money that actually changed
-    /// hands rather than what a template said at some point.
-    /// </summary>
+    /// <summary>Every time the rate moved on a shift worked in the range, newest first.</summary>
     RaiseDto[] raises,
-    /// <summary>
-    /// What the work cost, split by kind. Never subtracted from anything above
-    /// it: take-home is what arrived, and these happened after that.
-    /// </summary>
+    /// <summary>What the work cost, split by kind.</summary>
     ExpenseKindDto[] expenses_by_kind,
     /// <summary>Everything the work cost across the range.</summary>
     decimal expenses,
-    /// <summary>
-    /// What share of the tips the travelling ate, as a percentage. Null where
-    /// there were no tips, or no fares — a percentage of nothing is undefined,
-    /// not large.
-    /// </summary>
+    /// <summary>What share of the tips the travelling ate, as a percentage.</summary>
     decimal? travel_share_of_tips,
     /// <summary>Income tax withheld across the range.</summary>
     decimal tax,
@@ -139,10 +108,7 @@ public record DaysDto(
     decimal net_earned,
     /// <summary>Holiday pay accrued, owed later and never part of net.</summary>
     decimal holiday_accrued,
-    /// <summary>
-    /// Every currency the range touches. More than one means the totals above
-    /// are a mix and the client must show them per place instead.
-    /// </summary>
+    /// <summary>Every currency the range touches.</summary>
     string[] currencies,
     /// <summary>Hours and money per place of work, worked shifts only.</summary>
     LocationTotalDto[] by_location,
@@ -154,73 +120,32 @@ public record DaysDto(
     double night_hours,
     /// <summary>What the night and public-holiday rules added, on top of the base.</summary>
     decimal premium_earned,
-    /// <summary>
-    /// The share of the takings across the range, already inside shifts_earned.
-    /// Broken out because a percentage is the half of the deal people watch —
-    /// hidden inside one shifts figure it cannot be seen to be working.
-    /// </summary>
+    /// <summary>The share of the takings across the range, already inside shifts_earned.</summary>
     decimal revenue_earned,
     /// <summary>What those shifts took, where it was recorded.</summary>
     decimal revenue_counted,
-    /// <summary>
-    /// How many people were served across the range, where anybody counted.
-    /// </summary>
+    /// <summary>How many people were served across the range, where anybody counted.</summary>
     int guests_counted,
-    /// <summary>
-    /// Takings over guests, across the shifts that recorded both.
-    ///
-    /// Null where either is missing. Takings alone do not describe an evening
-    /// — twelve thousand off forty covers is a different night from twelve
-    /// thousand off a hundred and twenty — and an average cheque computed from
-    /// half the data would describe neither.
-    /// </summary>
+    /// <summary>Takings over guests, across the shifts that recorded both.</summary>
     decimal? average_cheque,
-    /// <summary>
-    /// Tips and hours by zone, for the zones anybody named. The zone nobody
-    /// named is reported as its own row rather than shared out — a terrace
-    /// average that quietly includes every unlabelled shift is not a terrace
-    /// average.
-    /// </summary>
+    /// <summary>Tips and hours by zone, for the zones anybody named.</summary>
     ZoneTotalDto[] by_zone,
-    /// <summary>
-    /// Everything overlapping the range, once each rather than repeated on
-    /// every day it covers — a fortnight of leave is one entry, and the client
-    /// spreads it across the cells itself.
-    /// </summary>
+    /// <summary>Everything overlapping the range, once each rather than repeated on every day it covers — a fortnight of…</summary>
     EventDto[] events,
-    /// <summary>
-    /// The range restated in one currency, present only where more than one
-    /// was earned in. Converting a range that is already in one currency is
-    /// noise, and noise beside money is how people stop reading totals.
-    /// </summary>
+    /// <summary>The range restated in one currency, present only where more than one was earned in.</summary>
     ConversionDto? conversion = null
     );
 
-/// <summary>
-/// The same range in one currency, with the rates it was done at. The rates
-/// are part of the answer, not a footnote: a figure nobody can reproduce is
-/// not a figure anybody should act on.
-/// </summary>
+/// <summary>The same range in one currency, with the rates it was done at.</summary>
 public record ConversionDto(
     string base_currency,
     decimal total_earned,
     decimal net_earned,
     ConvertedPlaceDto[] by_location,
     RateUsedDto[] rates,
-    /// <summary>
-    /// Currencies the bank had no rate for. Their money is deliberately
-    /// absent from the totals above rather than counted one-to-one.
-    /// </summary>
+    /// <summary>Currencies the bank had no rate for.</summary>
     string[] unconverted,
-    /// <summary>
-    /// What actually arrived, converted at the rate of the day each payment
-    /// landed rather than at today's.
-    ///
-    /// A payment is a fact and so is what it was worth when it happened; a
-    /// range restated at this morning's rate moves last August's wage every
-    /// morning. Null where no payment in the range carried a stored rate —
-    /// which is every payment recorded before the rate started being kept.
-    /// </summary>
+    /// <summary>What actually arrived, converted at the rate of the day each payment landed rather than at today's.</summary>
     decimal? paid = null);
 
 public record ConvertedPlaceDto(
@@ -231,11 +156,7 @@ public record ConvertedPlaceDto(
     /// <summary>Null where this currency could not be converted.</summary>
     decimal? converted);
 
-/// <summary>
-/// One change of rate: when it happened, what it moved between, and what it has
-/// been worth since. Read out of the shifts themselves, so it describes money
-/// that actually changed hands.
-/// </summary>
+/// <summary>One change of rate: when it happened, what it moved between, and what it has been worth since.</summary>
 public record RaiseDto(
     int shift_id,
     string shift_name,
@@ -261,26 +182,11 @@ public record RateUsedDto(
     /// <summary>The national bank's published rate — the basis of every figure above.</summary>
     string rate,
     string on,
-    /// <summary>
-    /// What a commercial bank will actually buy this currency for today, and
-    /// the day it said so.
-    ///
-    /// The state's rate is the right basis for a report. It is not the number
-    /// a person is handed when they walk in with euros, and on a month's wages
-    /// earned abroad the gap is real money.
-    ///
-    /// It sits beside the official rate and never replaces it: nothing above
-    /// is computed from this, and a figure that changed source without saying
-    /// so would be worse than one that is merely approximate. Null where the
-    /// bank was unreachable or does not quote this currency.
-    /// </summary>
+    /// <summary>What a commercial bank will actually buy this currency for today, and the day it said so.</summary>
     string? market = null,
     string? market_on = null);
 
-/// <summary>
-/// What the client sends when saving a day. It carries the whole contents, not
-/// a patch, so the server replaces rather than merges.
-/// </summary>
+/// <summary>What the client sends when saving a day.</summary>
 public record DaySaveDto(
     DayShiftSaveDto[]? shifts,
     DaySaleSaveDto[]? sales,
@@ -290,21 +196,11 @@ public record DaySaveDto(
     /// <summary>Absent means unsaid, which is what an older client sends.</summary>
     string? deduction_reason,
     string? note,
-    /// <summary>
-    /// "#RRGGBB", or null to clear it. Like everything else here it replaces
-    /// rather than patches: the day is always sent whole.
-    /// </summary>
+    /// <summary>"#RRGGBB", or null to clear it.</summary>
     string? colour = null,
-    /// <summary>
-    /// The day's pool before the split. Where a shift on the day takes its
-    /// tips from the pool, the person's own share is worked out from this and
-    /// overwrites tips — the server prices, the client only reports.
-    /// </summary>
+    /// <summary>The day's pool before the split.</summary>
     decimal? tip_pool = null,
-    /// <summary>
-    /// The version this client loaded, echoed back. Null means an old client
-    /// that has never heard of versions: last-write-wins, as it always did.
-    /// </summary>
+    /// <summary>The version this client loaded, echoed back.</summary>
     int? version = null
     );
 
@@ -320,10 +216,7 @@ public record DayShiftSaveDto(
     int? break_minutes = null,
     /// <summary>What this shift took. Null leaves it uncounted, not zero.</summary>
     decimal? revenue = null,
-    /// <summary>
-    /// How many people it served. Null is "nobody counted", which is not the
-    /// same as an evening with no guests.
-    /// </summary>
+    /// <summary>How many people it served.</summary>
     int? guests = null,
     /// <summary>Where in the venue. Absent leaves whatever was there.</summary>
     string? zone = null
@@ -343,11 +236,7 @@ public record DaySaleSaveDto(
     int quantity
     );
 
-/// <summary>
-/// Colours a stretch of days in one round trip. Each date carries its own
-/// value, so a pattern that alternates colours is one request rather than one
-/// per colour — and a month painted a day at a time is thirty.
-/// </summary>
+/// <summary>Colours a stretch of days in one round trip.</summary>
 public record BulkColourDto(
     /// <summary>Date to colour. Null clears whatever the day had.</summary>
     DayColourDto[] days
@@ -355,10 +244,7 @@ public record BulkColourDto(
 
 public record DayColourDto(DateOnly date, string? colour);
 
-/// <summary>
-/// Applies one template across many dates in a single round trip. Dragging a
-/// week or generating a rota otherwise costs one request per day.
-/// </summary>
+/// <summary>Applies one template across many dates in a single round trip.</summary>
 public record BulkShiftDto(
     DateOnly[] dates,
     int shift_id,

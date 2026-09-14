@@ -36,23 +36,13 @@ export interface Gig {
   employer_count: number;
   responses: number;
   is_mine: boolean;
-  /**
-   * How many times you have worked for this employer. Your own history beats
-   * a stranger's average.
-   */
+  /** How many times you have worked for this employer. */
   worked_here: number;
   /** What you last gave them, where you have rated them. */
   my_rating: number | null;
-  /**
-   * The venue's own history vouches for it: shifts that happened and people
-   * who came back to say it went well. Not claimed, not applied for, and it
-   * comes off by itself.
-   */
+  /** The venue's own history vouches for it: shifts that happened and people who came back to say it went well. */
   trusted: boolean;
-  /**
-   * Where the contacts on this reply went. Filled only on the reader's own
-   * replies — it is an answer to "who saw my number", asked on their behalf.
-   */
+  /** Where the contacts on this reply went. */
   contact_seen_at: string | null;
   contact_seen_last: string | null;
   /** Separate occasions, not page loads. */
@@ -66,29 +56,16 @@ export interface Gig {
     venue_phone: string | null;
     venue_telegram: string | null;
   } | null;
-  /**
-   * The unguessable half of the share link, and only the owner is given it.
-   * The preview at /g/… has to work for people who are not signed in, so it
-   * cannot be keyed on the listing's id — counting from one used to walk the
-   * whole board.
-   */
+  /** The unguessable half of the share link, and only the owner is given it. */
   share_slug: string | null;
-  /**
-   * What this shift is worth against the hours the reader already works. Null
-   * where there is nothing honest to say — no rate on the listing, or not
-   * enough of their own hours to average.
-   */
+  /** What this shift is worth against the hours the reader already works. */
   worth: {
     offered_per_hour: number;
     your_per_hour: number;
     /** Positive means better than their usual hour. */
     difference_percent: number;
   } | null;
-  /**
-   * Somebody has not turned up and the shift starts today. The only listing in
-   * the app that reaches anybody by notification, and only people who have
-   * published a card saying they are looking.
-   */
+  /** Somebody has not turned up and the shift starts today. */
   urgent: boolean;
 }
 
@@ -159,10 +136,7 @@ export const gigApi = {
     api<GigReply>(`${GIGS}/${id}/replies/${replyId}/accept`, { body }),
 };
 
-/**
- * The whole trade, grouped the way a venue's org chart reads. Order inside a
- * group runs senior to junior; the filter bar renders group by group.
- */
+/** The whole trade, grouped the way a venue's org chart reads. */
 export const GIG_CATEGORIES: { id: GigCategory; emoji: string; label: string; group: string }[] = [
   { id: 'managing', emoji: '🎩', label: 'General manager', group: 'Management' },
   { id: 'floor-manager', emoji: '📋', label: 'Floor manager', group: 'Management' },
@@ -215,9 +189,7 @@ export function shrinkPhoto(file: File): Promise<string> {
 
       image.onerror = () => reject(new Error('decode'));
       image.onload = () => {
-        // A photo has to have a photo in it. A tracking pixel or a broken
-        // export decodes fine and shrinks fine, and then a listing carries a
-        // 128-pixel band of one flat colour where a room should be.
+        // A photo has to have a photo in it.
         if (Math.min(image.width, image.height) < 64) {
           reject(new Error('tiny'));
 
@@ -257,7 +229,6 @@ export function shrinkPhoto(file: File): Promise<string> {
 
 export const categoryOf = (id: string) =>
   GIG_CATEGORIES.find((entry) => entry.id === id) ?? GIG_CATEGORIES[0];
-
 
 // ==== The seekers' side ====
 
@@ -307,7 +278,6 @@ export const seekerApi = {
   save: (body: SeekerSave) => api<Seeker>(`${GIGS}/seeker`, { method: 'PUT', body }),
 };
 
-
 // ==== Reviews ====
 
 export interface PendingReview {
@@ -328,7 +298,6 @@ export const reviewApi = {
     api<unknown>(`${GIGS}/${listingId}/reviews`, { body }),
 };
 
-
 // ==== Calling back somebody who already worked out ====
 
 export interface KnownWorker {
@@ -344,13 +313,7 @@ export interface KnownWorker {
   telegram: string | null;
 }
 
-/**
- * What the board pays for a job in a city.
- *
- * Every figure is nullable together: below the thresholds there is no band at
- * all, and a client cannot round a null up into a confident number the way it
- * can round a zero.
- */
+/** What the board pays for a job in a city. */
 export interface MarketBand {
   median: number | null;
   low: number | null;

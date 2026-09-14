@@ -1,9 +1,4 @@
-/**
- * The shape of what is coming, instead of a sentence about it. A block the
- * size of the real thing keeps the page from jumping when the data lands,
- * and a short stack reads as «a list is on its way» without pretending to
- * be the list.
- */
+/** The shape of what is coming, instead of a sentence about it. */
 export function Skeleton({ height, className }: { height?: string; className?: string }) {
   return <div aria-hidden className={`skeleton ${className ?? ''}`.trim()} style={{ height }} />;
 }

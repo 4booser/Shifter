@@ -13,26 +13,11 @@ export interface LiveShift {
   /** Hourly rate when the template pays by the hour; null otherwise. */
   hourlyRate: number | null;
   plannedEnd: string;
-  /**
-   * When the shift was meant to start, which is not when it did. The planned
-   * length is a property of the shift — 17:00 to 01:00 is eight hours whoever
-   * turns up when — and measuring it from the actual clock-in made a late
-   * start lengthen the plan instead of eating into it.
-   *
-   * Optional: a shift already running when this shipped has none, and falls
-   * back to its start.
-   */
+  /** When the shift was meant to start, which is not when it did. */
   plannedStart?: string;
-  /**
-   * Unpaid stretches inside the shift, as ISO instants. An open one has no
-   * end yet. Optional because a shift started by an older build has none, and
-   * a missing field must not read as a break of unknown length.
-   */
+  /** Unpaid stretches inside the shift, as ISO instants. */
   breaks?: { from: string; to: string | null }[];
-  /**
-   * The forgotten-shift alarm scheduled at start, so ending the shift can
-   * cancel it. Optional: shifts started by an older build have none.
-   */
+  /** The forgotten-shift alarm scheduled at start, so ending the shift can cancel it. */
   alarmId?: string | null;
 }
 
@@ -49,11 +34,7 @@ export const breakSeconds = (shift: LiveShift, now: number): number =>
 export const onBreak = (shift: LiveShift): boolean =>
   (shift.breaks ?? []).some((entry) => entry.to === null);
 
-/**
- * The instant the plan says this shift ends. plannedEnd is a wall clock
- * ("23:00"); an end at or before the start belongs to the next morning —
- * 17:00–01:00 ends on the day after the shift's date.
- */
+/** The instant the plan says this shift ends. */
 export const plannedEndInstant = (shift: LiveShift): Date => {
   const startClock = (shift.plannedStart ?? shift.startedAt.slice(11, 16)).slice(0, 5);
   const endClock = shift.plannedEnd.slice(0, 5);
@@ -70,14 +51,7 @@ export const forgotten = (shift: LiveShift, now: number): boolean =>
 
 const KEY = 'shifter.live';
 
-/**
- * Storage that cannot throw at the caller.
- *
- * `void AsyncStorage.setItem(...)` looks like fire-and-forget and is actually
- * an unhandled rejection: on a phone where the module is missing or the disk
- * is full it surfaces as a red box over the calendar, for a write nobody was
- * waiting on. A lost marker is recoverable by hand; a crash is not.
- */
+/** Storage that cannot throw at the caller. */
 const quietly = (work: Promise<unknown>) => {
   void work.catch(() => undefined);
 };
@@ -91,10 +65,7 @@ interface LiveState {
   clear: () => void;
 }
 
-/**
- * Survives app restarts on purpose: a shift is hours long and phones
- * reboot. The clock is the wall clock, not a timer, so nothing drifts.
- */
+/** Survives app restarts on purpose: a shift is hours long and phones reboot. */
 export const useLive = create<LiveState>((set, get) => ({
   live: null,
 
@@ -114,9 +85,7 @@ export const useLive = create<LiveState>((set, get) => ({
     set({ live: fresh });
     quietly(AsyncStorage.setItem(KEY, JSON.stringify(fresh)));
 
-    // The wave-60 banner only helps whoever opens the app — and the whole
-    // failure mode of a forgotten timer is that nobody did. Knock instead,
-    // two hours after the plan ran out, straight into the live screen.
+    // The wave-60 banner only helps whoever opens the app — and the whole failure mode of a forgotten timer is that…
     quietly(
       Notifications.scheduleNotificationAsync({
         content: {
@@ -150,9 +119,7 @@ export const useLive = create<LiveState>((set, get) => ({
     const open = breaks.findIndex((entry) => entry.to === null);
     const now = new Date().toISOString();
 
-    // Written down the moment it happens rather than on finish: a break is
-    // remembered by the phone, not by the person, and the phone is the one
-    // that survives being put in an apron pocket for twenty minutes.
+    // Written down the moment it happens rather than on finish: a break is remembered by the phone, not by the…
     if (open >= 0) breaks[open] = { ...breaks[open], to: now };
     else breaks.push({ from: now, to: null });
 

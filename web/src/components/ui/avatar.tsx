@@ -2,12 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 
-/**
- * The face used everywhere a person appears. Three kinds:
- * photo — a small JPEG data URL; preset — "emoji|#colour"; weave — a
- * deterministic thread pattern grown from a seed (for us: the person's own
- * punch-card), unique the way a work schedule is. Fallback: initials.
- */
+/** The face used everywhere a person appears. */
 export function Avatar({
   kind,
   data,
@@ -73,12 +68,7 @@ function mulberry(seed: number) {
   };
 }
 
-/**
- * An avatar woven from a schedule. The seed encodes 7×4 intensity cells
- * (the person's real hours by weekday × week); threads run vertical for
- * worked weight, horizontal for the accent, giving everyone a cloth as
- * individual as their rota. Falls back to hashing the raw seed string.
- */
+/** An avatar woven from a schedule. */
 export function Weave({ seed, size = 32 }: { seed: string; size?: number }) {
   const canvas = useRef<HTMLCanvasElement>(null);
 

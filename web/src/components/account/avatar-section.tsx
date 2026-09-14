@@ -14,12 +14,7 @@ import { Avatar, Weave } from '@/components/ui/avatar';
 
 const PRESET_EMOJI = ['🍸', '🍕', '☕', '🍣', '🥂', '🔪', '🥐', '🛵', '📋', '🫧', '🍰', '🔥'];
 
-/**
- * The face on the profile. A photo is cropped square on the client and
- * leaves the browser as a 256×256 JPEG data URL — the server never sees
- * the original. The weave is grown from the person's own last four weeks,
- * so no two schedules wear the same cloth.
- */
+/** The face on the profile. */
 export function AvatarSection({
   name,
   kind,
@@ -197,10 +192,7 @@ export function AvatarSection({
   );
 }
 
-/**
- * The recovery address, the only thing standing between a forgotten
- * password and a lost account. Private: it never travels with a gig reply.
- */
+/** The recovery address, the only thing standing between a forgotten password and a lost account. */
 function EmailRow({ email, onSaved }: { email: string | null; onSaved: () => void }) {
   const { t } = useI18n();
   const [value, setValue] = useState(email ?? '');

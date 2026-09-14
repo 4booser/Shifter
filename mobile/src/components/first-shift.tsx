@@ -37,15 +37,7 @@ const SHAPES = [
 
 const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
 
-/**
- * The first shift, and with it the first number.
- *
- * A new account opened on an empty grid under three zeros, and the way out was
- * a settings screen two taps away that nothing pointed at. This is the whole
- * of what the app needs before it can count: when you work and what it pays.
- * The place is asked for because it unlocks paydays, and left optional because
- * a field somebody cannot answer is a reason to close the app.
- */
+/** The first shift, and with it the first number. */
 export function FirstShift({
   open,
   palette,
@@ -88,9 +80,7 @@ export function FirstShift({
     setError(null);
 
     try {
-      // Everything at its default except the answers. A place has two dozen
-      // settings and not one of them is worth a question before the app has
-      // shown somebody a number.
+      // Everything at its default except the answers.
       let placeId: number | null = null;
 
       if (venue.trim() !== '') {
@@ -148,9 +138,7 @@ export function FirstShift({
 
   return (
     <Modal visible={open} transparent animationType="slide" onRequestClose={onClose}>
-      {/* A full-screen «tap outside to close». Unnamed, a screen reader
-          announces it as a button and says nothing about what it does —
-          the first thing met on entering every sheet in this app. */}
+      {/* A full-screen «tap outside to close». */}
       <Pressable
         style={styles.backdrop}
         accessibilityRole="button"

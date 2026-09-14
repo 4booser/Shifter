@@ -7,14 +7,7 @@ import { Palette } from '@/constants/theme';
 import { t } from '@/lib/i18n';
 import { usePalette } from '@/store/palette';
 
-/**
- * Picking a colour, with the palette this person keeps.
- *
- * The saved colours sit above the stock ones, because somebody who took the
- * trouble to save their venue's violet wants that violet first. A long press
- * on a saved swatch forgets it — a menu for six pixels would be worse than
- * the gesture.
- */
+/** Picking a colour, with the palette this person keeps. */
 export const MARK_COLOURS = [
   '#FF5C7A', '#FFA53D', '#F5C518', '#5CD65C', '#22C55E', '#14B8A6',
   '#38BDF8', '#6366F1', '#A855F7', '#EC4899', '#64748B', '#334155',

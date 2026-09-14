@@ -420,10 +420,7 @@ public class ShifterCommand : IShifterCommand
         return day;
     }
 
-    /// <summary>
-    /// The day with its contents attached, tracked, created if this is the
-    /// first thing to land on it. Not saved here: the caller has more to add.
-    /// </summary>
+    /// <summary>The day with its contents attached, tracked, created if this is the first thing to land on it.</summary>
     private async Task<Day> LoadOrStartDayAsync(int userId, DateOnly date, CancellationToken ct)
     {
         Day? existing = await _db.Days

@@ -5,16 +5,7 @@ using Shifter.Application.Features.Webhooks.DTOs;
 
 namespace Shifter.Application.Features.Webhooks.Services;
 
-/// <summary>
-/// Turns a delivery's body into one of the canonical payloads, through the
-/// endpoint's mapping.
-///
-/// Everything here is lenient about form and strict about meaning. Senders
-/// write numbers as strings, dates as epochs, booleans as "Y"; refusing those
-/// helps nobody, since the person on the receiving end cannot change what their
-/// employer's till emits. What it will not do is guess at a missing date or an
-/// unreadable quantity — that is how a night's takings land on the wrong day.
-/// </summary>
+/// <summary>Turns a delivery's body into one of the canonical payloads, through the endpoint's mapping.</summary>
 public static class PayloadReader
 {
     /// <summary>Lines past this in one delivery are a runaway sender, not a day.</summary>
@@ -197,11 +188,7 @@ public static class PayloadReader
         return string.IsNullOrWhiteSpace(text) ? null : text;
     }
 
-    /// <summary>
-    /// Yes and no in the shapes senders actually use. Anything unrecognised is
-    /// left to the caller's default rather than read as false, which would turn
-    /// a typo into a silent "not worked".
-    /// </summary>
+    /// <summary>Yes and no in the shapes senders actually use.</summary>
     private static bool? Flag(JsonElement? value)
     {
         if (value is not JsonElement element) return null;

@@ -4,12 +4,7 @@ using Shifter.Application.Common.Text;
 
 namespace Shifter.Application.Features.Brief;
 
-/// <summary>
-/// The brief in words, written without a model. It is the fallback when no
-/// key is configured — and the safety net when the model answers with
-/// nonsense — so it has to be genuinely good, not a placeholder. Pure, and
-/// therefore testable: the same facts always produce the same page.
-/// </summary>
+/// <summary>The brief in words, written without a model.</summary>
 public static class BriefWriter
 {
     private static readonly CultureInfo Ru = Figures.Ru;

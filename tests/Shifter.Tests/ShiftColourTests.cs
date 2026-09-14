@@ -7,13 +7,7 @@ using Xunit;
 
 namespace Shifter.Tests;
 
-/// <summary>
-/// A shift's colour used to come from its place of work and nowhere else,
-/// which was fine while one place meant one kind of work and useless the
-/// moment a bar had an opening shift and a close worth telling apart. The
-/// precedence is the whole feature: own colour first, the place's as a
-/// fallback, and one answer for every screen rather than one per screen.
-/// </summary>
+/// <summary>A shift's colour used to come from its place of work and nowhere else, which was fine while one place meant…</summary>
 public class ShiftColourTests
 {
     private readonly FakeShifterQuery _query = new();

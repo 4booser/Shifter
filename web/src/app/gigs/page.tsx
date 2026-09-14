@@ -36,11 +36,7 @@ export default function GigsPage() {
   );
 }
 
-/**
- * The freelance board: one-off hospitality shifts, posted by whoever needs
- * hands and answered with one tap. Contacts move only inside a reply the
- * person typed on purpose — the profile stays private.
- */
+/** The freelance board: one-off hospitality shifts, posted by whoever needs hands and answered with one tap. */
 function Gigs() {
   const revealHost = useReveal<HTMLDivElement>();
   const { t, lang, n } = useI18n();
@@ -91,9 +87,7 @@ function Gigs() {
     else if (span === 'month') date.setMonth(date.getMonth() + delta);
     else date.setFullYear(date.getFullYear() + delta);
 
-    // Local, not UTC. Converting a local midnight to UTC lands on the previous
-    // day east of Greenwich, so every step lost a day — and on the first of a
-    // month the arrow did nothing at all.
+    // Local, not UTC.
     setAnchor(keyOf(date));
   };
 
@@ -108,18 +102,7 @@ function Gigs() {
         : `${range.from.slice(8)}–${range.to.slice(8)} ${new Intl.DateTimeFormat(lang, { month: 'short' }).format(new Date(`${range.from}T00:00:00`))}`;
 
   // The board groups by date so a busy Friday reads as one block.
-  /**
-   * "Worth at least as much as my usual hour."
-   *
-   * A board full of rates tells nobody anything: 250 an hour is generous in
-   * one city and a pay cut in another, and the only rate that settles it is
-   * the reader's own. The server already prices every card against their
-   * hours; this is the filter that makes the comparison usable.
-   *
-   * A card with no comparison — no rate, not enough of their own hours — is
-   * never filtered out. Hiding it would be treating "we do not know" as "it
-   * pays badly".
-   */
+  /** "Worth at least as much as my usual hour." A board full of rates tells nobody anything: 250 an hour is… */
   const [least, setLeast] = useState<number | null>(null);
 
   const byDate = useMemo(() => {
@@ -285,9 +268,7 @@ function Gigs() {
             ))}
           </div>
 
-          {/* What the trade pays here, once a city and a job are both named.
-              Silent below the thresholds — a city with three venues on it
-              gets no figure, which is the correct answer. */}
+          {/* What the trade pays here, once a city and a job are both named. */}
           <div className="mb-3">
             <MarketBandCard city={city} category={category} />
           </div>
@@ -339,9 +320,7 @@ function Gigs() {
           onCallBack={setCallingBack}
           onRepost={(gig) =>
             setEditing({
-              // No id: this is a new listing that happens to look like an old
-              // one. Carrying the id would edit the shift somebody already
-              // answered.
+              // No id: this is a new listing that happens to look like an old one.
               id: null,
               venue: gig.venue,
               category: gig.category,
@@ -433,11 +412,7 @@ function gigWorth(gig: Gig): number {
   return (span / 60) * gig.pay_amount;
 }
 
-/**
- * The board as a month: each day says how many covers it needs and what
- * they add up to. A tap opens the day's cards right under the grid — the
- * same mental model as the person's own calendar, money in the cells.
- */
+/** The board as a month: each day says how many covers it needs and what they add up to. */
 function GigCalendar({
   from,
   to,
@@ -555,15 +530,7 @@ function GigCard({ gig, onRespond, onWithdraw }: { gig: Gig; onRespond: () => vo
 
   const [photo, setPhoto] = useState(0);
 
-  /*
-   * A picture that will not load is worse than no picture.
-   *
-   * The strip is 128 pixels tall whatever arrives in it, so a photo that 404s
-   * — or one that was a tracking pixel before the uploader learned to refuse
-   * them — leaves a black band across the top of the card and the listing
-   * reads as broken. Anything that fails to paint drops out; when the last one
-   * does, the card closes up as though it never had photos.
-   */
+  /* A picture that will not load is worse than no picture. */
   const [dead, setDead] = useState<readonly string[]>([]);
   const photos = gig.photos.filter((url) => !dead.includes(url));
   const current = photos.length === 0 ? undefined : photos[photo % photos.length];
@@ -594,11 +561,7 @@ function GigCard({ gig, onRespond, onWithdraw }: { gig: Gig; onRespond: () => vo
           />
           {photos.length > 1 && (
             <span className="absolute bottom-1.5 right-2 flex items-center gap-1">
-              {/* Keyed by position, not by the photograph. Two gigs posted
-                  with the same picture twice gave React two children with
-                  the same key, and React is entitled to drop one of them —
-                  it said so in the console on every load of this page. A
-                  dot here means «the third photo», which is what index is. */}
+              {/* Keyed by position, not by the photograph. */}
               {photos.map((_url, index) => (
                 <span
                   key={index}
@@ -656,11 +619,7 @@ function GigCard({ gig, onRespond, onWithdraw }: { gig: Gig; onRespond: () => vo
       )}
       {gig.details !== null && <p className="line-clamp-2 text-[0.85rem] text-muted">{gig.details}</p>}
 
-      {/* What the rate is worth to *this* reader. A board full of numbers tells
-          nobody anything: 250 an hour is generous in one city and a pay cut in
-          another, and the app already knows which. Not shown on your own
-          listings — comparing a shift you are offering against your own wage
-          would be answering a question nobody asked. */}
+      {/* What the rate is worth to *this* reader. */}
       {!gig.is_mine && gig.worth !== null && (
         <p
           className={`text-[0.82rem] ${
@@ -733,11 +692,7 @@ function GigCard({ gig, onRespond, onWithdraw }: { gig: Gig; onRespond: () => vo
   );
 }
 
-/**
- * The link that travels: shifter.ink/g/42 unfurls in a work chat with the
- * venue, the trade, the pay and the first photo — because that is where
- * hospitality shifts are actually passed around.
- */
+/** The link that travels: shifter.ink/g/42 unfurls in a work chat with the venue, the trade, the pay and the… */
 function ShareGig({ gig }: { gig: Gig }) {
   const { t } = useI18n();
   const [copied, setCopied] = useState(false);
@@ -857,9 +812,7 @@ function MyListings({
                 </button>
               )}
               <button type="button" className="btn btn-quiet btn-sm" onClick={() => onEdit(gig)}>{t('Edit')}</button>
-              {/* A venue posts the same shift ten times a month. Everything
-                  but the date is already right; the date is the only thing
-                  that ever changes. */}
+              {/* A venue posts the same shift ten times a month. */}
               <button
                 type="button"
                 className="btn btn-quiet btn-sm"
@@ -927,14 +880,7 @@ function MyListings({
   );
 }
 
-/**
- * The consent moment: exactly what leaves your profile, shown before it does.
- *
- * It serves both halves of the handshake. Opened on a gig you have not
- * answered it is the reply; opened on one where the venue has already said
- * yes it is your yes back, and then there is nothing to choose — only the
- * contacts you held on to.
- */
+/** The consent moment: exactly what leaves your profile, shown before it does. */
 function RespondModal({ gig, onClose, onDone }: { gig: Gig; onClose: () => void; onDone: () => void }) {
   const opening = gig.my_response !== null;
   const { t } = useI18n();

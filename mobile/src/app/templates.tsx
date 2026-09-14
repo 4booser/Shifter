@@ -31,9 +31,7 @@ interface Place {
   archived: boolean;
 }
 
-// The week was missing here, so a weekly template opened as hourly and saving
-// it without touching anything priced it forty times high. The server has
-// always accepted it and the phone's own rate line already prints "в неделю".
+// The week was missing here, so a weekly template opened as hourly and saving it without touching anything…
 type Period = 'hour' | 'day' | 'week' | 'month';
 
 const PERIOD_LABEL: Record<Period, string> = {
@@ -43,11 +41,7 @@ const PERIOD_LABEL: Record<Period, string> = {
   month: 'в месяц',
 };
 
-/**
- * The shift palette, editable from the phone. Until now the app could place
- * templates and never make one, so a person who only ever opens the app had
- * to go and find a laptop before they could record their first shift.
- */
+/** The shift palette, editable from the phone. */
 export default function TemplatesScreen() {
   const router = useRouter();
   const scheme = useColorScheme();
@@ -192,9 +186,7 @@ export default function TemplatesScreen() {
                 )}
               </View>
 
-              {/* …and the hour it closes itself. Read against the plan's own
-                  end, so a сутки shift planned 11:00→11:00 that stops «at
-                  10:45» means the next morning, not a quarter after start. */}
+              {/* …and the hour it closes itself. */}
               <View style={styles.autoRow}>
                 <Press
                   style={styles.autoToggle}
@@ -323,16 +315,7 @@ export default function TemplatesScreen() {
   );
 }
 
-
-/**
- * One kind of non-working thing: «английский», «вождение», the gym.
- *
- * The cost field is the reason this is not just the shift editor with fewer
- * boxes. Money here runs the other way, and the note under it says so — what
- * a lesson takes is never subtracted from what a week earned, it sits beside
- * it, because the figure people check each evening has to keep meaning the
- * same thing.
- */
+/** One kind of non-working thing: «английский», «вождение», the gym. */
 function EventTypeEditor({
   editing,
   palette,
@@ -579,11 +562,7 @@ const KIND_LABEL: Record<EventKind, string> = {
   dayoff: 'Выходной',
 };
 
-/**
- * One template. The pay constructor lives here in full — a rate, a share of
- * the takings, or the two together — because a phone that can only express
- * half a deal will quietly price somebody's month wrong.
- */
+/** One template. */
 function TemplateEditor({
   editing,
   places,
@@ -618,9 +597,7 @@ function TemplateEditor({
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState<string | null>(null);
 
-  // The advert somebody is copying the terms out of. New templates only:
-  // pasting over an existing one would overwrite agreed terms with figures a
-  // regex read off a listing.
+  // The advert somebody is copying the terms out of.
   const [advert, setAdvert] = useState('');
   const [reading, setReading] = useState(false);
 
@@ -637,9 +614,7 @@ function TemplateEditor({
         break_minutes: number | null;
       }>('/shifter/v1/advert/read', { body: { text: advert } });
 
-      // Only what the advert actually said; blanks stay blank. A blank is a
-      // question and a guess is an answer, and only one of those can be wrong
-      // about somebody's pay.
+      // Only what the advert actually said; blanks stay blank.
       if (read.pay_amount !== null) setAmount(`${read.pay_amount}`);
       if (read.pay_period !== null && read.pay_period in PERIOD_LABEL)
         setPeriod(read.pay_period as Period);
@@ -699,9 +674,7 @@ function TemplateEditor({
       salary_period: period,
       salary_amount: Number(amount.replace(',', '.')) || 0,
       break_minutes: Number(breakMinutes) || 0,
-      // Carried, not cleared. The contract defaults this to absent precisely so
-      // an older client cannot wipe it; sending an explicit null threw away a
-      // colour chosen on the web the moment the template was opened here.
+      // Carried, not cleared.
       colour: shiftColour,
       paints_day: paintsDay,
       revenue_percent: percent.trim() === '' ? null : Number(percent.replace(',', '.')),
@@ -736,9 +709,7 @@ function TemplateEditor({
             </Press>
           </View>
 
-          {/* The terms are already written in the advert; retyping them is
-              the step half of people skip — and then the shift is priced at a
-              rate nobody checked. */}
+          {/* The terms are already written in the advert; retyping them is the step half of people skip — and then the… */}
           {template === null && (
             <View style={styles.advertBox}>
               <Text style={styles.fieldLabel}>{t('Или вставьте объявление')}</Text>
@@ -854,9 +825,7 @@ function TemplateEditor({
             placeholderTextColor={palette.textSecondary}
           />
 
-          {/* The shift's own colour, and whether the calendar wears it. One
-              switch instead of colouring thirty days by hand; a day painted
-              by hand still keeps what its owner chose. */}
+          {/* The shift's own colour, and whether the calendar wears it. */}
           <Text style={styles.fieldLabel}>{t('Цвет смены')}</Text>
           <ColourPicker palette={palette} value={shiftColour} onPick={setShiftColour} />
 

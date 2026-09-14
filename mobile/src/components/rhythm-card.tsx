@@ -28,10 +28,7 @@ interface FatigueVerdict {
   noticeable: boolean;
 }
 
-/**
- * The rota's rhythm on the phone: the same sentences the web says, and the
- * same silences. No advice — a close-then-open shown as the night it was.
- */
+/** The rota's rhythm on the phone: the same sentences the web says, and the same silences. */
 export function RhythmCard({ palette }: { palette: Palette }) {
   const styles = makeStyles(palette);
 

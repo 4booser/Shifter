@@ -5,11 +5,7 @@ using Xunit;
 
 namespace Shifter.Tests;
 
-/// <summary>
-/// The door itself, with the clock in hand. What happens over HTTP is checked
-/// over HTTP; here is the arithmetic of when it opens again, which no test
-/// should have to wait fifteen real minutes to see.
-/// </summary>
+/// <summary>The door itself, with the clock in hand.</summary>
 public class LoginThrottleTests
 {
     [Fact]

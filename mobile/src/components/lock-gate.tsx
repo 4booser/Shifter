@@ -9,12 +9,7 @@ import { t } from '@/lib/i18n';
 /** Long enough to answer a call or copy a code, short enough to matter. */
 const GRACE_MS = 30_000;
 
-/**
- * The lock, drawn over everything. It closes on the way to the background
- * rather than on the way back, because the screenshot the system takes for
- * the app switcher is taken as the app leaves — cover it late and the
- * switcher still shows a month of earnings to whoever is holding the phone.
- */
+/** The lock, drawn over everything. */
 export function LockGate({ children }: { children: React.ReactNode }) {
   const scheme = useColorScheme();
   const palette = Colors[scheme === 'dark' ? 'dark' : 'light'];

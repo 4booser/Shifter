@@ -12,30 +12,13 @@ using Shifter.Application.Common.Text;
 
 namespace Shifter.Application.Features.Mail;
 
-/// <summary>
-/// Sends the month's letter, once, to the people who asked for it.
-///
-/// Once a month is the only frequency at which a letter from an app is not an
-/// irritation, and it goes out after the month has ended because that is the
-/// only moment its figures are final.
-///
-/// Nobody is written to who did not switch it on. An address given to recover
-/// a password is not permission to send somebody post, and treating it as one
-/// is how a product loses the address it actually needed.
-/// </summary>
+/// <summary>Sends the month's letter, once, to the people who asked for it.</summary>
 public sealed class MonthlyLetterService : BackgroundService
 {
-    /// <summary>
-    /// Checked hourly rather than by cron: a process that was down at
-    /// midnight on the first should still send that morning, and the stamp on
-    /// each account is what keeps it to one letter either way.
-    /// </summary>
+    /// <summary>Checked hourly rather than by cron: a process that was down at midnight on the first should still send that…</summary>
     private static readonly TimeSpan Period = TimeSpan.FromHours(1);
 
-    /// <summary>
-    /// Not at midnight. A letter that arrives at 03:00 is read at 09:00 with
-    /// forty others; one that arrives at 09:00 is read.
-    /// </summary>
+    /// <summary>Not at midnight.</summary>
     private const int SendHour = 9;
 
     private readonly IServiceScopeFactory _scopes;
@@ -202,11 +185,7 @@ public sealed class MonthlyLetterService : BackgroundService
             worked.Count(day => day.Tips is null && day.Sales is null or []));
     }
 
-    /// <summary>
-    /// The letter's own words. Deliberately not the app's dictionary: a
-    /// letter's language is chosen when it is sent and the app's is chosen in
-    /// a browser, and wiring them together would make one of the two lie.
-    /// </summary>
+    /// <summary>The letter's own words.</summary>
     private static string Phrase(string key) => key switch
     {
         "Worked" => "Отработано",
@@ -220,10 +199,7 @@ public sealed class MonthlyLetterService : BackgroundService
         _ => key,
     };
 
-    /// <summary>
-    /// Twenty-two characters of base32. An account id in the link would let
-    /// anybody unsubscribe anybody by counting.
-    /// </summary>
+    /// <summary>Twenty-two characters of base32.</summary>
     public static string NewKey()
     {
         const string alphabet = "abcdefghjkmnpqrstuvwxyz23456789";

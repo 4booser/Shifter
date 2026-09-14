@@ -2,12 +2,7 @@ import { expect, test } from '@playwright/test';
 
 import { apiPut, createShiftTemplate, registerUser, signIn } from './helpers';
 
-/**
- * The goal meter, end to end: set an amount the month has already beaten,
- * and the stats page must say so out loud. This guards the whole chain —
- * the goal rows, activeGoalFor's period maths, and the reached branch that
- * fires the confetti.
- */
+/** The goal meter, end to end: set an amount the month has already beaten, and the stats page must say so out… */
 test('a goal the month has beaten reads as taken', async ({ page }) => {
   const user = await registerUser();
   const shift = await createShiftTemplate(user.token);

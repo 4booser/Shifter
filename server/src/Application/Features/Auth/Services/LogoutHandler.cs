@@ -6,11 +6,7 @@ using Shifter.Infrastructure.Repositories.Interfaces;
 
 namespace Shifter.Application.Features.Auth.Services;
 
-/// <summary>
-/// Signing out revokes the refresh token so it cannot be traded for a new pair.
-/// The access token still works until it expires — that is the price of a
-/// stateless token, and the lifetime is short for exactly this reason.
-/// </summary>
+/// <summary>Signing out revokes the refresh token so it cannot be traded for a new pair.</summary>
 public class LogoutHandler : IRequestHandler<LogoutDto, LogoutResultDto>
 {
     private readonly ITokenQuery _tokenQuery;

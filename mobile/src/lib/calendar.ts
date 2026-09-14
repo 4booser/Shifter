@@ -48,14 +48,7 @@ export const monthLabel = ({ year, month }: YearMonth): string => {
   return `${t(MONTHS[month - 1])} ${year}`;
 };
 
-/**
- * Month names by hand rather than through Intl.
- *
- * toLocaleDateString was pinned to 'ru', so every date in the app stayed
- * Russian whatever language somebody chose — and unpinning it would have made
- * the app's dates depend on which locales this particular phone happens to
- * carry. A table is a table in both languages.
- */
+/** Month names by hand rather than through Intl. */
 const MONTHS = [
   'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
   'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь',
@@ -75,11 +68,7 @@ export const shortDate = (key: string): string => {
   return `${Number(day)} ${t(MONTHS_SHORT[Number(month) - 1])}`;
 };
 
-/**
- * The same, with the weekday in front. For a shift the weekday is the whole
- * question — "which evening am I giving up" — and a bare number does not
- * answer it.
- */
+/** The same, with the weekday in front. */
 export const dayLabel = (key: string): string => {
   const date = new Date(`${key}T00:00:00`);
 
@@ -92,14 +81,7 @@ export interface GridCell {
   inMonth: boolean;
 }
 
-/**
- * Six full weeks, Monday first, with the neighbouring months' days in the
- * gaps rather than blanks.
- *
- * Blanks cost twice: the corner of the month reads as broken, and the grid
- * changes height between a five-week month and a six-week one — which on a
- * pager means the page under your thumb grows while you swipe it.
- */
+/** Six full weeks, Monday first, with the neighbouring months' days in the gaps rather than blanks. */
 export const monthGrid = ({ year, month }: YearMonth): GridCell[] => {
   const lead = (new Date(year, month - 1, 1).getDay() + 6) % 7;
   const start = new Date(year, month - 1, 1 - lead);
@@ -135,13 +117,7 @@ export const nextDay = (key: string): string => {
 /** True where the key falls inside an inclusive range. Keys sort as dates. */
 export const covers = (from: string, to: string, key: string) => key >= from && key <= to;
 
-/**
- * Day keys collapsed into contiguous stretches.
- *
- * Painting a fortnight of leave should leave one event on the server, not
- * fourteen — the calendar says "Отпуск, 14 дней" instead of repeating itself,
- * and deleting it takes one tap rather than fourteen.
- */
+/** Day keys collapsed into contiguous stretches. */
 export const runsOf = (keys: string[]): { from: string; to: string }[] => {
   const sorted = [...keys].sort();
   const runs: { from: string; to: string }[] = [];
@@ -172,13 +148,7 @@ export const WEEKDAYS = ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс']
 export const weekdayOf = (key: string): number =>
   (new Date(`${key}T00:00:00`).getDay() + 6) % 7;
 
-/**
- * Every day of the month that shares a weekday with one already chosen.
- *
- * "Каждый вторник и четверг" is the commonest shape a rota takes here, and
- * painting it by hand is eight separate touches spread across a month — the
- * kind of work people put off until the month is half over.
- */
+/** Every day of the month that shares a weekday with one already chosen. */
 export const sameWeekdaysIn = (at: YearMonth, chosen: Iterable<string>): string[] => {
   const wanted = new Set<number>();
 
@@ -199,14 +169,7 @@ export interface Range {
 /** Days in a month, so a comparison never asks for the 31st of February. */
 export const daysIn = ({ year, month }: YearMonth): number => new Date(year, month, 0).getDate();
 
-/**
- * The range a period should be compared against.
- *
- * Cut to the same length where the period being shown has not finished yet.
- * Nineteen days of August against the whole of July is not a comparison, it is
- * a way of telling somebody their month is going badly when it is going fine —
- * and this app is read by people deciding whether to ask for a raise.
- */
+/** The range a period should be compared against. */
 export const previousRange = (
   span: 'month' | 'year',
   at: YearMonth,

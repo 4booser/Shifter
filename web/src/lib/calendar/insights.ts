@@ -1,10 +1,7 @@
 import { CalendarDayData, DaysResponse } from './models';
 import { keysBetween, shiftDays } from './calendar-date';
 
-/**
- * The per-unit numbers. Totals answer "how much"; these answer "how much is a
- * day of my life worth", which is the question people actually carry around.
- */
+/** The per-unit numbers. */
 export interface Averages {
   /** Days that had at least one shift marked worked. */
   daysWorked: number;
@@ -13,15 +10,7 @@ export interface Averages {
   hoursPerDay: number;
   tipsPerDay: number;
   salesPerDay: number;
-  /**
-   * What an hour was worth, or null where there is no honest answer.
-   *
-   * Null rather than nought, because nought is a figure and every screen
-   * printed it as one: «В час 0 ₴» beside «↓ 100%» on the comparison table,
-   * on the report, and in the month's share text — all of them saying the
-   * hour had collapsed, when the truth was that under an hour of work there
-   * was nothing to divide.
-   */
+  /** What an hour was worth, or null where there is no honest answer. */
   perHour: number | null;
   tipsPerHour: number | null;
   perShift: number;
@@ -69,10 +58,7 @@ export function averagesFor(summary: DaysResponse): Averages {
     hoursPerDay: per(summary.hours, worked),
     tipsPerDay: per(summary.tips_earned, worked),
     salesPerDay: per(summary.sales_earned, worked),
-    // An hourly rate divided out of minutes is not a rate. A shift closed
-    // after fifty seconds priced the hour at −₴3 805 on the statistics page,
-    // beside a card that said nought hours had been worked. Under an hour
-    // there is nothing to quote.
+    // An hourly rate divided out of minutes is not a rate.
     perHour: summary.hours < 1 ? null : per(summary.total_earned, summary.hours),
     tipsPerHour: summary.hours < 1 ? null : per(summary.tips_earned, summary.hours),
     perShift: per(summary.total_earned, shifts),
@@ -81,10 +67,7 @@ export function averagesFor(summary: DaysResponse): Averages {
   };
 }
 
-/**
- * Percent change, or null when there is no baseline to compare against —
- * "+100%" from nothing is noise, and an arrow pointing up from zero lies.
- */
+/** Percent change, or null when there is no baseline to compare against — "+100%" from nothing is noise, and an… */
 export function change(now: number, before: number): number | null {
   if (before === 0) return null;
 
@@ -113,10 +96,7 @@ export interface Streak {
   to: string;
 }
 
-/**
- * The longest run of consecutive calendar days with work on them. Walks the
- * dates rather than the array so a gap in the data is still a gap in the run.
- */
+/** The longest run of consecutive calendar days with work on them. */
 export function longestStreak(days: readonly CalendarDayData[]): Streak | null {
   const worked = days
     .filter((day) => day.shifts.some((entry) => entry.worked))

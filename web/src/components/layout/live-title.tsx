@@ -5,12 +5,7 @@ import { useEffect } from 'react';
 import { formatElapsed, useLive, workedMs } from '@/lib/live/live-shift';
 import { setLiveTitle } from '@/lib/use-title';
 
-/**
- * The running shift, visible from any tab in the strip: the browser title
- * carries the dot and the elapsed time while somebody is on the floor, the
- * pause mark while they are on a break, and hands the tab back to its page
- * the moment the shift ends.
- */
+/** The running shift, visible from any tab in the strip: the browser title carries the dot and the elapsed time… */
 export function LiveTitle() {
   const live = useLive((state) => state.live);
 

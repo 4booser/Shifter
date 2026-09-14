@@ -19,11 +19,7 @@ import { currentMonth, monthBounds } from '@/lib/calendar';
 import { DaysResponse, money, plural } from '@/lib/types';
 import { t } from '@/lib/i18n';
 
-/**
- * Hours are the honest measure of a year in hospitality: money moves with the
- * city and the season, hours are what a person actually gave. The names are
- * the trade's own, not a leaderboard.
- */
+/** Hours are the honest measure of a year in hospitality: money moves with the city and the season, hours are… */
 const TIERS: { hours: number; name: string; emoji: string }[] = [
   { hours: 1800, name: t('Легенда зала'), emoji: '👑' },
   { hours: 1200, name: t('Железная смена'), emoji: '🔥' },
@@ -67,11 +63,7 @@ const PERIOD_SUFFIX: Record<Raise['period'], string> = {
   month: t('/месяц'),
 };
 
-/**
- * The year, in the pocket. Everything here is counted from the same days the
- * calendar draws — a year is twelve of the same request the month view makes,
- * so nothing can disagree with anything.
- */
+/** The year, in the pocket. */
 export default function YearScreen() {
   const [yearCheers, setYearCheers] = useState<{ amount: number }[]>([]);
 
@@ -186,9 +178,7 @@ export default function YearScreen() {
     const busiest = [...byWeekday.entries()].sort((left, right) => right[1] - left[1])[0] ?? null;
     const place = [...(summary.by_location ?? [])].sort((left, right) => right.earned - left.earned)[0] ?? null;
 
-    // Days off are counted from the calendar, not from the response: a day
-    // with nothing on it is never sent, so filtering the list for empty days
-    // finds none and reports a year without a single day off.
+    // Days off are counted from the calendar, not from the response: a day with nothing on it is never sent, so…
     const today = new Date();
     const isThisYear = year === today.getFullYear();
     const start = new Date(year, 0, 1);
@@ -274,7 +264,6 @@ export default function YearScreen() {
               hint={null}
             />
           </View>
-
 
           <Section palette={palette} title={t("Месяц за месяцем")}>
             <MonthBars rows={months} palette={palette} />

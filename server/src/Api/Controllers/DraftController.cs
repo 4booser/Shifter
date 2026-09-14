@@ -7,12 +7,7 @@ using Shifter.Application.Features.business.Services;
 
 namespace Shifter.Api.Controllers;
 
-/// <summary>
-/// Prices a hypothetical set of shifts and writes nothing.
-///
-/// The client cannot do this honestly: the fifth shift of a week is priced by
-/// the four real ones already in it, and only the server holds both halves.
-/// </summary>
+/// <summary>Prices a hypothetical set of shifts and writes nothing.</summary>
 [Authorize]
 [Route("shifter/v1/days/price")]
 public class DraftController : ControllerBase

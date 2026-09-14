@@ -19,9 +19,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    // The theme attribute is stamped before paint by the inline script below;
-    // suppressHydrationWarning covers the deliberate mismatch with the SSR'd
-    // default.
+    // The theme attribute is stamped before paint by the inline script below; suppressHydrationWarning covers the…
     <html lang="en" data-theme="system" suppressHydrationWarning>
       <head>
         {/* First paint must not flash the wrong palette: the stored settings

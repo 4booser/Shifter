@@ -4,10 +4,7 @@ using Xunit;
 
 namespace Shifter.Tests;
 
-/// <summary>
-/// Somebody's own tax figures, and the running total against their own stated
-/// ceiling. Every test here is about the app not inventing a number.
-/// </summary>
+/// <summary>Somebody's own tax figures, and the running total against their own stated ceiling.</summary>
 public class TaxYearTests
 {
     private static TaxProfile Profile(

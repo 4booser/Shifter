@@ -28,16 +28,7 @@ import { todayKey } from '@/lib/calendar';
 import { Gig, TRADES } from '@/lib/gigs';
 import { t } from '@/lib/i18n';
 
-/**
- * The listing, born where the shift fell through. A no-show at 16:40 wants
- * an ad out by 16:42 from the phone in the manager's hand — not after a
- * search for a laptop.
- *
- * The photo rule is the server's, spoken twice while seeding wave 73: at
- * least three venue photos, each a JPEG data URL shrunk by the client. The
- * shrink mirrors the site's numbers — longest side 900, quality stepped
- * down from 0.8 until the URL fits 200k.
- */
+/** The listing, born where the shift fell through. */
 interface Draft {
   venue: string;
   title: string;
@@ -113,10 +104,7 @@ const fromGig = (gig: Gig, keepDate: boolean): Draft => ({
 
 export default function CreateGigScreen() {
   const router = useRouter();
-  // ?edit=id opens the same form over an existing listing (PUT, replies
-  // kept); ?copy=id starts a fresh one from it with today's date — the
-  // second Friday should not begin from scratch. Both run in memory:
-  // neither may trample a from-zero draft someone left behind.
+  // ?edit=id opens the same form over an existing listing (PUT, replies kept); ?copy=id starts a fresh one from…
   const { edit, copy } = useLocalSearchParams<{ edit?: string; copy?: string }>();
   const editId = edit !== undefined ? Number(edit) : null;
   const sourceId = editId ?? (copy !== undefined ? Number(copy) : null);

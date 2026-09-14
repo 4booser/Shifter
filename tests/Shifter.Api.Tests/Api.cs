@@ -16,31 +16,10 @@ using Xunit;
 
 namespace Shifter.Api.Tests;
 
-/// <summary>
-/// The real application, over real HTTP, against a real Postgres.
-///
-/// Everything this app promises about money happens across three layers at
-/// once — a controller, EF, and the database — and nothing exercised the three
-/// of them together. Every defect found this week was found by hand: overtime
-/// paid at a negative multiplier, every hour counted as overtime, a meal
-/// deducted from a day nobody worked, a year of salary missing from a tax
-/// figure. All of them survive a unit test on fakes and none of them survives
-/// asking the running server what a month came to.
-///
-/// The schema is built by the migrations themselves, from nothing, on every
-/// run. That is a second thing nothing checked: the migration guards read the
-/// files as text and have never watched one execute.
-/// </summary>
+/// <summary>The real application, over real HTTP, against a real Postgres.</summary>
 public sealed class Api : WebApplicationFactory<Program>, IAsyncLifetime
 {
-    /// <summary>
-    /// A schema of its own inside the development database.
-    ///
-    /// A database of its own would be tidier and this role cannot create one.
-    /// A schema is enough: every table lands in it, including the migrations
-    /// history, so the run is isolated from whatever state a developer's own
-    /// database has drifted into — which locally it has.
-    /// </summary>
+    /// <summary>A schema of its own inside the development database.</summary>
     private const string Schema = "e2e";
 
     private static readonly string Base =
@@ -95,14 +74,7 @@ public sealed class Api : WebApplicationFactory<Program>, IAsyncLifetime
         await base.DisposeAsync();
     }
 
-    /// <summary>
-    /// A signed-in client with an account of its own.
-    ///
-    /// Every test gets a fresh login rather than sharing one, because almost
-    /// everything in this application is scoped by account — and a test that
-    /// passed only because another test had left a place lying around is worse
-    /// than no test.
-    /// </summary>
+    /// <summary>A signed-in client with an account of its own.</summary>
     public async Task<Signed> SignInAsync(string who)
     {
         var client = CreateClient();

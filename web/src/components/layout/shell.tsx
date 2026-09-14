@@ -34,11 +34,7 @@ const NAV: { href: string; label: string; icon: string }[] = [
   { href: '/cv', label: 'Your record', icon: 'user' },
 ];
 
-/**
- * The signed-in frame: one sticky top bar on wide screens, a tab bar on
- * narrow ones, and the client-side guard that sends anonymous visitors to the
- * login page. Pages render inside it.
- */
+/** The signed-in frame: one sticky top bar on wide screens, a tab bar on narrow ones, and the client-side guard… */
 export function Shell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -51,13 +47,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
   useEscape(menuOpen, () => setMenuOpen(false));
   const [face, setFace] = useState<Profile | null>(null);
 
-  /**
-   * One integer, so decisions about what to build next stop being guesses.
-   *
-   * The screen's name off the path and nothing else — no identifier of any
-   * kind reaches this, by design and by test. Failing is silent: a counter
-   * that can interrupt somebody's evening has its priorities backwards.
-   */
+  /** One integer, so decisions about what to build next stop being guesses. */
   useEffect(() => {
     const screen = pathname.split('/')[1] || 'calendar';
 
@@ -135,13 +125,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
     <div className="min-h-dvh">
       <LiveTitle />
 
-      {/*
-        Above the chrome and not dismissable, because the one thing this
-        account must never do is let somebody spend an evening typing their
-        real month into work that is invented and gone on Thursday. It sits
-        outside the sticky header on purpose: a banner that scrolls away is a
-        banner that stops being true half a page down.
-      */}
+      {/* Above the chrome and not dismissable, because the one thing this account must never do is let somebody spend… */}
       {face?.is_demo === true && (
         <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 bg-(--warn-soft) px-3 py-1.5 text-center text-[0.82rem] text-warn-read">
           <span>
@@ -299,12 +283,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
   );
 }
 
-
-/**
- * The desktop nav with a pill that slides between items instead of teleporting
- * — measured with getBoundingClientRect on every route change and window
- * resize, then moved with a transform the CSS springs.
- */
+/** The desktop nav with a pill that slides between items instead of teleporting — measured with… */
 function DesktopNav({ pathname }: { pathname: string }) {
   const { t } = useI18n();
   const host = useRef<HTMLElement>(null);

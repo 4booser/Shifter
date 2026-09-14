@@ -1,10 +1,6 @@
 namespace Shifter.Domain.Entities;
 
-/// <summary>
-/// The trade a one-off shift asks for. Deliberately hospitality-specific:
-/// this board is for the industry the whole product lives in, and a real
-/// taxonomy is what makes filters worth tapping.
-/// </summary>
+/// <summary>The trade a one-off shift asks for.</summary>
 public enum GigCategory
 {
     Bartender = 0,
@@ -61,11 +57,7 @@ public enum GigStatus
     Closed = 2,
 }
 
-/// <summary>
-/// One freelance shift somebody needs covered: a date, a slot, a rate and a
-/// venue. Not employment — a gig. Contact details never live here; they
-/// travel only inside an explicit response.
-/// </summary>
+/// <summary>One freelance shift somebody needs covered: a date, a slot, a rate and a venue.</summary>
 public sealed class GigListing
 {
     public const int TitleMax = 80;
@@ -75,14 +67,7 @@ public sealed class GigListing
     /// <summary>Base64 budget per photo — a client-side 900px JPEG fits well under it.</summary>
     public const int PhotoBudget = 220_000;
 
-    /// <summary>
-    /// The shortest side a photograph of a place may have.
-    ///
-    /// A listing was posted whose three photos were each one pixel of black,
-    /// and every client did the only thing it could with them: filled the
-    /// card with a black slab. The count was checked; whether the pictures
-    /// were pictures was not.
-    /// </summary>
+    /// <summary>The shortest side a photograph of a place may have.</summary>
     public const int MinPhotoSide = 64;
     public const int VenueMax = 60;
     public const int CityMax = 40;
@@ -101,12 +86,7 @@ public sealed class GigListing
 
     public GigEmployment Employment { get; set; } = GigEmployment.Freelance;
 
-    /// <summary>
-    /// The venue, seen: at least three photos, JSON array of small JPEG data
-    /// URLs the client already shrank. A listing without a face is exactly
-    /// the listing people scroll past — and the board is worth looking at
-    /// only when every card can be looked at.
-    /// </summary>
+    /// <summary>The venue, seen: at least three photos, JSON array of small JPEG data URLs the client already shrank.</summary>
     public string PhotosJson { get; set; } = "[]";
 
     /// <summary>Permanent roles: the rhythm in the venue's words — "2/2", "5/2 с 10:00".</summary>
@@ -127,10 +107,7 @@ public sealed class GigListing
     /// <summary>"hour" or "shift".</summary>
     public required string PayPeriod { get; set; }
 
-    /// <summary>
-    /// Percent of sales on top of (or instead of) the base — hospitality's
-    /// oldest sweetener. Null means the pay is the base alone.
-    /// </summary>
+    /// <summary>Percent of sales on top of (or instead of) the base — hospitality's oldest sweetener.</summary>
     public decimal? PayPercent { get; set; }
 
     public required string City { get; set; }
@@ -138,43 +115,18 @@ public sealed class GigListing
     /// <summary>How many people this listing needs. Accepted responses count against it.</summary>
     public int Slots { get; set; } = 1;
 
-    /// <summary>
-    /// Somebody has not turned up and the shift starts in two hours.
-    ///
-    /// The only case in this app where a notification is defensible without a
-    /// subscription: the person receiving it has published a card saying they
-    /// are looking for work, in this trade, in this city, and their own
-    /// calendar says the day is free. Every one of those has to be true.
-    ///
-    /// It expires by itself when the shift starts. A board full of yesterday's
-    /// emergencies is a board nobody checks.
-    /// </summary>
+    /// <summary>Somebody has not turned up and the shift starts in two hours.</summary>
     public bool Urgent { get; set; }
 
-    /// <summary>
-    /// Set once the push has gone out, so a listing edited three times does
-    /// not wake the same people three times.
-    /// </summary>
+    /// <summary>Set once the push has gone out, so a listing edited three times does not wake the same people three times.</summary>
     public DateTime? AlertedAt { get; set; }
 
     public GigStatus Status { get; set; } = GigStatus.Open;
 
-    /// <summary>
-    /// The half of the share link that cannot be guessed.
-    ///
-    /// The preview at /g/… is anonymous on purpose — a link pasted into a work
-    /// chat has to unfurl for people who are not signed in. But it used to be
-    /// keyed on the primary key, so counting from one handed the whole board
-    /// to exactly the scraper the board's own rules say must not have it. A
-    /// link still works for anybody who has it; nobody can produce one they
-    /// were not given.
-    /// </summary>
+    /// <summary>The half of the share link that cannot be guessed.</summary>
     public string ShareSlug { get; set; } = NewSlug();
 
-    /// <summary>
-    /// Twelve characters of base32 — short enough to paste, far too much to
-    /// walk. Ambiguous letters are left out so a slug read aloud survives.
-    /// </summary>
+    /// <summary>Twelve characters of base32 — short enough to paste, far too much to walk.</summary>
     public static string NewSlug()
     {
         const string alphabet = "abcdefghjkmnpqrstuvwxyz23456789";

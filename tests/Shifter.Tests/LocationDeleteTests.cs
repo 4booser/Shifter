@@ -6,14 +6,7 @@ using Xunit;
 
 namespace Shifter.Tests;
 
-/// <summary>
-/// Removing a place of work is destructive in a way that is not obvious: the
-/// templates keep working, but the tip-out, meal and tax rules they took from
-/// that place are gone, so days already worked stop being worth what they were.
-/// These pin down that it cannot happen by accident, and that it can happen at
-/// all — the handler used to refuse outright, which left no way to remove a
-/// place that was simply typed in wrong.
-/// </summary>
+/// <summary>Removing a place of work is destructive in a way that is not obvious: the templates keep working, but the…</summary>
 public class LocationDeleteTests
 {
     private readonly FakeShifterQuery _query = new();

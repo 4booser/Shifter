@@ -5,11 +5,7 @@ import { Palette } from '@/constants/theme';
 import { money } from '@/lib/types';
 import { t } from '@/lib/i18n';
 
-/**
- * The month as bars. The current period glows, the tallest is bold, the rest
- * stay quiet — the same reading order the web charts use, so somebody who
- * knows one client can read the other without learning anything new.
- */
+/** The month as bars. */
 export function MonthBars({
   rows,
   palette,
@@ -17,11 +13,7 @@ export function MonthBars({
 }: {
   rows: { label: string; value: number; current?: boolean }[];
   palette: Palette;
-  /**
-   * How to print an amount. Handed in because the caller is the only one that
-   * knows whether the range mixes currencies — the default stamps a hryvnia
-   * sign, which is a lie on a month that also holds złoty.
-   */
+  /** How to print an amount. */
   format?: (value: number) => string;
 }) {
   const peak = Math.max(1, ...rows.map((row) => row.value));
@@ -33,9 +25,7 @@ export function MonthBars({
         <View key={row.label} style={styles.row}>
           <Text style={[styles.rowLabel, row.current === true && styles.rowLabelCurrent]}>{row.label}</Text>
           <View style={styles.track}>
-            {/* A month with nothing earned draws nothing at all: the minimum
-                sliver is for a small amount, not for the absence of one, and
-                an empty box would still show its own outline. */}
+            {/* A month with nothing earned draws nothing at all: the minimum sliver is for a small amount, not for the… */}
             {row.value > 0 && (
               <View
                 style={[
@@ -59,11 +49,7 @@ export function MonthBars({
   );
 }
 
-/**
- * Where the money came from, as one bar. Every slice keeps a visible sliver,
- * because a small source is still a source and a zero-width rectangle is a
- * lie about it.
- */
+/** Where the money came from, as one bar. */
 export function MoneyFlow({
   parts,
   palette,
@@ -118,10 +104,7 @@ export function MoneyFlow({
   );
 }
 
-/**
- * The hours of the day as a ring of arcs: a day is a circle, and midnight
- * sitting next to 23:00 is exactly the fact this chart exists to show.
- */
+/** The hours of the day as a ring of arcs: a day is a circle, and midnight sitting next to 23:00 is exactly the… */
 export function ClockRing({ hours, palette }: { hours: number[]; palette: Palette }) {
   const size = 190;
   const centre = size / 2;

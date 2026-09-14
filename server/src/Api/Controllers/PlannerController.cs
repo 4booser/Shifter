@@ -7,11 +7,7 @@ using Shifter.Application.Features.Teams.Services;
 
 namespace Shifter.Api.Controllers;
 
-/// <summary>
-/// The manager's board over HTTP. Reads are open to any member (drafts are
-/// filtered inside); writes check the caller's right per call, because the
-/// service is where the rules live.
-/// </summary>
+/// <summary>The manager's board over HTTP.</summary>
 [Authorize]
 [Route("shifter/v1/teams/{teamId:int}/planner")]
 public class PlannerController : ControllerBase
@@ -74,10 +70,7 @@ public class PlannerController : ControllerBase
         CancellationToken ct)
         => Ok(await _planner.PublishAsync(teamId, UserId(), from, to, ct));
 
-    /// <summary>
-    /// Hands one slot out to whoever can take it. Drafts, always — a rota is
-    /// argued about, so this fills a board a manager then corrects.
-    /// </summary>
+    /// <summary>Hands one slot out to whoever can take it.</summary>
     [HttpPost("fill")]
     public async Task<ActionResult<FillResultDto>> Fill(
         int teamId, [FromBody] FillSlotDto request, CancellationToken ct)
@@ -101,20 +94,13 @@ public class PlannerController : ControllerBase
 
     // ==== The pool ====
 
-    /// <summary>
-    /// The night's tip pool and how it divides. Everybody who worked the shift
-    /// sees every share — that is not a hole in the privacy rules, it is the
-    /// exact transparency a pool exists for.
-    /// </summary>
+    /// <summary>The night's tip pool and how it divides.</summary>
     [HttpGet("pool")]
     public async Task<ActionResult<PoolDto>> Pool(
         int teamId, [FromQuery] DateOnly date, CancellationToken ct)
         => Ok(await _planner.PoolAsync(teamId, UserId(), date, ct));
 
-    /// <summary>
-    /// Entering it. Anybody in the crew may: whoever counted the tin is
-    /// whoever counted it.
-    /// </summary>
+    /// <summary>Entering it.</summary>
     [HttpPost("pool")]
     public async Task<ActionResult<PoolDto>> SavePool(
         int teamId, [FromBody] PoolSaveDto request, CancellationToken ct)
@@ -122,10 +108,7 @@ public class PlannerController : ControllerBase
 
     // ==== The handover ====
 
-    /// <summary>
-    /// What the shift going home knows and the shift coming in does not: one
-    /// note for the day, and everything the room is currently missing.
-    /// </summary>
+    /// <summary>What the shift going home knows and the shift coming in does not: one note for the day, and everything the…</summary>
     [HttpGet("handover")]
     public async Task<IActionResult> Handover(
         int teamId, [FromQuery] DateOnly date, CancellationToken ct)
@@ -135,10 +118,7 @@ public class PlannerController : ControllerBase
         return Ok(new { note, stops });
     }
 
-    /// <summary>
-    /// Anybody in the crew may write it. The person who knows the grinder is
-    /// broken is whoever was standing next to it.
-    /// </summary>
+    /// <summary>Anybody in the crew may write it.</summary>
     [HttpPost("handover")]
     public async Task<ActionResult<HandoverDto>> WriteHandover(
         int teamId, [FromBody] HandoverSaveDto request, CancellationToken ct)
@@ -157,9 +137,7 @@ public class PlannerController : ControllerBase
 
     // ==== Leave ====
 
-    /// <summary>
-    /// A planner sees the crew's requests; everybody else sees their own.
-    /// </summary>
+    /// <summary>A planner sees the crew's requests; everybody else sees their own.</summary>
     [HttpGet("leave")]
     public async Task<ActionResult<LeaveDto[]>> Leave(int teamId, CancellationToken ct)
         => Ok(await _planner.LeaveAsync(teamId, UserId(), ct));

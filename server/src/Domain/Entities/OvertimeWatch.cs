@@ -1,10 +1,6 @@
 namespace Shifter.Domain.Entities;
 
-/// <summary>
-/// The guard that speaks before the line, not after: hours already worked
-/// this week against the place's threshold. Pure, because "did this deserve
-/// a push" is exactly the kind of judgement that should be provable.
-/// </summary>
+/// <summary>The guard that speaks before the line, not after: hours already worked this week against the place's…</summary>
 public static class OvertimeWatch
 {
     /// <summary>How close to the threshold is worth a word: the last fifth of it.</summary>

@@ -8,18 +8,7 @@ using Shifter.Infrastructure.Persistence.DbContexts;
 
 namespace Shifter.Application.Features.Papers;
 
-/// <summary>
-/// The whole account, in one archive somebody can walk away with.
-///
-/// What cannot be exported is not owned, and this application asks people to
-/// pour years of their working life into it. The archive is the counterparty
-/// to that ask: every day, every shift, every place, every payout, every
-/// expense — as JSON for machines and CSV for humans, in one zip, on demand.
-///
-/// The JSON is shaped to survive: plain field names, ISO dates, no internal
-/// ids beyond what links rows to each other. Somebody importing this into a
-/// spreadsheet in 2036 should not need this codebase to make sense of it.
-/// </summary>
+/// <summary>The whole account, in one archive somebody can walk away with.</summary>
 public sealed class TakeoutService
 {
     private readonly ShifterDbContext _db;

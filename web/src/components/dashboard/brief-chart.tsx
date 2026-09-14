@@ -12,15 +12,7 @@ import { ChartTip, CrossHair, useChartHover } from '@/components/charts/hover';
 import { niceCeiling, niceFloor, smoothPath } from '@/lib/charts/math';
 import { Money } from '@/components/ui/bits';
 
-/**
- * The brief's numbers, drawn: the month as a climbing line.
- *
- * Everything here is what the assistant already said in words one card up —
- * заработано столько-то, таким темпом выйдет столько-то, лучший день был
- * такой-то. The solid line is the fact (the same days the brief reads); the
- * dashed tail is the brief's own projectedMonth, drawn as a projection
- * because that is what it is. Hover answers with the day and the figure.
- */
+/** The brief's numbers, drawn: the month as a climbing line. */
 interface BriefFacts {
   monthEarned: number;
   projectedMonth: number | null;
@@ -80,10 +72,7 @@ export function BriefChart() {
     const projected: { day: string; value: number }[] = [];
     const target = facts?.projectedMonth ?? null;
 
-    // Drawn whichever way it points. This read `target > running`, so a month
-    // heading downwards — which is what a month in the red does — printed
-    // «−156 ₴ → ≈−1 561 ₴ к концу месяца» in its own header, explained the
-    // dashed line in its own footer, and then drew no dashes at all.
+    // Drawn whichever way it points.
     if (target !== null && target !== running && todayDay < daysInMonth) {
       const left = daysInMonth - todayDay;
 
@@ -104,15 +93,7 @@ export function BriefChart() {
 
   const all = [...line.fact, ...line.projected];
   const values = [...all.map((point) => point.value), facts.goal ?? 0];
-  /*
-   * The scale reaches wherever the month went, including down.
-   *
-   * Pinned at zero under a ceiling set by the goal, a month sitting at −₴156
-   * was a fifty-pixel scratch along the bottom of a 720×225 box, and a month
-   * projected to −₴1 561 had nowhere at all to be drawn. The same treatment
-   * the statistics chart got: both ends rounded, and a zero line whenever
-   * the floor is under it.
-   */
+  /* The scale reaches wherever the month went, including down. */
   const peak = niceCeiling(Math.max(1, ...values));
   const floor = niceFloor(Math.min(0, ...values));
   const span = peak - floor;

@@ -1,9 +1,4 @@
-/**
- * Appearance and behaviour, stored in the browser under the same key the
- * previous client used — an upgrade must not cost anyone their theme, accent
- * or saved colour schemes. None of this changes what the numbers are, only how
- * they are shown, and keeping it local means a preference applies instantly.
- */
+/** Appearance and behaviour, stored in the browser under the same key the previous client used — an upgrade must… */
 
 export type ThemeMode =
   | 'system'
@@ -43,10 +38,7 @@ export type ShiftLook = 'dot' | 'mark' | 'chip' | 'bar';
 /** Weekday number as Date#getDay counts it (0 = Sunday) to a template id. */
 export type WeekdayShifts = Partial<Record<number, number>>;
 
-/**
- * A named way of colouring a calendar: fixed to weekdays, or a run of colours
- * repeating from a start date — the two shapes people describe a week in.
- */
+/** A named way of colouring a calendar: fixed to weekdays, or a run of colours repeating from a start date — the… */
 export interface ColourScheme {
   id: string;
   name: string;
@@ -62,11 +54,7 @@ export interface Settings {
   hideAmounts: boolean;
   accent: string;
   currency: string;
-  /**
-   * The ISO code everything is restated in when a range mixes currencies —
-   * separate from the symbol above, which is only how money is printed. Empty
-   * turns the conversion off entirely.
-   */
+  /** The ISO code everything is restated in when a range mixes currencies — separate from the symbol above, which… */
   baseCurrency: string;
   currencyBefore: boolean;
   moneyDecimals: 0 | 2;

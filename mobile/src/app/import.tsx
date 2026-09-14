@@ -37,11 +37,7 @@ interface Draft extends ParsedRow {
 
 const NAME_KEY = 'shifter.rota-name';
 
-/**
- * The rota photographed on the wall becomes a month on the calendar. The
- * model reads it on the server, the phone shows what it found, and nothing
- * is written until a person has looked at the list.
- */
+/** The rota photographed on the wall becomes a month on the calendar. */
 export default function ImportScreen() {
   const router = useRouter();
   const scheme = useColorScheme();
@@ -159,10 +155,7 @@ export default function ImportScreen() {
     setBusy(true);
 
     try {
-      // A day at a time, the same PUT the day editor sends, so an import and
-      // a hand edit end up as the same kind of row. The day is sent whole, so
-      // whatever else is already on it — a note, a colour, cash tips — is
-      // carried over rather than erased by the import.
+      // A day at a time, the same PUT the day editor sends, so an import and a hand edit end up as the same kind of…
       for (const row of chosen) {
         const payload = toSavePayload(existing.get(row.date));
 

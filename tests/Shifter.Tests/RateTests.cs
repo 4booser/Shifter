@@ -4,12 +4,7 @@ using Xunit;
 
 namespace Shifter.Tests;
 
-/// <summary>
-/// Converting somebody's wages is the one place in this app where being
-/// approximately right is worse than refusing: a figure nobody can reproduce
-/// against their own bank statement is a figure they will act on and then
-/// discover was invented.
-/// </summary>
+/// <summary>Converting somebody's wages is the one place in this app where being approximately right is worse than…</summary>
 public class RateTests
 {
     private static readonly DateOnly On = new(2026, 8, 27);

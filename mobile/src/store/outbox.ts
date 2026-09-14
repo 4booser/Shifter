@@ -20,11 +20,7 @@ interface OutboxState {
 
 let sending = false;
 
-/**
- * Storage that cannot throw at the caller. The queue lives in memory as well
- * as on disk, so a failed write costs durability across a restart — never the
- * work itself, and never a red box over the calendar.
- */
+/** Storage that cannot throw at the caller. */
 const keepDown = async (pending: Pending[]) => {
   try {
     await AsyncStorage.setItem(KEY, JSON.stringify(pending));
@@ -33,15 +29,7 @@ const keepDown = async (pending: Pending[]) => {
   }
 };
 
-/**
- * The queue behind every write the calendar makes.
- *
- * A bartender records the shift in a basement, on the way home, in a lift.
- * Before this the answer to a dropped connection was «Не сохранилось» and a
- * stroke across twenty days was simply lost. Nothing held is ever shown as
- * money: a waiting day is drawn as waiting, because a day nobody has recorded
- * is not earnings.
- */
+/** The queue behind every write the calendar makes. */
 export const useOutbox = create<OutboxState>((set, get) => ({
   pending: [],
   refused: 0,

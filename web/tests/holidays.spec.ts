@@ -1,11 +1,6 @@
 import { holidaysForYear, holidaysInRange } from '@/lib/calendar/holidays';
 
-/**
- * Dates checked against the published calendars rather than against the code
- * that produces them. The moving feasts are the point: a table of fixed dates
- * needs no test, and an Easter calculation that drifts by a day is exactly the
- * kind of error nobody notices until somebody books leave on a working day.
- */
+/** Dates checked against the published calendars rather than against the code that produces them. */
 describe('holidays', () => {
   const on = (country: string, year: number, date: string): string | undefined =>
     holidaysForYear(country, year).get(date)?.name;

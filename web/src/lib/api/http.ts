@@ -3,12 +3,7 @@
 import { translate } from '@/lib/i18n';
 import { useSettings } from '@/lib/settings/store';
 
-/**
- * The one place requests go through: attaches the bearer token, renews the
- * session in place on a 401 and retries once, and turns the API's error
- * envelope into a message. Mirrors the old client's interceptor, because the
- * server's contract did not change.
- */
+/** The one place requests go through: attaches the bearer token, renews the session in place on a 401 and… */
 
 export interface AuthResponse {
   access_token: string;
@@ -54,14 +49,7 @@ export function readSession(): AuthResponse | null {
   }
 }
 
-/**
- * Write to storage, or carry on without it.
- *
- * Safari in private browsing throws on every setItem, and these throws sat in
- * the middle of signing in, clocking on and changing a setting. Losing the
- * write costs a person their session when the tab closes; letting the throw
- * escape costs them the action they were taking, right now, with no message.
- */
+/** Write to storage, or carry on without it. */
 export function remember(key: string, value: string): void {
   try {
     localStorage.setItem(key, value);
@@ -94,11 +82,7 @@ function notifySession(): void {
   for (const listener of sessionListeners) listener();
 }
 
-/**
- * Shares one refresh between everything that hits a 401 at the same time. The
- * server rotates tokens, so a second concurrent call would present an
- * already-spent token and fail — logging the user out mid-session.
- */
+/** Shares one refresh between everything that hits a 401 at the same time. */
 let inFlightRefresh: Promise<boolean> | null = null;
 
 async function refreshOnce(): Promise<boolean> {
@@ -146,11 +130,7 @@ async function errorFrom(response: Response): Promise<HttpError> {
   return new HttpError(response.status, response.statusText || 'Something went wrong.', null, retryAfter);
 }
 
-/**
- * The auth sentences, spoken in the reader's language. Keyed by the codes the
- * server now sends on its most-read errors; everything uncoded still falls
- * back to the server's own English words below.
- */
+/** The auth sentences, spoken in the reader's language. */
 const CODED: Record<string, string> = {
   'auth.invalid': 'Wrong login or password.',
   'auth.code': 'That code did not fit. Codes rotate every 30 seconds.',
@@ -170,20 +150,10 @@ export function apiErrorMessage(error: unknown): string {
     if (error.code in CODED) return say(CODED[error.code]);
   }
 
-  /*
-   * The server's own words for everything not yet coded — through the
-   * dictionary, which is the same shape it already has: the keys in there are
-   * English sentences, so a server sentence either finds its translation or
-   * falls out the other side unchanged. It used to fall straight onto the
-   * screen, and the day panel's «Cash tips cannot exceed the total.» greeted
-   * a Russian interface in English.
-   */
+  /* The server's own words for everything not yet coded — through the dictionary, which is the same shape it… */
   if (error instanceof HttpError) return say(error.message);
 
-  // A request that never landed. Saying which address was tried turns an
-  // unhelpful message into a diagnosis — and it read in English to every
-  // Russian and Ukrainian user, because this module is not a component and
-  // never went near the dictionary.
+  // A request that never landed.
   if (error instanceof TypeError) {
     return `${say('Cannot reach the server. Is it running?')} ${location.origin}`;
   }
@@ -191,10 +161,7 @@ export function apiErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : say('Something went wrong.');
 }
 
-/**
- * The dictionary, read outside React. The settings store is a plain zustand
- * store, so its language is available without a hook.
- */
+/** The dictionary, read outside React. */
 function say(key: string): string {
   return translate(useSettings.getState().settings.language, key);
 }
@@ -207,13 +174,7 @@ interface RequestOptions {
   signal?: AbortSignal;
 }
 
-/**
- * A file over the same authorized channel.
- *
- * The papers endpoints answer with bytes — a PDF, a CSV, a zip — and the
- * JSON-shaped api() would choke on them. Same bearer, same single refresh
- * retry, but the body comes back as a Blob for downloadBlob to hand over.
- */
+/** A file over the same authorized channel. */
 export async function apiBlob(path: string): Promise<Blob> {
   const call = async (): Promise<Response> => {
     const session = readSession();

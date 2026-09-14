@@ -15,19 +15,7 @@ import { Alert } from '@/components/ui/bits';
 import { Shell } from '@/components/layout/shell';
 import { pluralWord } from '@/lib/i18n/plural';
 
-/**
- * The biography that has been accumulating in the calendar all along.
- *
- * Somebody who has used this for two years is carrying a proven work history —
- * how long, where, how many shifts, what an hour was worth — and at an
- * interview they recite it from memory and round it wrong in both directions.
- * Nothing on this page is invented: every figure comes from days that were
- * actually recorded, which is exactly what makes it worth showing to somebody
- * who has no reason to believe you.
- *
- * Money is off by default. A CV that opens with what you were paid is a CV
- * that argues about the wrong thing first.
- */
+/** The biography that has been accumulating in the calendar all along. */
 export default function CvPage() {
   return (
     <Shell>
@@ -45,14 +33,7 @@ function Cv() {
   const [money, setMoney] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  /*
-   * Whose record this is.
-   *
-   * The page exists to be handed to somebody with no reason to believe you,
-   * and it never said a name — twelve months, two hundred and seventy-seven
-   * shifts and no clue whose. The payslip has carried one since it was
-   * written; this one simply never asked.
-   */
+  /* Whose record this is. */
   const [who, setWho] = useState('');
 
   useEffect(() => {
@@ -129,14 +110,8 @@ function Cv() {
         <>
           <section className="card reveal p-4">
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              {/* Grouped like every other four-figure number in the app: this
-                  page printed «2512 часов» over a table whose own total said
-                  the same thing, and a CV is the one screen shown to someone
-                  who has no reason to be forgiving about it. */}
-              {/* Every one of the four labels was a fixed string, so a person
-                  one month into the trade read «1 месяцев» and anybody with a
-                  single job read «1 мест». On the one page written to be
-                  handed to a stranger. */}
+              {/* Grouped like every other four-figure number in the app: this page printed «2512 часов» over a table whose own… */}
+              {/* Every one of the four labels was a fixed string, so a person one month into the trade read «1 месяцев» and… */}
               <Figure
                 value={history.months.toLocaleString(lang)}
                 label={`${pluralWord(lang, 'months', history.months)} ${t('in the trade')}`}
@@ -188,12 +163,7 @@ function Cv() {
             </ul>
           </section>
 
-          {/* ==== Помесячно: то, ради чего этот лист и распечатывают ====
-
-              Четыре круглых числа за три года никто не проверит и потому
-              никто им и не верит. Табель по месяцам проверяется строкой:
-              вот март, вот двадцать один отработанный день, вот сто
-              шестьдесят часов, вот сколько стоил час. */}
+          {/* ==== Помесячно: то, ради чего этот лист и распечатывают ==== Четыре круглых числа за три года никто не провери */}
           {history.by_month.length > 0 && (
             <section className="card reveal p-4">
               <h2 className="mb-1 text-[0.98rem] font-bold">{t('Month by month')}</h2>

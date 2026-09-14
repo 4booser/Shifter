@@ -10,13 +10,7 @@ using Shifter.Application.Features.Papers;
 
 namespace Shifter.Api.Controllers;
 
-/// <summary>
-/// "Download everything": the route every client already knows, serving the
-/// takeout archive. There used to be a second, thinner export living here —
-/// two archives claiming to be everything is one lie waiting to be noticed,
-/// so the richer one (per-entity JSON, expenses, goals, a README, a days.csv
-/// that reimports) is now the only one.
-/// </summary>
+/// <summary>"Download everything": the route every client already knows, serving the takeout archive.</summary>
 [Authorize]
 [Route("shifter/v1/account/export")]
 [EnableRateLimiting(HardeningExtensions.AuthPolicy)]

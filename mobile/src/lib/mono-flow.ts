@@ -1,23 +1,13 @@
 import { t } from '@/lib/i18n';
 
-/**
- * The arithmetic behind the flow picture, kept away from the drawing.
- *
- * This is the claim the picture makes — money in equals money out plus what
- * stayed — and a claim should be checkable without a renderer.
- */
+/** The arithmetic behind the flow picture, kept away from the drawing. */
 
 export interface FlowBand {
   name: string;
   total: number;
 }
 
-/**
- * The largest few, with everything else gathered rather than dropped.
- *
- * Dropping the tail would make the two sides stop adding up, which is the one
- * thing this picture must never do.
- */
+/** The largest few, with everything else gathered rather than dropped. */
 export const top = (bands: FlowBand[], keep: number): FlowBand[] => {
   const sorted = [...bands]
     .filter((band) => band.total > 0)
@@ -30,13 +20,7 @@ export const top = (bands: FlowBand[], keep: number): FlowBand[] => {
   return [...sorted.slice(0, keep), { name: t('остальное'), total: rest }];
 };
 
-/**
- * The two columns, made to add to the same number.
- *
- * Spend more than came in and the shortfall appears on the left as money taken
- * out of the balance, named — rather than the picture quietly failing to add
- * up and leaving the reader to work out why.
- */
+/** The two columns, made to add to the same number. */
 export function balance(
   sources: FlowBand[],
   categories: FlowBand[],

@@ -19,41 +19,25 @@ export interface Forecast {
   perDay: number;
   /** Whether the period is still running; a finished one has no forecast. */
   live: boolean;
-  /**
-   * The projection with the month's own history applied, and null where there
-   * is not enough of it.
-   *
-   * Null rather than a copy of `projected`: a caller has to decide what to
-   * show without a season and cannot accidentally present a flat number as a
-   * seasonal one.
-   */
+  /** The projection with the month's own history applied, and null where there is not enough of it. */
   seasonal: number | null;
 }
 
-/**
- * Projects a period forward. Two honest numbers rather than one guess: what is
- * already booked, and what the pace so far suggests. The blend fills only the
- * days that have nothing on them yet, so booked work is never double-counted.
- */
+/** Projects a period forward. */
 export function forecastFor(
   days: CalendarDayData[],
   from: string,
   to: string,
   /** Days covered by leave or sickness — outside the pace in both directions. */
   awayDays: ReadonlySet<string> = new Set(),
-  /**
-   * How this month usually compares with a typical one, from the person's own
-   * years. Null where there are not two of them — see seasonality.ts.
-   */
+  /** How this month usually compares with a typical one, from the person's own years. */
   season: number | null = null,
 ): Forecast {
   const today = todayKey();
   const everything = keysBetween(from, to);
   const byDate = new Map(days.map((day) => [day.date, day]));
 
-  // A fortnight of leave is not a fortnight of laziness: counting it as a
-  // zero-earning day would slander the pace, and projecting the pace onto
-  // it would promise money nobody will earn. It leaves both sums.
+  // A fortnight of leave is not a fortnight of laziness: counting it as a zero-earning day would slander the…
   const all = everything.filter((key) => !awayDays.has(key) || (byDate.get(key)?.earned ?? 0) > 0);
 
   const past = all.filter((key) => key <= today);
@@ -64,12 +48,7 @@ export function forecastFor(
     0,
   );
 
-  // Today counts as still ahead for anything booked on it. A shift happening
-  // this evening has earned nothing yet, so it is not in earnedSoFar; before
-  // this it was not in plannedAhead either, because that started at tomorrow —
-  // and the shift simply vanished from the forecast on the day it mattered
-  // most. Earned and planned never overlap on one day, so counting today in
-  // both sets cannot double anything.
+  // Today counts as still ahead for anything booked on it.
   const ahead = all.filter((key) => key >= today);
 
   const plannedAhead = ahead.reduce(
@@ -97,9 +76,7 @@ export function forecastFor(
     runRate: perDay * all.length,
     withPlanned: earnedSoFar + plannedAhead,
     projected: earnedSoFar + plannedAhead + perDay * emptyAhead,
-    // The correction lands only on the days with nothing on them. What is
-    // already earned happened, and what is already booked is booked at a
-    // stated rate — a season cannot argue with either.
+    // The correction lands only on the days with nothing on them.
     seasonal:
       season === null
         ? null
@@ -155,10 +132,7 @@ export function projectionSeries(
     const day = byDate.get(key);
 
     if (key === today) {
-      // The line starts at today, and it starts with whatever is still booked
-      // for tonight. Without this the first point sat below the last recorded
-      // day and the curve dipped on the day the shift was actually being
-      // worked. The pace is not applied here: most of today is already gone.
+      // The line starts at today, and it starts with whatever is still booked for tonight.
       running += day?.planned ?? 0;
 
       points.push({ label: key.slice(8), value: running });

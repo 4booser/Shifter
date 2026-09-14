@@ -7,12 +7,7 @@ using Xunit;
 
 namespace Shifter.Tests;
 
-/// <summary>
-/// Reading a stranger's payload. Everything here is about the gap between what
-/// a till emits and what the calendar means: envelopes to see past, cents to
-/// divide, dates written six different ways, and fields the sender simply does
-/// not have.
-/// </summary>
+/// <summary>Reading a stranger's payload.</summary>
 public class WebhookMappingTests
 {
     private static JsonElement Body(string json)
@@ -53,10 +48,7 @@ public class WebhookMappingTests
         Assert.Equal(3, line.Quantity);
     }
 
-    /// <summary>
-    /// A partial delivery has to stay partial all the way through: null here is
-    /// what stops a payload of tips from erasing the note under it.
-    /// </summary>
+    /// <summary>A partial delivery has to stay partial all the way through: null here is what stops a payload of tips from…</summary>
     [Fact]
     public void Leaves_fields_the_payload_never_mentioned_as_null()
     {
@@ -110,10 +102,7 @@ public class WebhookMappingTests
         Assert.Equal([3, 11], payload.Lines.Select(line => line.Quantity));
     }
 
-    /// <summary>
-    /// For the fields a sender never has. Without it, an endpoint whose till
-    /// only ever reports one shift could not say which one.
-    /// </summary>
+    /// <summary>For the fields a sender never has.</summary>
     [Fact]
     public void Takes_a_literal_for_a_field_the_sender_does_not_send()
     {
@@ -168,11 +157,7 @@ public class WebhookMappingTests
         Assert.Equal(new DateOnly(2026, 8, 20), payload.Date);
     }
 
-    /// <summary>
-    /// A till closing after midnight files the night under the date on its own
-    /// wall clock. Converting to UTC first would move a whole evening's takings
-    /// onto the day before.
-    /// </summary>
+    /// <summary>A till closing after midnight files the night under the date on its own wall clock.</summary>
     [Fact]
     public void Keeps_the_senders_own_day_when_the_timestamp_carries_an_offset()
     {
@@ -220,10 +205,7 @@ public class WebhookMappingTests
         Assert.Equal(expected, payload.Worked);
     }
 
-    /// <summary>
-    /// Unrecognised is not "no". A timesheet whose flag says "OK" should be
-    /// read as worked, which is the default, rather than filed as a plan.
-    /// </summary>
+    /// <summary>Unrecognised is not "no".</summary>
     [Fact]
     public void Falls_back_to_worked_when_the_flag_says_something_unfamiliar()
     {
@@ -258,11 +240,7 @@ public class WebhookMappingTests
             """));
     }
 
-    /// <summary>
-    /// A daily summary written by a person, rather than exported by a till:
-    /// the positions are a plain map of name to how many. Refusing it would
-    /// mean asking them to rewrite their report to suit us.
-    /// </summary>
+    /// <summary>A daily summary written by a person, rather than exported by a till: the positions are a plain map of name to…</summary>
     [Fact]
     public void Reads_positions_given_as_a_map_of_name_to_quantity()
     {

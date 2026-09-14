@@ -27,8 +27,6 @@ test('a wrong password answers through the code map, not the raw envelope', asyn
   await page.locator('input[type="password"]').fill('WrongWrong1@');
   await page.getByRole('button', { name: 'Sign in' }).click();
 
-  // The dictionary phrase for auth.invalid — not the server's own
-  // «Invalid login or password.» fallback. Seeing this string proves the
-  // code travelled the whole way: middleware → envelope → client map.
+  // The dictionary phrase for auth.invalid — not the server's own «Invalid login or password.» fallback.
   await expect(page.getByText('Wrong login or password.')).toBeVisible({ timeout: 10_000 });
 });

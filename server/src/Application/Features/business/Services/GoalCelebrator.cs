@@ -5,11 +5,7 @@ using Shifter.Application.Common.Text;
 
 namespace Shifter.Application.Features.business.Services;
 
-/// <summary>
-/// Turns a crossed goal into one push. Runs after a day is saved — the only
-/// moment earned money can change — and stamps the goal so each period is
-/// cheered exactly once, restarts and retries included.
-/// </summary>
+/// <summary>Turns a crossed goal into one push.</summary>
 public sealed class GoalCelebrator
 {
     /// <summary>Year on purpose excluded: summing 365 days on every save is not worth it.</summary>
@@ -48,11 +44,7 @@ public sealed class GoalCelebrator
 
     public static bool Crossed(Goal goal, decimal earned) => earned >= goal.Amount;
 
-    /// <param name="earnedOver">
-    /// Supplied by the caller because the caller (the day handler) is the one
-    /// who knows how to price a stretch of days; taking it as a function keeps
-    /// this class free of a circular dependency on it.
-    /// </param>
+    /// Supplied by the caller because the caller (the day handler) is the one who knows how to price a stretch of…
     public async Task CheckAsync(
         int userId,
         DateOnly date,

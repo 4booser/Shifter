@@ -6,10 +6,7 @@ using Xunit;
 
 namespace Shifter.Tests;
 
-/// <summary>
-/// The overtime rule: hours past the weekly threshold are paid at the
-/// multiplier, and only the part past the line is topped up.
-/// </summary>
+/// <summary>The overtime rule: hours past the weekly threshold are paid at the multiplier, and only the part past the…</summary>
 public class DayHandlerOvertimeTests
 {
     private readonly FakeShifterQuery _query = new();
@@ -144,10 +141,7 @@ public class DayHandlerOvertimeTests
         Assert.Equal(800m, result.overtime_earned);
     }
 
-    /// <summary>
-    /// A salaried shift has no hourly base to multiply. The hours are still
-    /// reported as overtime, but no money is invented for them.
-    /// </summary>
+    /// <summary>A salaried shift has no hourly base to multiply.</summary>
     [Fact]
     public async Task ASalariedShiftEarnsNoOvertimeMoney()
     {
@@ -186,16 +180,7 @@ public class DayHandlerOvertimeTests
         Assert.Equal(48, result.planned_hours);
     }
 
-    /// <summary>
-    /// A place created before the overtime rule existed got 0 in the column,
-    /// because that is what the type's zero is. The pay is
-    /// `hours × rate × (multiplier − 1)`, so 0 makes the factor −1 and every
-    /// overtime hour subtracts an hour's pay — reported, to the person it
-    /// happened to, as what the overtime brought them.
-    ///
-    /// The rows are repaired by a migration. This is the other half: the sum
-    /// itself refuses to run backwards, whatever any row holds.
-    /// </summary>
+    /// <summary>A place created before the overtime rule existed got 0 in the column, because that is what the type's zero is.</summary>
     [Fact]
     public async Task Overtime_never_takes_money_away_however_bad_the_row_is()
     {
@@ -225,13 +210,7 @@ public class DayHandlerOvertimeTests
         Assert.Equal(4800m, result.total_earned);
     }
 
-    /// <summary>
-    /// The other half of the same defect. The weekly threshold arrived on
-    /// existing rows as 0, and `place?.OvertimeWeeklyHours ?? 40` only catches
-    /// a place that is absent, not one holding a zero — so the first hour of
-    /// the week was overtime and so was every hour after it. Together with the
-    /// zero multiplier it cancelled the month's pay outright.
-    /// </summary>
+    /// <summary>The other half of the same defect.</summary>
     [Fact]
     public async Task A_place_with_no_threshold_uses_the_ordinary_week()
     {

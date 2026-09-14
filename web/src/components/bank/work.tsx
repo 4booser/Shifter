@@ -8,14 +8,7 @@ import { MonoStatementItem } from '@/lib/mono/mono';
 import { WorkedDay, closingCosts, realHourly, spendingByDayKind } from '@/lib/mono/mono-work';
 import { Money } from '@/components/ui/bits';
 
-/**
- * The cards that make the bank belong inside Shifter rather than beside it:
- * every one needs both the statement and the rota, and no standalone banking
- * app has the second.
- *
- * All three go silent without enough of either. A card that guessed would be
- * mixing an estimate into a fact.
- */
+/** The cards that make the bank belong inside Shifter rather than beside it: every one needs both the statement… */
 /** Машинные виды расхода из общей арифметики — в человеческие фразы. */
 const WORK_EXPENSE: Record<string, string> = {
   transport: 'Travel',
@@ -83,9 +76,7 @@ export function BankWork({
             <h3 className="card-head-title">{t('The price of a close')}</h3>
           </div>
 
-          {/* The venue pays the night premium and the person pays the fare,
-              and nobody had ever put the two numbers side by side because
-              they live in different applications. */}
+          {/* The venue pays the night premium and the person pays the fare, and nobody had ever put the two numbers side… */}
           <p className="card-body text-[0.92rem]">
             {closing.closings} {t('closes ended in')}{' '}
             <strong className="tabular"><Money value={closing.ride} /></strong>{' '}
@@ -132,9 +123,7 @@ export function BankWork({
               <div className="mt-2 flex flex-col gap-0.5">
                 {byKind.differences.slice(0, 3).map((row) => (
                   <div key={row.kind} className="flex justify-between gap-2 text-[0.82rem] text-muted">
-                    {/* Вид расхода приходит из общей арифметики машинным
-                        словом — 'transport', 'food', 'other'. В русском
-                        интерфейсе они так и печатались по-английски. */}
+                    {/* Вид расхода приходит из общей арифметики машинным словом — 'transport', 'food', 'other'. */}
                     <span>{t(WORK_EXPENSE[row.kind] ?? row.kind)}</span>
                     <span className="tabular">
                       <Money value={Math.round(row.onShift)} /> {t('vs')}{' '}

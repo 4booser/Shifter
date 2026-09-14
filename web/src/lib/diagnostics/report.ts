@@ -1,16 +1,4 @@
-/**
- * Sends the crashes the page collected before React existed.
- *
- * The inline script in the document head has been pushing errors into
- * `window.__errs` since the first line of script on the page — and until now
- * they went nowhere. Which meant a white screen was something we heard about
- * from the person it happened to, days later, described from memory.
- *
- * Deliberately not a monitoring client: one request, once, on the way in. No
- * retry, no queue, no beacon on unload. A page that is broken enough to crash
- * is not a page to hang more machinery off, and a report that fails to send is
- * a report nobody needed badly enough to chase.
- */
+/** Sends the crashes the page collected before React existed. */
 
 const SENT = 'shifter.errs.sent';
 
@@ -23,9 +11,7 @@ export function reportCollectedErrors(): void {
 
   if (errors === undefined || errors.length === 0) return;
 
-  // Same faults on a reload are the same faults. Without this, a page that
-  // crashes on load reports itself again every time somebody retries — which
-  // is exactly when people retry most.
+  // Same faults on a reload are the same faults.
   const signature = errors.join('|');
 
   try {

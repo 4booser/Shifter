@@ -6,13 +6,7 @@ import { t } from '@/lib/i18n';
 import { bestWeekday, WeekdayRate } from '@/lib/rhythm';
 import { money } from '@/lib/types';
 
-/**
- * What each day of the week is worth, by the hour.
- *
- * The screen already says which hour pays best. Which day pays best is the
- * more useful question, because it is the one somebody answers every week
- * when the rota goes up — and until now they answered it from memory.
- */
+/** What each day of the week is worth, by the hour. */
 export function Weekdays({ rows, palette }: { rows: WeekdayRate[]; palette: Palette }) {
   const styles = makeStyles(palette);
   const peak = Math.max(1, ...rows.map((row) => row.perHour ?? 0));
@@ -37,9 +31,7 @@ export function Weekdays({ rows, palette }: { rows: WeekdayRate[]; palette: Pale
               </Text>
 
               <View style={styles.track}>
-                {/* Nothing at all for a day nobody has worked: an empty column
-                    is the honest shape for "no answer", and a stub would read
-                    as a bad day. */}
+                {/* Nothing at all for a day nobody has worked: an empty column is the honest shape for "no answer", and a stub… */}
                 {row.perHour !== null && (
                   <View
                     style={[

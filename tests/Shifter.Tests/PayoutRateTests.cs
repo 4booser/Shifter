@@ -6,14 +6,7 @@ using Xunit;
 
 namespace Shifter.Tests;
 
-/// <summary>
-/// A payment of 18 500 złoty in August is a fact. What it was worth is also a
-/// fact, and re-deriving it every time somebody opens the page means last
-/// August's wage changes every morning with the exchange rate.
-///
-/// So the rate is written down beside the money, once, at the moment the
-/// payment is recorded — and nothing afterwards moves it.
-/// </summary>
+/// <summary>A payment of 18 500 złoty in August is a fact.</summary>
 public class PayoutRateTests
 {
     private static readonly DateOnly Received = new(2026, 8, 10);

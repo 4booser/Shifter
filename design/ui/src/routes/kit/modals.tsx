@@ -4,13 +4,7 @@ import { Plate, Sheet } from '@/components/frame';
 import { Button, Field, Modal, Pills, Switch } from '@/components/ui/kit';
 import { cn } from '@/lib/utils';
 
-/**
- * Окна.
- *
- * Все семнадцать собираются из одних и тех же частей: заголовок, строка
- * пояснения, поля, одно латунное действие. Если для окна понадобилась новая
- * деталь — значит его придумали неправильно.
- */
+/** Окна. */
 function Modals() {
   return (
     <Sheet

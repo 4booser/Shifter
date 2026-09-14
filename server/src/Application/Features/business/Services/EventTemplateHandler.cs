@@ -8,17 +8,7 @@ using Shifter.Infrastructure.Repositories.Interfaces;
 
 namespace Shifter.Application.Features.business.Services;
 
-/// <summary>
-/// The palette for everything on the calendar that is not a shift. It exists
-/// for the same reason the shift palette does: a week is filled by picking a
-/// thing and putting it on days, and typing «английский, 19:00–20:30, 400»
-/// out again every Tuesday is exactly the friction that stops people filling
-/// the calendar in at all.
-///
-/// The money it carries points outward. Nothing here is ever added to what a
-/// week earned — the day earned what it earned, and the driving lesson is a
-/// second figure beside it.
-/// </summary>
+/// <summary>The palette for everything on the calendar that is not a shift.</summary>
 public partial class EventTemplateHandler : IEventTemplateHandler
 {
     private readonly IShifterCommand _command;
@@ -62,12 +52,7 @@ public partial class EventTemplateHandler : IEventTemplateHandler
         return ToDto(item);
     }
 
-    /// <summary>
-    /// Archiving, not deleting: the events already on the calendar carry their
-    /// own copy of everything, so the row could go safely — but somebody who
-    /// stops taking lessons in June wants the choice gone from the palette,
-    /// not the spring erased from the year.
-    /// </summary>
+    /// <summary>Archiving, not deleting: the events already on the calendar carry their own copy of everything, so the row…</summary>
     public async Task ArchiveAsync(int userId, int id, bool archived, CancellationToken ct)
     {
         var item = await _query.GetEventTemplateAsync(userId, id, ct)
@@ -140,11 +125,7 @@ public partial class EventTemplateHandler : IEventTemplateHandler
         _ => throw new ValidationException("kind must be ordinary, vacation, sick or dayoff."),
     };
 
-    /// <summary>
-    /// Hours the palette can print beside the name, the way a shift shows its
-    /// span. A lesson that runs past midnight is measured the same way a night
-    /// shift is — the clock wrapping is not a negative evening.
-    /// </summary>
+    /// <summary>Hours the palette can print beside the name, the way a shift shows its span.</summary>
     private static double Hours(TimeOnly? start, TimeOnly? end)
     {
         if (start is null || end is null) return 0;

@@ -6,13 +6,7 @@ using Xunit;
 
 namespace Shifter.Tests;
 
-/// <summary>
-/// A payment has to have happened on a day. DateOnly has no null, so a client
-/// that left the field out sent the type's zero and the server filed a
-/// payment received on the first of January in the year one — a payment that
-/// exists, shows up in the list as 01.01.0001, and matches no period any work
-/// was done in, so no reconciliation ever finds it.
-/// </summary>
+/// <summary>A payment has to have happened on a day.</summary>
 public class PayoutDateTests
 {
     private static PayoutHandler Made(out FakeShifterQuery query)

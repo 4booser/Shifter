@@ -5,11 +5,7 @@ import { useState } from 'react';
 import { useI18n } from '@/lib/i18n';
 import { pluralWord } from '@/lib/i18n/plural';
 
-/**
- * "5 минут назад" that flips to the exact date on a tap and back. Relative
- * time answers the question people actually have — is this listing fresh —
- * and the absolute date stays one tap away for the sceptics.
- */
+/** "5 минут назад" that flips to the exact date on a tap and back. */
 export function TimeAgo({ iso }: { iso: string }) {
   const { t, lang } = useI18n();
   const [exact, setExact] = useState(false);

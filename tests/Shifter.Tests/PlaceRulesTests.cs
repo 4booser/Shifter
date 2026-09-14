@@ -6,11 +6,7 @@ using Xunit;
 
 namespace Shifter.Tests;
 
-/// <summary>
-/// Two house rules that live on a place rather than on every template: the
-/// unpaid break a long shift earns automatically, and the hourly floor the
-/// person will not go under there. Both change money, so both are pinned.
-/// </summary>
+/// <summary>Two house rules that live on a place rather than on every template: the unpaid break a long shift earns…</summary>
 public class PlaceRulesTests
 {
     private readonly FakeShifterQuery _query = new();

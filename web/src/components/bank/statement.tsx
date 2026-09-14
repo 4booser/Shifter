@@ -9,14 +9,7 @@ import { categoryStyle } from '@/lib/mono/spend-viz';
 import { useMono } from '@/lib/mono/store';
 import { Money } from '@/components/ui/bits';
 
-/**
- * The statement itself — the rows every figure above is made of.
- *
- * Every bank app has this list; the analysis without it asks to be trusted.
- * Search matches the description; the day headers carry the day's own
- * signed total; the chip carries the category's name and colour so a row can
- * be read back against the ring at the top of the page.
- */
+/** The statement itself — the rows every figure above is made of. */
 export function StatementCard({
   items,
   from,
@@ -153,10 +146,7 @@ export function StatementCard({
                     <span className="min-w-0 flex-1 truncate text-[0.88rem]" title={item.description}>
                       {item.description}
                     </span>
-                    {/* Категория словом, а не только цветом точки: по цвету её
-                        знает тот, кто уже посмотрел кольцо наверху. Своей
-                        колонкой — приклеенная к названию, она вставала на
-                        разном месте в каждой строке, и список читался рваным. */}
+                    {/* Категория словом, а не только цветом точки: по цвету её знает тот, кто уже посмотрел кольцо наверху. */}
                     <span className="hidden w-44 flex-none sm:block">
                       <span className="chip max-w-full">
                         <span className="truncate">{item.amount > 0 ? t('arrivals') : category}</span>
@@ -172,10 +162,7 @@ export function StatementCard({
                         {item.amount > 0 ? '+' : ''}
                         <Money value={fromMinor(item.amount)} />
                       </span>
-                      {/* Кешбэк тем же форматом, что и сумма рядом. Голое «+4.00»
-                          без валюты и с двумя знаками посреди строки, где всё
-                          остальное в целых гривнах, читается как непонятная
-                          добавка к покупке, а не как возврат. */}
+                      {/* Кешбэк тем же форматом, что и сумма рядом. */}
                       {item.cashbackAmount > 0 && (
                         <span className="tabular block text-[0.66rem] leading-tight text-good-read" title={t('Cashback returned')}>
                           +<Money value={fromMinor(item.cashbackAmount)} />

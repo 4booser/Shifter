@@ -5,13 +5,7 @@ using Xunit;
 
 namespace Shifter.Tests;
 
-/// <summary>
-/// What a listed shift is worth against the hours somebody already works.
-///
-/// A board full of rates tells nobody anything on its own: 250 an hour is
-/// generous in one city and a pay cut in another, and which of those it is
-/// depends entirely on who is reading.
-/// </summary>
+/// <summary>What a listed shift is worth against the hours somebody already works.</summary>
 public class GigWorthTests
 {
     private static LocationTotalDto Mine(double hours, decimal earned)

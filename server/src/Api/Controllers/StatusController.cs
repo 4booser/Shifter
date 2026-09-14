@@ -11,15 +11,7 @@ using Shifter.Infrastructure.Persistence.DbContexts;
 
 namespace Shifter.Api.Controllers;
 
-/// <summary>
-/// What the service can say about itself, out loud. A status page that only
-/// the owner can read is a diary; this one answers anybody, and it answers
-/// with facts it can actually prove — can each database be reached, how long
-/// has this process been up, which build is running.
-///
-/// Nothing here counts users or reveals data: an uptime page is a promise
-/// about availability, not a window into the tenants.
-/// </summary>
+/// <summary>What the service can say about itself, out loud.</summary>
 [AllowAnonymous]
 [Route("shifter/v1/status")]
 public class StatusController : ControllerBase
@@ -40,17 +32,7 @@ public class StatusController : ControllerBase
         _log = log;
     }
 
-    /// <summary>
-    /// A crash the browser saw. The page has collected these since the first
-    /// line of script on it, and until now they went nowhere — which meant a
-    /// white screen was something we heard about from the person it happened
-    /// to, days later, described from memory.
-    ///
-    /// Anonymous because a page can break before anybody has logged in, and
-    /// scrubbed on the way in because a stack trace from a live page can carry
-    /// an address or a token in it. Nothing here identifies a person: what
-    /// broke, on which page, on which build.
-    /// </summary>
+    /// <summary>A crash the browser saw.</summary>
     [HttpPost]
     [Route("client-error")]
     [EnableRateLimiting(HardeningExtensions.ClientErrorPolicy)]
@@ -73,18 +55,7 @@ public class StatusController : ControllerBase
     /// <summary>What a broken page is allowed to tell us about itself.</summary>
     public record ClientErrorDto(string? message, string? path, string? build);
 
-    /// <summary>
-    /// One screen was opened. Nothing about who opened it.
-    ///
-    /// The alternative was an analytics SDK: somebody else's code, watching
-    /// everything, reporting to a third party — in an application whose whole
-    /// argument is that it does not do that. This writes one integer.
-    ///
-    /// The name comes off a fixed list rather than out of the request, so a
-    /// caller cannot turn this into free-text storage or smuggle an
-    /// identifier through it. Anonymous on purpose: attaching a token would
-    /// make the counter attributable, which is the one thing it must not be.
-    /// </summary>
+    /// <summary>One screen was opened.</summary>
     [HttpPost]
     [Route("seen")]
     [EnableRateLimiting(HardeningExtensions.ContactPolicy)]
@@ -127,10 +98,7 @@ public class StatusController : ControllerBase
         return NoContent();
     }
 
-    /// <summary>
-    /// The counters, for whoever wants to see what this application knows
-    /// about its own use — which is exactly this and no more.
-    /// </summary>
+    /// <summary>The counters, for whoever wants to see what this application knows about its own use — which is exactly this…</summary>
     [HttpGet]
     [Route("seen")]
     public async Task<ActionResult<object>> SeenSoFar(
@@ -153,11 +121,7 @@ public class StatusController : ControllerBase
         return Ok(new { from = start, to = end, screens = rows });
     }
 
-    /// <summary>
-    /// The screens this will count. A fixed list because the alternative is
-    /// storing whatever a caller sends, and whatever a caller sends is where
-    /// an identifier ends up.
-    /// </summary>
+    /// <summary>The screens this will count.</summary>
     private static readonly HashSet<string> Screens =
     [
         "calendar", "schedule", "gigs", "payouts", "stats", "report", "assistant",

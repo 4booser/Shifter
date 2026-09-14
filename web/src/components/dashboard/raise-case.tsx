@@ -6,19 +6,7 @@ import { assistantApi, RaiseCase } from '@/lib/api/assistant';
 import { useI18n } from '@/lib/i18n';
 import { useMoney } from '@/lib/settings/money';
 
-/**
- * The conversation about money, prepared in advance.
- *
- * People do not fail to ask for a raise because they lack nerve. They fail
- * because when the moment comes they have nothing but a feeling, and a feeling
- * loses to "business has been slow" every time. The evidence has been
- * accumulating here the whole while — how long the rate has stood still, how
- * this place compares to the others they actually work, how many shifts they
- * covered for somebody else at short notice.
- *
- * It says "not yet" out loud when that is the answer. An app that talks
- * somebody into a conversation they will lose has done them harm.
- */
+/** The conversation about money, prepared in advance. */
 export function RaiseCasePanel() {
   const { t, n } = useI18n();
   const { format } = useMoney();

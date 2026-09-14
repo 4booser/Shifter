@@ -79,11 +79,7 @@ export const webhookApi = {
   deliveries: (id: number) => api<Delivery[]>(`${HOOKS}/${id}/deliveries`),
   replay: (deliveryId: number) =>
     api<IngestResult>(`${HOOKS}/deliveries/${deliveryId}/replay`, { method: 'POST', body: {} }),
-  /**
-   * The body goes up as the raw text the person typed, not as an object: it is
-   * somebody else's JSON, and re-serialising it would quietly repair what we
-   * are asking the server to judge.
-   */
+  /** The body goes up as the raw text the person typed, not as an object: it is somebody else's JSON, and… */
   test: (id: number, body: string, apply: boolean) =>
     api<IngestResult>(`${HOOKS}/${id}/test?apply=${apply}`, { rawBody: body }),
 };

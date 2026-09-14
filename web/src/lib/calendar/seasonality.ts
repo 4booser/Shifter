@@ -1,18 +1,6 @@
 import { CalendarDayData } from './models';
 
-/**
- * The year's shape, from somebody's own months.
- *
- * "December is always plus forty" is knowledge everybody with two years in the
- * trade has and nobody with one year does — and the app has been giving both
- * of them the same flat forecast. It is the single most useful thing a second
- * year of records contains, and it was sitting there unread.
- *
- * Everything here is that person's own history. No industry averages, no
- * assumptions about hospitality in general: a bar on a ski slope and a canteen
- * in an office block have opposite Decembers, and only their own records know
- * which is which.
- */
+/** The year's shape, from somebody's own months. */
 
 export interface MonthShape {
   /** 1..12. */
@@ -21,10 +9,7 @@ export interface MonthShape {
   years: number;
   /** Average earned in this month, across those years. */
   average: number;
-  /**
-   * Against a typical month of the same years. 1.4 is "forty per cent better
-   * than usual"; 1 is unremarkable.
-   */
+  /** Against a typical month of the same years. */
   index: number;
 }
 
@@ -47,13 +32,7 @@ const monthlyTotals = (days: CalendarDayData[], upTo: string): Map<string, numbe
   return totals;
 };
 
-/**
- * How each month of the year compares with a typical one.
- *
- * Only months with at least <paramref name="leastYears" /> years behind them.
- * One December is a December, not a pattern, and calling it one would turn a
- * good Christmas into a promise.
- */
+/** How each month of the year compares with a typical one. */
 export function yearShape(
   days: CalendarDayData[],
   today: string,
@@ -99,14 +78,7 @@ export interface SameMonthLastYear {
   daysWorked: number;
 }
 
-/**
- * The same month a year ago, and the same part of it.
- *
- * Comparing a half-finished March against a whole one says nothing except that
- * March is not over. So the earlier month is cut at the same day of the month
- * the current one has reached, and both figures are given: the whole of it,
- * and the part that matches.
- */
+/** The same month a year ago, and the same part of it. */
 export function sameMonthLastYear(
   days: CalendarDayData[],
   today: string,
@@ -130,22 +102,13 @@ export function sameMonthLastYear(
   };
 }
 
-/**
- * The seasonal correction for a month, or null where there is not enough
- * history to make one.
- *
- * Returning null rather than 1 is the point: a caller has to decide what to do
- * without a correction, and cannot accidentally present a flat forecast as a
- * seasonal one.
- */
+/** The seasonal correction for a month, or null where there is not enough history to make one. */
 export function seasonalIndex(shape: MonthShape[], month: number): number | null {
   const found = shape.find((row) => row.month === month);
 
   if (found === undefined) return null;
 
-  // A correction beyond a half in either direction is almost always one
-  // freakish month rather than a season, and applying it would turn a
-  // forecast into a rumour.
+  // A correction beyond a half in either direction is almost always one freakish month rather than a season, and…
   return Math.min(1.5, Math.max(0.5, found.index));
 }
 
@@ -154,26 +117,11 @@ export interface Cushion {
   fat: { month: number; surplus: number }[];
   /** Months that usually run under, with the shortfall. */
   lean: { month: number; shortfall: number }[];
-  /**
-   * Set aside this share of a fat month's earnings and the lean months even
-   * out to the typical level. One number, because a rule with one number gets
-   * followed and a table does not.
-   */
+  /** Set aside this share of a fat month's earnings and the lean months even out to the typical level. */
   saveShare: number | null;
 }
 
-/**
- * The seasonal cushion: what to put aside in December so January is livable.
- *
- * Their own months only, like everything seasonal here — a ski bar and an
- * office canteen have opposite winters. And strictly a transfer between a
- * person's own months: no yield, no products, not advice. The arithmetic is
- * a bathtub filling and draining, nothing more.
- *
- * Null while the year has no shape, or while it has no lean months to save
- * for — telling somebody with a flat year to build a cushion is inventing a
- * problem to solve.
- */
+/** The seasonal cushion: what to put aside in December so January is livable. */
 export function seasonalCushion(shape: MonthShape[]): Cushion | null {
   if (shape.length < 6) return null;
 
@@ -195,9 +143,7 @@ export function seasonalCushion(shape: MonthShape[]): Cushion | null {
   const shortfallTotal = lean.reduce((sum, row) => sum + row.shortfall, 0);
   const fatEarnings = fat.reduce((sum, row) => sum + row.surplus + typical, 0);
 
-  // The share of a fat month's whole take that covers the lean months' whole
-  // gap — capped where the gap is deeper than the surplus, because "save
-  // more than the surplus" is not advice, it is arithmetic failing politely.
+  // The share of a fat month's whole take that covers the lean months' whole gap — capped where the gap is deeper…
   const needed = Math.min(shortfallTotal, surplusTotal);
 
   return {

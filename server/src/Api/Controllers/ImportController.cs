@@ -8,11 +8,7 @@ using Shifter.Application.Features.Import;
 
 namespace Shifter.Api.Controllers;
 
-/// <summary>
-/// The rota photographed on the wall becomes rows on the calendar. This
-/// endpoint only reads — what lands on days is decided by a person on the
-/// preview screen, and written through the ordinary day-save path.
-/// </summary>
+/// <summary>The rota photographed on the wall becomes rows on the calendar.</summary>
 [Authorize]
 [Route("shifter/v1/import")]
 // A model call costs money, and this one is the most expensive in the app —
@@ -40,13 +36,7 @@ public class ImportController : ControllerBase
         _csv = csv;
     }
 
-    /// <summary>
-    /// Reads a file and writes nothing.
-    ///
-    /// The whole point of the two-step shape: a confident import that put tips
-    /// in the wage column would be indistinguishable from a correct one a
-    /// month later, so a person sees the grid before anything is saved.
-    /// </summary>
+    /// <summary>Reads a file and writes nothing.</summary>
     [HttpPost("csv/preview")]
     [RequestSizeLimit(CsvMaxBytes + 1024)]
     public async Task<ActionResult> CsvPreview([FromForm] IFormFile file, CancellationToken ct)
@@ -100,17 +90,7 @@ public class ImportController : ControllerBase
         });
     }
 
-    /// <summary>
-    /// A photographed receipt, read into the beginnings of an expense.
-    ///
-    /// An expense gets recorded when somebody remembers it, and two days later
-    /// nobody does. The receipt is in a pocket exactly when it is worth asking
-    /// about, which is the whole of why this exists.
-    ///
-    /// Every field comes back nullable and the form on the other side stays
-    /// editable whatever happens: a reader that fails by clearing the form is
-    /// worse than no reader at all.
-    /// </summary>
+    /// <summary>A photographed receipt, read into the beginnings of an expense.</summary>
     [HttpPost("receipt")]
     [RequestSizeLimit(MaxBytes + 1024)]
     public async Task<ActionResult> Receipt(

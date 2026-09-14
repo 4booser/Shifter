@@ -3,19 +3,10 @@ using Shifter.Application.Features.business.DTOs;
 
 namespace Shifter.Application.Features.Assistant;
 
-/// <summary>
-/// What the assistant does not know and could simply ask. Every gap here is a
-/// hole in somebody's own record, not a preference survey: a worked day with
-/// no tips, a percentage shift with no takings, a pool with no amount. The
-/// point is that answering one improves the arithmetic on every screen —
-/// asking questions that change nothing is how an assistant becomes noise.
-/// </summary>
+/// <summary>What the assistant does not know and could simply ask.</summary>
 public static class AssistantGaps
 {
-    /// <summary>
-    /// A question and everything needed to write the answer back. Kind decides
-    /// which field the answer lands in; nothing else about it is guessed.
-    /// </summary>
+    /// <summary>A question and everything needed to write the answer back.</summary>
     public sealed record Gap(
         string id,
         string kind,

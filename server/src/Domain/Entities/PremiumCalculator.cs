@@ -1,23 +1,9 @@
 namespace Shifter.Domain.Entities;
 
-/// <summary>
-/// Night and public-holiday premiums: the two extras Ukrainian hospitality
-/// actually pays and nobody counts by hand. Pure arithmetic on purpose —
-/// the money a night shift is worth should be provable, not observed.
-/// </summary>
+/// <summary>Night and public-holiday premiums: the two extras Ukrainian hospitality actually pays and nobody counts by…</summary>
 public static class PremiumCalculator
 {
-    /// <summary>
-    /// Hours of a shift that fall inside the night window. The window wraps
-    /// midnight (22:00–06:00 is the usual one) and so may a shift, so both are
-    /// unrolled onto a minute line and intersected on two consecutive days.
-    /// </summary>
-    /// <summary>
-    /// How long a shift runs on the clock, wrapping midnight. This is the base
-    /// the night hours are measured against, which is not the same as the base
-    /// the wage is measured against — the difference is the unpaid break, and
-    /// paying the night premium through it was worth about 35 a shift.
-    /// </summary>
+    /// <summary>Hours of a shift that fall inside the night window.</summary>
     public static double Span(TimeOnly start, TimeOnly end)
     {
         double minutes = end.ToTimeSpan().TotalMinutes - start.ToTimeSpan().TotalMinutes;
@@ -55,13 +41,7 @@ public static class PremiumCalculator
         return Math.Round(minutes / 60, 4);
     }
 
-    /// <summary>
-    /// What the two premiums add to one shift. Hourly rates only, for the same
-    /// reason overtime is hourly-only: a per-day or per-month wage has no
-    /// hourly base to multiply, and inventing one puts money on the screen
-    /// nobody agreed to. A holiday shift takes the holiday multiplier alone —
-    /// the higher of the two, never both stacked on the same hour.
-    /// </summary>
+    /// <summary>What the two premiums add to one shift.</summary>
     public static decimal Extra(
         double nightHours,
         double totalHours,

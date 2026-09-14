@@ -11,10 +11,7 @@ export interface Session {
 
 const KEY = 'shifter.session';
 
-/**
- * One secret store for every platform: Keychain/Keystore on the phones,
- * localStorage when the very same bundle runs as a web preview.
- */
+/** One secret store for every platform: Keychain/Keystore on the phones, localStorage when the very same bundle… */
 export const sessionStore = {
   async load(): Promise<Session | null> {
     try {
@@ -41,10 +38,7 @@ export const sessionStore = {
   },
 };
 
-/**
- * EXPO_PUBLIC_API_BASE wins (prod, LAN address for a physical phone),
- * app.json extra second, localhost covers simulator-against-local last.
- */
+/** EXPO_PUBLIC_API_BASE wins (prod, LAN address for a physical phone), app.json extra second, localhost covers… */
 export const API_BASE: string =
   process.env.EXPO_PUBLIC_API_BASE
   ?? (Constants.expoConfig?.extra as { apiBase?: string } | undefined)?.apiBase
@@ -63,11 +57,7 @@ export class ApiError extends Error {
   }
 }
 
-/**
- * The auth sentences in the reader's language, keyed by the server's codes.
- * Everything uncoded falls back to the server's own English words — same
- * contract as the site.
- */
+/** The auth sentences in the reader's language, keyed by the server's codes. */
 const CODED: Record<string, string> = {
   'auth.invalid': 'Неверный логин или пароль.',
   'auth.code': 'Код не подошёл. Коды меняются каждые 30 секунд.',
@@ -161,9 +151,7 @@ export async function api<T>(
 
     if (renewed !== null) return api<T>(path, options, true);
 
-    // The key is dead — a stale simulator session, a revoked device. Holding
-    // onto it would strand the person on error screens; the login door is
-    // the honest place to put them.
+    // The key is dead — a stale simulator session, a revoked device.
     setSession(null);
     authLost?.();
   }
@@ -186,11 +174,7 @@ export async function api<T>(
   return (await response.json()) as T;
 }
 
-/**
- * The same door for a file. Multipart cannot go through `api` because that
- * one declares JSON, and a declared Content-Type overrides the boundary
- * fetch would otherwise write for the form.
- */
+/** The same door for a file. */
 export async function upload<T>(path: string, form: FormData, retried = false): Promise<T> {
   const response = await fetch(`${API_BASE}${path}`, {
     method: 'POST',

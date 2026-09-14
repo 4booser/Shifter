@@ -85,11 +85,7 @@ interface RotaGig {
 }
 
 /** A swap in flight: two shifts and two agreements. */
-/**
- * One request for time off. Not the same thing as blocking a day: blocking says
- * "I cannot work Tuesday" and obliges nobody, while this covers a stretch and
- * needs an answer — an unanswered one is a cancelled flight.
- */
+/** One request for time off. */
 interface Leave {
   id: number;
   user_id: number;
@@ -148,12 +144,7 @@ const windowDates = (): string[] => {
   });
 };
 
-/**
- * The crew's fortnight, from the crew's side. A manager's wall-sized board
- * does not fit a phone and does not need to: what a person opens their
- * phone for is what they are working, what they have been offered, and
- * which days they have already said no to.
- */
+/** The crew's fortnight, from the crew's side. */
 export default function ScheduleScreen() {
   const scheme = useColorScheme();
   const palette = Colors[scheme === 'dark' ? 'dark' : 'light'];
@@ -501,9 +492,7 @@ export default function ScheduleScreen() {
                         </View>
                       ))}
 
-                      {/* A crew member going out on the board is not absent —
-                          they are working somewhere else, and the crew planning
-                          around them needs to know which kind. */}
+                      {/* A crew member going out on the board is not absent — they are working somewhere else, and the crew planning… */}
                       {outings.map((outing, at) => (
                         <View key={`gig-${outing.member_id}-${at}`} style={styles.personRow}>
                           <View style={[styles.dot, { backgroundColor: palette.textSecondary }]} />
@@ -552,13 +541,7 @@ export default function ScheduleScreen() {
   );
 }
 
-/**
- * Accepting a shift means it lands on your own calendar, and a shift on your
- * calendar has to be priced. Rather than making somebody leave, build a
- * template on the site and come back, this offers to make one out of the
- * shift they are being offered: the hours are already known, and the terms
- * are two fields and a choice.
- */
+/** Accepting a shift means it lands on your own calendar, and a shift on your calendar has to be priced. */
 function TemplateModal({
   assignment,
   templates,
@@ -632,9 +615,7 @@ function TemplateModal({
 
   return (
     <Modal visible={assignment !== null} animationType="slide" transparent onRequestClose={onClose}>
-      {/* A full-screen «tap outside to close». Unnamed, a screen reader
-          announces it as a button and says nothing about what it does —
-          the first thing met on entering every sheet in this app. */}
+      {/* A full-screen «tap outside to close». */}
       <Pressable
         style={styles.backdrop}
         accessibilityRole="button"
@@ -803,9 +784,7 @@ function JoinModal({
 
   return (
     <Modal visible={open} animationType="slide" transparent onRequestClose={onClose}>
-      {/* A full-screen «tap outside to close». Unnamed, a screen reader
-          announces it as a button and says nothing about what it does —
-          the first thing met on entering every sheet in this app. */}
+      {/* A full-screen «tap outside to close». */}
       <Pressable
         style={styles.backdrop}
         accessibilityRole="button"

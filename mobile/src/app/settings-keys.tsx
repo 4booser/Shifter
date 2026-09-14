@@ -27,11 +27,7 @@ interface Profile {
   two_factor: boolean;
 }
 
-/**
- * The keys to the account: the address «forgot password» writes to, the
- * password itself, and the second factor. One screen, because these three
- * are what somebody checks after a phone goes missing.
- */
+/** The keys to the account: the address «forgot password» writes to, the password itself, and the second factor. */
 export default function SettingsKeysScreen() {
   const router = useRouter();
   const scheme = useColorScheme();
@@ -168,9 +164,7 @@ export default function SettingsKeysScreen() {
             onChanged={() => void reloadProfile()}
           />
 
-          {/* The red zone, last on purpose. The App Store also requires the
-              account to be deletable from inside the app — but mostly this is
-              simply the person's own data, and the door out belongs to them. */}
+          {/* The red zone, last on purpose. */}
           <Text style={styles.sectionDanger}>{t('Удалить аккаунт')}</Text>
           <View style={styles.card}>
             <Text style={styles.rowHint}>

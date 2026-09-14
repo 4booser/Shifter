@@ -11,13 +11,7 @@ import { addMonths, currentMonth, monthBounds, monthLabel, YearMonth } from '@/l
 import { t } from '@/lib/i18n';
 import { DaysResponse, money } from '@/lib/types';
 
-/**
- * Two months, side by side — asked where the question is actually asked.
- *
- * «Этот месяц против прошлого» is bar-counter talk, not desk talk, and the
- * site had this page first. The figures are the server's own range totals for
- * both periods, so this screen and the calendar cannot disagree.
- */
+/** Two months, side by side — asked where the question is actually asked. */
 export default function CompareScreen() {
   const scheme = useColorScheme();
   const palette = Colors[scheme === 'dark' ? 'dark' : 'light'];

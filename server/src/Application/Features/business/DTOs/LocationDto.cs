@@ -1,9 +1,6 @@
 namespace Shifter.Application.Features.business.DTOs;
 
-/// <summary>
-/// A place of work. current_period_from/to are the pay period containing today,
-/// so the client can offer "this pay period" without knowing the rules.
-/// </summary>
+/// <summary>A place of work.</summary>
 public record LocationDto(
     int id,
     string name,
@@ -30,10 +27,7 @@ public record LocationDto(
     /// <summary>Empty means "same as the app's currency".</summary>
     string currency,
     bool archived,
-    /// <summary>
-    /// Empty where the sales commission is paid with everything else; otherwise
-    /// the cycle it settles on, with its own day and anchor.
-    /// </summary>
+    /// <summary>Empty where the sales commission is paid with everything else; otherwise the cycle it settles on, with its…</summary>
     string sales_pay_period = "",
     int sales_pay_day = 1,
     DateOnly sales_pay_anchor = default,
@@ -79,11 +73,7 @@ public record LocationCreateDto(
     DateOnly? sales_pay_anchor = null,
     double? latitude = null,
     double? longitude = null,
-    /// <summary>
-    /// Defaulted like everything below the colour: a client written before
-    /// these existed must keep saving places rather than silently clearing
-    /// rules somebody set on the other screen.
-    /// </summary>
+    /// <summary>Defaulted like everything below the colour: a client written before these existed must keep saving places…</summary>
     decimal auto_break_after_hours = 0m,
     int auto_break_minutes = 0,
     decimal minimum_hourly = 0m,
@@ -114,19 +104,11 @@ public record LocationTotalDto(
     /// <summary>Holiday pay accrued here, owed but not yet paid.</summary>
     decimal holiday,
     string currency,
-    /// <summary>
-    /// The same place with the journey counted in. Null where nobody has said
-    /// how far it is — an unstated commute is not a commute of zero, and
-    /// pretending otherwise would invent a comparison.
-    /// </summary>
+    /// <summary>The same place with the journey counted in.</summary>
     CommuteDto? commute = null
     );
 
-/// <summary>
-/// What getting to a place costs, and what it does to the hourly rate. An
-/// estimate throughout, which is why it lives in its own object rather than
-/// being folded into the earnings beside it.
-/// </summary>
+/// <summary>What getting to a place costs, and what it does to the hourly rate.</summary>
 public record CommuteDto(
     /// <summary>One way, in minutes.</summary>
     int minutes,

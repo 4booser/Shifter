@@ -4,13 +4,7 @@ using Shifter.Application.Common.Text;
 
 namespace Shifter.Application.Features.Assistant;
 
-/// <summary>
-/// The assistant without a model behind it. Every answer here is arithmetic
-/// somebody could check, matched to the question by the words people actually
-/// use — "сколько", "лучший день", "когда заплатят". It exists because the
-/// feature has to be worth opening on a server with no key, and because when
-/// the model does answer, this is the floor its answer has to beat.
-/// </summary>
+/// <summary>The assistant without a model behind it.</summary>
 public static class AssistantWriter
 {
     private static readonly CultureInfo Ru = Figures.Ru;
@@ -19,18 +13,10 @@ public static class AssistantWriter
 
     private static string Hours(double value) => $"{Figures.Hours(value)} ч";
 
-    /// <summary>
-    /// A plain count, grouped the way the money beside it is.
-    ///
-    /// The assistant's card put «Заработано 359 396 ₴» next to «Часов 2512»,
-    /// two spellings of a thousand a finger apart.
-    /// </summary>
+    /// <summary>A plain count, grouped the way the money beside it is.</summary>
     public static string Count(double value) => Figures.Count(value);
 
-    /// <summary>
-    /// "1 смена", "2 смены", "5 смен". Russian declines after a number and
-    /// getting it wrong is the tell that nobody read the sentence out loud.
-    /// </summary>
+    /// <summary>"1 смена", "2 смены", "5 смен".</summary>
     private static string Shifts(int count) =>
         $"{count} {Telegram.TelegramCommands.Plural(count, "смена", "смены", "смен")}";
 
@@ -200,11 +186,7 @@ public static class AssistantWriter
         return (summary, paragraphs.ToArray());
     }
 
-    /// <summary>
-    /// A place's earnings in its own currency. The hryvnia keeps its mark
-    /// because that is what everything else on the screen uses; anything else
-    /// gets its code, because a number is only money once you know which.
-    /// </summary>
+    /// <summary>A place's earnings in its own currency.</summary>
     private static string Amount(AssistantPlace place) =>
         place.Currency == "UAH"
             ? Money(place.Earned)

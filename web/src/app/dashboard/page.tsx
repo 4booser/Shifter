@@ -134,10 +134,7 @@ function Dashboard() {
     return () => removeEventListener(PALETTE_EVENT, onCommand);
   }, []);
 
-  /**
-   * Past days with a worked shift and nothing else recorded. Tips and sales
-   * are entered at the end of a shift and are the easiest thing to forget.
-   */
+  /** Past days with a worked shift and nothing else recorded. */
   const unclosed = useMemo(() => {
     const today = todayKey();
 
@@ -208,9 +205,7 @@ function Dashboard() {
     setTimeout(() => dispatchEvent(new CustomEvent('shifter:palette')), 600);
   }, []);
 
-  // The at-the-door nudge: today has a planned shift at a pinned place, the
-  // browser has already granted location (never prompt from here), and the
-  // phone stands within 300 metres — offer to start. Once per day.
+  // The at-the-door nudge: today has a planned shift at a pinned place, the browser has already granted location…
   const [nearby, setNearby] = useState<{ template: ShiftTemplate; place: string } | null>(null);
 
   useEffect(() => {
@@ -314,16 +309,9 @@ function Dashboard() {
       {!needsSetup && <TipsTicker />}
       {!needsSetup && <InsightsPanel />}
 
-      {/*
-        Three columns of cards, each ending where its content does. The day
-        panel used to be one tall card pinned to the top with its own
-        scrollbar; two scroll areas on one page is a fight nobody wins with a
-        wheel, and it unpinned halfway down anyway.
-      */}
+      {/* Three columns of cards, each ending where its content does. */}
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start">
-        {/* The two side columns wear the same cap and scroll inside it, so
-            they are the same height by construction — one line with the
-            calendar between them. */}
+        {/* The two side columns wear the same cap and scroll inside it, so they are the same height by construction … */}
         <div className="contents lg:block lg:max-h-[calc(100dvh-5.5rem)] lg:flex-none lg:self-start lg:overflow-y-auto lg:pr-0.5 lg:sticky lg:top-[4.25rem]">
         <Sidebar />
         </div>

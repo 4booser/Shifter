@@ -1,10 +1,6 @@
 namespace Shifter.Domain.Entities;
 
-/// <summary>
-/// The other side of the board: a person saying "I am looking". One card
-/// per account, switchable off. Contact channels live here only because
-/// the person typed them in — publishing the card IS the consent.
-/// </summary>
+/// <summary>The other side of the board: a person saying "I am looking".</summary>
 public sealed class GigSeeker
 {
     public const int AboutMax = 300;

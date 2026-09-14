@@ -13,11 +13,7 @@ import { Modal } from '@/components/ui/modal';
 import { TimeAgo } from '@/components/ui/time-ago';
 import { Stars } from '@/components/gigs/reviews';
 
-/**
- * The other half of the marketplace: people saying "I am looking", browsed
- * by whoever needs hands. A card carries only what its owner typed in —
- * publishing it is the consent.
- */
+/** The other half of the marketplace: people saying "I am looking", browsed by whoever needs hands. */
 export function SeekersBoard({ city, category }: { city: string; category: GigCategory | null }) {
   const { t } = useI18n();
   const [employment, setEmployment] = useState<'any' | 'freelance' | 'permanent'>('any');

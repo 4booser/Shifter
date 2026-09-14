@@ -49,11 +49,7 @@ type PresetId = 'month' | 'previous' | '3m' | '6m' | 'year' | 'all' | 'custom';
 
 const ALL_TIME = { from: '2000-01-01', to: '2099-12-31' };
 
-/**
- * What a fine was for. 'unsaid' covers everything recorded before the reason
- * existed as well as everyone who did not bother — it is counted rather than
- * dropped so the split still adds up to the total above it.
- */
+/** What a fine was for. */
 /** How the rate is quoted, printed after the two numbers. */
 const PERIOD_SUFFIX: Record<Raise['period'], string> = {
   hour: '/hour',
@@ -82,15 +78,7 @@ const REASON_LABEL: Record<DeductionSplit['reason'], string> = {
   unsaid: 'Not said',
 };
 
-/**
- * What the one weekday card is showing.
- *
- * There used to be three cards asking the same question of the same seven
- * days — «Форма вашей недели», the weekday half of «Что кормит месяц» and the
- * column chart «По дням» — and a reader had to scroll between them to learn
- * that Friday is long and Wednesday pays better per hour. One table, three
- * modes, same rows.
- */
+/** What the one weekday card is showing. */
 type WeekMode = 'money' | 'hours' | 'rate';
 
 const WEEK_MODES: { id: WeekMode; label: string }[] = [
@@ -143,12 +131,7 @@ function Stats() {
   const settings = useSettings((state) => state.settings);
   const formatWith = (code: string, amount: number) => formatMoneyIn(settings, code, amount);
 
-  /**
-   * A place with no currency set earns in whatever the app is set to, which
-   * is the base — the same rule the server converts by. Falling back to the
-   * first code in the list instead would label unplaced shifts in zloty
-   * purely because Z sorts before U.
-   */
+  /** A place with no currency set earns in whatever the app is set to, which is the base — the same rule the… */
   const currencyOf = (place: { currency: string }) =>
     place.currency.length === 3 ? place.currency : settings.baseCurrency;
 
@@ -215,20 +198,12 @@ function Stats() {
     setError(null);
 
     void calendarApi
-      // The base is asked for on this page alone: it is where somebody goes
-      // to see a period as one number, and the conversion is what that means
-      // when the period was earned in two currencies.
+      // The base is asked for on this page alone: it is where somebody goes to see a period as one number, and the…
       .days(from, to, settings.baseCurrency)
       .then(setSummary)
       .catch((caught) => setError(apiErrorMessage(caught)));
 
-    // The window immediately before, same length, so "vs previous" compares
-    // like with like whatever the preset.
-    //
-    // Same length as the part that has happened, not as the part on the
-    // calendar: counting the days still ahead put thirty finished days against
-    // two lived ones, and every headline on this page read −100% on the second
-    // of the month.
+    // The window immediately before, same length, so "vs previous" compares like with like whatever the preset.
     const lived = to > todayKey() ? todayKey() : to;
     const span = Math.max(1, keysBetween(from, lived).length);
     const previousTo = shiftDays(from, -1);
@@ -313,9 +288,7 @@ function Stats() {
     return away;
   }, [summary.events]);
 
-  // The month's own history, where there is enough of it. Two years of a
-  // December is the difference between a forecast and a flat line, and it is
-  // the one thing a second year of records is actually for.
+  // The month's own history, where there is enough of it.
   const season = useMemo(() => {
     if (!range.from.startsWith(range.to.slice(0, 4))) return null;
 
@@ -367,15 +340,7 @@ function Stats() {
 
   const weekdays = weekdayTotals(summary.days);
 
-  /**
-   * The seven rows the weekday card draws, whichever mode it is in.
-   *
-   * Money comes from the day totals — everything a Friday brought, tips and
-   * all — while hours and the paying hour come from the worked shifts, which
-   * is the only place a start and an end are written down. A weekday nobody
-   * has ever worked is left out rather than drawn as a nought: an empty row
-   * says «Tuesday pays nothing», and the truth is there has not been one.
-   */
+  /** The seven rows the weekday card draws, whichever mode it is in. */
   const weekRows = useMemo(() => {
     const byDay = new Map(bands.map((band) => [band.weekday, band]));
 
@@ -397,15 +362,7 @@ function Stats() {
   }, [weekdays, bands]);
 
   /** Months with nothing in them are not drawn at all — see the card. */
-  /*
-   * Месяц со своим составом в одной строке.
-   *
-   * Состав жил отдельной карточкой «Из чего состоял каждый месяц» — теми же
-   * месяцами, теми же суммами, только столбиками и с пустой верхней
-   * половиной, потому что высота бралась от лучшего месяца за год. Два
-   * рассказа об одном и том же рядом: теперь полоса в строке показывает и
-   * величину месяца, и из чего он собран.
-   */
+  /* Месяц со своим составом в одной строке. */
   const months = useMemo(
     () =>
       trendRaw
@@ -448,11 +405,7 @@ function Stats() {
     ...weekRows.map((row) => (weekMode === 'money' ? row.money : weekMode === 'hours' ? row.hours : row.rate)),
   );
 
-  /*
-   * «Понедельник», not «Пн», and not a dictionary key either: a weekday's own
-   * name is what Intl is for, and three languages of seven days is twenty-one
-   * translations nobody would have to maintain. 1 January 2024 was a Monday.
-   */
+  /* «Понедельник», not «Пн», and not a dictionary key either: a weekday's own name is what Intl is for, and three… */
   const weekdayName = (weekday: number) =>
     sentenceCase(
       new Intl.DateTimeFormat(lang, { weekday: 'long' }).format(new Date(2024, 0, 1 + weekday)),
@@ -461,11 +414,7 @@ function Stats() {
 
   const heatValues = useMemo(() => new Map(summary.days.map((day) => [day.date, day.earned])), [summary.days]);
 
-  /*
-   * Null, not nought. `median([])` answers 0, and a month with nothing
-   * earned then printed «Медианный день 0 ₴» — a figure, where the truth is
-   * that no day had one. The same mistake the hourly rate above used to make.
-   */
+  /* Null, not nought. */
   const earningDays = summary.days.map((day) => day.earned).filter((value) => value > 0);
   const dayMedian = earningDays.length === 0 ? null : median(earningDays);
 
@@ -479,9 +428,7 @@ function Stats() {
 
   /** Sources ranked, and the same five as shares of one whole. */
   const sources = [
-    // The percentage comes out of the shifts figure it already sits inside:
-    // hidden there it cannot be seen to be working, which is the whole reason
-    // somebody agreed to it.
+    // The percentage comes out of the shifts figure it already sits inside: hidden there it cannot be seen to be…
     { name: 'Shifts', value: summary.shifts_earned - summary.revenue_earned },
     { name: 'Percentage', value: summary.revenue_earned },
     { name: 'Overtime', value: summary.overtime_earned },
@@ -584,8 +531,6 @@ function Stats() {
   const comparison = summary.by_location.length >= 2 ? summary.by_location : null;
 
   // The travel column only appears once somebody has said how far a place is.
-  // An empty column reads as "the journey is nothing", which is the exact
-  // wrong answer.
   const anyCommute = (comparison ?? []).some((place) => place.commute != null);
 
   // ==== Exports ====
@@ -762,9 +707,7 @@ function Stats() {
             setPreset('custom');
           }}
         />
-        {/* flex-wrap: пять кнопок в ряд не помещаются в телефон, и панель
-            уезжала за правый край — страница получала горизонтальную
-            прокрутку от одной строки инструментов. */}
+        {/* flex-wrap: пять кнопок в ряд не помещаются в телефон, и панель уезжала за правый край — страница получала… */}
         <span className="ml-auto flex flex-wrap gap-1.5">
           <Link href="/report" className="btn btn-sm">
             <Icon name="note" size={13} />
@@ -799,18 +742,14 @@ function Stats() {
 
       {/* ==== The band of figures: one filled, five quiet ==== */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
-        {/* Where the range mixes currencies the plain sum is hryvnia and
-            zloty added together as if they were the same money, so the
-            converted figure is the only honest headline. */}
+        {/* Where the range mixes currencies the plain sum is hryvnia and zloty added together as if they were the same… */}
         <Tile
           hero
           icon="coins"
           label={t('Earned')}
           delta={summary.conversion === null ? delta(summary.total_earned, previous.total_earned) : null}
         >
-          {/* Не earnedTone: на залитой акцентом плитке зелёный и красный —
-              пара нечитаемых тёмных пятен, а знак минуса перед суммой и так
-              говорит, куда ушёл месяц. */}
+          {/* Не earnedTone: на залитой акцентом плитке зелёный и красный — пара нечитаемых тёмных пятен, а знак минуса… */}
           {summary.conversion === null ? (
             <CountUp value={summary.total_earned} className="tile-value" />
           ) : (
@@ -819,10 +758,7 @@ function Stats() {
             </span>
           )}
         </Tile>
-        {/* «Отработанные», not «Часы»: the calendar's tile counts the whole
-            month including what is still booked, and the two screens naming
-            the same word with different numbers is how a page stops being
-            trusted. */}
+        {/* «Отработанные», not «Часы»: the calendar's tile counts the whole month including what is still booked, and… */}
         <Tile icon="clock" label={t('Hours worked')} delta={delta(summary.hours, previous.hours)}>
           <CountUp value={summary.hours} format={(value) => num(Math.round(value))} className="tile-value" />
         </Tile>
@@ -857,21 +793,9 @@ function Stats() {
       </div>
 
       {/* ==== The period's climb, and the goal beside it ==== */}
-      {/* items-start: цель без заданной суммы — это одна строка подсказки, и
-          растянутая под высокий график она превращалась в обведённую рамкой
-          пустоту в треть экрана. Пусть будет своего роста. */}
-      {/*
-        Справа — две карточки, а не одна.
-
-        «Цель» — это процент, полоса и две строки; рядом с графиком в треть
-        экрана высотой под ней оставалось пустое поле, и растягивать её
-        бессмысленно: растянутая карточка на три строки — та же пустота, но в
-        рамке. Второй карточкой колонка заполняется по-настоящему, а «Ваш час»
-        как раз того же роста и о том же периоде.
-      */}
-      {/* Без items-start: пусть ряд равняет обе колонки, а Panel растянет
-          содержимое — иначе пустое поле просто переезжает под ту карточку,
-          которая оказалась короче. */}
+      {/* items-start: цель без заданной суммы — это одна строка подсказки, и растянутая под высокий график она… */}
+      {/* Справа — две карточки, а не одна. */}
+      {/* Без items-start: пусть ряд равняет обе колонки, а Panel растянет содержимое — иначе пустое поле просто… */}
       <div className="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <Panel
           title={t('Earned over the period')}
@@ -916,10 +840,7 @@ function Stats() {
         <div className="flex flex-col gap-4">
         <Panel
           title={t('Goal')}
-          /* Заданная цель тянется на всю высоту графика рядом — иначе под ней
-             остаётся полоса пустоты в треть экрана. Незаданная так и стоит
-             своего роста: растянутая подсказка в одну строку — это обведённая
-             рамкой пустота. */
+          /* Заданная цель тянется на всю высоту графика рядом — иначе под ней остаётся полоса пустоты в треть экрана. */
           className={goalProgress === null ? undefined : 'lg:self-stretch'}
           action={
             <button type="button" className="btn btn-quiet btn-sm" onClick={() => setGoalsOpen(true)}>
@@ -931,11 +852,7 @@ function Stats() {
           {goalProgress === null ? (
             <p className="field-hint">{t('Set an amount to aim for and the period fills this meter.')}</p>
           ) : (
-            /* The same meter the dashboard's goal tile uses.
-               It was a ring here and a bar there, for one question asked
-               twice — and at nought per cent the ring is an empty circle
-               with nothing in it to read, where a bar at least shows the
-               track it has not filled. */
+            /* The same meter the dashboard's goal tile uses. */
             <div className="relative flex flex-col gap-2">
               <GoalCheer periodFrom={range.from} reached={goalProgress.reached} />
               <div className="flex items-baseline gap-2">
@@ -976,9 +893,7 @@ function Stats() {
           )}
         </Panel>
 
-        {/* Компактно, а не во весь рост: вопрос здесь один — сколько платит
-              час сейчас и куда он идёт, — и на него отвечают число, дельта и
-              линия в палец высотой. */}
+        {/* Компактно, а не во весь рост: вопрос здесь один — сколько платит час сейчас и куда он идёт, — и на него… */}
           {rate.length > 1 && (
             <Panel title={t('Your hour, week by week')} hint={t('Where a raise — or a quiet cut — shows up first.')}>
               <div className="flex items-baseline justify-between gap-2">
@@ -998,13 +913,7 @@ function Stats() {
       {/* ==== The year, square by square ==== */}
       <YearHeat />
 
-      {/* ==== Where the money came from, and when in the day ====
-
-          Каждая во всю ширину, а не парой. «Как собрались деньги» — это
-          полоса, легенда и цепочка вычетов: в месяце без удержаний она
-          коротка, а сутки рядом высокие, и под ней оставалось пустое поле.
-          Обе широкие по смыслу: полоса источников тем понятнее, чем длиннее,
-          а у бублика справа встают подписанные доли. */}
+      {/* ==== Where the money came from, and when in the day ==== Каждая во всю ширину, а не парой. «Как собрались день */}
       {(waterfallSteps.length > 0 || dialTotal > 0) && (
         <div className="flex flex-col gap-4">
           {waterfallSteps.length > 0 && (
@@ -1050,9 +959,7 @@ function Stats() {
                     </>
                   )}
 
-                  {/* Below the take-home line on purpose: this money left after
-                      the wage arrived, and folding it in would stop the app
-                      agreeing with anybody's payslip. */}
+                  {/* Below the take-home line on purpose: this money left after the wage arrived, and folding it in would stop the… */}
                   {summary.expenses > 0 && (
                     <div className="mt-1 border-t border-border pt-1.5">
                       <div className="flex justify-between">
@@ -1086,14 +993,7 @@ function Stats() {
               hint={t('Midnight on top; the brighter the hour, the more it brings.')}
               action={<span className="field-hint tabular">{formatMoneyCompact(settings, dialTotal)}</span>}
             >
-              {/*
-                Круг слева, доли справа — рядом, а не одно под другим.
-
-                Во всю ширину карточки бублик оказался маленьким кругом
-                посреди пустого поля, а четыре полосы растянулись на метр. В
-                паре они объясняют друг друга: круг отвечает про один лучший
-                час, полосы — в какую часть суток вообще уходит смена.
-              */}
+              {/* Круг слева, доли справа — рядом, а не одно под другим. */}
               <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-center">
               <span className="w-full max-w-[18rem] shrink-0">
                 <ClockRing hours={dial} />
@@ -1161,10 +1061,7 @@ function Stats() {
                     <tr key={row.weekday} className="border-t border-border">
                       <td className="px-4 py-2.5">
                         <span className="font-semibold">{weekdayName(row.weekday)}</span>
-                        {/* Что осталось от «Формы вашей недели»: когда день
-                            обычно начинается и кончается и сколько раз он
-                            случился. Отдельная карточка под это спрашивала
-                            про те же семь строк. */}
+                        {/* Что осталось от «Формы вашей недели»: когда день обычно начинается и кончается и сколько раз он случился. */}
                         {/* На телефоне этой подписи нет: вместе с ней колонка
                             «Итого» уезжала за правый край таблицы. */}
                         {row.from !== null && row.to !== null && (
@@ -1243,10 +1140,7 @@ function Stats() {
                       <th className={`${TH} text-right`}>{t('Amount')}</th>
                     </tr>
                   </thead>
-                  {/* Месяц без записей не рисуется вовсе. Десять тонких
-                      линеек с точкой вместо суммы занимали всю карточку и
-                      сообщали ровно ничего — у человека может быть один
-                      отработанный месяц, и это нормально. */}
+                  {/* Месяц без записей не рисуется вовсе. */}
                   <tbody>
                     {months.map((month) => (
                       <tr
@@ -1255,9 +1149,7 @@ function Stats() {
                       >
                         <td className="px-4 py-2 font-semibold capitalize">{month.label}</td>
                         <td className="px-4 py-2">
-                          {/* Во всю ширину колонки: полоса в десять рем внутри
-                              колонки в сорок читалась как обрубок. Внутри —
-                              слои: смены, продажи, чаевые. */}
+                          {/* Во всю ширину колонки: полоса в десять рем внутри колонки в сорок читалась как обрубок. */}
                           <span className="block h-2.5 w-full overflow-hidden rounded-full bg-surface-2">
                             <span
                               className="flex h-full overflow-hidden rounded-full"
@@ -1292,16 +1184,7 @@ function Stats() {
         </div>
       )}
 
-      {/*
-        ==== Что стоит дозаполнить и как спали между сменами ====
-
-        Каждая во всю ширину, а не двумя колонками.
-
-        «Дозаполнить» — это три строки, «Ночи между сменами» — семь строк и
-        итог. В паре короткая оставляла под собой пустое поле в пол-экрана:
-        сетка держит ряд по высокой, а кладка на двух карточках делает ровно
-        то же самое. Соседа нет — и мерить не по чему.
-      */}
+      {/* ==== Что стоит дозаполнить и как спали между сменами ==== Каждая во всю ширину, а не двумя колонками. «Дозапол */}
       <RecordsHealthCard />
 
       <RhythmCard />
@@ -1309,18 +1192,9 @@ function Stats() {
       {/* ==== Mix, shifts, raises, currencies ==== */}
       <div className="cards">
 
-        {/* Раньше эта карточка держала две разбивки — по дням недели и по
-            сменам. Дни недели теперь живут в своей таблице выше, а смены
-            остались здесь: это другой вопрос и другой список. */}
+        {/* Раньше эта карточка держала две разбивки — по дням недели и по сменам. */}
         {topShifts.length > 0 && (
-          /*
-           * Таблицей, а не полосами.
-           *
-           * Полосы показывали четыре смены с округлённой суммой «₴2 тыс.» у
-           * каждой — четыре одинаковых строки, из которых нельзя выбрать. А
-           * вопрос здесь именно про выбор: какая смена стоит того. Значит
-           * нужны точная сумма, часы и цена часа — последнее и есть ответ.
-           */
+          /* Таблицей, а не полосами. */
           <Panel
             title={t('What feeds the month')}
             hint={t('Which shift brings the money, and what an hour of it is worth.')}
@@ -1447,10 +1321,7 @@ function Stats() {
               {summary.conversion.rates.map((rate) => (
                 <li key={rate.code}>
                   1 {rate.code} = {rate.rate} UAH · {t('official')} {rate.on}
-                  {/* The rate somebody is actually handed, named as such. The
-                      totals above are the official ones and stay that way —
-                      a figure that changed source without saying so would be
-                      worse than one that is merely approximate. */}
+                  {/* The rate somebody is actually handed, named as such. */}
                   {rate.market !== null && (
                     <span className="ml-2 text-muted">
                       · {t('a bank buys at')} {rate.market}
@@ -1590,10 +1461,7 @@ function Stats() {
                       </td>
                       <td className="px-4 py-2 tabular">{place.days_worked}</td>
                       <td className="px-4 py-2 tabular">{num(Math.round(place.hours * 10) / 10)}</td>
-                      {/* Where the range mixes currencies, each place is
-                          labelled with its own: printing zloty with a hryvnia
-                          mark makes the comparison this table exists for a
-                          lie. */}
+                      {/* Where the range mixes currencies, each place is labelled with its own: printing zloty with a hryvnia mark… */}
                       {summary.currencies.length > 1 ? (
                         <>
                           <td className="px-4 py-2 tabular">{formatWith(currencyOf(place), place.earned)}</td>
@@ -1631,13 +1499,7 @@ function Stats() {
   );
 }
 
-/**
- * One figure in the band at the top of the page.
- *
- * Exactly one of them is filled with the accent — the money — and the other
- * five stand quiet. Six identical outlined boxes gave the eye nowhere to
- * land: the period's most important number looked the same as its least.
- */
+/** One figure in the band at the top of the page. */
 function Tile({
   label,
   icon,
@@ -1690,12 +1552,7 @@ function Fact({ label, icon, children }: { label: string; icon?: string; childre
   );
 }
 
-/**
- * A line the size of a finger: enough to show which way the hourly rate is
- * drifting, and nothing else. The full-height version of this chart took a
- * third of the screen to answer a question the number above it already
- * answers.
- */
+/** A line the size of a finger: enough to show which way the hourly rate is drifting, and nothing else. */
 function Spark({ values }: { values: number[] }) {
   const W = 220;
   const H = 64;
@@ -1707,9 +1564,7 @@ function Spark({ values }: { values: number[] }) {
   const y = (value: number) => 6 + (H - 12) * (1 - (value - low) / span);
   const path = values.map((value, index) => `${index === 0 ? 'M' : 'L'} ${x(index)} ${y(value)}`).join(' ');
 
-  // `h-16 w-full` рисовало линию в 220 точек по центру трёхсотпиксельной
-  // карточки: viewBox вписывается по меньшей стороне, и половина ширины
-  // оставалась пустой. Теперь высоту задаёт пропорция самого viewBox.
+  // `h-16 w-full` рисовало линию в 220 точек по центру трёхсотпиксельной карточки: viewBox вписывается по меньшей…
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="my-2 block aspect-[220/64] w-full" aria-hidden="true">
       <path
@@ -1725,10 +1580,7 @@ function Spark({ values }: { values: number[] }) {
   );
 }
 
-/**
- * The shower for the moment the meter fills — once per period, remembered
- * locally: the tenth visit to a taken goal is a fact, not a party.
- */
+/** The shower for the moment the meter fills — once per period, remembered locally: the tenth visit to a taken… */
 function GoalCheer({ periodFrom, reached }: { periodFrom: string; reached: boolean }) {
   const [burst, setBurst] = useState(false);
 

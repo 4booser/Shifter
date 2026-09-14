@@ -4,13 +4,7 @@ import { api } from './http';
 
 const API = '/shifter/v1/weather';
 
-/**
- * Somebody's own record read against the sky over their own place.
- *
- * The server has already decided whether the gap is big enough to say out
- * loud, which is deliberate: two screens inventing their own thresholds would
- * eventually disagree about whether the same record proves anything.
- */
+/** Somebody's own record read against the sky over their own place. */
 export interface WeatherEffect {
   location_id: number;
   place: string;

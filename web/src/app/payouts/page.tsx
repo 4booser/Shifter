@@ -28,13 +28,7 @@ import { wageCandidates } from '@/lib/mono/mono';
 
 const MONTHS_BACK = 6;
 
-/**
- * What a square in a reliability strip is painted, and what that paint means.
- *
- * Five colours carried five states with nothing but a tooltip to name them,
- * on a screen about who owes what. The strip prints a key underneath now,
- * listing only the states the strip actually contains.
- */
+/** What a square in a reliability strip is painted, and what that paint means. */
 const STRIP_TONES: { key: string; label: string; colour: string }[] = [
   { key: 'paid', label: 'Paid', colour: 'var(--good)' },
   { key: 'partial', label: 'Advance paid', colour: 'var(--accent)' },
@@ -78,11 +72,7 @@ export default function PayoutsPage() {
   );
 }
 
-/**
- * When money is due, from whom, and whether it arrived in full. Two places on
- * different cycles is already more than anyone tracks reliably in their head —
- * which is exactly how a place that quietly pays short goes unnoticed.
- */
+/** When money is due, from whom, and whether it arrived in full. */
 function Payouts() {
   const { t, lang, n } = useI18n();
 
@@ -99,11 +89,7 @@ function Payouts() {
   const [ledger, setLedger] = useState<Payout[]>([]);
   const [checking, setChecking] = useState<{ locationId: number; on: string } | null>(null);
 
-  /**
-   * The stretch the page is about: as far back as the periods reach, and one
-   * month ahead. The expenses panel reads the same window so a fare and the
-   * wage it ate into are always on screen together.
-   */
+  /** The stretch the page is about: as far back as the periods reach, and one month ahead. */
   const range = useMemo(() => {
     const now = currentMonth();
     const start = addMonths(now, -monthsBack);
@@ -504,14 +490,10 @@ function PeriodRow({
     };
   }, [menuFor]);
 
-  // A shortfall somebody has finished arguing about: still short, no longer
-  // chased. Only these two states can be closed — an open month has nothing
-  // to close yet.
+  // A shortfall somebody has finished arguing about: still short, no longer chased.
   const chaseable = row.settled === null && (row.status === 'short' || row.status === 'overdue');
 
-  // The statement's side of the story, where a bank is connected: one credit
-  // near the due day and near the amount is worth a question mark, and the
-  // full is-this-your-wage flow lives on the bank page it links to.
+  // The statement's side of the story, where a bank is connected: one credit near the due day and near the amount…
   const bankItems = useMono((state) => state.items);
   const landed = useMemo(() => {
     if (bankItems.length === 0) return null;
@@ -602,9 +584,7 @@ function PeriodRow({
         </button>
       )}
 
-      {/* Not only on a short period: the point is to find the line that is
-          wrong, and a period that adds up to the right total can still have
-          the night hours in the wrong column. */}
+      {/* Not only on a short period: the point is to find the line that is wrong, and a period that adds up to the… */}
       {row.location_id > 0 && (
         <button type="button" className="btn btn-quiet btn-sm" onClick={() => onCheck(row)}>
           {t('Check')}

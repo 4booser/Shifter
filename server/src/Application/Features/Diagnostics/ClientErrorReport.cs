@@ -2,32 +2,16 @@ using System.Text.RegularExpressions;
 
 namespace Shifter.Application.Features.Diagnostics;
 
-/// <summary>
-/// A crash the browser saw, cut down to what is safe to keep.
-///
-/// The point of this class is everything it removes. A stack trace from a live
-/// page can carry a query string with somebody's email in it, a token in a URL,
-/// or a whole response body pasted into an error message. None of that belongs
-/// in a log file that operators read casually and backups keep for months, so
-/// the report is trimmed to the shape of the fault — what broke, in which file,
-/// on which build — and the rest is dropped before it is ever written.
-/// </summary>
+/// <summary>A crash the browser saw, cut down to what is safe to keep.</summary>
 public static partial class ClientErrorReport
 {
-    /// <summary>
-    /// Long enough for a message and the top of a stack; short enough that a
-    /// pasted document cannot ride in on it.
-    /// </summary>
+    /// <summary>Long enough for a message and the top of a stack; short enough that a pasted document cannot ride in on it.</summary>
     public const int MessageMax = 600;
 
     private const int PathMax = 120;
     private const int BuildMax = 40;
 
-    /// <summary>
-    /// Anything that looks like an address, a token or a long number is
-    /// replaced rather than shortened: truncation keeps the first half of a
-    /// secret, which is not an improvement.
-    /// </summary>
+    /// <summary>Anything that looks like an address, a token or a long number is replaced rather than shortened: truncation…</summary>
     public static string Clean(string? message)
     {
         if (string.IsNullOrWhiteSpace(message)) return string.Empty;
@@ -42,10 +26,7 @@ public static partial class ClientErrorReport
         return text.Length > MessageMax ? text[..MessageMax] : text;
     }
 
-    /// <summary>
-    /// Where it happened, as a path with no query and no fragment. Which page
-    /// broke is the useful half; what was being looked at on it is not ours.
-    /// </summary>
+    /// <summary>Where it happened, as a path with no query and no fragment.</summary>
     public static string CleanPath(string? path)
     {
         if (string.IsNullOrWhiteSpace(path)) return "/";

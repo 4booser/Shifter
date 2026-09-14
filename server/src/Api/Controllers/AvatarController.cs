@@ -9,12 +9,7 @@ using Shifter.Infrastructure.Persistence.DbContexts;
 
 namespace Shifter.Api.Controllers;
 
-/// <summary>
-/// The face on the profile. Three kinds and one hard budget: a photo arrives
-/// as a small data URL the client already cropped square, a preset is an
-/// emoji on a colour, a weave is a seed the client paints from the person's
-/// own punch-card. Clearing it falls back to initials.
-/// </summary>
+/// <summary>The face on the profile.</summary>
 [Authorize]
 [Route("shifter/v1/account/avatar")]
 public class AvatarController : ControllerBase
@@ -74,12 +69,7 @@ public class AvatarController : ControllerBase
         return Ok(new { kind = user.AvatarKind, data = user.AvatarData });
     }
 
-    /// <summary>
-    /// The recovery address. Stored lowercase, unverified on purpose: a
-    /// wrong address simply never receives a reset, and demanding a
-    /// verification round-trip before the person has lost anything is a
-    /// tax on people who are just filling in a profile.
-    /// </summary>
+    /// <summary>The recovery address.</summary>
     [HttpPut("email")]
     public async Task<IActionResult> Email([FromBody] EmailDto request, CancellationToken ct)
     {
@@ -113,13 +103,7 @@ public class AvatarController : ControllerBase
         return Ok(new { email = user.Email });
     }
 
-    /// <summary>
-    /// The month's letter, on or off.
-    ///
-    /// Off until somebody switches it on. An address given to recover a
-    /// password is not permission to write to them, and treating it as one is
-    /// how a product loses the address it actually needed.
-    /// </summary>
+    /// <summary>The month's letter, on or off.</summary>
     [HttpPut("letter")]
     public async Task<IActionResult> Letter([FromBody] LetterDto request, CancellationToken ct)
     {
@@ -144,11 +128,7 @@ public class AvatarController : ControllerBase
         return Ok(new { on = user.MonthlyLetter });
     }
 
-    /// <summary>
-    /// This account's invite link, minted on first ask, plus how many people
-    /// have arrived through it. A referral is a thank-you, not a funnel: it
-    /// counts arrivals and nothing about them.
-    /// </summary>
+    /// <summary>This account's invite link, minted on first ask, plus how many people have arrived through it.</summary>
     [HttpGet("/shifter/v1/account/referral")]
     public async Task<IActionResult> Referral(CancellationToken ct)
     {

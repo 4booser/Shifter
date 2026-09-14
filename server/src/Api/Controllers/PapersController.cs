@@ -9,13 +9,7 @@ using Shifter.Application.Features.Papers;
 
 namespace Shifter.Api.Controllers;
 
-/// <summary>
-/// The papers: the income statement, the accountant's CSV, the chronicle.
-/// The takeout lives at /account/export, where clients have always fetched it.
-///
-/// Rate-limited under the assistant's ceiling: each of these walks a whole
-/// account, and an account is walked for a reason, not in a loop.
-/// </summary>
+/// <summary>The papers: the income statement, the accountant's CSV, the chronicle.</summary>
 [Authorize]
 [EnableRateLimiting(HardeningExtensions.AssistantPolicy)]
 [Route("shifter/v1/papers")]

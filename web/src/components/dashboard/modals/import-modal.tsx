@@ -8,10 +8,7 @@ import { importDays, useCalendar } from '@/lib/store/calendar';
 import { Alert } from '@/components/ui/bits';
 import { Modal } from '@/components/ui/modal';
 
-/**
- * Bringing a spreadsheet in. Nothing is written until the preview has been
- * looked at: an import that half-succeeds is worse than one that never ran.
- */
+/** Bringing a spreadsheet in. */
 export function ImportModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { t, n } = useI18n();
   const templates = useCalendar((state) => state.templates);
@@ -79,11 +76,7 @@ export function ImportModal({ open, onClose }: { open: boolean; onClose: () => v
       <div className="flex flex-col gap-3.5">
         <p className="field-hint">{t('CSV or XLSX. One row per day; a column named date is the only one required.')}</p>
 
-        {/* The reader knows six columns and a spread of names for each, and
-            the line above named one of them. Somebody exporting from another
-            app had no way to tell whether their hours and tips would be read
-            or dropped — so they were left out, or the import looked broken.
-            Naming them costs a line. */}
+        {/* The reader knows six columns and a spread of names for each, and the line above named one of them. */}
         <p className="field-hint">
           {t('Also read, under any of their usual names:')}{' '}
           {[t('Hours'), t('Earned'), t('Tips'), t('Place'), t('Note')].join(' · ')}

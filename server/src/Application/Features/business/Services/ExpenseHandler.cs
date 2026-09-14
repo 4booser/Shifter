@@ -6,11 +6,7 @@ using Shifter.Infrastructure.Repositories.Interfaces;
 
 namespace Shifter.Application.Features.business.Services;
 
-/// <summary>
-/// Recording what the work cost. Mirrors the payout handler on purpose — the
-/// two are the same shape of fact from opposite directions, and a person who
-/// has learned one screen should not have to learn the other.
-/// </summary>
+/// <summary>Recording what the work cost.</summary>
 public class ExpenseHandler : IExpenseHandler
 {
     private readonly IShifterCommand _command;
@@ -22,15 +18,7 @@ public class ExpenseHandler : IExpenseHandler
         _query = query;
     }
 
-    /// <summary>
-    /// What the work cost in this range: the rows somebody wrote, plus the
-    /// ones their standing costs say are due.
-    ///
-    /// The conjured ones are marked. An estimate never mixes with a fact, and
-    /// "the pass will cost 900 on the 5th" is an estimate right up until the
-    /// 5th — but leaving it out entirely would mean the app knows something
-    /// about somebody's month and declines to say it.
-    /// </summary>
+    /// <summary>What the work cost in this range: the rows somebody wrote, plus the ones their standing costs say are due.</summary>
     public async Task<ExpenseDto[]> ListAsync(
         int userId, DateOnly from, DateOnly to, CancellationToken ct)
     {
@@ -102,13 +90,7 @@ public class ExpenseHandler : IExpenseHandler
         return ToDto(rule, today);
     }
 
-    /// <summary>
-    /// Calls off one occurrence, or puts it back.
-    ///
-    /// Not an edit to the rule: the pass is still bought every month, it was
-    /// simply not bought in August because August was holiday. Deleting the
-    /// rule would lose that distinction and next month with it.
-    /// </summary>
+    /// <summary>Calls off one occurrence, or puts it back.</summary>
     public async Task<ExpenseRuleDto> SkipAsync(
         int userId, int id, DateOnly day, bool skipped, DateOnly today, CancellationToken ct)
     {

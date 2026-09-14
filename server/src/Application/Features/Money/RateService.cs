@@ -5,19 +5,10 @@ using Shifter.Infrastructure.Persistence.DbContexts;
 
 namespace Shifter.Application.Features.Money;
 
-/// <summary>
-/// What one currency was worth on one day, remembered. The bank is asked at
-/// most once per currency per day; after that the answer is a stored fact, so
-/// a report reads the same tomorrow as it did today.
-/// </summary>
+/// <summary>What one currency was worth on one day, remembered.</summary>
 public sealed class RateService
 {
-    /// <summary>
-    /// How far back a stale rate may be stretched. Rates are not published on
-    /// weekends and holidays, and refusing to convert a Sunday would make the
-    /// feature useless in a trade that works Sundays. Beyond a week the
-    /// silence means something else and the money is left unconverted.
-    /// </summary>
+    /// <summary>How far back a stale rate may be stretched.</summary>
     private const int StaleDays = 7;
 
     private readonly ShifterDbContext _db;
@@ -29,12 +20,7 @@ public sealed class RateService
         _bank = bank;
     }
 
-    /// <summary>
-    /// Hryvnia per unit for each code on that day, with the day each rate
-    /// actually came from. A code that comes back missing could not be
-    /// converted, which the caller must say out loud rather than quietly
-    /// treating as one-to-one.
-    /// </summary>
+    /// <summary>Hryvnia per unit for each code on that day, with the day each rate actually came from.</summary>
     public async Task<Dictionary<string, (decimal Rate, DateOnly On)>> OnAsync(
         IEnumerable<string> codes, DateOnly date, CancellationToken ct)
     {
@@ -104,11 +90,7 @@ public sealed class RateService
         return found;
     }
 
-    /// <summary>
-    /// One amount from one currency into another, through the hryvnia. Both
-    /// legs come from the same day's rates, so a cross rate is exact rather
-    /// than two conversions rounded twice.
-    /// </summary>
+    /// <summary>One amount from one currency into another, through the hryvnia.</summary>
     public static decimal? Convert(
         decimal amount,
         string from,

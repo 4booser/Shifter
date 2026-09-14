@@ -14,21 +14,7 @@ using Shifter.Infrastructure.Persistence.DbContexts;
 
 namespace Shifter.Application.Features.Papers;
 
-/// <summary>
-/// The papers: an income statement as a PDF, and a CSV an accountant can take
-/// without a conversation.
-///
-/// A worker without papers is the weak side of every negotiation — with a
-/// landlord, a consulate, a bank. This application holds the most complete
-/// record of their work that exists, and until now could not turn it into a
-/// document.
-///
-/// The statement never pretends to be an employer's certificate. Its title,
-/// its layout and a line in its footer all say the same thing: составлено по
-/// записям владельца аккаунта. That honesty is the document's spine, not its
-/// small print — a paper that oversells itself gets one use and then poisons
-/// the rest.
-/// </summary>
+/// <summary>The papers: an income statement as a PDF, and a CSV an accountant can take without a conversation.</summary>
 public sealed class PapersService
 {
     private readonly ShifterDbContext _db;
@@ -95,11 +81,7 @@ public sealed class PapersService
         return (who, months, paid);
     }
 
-    /// <summary>
-    /// The CSV an accountant takes without a conversation: the most boring
-    /// spreadsheet money can be written in. No formulas, no merged cells,
-    /// semicolons for the Excel this part of the world runs.
-    /// </summary>
+    /// <summary>The CSV an accountant takes without a conversation: the most boring spreadsheet money can be written in.</summary>
     public async Task<string> AccountantCsvAsync(
         int userId, DateOnly from, DateOnly to, string lang, CancellationToken ct)
     {
@@ -108,15 +90,7 @@ public sealed class PapersService
         var uk = lang == "uk";
         string T(string ru, string ua) => uk ? ua : ru;
 
-        /*
-         * The separator and the decimal mark have to agree.
-         *
-         * Semicolons are here because that is the Excel this part of the world
-         * runs — and that Excel reads «1234.50» as text, not money, because
-         * its decimal mark is a comma. Every amount in the file arrived
-         * unsummable. The header was written in Ukrainian for everybody, in
-         * an app that asks which language you read.
-         */
+        /* The separator and the decimal mark have to agree. */
         var culture = CultureInfo.GetCultureInfo(uk ? "uk-UA" : "ru-RU");
         string Number(decimal value) => value.ToString("0.##", culture);
 

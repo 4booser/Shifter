@@ -1,9 +1,6 @@
 namespace Shifter.Domain.Entities;
 
-/// <summary>
-/// A catalogue position: what can be sold, at what price, and what share of it
-/// the worker keeps. Quantities are not here — they belong to DaySale.
-/// </summary>
+/// <summary>A catalogue position: what can be sold, at what price, and what share of it the worker keeps.</summary>
 public class Sales
 {
     public int Id { get; set; }

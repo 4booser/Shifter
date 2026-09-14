@@ -4,13 +4,7 @@ import { Printer, Upload } from 'lucide-react';
 import { Head } from '@/components/screen';
 import { Button, Card } from '@/components/ui/kit';
 
-/**
- * Расчётка.
- *
- * Единственный экран, который спорит с работодателем. Слева — что насчитало
- * приложение, справа — что написано в бумаге, и цветом отмечено только
- * расхождение: если подсветить всё, спорить будет не о чем.
- */
+/** Расчётка. */
 function Payslip() {
   return (
     <>

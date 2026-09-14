@@ -15,11 +15,7 @@ export interface WhatIfBaseline {
   sample: number;
 }
 
-/**
- * Measures the person's actual pace from the last eight weeks: how often they
- * work and what one shift brings on average. Days count as worked when money
- * landed on them — a planned-but-empty day teaches nothing about pace.
- */
+/** Measures the person's actual pace from the last eight weeks: how often they work and what one shift brings on… */
 export function whatIfBaseline(
   days: CalendarDayData[],
   today = todayKey(),
@@ -31,10 +27,7 @@ export function whatIfBaseline(
 
   if (worked.length === 0) return null;
 
-  // The window is fixed even when the first worked day is late in it: someone
-  // who started last week genuinely works "two shifts per eight weeks" so far,
-  // and stretching their young pace over the full window would flatter nobody
-  // — it under-promises, which is the safe direction for a projection.
+  // The window is fixed even when the first worked day is late in it: someone who started last week genuinely…
   const total = worked.reduce((sum, day) => sum + day.earned, 0);
 
   return {
@@ -55,11 +48,7 @@ export interface WhatIfResult {
   reached: boolean;
 }
 
-/**
- * Turns the two dials — shifts per week and money per shift — into an income
- * and a date. Pure arithmetic on purpose: the honesty of the answer is the
- * caller's sliders, not a model.
- */
+/** Turns the two dials — shifts per week and money per shift — into an income and a date. */
 export function whatIfProject(
   perShift: number,
   shiftsPerWeek: number,

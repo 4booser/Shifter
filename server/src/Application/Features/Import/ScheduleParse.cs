@@ -17,12 +17,7 @@ public sealed class ParsedScheduleDto
     [JsonPropertyName("days")] public List<ParsedShiftDto> Days { get; set; } = [];
 }
 
-/// <summary>
-/// Turns whatever the model said into rows worth showing a person. Models
-/// wrap JSON in prose and fences however firmly the prompt forbids it, so
-/// the parser digs the outermost object out itself; rows that fail the
-/// shape checks are dropped rather than guessed at.
-/// </summary>
+/// <summary>Turns whatever the model said into rows worth showing a person.</summary>
 public static class ScheduleParse
 {
     public static ParsedShiftDto[] FromModelText(string text)

@@ -13,12 +13,7 @@ import { Money } from '@/components/ui/bits';
 
 const round = (value: number, step: number) => Math.round(value / step) * step;
 
-/**
- * Two dials and a target: turn "what if I picked up one more shift a week"
- * into a monthly figure and a date. The baseline is the person's own last
- * eight weeks, fetched here so the card stays honest whatever period the
- * page above it is showing.
- */
+/** Two dials and a target: turn "what if I picked up one more shift a week" into a monthly figure and a date. */
 export function WhatIfCard({ suggestedTarget }: { suggestedTarget: number | null }) {
   const { t, lang, n } = useI18n();
   const settings = useSettings((state) => state.settings);
@@ -27,9 +22,7 @@ export function WhatIfCard({ suggestedTarget }: { suggestedTarget: number | null
   const [shiftsPerWeek, setShiftsPerWeek] = useState(3);
   const [perShift, setPerShift] = useState(1000);
   const [target, setTarget] = useState(0);
-  // The "vs your pace" line only makes sense once a dial has actually moved:
-  // at rest the rounded defaults sit a few hryvnias off the exact baseline,
-  // and a red delta the person never caused reads as a bug.
+  // The "vs your pace" line only makes sense once a dial has actually moved: at rest the rounded defaults sit a…
   const [touched, setTouched] = useState(false);
 
   useEffect(() => {

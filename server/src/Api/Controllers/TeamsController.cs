@@ -7,14 +7,7 @@ using Shifter.Application.Features.Teams.DTOs;
 
 namespace Shifter.Api.Controllers;
 
-/// <summary>
-/// The shared rota: who is on and for how long.
-///
-/// What anyone earns is theirs to publish. It reaches the rota only for members
-/// who have switched sharing on, and for the rest the query does not read the
-/// pay column at all — see <see cref="Shifter.Application.Features.Teams.DTOs.RotaEntryDto"/>.
-/// Tips, sales and rates are never read for anyone.
-/// </summary>
+/// <summary>The shared rota: who is on and for how long.</summary>
 [Authorize]
 [Route("shifter/v1/teams")]
 public class TeamsController : Controller
@@ -67,10 +60,7 @@ public class TeamsController : Controller
         CancellationToken ct)
         => Ok(await _mediator.Send(new GetRotaDto(UserId(), id, from, to), ct));
 
-    /// <summary>
-    /// How you appear to this crew and what you let them see. Your own only —
-    /// there is no route to anybody else's, by design.
-    /// </summary>
+    /// <summary>How you appear to this crew and what you let them see.</summary>
     [HttpPatch]
     [Route("{id:int}/me")]
     public async Task<ActionResult<MembershipDto>> UpdateMembership(
@@ -89,10 +79,7 @@ public class TeamsController : Controller
                 request.trial_ends_on),
             ct));
 
-    /// <summary>
-    /// Whether one shift of yours shows on the rota. Null puts it back under
-    /// your default. Not scoped to a team: hiding a shift hides it everywhere.
-    /// </summary>
+    /// <summary>Whether one shift of yours shows on the rota.</summary>
     [HttpPut]
     [Route("shifts/{dayShiftId:int}/visibility")]
     public async Task<IActionResult> SetVisibility(
@@ -123,10 +110,7 @@ public class TeamsController : Controller
         return NoContent();
     }
 
-    /// <summary>
-    /// Handing the shift over. Only its owner may, and it leaves their calendar
-    /// as a result — the person taking it places it on their own.
-    /// </summary>
+    /// <summary>Handing the shift over.</summary>
     [HttpPost]
     [Route("{id:int}/cover/offers/{offerId:int}/accept")]
     public async Task<ActionResult<AcceptedCoverDto>> AcceptCover(

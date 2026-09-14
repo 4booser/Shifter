@@ -3,12 +3,7 @@
 import { api } from './api/http';
 import { Settings } from './settings/settings';
 
-/**
- * The browser half of web push. The server holds the subscription and does
- * the timing; this file's job is the ceremony: permission, service worker,
- * applicationServerKey, and keeping the server's copy of the preferences in
- * step with the local settings.
- */
+/** The browser half of web push. */
 
 const API = '/shifter/v1/push';
 
@@ -50,11 +45,7 @@ export async function pushState(settings: Settings): Promise<PushState> {
   return (await currentSubscription()) !== null ? 'on' : 'off';
 }
 
-/**
- * Turns notifications on (or updates the stored preferences). Returns the
- * resulting state; 'denied' means the browser said no and the toggles
- * should reflect that rather than pretend.
- */
+/** Turns notifications on (or updates the stored preferences). */
 export async function syncPush(settings: Settings): Promise<PushState> {
   if (!pushSupported()) return 'unsupported';
 

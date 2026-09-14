@@ -46,11 +46,7 @@ public class BriefController : ControllerBase
         });
     }
 
-    /// <summary>
-    /// The day page under the calendar: today, the month, what the figures
-    /// noticed, and what is coming. Sections with nothing to say are absent
-    /// rather than empty — a page that pads itself teaches people to skim it.
-    /// </summary>
+    /// <summary>The day page under the calendar: today, the month, what the figures noticed, and what is coming.</summary>
     [HttpGet("blocks")]
     public async Task<IActionResult> Blocks(
         [FromQuery] DateOnly? date,

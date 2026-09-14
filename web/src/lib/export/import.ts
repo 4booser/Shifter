@@ -1,8 +1,4 @@
-/**
- * Reading a spreadsheet back in. The export side hand-rolls XLSX, so the
- * import side does too — a parser for the two formats people actually have is
- * a couple of hundred lines, and it keeps the dependency list at zero.
- */
+/** Reading a spreadsheet back in. */
 
 export interface ImportRow {
   /** 1-based, as the person sees it in their spreadsheet. */
@@ -47,10 +43,7 @@ export async function readSpreadsheet(file: File): Promise<ImportPreview> {
 
 // ==== CSV ====
 
-/**
- * Splits on the delimiter the file actually uses and honours quoting, so a
- * note containing a comma does not become two columns.
- */
+/** Splits on the delimiter the file actually uses and honours quoting, so a note containing a comma does not… */
 export function parseCsv(text: string): string[][] {
   const clean = text.replace(/^﻿/, '');
   const delimiter = pickDelimiter(clean);
@@ -117,11 +110,7 @@ function pickDelimiter(text: string): string {
 
 // ==== XLSX ====
 
-/**
- * An xlsx is a zip of XML. Only two members are needed: the shared string
- * table and the first worksheet. Inflating uses DecompressionStream, which
- * every browser this app targets now has, so no inflate implementation here.
- */
+/** An xlsx is a zip of XML. */
 async function readXlsx(file: File): Promise<string[][]> {
   const buffer = new Uint8Array(await file.arrayBuffer());
   const entries = await unzip(buffer);

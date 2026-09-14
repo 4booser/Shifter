@@ -31,12 +31,7 @@ import { Icon } from '@/components/ui/icon';
 import { useMono } from '@/lib/mono/store';
 import { markOf, fromMinor } from '@/lib/mono/mono';
 
-/**
- * The command-centre strip over the calendar: this month at a glance, one
- * fact per tile. Everything is derived from a six-week window around today,
- * so the strip tells the truth about the current month wherever the grid
- * below happens to be navigated.
- */
+/** The command-centre strip over the calendar: this month at a glance, one fact per tile. */
 
 export const TILE_IDS = [
   'today', 'pace', 'goal', 'payday', 'bank', 'streak', 'best', 'hours', 'tips', 'heat',
@@ -191,7 +186,6 @@ export function TileStrip() {
   );
 }
 
-
 /** The tile drawer: which tiles show, and in what order. */
 function TilePicker({
   order,
@@ -313,11 +307,7 @@ function Tile(props: {
   }
 }
 
-/**
- * The card's balance on the strip — the bank's one number a morning glance
- * wants. Reads what the bank page already holds in this browser; with no
- * bank connected it extends the same quiet invitation the goal tile does.
- */
+/** The card's balance on the strip — the bank's one number a morning glance wants. */
 function BankTile() {
   const { t } = useI18n();
   const token = useMono((state) => state.token);
@@ -335,9 +325,7 @@ function BankTile() {
     return (
       <>
         <Label icon="coins">{t('Bank')}</Label>
-        {/* «Подключить выписку» is one word too many for a tile: «Подключить»
-            alone is 125 pixels against 119 of box, and the line under it
-            already says what is being connected. */}
+        {/* «Подключить выписку» is one word too many for a tile: «Подключить» alone is 125 pixels against 119 of box… */}
         <span className="tile-value !text-[0.95rem] !font-semibold text-muted">
           {t('Connect')} →
         </span>
@@ -385,9 +373,7 @@ function HourlyTile({ monthDays }: { monthDays: CalendarDayData[] }) {
   return (
     <>
       <Label icon="clock">{t('Your hour')}</Label>
-      {/* A whole hour before quoting one: a shift closed after fifty seconds
-          divided the month by a fraction and read «−₴3 850» over a hint that
-          said «0 ч». */}
+      {/* A whole hour before quoting one: a shift closed after fifty seconds divided the month by a fraction and read… */}
       <span className="tile-value">
         {hours >= 1 ? <FlowMoney value={Math.round(earned / hours)} /> : '—'}
       </span>
@@ -524,9 +510,7 @@ function WeekdayTile({ monthDays }: { monthDays: CalendarDayData[] }) {
     byDay.set(weekday, bucket);
   }
 
-  // A day that cost more in deductions than it paid is not the best day of
-  // anybody's week. The tile said «Tue · −77 ₴ a shift» after one short shift
-  // went negative; nothing beats nothing, so it says nothing.
+  // A day that cost more in deductions than it paid is not the best day of anybody's week.
   const best = [...byDay.entries()]
     .map(([weekday, bucket]) => ({ weekday, average: bucket.total / bucket.count }))
     .filter((entry) => entry.average > 0)
@@ -598,13 +582,7 @@ function GuestsTile({ monthDays }: { monthDays: CalendarDayData[] }) {
   return (
     <>
       <Label icon="users">{t('Guests served')}</Label>
-      {/*
-        «0» is an answer, and it is the wrong one here. Nobody counting the
-        room is not the same fact as an evening with no guests in it, and this
-        tile said «0 · там, где считали» to every month where the question was
-        never asked — which is most of them, and which is the first thing a
-        stranger sees on the example account.
-      */}
+      {/* «0» is an answer, and it is the wrong one here. */}
       <span className="tile-value">
         {counted.length === 0
           ? <span className="text-faint">·</span>
@@ -705,10 +683,7 @@ function TodayTile({ window, templates }: { window: CalendarDayData[]; templates
         </span>
         <span className={`field-hint flex items-center gap-1.5 ${discard.armed ? 'text-danger-read' : ''}`}>
           {discard.armed ? <Icon name="close" size={11} /> : <span className="live-dot" />}
-          {/* The counter is the rate times the clock, and the recorded day
-              will also carry the night premium, the overtime and the tips.
-              Named for what it is rather than taught a second copy of the
-              server's rules. */}
+          {/* The counter is the rate times the clock, and the recorded day will also carry the night premium, the overtime… */}
           {discard.armed
             ? t('Press again to discard')
             : tick.earned === null
@@ -723,11 +698,7 @@ function TodayTile({ window, templates }: { window: CalendarDayData[]; templates
           >
             {t('Finish')}
           </button>
-          {/*
-            Discarding a running shift used to be one press away from the
-            button that banks it. It arms first now, and the line above says
-            what the next press does.
-          */}
+          {/* Discarding a running shift used to be one press away from the button that banks it. */}
           <button
             type="button"
             className={`btn btn-sm flex-none !px-2 ${discard.armed ? 'btn-armed' : 'btn-quiet'}`}
@@ -773,18 +744,14 @@ function TodayTile({ window, templates }: { window: CalendarDayData[]; templates
     );
   }
 
-  // A day off used to be an em dash. It is the one day the tile has room to
-  // say something, and the thing anybody wants from a day off is knowing how
-  // much of it is left — so it counts down to the next shift instead.
+  // A day off used to be an em dash.
   const next = window
     .filter((item) => item.date > today && item.shifts.length > 0)
     .sort((a, b) => a.date.localeCompare(b.date))[0];
 
   const away = next === undefined ? null : Math.round((fromKey(next.date).getTime() - fromKey(today).getTime()) / 86_400_000);
 
-  // The big word says what today is, which is what the tile is for. What
-  // comes next goes under it — that is the thing a day off leaves you
-  // wondering, and it used to be an em dash.
+  // The big word says what today is, which is what the tile is for.
   return (
     <>
       <Label icon="spark">{t('Today')}</Label>
@@ -852,12 +819,7 @@ function GoalTile({ monthDays, goals }: { monthDays: CalendarDayData[]; goals: G
     );
   }
 
-  /*
-   * Two readings, and the solid one is always the banked one. The meter shows
-   * where the shifts already on the calendar would land, the percentage counts
-   * only money that has been worked, and the line underneath names the second
-   * figure as a plan.
-   */
+  /* Two readings, and the solid one is always the banked one. */
   const ahead = monthDays.reduce((sum, day) => sum + day.planned, 0);
   const share = Math.min(1, earned / active.target);
   const withPlan = Math.min(1, (earned + ahead) / active.target);
@@ -973,18 +935,7 @@ function BestTile({ monthDays }: { monthDays: CalendarDayData[] }) {
   );
 }
 
-/**
- * Часы месяца целиком, и сколько из них уже отстояно.
- *
- * `day.hours` — это часы смен, отмеченных отработанными. Плитка показывала
- * только их, и первого числа месяц с двадцатью поставленными сменами читался
- * как ноль часов: всё, что впереди, для неё не существовало. Наверху теперь
- * весь месяц — план и факт вместе, — а строкой ниже сказано, сколько из
- * этого уже позади.
- *
- * Подпись раньше считала дни, а называла их сменами: день с двумя выходами
- * шёл за один. Считаем смены.
- */
+/** Часы месяца целиком, и сколько из них уже отстояно. */
 function HoursTile({ monthDays }: { monthDays: CalendarDayData[] }) {
   const { t, n, lang } = useI18n();
   const all = monthDays.reduce(
@@ -996,10 +947,7 @@ function HoursTile({ monthDays }: { monthDays: CalendarDayData[] }) {
     (sum, day) => sum + day.shifts.filter((entry) => entry.worked).length,
     0,
   );
-  // Rounded before the whole-number test: a month of 9.5s and 7.5s adds up to
-  // 113.99999999999999, which is not a whole number and printed «114.0».
-  // Written out by the locale rather than by toFixed, which only ever knows
-  // the dot: «104.5» stood in a Russian tile next to «0,02 ч» elsewhere.
+  // Rounded before the whole-number test: a month of 9.5s and 7.5s adds up to 113.99999999999999, which is not a…
   const round = (value: number) => {
     const tenth = Math.round(value * 10) / 10;
 
@@ -1013,10 +961,7 @@ function HoursTile({ monthDays }: { monthDays: CalendarDayData[] }) {
         <CountUp value={all} format={round} />
       </span>
       <span className="field-hint">
-        {/* The headline counts every shift on the month, worked or not, and
-            the caption used to open «отработано 0 ч» directly under it —
-            two numbers about hours, in one tile, that read as a
-            contradiction. It says which of the two it is now. */}
+        {/* The headline counts every shift on the month, worked or not, and the caption used to open «отработано 0 ч»… */}
         {done < all
           ? `${t('of them worked')} ${round(done)} ${t('h')} · ${n(shifts, 'shifts')}`
           : `${n(shifts, 'shifts')} ${t('this month')}`}
@@ -1046,15 +991,7 @@ function HeatTile({ window }: { window: CalendarDayData[] }) {
     return sum;
   });
 
-  /*
-   * A line with no number on it.
-   *
-   * This tile drew twelve weeks as a shape and said nothing about their
-   * size: the same stroke serves a week of ₴400 and a week of ₴40 000, and
-   * a reader could tell that one week beat another and nothing else. It now
-   * leads with the week it is standing in and names the best of the twelve
-   * underneath, which is the scale the line is drawn to.
-   */
+  /* A line with no number on it. */
   const best = Math.max(0, ...weeks);
   const peak = Math.max(1, ...weeks);
   const W = 120;

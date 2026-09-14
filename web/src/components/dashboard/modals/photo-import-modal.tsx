@@ -24,11 +24,7 @@ interface Draft extends ParsedRow {
   conflict: boolean;
 }
 
-/**
- * The rota photographed on the wall becomes a month on the calendar:
- * photo in, model reads it, a person checks the preview, one button
- * writes the lot — and one Cmd+Z takes it back.
- */
+/** The rota photographed on the wall becomes a month on the calendar: photo in, model reads it, a person checks… */
 export function PhotoImportModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { t, n } = useI18n();
   const settings = useSettings((state) => state.settings);
@@ -124,16 +120,7 @@ export function PhotoImportModal({ open, onClose }: { open: boolean; onClose: ()
     <Modal open={open} title={t('Import from a photo')} onClose={onClose}>
       <div className="flex flex-col gap-3">
         <label>
-          {/*
-            Where the photograph goes.
-            
-            This app tells somebody that a bank statement never reaches its
-            server and that a medical book belongs in a pocket. A photograph
-            of a rota leaves the device, goes out to a service that reads it,
-            and carries every colleague's name on it — and the dialog said
-            nothing at all. Saying it is not a warning, it is the same
-            sentence the rest of the app already writes.
-          */}
+          {/* Where the photograph goes. */}
           <p className="field-hint">
             {t('The photo leaves your device: an outside service reads it and sends back the rows. Shifter keeps no copy — only the days you tick below. A rota usually carries other people’s names.')}
           </p>

@@ -1,10 +1,6 @@
 namespace Shifter.Application.Features.Assistant;
 
-/// <summary>
-/// Which stretch of days a question is about. Without this the assistant
-/// answers "сколько я заработал в июле" with August's figures and sounds
-/// completely sure of itself, which is worse than not answering at all.
-/// </summary>
+/// <summary>Which stretch of days a question is about.</summary>
 public static class AssistantPeriod
 {
     /// <summary>The day number written immediately before a month name, if any.</summary>
@@ -45,12 +41,7 @@ public static class AssistantPeriod
         ["декабр", "грудн"],
     ];
 
-    /// <summary>
-    /// The range the question asks about, or the fallback when it names none.
-    /// Only the first match counts: a sentence mentioning two months is
-    /// ambiguous, and guessing between them is how a wrong answer sounds
-    /// confident.
-    /// </summary>
+    /// <summary>The range the question asks about, or the fallback when it names none.</summary>
     public static (DateOnly From, DateOnly To) Of(
         string question, DateOnly today, DateOnly fallbackFrom, DateOnly fallbackTo)
     {

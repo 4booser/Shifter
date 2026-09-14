@@ -1,10 +1,6 @@
 namespace Shifter.Domain.Entities;
 
-/// <summary>
-/// Public holidays, computed rather than tabled — the same rules the client
-/// draws the calendar with, so a holiday premium and a red day in the grid
-/// can never disagree. Only the countries the product actually serves.
-/// </summary>
+/// <summary>Public holidays, computed rather than tabled — the same rules the client draws the calendar with, so a…</summary>
 public static class Holidays
 {
     public static readonly string[] Countries = ["UA", "PL", "DE", "GB", "US", "CA"];
@@ -28,11 +24,7 @@ public static class Holidays
         return new DateOnly(year, (h + l - 7 * m + 114) / 31, ((h + l - 7 * m + 114) % 31) + 1);
     }
 
-    /// <summary>
-    /// Julian (Orthodox) Easter mapped onto the Gregorian calendar — the date
-    /// Ukrainian holidays hang off. The thirteen-day offset holds for the
-    /// whole of this century, which is as far as this needs to be right.
-    /// </summary>
+    /// <summary>Julian (Orthodox) Easter mapped onto the Gregorian calendar — the date Ukrainian holidays hang off.</summary>
     public static DateOnly JulianEaster(int year)
     {
         var a = year % 4;

@@ -16,12 +16,7 @@ export default function ResetPage() {
   );
 }
 
-/**
- * Two doors behind one address: without a token it asks where to send the
- * letter, with one it takes the new password. The "sent" screen says the
- * same thing whether or not the address is known — the server refuses to
- * enumerate accounts, and the page must not undo that.
- */
+/** Two doors behind one address: without a token it asks where to send the letter, with one it takes the new… */
 function Reset() {
   const { t } = useI18n();
   const params = useSearchParams();

@@ -1,19 +1,9 @@
 namespace Shifter.Domain.Entities;
 
-/// <summary>
-/// Runs of worked days, counted and nothing else.
-///
-/// Twelve days in a row is a fact a person notices on the tenth. The app can
-/// see it on the third — and its whole job here is to say the number out
-/// loud. No advice: «двенадцатый день подряд» is a constatation, and any
-/// sentence starting with «вам стоит» belongs to somebody who was asked.
-/// </summary>
+/// <summary>Runs of worked days, counted and nothing else.</summary>
 public static class WorkStreaks
 {
-    /// <summary>
-    /// Each worked date's 1-based position inside its consecutive run.
-    /// Day one of a run is 1; a day after a gap starts a new run at 1.
-    /// </summary>
+    /// <summary>Each worked date's 1-based position inside its consecutive run.</summary>
     public static Dictionary<DateOnly, int> Positions(IEnumerable<DateOnly> workedDates)
     {
         var ordered = workedDates.Distinct().OrderBy(date => date).ToArray();
@@ -30,12 +20,7 @@ public static class WorkStreaks
         return positions;
     }
 
-    /// <summary>
-    /// The run that is happening right now: consecutive worked days ending
-    /// today or yesterday. Yesterday counts because a person reading a
-    /// morning brief has not worked today yet — their streak is still alive
-    /// until a day actually passes without a shift.
-    /// </summary>
+    /// <summary>The run that is happening right now: consecutive worked days ending today or yesterday.</summary>
     public static int Current(IEnumerable<DateOnly> workedDates, DateOnly today)
     {
         var worked = workedDates.Distinct().ToHashSet();

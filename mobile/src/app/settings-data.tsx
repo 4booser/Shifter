@@ -16,11 +16,7 @@ import { Colors, Palette } from '@/constants/theme';
 import { t, useLang } from '@/lib/i18n';
 import { paperRanges, shareAccountantCsv, shareIncomePdf, shareTakeout, PaperRange } from '@/lib/papers-share';
 
-/**
- * «За какой период?» — the four stretches people are actually asked for.
- * An Alert rather than a date picker on purpose: the paper is for a clerk,
- * and clerks ask in calendar words, not in dates.
- */
+/** «За какой период?» — the four stretches people are actually asked for. */
 function askPeriod(onPicked: (range: PaperRange) => void): void {
   Alert.alert(
     t('За какой период?'),
@@ -35,11 +31,7 @@ function askPeriod(onPicked: (range: PaperRange) => void): void {
   );
 }
 
-/**
- * The two directions records travel: in from a calendar, out as papers.
- * Everything here produces or consumes a file; nothing here is a setting
- * you flip.
- */
+/** The two directions records travel: in from a calendar, out as papers. */
 export default function SettingsDataScreen() {
   const router = useRouter();
   const scheme = useColorScheme();

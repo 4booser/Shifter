@@ -1,28 +1,12 @@
 namespace Shifter.Application.Features.Import;
 
-/// <summary>
-/// A CSV reader that assumes as little as possible about the file.
-///
-/// Somebody with a year in another tracker will not retype it, and the export
-/// they have is whatever that app produced: semicolons because the machine was
-/// Russian-locale, a byte-order mark because it came out of Excel, quoted
-/// fields with commas inside them because a venue is called "Bar, The".
-///
-/// Nothing here is written to the database. This turns bytes into a grid, and
-/// a person on a preview screen decides what the grid means.
-/// </summary>
+/// <summary>A CSV reader that assumes as little as possible about the file.</summary>
 public static class Csv
 {
     public const int MaxRows = 5_000;
     public const int MaxColumns = 60;
 
-    /// <summary>
-    /// The separator this file actually uses.
-    ///
-    /// Guessed from the header line rather than assumed, because a comma in a
-    /// semicolon file splits every venue name in half and the resulting grid
-    /// looks plausible enough to import.
-    /// </summary>
+    /// <summary>The separator this file actually uses.</summary>
     public static char Delimiter(string text)
     {
         var line = text.Split('\n', 2)[0];
@@ -45,13 +29,7 @@ public static class Csv
         return best.Value == 0 ? ',' : best.Key;
     }
 
-    /// <summary>
-    /// The file as a grid of trimmed strings.
-    ///
-    /// Ragged rows are kept ragged rather than padded: a row with three cells
-    /// where the header has six is a broken row, and the preview should be
-    /// able to say so instead of showing four confident blanks.
-    /// </summary>
+    /// <summary>The file as a grid of trimmed strings.</summary>
     public static List<string[]> Parse(string text)
     {
         List<string[]> rows = [];

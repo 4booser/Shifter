@@ -4,29 +4,10 @@ using Xunit;
 
 namespace Shifter.Tests;
 
-/// <summary>
-/// A migration that adds a non-nullable column has to say what the rows
-/// already in the table hold. EF offers the type's zero — "" for text, 0 for
-/// an int, 0001-01-01 for a date — and that is almost never a value the
-/// application will accept back.
-///
-/// It has happened three times in this project. An empty colour went into a
-/// style attribute and painted a workplace as nothing; a pay day of 0 sat
-/// outside the 1..28 the form allows, so the place could not be saved again;
-/// an anchor of 0001-01-01 made a fortnightly cycle count two thousand years
-/// of fortnights to reach this one. Each was repaired later, and only for its
-/// own columns.
-///
-/// So the rule is checked rather than remembered. Where a zero really is the
-/// answer, the column says so here — and saying so is a sentence somebody has
-/// to write on purpose.
-/// </summary>
+/// <summary>A migration that adds a non-nullable column has to say what the rows already in the table hold.</summary>
 public class MigrationDefaultsTests
 {
-    /// <summary>
-    /// Columns where the type's zero is the intended meaning. Each is a
-    /// decision, not an oversight, and the note says which.
-    /// </summary>
+    /// <summary>Columns where the type's zero is the intended meaning.</summary>
     private static readonly Dictionary<string, string> Deliberate = new()
     {
         ["Currency"] = "empty means \"whatever the app is set to\"",
@@ -75,11 +56,7 @@ public class MigrationDefaultsTests
         ["Zone"] = "0 is Unset — \"nobody said\", counted apart rather than guessed",
     };
 
-    /// <summary>
-    /// The ones that already shipped. A migration cannot be edited once it has
-    /// run somewhere, so each is listed with the repair that put it right —
-    /// which is the point of writing them down rather than deleting the check.
-    /// </summary>
+    /// <summary>The ones that already shipped.</summary>
     private static readonly Dictionary<string, string> AlreadyRepaired = new()
     {
         ["20260815122446_LocationsAndPayPeriods.cs: Colour"] = "RepairLegacyPlaces",
@@ -150,11 +127,7 @@ public class MigrationDefaultsTests
         Assert.Empty(offenders);
     }
 
-    /// <summary>
-    /// The repair itself has to exist, and has to still touch every column
-    /// the list above says it does — otherwise this file becomes a way to
-    /// silence the check by naming a migration that no longer mentions it.
-    /// </summary>
+    /// <summary>The repair itself has to exist, and has to still touch every column the list above says it does — otherwise…</summary>
     [Fact]
     public void Every_repair_named_here_actually_repairs_what_it_claims()
     {

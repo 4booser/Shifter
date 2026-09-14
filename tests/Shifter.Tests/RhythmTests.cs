@@ -4,13 +4,7 @@ using Xunit;
 
 namespace Shifter.Tests;
 
-/// <summary>
-/// The streak arithmetic and the fatigue comparison.
-///
-/// Both feed sentences the brief says out loud, and a wrong position — a
-/// streak that survives a gap, a fresh day counted as deep — turns a
-/// constatation into a lie with a number on it.
-/// </summary>
+/// <summary>The streak arithmetic and the fatigue comparison.</summary>
 public sealed class RhythmTests
 {
     private static DateOnly D(int day) => new(2026, 3, day);

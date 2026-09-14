@@ -1,31 +1,5 @@
-/*
- * One copy, read by the web and by the phone.
- *
- * This file used to exist twice, and the header said parity between the
- * platforms was parity of files — keep them identical by hand. They did not
- * stay identical: the web learned that an hour priced on two worked minutes
- * is not a rate and the phone did not, the web's «what a day usually costs»
- * settled on one window and the phone kept two, and a comment here described
- * a rule the code stopped following. None of that is visible from either side
- * alone, which is the whole problem with parity by discipline.
- *
- * So it lives outside both clients now and neither owns it. The rule that
- * makes that possible: nothing in here may import from a platform. No
- * `@/`, no expo, no next, no react — statements in, numbers out. A test
- * holds that line.
- */
-/**
- * monobank, as far as arithmetic goes.
- *
- * Everything here is pure: shapes, money, windows, and the rules that decide
- * whether a transaction looks like a wage or like a work expense. The token
- * lives elsewhere and never reaches this file, which is the point — the part
- * that decides what a payment means can then be tested exhaustively without
- * anybody's bank account being involved.
- *
- * Field names follow the API exactly rather than being renamed on the way in.
- * A layer that renames things is a layer where a wrong field is invisible.
- */
+/* One copy, read by the web and by the phone. */
+/** monobank, as far as arithmetic goes. */
 
 /** One card or account. Balances are in minor units, like everything else here. */
 export interface MonoAccount {
@@ -61,13 +35,7 @@ export interface MonoClientInfo {
   jars?: MonoJar[];
 }
 
-/**
- * One line of a statement.
- *
- * `amount` is what moved on the account and is signed: negative is money
- * leaving. `operationAmount` is the same event in the currency it happened in,
- * which differs only abroad. Both are minor units.
- */
+/** One line of a statement. */
 export interface MonoStatementItem {
   id: string;
   /** Unix seconds. */
@@ -107,20 +75,7 @@ const CURRENCIES: Record<number, string> = {
 
 export const currencyOf = (code: number): string => CURRENCIES[code] ?? `${code}`;
 
-/**
- * The mark to print beside an account's balance.
- *
- * The bank page used to stamp «₴» on every figure it drew, which is right
- * for most cards in this trade and wrong for anybody holding a dollar or a
- * złoty one — and this app's one unbreakable rule about money is that it
- * never puts the wrong mark on a number. The symbol where the currency has a
- * familiar one, the ISO code where it does not, so an unusual account reads
- * as unusual rather than as somebody's hryvnia.
- *
- * The rest of the bank page still prices a day and a month in whatever
- * currency the person picked for wages; that is a wider question than the
- * mark on a balance and it is not answered here.
- */
+/** The mark to print beside an account's balance. */
 const MARKS: Record<string, string> = {
   UAH: '₴', USD: '$', EUR: '€', GBP: '£', PLN: 'zł', CZK: 'Kč', KZT: '₸', JPY: '¥',
 };
@@ -131,12 +86,7 @@ export const markOf = (code: number): string => {
   return MARKS[iso] ?? iso;
 };
 
-/**
- * Minor units to whole money.
- *
- * Everything monobank sends is in hundredths, and getting this wrong is not a
- * rounding error — it is a wage a hundred times too large.
- */
+/** Minor units to whole money. */
 export const fromMinor = (amount: number): number => amount / 100;
 
 /** Money in, as a positive number. Anything leaving the account is not income. */
@@ -155,12 +105,7 @@ export const dayOf = (item: MonoStatementItem): string => {
   return `${at.getFullYear()}-${pad(at.getMonth() + 1)}-${pad(at.getDate())}`;
 };
 
-/**
- * The statement endpoint takes at most 31 days and an hour, and will only be
- * asked once a minute. A year of history is therefore twelve requests spread
- * over twelve minutes, which is a thing to show a progress bar for rather than
- * a thing to hide.
- */
+/** The statement endpoint takes at most 31 days and an hour, and will only be asked once a minute. */
 export const MAX_WINDOW_SECONDS = 30 * 24 * 60 * 60;
 
 /** A range split into windows the endpoint will actually accept, newest first. */
@@ -186,14 +131,7 @@ export const statementWindows = (
 /** What the app calls a work expense. Mirrors the server's own list. */
 export type WorkExpenseKind = 'transport' | 'uniform' | 'tools' | 'food' | 'training' | 'other';
 
-/**
- * A merchant category to a kind of work expense.
- *
- * `sure` marks the categories where being near a shift really does mean the
- * spending was for work. A taxi at two in the morning on a night somebody
- * closed a bar is a work expense; a supermarket on the same day is shopping.
- * Both can be offered, but only one should be offered first.
- */
+/** A merchant category to a kind of work expense. */
 export const MCC_KINDS: Record<number, { kind: WorkExpenseKind; sure: boolean }> = {
   4111: { kind: 'transport', sure: true },
   4112: { kind: 'transport', sure: true },
@@ -227,14 +165,7 @@ export const MCC_KINDS: Record<number, { kind: WorkExpenseKind; sure: boolean }>
 
 export const kindForMcc = (mcc: number) => MCC_KINDS[mcc] ?? null;
 
-/**
- * Spending that might belong to a shift.
- *
- * Only on days somebody actually worked, and only where the category means
- * anything. The app cannot know that a taxi was for work — it can only ask,
- * and asking about the right forty transactions is the whole difference
- * between a useful question and a nuisance.
- */
+/** Spending that might belong to a shift. */
 export const workSpending = (
   items: MonoStatementItem[],
   workedDays: Set<string>,
@@ -246,16 +177,7 @@ export const workSpending = (
     .map((row) => ({ item: row.item, kind: row.match!.kind, sure: row.match!.sure, day: row.day }))
     .sort((a, b) => b.item.time - a.item.time);
 
-/**
- * A payer, as something that survives being written two ways.
- *
- * The same venue pays from more than one place — the official wage from a
- * company, the rest from a sole trader or the manager's own card — and the
- * name arrives spelled differently each time: «ТОВ "БАР"», «ТОВ БАР», «Бар,
- * ТОВ». So a payer is remembered by the steadiest thing the bank gave us: the
- * company code first, the account number next, and only then a name with its
- * quotes and doubled spaces taken out.
- */
+/** A payer, as something that survives being written two ways. */
 export const normalisePayer = (raw: string): string =>
   raw
     .toUpperCase()
@@ -306,14 +228,7 @@ export interface WageMatch {
 /** Days either side of the payday a wage is still recognisably that wage. */
 export const WAGE_WINDOW_DAYS = 6;
 
-/**
- * Credits that could be this wage.
- *
- * Deliberately generous about the amount and strict about the window: a wage
- * is rarely to the hryvnia — tax, an advance already taken, a fine — but it
- * does arrive within a few days of the day it was promised. Nothing here
- * decides anything; every result is a question for the person to answer.
- */
+/** Credits that could be this wage. */
 export const wageCandidates = (
   items: MonoStatementItem[],
   expected: ExpectedWage,
@@ -340,19 +255,7 @@ export const wageCandidates = (
     payers: [payerKey(item)],
   }));
 
-  // An advance and the rest, which is how most of this trade is paid — and
-  // often from two different payers of the same venue: the wage from the
-  // company, the remainder from a sole trader or the manager's own card.
-  //
-  // The evidence that two credits are one wage is that together they land on
-  // the amount expected. Requiring a known payer first sounds careful and is
-  // not: the very first month, neither payer is known, so the pair is never
-  // offered and the app tells somebody they were underpaid by a third when
-  // they were paid in full. A wrong pair costs one tap to reject. A wrong
-  // "недоплатили" is the thing this app exists to be right about.
-  //
-  // Each half has to be a real part of the wage, though, or a refunded coffee
-  // pairs with the wage and lands just as close.
+  // An advance and the rest, which is how most of this trade is paid — and often from two different payers of the…
   const floor = expected.amount * 0.1;
 
   for (let a = 0; a < credits.length; a++) {
@@ -383,9 +286,7 @@ export const wageCandidates = (
     return Math.abs(one.difference) - Math.abs(two.difference);
   });
 
-  // A credit already offered as half of a better pair is not also offered on
-  // its own. Seeing "₴18 205 — меньше на 35%" underneath the pair that makes
-  // the full wage is how somebody ends up believing the wrong one.
+  // A credit already offered as half of a better pair is not also offered on its own.
   const spoken = new Set<string>();
 
   return ranked.filter((match) => {
@@ -452,11 +353,7 @@ export const periodTotals = (
   return { income: inward, spent: outward, cashback };
 };
 
-/**
- * Merchant categories in the words somebody would use, for the half of the
- * statement that has nothing to do with work. Deliberately coarse: this is a
- * shift app, and a spending report with forty rows is a different product.
- */
+/** Merchant categories in the words somebody would use, for the half of the statement that has nothing to do… */
 const CATEGORIES: { name: string; mccs: number[] }[] = [
   { name: 'Продукты', mccs: [5411, 5422, 5441, 5451, 5462, 5499] },
   { name: 'Кафе и бары', mccs: [5811, 5812, 5813, 5814] },
@@ -503,14 +400,7 @@ export const spendingByCategory = (
   return [...totals.values()].sort((one, two) => two.total - one.total);
 };
 
-/**
- * How long the money lasted.
- *
- * From the day a wage landed until the balance first fell under a line
- * somebody set for themselves. It is the question behind every "where did it
- * all go", and a bank statement is the only thing that can answer it —
- * Shifter knows what arrived, not what was left by Thursday.
- */
+/** How long the money lasted. */
 export const moneyLasted = (
   items: MonoStatementItem[],
   /** The day a wage was recorded as arriving. */
@@ -546,18 +436,7 @@ export interface MonoRate {
   rateCross?: number;
 }
 
-/**
- * One amount in another currency, at the bank's own published rate.
- *
- * Never an invented number. A euro balance stamped with a hryvnia sign is the
- * confident lie about money this app does not tell, and a total across
- * accounts is exactly where that lie would live — so every conversion carries
- * the day the rate was published, and a pair the bank does not quote is
- * reported as unconvertible rather than guessed at.
- *
- * A rate somebody could actually get: the mid-point between buy and sell,
- * because neither of the two is the price of merely holding the money.
- */
+/** One amount in another currency, at the bank's own published rate. */
 const rateBetween = (rates: MonoRate[], from: number, to: number): number | null => {
   const direct = rates.find((row) => row.currencyCodeA === from && row.currencyCodeB === to);
 
@@ -624,13 +503,7 @@ export interface Wealth {
   currency: number;
 }
 
-/**
- * What somebody has, across the accounts they chose to count.
- *
- * The credit limit never joins the total. "12 400 on the card, 2 400 of it
- * yours" is two numbers and two different feelings, and an app that adds them
- * is telling somebody they are five times richer than they are.
- */
+/** What somebody has, across the accounts they chose to count. */
 export const wealth = (
   accounts: MonoAccount[],
   jars: MonoJar[],

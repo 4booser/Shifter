@@ -1,12 +1,5 @@
 import { t } from '@/lib/i18n';
-/**
- * A place of work, as the server keeps it.
- *
- * Every field is here even though the phone only offers some of them for
- * editing. A place is saved whole, exactly like a day: send a shorter object
- * and the fields left out fall back to their defaults, which would quietly
- * wipe the holiday calendar or the commission cycle somebody set on the site.
- */
+/** A place of work, as the server keeps it. */
 export interface WorkPlace {
   id: number;
   name: string;
@@ -69,10 +62,7 @@ export const payLine = (place: WorkPlace): string => {
   return period.label;
 };
 
-/**
- * The whole place, ready to send back. Nothing is dropped and nothing is
- * defaulted: what the phone does not show, it carries.
- */
+/** The whole place, ready to send back. */
 export const toPlacePayload = (place: WorkPlace) => ({
   name: place.name,
   address: place.address,

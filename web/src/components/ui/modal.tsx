@@ -5,10 +5,7 @@ import { useEffect, useId, useRef } from 'react';
 import { useI18n } from '@/lib/i18n';
 import { Icon } from './icon';
 
-/**
- * Wraps the native dialog element, which brings the backdrop, Escape handling,
- * focus trapping and inertness of the page behind it for free.
- */
+/** Wraps the native dialog element, which brings the backdrop, Escape handling, focus trapping and inertness of… */
 export function Modal({
   open,
   title,
@@ -25,9 +22,7 @@ export function Modal({
   const ref = useRef<HTMLDialogElement>(null);
   const { t } = useI18n();
 
-  // Without this every modal in the app announces itself as "dialog" and
-  // nothing else — the heading is right there on screen and was never
-  // connected to it.
+  // Without this every modal in the app announces itself as "dialog" and nothing else — the heading is right…
   const titleId = useId();
 
   useEffect(() => {

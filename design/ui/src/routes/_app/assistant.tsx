@@ -5,13 +5,7 @@ import { Head } from '@/components/screen';
 import { Button, Card, Field } from '@/components/ui/kit';
 import { cn } from '@/lib/utils';
 
-/**
- * Спросить про свои месяцы.
- *
- * У каждого ответа подписано, кем он получен: цифры всегда считает Shifter,
- * модель только складывает из них фразу. Подпись стоит не для порядка —
- * человек должен знать, где кончается арифметика и начинается пересказ.
- */
+/** Спросить про свои месяцы. */
 const BY = {
   app: { label: 'посчитал и написал Shifter', tone: 'text-money border-money/35' },
   model: { label: 'слова модели', tone: 'text-brass border-brass/35' },

@@ -5,18 +5,7 @@ using Serilog;
 
 namespace Shifter.Application.Features.Weather;
 
-/// <summary>
-/// The public weather archive, asked only about days that have already been.
-///
-/// Free, no key, no account — the same shape of dependency as the national
-/// bank's rate list, and chosen for the same reason: a feature that needs
-/// somebody to register for an API is a feature most people never see.
-///
-/// It answers about the past. There is a forecast endpoint next to this one
-/// and it is deliberately not used: a forecast beside a planned shift becomes
-/// a prediction about somebody's earnings, and that is a promise the app has
-/// no business making.
-/// </summary>
+/// <summary>The public weather archive, asked only about days that have already been.</summary>
 public sealed class OpenMeteoClient
 {
     private readonly IHttpClientFactory _http;
@@ -30,13 +19,7 @@ public sealed class OpenMeteoClient
         decimal TempMin,
         decimal WindMax);
 
-    /// <summary>
-    /// Daily weather at a point, between two past dates.
-    ///
-    /// Days the archive has not settled yet come back missing rather than
-    /// zeroed. A null in the response means "not measured", and writing that
-    /// down as no rain would quietly turn a gap in the record into a dry day.
-    /// </summary>
+    /// <summary>Daily weather at a point, between two past dates.</summary>
     public async Task<IReadOnlyList<DayReading>> ArchiveAsync(
         double latitude,
         double longitude,

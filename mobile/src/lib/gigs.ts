@@ -1,9 +1,5 @@
 import { t } from '@/lib/i18n';
-/**
- * The trade, named the way people in it speak. The server stores the role as
- * a slug and prices everything itself; this table is only how the phone says
- * it out loud, with the emoji doing the work an icon set would.
- */
+/** The trade, named the way people in it speak. */
 export const TRADES: Record<string, { emoji: string; label: string }> = {
   managing: { emoji: '🎩', label: 'управляющий' },
   'floor-manager': { emoji: '📋', label: 'менеджер зала' },
@@ -68,16 +64,9 @@ export interface Gig {
   employer_count: number;
   responses: number;
   is_mine: boolean;
-  /**
-   * Somebody has not turned up and the shift starts today. The only listing in
-   * the app that reaches anybody by notification.
-   */
+  /** Somebody has not turned up and the shift starts today. */
   urgent: boolean;
-  /**
-   * What this shift is worth against the hours the reader already works. Null
-   * where there is nothing honest to say — no rate on the listing, or not
-   * enough of their own hours to average against.
-   */
+  /** What this shift is worth against the hours the reader already works. */
   worth: {
     offered_per_hour: number;
     your_per_hour: number;
@@ -87,11 +76,7 @@ export interface Gig {
   my_response: {
     id: number;
     accepted: boolean;
-    /**
-     * Where the answer has got to. "quiet" — asked, shared nothing; "direct"
-     * — contacts handed over with the first word; "invited" — the venue said
-     * yes and is waiting for yours; "open" — both said yes.
-     */
+    /** Where the answer has got to. */
     stage: 'quiet' | 'direct' | 'invited' | 'open';
     /** The venue's own contacts, and only once it has picked you. */
     venue_phone: string | null;
@@ -109,10 +94,7 @@ export function payLine(gig: Gig): string {
   return [base, percent].filter((part) => part !== null).join(' + ');
 }
 
-/**
- * How long a vacancy has been sitting there. A fresh post and a three-week
- * one deserve different amounts of trust, and the exact stamp is a tap away.
- */
+/** How long a vacancy has been sitting there. */
 export function postedAgo(iso: string): string {
   const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
 
@@ -130,19 +112,10 @@ export function postedAgo(iso: string): string {
   return months === 1 ? 'месяц назад' : `${months} ${t('мес. назад')}`;
 }
 
-/**
- * Only the photos that are actually there. An empty string in the array
- * still passes a length check and then draws as a blank grey box, which
- * reads as a broken listing rather than one without pictures.
- */
+/** Only the photos that are actually there. */
 export const photosOf = (gig: Gig): string[] => gig.photos.filter((url) => url.trim() !== '');
 
-/**
- * The vacancy's own terms, in the shape a shift template takes. A gig says
- * "per shift" where a template says "per day", and its percentage is the same
- * share of the takings the template already knows how to hold — so an outing
- * arranged on the board can be priced without anybody retyping the deal.
- */
+/** The vacancy's own terms, in the shape a shift template takes. */
 export const templateFromGig = (gig: Gig) => ({
   name: gig.title.slice(0, 40),
   symbol: null,

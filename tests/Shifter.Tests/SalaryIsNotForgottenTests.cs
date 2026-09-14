@@ -4,18 +4,7 @@ using Xunit;
 
 namespace Shifter.Tests;
 
-/// <summary>
-/// A weekly or monthly wage earns nothing per shift — it belongs to the
-/// period — so <see cref="Shifter.Domain.Entities.DayShift.Pay"/> is zero for
-/// everybody on a salary. Any code that sums it and calls the result somebody's
-/// income silently reports a year of tips and nothing else, for exactly the
-/// people most likely to be reading.
-///
-/// It has happened twice: once in the tax profile and once in the monthly
-/// letter, both written the same evening, both by the same reasoning. This
-/// pins it, because the mistake is invisible in a test written by whoever made
-/// it — the fixture would have hourly shifts in it.
-/// </summary>
+/// <summary>A weekly or monthly wage earns nothing per shift — it belongs to the period — so <see…</summary>
 public class SalaryIsNotForgottenTests
 {
     private static string Root()
@@ -30,11 +19,7 @@ public class SalaryIsNotForgottenTests
         return here!.FullName;
     }
 
-    /// <summary>
-    /// Files that sum shift pay and are known to handle the period wage
-    /// separately, each read before being listed. Adding a name here is a
-    /// claim that somebody checked.
-    /// </summary>
+    /// <summary>Files that sum shift pay and are known to handle the period wage separately, each read before being listed.</summary>
     private static readonly Dictionary<string, string> Handled = new()
     {
         ["DayHandler.cs"] = "adds PeriodSalary alongside, which is where the rule lives",

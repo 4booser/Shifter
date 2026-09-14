@@ -21,8 +21,6 @@ function read(): Settings {
   if (typeof localStorage === 'undefined') return { ...DEFAULT_SETTINGS };
 
   // A fresh browser speaks the visitor's language, not the scaffolding's.
-  // The audience is ru/uk; the audit found a brand-new session greeting a
-  // Ukrainian bartender with «Sign in». Stored choices always win below.
   const spoken = (navigator.languages ?? [navigator.language ?? ''])
     .map((tag) => tag.slice(0, 2).toLowerCase())
     .find((tag) => tag === 'ru' || tag === 'uk');
@@ -79,20 +77,14 @@ export const useSettings = create<SettingsState>((set) => ({
     })),
 }));
 
-/**
- * Persists every change and writes the choices onto the document root so plain
- * CSS picks them up — no component needs to know a theme exists. Subscribed
- * once from the shell rather than per component.
- */
+/** Persists every change and writes the choices onto the document root so plain CSS picks them up — no component… */
 export function bindSettingsToDocument(): () => void {
   const apply = (settings: Settings) => {
     remember(STORAGE_KEY, JSON.stringify(settings));
 
     const root = document.documentElement;
 
-    // Without this the document stays lang="en" forever, so a screen reader
-    // pronounces the whole Cyrillic interface with an English voice — which is
-    // not an inconvenience, it is unintelligible.
+    // Without this the document stays lang="en" forever, so a screen reader pronounces the whole Cyrillic interface…
     root.lang = settings.language;
 
     root.dataset['theme'] = settings.theme;

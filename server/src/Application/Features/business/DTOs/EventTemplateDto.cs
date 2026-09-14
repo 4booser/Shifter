@@ -1,10 +1,6 @@
 namespace Shifter.Application.Features.business.DTOs;
 
-/// <summary>
-/// A palette entry for the calendar's non-working side: «английский»,
-/// «вождение», the gym. Money here points outward — it is what the thing
-/// costs, and it is never added to anything the week earned.
-/// </summary>
+/// <summary>A palette entry for the calendar's non-working side: «английский», «вождение», the gym.</summary>
 public record EventTemplateDto(
     int id,
     string name,

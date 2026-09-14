@@ -5,27 +5,10 @@ using Shifter.Domain.Entities;
 
 namespace Shifter.Application.Features.Assistant;
 
-/// <summary>
-/// The case for a raise, assembled out of somebody's own record.
-///
-/// People do not fail to ask because they lack nerve. They fail because when
-/// the moment comes they have nothing but a feeling, and a feeling loses to
-/// "business has been slow" every time. The evidence has been accumulating in
-/// this app the whole while: how long since the rate last moved, how this place
-/// compares to the others they work, how many shifts they took at short notice
-/// for somebody else.
-///
-/// Nothing here is invented and nothing is exaggerated. A weak case is reported
-/// as a weak case — an app that talks somebody into a conversation they will
-/// lose has done them harm, not a favour.
-/// </summary>
+/// <summary>The case for a raise, assembled out of somebody's own record.</summary>
 public static class RaiseCase
 {
-    /// <summary>
-    /// Below this there is nothing to say yet. Three months is roughly when a
-    /// person stops being new, and asking before that is asking to be told to
-    /// wait.
-    /// </summary>
+    /// <summary>Below this there is nothing to say yet.</summary>
     private const int SettledInMonths = 3;
 
     public static RaiseCaseDto Build(
@@ -105,12 +88,7 @@ public static class RaiseCase
             Weakness(monthsHere, points.Count));
     }
 
-    /// <summary>
-    /// A short message somebody can send as it is, or read once and then say in
-    /// their own words. Deliberately not a script: it opens with the ask,
-    /// gives the reasons as a list, and stops. Anything longer gets edited into
-    /// nothing on the way out of the door.
-    /// </summary>
+    /// <summary>A short message somebody can send as it is, or read once and then say in their own words.</summary>
     private static string Message(Location place, List<string> points)
     {
         string reasons = string.Join(";\n— ", points);
@@ -120,10 +98,7 @@ public static class RaiseCase
             + "Понимаю, что это разговор не на одну минуту — скажите, когда вам удобно.";
     }
 
-    /// <summary>
-    /// Why the case is thin, where it is. Said plainly rather than hidden: an
-    /// app that talks somebody into a losing conversation has done them harm.
-    /// </summary>
+    /// <summary>Why the case is thin, where it is.</summary>
     private static string? Weakness(int monthsHere, int points)
     {
         if (monthsHere < SettledInMonths)
@@ -144,14 +119,7 @@ public static class RaiseCase
     private static int Months(DateOnly from, DateOnly to)
         => ((to.Year - from.Year) * 12) + to.Month - from.Month;
 
-    /// <summary>
-    /// Hours, declined and grouped — this line is copied into a message and
-    /// read out to a manager.
-    ///
-    /// It said «2304 часов»: the word never bent, and the number never got its
-    /// space because the default format for a double does not group. Both
-    /// wrong in the one sentence somebody rehearses before asking for money.
-    /// </summary>
+    /// <summary>Hours, declined and grouped — this line is copied into a message and read out to a manager.</summary>
     private static string Hours(double value)
         => Plural((int)Math.Round(value), "час", "часа", "часов");
 

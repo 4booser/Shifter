@@ -5,16 +5,7 @@ using Xunit;
 
 namespace Shifter.Tests;
 
-/// <summary>
-/// "Я выйду" hands the phone over with the first word, which is right for
-/// somebody who has decided and far too much for somebody still looking.
-/// The quiet answer holds the contacts back until both sides have said yes.
-///
-/// The rule that matters is one sentence long — a contact is visible only
-/// once its owner opened it — and it is exactly the kind that gets broken by
-/// a new screen written six months later, so half of what is below reads the
-/// service's own source rather than its behaviour.
-/// </summary>
+/// <summary>"Я выйду" hands the phone over with the first word, which is right for somebody who has decided and far too…</summary>
 public class GigHandshakeTests
 {
     private static GigResponse Reply(bool quiet) => new()

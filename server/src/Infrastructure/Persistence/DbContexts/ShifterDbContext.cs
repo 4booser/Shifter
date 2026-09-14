@@ -65,26 +65,7 @@ public class ShifterDbContext : DbContext
             .HasIndex(link => link.UserId)
             .IsUnique();
 
-        /*
-         * What happens to a child row when its parent goes is a rule, not a
-         * detail — and it belongs here, once, for every relationship.
-         *
-         * The comment below was written for gigs alone, and the same fault was
-         * still live in four more places: a break could not be deleted with
-         * its shift, so anybody who had ever taken one could not delete their
-         * account at all; and deleting a place threw a database error for
-         * anybody who had ever been paid there or set an expense rule for it,
-         * because only shifts were detached first, by a handler that had to
-         * remember. A rule enforced by remembering is not enforced.
-         *
-         * Two different answers, because the domain gives two:
-         *   — a break is part of its shift and means nothing without it, so it
-         *     follows the shift out; the same holds for a rule written for one
-         *     place;
-         *   — hours worked and money already paid outlive the place they
-         *     happened at, so they keep their own numbers and merely lose the
-         *     reference.
-         */
+        /* What happens to a child row when its parent goes is a rule, not a detail — and it belongs here, once, for… */
         modelBuilder.Entity<Break>()
             .HasOne(rest => rest.Shift)
             .WithMany(shift => shift.Breaks)

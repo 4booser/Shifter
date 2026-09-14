@@ -8,18 +8,10 @@ using Shifter.Infrastructure.Repositories.Interfaces;
 
 namespace Shifter.Application.Features.Auth.Services;
 
-/// <summary>
-/// Signs a Google user in, creating the account on first contact. One trip:
-/// the browser never sees a separate "register" step, which is the whole point
-/// of the button.
-/// </summary>
+/// <summary>Signs a Google user in, creating the account on first contact.</summary>
 public class GoogleSignInHandler : IRequestHandler<GoogleSignInDto, AuthResponseDto>
 {
-    /// <summary>
-    /// Checks a credential and hands back what Google says about the person.
-    /// Shared with account linking so both paths verify identically — a second
-    /// copy of this would be the place a validation step quietly goes missing.
-    /// </summary>
+    /// <summary>Checks a credential and hands back what Google says about the person.</summary>
     public static async Task<GoogleJsonWebSignature.Payload> VerifyAsync(
         string? credential,
         IConfiguration configuration)
@@ -146,10 +138,7 @@ public class GoogleSignInHandler : IRequestHandler<GoogleSignInDto, AuthResponse
     private static string Pick(string? typed, string? fromGoogle)
         => string.IsNullOrWhiteSpace(typed) ? fromGoogle?.Trim() ?? string.Empty : typed.Trim();
 
-    /// <summary>
-    /// Logins are unique and visible, so the email's local part is used as a
-    /// seed and a counter is appended until it is free.
-    /// </summary>
+    /// <summary>Logins are unique and visible, so the email's local part is used as a seed and a counter is appended until it…</summary>
     private async Task<string> UniqueLoginAsync(string? email, CancellationToken ct)
     {
         const string allowed = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@._-";

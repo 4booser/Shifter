@@ -25,9 +25,7 @@ test('the manager plans a week, publishes it, and the member accepts at their ow
   // which is the window the member's inbox reads.
   const cell = page.locator('td.group').nth(13);
   await cell.hover();
-  // By its accessible name, not by the glyph on it. The button used to be
-  // display:none until a pointer hovered — which meant a keyboard could never
-  // reach it — and giving it a real name is what fixed that.
+  // By its accessible name, not by the glyph on it.
   await cell.getByRole('button', { name: 'Add a shift here' }).click();
 
   await page.getByRole('textbox').first().fill('Bar');

@@ -2,11 +2,7 @@ import { test } from '@playwright/test';
 
 import { apiPost, apiPut, createShiftTemplate, registerUser, signIn } from './helpers';
 
-/**
- * The shop-window press: bakes the landing page's screenshots from the live
- * product, so the визитка can never quietly show pages that no longer exist.
- * Run by hand (SHOTS=1), writes straight into public/landing/.
- */
+/** The shop-window press: bakes the landing page's screenshots from the live product, so the визитка can never… */
 test.skip(process.env['SHOTS'] !== '1', 'the landing press runs only when asked: SHOTS=1');
 
 test('bake the landing screenshots', async ({ page }) => {

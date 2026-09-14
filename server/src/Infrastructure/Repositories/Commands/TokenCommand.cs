@@ -7,10 +7,7 @@ namespace Shifter.Infrastructure.Repositories.Commands;
 
 public class TokenCommand : ITokenCommand
 {
-    /// <summary>
-    /// How long a spent token is kept. Long enough that a replay arriving after
-    /// the client has moved on is still recognised for what it is.
-    /// </summary>
+    /// <summary>How long a spent token is kept.</summary>
     private static readonly TimeSpan RevokedRetention = TimeSpan.FromDays(30);
 
     private readonly TokensDbContext _db;

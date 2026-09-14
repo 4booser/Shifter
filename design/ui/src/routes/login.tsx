@@ -4,12 +4,7 @@ import { ArrowRight } from 'lucide-react';
 
 import { Button, Field } from '@/components/ui/kit';
 
-/**
- * Вход.
- *
- * Свет сверху и три поля: в два часа ночи это должно занимать четыре
- * секунды. Оболочки приложения здесь нет — до входа её и не существует.
- */
+/** Вход. */
 function Login() {
   const [second, setSecond] = useState(false);
   const [shown, setShown] = useState(false);

@@ -1,9 +1,6 @@
 namespace Shifter.Application.Features.business.DTOs;
 
-/// <summary>
-/// One thing the work cost. Reported beside earnings, never inside them: what
-/// arrived is what arrived, and this left afterwards.
-/// </summary>
+/// <summary>One thing the work cost.</summary>
 public record ExpenseDto(
     int id,
     DateOnly date,
@@ -14,11 +11,7 @@ public record ExpenseDto(
     /// <summary>Null where it belongs to the trade rather than to an employer.</summary>
     int? location_id,
     string? location_name,
-    /// <summary>
-    /// True where nobody has confirmed it yet: the rule says it happens, and
-    /// the day has not come or has not been checked. An estimate never mixes
-    /// with a fact, so it is labelled rather than quietly counted as one.
-    /// </summary>
+    /// <summary>True where nobody has confirmed it yet: the rule says it happens, and the day has not come or has not been…</summary>
     bool expected = false,
     /// <summary>The standing cost it came from, where it came from one.</summary>
     int? rule_id = null);

@@ -2,11 +2,7 @@
 
 import { create } from 'zustand';
 
-/**
- * A small global toast stack for moments that happen outside any one page:
- * a badge unlocking, a live shift landing on the calendar. Errors stay in
- * the Alert components next to what failed; this is for good news.
- */
+/** A small global toast stack for moments that happen outside any one page: a badge unlocking, a live shift… */
 
 export interface Toast {
   id: number;

@@ -3,12 +3,7 @@ import { create } from 'zustand';
 
 import { AutoStartRule } from '@/lib/autostart';
 
-/**
- * The hours shifts start themselves at, and which fired today.
- *
- * Phone-local, like the live shift itself: the server has no concept of a
- * running shift and gains nothing by learning this one.
- */
+/** The hours shifts start themselves at, and which fired today. */
 
 const RULES_KEY = 'shifter.autostart.rules';
 const FIRED_KEY = 'shifter.autostart.fired';

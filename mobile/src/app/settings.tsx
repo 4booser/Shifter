@@ -31,11 +31,7 @@ interface Profile {
   rest_hours: number;
 }
 
-/**
- * The hub. Device-local switches live here — language, the eye, the lock —
- * because flipping them must never wait on the network. Everything that
- * talks to the server got a screen of its own: keys, alerts, papers.
- */
+/** The hub. */
 export default function SettingsScreen() {
   const router = useRouter();
   const scheme = useColorScheme();

@@ -1,8 +1,4 @@
-/**
- * Great-circle distance, metres. Haversine on a spherical Earth is within a
- * third of a percent everywhere people work shifts — plenty for "am I at
- * the bar".
- */
+/** Great-circle distance, metres. */
 export function distanceMetres(
   latitudeA: number,
   longitudeA: number,

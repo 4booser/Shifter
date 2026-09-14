@@ -1,11 +1,6 @@
 namespace Shifter.Domain.Entities;
 
-/// <summary>
-/// One side's verdict on a shift that actually happened. Both directions
-/// live in the same row type: a worker rates the venue that hired them, the
-/// venue rates the worker it took — always pinned to one listing, so a
-/// grudge cannot be filed twice and a stranger cannot file one at all.
-/// </summary>
+/// <summary>One side's verdict on a shift that actually happened.</summary>
 public sealed class GigReview
 {
     public const int TextMax = 300;

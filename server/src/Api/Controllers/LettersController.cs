@@ -6,13 +6,7 @@ using Shifter.Infrastructure.Persistence.DbContexts;
 
 namespace Shifter.Api.Controllers;
 
-/// <summary>
-/// The way out of the month's letter.
-///
-/// One link, no login, one click. That is the whole difference between a
-/// letter people tolerate and one they mark as spam — and a person who has to
-/// sign in to stop hearing from you reports you instead.
-/// </summary>
+/// <summary>The way out of the month's letter.</summary>
 [AllowAnonymous]
 [Route("letters")]
 public class LettersController : ControllerBase
@@ -45,11 +39,7 @@ public class LettersController : ControllerBase
         return Content(Page, "text/html; charset=utf-8");
     }
 
-    /// <summary>
-    /// Plain and self-contained. Somebody unsubscribing is already slightly
-    /// annoyed; a page that loads a stylesheet from somewhere and shows them a
-    /// spinner is worse than a sentence.
-    /// </summary>
+    /// <summary>Plain and self-contained.</summary>
     private const string Page =
         "<!doctype html><html lang=\"ru\"><head><meta charset=\"utf-8\">"
         + "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">"

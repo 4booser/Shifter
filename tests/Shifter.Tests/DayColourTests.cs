@@ -7,11 +7,7 @@ using Xunit;
 
 namespace Shifter.Tests;
 
-/// <summary>
-/// The colour a person puts on a day by hand. It carries no meaning the totals
-/// care about, which is exactly why it needs guarding: nothing downstream would
-/// notice a malformed value until it reached a stylesheet.
-/// </summary>
+/// <summary>The colour a person puts on a day by hand.</summary>
 public class DayColourTests
 {
     private readonly FakeShifterQuery _query = new();

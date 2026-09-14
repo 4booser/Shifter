@@ -20,31 +20,18 @@ import { ChartTip, CrossHair, useChartHover } from '@/components/charts/hover';
 import { Money } from '@/components/ui/bits';
 import { BankTile } from '@/components/bank/hero';
 
-/*
- * The bank's chart shelf. Every figure comes из выписки; every chart answers
- * the cursor, not just the eyes. Rendering is plain divs and SVG the page
- * owns end to end.
- */
+/* The bank's chart shelf. */
 
 const monthName = (key: string, lang: string) =>
   new Intl.DateTimeFormat(lang, { month: 'short' }).format(new Date(`${key}-15T12:00:00`));
 
-/**
- * A column chart's axis: the tallest value named, and two rules under it at
- * thirds of it.
- *
- * The bars are drawn as a percentage of the box, so the rules are placed the
- * same way — SVG text over a stretched plot comes out with stretched letters,
- * and an axis is the last place that is acceptable.
- */
+/** A column chart's axis: the tallest value named, and two rules under it at thirds of it. */
 export function ColumnAxis({ peak, headroom = 92 }: { peak: number; headroom?: number }) {
   const { compact } = useMoney();
 
   const at = (share: number) => `${100 - share * headroom}%`;
 
-  // Above the columns, not under them: the bars are positioned too, and the
-  // later element wins — the peak's own label sat behind the tallest bar,
-  // which is the one place it is guaranteed to be unreadable.
+  // Above the columns, not under them: the bars are positioned too, and the later element wins — the peak's own…
   return (
     <div className="pointer-events-none absolute inset-0 z-10" aria-hidden>
       {[1, 2 / 3, 1 / 3].map((share) => (
@@ -91,23 +78,13 @@ export function ReserveTile({
   const { t, n } = useI18n();
   const { format } = useMoney();
 
-  /*
-   * The same habit the forecast beside it is drawn from.
-   *
-   * This figure used to take a median of whatever the month on screen had
-   * lived: on the second of September it divided the whole balance by one
-   * afternoon's coffee and announced a reserve of 3 965 days — while the tile
-   * next to it named a different «ordinary day» in the same row. The balance
-   * here is today's, so the rate it is divided by has to be a settled one too.
-   */
+  /* The same habit the forecast beside it is drawn from. */
   const usual = useMemo(
     () => habitualDay(items, todayKey() > to ? to : todayKey()),
     [items, to],
   );
 
-  // The same fallback the hero uses: the curve's last point is the bank's
-  // own stamped figure. Two figures on one page must not disagree about the
-  // balance because one of them read an unsorted array.
+  // The same fallback the hero uses: the curve's last point is the bank's own stamped figure.
   const curve = useMemo(() => balanceCurve(items, from, to), [items, from, to]);
   const balance = account !== null
     ? fromMinor(account.balance - account.creditLimit)
@@ -163,15 +140,7 @@ export function MonthlyFlowsCard({ items }: { items: MonoStatementItem[] }) {
   if (shown.length < 2) return null;
 
   const peak = Math.max(1, ...shown.map((row) => Math.max(row.earned, row.spent)));
-  /*
-   * Ширина месяца с потолком.
-   *
-   * `100 / shown.length` на двух месяцах отдавало каждому половину карточки,
-   * и пара столбиков в тринадцать процентов ширины повисала посреди пустого
-   * поля — график выглядел недорисованным. Потолок держит колонки одного
-   * размера независимо от того, два месяца в выписке или шесть, а ряд
-   * ставится по центру.
-   */
+  /* Ширина месяца с потолком. */
   const width = Math.min(100 / shown.length, 24);
 
   return (
@@ -227,9 +196,7 @@ export function MonthlyFlowsCard({ items }: { items: MonoStatementItem[] }) {
                       className="w-full rounded-t-[3px] bg-(--good)"
                       style={{ height: `${Math.max(2, (row.earned / peak) * 92)}%`, opacity: latest ? 1 : 0.75 }}
                     />
-                    {/* Округление до тысяч в первые дни месяца превращает
-                        подпись в «+0K», и столбик выглядит сломанным, а не
-                        маленьким. Ниже тысячи пишем сумму как есть. */}
+                    {/* Округление до тысяч в первые дни месяца превращает подпись в «+0K», и столбик выглядит сломанным, а не… */}
                     {latest && (
                       <span className="absolute -top-0.5 left-1/2 -translate-x-1/2 -translate-y-full text-[0.68rem] font-semibold text-good-read tabular">
                         {row.earned >= 1000 ? `+${Math.round(row.earned / 1000)}K` : <>+<Money value={row.earned} /></>}
@@ -416,10 +383,7 @@ export function SpendPaceCard({
   const peak = Math.max(1, now.at(-1)?.total ?? 0, beforeTotal);
   const W = 560;
   const H = 150;
-  // The strip on the right the axis labels live in. The plot is told about it
-  // in pixels, because an absolutely positioned SVG with no stated height
-  // takes it from the viewBox and quietly ignores `bottom` — the line then
-  // sits at a different scale than the rules drawn behind it.
+  // The strip on the right the axis labels live in.
   const gutter = 56;
   const x = (index: number) => (index / (days - 1)) * W;
   const y = (value: number) => H - (value / peak) * (H - 14) - 6;
@@ -475,9 +439,7 @@ export function SpendPaceCard({
               <div
                 key={share}
                 className="absolute inset-x-0 border-t border-dashed border-border"
-                // The same mapping the line uses: y = H − value/peak·(H−14) − 6,
-                // said as a percentage of the box. A rule a few pixels off its
-                // own label is worse than no rule.
+                // The same mapping the line uses: y = H − value/peak·(H−14) − 6, said as a percentage of the box.
                 style={{ top: `${96 - 90.67 * share}%` }}
               >
                 <span className="absolute -top-2 right-0 bg-surface pl-1 text-[0.66rem] text-faint tabular">

@@ -7,10 +7,7 @@ using Shifter.Infrastructure.Persistence.DbContexts;
 
 namespace Shifter.Api.Controllers;
 
-/// <summary>
-/// A day's history: every write that touched it, newest first. Read-only by
-/// construction — the log answers "where did my tips go", it never argues.
-/// </summary>
+/// <summary>A day's history: every write that touched it, newest first.</summary>
 [Authorize]
 [Route("shifter/v1/days")]
 public class HistoryController : ControllerBase

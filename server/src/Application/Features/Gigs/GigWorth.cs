@@ -3,29 +3,13 @@ using Shifter.Domain.Entities;
 
 namespace Shifter.Application.Features.Gigs;
 
-/// <summary>
-/// What a listed shift is worth against the hours somebody already works.
-///
-/// A board full of rates tells nobody anything: 250 an hour is generous in one
-/// city and a pay cut in another, and it is a pay cut for this person or not
-/// depending on what their own hours pay. The app already knows their hourly —
-/// it is the number the whole product is built around — so the comparison
-/// costs one division and answers the only question the card actually raises.
-/// </summary>
+/// <summary>What a listed shift is worth against the hours somebody already works.</summary>
 public static class GigWorth
 {
-    /// <summary>
-    /// How few hours make an average worth quoting. Below this the figure is
-    /// one lucky night rather than what somebody earns, and comparing against
-    /// it would be worse than saying nothing.
-    /// </summary>
+    /// <summary>How few hours make an average worth quoting.</summary>
     private const double EnoughHours = 20;
 
-    /// <summary>
-    /// The comparison, or null when there is nothing honest to say — no rate
-    /// on the listing, no hours behind the person, or a rate quoted per month
-    /// against an hourly life.
-    /// </summary>
+    /// <summary>The comparison, or null when there is nothing honest to say — no rate on the listing, no hours behind the…</summary>
     public static GigWorthDto? Judge(
         decimal payAmount,
         string payPeriod,

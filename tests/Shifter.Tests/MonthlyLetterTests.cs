@@ -4,11 +4,7 @@ using Xunit;
 
 namespace Shifter.Tests;
 
-/// <summary>
-/// The month in a letter. Once a month is the only frequency at which a letter
-/// from an app is not an irritation, which puts the whole weight on it saying
-/// something true and nothing padded.
-/// </summary>
+/// <summary>The month in a letter.</summary>
 public class MonthlyLetterTests
 {
     private static MonthlyLetter.Facts Facts(
@@ -108,11 +104,7 @@ public class MonthlyLetterTests
         Assert.DoesNotContain("<link", html);
     }
 
-    /// <summary>
-    /// The letter goes to an inbox, where a reader has nothing to compare a
-    /// figure against and nobody to ask. It used to write «199.5 h» — an
-    /// invariant decimal point and an English unit — under Russian prose.
-    /// </summary>
+    /// <summary>The letter goes to an inbox, where a reader has nothing to compare a figure against and nobody to ask.</summary>
     [Fact]
     public void TheLetterWritesHoursInTheLanguageItIsWrittenIn()
     {

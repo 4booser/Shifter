@@ -2,12 +2,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Shifter.Domain.Entities;
 
-/// <summary>
-/// One shift placed on one day. An entity rather than a bare join table for two
-/// reasons: it carries a snapshot of the rate, so editing a template no longer
-/// rewrites what past days earned, and it records whether the shift was
-/// actually worked or is still only planned.
-/// </summary>
+/// <summary>One shift placed on one day.</summary>
 public sealed class DayShift
 {
     public int Id { get; set; }
@@ -25,71 +20,29 @@ public sealed class DayShift
     public TipSource TipSource { get; set; }
     public decimal? TipPoolPercent { get; set; }
 
-    /// <summary>
-    /// What this shift took, entered after the fact — the only number in the
-    /// pay that the template cannot know in advance. Null is "not counted",
-    /// which is different from zero and is why a percentage shift with no
-    /// takings recorded pays its base and nothing more.
-    /// </summary>
+    /// <summary>What this shift took, entered after the fact — the only number in the pay that the template cannot know in…</summary>
     public decimal? Revenue { get; set; }
 
-    /// <summary>
-    /// How many people the shift served.
-    ///
-    /// Takings on their own do not describe an evening. Twelve thousand off
-    /// forty covers is a different night from twelve thousand off a hundred
-    /// and twenty, and it is the average cheque — not the total — that a
-    /// manager and a bartender actually argue about.
-    ///
-    /// Null is "nobody counted", which is different from zero: an evening
-    /// with no guests is a real and dreadful thing, and it is not the same as
-    /// an evening nobody kept a tally on.
-    /// </summary>
+    /// <summary>How many people the shift served.</summary>
     public int? Guests { get; set; }
 
-    /// <summary>
-    /// Where in the venue it was worked.
-    ///
-    /// Every waiter knows the terrace tips better than the bar; none of them
-    /// can say by how much. Unset is "nobody said", and it is counted apart
-    /// rather than folded into whichever zone is commonest.
-    /// </summary>
+    /// <summary>Where in the venue it was worked.</summary>
     public ShiftZone Zone { get; set; } = ShiftZone.Unset;
 
     public TimeOnly StartTime { get; set; }
     public TimeOnly EndTime { get; set; }
     public int BreakMinutes { get; set; }
 
-    /// <summary>
-    /// False means planned. Totals keep the two apart so a month of future
-    /// shifts is not reported as money already earned.
-    /// </summary>
+    /// <summary>False means planned.</summary>
     public bool Worked { get; set; }
 
-    /// <summary>
-    /// Raised when this shift needs someone to take it. Visible to the whole
-    /// team on the shared rota, which is the point: the alternative is a
-    /// message in a group chat that scrolls away in ten minutes.
-    /// </summary>
+    /// <summary>Raised when this shift needs someone to take it.</summary>
     public bool NeedsCover { get; set; }
 
-    /// <summary>
-    /// Whether the crew sees this one. Null defers to the member's own default
-    /// for the team, which is what almost every shift will be; true and false
-    /// are the deliberate exceptions to it.
-    ///
-    /// Three states rather than two because the answer is genuinely "I have not
-    /// said" for most shifts, and collapsing that into either yes or no makes
-    /// changing the default rewrite history.
-    /// </summary>
+    /// <summary>Whether the crew sees this one.</summary>
     public bool? TeamVisible { get; set; }
 
-    /// <summary>
-    /// When the shift actually started, where that differs from the plan. Set
-    /// by the live clock or by hand; null keeps the template's word for it.
-    /// Both must be present to count — one honest edge and one planned edge
-    /// would price an interval nobody worked.
-    /// </summary>
+    /// <summary>When the shift actually started, where that differs from the plan.</summary>
     public TimeOnly? ActualStart { get; set; }
 
     public TimeOnly? ActualEnd { get; set; }
@@ -123,12 +76,7 @@ public sealed class DayShift
         }
     }
 
-    /// <summary>
-    /// What this placement adds to its day. Weekly and monthly wages earn
-    /// nothing per shift — they are paid once per period and land on the range
-    /// summary instead.
-    /// </summary>
-    /// <summary>The rate alone, before any share of the takings.</summary>
+    /// <summary>What this placement adds to its day.</summary>
     [NotMapped]
     public decimal BasePay => SalaryPeriod switch
     {

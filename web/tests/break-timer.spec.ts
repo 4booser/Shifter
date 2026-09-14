@@ -80,9 +80,7 @@ describe('the break that survives a refresh', () => {
 
 describe('what a timed break does to the minutes already there', () => {
   it('replaces the break a template assumed', () => {
-    // A template can apply half an hour automatically — an assumption about
-    // what this shift usually does. The timed one is a fact, and adding it to
-    // the assumption costs somebody a full hour of paid time instead of half.
+    // A template can apply half an hour automatically — an assumption about what this shift usually does.
     expect(foldBreak(30, 30, false)).toBe(30);
     expect(foldBreak(30, 47, false)).toBe(47);
   });

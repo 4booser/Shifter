@@ -11,12 +11,7 @@ using Shifter.Infrastructure.Persistence.DbContexts;
 
 namespace Shifter.Application.Features.Auth.Services;
 
-/// <summary>
-/// Losing a password stops meaning losing the account. A request always
-/// answers the same way whether or not the address is known — the letter is
-/// the only channel that reveals anything — and the ticket it carries is
-/// single-use, hour-long and stored only as a hash.
-/// </summary>
+/// <summary>Losing a password stops meaning losing the account.</summary>
 public sealed class PasswordResetService
 {
     public const int MinPasswordLength = 8;
@@ -39,11 +34,7 @@ public sealed class PasswordResetService
     public static string NewToken()
         => Convert.ToHexString(RandomNumberGenerator.GetBytes(32)).ToLowerInvariant();
 
-    /// <summary>
-    /// Always succeeds from the caller's point of view. Returns the token
-    /// only when the environment asked for it (development), never in
-    /// production, where the letter is the only way to learn it.
-    /// </summary>
+    /// <summary>Always succeeds from the caller's point of view.</summary>
     public async Task<string?> RequestAsync(string? email, bool revealToken, CancellationToken ct)
     {
         var address = email?.Trim().ToLowerInvariant();

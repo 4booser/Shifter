@@ -4,11 +4,7 @@ import { useEffect, useState } from 'react';
 
 const HUES = ['var(--accent)', 'var(--good)', 'var(--warn)', 'var(--s1)', 'var(--s2)', 'var(--s3)'];
 
-/**
- * A one-second shower over the card that earned it. Pure CSS, no library,
- * and nothing at all under reduced motion — a milestone is worth a breath
- * of colour, not a physics engine.
- */
+/** A one-second shower over the card that earned it. */
 export function ConfettiBurst() {
   const [alive, setAlive] = useState(true);
 

@@ -3,14 +3,7 @@ import { pad } from '@/lib/calendar';
 import { CalendarDayData, DaysResponse, toSavePayload } from '@/lib/types';
 import { LiveShift, breakSeconds } from '@/store/live';
 
-/**
- * Writing a finished shift into its day.
- *
- * Lifted out of the live screen so the auto-stop can use the very same
- * routine: a shift that closes itself at the chosen hour must land in the
- * calendar exactly as one closed by the button, or the two would quietly
- * disagree about what a worked day looks like.
- */
+/** Writing a finished shift into its day. */
 const clock = (at: Date): string => `${pad(at.getHours())}:${pad(at.getMinutes())}`;
 
 export async function writeFinishedShift(input: {
@@ -31,9 +24,7 @@ export async function writeFinishedShift(input: {
     actual_start: clock(started),
     actual_end: clock(ended),
     worked: true,
-    // Minutes, because that is what the server prices in — and null rather
-    // than zero where nobody took one, so the template's own unpaid minutes
-    // are kept rather than overwritten with "none".
+    // Minutes, because that is what the server prices in — and null rather than zero where nobody took one, so the…
     break_minutes: paused > 30 ? Math.round(paused / 60) : null,
   };
 

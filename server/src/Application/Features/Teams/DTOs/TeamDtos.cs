@@ -19,15 +19,7 @@ public record RotaOfferDto(
     bool is_you,
     bool accepted);
 
-/// <summary>
-/// One person's shift on the shared rota.
-///
-/// This record is the privacy boundary. <c>pay</c> is null for everyone who has
-/// not switched sharing on, and null there is not a filtered value — the query
-/// does not select the column for those people at all, so there is nothing in
-/// memory to leak. Anything added here becomes visible to the whole team, so
-/// think before widening it.
-/// </summary>
+/// <summary>One person's shift on the shared rota.</summary>
 public record RotaEntryDto(
     /// <summary>Identifies the placement so an offer can name which one.</summary>
     int day_shift_id,
@@ -48,11 +40,7 @@ public record RotaEntryDto(
     bool needs_cover,
     /// <summary>True when it is the caller's own shift, who alone can hand it over.</summary>
     bool is_mine,
-    /// <summary>
-    /// What the shift is set to do on the rota: "shown", "hidden", or "default".
-    /// Only ever populated for the caller's own shifts — what somebody else has
-    /// chosen to keep back is itself not the crew's business.
-    /// </summary>
+    /// <summary>What the shift is set to do on the rota: "shown", "hidden", or "default".</summary>
     string? visibility,
     /// <summary>Null unless this person shares earnings. See the type remarks.</summary>
     decimal? pay,
@@ -71,20 +59,13 @@ public record RotaMemberDto(
     int cover_requests,
     /// <summary>Whether this person lets the crew see what they earn.</summary>
     bool shares_earnings,
-    /// <summary>
-    /// Still learning the room. Not private: everybody on a shift already
-    /// knows who is new, and the rota pretending otherwise helps nobody.
-    /// </summary>
+    /// <summary>Still learning the room.</summary>
     bool trainee,
     /// <summary>Null unless they do.</summary>
     decimal? earned,
     /// <summary>Shifts of theirs the crew cannot see. Only ever set for you.</summary>
     int? hidden,
-    /// <summary>
-    /// What their unmarked shifts do. Only ever set for you — knowing whether
-    /// somebody hides by habit or by exception says something about them that
-    /// the rota has no business saying.
-    /// </summary>
+    /// <summary>What their unmarked shifts do.</summary>
     bool? private_by_default,
     /// <summary>When your trial ends. Only ever set for you: the flag is the
     /// crew's business, the date is yours.</summary>
@@ -115,20 +96,7 @@ public record RotaDto(
     RotaDayDto[] days,
     /// <summary>Accepted gig-board outings inside the range, one chip each.</summary>
     RotaGigDto[] gig_outings,
-    /// <summary>
-    /// True where the reader's account has no second factor and the crew's
-    /// shared totals are consequently being withheld.
-    ///
-    /// Named for the account rather than for what is missing, because a rota
-    /// privacy test forbids this envelope from mentioning money at all — and
-    /// it is right to: the envelope has no owner who agreed to anything, so a
-    /// field named after somebody's earnings has no business on it even as a
-    /// flag.
-    ///
-    /// Said out loud rather than shown as an empty column: somebody whose
-    /// colleagues' figures have quietly gone missing will conclude the app is
-    /// broken, and they would be reasonable to.
-    /// </summary>
+    /// <summary>True where the reader's account has no second factor and the crew's shared totals are consequently being…</summary>
     bool needs_second_factor = false);
 
 /// <summary>Offering to take somebody else's shift.</summary>
@@ -137,11 +105,7 @@ public record OfferCoverDto(int UserId, int TeamId, int DayShiftId) : IRequest<R
 /// <summary>Taking the offer back, which only the person who made it may do.</summary>
 public record WithdrawCoverDto(int UserId, int TeamId, int OfferId) : IRequest<Unit>;
 
-/// <summary>
-/// Handing the shift over, which only its owner may do. The shift leaves their
-/// calendar; the person taking it puts it on their own, because only they know
-/// what they are paid for it.
-/// </summary>
+/// <summary>Handing the shift over, which only its owner may do.</summary>
 public record AcceptCoverDto(int UserId, int TeamId, int OfferId) : IRequest<AcceptedCoverDto>;
 
 /// <summary>What was handed over, so the client can say so plainly.</summary>
@@ -166,11 +130,7 @@ public record RotateCodeDto(int UserId, int TeamId) : IRequest<TeamDto>;
 public record GetRotaDto(int UserId, int TeamId, DateOnly From, DateOnly To)
     : IRequest<RotaDto>;
 
-/// <summary>
-/// How you appear to your crew and how much of yourself you show them. Every
-/// field is optional so a screen can change one thing without restating the
-/// rest, which is also what stops a stale client switching sharing back on.
-/// </summary>
+/// <summary>How you appear to your crew and how much of yourself you show them.</summary>
 public record UpdateMembershipDto(
     int UserId,
     int TeamId,
@@ -193,10 +153,7 @@ public record MembershipDto(
     /// <summary>When the trial ends, where one was agreed.</summary>
     DateOnly? trial_ends_on = null);
 
-/// <summary>
-/// Marking one shift shown or hidden on the rota. Null means "no opinion" and
-/// puts the shift back under whatever the member default is.
-/// </summary>
+/// <summary>Marking one shift shown or hidden on the rota.</summary>
 public record SetShiftVisibilityDto(int UserId, int DayShiftId, bool? visible)
     : IRequest<Unit>;
 

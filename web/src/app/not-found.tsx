@@ -4,15 +4,7 @@ import Link from 'next/link';
 
 import { useI18n } from '@/lib/i18n';
 
-/**
- * A wrong address, in the app's own skin.
- *
- * Without this file the export ships Next's default: black on white,
- * «This page could not be found.» in English regardless of the language
- * the person set, with no way back except the browser's own button. It is
- * also what a mistyped share link lands on, which makes it the first thing
- * some people ever see of this app.
- */
+/** A wrong address, in the app's own skin. */
 export default function NotFound() {
   const { t } = useI18n();
 

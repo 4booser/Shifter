@@ -178,11 +178,7 @@ public partial class ShiftHandler : IShiftHandler
     private static TipSource ParseTipSource(string? value) =>
         value?.Trim().ToLowerInvariant() == "pool" ? TipSource.Pool : TipSource.Personal;
 
-    /// <summary>
-    /// A percentage worth storing: zero and nothing mean the same thing here,
-    /// and anything outside nought to a hundred is a typing slip rather than a
-    /// deal anybody struck.
-    /// </summary>
+    /// <summary>A percentage worth storing: zero and nothing mean the same thing here, and anything outside nought to a…</summary>
     private static decimal? Share(decimal? value)
     {
         if (value is not decimal share || share <= 0m) return null;
@@ -193,10 +189,7 @@ public partial class ShiftHandler : IShiftHandler
         return Math.Round(share, 2);
     }
 
-    /// <summary>
-    /// Empty and null both mean "take the place's colour": the client clears
-    /// the swatch by sending either, and neither belongs in the database.
-    /// </summary>
+    /// <summary>Empty and null both mean "take the place's colour": the client clears the swatch by sending either, and…</summary>
     private static string? NormaliseColour(string? colour)
     {
         if (string.IsNullOrWhiteSpace(colour)) return null;

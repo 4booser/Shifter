@@ -1,10 +1,6 @@
 namespace Shifter.Domain.Entities;
 
-/// <summary>
-/// The stations a hospitality rota is counted by. Deliberately short: a list
-/// long enough to describe every job is long enough that nobody fills it in,
-/// and a coverage gap nobody records is a gap nobody sees.
-/// </summary>
+/// <summary>The stations a hospitality rota is counted by.</summary>
 public enum PlanRole
 {
     /// <summary>Not said. Counted separately rather than guessed at.</summary>

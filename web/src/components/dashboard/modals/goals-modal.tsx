@@ -19,10 +19,7 @@ const EVERY: Record<GoalPeriod, string> = {
   year: 'Every year',
 };
 
-/**
- * Amounts to aim for: standing — every month, every day — or pinned to one
- * period that is going to be different from the rest.
- */
+/** Amounts to aim for: standing — every month, every day — or pinned to one period that is going to be different… */
 export function GoalsModal({
   open,
   onClose,

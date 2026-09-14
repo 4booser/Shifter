@@ -2,12 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { CalendarDayData, toSavePayload } from '@/lib/calendar/models';
 
-/**
- * A save replaces the day: the server builds every shift row from the
- * template again and only keeps what the request carried. So the payload
- * builder has to hand back everything the day already held — anything it
- * drops is not left alone, it is erased on the next unrelated edit.
- */
+/** A save replaces the day: the server builds every shift row from the template again and only keeps what the… */
 const day = {
   date: '2026-08-31',
   colour: '#22C55E',

@@ -18,11 +18,7 @@ import { t } from '@/lib/i18n';
 import { money } from '@/lib/types';
 import { todayKey } from '@/lib/calendar';
 
-/*
- * The web's chart shelf, in the pocket. The phone has no cursor, so every
- * chart answers the finger instead: tap a column and the figures appear in
- * a line under the chart. Same mirrored arithmetic, same stable colours.
- */
+/* The web's chart shelf, in the pocket. */
 
 const monthName = (key: string) =>
   new Date(`${key}-15T12:00:00`).toLocaleDateString('ru', { month: 'short' });

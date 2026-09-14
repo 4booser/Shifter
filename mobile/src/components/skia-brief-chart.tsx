@@ -11,11 +11,7 @@ import { todayKey } from '@/lib/calendar';
 import { t } from '@/lib/i18n';
 import { CalendarDayData, money } from '@/lib/types';
 
-/**
- * The brief's month, redrawn on the GPU: Victory Native XL over Skia, 60fps
- * pan instead of a tap-only answer. The figures are the same wave-52 maths —
- * cumulative fact to today, the brief's own projection as the dashed tail.
- */
+/** The brief's month, redrawn on the GPU: Victory Native XL over Skia, 60fps pan instead of a tap-only answer. */
 interface BriefFacts {
   monthEarned: number;
   projectedMonth: number | null;
@@ -84,13 +80,7 @@ export function SkiaBriefChart({ palette, days }: { palette: Palette; days: Cale
     if (value !== null) setPicked({ day, value });
   };
 
-  /*
-   * The day under the finger, read on the thread that holds it.
-   *
-   * Two things stood here: a derived value whose result nobody consumed, and
-   * a timer polling the same shared value from JS twelve times a second. One
-   * reaction does the work, and does it when the number actually changes.
-   */
+  /* The day under the finger, read on the thread that holds it. */
   useAnimatedReaction(
     () => Math.round(state.x.value.value),
     (day, before) => {

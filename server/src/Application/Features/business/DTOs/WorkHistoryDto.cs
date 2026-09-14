@@ -1,10 +1,6 @@
 namespace Shifter.Application.Features.business.DTOs;
 
-/// <summary>
-/// One place somebody has worked, as a line of a CV. The rate rather than the
-/// total: what an hour was worth is the number an employer reads, and what the
-/// year came to is nobody else's business.
-/// </summary>
+/// <summary>One place somebody has worked, as a line of a CV.</summary>
 public record WorkHistoryPlaceDto(
     string name,
     /// <summary>yyyy-MM.</summary>
@@ -16,12 +12,7 @@ public record WorkHistoryPlaceDto(
     decimal? per_hour,
     string currency);
 
-/// <summary>
-/// One month of the record, the way a payroll clerk reads it: how many days
-/// were actually stood, how many hours they came to, and what an hour was
-/// worth. A CV that says only "three years in the trade" cannot be checked;
-/// this can be, line by line.
-/// </summary>
+/// <summary>One month of the record, the way a payroll clerk reads it: how many days were actually stood, how many hours…</summary>
 public record WorkHistoryMonthDto(
     /// <summary>yyyy-MM.</summary>
     string month,
@@ -34,11 +25,7 @@ public record WorkHistoryMonthDto(
     decimal? earned,
     decimal? per_hour);
 
-/// <summary>
-/// A biography made of shifts. Every figure comes from days that were actually
-/// recorded, which is what makes it worth showing to somebody with no reason to
-/// believe you.
-/// </summary>
+/// <summary>A biography made of shifts.</summary>
 public record WorkHistoryDto(
     int shifts,
     double hours,

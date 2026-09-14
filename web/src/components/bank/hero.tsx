@@ -10,23 +10,9 @@ import { Icon } from '@/components/ui/icon';
 import { Money } from '@/components/ui/bits';
 import { FlowMoney } from '@/components/ui/flow';
 
-/**
- * The band of figures across the top of the bank, and the one filled card in
- * it.
- *
- * Before this the balance owned a card two thirds of the page wide, the reserve
- * owned another, and everything else queued underneath — so the short cards on
- * the right ran out while the left column kept going, leaving empty rectangles
- * a screen and a half tall. A row of tiles has no such quarrel: five figures,
- * one of them filled, and the row ends where the shortest tile ends.
- */
+/** The band of figures across the top of the bank, and the one filled card in it. */
 
-/**
- * One quiet tile: what it is, the figure, and the small line that says how it
- * moved. A tile never disappears when its arithmetic comes out empty — a hole
- * in the band reads as a broken page, so the figure becomes «—» and the hint
- * says why.
- */
+/** One quiet tile: what it is, the figure, and the small line that says how it moved. */
 export function BankTile({
   label,
   icon,
@@ -39,10 +25,7 @@ export function BankTile({
   icon: string;
   value: React.ReactNode;
   hint?: React.ReactNode;
-  /**
-   * The sentence a tile has no room for — how the figure was arrived at, what
-   * it does not know. A tile that drops the caveat is a tile that promises.
-   */
+  /** The sentence a tile has no room for — how the figure was arrived at, what it does not know. */
   note?: string;
   /** Colour for the hint line only; the figure itself is always the page's ink. */
   tone?: 'quiet' | 'good' | 'danger' | 'warn';
@@ -57,9 +40,7 @@ export function BankTile({
           : 'text-muted';
 
   return (
-    // Justified: the quiet tiles are stretched to the filled one's height by
-    // the grid, and left to themselves they hung their figure at the top with
-    // a hand's width of nothing under it.
+    // Justified: the quiet tiles are stretched to the filled one's height by the grid, and left to themselves they…
     <div className="tile justify-between" title={note}>
       <span className="tile-label w-full justify-between">
         <span className="truncate">{label}</span>
@@ -75,16 +56,7 @@ export function BankTile({
   );
 }
 
-/**
- * «На карте» — the filled tile, with the month's own balance curve along its
- * floor.
- *
- * The curve is the bank's own running balance read off the transactions: the
- * one figure on this page nobody has to trust our arithmetic for. At a tile's
- * size it is a sparkline and says only «how did the month feel» — the day the
- * balance was lowest is written under it in figures, because a sparkline that
- * small cannot be read to the hryvnia and should not pretend to be.
- */
+/** «На карте» — the filled tile, with the month's own balance curve along its floor. */
 export function BankHero({
   account,
   items,
@@ -118,9 +90,7 @@ export function BankHero({
     return { line, area: `${line} L ${width} ${height} L 0 ${height} Z`, low, high };
   }, [curve]);
 
-  // The account names the credit limit; the curve alone still knows the
-  // balance — its last point is the bank's own figure. client-info failing
-  // must not blank the one chart on the page.
+  // The account names the credit limit; the curve alone still knows the balance — its last point is the bank's…
   if (account === null && curve === null) return null;
 
   const balance =
@@ -172,11 +142,7 @@ export function BankHero({
             )}
           </div>
 
-          {/* Bled to the tile's edges: a sparkline with a gutter under it
-              reads as a chart missing its axis. Height stated, not inferred —
-              a five-to-one viewBox on a four-hundred-pixel tile worked out to
-              eighty-six pixels of sparkline, and the whole band was stretched
-              to the filled tile's height. */}
+          {/* Bled to the tile's edges: a sparkline with a gutter under it reads as a chart missing its axis. */}
           <svg
             viewBox={`0 0 ${width} ${height}`}
             className="-mx-[0.95rem] -mb-[0.85rem] mt-1 block h-12 w-[calc(100%+1.9rem)]"

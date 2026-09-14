@@ -22,11 +22,7 @@ const NAMES: Record<string, string> = {
   'accounts-database': 'Accounts database',
 };
 
-/**
- * The public status page. It asks the service about itself and shows the
- * answer plainly — including a bad answer, because a status page that can
- * only say "fine" is decoration.
- */
+/** The public status page. */
 export default function StatusPage() {
   const { t, lang } = useI18n();
   const revealHost = useReveal<HTMLDivElement>();
@@ -58,9 +54,7 @@ export default function StatusPage() {
     if (days > 0) return `${days} ${t('d.')} ${hours} ${t('hr')}`;
     if (hours > 0) return `${hours} ${t('hr')} ${minutes} ${t('min')}`;
 
-    // A service up for forty seconds read «0 мин без перезапуска», which on a
-    // status page is what a broken counter looks like. Under the unit, say
-    // «under the unit».
+    // A service up for forty seconds read «0 мин без перезапуска», which on a status page is what a broken counter…
     if (minutes === 0) return t('under a minute');
 
     return `${minutes} ${t('min')}`;
@@ -84,9 +78,7 @@ export default function StatusPage() {
 
       <main className="mx-auto max-w-3xl px-4 py-12">
         <section className="reveal mb-8 text-center">
-          {/* Three colour emoji in a coloured disc: the tick brought its own
-              green square inside the app's green circle. Drawn from the set,
-              the disc's colour is the only colour. */}
+          {/* Three colour emoji in a coloured disc: the tick brought its own green square inside the app's green circle. */}
           <span
             className={`mx-auto mb-3 grid h-16 w-16 place-items-center rounded-full ${
               unreachable

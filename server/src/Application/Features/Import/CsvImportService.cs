@@ -6,19 +6,7 @@ using Shifter.Infrastructure.Persistence.DbContexts;
 
 namespace Shifter.Application.Features.Import;
 
-/// <summary>
-/// A year of somebody's records, carried in from whatever they used before.
-///
-/// Nobody retypes a year. The alternative to importing badly is not importing
-/// carefully — it is the person deciding this app starts empty and theirs does
-/// not, and leaving.
-///
-/// Two steps, and the first one writes nothing. A file is read into a grid,
-/// the columns are guessed, and the whole thing goes back to a preview screen
-/// where a person fixes the guess. Only then is anything saved. A confident
-/// import that put tips in the wage column would be indistinguishable from a
-/// correct one a month later.
-/// </summary>
+/// <summary>A year of somebody's records, carried in from whatever they used before.</summary>
 public sealed class CsvImportService
 {
     private readonly ShifterDbContext _db;
@@ -78,14 +66,7 @@ public sealed class CsvImportService
 
     public sealed record Written(int Days, int Skipped, int Places);
 
-    /// <summary>
-    /// Writes the file, under the mapping a person confirmed.
-    ///
-    /// Days that already have something on them are left alone. Somebody
-    /// importing a year on top of three months of real work must not lose the
-    /// three months, and "the past is not rewritten" does not stop being true
-    /// because the rewrite came from a spreadsheet.
-    /// </summary>
+    /// <summary>Writes the file, under the mapping a person confirmed.</summary>
     public async Task<Written> ApplyAsync(
         int userId,
         string text,

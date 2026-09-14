@@ -1,16 +1,8 @@
 using Xunit;
 
-
 namespace Shifter.Api.Tests;
 
-/// <summary>
-/// How long the screens people actually open take, against three years of
-/// somebody's working life.
-///
-/// The first run of this is a measurement rather than a check: nobody has ever
-/// looked, so there is no number to be right or wrong about yet. What it
-/// prints becomes the budget.
-/// </summary>
+/// <summary>How long the screens people actually open take, against three years of somebody's working life.</summary>
 [Collection("api")]
 public sealed class LoadTests(Api api, ITestOutputHelper output)
 {

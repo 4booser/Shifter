@@ -11,12 +11,7 @@ using Shifter.Infrastructure.Persistence.DbContexts;
 
 namespace Shifter.Application.Features.Gigs;
 
-/// <summary>
-/// The freelance shift board. Anyone may post a gig for their venue and
-/// anyone may answer one; what crosses between them is only what each side
-/// typed in on purpose. Money here is a label on a card, never a wage the
-/// calendar computes — a gig belongs to the venue's till, not to payroll.
-/// </summary>
+/// <summary>The freelance shift board.</summary>
 public sealed class GigService
 {
     private readonly ShifterDbContext _db;
@@ -193,12 +188,7 @@ public sealed class GigService
         return ToDto(gig, userId);
     }
 
-    /// <summary>
-    /// One reply as its listing's owner may see it. Every screen that shows a
-    /// reply goes through here, because the rule it enforces — a contact is
-    /// visible only once the person opened it — is the kind that has to be
-    /// impossible to forget rather than merely written down somewhere.
-    /// </summary>
+    /// <summary>One reply as its listing's owner may see it.</summary>
     private static GigResponseDto Seen(
         GigResponse reply,
         Dictionary<int, (double Avg, int Count)> workerRatings)
@@ -247,18 +237,7 @@ public sealed class GigService
             .ToArray();
     }
 
-    /// <summary>
-    /// Marks the replies whose contacts have just gone out to an owner.
-    ///
-    /// Counted as occasions rather than page loads: a venue with the tab open
-    /// all evening looked once. Counting refreshes would turn an honest log
-    /// into an accusation, and the person reading it cannot tell the two
-    /// apart.
-    ///
-    /// A failure here is swallowed. The log is a courtesy and the reply is the
-    /// product; losing one view record is much better than a board that will
-    /// not load.
-    /// </summary>
+    /// <summary>Marks the replies whose contacts have just gone out to an owner.</summary>
     private async Task NoteContactsSeenAsync(
         IEnumerable<GigResponse> replies, CancellationToken ct)
     {
@@ -441,14 +420,7 @@ public sealed class GigService
         return Seen(reply, []);
     }
 
-    /// <summary>
-    /// The person's own yes: the contacts they held back now go to the venue.
-    ///
-    /// It does not insist the venue said yes first. The number belongs to the
-    /// person, and somebody who changes their mind and wants to be called
-    /// should be able to say so rather than sit in a stage waiting for
-    /// permission to share their own phone.
-    /// </summary>
+    /// <summary>The person's own yes: the contacts they held back now go to the venue.</summary>
     public async Task<GigDto> OpenAsync(int userId, int gigId, GigRespondDto request, CancellationToken ct)
     {
         var gig = await _db.GigListings
@@ -496,18 +468,7 @@ public sealed class GigService
         return ToDto(gig, userId);
     }
 
-    /// <summary>
-    /// Venues whose history vouches for them.
-    ///
-    /// Not a claim made at registration and not a thing anybody can apply for:
-    /// enough one-off shifts that actually took place, and nobody who worked
-    /// them came back and said it went badly. A badge that can be applied for
-    /// is a badge that means whatever the person applying wanted it to mean.
-    ///
-    /// It comes off by itself. One bad review inside the recent ones takes it
-    /// away without anybody deciding to, which is the only kind of automatic
-    /// removal that is fair — the same rule that gave it takes it back.
-    /// </summary>
+    /// <summary>Venues whose history vouches for them.</summary>
     private async Task<HashSet<int>> TrustedAsync(int[] ownerIds, CancellationToken ct)
     {
         if (ownerIds.Length == 0) return [];
@@ -557,23 +518,12 @@ public sealed class GigService
             .ToHashSet();
     }
 
-    /// <summary>
-    /// Five shifts that happened and three people who came back to rate them,
-    /// none below four. Deliberately hard: a badge two venues in the city can
-    /// hold means something, and a badge everybody holds is decoration.
-    /// </summary>
+    /// <summary>Five shifts that happened and three people who came back to rate them, none below four.</summary>
     private const int TrustedShifts = 5;
     private const int TrustedReviews = 3;
     private const int TrustedFloor = 4;
 
-    /// <summary>
-    /// How many times the caller has worked for each of these people, and what
-    /// they thought of them.
-    ///
-    /// Somebody else's stars are an average of strangers. "You worked here
-    /// four times and gave them a five" is the reader's own evidence, and it
-    /// settles the question before the rating is read at all.
-    /// </summary>
+    /// <summary>How many times the caller has worked for each of these people, and what they thought of them.</summary>
     private async Task<Dictionary<int, (int Times, int? Rating)>> HistoryWithAsync(
         int userId, int[] ownerIds, CancellationToken ct)
     {
@@ -628,11 +578,7 @@ public sealed class GigService
 
     // ==== Calling back somebody who already worked out ====
 
-    /// <summary>
-    /// The people this venue has actually taken before, newest first. The
-    /// contacts are the ones they already handed over on those shifts —
-    /// nothing new is disclosed by remembering them.
-    /// </summary>
+    /// <summary>The people this venue has actually taken before, newest first.</summary>
     public async Task<KnownWorkerDto[]> KnownWorkersAsync(int userId, CancellationToken ct)
     {
         var replies = await _db.GigResponses
@@ -679,11 +625,7 @@ public sealed class GigService
             .ToArray();
     }
 
-    /// <summary>
-    /// "Come work this one too": a direct push to somebody who worked here
-    /// before. It invites, it does not book — the person still answers on
-    /// the board, so consent stays theirs.
-    /// </summary>
+    /// <summary>"Come work this one too": a direct push to somebody who worked here before.</summary>
     public async Task InviteAsync(int userId, int listingId, int inviteeUserId, CancellationToken ct)
     {
         var gig = await _db.GigListings
@@ -720,12 +662,7 @@ public sealed class GigService
 
     // ==== Reviews: reputation earned one shift at a time ====
 
-    /// <summary>
-    /// Who may review whom for this listing: the owner reviews accepted
-    /// workers, an accepted worker reviews the owner — and only once the
-    /// shift's date has passed, because a verdict on work not yet done is
-    /// just a mood.
-    /// </summary>
+    /// <summary>Who may review whom for this listing: the owner reviews accepted workers, an accepted worker reviews the…</summary>
     public async Task<ReviewDto> ReviewAsync(int userId, int listingId, ReviewSaveDto request, CancellationToken ct)
     {
         if (request.rating is < 1 or > 5)
@@ -839,12 +776,7 @@ public sealed class GigService
                 .ToArray());
     }
 
-    /// <summary>
-    /// Whether this person has put themselves in front of the caller: an
-    /// active card on the board, a listing of theirs the caller answered, or a
-    /// response of theirs to a listing the caller owns. Publishing a card is
-    /// consent to be looked up; merely having an account is not.
-    /// </summary>
+    /// <summary>Whether this person has put themselves in front of the caller: an active card on the board, a listing of…</summary>
     private async Task<bool> OnTheBoardAsync(int targetUserId, int callerUserId, CancellationToken ct)
     {
         if (await _db.GigSeekers.AnyAsync(
@@ -1062,11 +994,7 @@ public sealed class GigService
         ratings?.GetValueOrDefault(seeker.UserId).Count ?? 0,
         seeker.UpdatedAt.ToString("O"));
 
-    /// <summary>
-    /// What the caller's own hours have been worth lately. Three months rather
-    /// than everything: a rate from two years ago is not what they would be
-    /// giving up tonight.
-    /// </summary>
+    /// <summary>What the caller's own hours have been worth lately.</summary>
     private async Task<LocationTotalDto[]> MyHoursAsync(int userId, CancellationToken ct)
     {
         DateOnly today = DateOnly.FromDateTime(DateTime.UtcNow);

@@ -1,22 +1,12 @@
 namespace Shifter.Application.Features.Webhooks.DTOs;
 
-/// <summary>
-/// The one address in the application that answers without a token of ours.
-/// Named here rather than written twice, so the URL the manager hands out and
-/// the route that receives on it cannot drift apart.
-/// </summary>
+/// <summary>The one address in the application that answers without a token of ours.</summary>
 public static class WebhookRoutes
 {
     public const string Hooks = "shifter/v1/hooks";
 }
 
-/// <summary>
-/// An endpoint as its owner sees it. The secret is included rather than shown
-/// once and hidden: it has to be pasted into somebody else's software, often
-/// days later and often twice, and an integration nobody can re-configure
-/// without deleting it is worse than one whose key is readable by the account
-/// that owns it.
-/// </summary>
+/// <summary>An endpoint as its owner sees it.</summary>
 public record WebhookDto(
     int id,
     string name,
@@ -40,11 +30,7 @@ public record WebhookDto(
     int recent_applied,
     int recent_failed);
 
-/// <summary>
-/// The whole endpoint, sent on create and on edit alike. There is no partial
-/// update: the screen holds every field, so a patch would only add a way for
-/// one form to silently reset another's work.
-/// </summary>
+/// <summary>The whole endpoint, sent on create and on edit alike.</summary>
 public record WebhookSaveDto(
     string name,
     string kind,
@@ -53,11 +39,7 @@ public record WebhookSaveDto(
     int? default_shift_id,
     /// <summary>Null or empty means the sender already speaks the canonical shape.</summary>
     string? mapping,
-    /// <summary>
-    /// Together these say "this sender signs its own way": the header it signs
-    /// under and the key it signs with. Both or neither — a header with no key
-    /// cannot be checked, and a key with no header cannot be found.
-    /// </summary>
+    /// <summary>Together these say "this sender signs its own way": the header it signs under and the key it signs with.</summary>
     string? signature_header = null,
     string? signature_secret = null);
 
@@ -72,9 +54,7 @@ public record DeliveryDto(
     string? error,
     string payload);
 
-/// <summary>What a delivery turned into. The preview is filled in for the
-/// owner's own test runs and replays, and left off the sender's response —
-/// it holds catalogue prices, and the sender has no business with those.</summary>
+/// <summary>What a delivery turned into.</summary>
 public record IngestResultDto(
     /// <summary>applied, duplicate or preview.</summary>
     string status,

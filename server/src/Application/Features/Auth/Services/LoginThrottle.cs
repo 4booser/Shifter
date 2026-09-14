@@ -3,15 +3,7 @@ using Shifter.Application.Common.Exceptions;
 
 namespace Shifter.Application.Features.Auth.Services;
 
-/// <summary>
-/// Five wrong passwords in a quarter hour close the door for a quarter hour —
-/// for the right password too, because a lock that only stops wrong guesses
-/// stops nothing. A successful sign-in opens it and clears the count.
-///
-/// The count lives in process memory on purpose: the app runs as a single
-/// instance, and a table for this would outlive its own usefulness — a
-/// restart forgiving all counters is an acceptable cost of that honesty.
-/// </summary>
+/// <summary>Five wrong passwords in a quarter hour close the door for a quarter hour — for the right password too…</summary>
 public sealed class LoginThrottle
 {
     public const int Limit = 5;

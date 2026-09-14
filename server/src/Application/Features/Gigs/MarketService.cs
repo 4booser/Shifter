@@ -5,25 +5,14 @@ using Shifter.Infrastructure.Persistence.DbContexts;
 
 namespace Shifter.Application.Features.Gigs;
 
-/// <summary>
-/// What a job pays in a city, and where somebody's own rate sits in that.
-///
-/// Built from listings, which are already public — the board is where venues
-/// say out loud what they will pay. Nothing here reads anybody's private
-/// records, which is what makes the figure safe to publish at all: the
-/// alternative, aggregating what people actually earn, is a much better number
-/// and a much worse idea.
-/// </summary>
+/// <summary>What a job pays in a city, and where somebody's own rate sits in that.</summary>
 public sealed class MarketService
 {
     private readonly ShifterDbContext _db;
 
     public MarketService(ShifterDbContext db) => _db = db;
 
-    /// <summary>
-    /// How far back listings count. Half a year is recent enough that the
-    /// figure is about now, and long enough that a small city has a sample.
-    /// </summary>
+    /// <summary>How far back listings count.</summary>
     private const int Months = 6;
 
     public sealed record Reading(
@@ -70,12 +59,7 @@ public sealed class MarketService
             band is not null && mine is decimal rate ? MarketRate.Standing(band, rate) : null);
     }
 
-    /// <summary>
-    /// A shift price turned into an hourly one over the hours the listing
-    /// itself advertises. It is arithmetic on the venue's own two numbers, not
-    /// a guess about the shift — but a listing with no hours in it is dropped
-    /// rather than divided by zero into something enormous.
-    /// </summary>
+    /// <summary>A shift price turned into an hourly one over the hours the listing itself advertises.</summary>
     // Shared with the city comparison, which must normalise a listing the
     // same way this page does or the two would disagree about one posting.
     internal static decimal PerHour(
@@ -92,14 +76,7 @@ public sealed class MarketService
         return hours <= 0 ? 0m : Math.Round(amount / (decimal)hours, 2);
     }
 
-    /// <summary>
-    /// The caller's own hourly rate, averaged over what they actually worked.
-    ///
-    /// Only from placements priced by the hour: a monthly wage divided by
-    /// hours is a different number with a different meaning, and quietly
-    /// mixing the two would put a figure in front of somebody that no payslip
-    /// of theirs agrees with.
-    /// </summary>
+    /// <summary>The caller's own hourly rate, averaged over what they actually worked.</summary>
     private async Task<decimal?> MineAsync(int userId, CancellationToken ct)
     {
         var since = DateOnly.FromDateTime(DateTime.UtcNow).AddMonths(-Months);

@@ -5,16 +5,7 @@ using Xunit;
 
 namespace Shifter.Api.Tests;
 
-/// <summary>
-/// What a month comes to, asked of the running server.
-///
-/// Every money defect found this week — overtime at a negative multiplier,
-/// every hour counted as overtime, a meal deducted from a day nobody worked, a
-/// year of salary missing from a tax figure — survived a unit test on fakes
-/// and would not have survived this. The difference is that here the figure
-/// travels through the controller, the handler, EF and Postgres, which is what
-/// it does for a person.
-/// </summary>
+/// <summary>What a month comes to, asked of the running server.</summary>
 [Collection("api")]
 public sealed class MoneyOverHttpTests(Api api)
 {

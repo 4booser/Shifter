@@ -8,16 +8,7 @@ import { useI18n } from '@/lib/i18n';
 import { ExpectedWage, MonoStatementItem, WageMatch, wageCandidates } from '@/lib/mono/mono';
 import { Alert, Money } from '@/components/ui/bits';
 
-/**
- * The wage, matched against what the app expected.
- *
- * The reconciliation already knows what each place owes and when. The
- * statement knows what arrived. Putting the two side by side is the single
- * most useful thing a bank tab inside a shift tracker can do — and it is a
- * question, never an announcement: the app matched a credit against a figure
- * it computed itself, and the person is the one who knows whether that credit
- * is their wage.
- */
+/** The wage, matched against what the app expected. */
 export function BankWage({
   items,
   onRecorded,
@@ -59,9 +50,7 @@ export function BankWage({
           due: row.due_on,
         };
 
-        // The cutoff the phone's background watcher already uses: beyond a
-        // third out, a credit is not this wage arriving — it is something
-        // else, and offering it teaches people the card guesses.
+        // The cutoff the phone's background watcher already uses: beyond a third out, a credit is not this wage…
         const candidates = wageCandidates(items, expected, [])
           .filter((match) => Math.abs(match.difference) <= 0.35)
           .slice(0, 2);

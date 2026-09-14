@@ -1,18 +1,6 @@
 import { ExpectedWage, MonoStatementItem, WageMatch, wageCandidates } from '@/lib/mono';
 
-/**
- * Noticing that the wage arrived, without a server ever holding the token.
- *
- * A webhook would need a public URL and a token living somewhere other than
- * the phone, and that was decided against on purpose. So the phone has to
- * notice for itself, which means waking up occasionally and looking.
- *
- * The honest part is the promise. When the phone wakes is the operating
- * system's decision, not ours — it may be twenty minutes, it may be six hours,
- * and on a phone in low-power mode it may be tomorrow. Every word this feature
- * says is "вскоре". Promising the moment the money lands would be a promise
- * about something we do not control.
- */
+/** Noticing that the wage arrived, without a server ever holding the token. */
 
 export interface Watch {
   /** The wage the app is expecting, or null when none is due. */
@@ -29,23 +17,10 @@ export interface Waking {
   period: string;
 }
 
-/**
- * How close a credit has to be before it is worth waking somebody for.
- *
- * Generous, because a wage is rarely to the hryvnia — tax, an advance, a fine.
- * But not unbounded: a credit half the size is not the wage arriving, it is
- * something else, and telling somebody their wage came when a friend paid them
- * back is worse than saying nothing.
- */
+/** How close a credit has to be before it is worth waking somebody for. */
 export const CLOSE_ENOUGH = 0.25;
 
-/**
- * Whether anything here is worth a notification.
- *
- * Null far more often than not. A background wake-up that fires a notification
- * for anything interesting is a background wake-up people switch off inside a
- * week, and then the one message that mattered never arrives.
- */
+/** Whether anything here is worth a notification. */
 export function worthWaking(
   items: MonoStatementItem[],
   watch: Watch,
@@ -65,15 +40,7 @@ export function worthWaking(
   return best === undefined ? null : { match: best, period };
 }
 
-/**
- * What the notification says.
- *
- * It reports the arrival and asks. It never says "вам заплатили" — the app
- * matched a credit against a figure it worked out itself, and the person is
- * the one who knows whether that credit is their wage. A confident wrong
- * announcement about somebody's pay is the exact failure this app exists to
- * avoid.
- */
+/** What the notification says. */
 export function wakingWords(
   waking: Waking,
   place: string,

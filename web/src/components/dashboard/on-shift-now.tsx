@@ -7,18 +7,7 @@ import { shiftDays, todayKey } from '@/lib/calendar/calendar-date';
 import { onShiftNow, spell } from '@/lib/calendar/on-shift';
 import { useI18n } from '@/lib/i18n';
 
-/**
- * Who is on the floor at this moment.
- *
- * The simplest question a crew asks, and the one currently answered by a group
- * chat: somebody types "кто сегодня?", three people answer and two of them are
- * wrong. The rota has known all along; it is only that nobody has read it at
- * the one moment it matters.
- *
- * Nothing is entered. It lives entirely off the published rota, which is what
- * makes it true — a board somebody has to keep up to date is a board that goes
- * stale in a fortnight.
- */
+/** Who is on the floor at this moment. */
 export function OnShiftNow({ rota }: { rota: Rota | null }) {
   const { t } = useI18n();
 

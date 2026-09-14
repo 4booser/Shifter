@@ -1,8 +1,4 @@
-/*
- * The same tests as on the phone, over the same code. If a platform ever
- * needs its own copy of one of these, something upstream has already gone
- * wrong.
- */
+/* The same tests as on the phone, over the same code. */
 import { describe, expect, it } from 'vitest';
 
 import { balance, top } from '@/lib/mono/mono-flow';
@@ -27,9 +23,7 @@ describe('the two sides of the picture', () => {
   });
 
   it('names the shortfall rather than letting the picture not add up', () => {
-    // Spending more than arrived is an ordinary month, and the difference came
-    // from somewhere. Drawing it as a gap would leave the reader to work out
-    // that the money came out of their balance.
+    // Spending more than arrived is an ordinary month, and the difference came from somewhere.
     const sides = balance(
       [band('Зарплата', 20_000)],
       [band('Аренда', 25_000)],

@@ -2,19 +2,9 @@
 
 import { useEffect, useRef } from 'react';
 
-/**
- * Motion utilities. Everything respects the reduced-motion setting through the
- * --motion custom property the settings store maintains — a duration
- * multiplied by zero is no animation at all.
- */
+/** Motion utilities. */
 
-/**
- * Reveals `.reveal` children in a stagger. Deliberately not an
- * IntersectionObserver: background windows throttle those into never firing,
- * and a card that never appears is worse than one that animated off-screen.
- * Runs after every render and only touches elements not yet revealed, so
- * content that arrives later joins the cascade instead of missing it.
- */
+/** Reveals `.reveal` children in a stagger. */
 export function useReveal<T extends HTMLElement>() {
   const ref = useRef<T>(null);
 
@@ -38,13 +28,7 @@ export function useReveal<T extends HTMLElement>() {
   return ref;
 }
 
-/**
- * The safety net under useReveal: a MutationObserver that catches `.reveal`
- * elements arriving outside any host's render — a badge wall that fetches
- * before it draws, a panel mounted by someone else's state. Without this,
- * anything revealed after its page's last render stays at opacity 0 forever.
- * Mounted once from the shell.
- */
+/** The safety net under useReveal: a MutationObserver that catches `.reveal` elements arriving outside any… */
 export function RevealObserver() {
   useEffect(() => {
     let order = 0;
@@ -95,18 +79,11 @@ interface ConfettiOptions {
   count?: number;
 }
 
-/**
- * A one-off confetti burst on a throwaway canvas. Imperative because the
- * moments that deserve confetti (a finished shift, an unlocked badge) are
- * events, not state. The canvas ignores pointers and removes itself when the
- * last particle leaves the screen.
- */
+/** A one-off confetti burst on a throwaway canvas. */
 export function fireConfetti({ x = 0.5, y = 0.4, count = 140 }: ConfettiOptions = {}): void {
   if (typeof document === 'undefined') return;
   if (document.documentElement.dataset['motion'] === 'reduced') return;
-  // A hidden tab gets no frames, so a burst fired into one hangs in mid-air
-  // until somebody comes back — and if nobody does, a full-screen canvas sits
-  // over the page for the rest of the session.
+  // A hidden tab gets no frames, so a burst fired into one hangs in mid-air until somebody comes back — and if…
   if (document.visibilityState === 'hidden') return;
 
   const canvas = document.createElement('canvas');
@@ -210,12 +187,7 @@ export function fireConfetti({ x = 0.5, y = 0.4, count = 140 }: ConfettiOptions 
 
 // ==== Pointer-reactive surfaces ====
 
-/**
- * One delegated listener pair powering two effects everywhere at once:
- * `.glow` surfaces get --mx/--my for a cursor-following sheen, and `.tilt`
- * surfaces lean toward the pointer. Mounted once from the shell; elements
- * opt in by class alone, so new tiles get the physics for free.
- */
+/** One delegated listener pair powering two effects everywhere at once: `.glow` surfaces get --mx/--my for a… */
 export function PointerFx() {
   useEffect(() => {
     const move = (event: PointerEvent) => {
@@ -260,10 +232,7 @@ export function PointerFx() {
   return null;
 }
 
-/**
- * Material-style press ripples on every .btn, delegated the same way. The
- * span cleans itself up on animationend, so a button never accumulates them.
- */
+/** Material-style press ripples on every .btn, delegated the same way. */
 export function PressRipple() {
   useEffect(() => {
     const press = (event: PointerEvent) => {

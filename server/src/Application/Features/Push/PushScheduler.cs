@@ -10,13 +10,7 @@ using Shifter.Application.Common.Text;
 
 namespace Shifter.Application.Features.Push;
 
-/// <summary>
-/// Wakes once a minute and asks, for every subscribed device, whether its
-/// local clock has just crossed its chosen time. Two nudges can result:
-/// tomorrow's shift, and yesterday's unclosed day. Each is stamped with the
-/// local date it went out, so however often the loop runs — or however long
-/// the process was down — a device hears about a given day exactly once.
-/// </summary>
+/// <summary>Wakes once a minute and asks, for every subscribed device, whether its local clock has just crossed its…</summary>
 public sealed class PushScheduler : BackgroundService
 {
     private static readonly TimeSpan Period = TimeSpan.FromMinutes(1);
@@ -157,18 +151,7 @@ public sealed class PushScheduler : BackgroundService
         await db.SaveChangesAsync(ct);
     }
 
-    /// <summary>
-    /// The same pass, for phones.
-    ///
-    /// It exists separately because the two channels carry different things: a
-    /// browser subscription belongs to a profile and knows six kinds of nudge,
-    /// a device token belongs to a person's pocket and wants the two that are
-    /// worth unlocking a phone for. And because until this, a person with only
-    /// the app — which is most of them — got neither of those two at all: the
-    /// whole scheduler was keyed on browser subscriptions, so a phone with no
-    /// browser beside it was never told about tomorrow's shift or today's
-    /// wage.
-    /// </summary>
+    /// <summary>The same pass, for phones.</summary>
     private async Task PhonesAsync(CancellationToken ct)
     {
         using var scope = _scopes.CreateScope();
@@ -419,11 +402,7 @@ public sealed class PushScheduler : BackgroundService
         return await _sender.SendAsync(subscription, title, body, "/stats");
     }
 
-    /// <summary>
-    /// "38 of 40 hours this week." Silent until the last fifth of the
-    /// threshold, silent again once the line is behind — a warning nobody
-    /// can act on is just noise, and this one has to be actionable.
-    /// </summary>
+    /// <summary>"38 of 40 hours this week." Silent until the last fifth of the threshold, silent again once the line is…</summary>
     private async Task<bool> SendOvertimeAsync(
         IServiceProvider services,
         PushSubscription subscription,
@@ -458,12 +437,7 @@ public sealed class PushScheduler : BackgroundService
         return await _sender.SendAsync(subscription, title, body, "/stats");
     }
 
-    /// <summary>
-    /// A paper running out. Sent once when it enters the month, once when it
-    /// enters the week, and then daily once it has actually expired — because
-    /// past that point every single shift is at risk, and a warning that goes
-    /// quiet is a warning that failed.
-    /// </summary>
+    /// <summary>A paper running out.</summary>
     private async Task<bool> SendDocumentsAsync(
         IServiceProvider services,
         PushSubscription subscription,

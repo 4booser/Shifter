@@ -19,13 +19,7 @@ interface Shelf {
   cheers: Cheer[];
 }
 
-/**
- * The trophy shelf: goals that were crossed, kept as they stood.
- *
- * The bar can be raised later; the trophies already won do not move — a
- * shelf you can rewrite is a story, not a record. The weekly streak is the
- * same kind of sentence as the day streak: a number and its history.
- */
+/** The trophy shelf: goals that were crossed, kept as they stood. */
 const PERIOD: Record<string, string> = {
   day: 'дневная',
   week: 'недельная',

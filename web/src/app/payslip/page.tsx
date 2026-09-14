@@ -11,19 +11,7 @@ import { useI18n } from '@/lib/i18n';
 import { Alert, Money } from '@/components/ui/bits';
 import { Shell } from '@/components/layout/shell';
 
-/**
- * One page somebody can hand to a person who does not have the app.
- *
- * Showing a manager a phone screen works. Sending it to an accountant, a
- * landlord or a bank does not, and that is where every argument about a wage
- * eventually goes. So: a period, the hours, the rate, what was added, what was
- * taken off, and the total — printed from the browser, with no library and no
- * server round trip to make a file nobody can check.
- *
- * It signs itself. This is what the app counted from what somebody recorded;
- * it is not a payroll document and saying so plainly is what makes it usable
- * as evidence rather than as a claim.
- */
+/** One page somebody can hand to a person who does not have the app. */
 export default function PayslipPage() {
   return (
     <Shell>
@@ -59,9 +47,7 @@ function Payslip() {
       .then((profile) => setWho(`${profile.first_name} ${profile.last_name ?? ''}`.trim()))
       .catch(() => setWho(''));
 
-    // The pay periods the places themselves define, over the last half year:
-    // "the last one" should mean what the employer means by it rather than a
-    // calendar month somebody guessed at.
+    // The pay periods the places themselves define, over the last half year: "the last one" should mean what the…
     const back = new Date();
 
     back.setMonth(back.getMonth() - 6);
@@ -140,9 +126,7 @@ function Payslip() {
               <Row label={t('Of which overtime')} value={`${num(range.overtime_hours)} ${t('h')}`} />
             )}
             {range.night_hours > 0 && (
-              // The one row on this sheet that skipped the formatter: «0,02 ч»
-              // on the line above and «0.02 ч» on this one, in a document
-              // written to be printed and handed to somebody.
+              // The one row on this sheet that skipped the formatter: «0,02 ч» on the line above and «0.02 ч» on this one, in…
               <Row label={t('Of which night')} value={`${num(range.night_hours)} ${t('h')}`} />
             )}
           </Section>
@@ -188,12 +172,7 @@ function Payslip() {
             </span>
           </div>
 
-          {/*
-            Below the line, on purpose. Holiday is owed later and an expense
-            happened after the money arrived; folding either into the total
-            would stop this page agreeing with what actually reached an
-            account, which is the only thing it is good for.
-          */}
+          {/* Below the line, on purpose. */}
           {(range.holiday_accrued > 0 || range.expenses > 0) && (
             <div className="mt-4 border-t border-border pt-3">
               <p className="field-hint mb-2">{t('Beside the total, not inside it')}</p>

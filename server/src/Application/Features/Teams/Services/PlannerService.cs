@@ -10,12 +10,7 @@ using Shifter.Infrastructure.Persistence.DbContexts;
 
 namespace Shifter.Application.Features.Teams.Services;
 
-/// <summary>
-/// The manager's board. A manager plans time — never money: an assignment
-/// carries a title and hours, and becomes a shift only when its person
-/// accepts it onto their own calendar with their own template. Everything
-/// here is scoped twice: to the team, and to the caller's right to touch it.
-/// </summary>
+/// <summary>The manager's board.</summary>
 public sealed class PlannerService
 {
     private readonly ShifterDbContext _db;
@@ -163,9 +158,7 @@ public sealed class PlannerService
 
     // ==== The pool: one number instead of five ====
 
-    /// <summary>
-    /// The night's pool and how it divides. Read by anybody in the crew.
-    /// </summary>
+    /// <summary>The night's pool and how it divides.</summary>
     public async Task<PoolDto> PoolAsync(int teamId, int userId, DateOnly date, CancellationToken ct)
     {
         var (team, _) = await MemberAsync(teamId, userId, ct);
@@ -177,11 +170,7 @@ public sealed class PlannerService
         return await SplitAsync(team, pool, date, userId, ct);
     }
 
-    /// <summary>
-    /// Entering it. Anybody in the crew may — whoever counted the tin is
-    /// whoever counted it, and making this a manager's job would put the one
-    /// number back out of reach of the people it belongs to.
-    /// </summary>
+    /// <summary>Entering it.</summary>
     public async Task<PoolDto> SavePoolAsync(
         int teamId, int userId, PoolSaveDto request, CancellationToken ct)
     {
@@ -213,11 +202,7 @@ public sealed class PlannerService
         return await SplitAsync(team, pool, date, userId, ct);
     }
 
-    /// <summary>
-    /// Divides the night by the shares written on each person's own shift.
-    /// The percentages come from the templates they built themselves, which is
-    /// why nobody has to agree a split in the app: they agreed it at work.
-    /// </summary>
+    /// <summary>Divides the night by the shares written on each person's own shift.</summary>
     private async Task<PoolDto> SplitAsync(
         Team team,
         TeamPool? pool,
@@ -277,10 +262,7 @@ public sealed class PlannerService
 
     // ==== The handover: what the shift going home knows ====
 
-    /// <summary>
-    /// One day's note plus everything the room is currently missing. Read at
-    /// the start of a shift, written at the end of one.
-    /// </summary>
+    /// <summary>One day's note plus everything the room is currently missing.</summary>
     public async Task<(HandoverDto Note, StopItemDto[] Stops)> HandoverAsync(
         int teamId, int userId, DateOnly date, CancellationToken ct)
     {
@@ -299,11 +281,7 @@ public sealed class PlannerService
         return (ToDto(note, date, team), stops.Select(item => ToDto(item, team)).ToArray());
     }
 
-    /// <summary>
-    /// Writing the note. Anybody in the crew may — the person who knows the
-    /// grinder is broken is whoever was standing next to it, not whoever has
-    /// the manager flag.
-    /// </summary>
+    /// <summary>Writing the note.</summary>
     public async Task<HandoverDto> WriteHandoverAsync(
         int teamId, int userId, HandoverSaveDto request, CancellationToken ct)
     {
@@ -430,11 +408,7 @@ public sealed class PlannerService
 
     // ==== Leave: a stretch of days that needs an answer ====
 
-    /// <summary>
-    /// Every request the caller is entitled to see: a planner sees the crew's,
-    /// everybody else sees their own. Waiting first, because that is the list
-    /// somebody has to act on; the rest is history.
-    /// </summary>
+    /// <summary>Every request the caller is entitled to see: a planner sees the crew's, everybody else sees their own.</summary>
     public async Task<LeaveDto[]> LeaveAsync(int teamId, int userId, CancellationToken ct)
     {
         var (team, me) = await MemberAsync(teamId, userId, ct);
@@ -516,11 +490,7 @@ public sealed class PlannerService
         return await LeaveAsync(teamId, userId, ct);
     }
 
-    /// <summary>
-    /// Withdrawing a request. Whoever asked may take it back at any point,
-    /// approved or not: plans change, and a holiday nobody is taking should
-    /// not keep somebody off the rota. A planner may also clear one out.
-    /// </summary>
+    /// <summary>Withdrawing a request.</summary>
     public async Task<LeaveDto[]> WithdrawLeaveAsync(
         int teamId, int userId, int id, CancellationToken ct)
     {
@@ -573,10 +543,7 @@ public sealed class PlannerService
     private static string RoleName(PlanRole role) =>
         role == PlanRole.Unset ? string.Empty : role.ToString().ToLowerInvariant();
 
-    /// <summary>
-    /// What each day is covered by. Drafts count: the point of the readout is
-    /// to catch a hole while the week can still be changed.
-    /// </summary>
+    /// <summary>What each day is covered by.</summary>
     private static CoverageDayDto[] Coverage(PlannedAssignment[] rows) => rows
         .Where(entry => entry.Status != AssignmentStatus.Declined)
         .GroupBy(entry => entry.Date)
@@ -607,14 +574,7 @@ public sealed class PlannerService
 
     // ==== Handing a slot out ====
 
-    /// <summary>
-    /// Fills one slot with the people who can take it, fewest planned hours
-    /// first. Deliberately greedy and deliberately dumb: a rota is argued
-    /// about, so this produces drafts a manager corrects, not a schedule it
-    /// insists on. What it will not do is put somebody on a day they blocked
-    /// or double-book them, because those are the two mistakes a person
-    /// laying out a week by hand actually makes.
-    /// </summary>
+    /// <summary>Fills one slot with the people who can take it, fewest planned hours first.</summary>
     public async Task<FillResultDto> FillAsync(
         int teamId, int userId, FillSlotDto request, CancellationToken ct)
     {
@@ -894,14 +854,7 @@ public sealed class PlannerService
         return new PublishResultDto(drafts.Count, drafts.Select(entry => entry.UserId).Distinct().Count());
     }
 
-    /// <summary>
-    /// Copies last week's board into the week starting at
-    /// <paramref name="weekStart"/>, as fresh drafts. A cell where the target
-    /// week already has anything — draft, published, answered — is left
-    /// alone, so the copy is safe to press twice and never overwrites a
-    /// conversation already in progress. People who have left the team since
-    /// last week are skipped: a draft for a ghost helps nobody.
-    /// </summary>
+    /// <summary>Copies last week's board into the week starting at <paramref name="weekStart"/>, as fresh drafts.</summary>
     public async Task<CopyWeekResultDto> CopyWeekAsync(
         int teamId, int userId, DateOnly weekStart, CancellationToken ct)
     {
@@ -1095,11 +1048,7 @@ public sealed class PlannerService
 
     public sealed record WhoRead(WhoRow[] Free, WhoRow[] Busy, WhoRow[] Away, WhoRow[] Out);
 
-    /// <summary>
-    /// The day's cast, three ways: who can be asked, who already stands, who
-    /// said they cannot. Free is everyone minus the other two — the board
-    /// stops guessing about people who already answered.
-    /// </summary>
+    /// <summary>The day's cast, three ways: who can be asked, who already stands, who said they cannot.</summary>
     public async Task<WhoRead> WhoAsync(int teamId, int userId, DateOnly date, CancellationToken ct)
     {
         var (team, _) = await ManagerAsync(teamId, userId, ct);
@@ -1201,11 +1150,7 @@ public static class PlannerRules
         return (day, from, to);
     }
 
-    /// <summary>
-    /// An optional note beside a blocked day. Absent is the normal case —
-    /// people mark a day and move on — so nothing here throws.
-    /// </summary>
-    /// <summary>As long as a day's note, which is the longest thing anyone writes here.</summary>
+    /// <summary>An optional note beside a blocked day.</summary>
     public const int NoteMax = 500;
 
     public static string? CleanReason(string? reason)
@@ -1217,11 +1162,7 @@ public static class PlannerRules
         return cleaned.Length <= TitleMax ? cleaned : cleaned[..TitleMax];
     }
 
-    /// <summary>
-    /// The note on an assignment. It was the one free-text field in the app
-    /// with no bound at all — straight into a text column, and copied forward
-    /// by "repeat the week". Every other note in the project is capped.
-    /// </summary>
+    /// <summary>The note on an assignment.</summary>
     public static string? CleanNote(string? note)
     {
         var cleaned = note?.Trim();

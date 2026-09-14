@@ -7,11 +7,7 @@ using Shifter.Infrastructure.Persistence.DbContexts;
 
 namespace Shifter.Api.Controllers;
 
-/// <summary>
-/// The devices holding a key to this account: every live refresh token,
-/// wearing the browser label it signed in with, individually revocable.
-/// "Sign out everywhere" already exists; this is the scalpel next to it.
-/// </summary>
+/// <summary>The devices holding a key to this account: every live refresh token, wearing the browser label it signed in…</summary>
 [Authorize]
 [Route("shifter/v1/account/sessions")]
 public class SessionsController : ControllerBase

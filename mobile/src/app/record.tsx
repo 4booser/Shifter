@@ -18,16 +18,7 @@ import { api } from '@/lib/api';
 import { t } from '@/lib/i18n';
 import { money, moneyIn } from '@/lib/types';
 
-/**
- * The record and its back room, on the phone.
- *
- * The front half is the CV the web shows: real shifts, real hours, the
- * places and their stretches — the thing worth showing to somebody with no
- * reason to believe you. The back half is the chronicle: first day, last
- * day, what each place came to, and the private note the server keeps off
- * every shared endpoint. The person most likely to need either is standing
- * in a corridor holding a phone.
- */
+/** The record and its back room, on the phone. */
 interface HistoryPlace {
   name: string;
   from: string;

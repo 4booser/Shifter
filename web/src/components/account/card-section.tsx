@@ -8,18 +8,7 @@ import { useI18n } from '@/lib/i18n';
 import { pushToast } from '@/lib/toast';
 import { Alert } from '@/components/ui/bits';
 
-/**
- * The link to somebody's own record.
- *
- * Off, and it stays off until it is asked for: a work history is not a thing
- * to publish on somebody's behalf, however useful it would be to them. What it
- * shows is two more switches — where you worked and what you were paid are
- * exactly the two answers somebody might not want a stranger to have.
- *
- * Turning it off drops the link rather than hiding the page, which is worth
- * saying out loud on the screen: people reasonably assume a switch hides
- * something, and this one revokes it.
- */
+/** The link to somebody's own record. */
 export function CardSection() {
   const { t } = useI18n();
 

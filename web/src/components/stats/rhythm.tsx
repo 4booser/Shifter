@@ -8,16 +8,7 @@ import { useMoney } from '@/lib/settings/money';
 import { useI18n } from '@/lib/i18n';
 import { Panel } from './panel';
 
-/**
- * The rota's rhythm: the sleep windows between shifts, and what long runs
- * do to the tips.
- *
- * Same contract as the rain card: the record read back, never advice. A
- * close-then-open is shown as the night it actually was; the fatigue line
- * appears only when both piles of days are deep enough and the gap is
- * bigger than noise — and it calls itself a coincidence, because that is
- * what a comparison of two piles of days is.
- */
+/** The rota's rhythm: the sleep windows between shifts, and what long runs do to the tips. */
 export function RhythmCard() {
   const { t, num } = useI18n();
   const { format } = useMoney();

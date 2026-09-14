@@ -81,10 +81,7 @@ public class PayPeriodCalculatorTests
         Assert.Equal(new DateOnly(2026, 2, 1), to);
     }
 
-    /// <summary>
-    /// The floor division exists for exactly this case: a plain remainder goes
-    /// negative before the anchor and lands the date in the wrong window.
-    /// </summary>
+    /// <summary>The floor division exists for exactly this case: a plain remainder goes negative before the anchor and lands…</summary>
     [Fact]
     public void ADateBeforeTheAnchorStaysOnItsOwnSideOfTheBoundary()
     {

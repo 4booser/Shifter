@@ -6,10 +6,7 @@ using Xunit;
 
 namespace Shifter.Tests;
 
-/// <summary>
-/// What the work cost, as opposed to what the venue took. A fine is an argument
-/// waiting to happen; a taxi home at four in the morning is just the job.
-/// </summary>
+/// <summary>What the work cost, as opposed to what the venue took.</summary>
 public class ExpenseTests
 {
     private static WorkExpense Spent(decimal amount, string kind, string date = "2026-03-10")

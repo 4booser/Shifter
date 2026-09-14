@@ -6,11 +6,7 @@ using Shifter.Infrastructure.Repositories.Interfaces;
 
 namespace Shifter.Application.Features.Webhooks.Services;
 
-/// <summary>
-/// The manager. Everything here is the owner acting on their own endpoints:
-/// making one, correcting its mapping, reading what arrived and running it
-/// again once the mapping is right.
-/// </summary>
+/// <summary>The manager.</summary>
 public class WebhookHandler : IWebhookHandler
 {
     private const int NameMaxLength = 60;
@@ -242,11 +238,7 @@ public class WebhookHandler : IWebhookHandler
         if (endpoint.DefaultShift?.Id != request.default_shift_id) endpoint.DefaultShift = null;
     }
 
-    /// <summary>
-    /// A token nobody else holds. Collisions are vanishingly unlikely at 24
-    /// random bytes, but the address is the whole of an incoming request's
-    /// identity, so the one case worth ruling out is ruled out.
-    /// </summary>
+    /// <summary>A token nobody else holds.</summary>
     private async Task<string> NewTokenAsync(CancellationToken ct)
     {
         for (int attempt = 0; attempt < 5; attempt += 1)
@@ -259,11 +251,7 @@ public class WebhookHandler : IWebhookHandler
         throw new ConflictException("Could not allocate an address. Try again.");
     }
 
-    /// <summary>
-    /// Strict, unlike the payout stream's lenient parse: the kind decides which
-    /// half of the calendar an endpoint can write to, and a typo quietly read as
-    /// "sales" would point a timesheet at the takings.
-    /// </summary>
+    /// <summary>Strict, unlike the payout stream's lenient parse: the kind decides which half of the calendar an endpoint can…</summary>
     private static WebhookKind ParseKind(string? value) => value?.Trim().ToLowerInvariant() switch
     {
         "sales" => WebhookKind.Sales,

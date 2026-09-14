@@ -18,16 +18,7 @@ import { Icon } from '@/components/ui/icon';
 import { BankTile } from '@/components/bank/hero';
 import { ColumnAxis } from '@/components/bank/charts';
 
-/**
- * «Куда уходят деньги» — the spending half of the bank tab, rebuilt to be
- * читаемо, not merely present.
- *
- * The grammar: a ring that always sums to the month, a ranked table of
- * categories that opens into the actual shops, a daily rhythm with the usual
- * day drawn as a line, and last month standing next to everything as a signed
- * percent. Colour follows the category, never its rank. Every figure comes из
- * выписки and nowhere else; estimates have no seat at this table.
- */
+/** «Куда уходят деньги» — the spending half of the bank tab, rebuilt to be читаемо, not merely present. */
 /** Everything the spending cards read, computed once per card. */
 function useSpend(items: MonoStatementItem[], from: string, to: string) {
   const rules = useMono((state) => state.rules);
@@ -68,21 +59,11 @@ function useSpend(items: MonoStatementItem[], from: string, to: string) {
     return budgetState(budgets, categories, now.getDate(), daysInMonth);
   }, [budgets, categories]);
 
-  // One denominator for the whole shelf: everything that left the card,
-  // holds and cancelled refunds excluded. flow() keeps transfers out of its
-  // totals — right for «пришло/ушло наружу», wrong here, because the rows
-  // show «Переводы» as a category and a bar must sum to its own list.
+  // One denominator for the whole shelf: everything that left the card, holds and cancelled refunds excluded.
   const spentAll = deltas.reduce((sum, row) => sum + row.total, 0);
   const previousAll = previous.reduce((sum, row) => sum + row.total, 0);
 
-  /*
-   * Сравнивать можно только законченный отрезок.
-   *
-   * Первого числа в этом месяце один день, а в прошлом — тридцать один, и
-   * заголовок объявлял «▼ 98% к прошлому отрезку». Тратить меньше тут не
-   * заслуга и не новость: месяц просто не прожит. Пока последний день
-   * отрезка ещё впереди, процента нет.
-   */
+  /* Сравнивать можно только законченный отрезок. */
   const finished = to < todayKey();
   const spentDelta =
     finished && previousAll > 0 ? Math.round(((spentAll - previousAll) / previousAll) * 100) : null;
@@ -150,9 +131,7 @@ export function SpendDonut({
   const { t } = useI18n();
   const { deltas, totals, usual, back, spentAll } = useSpend(items, from, to);
 
-  // Проверять надо то, что рисуется, а не то, что загружено. Выписка за
-  // три месяца есть, а в выбранном месяце трат нет — и карточка выходила
-  // одним заголовком над пустотой, отодвигая соседей вниз.
+  // Проверять надо то, что рисуется, а не то, что загружено.
   if (deltas.length === 0 || spentAll <= 0) return null;
 
   const head = deltas.slice(0, 4);
@@ -200,9 +179,7 @@ export function SpendDonut({
             ))}
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            {/* Гривна была вбита прямо здесь, а соседние карточки печатали
-                валюту из настроек — на одном экране выходило «₴331» и
-                «331 $» про одно и то же. */}
+            {/* Гривна была вбита прямо здесь, а соседние карточки печатали валюту из настроек — на одном экране выходило… */}
             <span className="tabular text-[1.3rem] font-bold leading-tight text-danger-read">
               <Money value={Math.round(spentAll)} />
             </span>
@@ -227,9 +204,7 @@ export function SpendDonut({
           ))}
         </div>
 
-        {/* Pushed to the floor of the card: this one shares a row with the
-            ranked table, which is always the taller of the two, and a footer
-            that stops halfway leaves the card looking unfinished. */}
+        {/* Pushed to the floor of the card: this one shares a row with the ranked table, which is always the taller of… */}
         <div className="mt-auto w-full border-t border-border pt-3 text-[0.82rem]">
           <div className="flex justify-between gap-2">
             <span className="text-muted">{t('Came in')}</span>
@@ -237,10 +212,7 @@ export function SpendDonut({
           </div>
           {usual > 0 && (
             <div className="flex justify-between gap-2">
-              {/* Not «a usual day» plain: the forecast and the reserve tile
-                  above both say that about a two-month habit, and this one
-                  is about the stretch on screen. Three numbers under one
-                  name on one page is how a page stops being believed. */}
+              {/* Not «a usual day» plain: the forecast and the reserve tile above both say that about a two-month habit, and… */}
               <span className="text-muted">{t('A day in this stretch costs')}</span>
               <b className="tabular"><Money value={usual} /></b>
             </div>
@@ -348,9 +320,7 @@ export function SpendCategories({
                     </span>
                   </span>
 
-                  {/* The bar is the ranking made visible, so on a phone it
-                      moves under the row rather than disappearing with the
-                      column it lived in. */}
+                  {/* The bar is the ranking made visible, so on a phone it moves under the row rather than disappearing with the… */}
                   <span className="order-last w-full sm:order-none sm:w-24">
                     <span className="block h-1.5 overflow-hidden rounded-full bg-(--surface-2)">
                       <span
@@ -376,10 +346,7 @@ export function SpendCategories({
                   </span>
                 </button>
 
-                {/* Plain conditional render. Framer wedged twice on this page
-                    (a height tween, then an opacity one) while something held
-                    the main thread; a panel that simply appears beats any
-                    charm that can freeze at half-open. */}
+                {/* Plain conditional render. */}
                 {isOpen && (
                   <div className="bank-open">
                     <CategoryInside
@@ -462,9 +429,7 @@ export function SpendPlaces({
         <span className="field-hint">{t('most often first')}</span>
       </div>
 
-      {/* Чипами это читалось как облако тегов: названия разной длины, суммы
-          вперемешку, и сравнить два места глазами нельзя. Строки с суммой у
-          одного края сравниваются сами. */}
+      {/* Чипами это читалось как облако тегов: названия разной длины, суммы вперемешку, и сравнить два места глазами… */}
       <div className="card-body flex-1 !py-0">
         {people.slice(0, 14).map((row) => (
           <div key={row.key} className="flex items-baseline gap-3 border-b border-border py-2 last:border-0">
@@ -599,9 +564,7 @@ export function SpendOddities({
             <span className="min-w-0 flex-1 truncate text-[0.76rem] text-faint" title={row.because}>
               {row.because}
             </span>
-            {/* `slice(5)` давал «09-01» — обрывок ISO, который читается
-                как «9 января». Везде в приложении дата пишется днём и
-                месяцем; здесь теперь так же. */}
+            {/* `slice(5)` давал «09-01» — обрывок ISO, который читается как «9 января». */}
             <span className="tabular flex-none text-[0.78rem] text-muted">
               {dayOf(row.item).slice(8)}.{dayOf(row.item).slice(5, 7)}
             </span>
@@ -645,11 +608,7 @@ export function StatementDownloadButton({
   );
 }
 
-/**
- * Inside one category: the shops it is made of, the limit, and teaching.
- * This is where «на отъебись» ends — a category that cannot answer «а это
- * что вообще?» is a label, not an explanation.
- */
+/** Inside one category: the shops it is made of, the limit, and teaching. */
 function CategoryInside({
   items,
   rules,
@@ -744,10 +703,7 @@ function CategoryInside({
   );
 }
 
-/**
- * The month as thirty-one thin columns, with the usual day drawn as a line.
- * The heaviest day gets named — a bar without a story is just geometry.
- */
+/** The month as thirty-one thin columns, with the usual day drawn as a line. */
 function DayRhythm({
   days,
   usual,
@@ -841,9 +797,7 @@ function DayRhythm({
           <p className="field-hint mt-1">
             {t('Heaviest')} — {said(heaviest.day)},{' '}
             <b className="tabular"><Money value={heaviest.total} /></b>
-            {/* Две покупки в одном месте за день — это «Macbook ×2», а не
-                «Macbook + Macbook»: повторённое название читается как ошибка
-                вывода, а не как два похода. */}
+            {/* Две покупки в одном месте за день — это «Macbook ×2», а не «Macbook + Macbook»: повторённое название читается… */}
             {heaviestSpent.length > 0 && (
               <>
                 :{' '}

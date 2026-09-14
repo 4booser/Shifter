@@ -6,25 +6,10 @@ using Xunit;
 
 namespace Shifter.Tests;
 
-/// <summary>
-/// Every column that names a person by id has to say what happens when that
-/// person deletes their account.
-///
-/// This is written as an audit rather than as a behaviour test because the
-/// failure was one of omission: the deletion code cleared three tables on the
-/// stated belief that only three named a person without a foreign key. There
-/// were nine, and the two that mattered most — the whole calendar, and who
-/// owns a team — were missing. A hand-maintained list is exactly the thing
-/// that was already wrong, so the list is derived and the exceptions are
-/// named one by one with a reason.
-/// </summary>
+/// <summary>Every column that names a person by id has to say what happens when that person deletes their account.</summary>
 public class OrphanColumnTests
 {
-    /// <summary>
-    /// A column is answered for when its entity carries a navigation to
-    /// <see cref="User"/> — that is what makes EF create the key at all — or
-    /// when it is named here as deliberately handled elsewhere.
-    /// </summary>
+    /// <summary>A column is answered for when its entity carries a navigation to <see cref="User"/> — that is what makes EF…</summary>
     private static readonly Dictionary<string, string> HandledByHand = new()
     {
         ["TelegramLink.UserId"] = "cleared explicitly before the account row goes",

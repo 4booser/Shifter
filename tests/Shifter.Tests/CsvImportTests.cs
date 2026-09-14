@@ -4,10 +4,7 @@ using Xunit;
 
 namespace Shifter.Tests;
 
-/// <summary>
-/// Somebody with a year in another tracker will not retype it, and the export
-/// they have is whatever that app produced. These are the shapes it comes in.
-/// </summary>
+/// <summary>Somebody with a year in another tracker will not retype it, and the export they have is whatever that app…</summary>
 public class CsvReaderTests
 {
     [Fact]

@@ -7,17 +7,7 @@ using Shifter.Infrastructure.Repositories.Interfaces;
 
 namespace Shifter.Application.Features.Webhooks.Services;
 
-/// <summary>
-/// Everything that happens between a body arriving and a day changing: proving
-/// the sender knows the secret, reading the payload through the endpoint's
-/// mapping, matching what it names against the account's own catalogue and
-/// templates, and writing the result without disturbing anything the person
-/// entered by hand.
-///
-/// Every arrival is recorded, including the ones that go nowhere. A webhook
-/// that fails silently is one nobody can fix: the sender sees a 400 and moves
-/// on, and the person waiting for their takings has nothing to look at.
-/// </summary>
+/// <summary>Everything that happens between a body arriving and a day changing: proving the sender knows the secret…</summary>
 public class WebhookIngestHandler : IWebhookIngestHandler
 {
     private const int NoteMaxLength = 500;
@@ -69,14 +59,7 @@ public class WebhookIngestHandler : IWebhookIngestHandler
         return await RunAsync(endpoint, body, IngestOptions.Delivery, ct);
     }
 
-    /// <summary>
-    /// Null when the sender may write. An endpoint can be reachable two ways at
-    /// once: by the sender's own scheme, where one is configured and the sender
-    /// used it, and by ours for everything else — a script, a curl, a second
-    /// integration that can be told what to send. The sender's own comes first
-    /// so that a configured integration is never silently judged by rules it
-    /// was never given.
-    /// </summary>
+    /// <summary>Null when the sender may write.</summary>
     private static string? Refuse(
         WebhookEndpoint endpoint,
         DeliveryHeaders headers,
@@ -149,12 +132,7 @@ public class WebhookIngestHandler : IWebhookIngestHandler
         }
     }
 
-    /// <summary>
-    /// Reads whichever halves this endpoint is for out of the one body, and
-    /// writes the ones the payload actually carried. A nightly report names
-    /// both the takings and the length of the shift; splitting that across two
-    /// addresses means two keys and two schedules for one report.
-    /// </summary>
+    /// <summary>Reads whichever halves this endpoint is for out of the one body, and writes the ones the payload actually…</summary>
     private async Task<IngestResultDto> ApplyAsync(
         WebhookEndpoint endpoint,
         JsonElement root,
@@ -261,12 +239,7 @@ public class WebhookIngestHandler : IWebhookIngestHandler
         return new IngestResultDto("applied", date, preview);
     }
 
-    /// <summary>
-    /// What a delivery's takings would write, and what to call it on screen.
-    /// <paramref name="Blind"/> means the payload had no positions field at all
-    /// and no amounts either — nothing was read, as opposed to a day on which
-    /// nothing was sold.
-    /// </summary>
+    /// <summary>What a delivery's takings would write, and what to call it on screen.</summary>
     private sealed record SalesWrite(
         DaySalesMerge Merge,
         IngestLineDto[] Lines,
@@ -367,11 +340,7 @@ public class WebhookIngestHandler : IWebhookIngestHandler
             empty && !payload.SawPositions);
     }
 
-    /// <summary>
-    /// Null when the payload says no shift was worked. A report on a schedule
-    /// arrives every day, including the days off, and on those it says zero —
-    /// which is a statement about the day, not a mistake in the delivery.
-    /// </summary>
+    /// <summary>Null when the payload says no shift was worked.</summary>
     private async Task<HoursWrite?> PrepareHoursAsync(
         WebhookEndpoint endpoint,
         HoursPayload payload,
@@ -450,12 +419,7 @@ public class WebhookIngestHandler : IWebhookIngestHandler
         public int Quantity { get; set; } = Quantity;
     }
 
-    /// <summary>
-    /// Matches what the delivery names against the account's catalogue. Names
-    /// are how a till identifies its own items, so they are matched first and
-    /// case-insensitively; an id is honoured when one is sent, and has to be a
-    /// position of this account's.
-    /// </summary>
+    /// <summary>Matches what the delivery names against the account's catalogue.</summary>
     private static List<ResolvedLine> ResolveLines(SalesLine[] lines, Sales[] catalogue)
     {
         Dictionary<int, Sales> byId = catalogue.ToDictionary(position => position.Id);
@@ -522,11 +486,7 @@ public class WebhookIngestHandler : IWebhookIngestHandler
         return resolved.Values.ToList();
     }
 
-    /// <summary>
-    /// The template the hours attach to: the one the payload names, else the
-    /// endpoint's default. Hours cannot stand on their own — the rate lives on
-    /// the template, and a placement without one would earn nothing.
-    /// </summary>
+    /// <summary>The template the hours attach to: the one the payload names, else the endpoint's default.</summary>
     private async Task<Shift> ResolveShiftAsync(
         WebhookEndpoint endpoint,
         string? named,
@@ -559,10 +519,7 @@ public class WebhookIngestHandler : IWebhookIngestHandler
             ?? throw new NotFoundException("The endpoint's default shift template is gone.");
     }
 
-    /// <summary>
-    /// Whether this exact event already landed. Senders retry on a timeout, and
-    /// without this the retry would add a second night's takings to the first.
-    /// </summary>
+    /// <summary>Whether this exact event already landed.</summary>
     private async Task<bool> SeenBeforeAsync(
         WebhookEndpoint endpoint,
         string? externalId,

@@ -7,30 +7,16 @@ using Shifter.Infrastructure.Repositories.Interfaces;
 
 namespace Shifter.Application.Features.business.Services;
 
-/// <summary>
-/// Answers two questions the totals cannot: when is money due and from whom,
-/// and has anywhere been paying short.
-///
-/// Both fall out of data the app already keeps — each place has its own pay
-/// period, and payouts record what actually arrived — but nobody can hold a
-/// dozen overlapping cycles in their head, which is exactly why underpayment
-/// goes unnoticed.
-/// </summary>
+/// <summary>Answers two questions the totals cannot: when is money due and from whom, and has anywhere been paying short.</summary>
 public class ReconciliationHandler : IReconciliationHandler
 {
-    /// <summary>
-    /// Below this, a difference is a rounding artefact of hours and rates
-    /// rather than a shortfall worth raising with anyone.
-    /// </summary>
+    /// <summary>Below this, a difference is a rounding artefact of hours and rates rather than a shortfall worth raising with…</summary>
     private const decimal Tolerance = 1m;
 
     /// <summary>A period is only chased once its work is actually finished.</summary>
     private const int GraceDays = 0;
 
-    /// <summary>
-    /// How much of the past one request may ask for. The walk is per pay
-    /// period per place, so this is a cost limit rather than a product one.
-    /// </summary>
+    /// <summary>How much of the past one request may ask for.</summary>
     private const int MaxDays = 366 * 2;
 
     private readonly IShifterQuery _shifterQuery;
@@ -150,10 +136,7 @@ public class ReconciliationHandler : IReconciliationHandler
                 .Sum(row => row.expected - row.paid));
     }
 
-    /// <summary>
-    /// What this place earned between two dates, or null when nothing was
-    /// worked there — an empty period is not an unpaid one.
-    /// </summary>
+    /// <summary>What this place earned between two dates, or null when nothing was worked there — an empty period is not an…</summary>
     private static LocationTotalDto? TotalFor(
         Location place,
         Day[] days,
@@ -172,11 +155,7 @@ public class ReconciliationHandler : IReconciliationHandler
         return total is null || total.hours == 0 ? null : total;
     }
 
-    /// <summary>
-    /// The commission after this place's own withholding. Every component is
-    /// taxed at one rate, so the commission's share of the tax is simply the
-    /// rate applied to the commission.
-    /// </summary>
+    /// <summary>The commission after this place's own withholding.</summary>
     private static decimal NetCommission(Location place, LocationTotalDto total)
         => total.sales - (total.sales * place.TaxPercent / 100m);
 
@@ -269,11 +248,7 @@ public class ReconciliationHandler : IReconciliationHandler
         }
     }
 
-    /// <summary>
-    /// When the money for a finished period is expected. Monthly places pay on
-    /// their pay day in the month after the period closes; the rolling cycles
-    /// pay shortly after the period ends.
-    /// </summary>
+    /// <summary>When the money for a finished period is expected.</summary>
     private static DateOnly DueDate(PayPeriod cycle, DateOnly periodTo) => cycle switch
     {
         PayPeriod.Monthly => periodTo.AddDays(1),
@@ -286,12 +261,7 @@ public class ReconciliationHandler : IReconciliationHandler
     private static bool Overlaps(Payout payout, DateOnly from, DateOnly to)
         => payout.PeriodFrom <= to && payout.PeriodTo >= from;
 
-    /// <summary>
-    /// Whether a recorded payment answers this row. Payments made before the
-    /// place split its commission out carry "all", and are read as settling the
-    /// wage: that is what they were at the time, and counting them against both
-    /// rows would show a single transfer as having paid twice.
-    /// </summary>
+    /// <summary>Whether a recorded payment answers this row.</summary>
     private static bool Settles(Payout payout, string stream)
         => payout.Stream == stream || (stream == "wage" && payout.Stream == "all");
 
@@ -320,11 +290,7 @@ public class ReconciliationHandler : IReconciliationHandler
         return "paid";
     }
 
-    /// <summary>
-    /// A run of short periods at one place, newest first. Stops at the first
-    /// period that was settled: the claim being made is "this keeps
-    /// happening", and an interruption breaks it.
-    /// </summary>
+    /// <summary>A run of short periods at one place, newest first.</summary>
     private static ShortfallDto[] Shortfalls(PayPeriodDto[] periods)
     {
         List<ShortfallDto> found = [];
@@ -370,14 +336,7 @@ public class ReconciliationHandler : IReconciliationHandler
         return found.OrderByDescending(entry => entry.total_short).ToArray();
     }
 
-    /// <summary>
-    /// One pay period at one place, taken apart into the lines a payslip has.
-    ///
-    /// The rest of this class answers "did the money arrive". This answers
-    /// "which part of it did not", which is the question somebody actually
-    /// takes to a manager — a total that disagrees by ₴1 440 is an argument,
-    /// and "the night hours were not paid" is a question with an answer.
-    /// </summary>
+    /// <summary>One pay period at one place, taken apart into the lines a payslip has.</summary>
     public async Task<PayslipCheckDto> CheckAsync(
         int userId,
         int locationId,

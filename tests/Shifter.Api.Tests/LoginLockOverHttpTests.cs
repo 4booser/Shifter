@@ -5,12 +5,7 @@ using Xunit;
 
 namespace Shifter.Api.Tests;
 
-/// <summary>
-/// The door over real HTTP: five wrong passwords shut it for the right one
-/// too, and a successful entry clears the slate. The clock's own arithmetic
-/// is unit-tested where a fake clock is cheap; here the promise is that the
-/// middleware, the handler and the header all say the same thing.
-/// </summary>
+/// <summary>The door over real HTTP: five wrong passwords shut it for the right one too, and a successful entry clears…</summary>
 [Collection("api")]
 public sealed class LoginLockOverHttpTests
 {

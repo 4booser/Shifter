@@ -6,11 +6,7 @@ using Xunit;
 
 namespace Shifter.Tests;
 
-/// <summary>
-/// An hour at the bar round the corner and an hour at the bar forty minutes
-/// away are not the same hour, and everybody knows it without ever having
-/// counted it. This is the counting.
-/// </summary>
+/// <summary>An hour at the bar round the corner and an hour at the bar forty minutes away are not the same hour, and…</summary>
 public class CommuteTests
 {
     private static LocationTotalDto Total(double hours = 40, decimal net = 8_000m, int days = 5)

@@ -12,11 +12,7 @@ const HEADER = [
   'note',
 ];
 
-/**
- * Builds a CSV of the days on screen. Generated in the browser rather than on
- * the server: the data is already loaded, and a download endpoint would need
- * the token in a query string to work from a plain link.
- */
+/** Builds a CSV of the days on screen. */
 export function daysToCsv(days: CalendarDayData[]): string {
   const rows = days.map((day) => [
     day.date,
@@ -47,16 +43,7 @@ export function downloadCsv(name: string, contents: string): void {
 }
 
 /** Quotes anything containing a separator, a quote or a newline. */
-/**
- * A note is text, and a spreadsheet must not read it as anything else.
- *
- * A day note beginning «=», «+», «-» or «@» is a formula to Excel and to
- * LibreOffice, evaluated the moment the file opens — «=1+1» becomes 2, and
- * worse things than that are one HYPERLINK away. Notes are where people put
- * what the schema has no column for, so they are exactly the field this
- * happens in. A leading apostrophe keeps it text; every reader strips it back
- * out on display.
- */
+/** A note is text, and a spreadsheet must not read it as anything else. */
 function escape(value: string | number): string {
   const text = `${value}`;
   const safe = /^[=+\-@\t\r]/.test(text) ? `'${text}` : text;

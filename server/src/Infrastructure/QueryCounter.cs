@@ -4,19 +4,7 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace Shifter.Infrastructure;
 
-/// <summary>
-/// Counts the SQL commands a request actually runs.
-///
-/// The previous attempt reported zero and was thrown away — an instrument
-/// showing zero is worse than no instrument, because it certifies health it
-/// never measured. This one is a DbCommandInterceptor registered inside the
-/// DbContext options themselves, so there is no wiring order to get wrong,
-/// and it has a test that fails if the counter stops counting.
-///
-/// The point is the page that is fast next to its own database and turns out
-/// to be a hundred round trips over a real network. Milliseconds hide that
-/// locally; a count does not.
-/// </summary>
+/// <summary>Counts the SQL commands a request actually runs.</summary>
 public sealed class QueryCounter : DbCommandInterceptor
 {
     private static readonly AsyncLocal<Box?> Current = new();

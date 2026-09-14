@@ -5,25 +5,14 @@ using Serilog;
 
 namespace Shifter.Application.Features.Money;
 
-/// <summary>
-/// The National Bank's published rates. No key, no account — it is a public
-/// statistical endpoint — so this follows the project's optional-integration
-/// pattern only in its failure behaviour: everything here returns nothing
-/// rather than throwing, and a range that cannot be converted is reported
-/// per currency exactly as it was before conversion existed.
-/// </summary>
+/// <summary>The National Bank's published rates.</summary>
 public sealed class NbuRateClient
 {
     private readonly IHttpClientFactory _http;
 
     public NbuRateClient(IHttpClientFactory http) => _http = http;
 
-    /// <summary>
-    /// Hryvnia per unit for each code on that day, as far as the bank knows.
-    /// A missing code means no rate was published — a weekend, a holiday, or
-    /// a currency the bank does not quote — and is left out rather than
-    /// filled in with a neighbouring day's number.
-    /// </summary>
+    /// <summary>Hryvnia per unit for each code on that day, as far as the bank knows.</summary>
     public async Task<Dictionary<string, decimal>> RatesAsync(
         IEnumerable<string> codes, DateOnly date, CancellationToken ct)
     {
@@ -84,12 +73,7 @@ public sealed class NbuRateClient
     /// <summary>The hryvnia itself, which the bank does not quote against itself.</summary>
     public const decimal Hryvnia = 1m;
 
-    /// <summary>
-    /// The currencies this app converts between. An allow-list rather than
-    /// "any three letters", because the code arrives in a query parameter and
-    /// an unknown one that will never resolve costs a walk back through eight
-    /// days of the bank's API on every single request.
-    /// </summary>
+    /// <summary>The currencies this app converts between.</summary>
     public static readonly string[] Known =
         ["UAH", "PLN", "EUR", "USD", "CZK", "GBP", "HUF", "RON", "TRY", "CAD", "CHF", "SEK", "NOK", "ILS"];
 
@@ -100,9 +84,6 @@ public sealed class NbuRateClient
         return Known.Contains(upper) ? upper : "UAH";
     }
 
-    /// <summary>
-    /// The rate as a reader would check it: no padded zeros, and a full stop
-    /// rather than a comma, because a comma is a different number elsewhere.
-    /// </summary>
+    /// <summary>The rate as a reader would check it: no padded zeros, and a full stop rather than a comma, because a comma is…</summary>
     public static string Format(decimal rate) => rate.ToString("0.####", CultureInfo.InvariantCulture);
 }

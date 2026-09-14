@@ -8,12 +8,7 @@ using Xunit;
 
 namespace Shifter.Tests;
 
-/// <summary>
-/// Handing a shift to somebody else. Almost everything here is a question of
-/// who is allowed to do what: the person offering is not the person who decides,
-/// and a shift can only be given away once.
-/// </summary>
-/// <summary>Push that goes nowhere; the tests are about the swap itself.</summary>
+/// <summary>Handing a shift to somebody else.</summary>
 file sealed class SilentPush : Shifter.Application.Features.Push.IPushNotifier
 {
     public Task NotifyAsync(

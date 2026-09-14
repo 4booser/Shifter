@@ -8,11 +8,7 @@ import { api } from '@/lib/api';
 import { t } from '@/lib/i18n';
 import { money } from '@/lib/types';
 
-/**
- * The month's goal, finally on the phone — the site had the meter for a
- * season while the pocket could only look at it. View, set, move, clear;
- * the amount is the server's row, so both screens always name one figure.
- */
+/** The month's goal, finally on the phone — the site had the meter for a season while the pocket could only look… */
 interface Goal {
   id: number;
   period: string;

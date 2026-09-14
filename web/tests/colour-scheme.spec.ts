@@ -3,12 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { ColourScheme } from '@/lib/settings/settings';
 import { schemeColourFor } from '@/lib/calendar/scheme';
 
-/**
- * A scheme answers one question per date: what colour, if any. The cycle is
- * where this can quietly go wrong — counted in weeks it drifts as months change
- * length, and a naive modulo falls off the front of the calendar the moment
- * somebody scrolls back past the start date.
- */
+/** A scheme answers one question per date: what colour, if any. */
 function weekday(byWeekday: Partial<Record<number, string>>): ColourScheme {
   return {
     id: 'a',

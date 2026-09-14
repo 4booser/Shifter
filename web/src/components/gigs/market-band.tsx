@@ -6,18 +6,7 @@ import { MarketBand, marketApi } from '@/lib/api/gigs';
 import { useI18n } from '@/lib/i18n';
 import { Money } from '@/components/ui/bits';
 
-/**
- * "Барменам в Киеве платят 220 в час."
- *
- * The one fact in this trade that nobody can look up and everybody wants. It
- * comes out of listings, which venues published on purpose — never out of what
- * people privately record, which would be a far better number and a far worse
- * idea.
- *
- * It goes quiet more often than it speaks: below five separate employers, or
- * with one of them posting most of the board, there is no figure. A city with
- * three venues on it gets silence, which is the correct answer.
- */
+/** "Барменам в Киеве платят 220 в час." The one fact in this trade that nobody can look up and everybody wants. */
 export function MarketBandCard({ city, category }: { city: string; category: string | null }) {
   const { t } = useI18n();
 

@@ -1,33 +1,12 @@
 namespace Shifter.Domain.Entities;
 
-/// <summary>
-/// Whether the weather shows up in somebody's tips.
-///
-/// Everybody in the trade believes rain kills a night, and nobody has ever
-/// checked their own record against the sky. This checks it — on their days,
-/// at their place, from measurements neither they nor the app can nudge.
-///
-/// It compares tips per hour and nothing else. Wage does not move with the
-/// weather, so folding it in would water down a real effect until it vanished.
-///
-/// It reports a coincidence and says so. Rain and a dead Tuesday can share a
-/// month without one causing the other, and the wording that comes out of this
-/// must never claim otherwise — the honest sentence is "on your wet days you
-/// earned less", not "rain costs you money".
-/// </summary>
+/// <summary>Whether the weather shows up in somebody's tips.</summary>
 public static class WeatherEffect
 {
-    /// <summary>
-    /// Below this many days on either side there is no comparison, only two
-    /// small numbers. Eight is roughly a month of one kind of weather for
-    /// somebody working a normal week.
-    /// </summary>
+    /// <summary>Below this many days on either side there is no comparison, only two small numbers.</summary>
     public const int Enough = 8;
 
-    /// <summary>
-    /// A gap smaller than this is noise wearing a percentage sign. Tips swing
-    /// this much between two dry Fridays.
-    /// </summary>
+    /// <summary>A gap smaller than this is noise wearing a percentage sign.</summary>
     public const decimal Noticeable = 0.12m;
 
     public sealed record Verdict(
@@ -42,14 +21,7 @@ public static class WeatherEffect
 
     public sealed record DayFigures(DateOnly Date, decimal Tips, double Hours, bool Wet);
 
-    /// <summary>
-    /// Null where the record cannot support a sentence: too few days of one
-    /// kind of weather, or no hours worked in them.
-    ///
-    /// Null rather than a verdict with a low confidence flag, so that no screen
-    /// can accidentally render the thin version of this as though it were the
-    /// solid one.
-    /// </summary>
+    /// <summary>Null where the record cannot support a sentence: too few days of one kind of weather, or no hours worked in…</summary>
     public static Verdict? Read(IEnumerable<DayFigures> days)
     {
         var worked = days.Where(day => day.Hours > 0).ToArray();

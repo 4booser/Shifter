@@ -6,13 +6,7 @@ import { Head } from '@/components/screen';
 import { Button, Card, Field, Modal, Over, Pills, Switch } from '@/components/ui/kit';
 import { SHIFTS } from '@/mock/data';
 
-/**
- * Шаблоны смен.
- *
- * На карточке написано не только «₴200 в час», но и во что это выливается
- * за смену. Ставку помнят все, а вот сколько выходит за вечер — считают в
- * уме каждый раз, и обычно неверно.
- */
+/** Шаблоны смен. */
 const SUMS: Record<string, string> = {
   'Вечер': '₴200 × 8,5 ч = ₴1 700 за смену',
   'День': '₴150 × 7,5 ч = ₴1 125 за смену',

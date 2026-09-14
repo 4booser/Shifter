@@ -7,12 +7,7 @@ using Shifter.Application.Features.Tax;
 
 namespace Shifter.Api.Controllers;
 
-/// <summary>
-/// Somebody's own tax arrangement, in their own numbers.
-///
-/// Not one figure here originates with us. The endpoint stores what a person
-/// typed off their own registration and does arithmetic on it.
-/// </summary>
+/// <summary>Somebody's own tax arrangement, in their own numbers.</summary>
 [Authorize]
 [Route("shifter/v1/tax")]
 public class TaxController : ControllerBase

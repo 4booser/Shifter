@@ -1,9 +1,6 @@
 namespace Shifter.Application.Features.Mail;
 
-/// <summary>
-/// Transactional mail, off unless configured — the same contract as push,
-/// import and the Telegram bot: no key, no feature, no crash.
-/// </summary>
+/// <summary>Transactional mail, off unless configured — the same contract as push, import and the Telegram bot: no key…</summary>
 public sealed class MailOptions
 {
     public const string Section = "Mail";

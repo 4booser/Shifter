@@ -1,10 +1,6 @@
 namespace Shifter.Domain.Entities.Enums;
 
-/// <summary>
-/// The life of a planned assignment. Draft is the manager thinking out loud;
-/// Published is the question put to the person; the last two are their
-/// answer, and only they can give it.
-/// </summary>
+/// <summary>The life of a planned assignment.</summary>
 public enum AssignmentStatus
 {
     Draft = 0,

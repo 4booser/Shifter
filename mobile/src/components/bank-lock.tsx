@@ -10,17 +10,7 @@ import { LockKind, bankLock, lockKind, lockNameBy, unlock } from '@/lib/lock';
 /** Long enough to answer a call or copy a code, short enough to matter. */
 const GRACE_MS = 30_000;
 
-/**
- * The bank tab, behind its own lock.
- *
- * The calendar holds how much somebody earns. This holds where they were, what
- * they bought and how much they have left — a different order of thing, and
- * one worth locking even by somebody who leaves the rest of the app open. A
- * phone is handed over to show a photograph, not a statement.
- *
- * It shuts on the way out rather than on the way back, because the screenshot
- * the system takes for the app switcher is taken as the app leaves.
- */
+/** The bank tab, behind its own lock. */
 export function BankLock({
   palette,
   children,

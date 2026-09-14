@@ -6,11 +6,7 @@ using Xunit;
 
 namespace Shifter.Tests;
 
-/// <summary>
-/// The date somebody last got a raise. Almost nobody can name it off the top of
-/// their head, and everybody feels it — which is the whole reason for reading it
-/// back out of the shifts.
-/// </summary>
+/// <summary>The date somebody last got a raise.</summary>
 public class RaiseHistoryTests
 {
     private static readonly DateOnly Today = new(2026, 6, 1);

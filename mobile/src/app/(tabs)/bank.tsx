@@ -79,17 +79,7 @@ const KIND_LABEL: Record<string, string> = {
   other: 'Другое',
 };
 
-/**
- * The bank, and what it lets the app finally say.
- *
- * Shifter has always been able to work out what somebody is owed. It has never
- * been able to say what arrived — that was the person's own word, which is a
- * poor thing to open a conversation with a manager on. monobank knows.
- *
- * The token stays on this phone. Every request on this screen goes either to
- * api.monobank.ua with a token the Shifter server has never seen, or to
- * Shifter with a row the person has explicitly confirmed. Nothing crosses.
- */
+/** The bank, and what it lets the app finally say. */
 export default function BankScreen() {
   const scheme = useColorScheme();
   const cover = Colors[scheme === 'dark' ? 'dark' : 'light'];
@@ -110,9 +100,7 @@ function Bank() {
 
   const mono = useMono();
 
-  // What is counted, and what the bank quoted it at. Both are the person's
-  // choices rather than the app's: an account left out stays out, and a total
-  // the rates cannot support is not shown as one.
+  // What is counted, and what the bank quoted it at.
   const purse = useMemo(
     () =>
       wealth(
@@ -209,9 +197,7 @@ function Bank() {
   const wages = useMemo(() => {
     if (periods === null || mono.items.length === 0) return [];
 
-    // A credit already recorded as a payout is not a candidate for another
-    // one, even if the period still reads as short — it might be short by
-    // exactly the amount somebody has yet to be paid.
+    // A credit already recorded as a payout is not a candidate for another one, even if the period still reads as…
     const open = mono.items.filter((item) => !mono.used.includes(item.id));
 
     return periods
@@ -239,17 +225,13 @@ function Bank() {
       .filter((entry) => entry.matches.length > 0);
   }, [periods, mono.items, mono.payers, mono.used]);
 
-  // What the phone should look for while the app is closed, written down
-  // here because this is where it is worked out. A wake-up the system granted
-  // for a few seconds is the wrong place to be calling two services.
+  // What the phone should look for while the app is closed, written down here because this is where it is worked…
   useEffect(() => {
     const soonest = wages
       .map((entry) => entry.expected)
       .sort((one, two) => one.due.localeCompare(two.due))[0] ?? null;
 
-    // The list of wages already announced survives this write. Clearing it
-    // whenever the screen recomputes would let one wage be announced twice,
-    // which reads as a second payment.
+    // The list of wages already announced survives this write.
     void loadSetup().then((setup) =>
       saveWatching({
         expected: soonest,
@@ -281,15 +263,7 @@ function Bank() {
     [mono.items, worked, mono.used],
   );
 
-  /**
-   * Cash going onto the card the day after a shift.
-   *
-   * Half the earnings in this trade are cash and the bank is blind to all of
-   * it — but the cash almost always reaches a card within a day, and at that
-   * moment the app can ask something nobody else is in a position to ask. It
-   * asks. It never records: this is the one kind of money the app knows less
-   * about than the person does.
-   */
+  /** Cash going onto the card the day after a shift. */
   const cashOffers = useMemo(() => {
     const month = monthBounds(currentMonth());
 
@@ -303,13 +277,7 @@ function Bank() {
   }, [mono.items, days, mono.used]);
 
   /** The most recent payday the app knows about, for "how long it lasted". */
-  /**
-   * How much there is per day until the next money lands.
-   *
-   * The calendar knows when the wage is due and how much. The bank knows what
-   * is left and what still has to leave. Neither application computes this on
-   * its own, and it is the question people actually ask on the 22nd.
-   */
+  /** How much there is per day until the next money lands. */
   const runway = useMemo(() => {
     const account = (mono.client?.accounts ?? []).find((entry) => entry.id === mono.accountId);
 
@@ -346,10 +314,7 @@ function Bank() {
     };
   }, [mono.client, mono.accountId, mono.items, periods]);
 
-  // The money half of the widget, written from the same figures this screen
-  // shows. Only from here: the calendar screen has no idea what is in
-  // anybody's bank, and a widget assembled from two screens would be a widget
-  // that disagrees with itself depending which one was opened last.
+  // The money half of the widget, written from the same figures this screen shows.
   useWidgetMoney(
     runway === null || mono.accountId === null
       ? null
@@ -360,12 +325,7 @@ function Bank() {
         },
   );
 
-  /**
-   * How many things the bank has found that nobody has answered yet.
-   *
-   * On the segment, because a tab that hides a question behind a scroll is a
-   * tab where the question never gets answered.
-   */
+  /** How many things the bank has found that nobody has answered yet. */
   const waiting = wages.length + spending.length + cashOffers.length;
 
   const lastPaid = useMemo(() => {
@@ -386,10 +346,7 @@ function Bank() {
     setSaving(tag);
 
     try {
-      // One payout per credit, so an advance stays an advance and the
-      // settlement stays a settlement — the app already refuses to call the
-      // first one an underpayment, and that only works if both are recorded
-      // as what they are.
+      // One payout per credit, so an advance stays an advance and the settlement stays a settlement — the app already…
       for (const item of match.items) {
         await api('/shifter/v1/payouts', {
           method: 'POST',
@@ -406,9 +363,7 @@ function Bank() {
         });
       }
 
-      // Every payer in the match, not only the first: one venue pays from a
-      // company and from a manager's own card, and learning half of that is
-      // what leaves the other half looking like a stranger next month.
+      // Every payer in the match, not only the first: one venue pays from a company and from a manager's own card…
       for (const key of match.payers) await mono.rememberPayer(row.location_id, key);
 
       await mono.markUsed(match.items.map((item) => item.id));
@@ -423,12 +378,7 @@ function Bank() {
     }
   };
 
-  /**
-   * Records a cash top-up as that day's cash tips.
-   *
-   * The day is sent whole, as always: the tips figure is one field of a day
-   * and patching it alone would drop everything else on it.
-   */
+  /** Records a cash top-up as that day's cash tips. */
   const addCashTip = async (item: MonoStatementItem, day: string) => {
     const tag = `cash-${item.id}`;
 
@@ -594,12 +544,7 @@ function Bank() {
 
       {mono.client !== null && view === 'summary' && (
         <>
-          {/*
-            What somebody has, across the accounts they chose to count. The
-            credit limit never joins it: "12 400 on the card, 2 400 of it
-            yours" is two numbers and two different feelings, and adding them
-            would tell somebody they are five times richer than they are.
-          */}
+          {/* What somebody has, across the accounts they chose to count. */}
           <View style={styles.wealth}>
             <Text style={styles.wealthLabel}>{t('Всего своих')}</Text>
             <Text style={styles.wealthValue}>{money(purse.own + purse.jars)}</Text>
@@ -645,9 +590,7 @@ function Bank() {
                     {cardOf(entry)}
                   </Text>
                   <Text style={styles.accountMeta}>
-                    {/* The account's own currency, not the app's. Stamping ₴ on a
-                        euro balance is exactly the confident lie about money this
-                        app does not tell. */}
+                    {/* The account's own currency, not the app's. */}
                     {moneyIn(
                       currencyOf(entry.currencyCode),
                       fromMinor(entry.balance - entry.creditLimit),
@@ -661,9 +604,7 @@ function Bank() {
         </>
       )}
 
-      {/* Jars are not accounts and are never added to one: monobank keeps them
-          apart and so does this. They are here because a jar is where tips get
-          put aside, which is the only saving most of this trade ever does. */}
+      {/* Jars are not accounts and are never added to one: monobank keeps them apart and so does this. */}
       {(mono.client?.jars ?? []).length > 0 && view === 'summary' && (
         <>
           <Text style={styles.label}>{t('Банки')}</Text>
@@ -700,12 +641,7 @@ function Bank() {
         </>
       )}
 
-      {/*
-        What the rule says should be there, against what is actually in the
-        jar. The app can only ever compute the first; the bank knows the
-        second, and the gap between them is the whole point of connecting one
-        to the other.
-      */}
+      {/* What the rule says should be there, against what is actually in the jar. */}
       {view === 'summary' && jarRule !== null && jarRule.percent > 0 && (() => {
         const jar = (mono.client?.jars ?? []).find((one) => one.id === mono.jarId);
 
@@ -719,8 +655,6 @@ function Bank() {
         }
 
         // A jar in another currency is not compared with a hryvnia figure.
-        // Two numbers under one sign that are not the same money is exactly
-        // the confident lie this app does not tell.
         if (jar.currencyCode !== 980) {
           return (
             <Text style={styles.hint}>
@@ -796,9 +730,7 @@ function Bank() {
             </View>
           )}
 
-          {/* Going further back is a minute a month, so it is a decision
-              somebody makes rather than something the app does on their
-              behalf while they wonder why it is slow. */}
+          {/* Going further back is a minute a month, so it is a decision somebody makes rather than something the app does… */}
           {!mono.busy && mono.syncedTo !== null && (
             <Press
               style={styles.deeper}
@@ -1068,11 +1000,7 @@ function Bank() {
         <Text style={styles.empty}>{t('В загруженной выписке нечего сопоставить: ни прихода рядом с днём выплаты, ни трат в дни смен. Это нормально — банк не видит наличные, а такси вы могли не брать.')}</Text>
       )}
 
-      {/*
-        A lock of its own, separate from the app's. The calendar holds how much
-        somebody earns; this holds where they were, what they bought and how
-        much they have left — and a phone is handed over to show a photograph.
-      */}
+      {/* A lock of its own, separate from the app's. */}
       {view === 'summary' && (
         <Press
           style={styles.lockRow}

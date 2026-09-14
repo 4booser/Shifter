@@ -9,20 +9,7 @@ import { useI18n } from '@/lib/i18n';
 import { Alert } from '@/components/ui/bits';
 import { Icon } from '@/components/ui/icon';
 
-/**
- * The handover.
- *
- * Everything the shift going home knows currently reaches the shift coming in
- * through a guest, half an hour in: the burrata ran out at eight, the grinder
- * makes a noise, there is a table of twenty at nine. One note per crew per day,
- * because a chat scrolls and a handover has to be the thing you read once and
- * act on — and it carries a name, because a handover with nobody's name on it
- * is a rumour.
- *
- * The stop list is deliberately not attached to a day. "Мартини закончился" is
- * true until somebody says it is not, and a list that resets at midnight is a
- * list nobody trusts.
- */
+/** The handover. */
 export function HandoverPanel({ teamId }: { teamId: number }) {
   const { t, n } = useI18n();
 

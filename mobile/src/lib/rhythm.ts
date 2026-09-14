@@ -11,17 +11,7 @@ export interface WeekdayRate {
   perHour: number | null;
 }
 
-/**
- * Which days of the week are actually worth working.
- *
- * The app already says which hour pays best. The more useful question is
- * which day: a Friday close and a Tuesday day shift are the same eight hours
- * and rarely the same money, and choosing between them is a decision people
- * make every week without a number in front of them.
- *
- * Averaged per hour rather than per shift, because a Saturday that pays more
- * only because it is longer is not a better Saturday.
- */
+/** Which days of the week are actually worth working. */
 export const byWeekday = (days: { date: string; hours: number; earned: number }[]): WeekdayRate[] => {
   const rows: WeekdayRate[] = Array.from({ length: 7 }, (_, weekday) => ({
     weekday,

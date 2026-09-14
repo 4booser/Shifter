@@ -1,15 +1,6 @@
 import { MonoClientInfo, MonoStatementItem } from '@/lib/mono';
 
-/**
- * The bank on a test drive: ninety days of a believable barista's statement,
- * generated on this phone. No token, no requests, nothing stored — the
- * point is to let somebody see what the page does with a statement before
- * deciding to paste a real one into it. A byte-for-byte mirror of the web generator — same seed,
- * same ninety days, so support can say «на примере» and mean one example.
- *
- * Deterministic on purpose: everyone sees the same example, which makes it
- * explainable («на примере видно...») and screenshot-stable.
- */
+/** The bank on a test drive: ninety days of a believable barista's statement, generated on this phone. */
 
 /** A small seeded generator — Math.random would redraw the demo every reload. */
 function rng(seed: number): () => number {

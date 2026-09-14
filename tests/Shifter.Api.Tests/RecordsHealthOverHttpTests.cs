@@ -7,9 +7,7 @@ using Xunit;
 
 namespace Shifter.Api.Tests;
 
-/// <summary>
-/// The census of holes: seed the gaps, read the map back.
-/// </summary>
+/// <summary>The census of holes: seed the gaps, read the map back.</summary>
 [Collection("api")]
 public sealed class RecordsHealthOverHttpTests(Api api)
 {

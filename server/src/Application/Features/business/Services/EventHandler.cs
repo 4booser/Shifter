@@ -13,10 +13,7 @@ public partial class EventHandler : IEventHandler
     private const int NameMaxLength = 80;
     private const int NoteMaxLength = 500;
 
-    /// <summary>
-    /// A guard against a runaway range rather than a rule about how long leave
-    /// may be: a bad end date would otherwise paint years of calendar.
-    /// </summary>
+    /// <summary>A guard against a runaway range rather than a rule about how long leave may be: a bad end date would…</summary>
     private const int MaxDays = 400;
 
     private readonly IShifterCommand _shifterCommand;
@@ -95,10 +92,7 @@ public partial class EventHandler : IEventHandler
         await _shifterCommand.DeleteEventAsync(item, ct);
     }
 
-    /// <summary>
-    /// Validates and writes in one place, so create and update cannot drift
-    /// into accepting different things.
-    /// </summary>
+    /// <summary>Validates and writes in one place, so create and update cannot drift into accepting different things.</summary>
     private static void Apply(EventSaveDto request, Event item)
     {
         string name = request.name?.Trim() ?? string.Empty;
@@ -159,10 +153,7 @@ public partial class EventHandler : IEventHandler
         item.TemplateId = request.template_id;
     }
 
-    /// <summary>
-    /// "HH:mm" or nothing. Deliberately strict: a time the server cannot read
-    /// is a bug in the client, and silently dropping it would hide it.
-    /// </summary>
+    /// <summary>"HH:mm" or nothing.</summary>
     private static TimeOnly? ParseTime(string? value, string which)
     {
         if (string.IsNullOrWhiteSpace(value)) return null;
@@ -180,10 +171,7 @@ public partial class EventHandler : IEventHandler
         return parsed;
     }
 
-    /// <summary>
-    /// Internal so the range endpoint can send events alongside days without a
-    /// second copy of this mapping drifting away from it.
-    /// </summary>
+    /// <summary>Internal so the range endpoint can send events alongside days without a second copy of this mapping drifting…</summary>
     internal static EventDto ToDto(Event item) => new EventDto(
         item.Id,
         item.Name,

@@ -8,22 +8,12 @@ public enum LeaveStatus
     Declined = 2,
 }
 
-/// <summary>
-/// "I want these two weeks off."
-///
-/// Deliberately not the same thing as blocking a day. Blocking says "I cannot
-/// work Tuesday" and obliges nobody; a leave request covers a stretch, needs an
-/// answer, and the answer has consequences — an unanswered one is a cancelled
-/// flight. So it carries a status, who decided, and when.
-/// </summary>
+/// <summary>"I want these two weeks off." Deliberately not the same thing as blocking a day.</summary>
 public sealed class LeaveRequest
 {
     public const int ReasonMax = 200;
 
-    /// <summary>
-    /// Long enough for a season, short enough that a typo in the year cannot
-    /// block a person out of the rota for a decade.
-    /// </summary>
+    /// <summary>Long enough for a season, short enough that a typo in the year cannot block a person out of the rota for a…</summary>
     public const int MaxDays = 120;
 
     public int Id { get; set; }
@@ -43,17 +33,10 @@ public sealed class LeaveRequest
 
     public LeaveStatus Status { get; set; } = LeaveStatus.Pending;
 
-    /// <summary>
-    /// Who answered, and what they said. Null while it is still waiting, which
-    /// is the state the whole thing exists to make visible.
-    /// </summary>
+    /// <summary>Who answered, and what they said.</summary>
     public int? DecidedByUserId { get; set; }
 
-    /// <summary>
-    /// Nullable and forgotten rather than cascaded: a manager leaving must not
-    /// take everybody's approved holidays with them. The decision stands; only
-    /// the name goes.
-    /// </summary>
+    /// <summary>Nullable and forgotten rather than cascaded: a manager leaving must not take everybody's approved holidays…</summary>
     public User? DecidedBy { get; set; }
     public DateTime? DecidedAt { get; set; }
     public string? DecisionNote { get; set; }

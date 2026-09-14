@@ -4,15 +4,7 @@ using Xunit;
 
 namespace Shifter.Tests;
 
-/// <summary>
-/// Tips are the only money in this trade that arrives in cash and leaves
-/// without a trace. "Save a bit" is advice nobody can follow, because a bit of
-/// nothing in particular is nothing; a percent of a figure the app already has
-/// is a number somebody can act on.
-///
-/// Nothing here moves any money, and nothing here promises a date it cannot
-/// stand behind.
-/// </summary>
+/// <summary>Tips are the only money in this trade that arrives in cash and leaves without a trace.</summary>
 public class TipJarTests
 {
     private static readonly DateOnly Today = new(2026, 8, 29);

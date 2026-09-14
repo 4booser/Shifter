@@ -7,10 +7,7 @@ using Xunit;
 
 namespace Shifter.Api.Tests;
 
-/// <summary>
-/// «Где мой час дороже»: the seasonal worker's own history, city by city,
-/// with the market band only where the sample clears the anonymity bar.
-/// </summary>
+/// <summary>«Где мой час дороже»: the seasonal worker's own history, city by city, with the market band only where the…</summary>
 [Collection("api")]
 public sealed class CitiesOverHttpTests(Api api)
 {

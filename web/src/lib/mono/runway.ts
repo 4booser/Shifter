@@ -1,27 +1,10 @@
-/*
- * The one question that looks forward: дотяну ли до зарплаты.
- *
- * Everything else this application computes looks backward — what came in,
- * where it went. The forward question is the one a person asks themselves
- * every month, and everything needed to answer it honestly is already in
- * hand: the balance now, the standing payments with their dates, what an
- * ordinary day costs, and when the next wage is due and how big.
- *
- * The discipline is that a forecast must look like a forecast. Known events
- * land on their dates as facts-to-be; the ordinary days are a median dressed
- * as habit; and the words around the curve say «обычно» and never «будет».
- * A confident line here would be the same lie as an estimate mixed into a
- * fact — the sin this codebase is organised around not committing.
- */
+/* The one question that looks forward: дотяну ли до зарплаты. */
 
-// The same two names the phone's month grid reads, from the one copy
-// they both now share; re-exported because every call site here says
-// «from runway» and the forecast is where they belong in this app's head.
+// The same two names the phone's month grid reads, from the one copy they both now share; re-exported because…
 import { PlannedCharge, chargesAhead } from '@/lib/mono/mono-insights';
 
 export { chargesAhead };
 export type { PlannedCharge };
-
 
 /** Money expected to arrive: the reconciliation's own figure and due date. */
 export interface PlannedIncome {
@@ -56,13 +39,7 @@ const shift = (day: string, by: number): string => {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 };
 
-/**
- * The balance walked forward, one day at a time.
- *
- * Null with no usual-day figure and no events: a flat line at today's balance
- * is not a forecast, it is the number repeated, and drawing it would dress
- * ignorance as stability.
- */
+/** The balance walked forward, one day at a time. */
 export function buildRunway(input: {
   balance: number;
   /** What a day usually costs. Zero is honest for a fresh statement. */
@@ -87,9 +64,7 @@ export function buildRunway(input: {
     const day = shift(input.from, step);
     const events: { name: string; amount: number }[] = [];
 
-    // The ordinary day first, then the named events: the order inside one
-    // day does not change the end-of-day figure, and end-of-day is all the
-    // curve claims.
+    // The ordinary day first, then the named events: the order inside one day does not change the end-of-day…
     balance -= input.usualPerDay;
 
     for (const charge of input.charges) {

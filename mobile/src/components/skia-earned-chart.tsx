@@ -7,12 +7,7 @@ import { running } from '@/lib/pace';
 import { t } from '@/lib/i18n';
 import { CalendarDayData, money } from '@/lib/types';
 
-/**
- * The period's money as a climb, the way the site draws it: a filled line of
- * what is recorded, and the previous period as a pale ghost underneath — the
- * comparison that turns «₴47 000» into «and last month this day was ₴21 000».
- * GPU-drawn (Victory XL over Skia); a finger on it names the day.
- */
+/** The period's money as a climb, the way the site draws it: a filled line of what is recorded, and the previous… */
 const dayCount = (from: string, to: string) =>
   Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86_400_000) + 1;
 

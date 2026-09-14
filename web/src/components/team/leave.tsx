@@ -9,14 +9,7 @@ import { useI18n } from '@/lib/i18n';
 import { Alert } from '@/components/ui/bits';
 import { Icon } from '@/components/ui/icon';
 
-/**
- * Asking for time off, and answering it.
- *
- * Deliberately separate from "I cannot work Tuesday". Blocking a day obliges
- * nobody; a fortnight in July needs a yes or a no, and the state that matters
- * most is the one in between — which is why waiting requests sit at the top and
- * say so, rather than being one grey row among the answered ones.
- */
+/** Asking for time off, and answering it. */
 export function LeavePanel({ teamId, onChanged }: { teamId: number; onChanged?: () => void }) {
   const { t, n, lang } = useI18n();
   const [requests, setRequests] = useState<Leave[]>([]);

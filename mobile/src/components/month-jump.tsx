@@ -12,15 +12,7 @@ const MONTHS = [
   'июл', 'авг', 'сен', 'окт', 'ноя', 'дек',
 ];
 
-/**
- * Twelve buttons and a year.
- *
- * Swiping is right for the month either side of you and wrong for the one
- * eight months out, which is nine flicks and a lost place. Deliberately says
- * nothing about money: it could only tell the truth about months already
- * loaded, and a grid where half the squares carry a figure and half do not is
- * worse than one that carries none.
- */
+/** Twelve buttons and a year. */
 export function MonthJump({
   open,
   at,
@@ -47,9 +39,7 @@ export function MonthJump({
 
   return (
     <Modal visible={open} transparent animationType="fade" onRequestClose={onClose}>
-      {/* A full-screen «tap outside to close». Unnamed, a screen reader
-          announces it as a button and says nothing about what it does —
-          the first thing met on entering every sheet in this app. */}
+      {/* A full-screen «tap outside to close». */}
       <Pressable
         style={styles.backdrop}
         accessibilityRole="button"

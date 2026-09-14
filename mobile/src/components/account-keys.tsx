@@ -6,14 +6,7 @@ import { Palette } from '@/constants/theme';
 import { api, ApiError } from '@/lib/api';
 import { t } from '@/lib/i18n';
 
-/**
- * The account's keys — password and the second factor — on the phone.
- *
- * The settings screen's own rule is that editors live on the site so the two
- * clients cannot disagree; keys are not an editor. Changing a password and
- * turning 2FA on are safety moves, and safety that requires finding a laptop
- * is safety postponed.
- */
+/** The account's keys — password and the second factor — on the phone. */
 export function AccountKeys({
   palette,
   hasPassword,

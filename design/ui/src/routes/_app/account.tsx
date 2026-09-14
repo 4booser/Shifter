@@ -6,14 +6,7 @@ import { Head } from '@/components/screen';
 import { Button, Card, Field, Modal, Over, Pills, Switch } from '@/components/ui/kit';
 import { cn } from '@/lib/utils';
 
-/**
- * Аккаунт.
- *
- * Собран по одному правилу: рядом с каждым переключателем написано, что
- * случится, а не что он называется. «Выключить ленту календаря» — это не
- * настройка, а «подписанные календари перестанут обновляться», и человек
- * должен это прочитать до нажатия, а не после.
- */
+/** Аккаунт. */
 const DEVICES = [
   { what: 'MacBook · Chrome', where: 'Киев', when: 'сейчас', here: true, icon: Monitor },
   { what: 'iPhone · приложение', where: 'Киев', when: '2 часа назад', here: false, icon: Smartphone },
@@ -73,9 +66,7 @@ function Account() {
         {twoStep ? (
           <div className="grid gap-5 lg:grid-cols-[200px_1fr]">
             <div>
-              {/* Не настоящий код — сканировать в макете нечего. Но и не
-                  диагональная штриховка: узор без углов-искателей читается
-                  как сломанная картинка, а не как «здесь будет QR». */}
+              {/* Не настоящий код — сканировать в макете нечего. */}
               <span className="grid size-[168px] place-items-center rounded-[var(--radius-field)] bg-paper">
                 <span className="grid size-36 grid-cols-[repeat(21,1fr)] grid-rows-[repeat(21,1fr)]">
                   {Array.from({ length: 441 }, (_, cell) => {

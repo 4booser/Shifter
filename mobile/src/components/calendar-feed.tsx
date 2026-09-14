@@ -6,11 +6,7 @@ import { Palette } from '@/constants/theme';
 import { api, API_BASE } from '@/lib/api';
 import { t } from '@/lib/i18n';
 
-/**
- * The site's calendar-subscription card, on the device the calendar actually
- * lives on. The link is secret and the share sheet is the honest way to move
- * it into Google/Apple Calendar; money never travels through the feed.
- */
+/** The site's calendar-subscription card, on the device the calendar actually lives on. */
 export function CalendarFeedCard({ palette }: { palette: Palette }) {
   const styles = makeStyles(palette);
   const [token, setToken] = useState<string | null | undefined>(undefined);

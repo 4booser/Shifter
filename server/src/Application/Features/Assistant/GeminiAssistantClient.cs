@@ -9,12 +9,7 @@ using Shifter.Application.Features.Brief;
 
 namespace Shifter.Application.Features.Assistant;
 
-/// <summary>
-/// The model, on the same short leash as the brief's: our finished figures go
-/// in as text, prose comes back, and every failure — a timeout, a refusal, a
-/// blocked key — falls through to the local writer. It is a stylist, never an
-/// accountant, and it is told so in as many words.
-/// </summary>
+/// <summary>The model, on the same short leash as the brief's: our finished figures go in as text, prose comes back, and…</summary>
 public sealed class GeminiAssistantClient
 {
     private readonly IHttpClientFactory _http;

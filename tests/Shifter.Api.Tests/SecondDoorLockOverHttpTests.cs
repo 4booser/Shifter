@@ -8,12 +8,7 @@ using Xunit;
 
 namespace Shifter.Api.Tests;
 
-/// <summary>
-/// The doors behind the front door. Wave 53 locked the login; that alone
-/// makes the 2FA code and the change-password check the interesting targets —
-/// one can be guessed for as long as tickets can be minted, the other is an
-/// oracle for whoever already stole an access token.
-/// </summary>
+/// <summary>The doors behind the front door.</summary>
 [Collection("api")]
 public sealed class SecondDoorLockOverHttpTests
 {

@@ -5,14 +5,7 @@ using Shifter.Domain.Entities;
 
 namespace Shifter.Api.Controllers;
 
-/// <summary>
-/// A job advert read into the beginnings of a shift template.
-///
-/// Costs nothing to run and stores nothing: the text goes in, a handful of
-/// numbers come back, and the person edits them in the form. Somebody's job
-/// hunt is their business and there is no reason for it to be written down
-/// here.
-/// </summary>
+/// <summary>A job advert read into the beginnings of a shift template.</summary>
 [Authorize]
 [Route("shifter/v1/advert")]
 public class AdvertController : ControllerBase

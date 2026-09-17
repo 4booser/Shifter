@@ -51,7 +51,7 @@
    "entry": "web/src/app/stats/page.tsx",
    "baselineDraftId": "a5751b26-d11d-471f-8841-f3dd34765c7a",
    "baselineNote": "pixel-perfect снимок нынешнего состояния на демо-данных",
-   "activeDraftId": "fd099eaa-9328-4df5-a57d-f5579d99c8e1",
+   "activeDraftId": "58e1b130-be62-46a1-9cc9-d7d928b91fe6",
    "branches": [
     {
      "id": "fd099eaa-9328-4df5-a57d-f5579d99c8e1",
@@ -60,6 +60,11 @@
     {
      "id": "9b120e38-ea01-47d8-bcc0-7798555a464e",
      "name": "Ответы, а не графики: каждый блок начинается фразой-выводом"
+    },
+    {
+     "id": "58e1b130-be62-46a1-9cc9-d7d928b91fe6",
+     "name": "Статистика — Liquid Glass (round 3)",
+     "note": "gpt-5.6-sol draft 2026-09-16; reviewed by 13 lens agents; repaired by hand + repair agents; local copy scratchpad/drafts/<screen>.html"
     }
    ],
    "contextBundle": [
@@ -80,9 +85,10 @@
    },
    "references": {
     "prismify-crm": "250a7b58-2c66-4138-924d-0d9107ee696d",
-    "current-screen": "4365abbb-f593-4305-927b-2057366a48b5"
+    "current-screen": "4365abbb-f593-4305-927b-2057366a48b5",
+    "current-screen-2026-09-16": "ea972670-1c6a-4d57-bf42-215d64a501b7"
    },
-   "activeVersion": "v5",
+   "activeVersion": "v2",
    "handRepairs": [
     "выдуманные числа из эталона убраны (в банке бублик показывал «97% лимит»)",
     "теплокарты рисовались на Math.random() и печатали случайное число в каждой клетке — заменены детерминированной сеткой без подписей",
@@ -93,14 +99,23 @@
     "на «Твоём годе» левая карточка короче соседней — под ней снова пусто",
     "в банке столбцы занимают нижнюю треть графика, верх пустой",
     "шапка приложения перерисована моделью: появились иконки у пунктов и глобус, которого в приложении нет"
-   ]
+   ],
+   "round3": {
+    "direction": "design-system.md § Round 3 — Стекло (Liquid Glass)",
+    "model": "gpt-5.6-sol",
+    "mode": "branch from active",
+    "status": "v2 on canvas — awaiting owner review before any code",
+    "draftId": "58e1b130-be62-46a1-9cc9-d7d928b91fe6",
+    "reviewDigest": "scratchpad/review-digest.md (137 findings: 12 blockers, 67 major, 58 minor; schedule and 5 bank lenses did not run — session limit)",
+    "verification": "13 review lenses + 10 verification lenses (agents) + hand fixes; local render/probe/audit clean"
+   }
   },
   "web:/wrapped": {
    "route": "/wrapped",
    "entry": "web/src/app/wrapped/page.tsx",
    "baselineDraftId": "cce7b1d0-42d9-46fa-b9d8-eec99415afd5",
    "baselineNote": "pixel-perfect снимок нынешнего состояния на демо-данных",
-   "activeDraftId": "a7b9ebd3-3a8d-40ca-8dc9-40154161ae64",
+   "activeDraftId": "f3d96130-e12d-48c0-9b45-da7c741b01ba",
    "branches": [
     {
      "id": "a7b9ebd3-3a8d-40ca-8dc9-40154161ae64",
@@ -109,6 +124,11 @@
     {
      "id": "9bfc4f80-f0f3-4d8e-81a7-3b49c133f0ce",
      "name": "Findings: год как последовательность выводов"
+    },
+    {
+     "id": "f3d96130-e12d-48c0-9b45-da7c741b01ba",
+     "name": "Твой год — Liquid Glass (round 3)",
+     "note": "gpt-5.6-sol draft 2026-09-16; reviewed by 13 lens agents; repaired by hand + repair agents; local copy scratchpad/drafts/<screen>.html"
     }
    ],
    "contextBundle": [
@@ -129,9 +149,10 @@
    },
    "references": {
     "prismify-crm": "250a7b58-2c66-4138-924d-0d9107ee696d",
-    "current-screen": "7942b041-36f5-4768-bd85-3efa45751c03"
+    "current-screen": "7942b041-36f5-4768-bd85-3efa45751c03",
+    "current-screen-2026-09-16": "06f99023-2b39-4469-b436-5abb9861c3e9"
    },
-   "activeVersion": "v4",
+   "activeVersion": "v2",
    "handRepairs": [
     "выдуманные числа из эталона убраны (в банке бублик показывал «97% лимит»)",
     "теплокарты рисовались на Math.random() и печатали случайное число в каждой клетке — заменены детерминированной сеткой без подписей",
@@ -142,14 +163,23 @@
     "на «Твоём годе» левая карточка короче соседней — под ней снова пусто",
     "в банке столбцы занимают нижнюю треть графика, верх пустой",
     "шапка приложения перерисована моделью: появились иконки у пунктов и глобус, которого в приложении нет"
-   ]
+   ],
+   "round3": {
+    "direction": "design-system.md § Round 3 — Стекло (Liquid Glass)",
+    "model": "gpt-5.6-sol",
+    "mode": "branch from active",
+    "status": "v2 on canvas — awaiting owner review before any code",
+    "draftId": "f3d96130-e12d-48c0-9b45-da7c741b01ba",
+    "reviewDigest": "scratchpad/review-digest.md (137 findings: 12 blockers, 67 major, 58 minor; schedule and 5 bank lenses did not run — session limit)",
+    "verification": "13 review lenses + 10 verification lenses (agents) + hand fixes; local render/probe/audit clean"
+   }
   },
   "web:/bank": {
    "route": "/bank",
    "entry": "web/src/app/bank/page.tsx",
    "baselineDraftId": "c90f74da-969a-48d3-8b65-bae178679dfb",
    "baselineNote": "pixel-perfect снимок нынешнего состояния на демо-данных",
-   "activeDraftId": "9ca67e30-00f9-4408-9fb0-4e1d10d8de6e",
+   "activeDraftId": "1987ae30-facb-4db9-8066-9b310b3a231e",
    "branches": [
     {
      "id": "9ca67e30-00f9-4408-9fb0-4e1d10d8de6e",
@@ -158,6 +188,11 @@
     {
      "id": "5ee42f84-2275-4719-ace4-d7ffb0985c4c",
      "name": "Findings: банк как последовательность ответов"
+    },
+    {
+     "id": "1987ae30-facb-4db9-8066-9b310b3a231e",
+     "name": "Shifter — Банк · Liquid Glass (round 3)",
+     "note": "gpt-5.6-sol draft 2026-09-16; reviewed by 13 lens agents; repaired by hand + repair agents; local copy scratchpad/drafts/<screen>.html"
     }
    ],
    "contextBundle": [
@@ -180,9 +215,12 @@
    },
    "references": {
     "prismify-crm": "250a7b58-2c66-4138-924d-0d9107ee696d",
-    "current-screen": "4a1fbadb-fbdc-499d-bfed-bdc870896af2"
+    "current-screen": "4a1fbadb-fbdc-499d-bfed-bdc870896af2",
+    "current-screen-2026-09-16": "578b4f4d-b6de-4c65-b370-9511c67a2c3c",
+    "shakuro-finance-frame1": "332ad85e-b4e0-4cea-ba75-70e7b5df610a",
+    "shakuro-finance-laptop": "458bb5af-a88b-4847-b6ff-c737558e41f5"
    },
-   "activeVersion": "v5",
+   "activeVersion": "v2",
    "handRepairs": [
     "выдуманные числа из эталона убраны (в банке бублик показывал «97% лимит»)",
     "теплокарты рисовались на Math.random() и печатали случайное число в каждой клетке — заменены детерминированной сеткой без подписей",
@@ -193,10 +231,74 @@
     "на «Твоём годе» левая карточка короче соседней — под ней снова пусто",
     "в банке столбцы занимают нижнюю треть графика, верх пустой",
     "шапка приложения перерисована моделью: появились иконки у пунктов и глобус, которого в приложении нет"
-   ]
+   ],
+   "round3": {
+    "direction": "design-system.md § Round 3 — Стекло (Liquid Glass)",
+    "model": "gpt-5.6-sol",
+    "mode": "branch from active",
+    "status": "v2 on canvas — awaiting owner review before any code",
+    "draftId": "1987ae30-facb-4db9-8066-9b310b3a231e",
+    "reviewDigest": "scratchpad/review-digest.md (137 findings: 12 blockers, 67 major, 58 minor; schedule and 5 bank lenses did not run — session limit)",
+    "verification": "13 review lenses + 10 verification lenses (agents) + hand fixes; local render/probe/audit clean"
+   }
+  },
+  "web:/schedule": {
+   "route": "/schedule",
+   "entry": "web/src/app/schedule/page.tsx",
+   "activeDraftId": "d1d895cf-6a89-4e31-8a5d-ac4ffe607155",
+   "branches": [
+    {
+     "id": "d1d895cf-6a89-4e31-8a5d-ac4ffe607155",
+     "name": "График — Сентябрь 2026 г. · Shifter (round 3)",
+     "note": "gpt-5.6-sol draft 2026-09-16; reviewed by 13 lens agents; repaired by hand + repair agents; local copy scratchpad/drafts/<screen>.html"
+    }
+   ],
+   "contextBundle": [
+    ".superdesign/design-system.md",
+    ".superdesign/init/theme.md",
+    "web/src/components/layout/shell.tsx",
+    "web/src/app/schedule/page.tsx:348:850",
+    "web/src/components/dashboard/on-shift-now.tsx",
+    "web/src/components/team/my-assignments.tsx",
+    "web/src/components/team/availability.tsx",
+    "web/src/components/team/week-cost.tsx"
+   ],
+   "references": {
+    "current-screen-2026-09-16": "89af5f89-af4c-46e0-9755-2309223ba435"
+   },
+   "note": "cold target; no reproduction step — the real screenshot (demo team «Бар «Ночь»», 3 members) is the ground truth reference",
+   "round3": {
+    "direction": "design-system.md § Round 3",
+    "model": "gpt-5.6-sol",
+    "mode": "create",
+    "status": "v2 on canvas — awaiting owner review before any code",
+    "draftId": "d1d895cf-6a89-4e31-8a5d-ac4ffe607155",
+    "reviewDigest": "scratchpad/review-digest.md (137 findings: 12 blockers, 67 major, 58 minor; schedule and 5 bank lenses did not run — session limit)",
+    "verification": "13 review lenses + 10 verification lenses (agents) + hand fixes; local render/probe/audit clean"
+   },
+   "activeVersion": "v2"
   }
  },
  "componentsExtracted": [],
  "componentsNote": "deliberately skipped — extracting the current shell would pin the redesign to it; revisit once a direction is chosen",
- "designDirection": "Композиция и плотность — с эталона Prismify CRM (Dribbble), цвета и шрифт — свои токены. Верхнее меню приложения остаётся (в эталоне рельс иконок слева — не берём). Правила: карточка забита до краёв; одна карточка залита акцентом; у графиков настоящая ось, сетка, легенда; в теплокарте числа внутри клеток; пустые месяцы и дни недели не рисуются вовсе."
+ "designDirection": "Композиция и плотность — с эталона Prismify CRM (Dribbble), цвета и шрифт — свои токены. Верхнее меню приложения остаётся (в эталоне рельс иконок слева — не берём). Правила: карточка забита до краёв; одна карточка залита акцентом; у графиков настоящая ось, сетка, легенда; в теплокарте числа внутри клеток; пустые месяцы и дни недели не рисуются вовсе.",
+ "round3": {
+  "date": "2026-09-17",
+  "drafts": {
+   "stats": "58e1b130-be62-46a1-9cc9-d7d928b91fe6",
+   "wrapped": "f3d96130-e12d-48c0-9b45-da7c741b01ba",
+   "bank": "1987ae30-facb-4db9-8066-9b310b3a231e",
+   "schedule": "d1d895cf-6a89-4e31-8a5d-ac4ffe607155"
+  },
+  "localCopies": "scratchpad/drafts/<screen>.html (v0 = raw generation)",
+  "openProductQuestions": [
+   "stats: чип «Ночей короче 11 ч: 3» при двух коротких ночах в списке",
+   "stats: плитка «Отработанные часы 100 ч» против суммы 99,5 ч в таблицах",
+   "wrapped: база темпа ₴249 910,5 (сумма месяцев) против hero ₴269 969,17 — расходятся на надбавки",
+   "wrapped: фраза «Ничего из этого не вычтено из сумм выше» при 280 929,17 − 10 960 = 269 969,17",
+   "wrapped: метрика «ближайшей награды» (по доле выполнения — «Железный месяц» 96%)",
+   "wrapped (прод): на трёх сменах тепловая карта года растягивается до 5 500 px — чинить при переносе",
+   "bank: «Против прошлого месяца» считает август иначе, чем помесячные панели (₴17 023 vs ₴14 217 по выписке)"
+  ]
+ }
 }

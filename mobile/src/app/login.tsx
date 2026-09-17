@@ -1,3 +1,5 @@
+import * as Google from 'expo-auth-session/providers/google';
+import * as WebBrowser from 'expo-web-browser';
 import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -16,12 +18,82 @@ import { api, ApiError } from '@/lib/api';
 import { useSession } from '@/store/session';
 import { t } from '@/lib/i18n';
 
+// Closes the auth popup on web once Google sends the browser back; a no-op on the phones.
+WebBrowser.maybeCompleteAuthSession();
+
+/** The server names the client id for this platform, or nothing — and then there is no button. */
+interface GoogleConfig {
+  client_id: string | null;
+  ios_client_id: string | null;
+  android_client_id: string | null;
+}
+
+/** Its own component: the provider hook throws without a platform client id, so it mounts only once the config has named one. */
+function GoogleButton({
+  clientId,
+  busy,
+  styles,
+  onBusy,
+  onCredential,
+  onError,
+}: {
+  clientId: string;
+  busy: boolean;
+  styles: ReturnType<typeof makeStyles>;
+  onBusy: (busy: boolean) => void;
+  onCredential: (credential: string) => Promise<void>;
+  onError: (message: string) => void;
+}) {
+  // Only the platform's own id is handed over; the web id has no business on a phone.
+  const [request, response, promptAsync] = Google.useIdTokenAuthRequest(
+    Platform.OS === 'ios' ? { iosClientId: clientId } : { androidClientId: clientId },
+  );
+
+  useEffect(() => {
+    if (response === null) return;
+
+    if (response.type !== 'success') {
+      // A closed sheet is not an error; anything else Google says is.
+      if (response.type === 'error') onError(response.error?.message ?? t('Google не отдал токен. Попробуйте ещё раз.'));
+      onBusy(false);
+
+      return;
+    }
+
+    const credential = response.params.id_token;
+
+    if (credential === undefined || credential === '') {
+      onError(t('Google не отдал токен. Попробуйте ещё раз.'));
+      onBusy(false);
+
+      return;
+    }
+
+    void onCredential(credential);
+    // The callbacks are recreated every render; the response is the one thing that changes.
+  }, [response]);
+
+  return (
+    <Press
+      style={[styles.quietButton, (busy || request === null) && styles.buttonOff]}
+      disabled={busy || request === null}
+      onPress={() => {
+        onBusy(true);
+        void promptAsync().catch(() => onBusy(false));
+      }}
+    >
+      <Text style={styles.quietButtonText}>{t('Войти с аккаунтом Google')}</Text>
+    </Press>
+  );
+}
+
 export default function LoginScreen() {
   const scheme = useColorScheme();
   const palette = Colors[scheme === 'dark' ? 'dark' : 'light'];
   const signIn = useSession((state) => state.signIn);
   const completeTwoFactor = useSession((state) => state.completeTwoFactor);
   const register = useSession((state) => state.register);
+  const googleSignIn = useSession((state) => state.googleSignIn);
 
   const [mode, setMode] = useState<'in' | 'up'>('in');
   const [login, setLogin] = useState('');
@@ -39,6 +111,8 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [letterSent, setLetterSent] = useState(false);
   const autoTried = useRef(false);
+  // The platform's Google client id, once the server has named one; null until then and when there is none.
+  const [googleClientId, setGoogleClientId] = useState<string | null>(null);
 
   // Simulator convenience only: EXPO_PUBLIC_AUTOLOGIN="login:password" signs straight in, because AppleScript…
   useEffect(() => {
@@ -51,6 +125,37 @@ export default function LoginScreen() {
 
     void signIn(autoLogin, autoPassword).catch(() => setError(t('Автологин не прошёл.')));
   }, [signIn]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    api<GoogleConfig>('/shifter/v1/auth/google/config')
+      .then((config) => {
+        if (cancelled) return;
+
+        const id = (Platform.OS === 'ios' ? config.ios_client_id : Platform.OS === 'android' ? config.android_client_id : null)?.trim();
+
+        setGoogleClientId(id !== undefined && id !== '' ? id : null);
+      })
+      // No config is just no button; the password form does not depend on it.
+      .catch(() => undefined);
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const withGoogle = async (credential: string) => {
+    setError(null);
+
+    try {
+      await googleSignIn(credential);
+    } catch (caught) {
+      setError(caught instanceof ApiError ? caught.message : t('Сеть молчит. Сервер доступен?'));
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const submit = async () => {
     setBusy(true);
@@ -259,6 +364,17 @@ export default function LoginScreen() {
             )}
           </Press>
 
+          {mode === 'in' && googleClientId !== null && (
+            <GoogleButton
+              clientId={googleClientId}
+              busy={busy}
+              styles={styles}
+              onBusy={setBusy}
+              onCredential={withGoogle}
+              onError={setError}
+            />
+          )}
+
           <Press onPress={() => setMode(mode === 'in' ? 'up' : 'in')}>
             <Text style={styles.switch}>
               {mode === 'in' ? t('Впервые тут? Создать аккаунт') : t('Уже есть аккаунт? Войти')}
@@ -322,5 +438,14 @@ const makeStyles = (palette: Palette) =>
     buttonOff: { opacity: 0.45 },
     pressed: { opacity: 0.85 },
     buttonText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+    quietButton: {
+      borderWidth: 1,
+      borderColor: palette.border,
+      borderRadius: 14,
+      paddingVertical: 13,
+      alignItems: 'center',
+      backgroundColor: palette.background,
+    },
+    quietButtonText: { color: palette.text, fontSize: 16, fontWeight: '600' },
     switch: { color: palette.accent, textAlign: 'center', paddingVertical: 6, fontWeight: '600' },
   });

@@ -19,16 +19,13 @@ public class GoogleSignInHandler : IRequestHandler<GoogleSignInDto, AuthResponse
         if (string.IsNullOrWhiteSpace(credential))
             throw new ValidationException("Google credential is empty.");
 
-        string? clientId = configuration["Google:ClientId"];
-
-        if (string.IsNullOrWhiteSpace(clientId))
-            throw new ForbiddenException("Google sign-in is not configured on this server.");
+        string[] audiences = Audiences(configuration);
 
         try
         {
             return await GoogleJsonWebSignature.ValidateAsync(
                 credential,
-                new GoogleJsonWebSignature.ValidationSettings { Audience = [clientId] });
+                new GoogleJsonWebSignature.ValidationSettings { Audience = audiences });
         }
         catch (InvalidJwtException)
         {
@@ -61,10 +58,7 @@ public class GoogleSignInHandler : IRequestHandler<GoogleSignInDto, AuthResponse
         if (string.IsNullOrWhiteSpace(request.credential))
             throw new ValidationException("Google credential is empty.");
 
-        string? clientId = _configuration["Google:ClientId"];
-
-        if (string.IsNullOrWhiteSpace(clientId))
-            throw new ForbiddenException("Google sign-in is not configured on this server.");
+        string[] audiences = Audiences(_configuration);
 
         GoogleJsonWebSignature.Payload payload;
 
@@ -76,7 +70,7 @@ public class GoogleSignInHandler : IRequestHandler<GoogleSignInDto, AuthResponse
                 request.credential,
                 new GoogleJsonWebSignature.ValidationSettings
                 {
-                    Audience = [clientId],
+                    Audience = audiences,
                 });
         }
         catch (InvalidJwtException exception)
@@ -133,6 +127,20 @@ public class GoogleSignInHandler : IRequestHandler<GoogleSignInDto, AuthResponse
 
             throw;
         }
+    }
+
+    /// <summary>The web client id is the switch; the phone ids widen who may present a token once it is on.</summary>
+    private static string[] Audiences(IConfiguration configuration)
+    {
+        string? web = configuration["Google:ClientId"];
+
+        if (string.IsNullOrWhiteSpace(web))
+            throw new ForbiddenException("Google sign-in is not configured on this server.");
+
+        return new[] { web, configuration["Google:IosClientId"], configuration["Google:AndroidClientId"] }
+            .Where(id => !string.IsNullOrWhiteSpace(id))
+            .Select(id => id!)
+            .ToArray();
     }
 
     private static string Pick(string? typed, string? fromGoogle)

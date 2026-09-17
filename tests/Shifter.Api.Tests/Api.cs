@@ -46,6 +46,9 @@ public sealed class Api : WebApplicationFactory<Program>, IAsyncLifetime
         builder.UseSetting("RateLimits:ApiBurst", "100000");
         builder.UseSetting("RateLimits:ApiPerPeriod", "100000");
 
+        // A phone client id, so the config endpoint has one to hand back.
+        // Android stays unset on purpose: the same test reads its null.
+        builder.UseSetting("Google:IosClientId", "ios-tests.apps.googleusercontent.com");
     }
 
     public async ValueTask InitializeAsync()

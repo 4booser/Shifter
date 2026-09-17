@@ -10,6 +10,8 @@ interface SessionState {
   /** The second half of a two-factor sign-in: six digits, or eight from the backup sheet. */
   completeTwoFactor: (ticket: string, code: string) => Promise<void>;
   register: (login: string, password: string, firstName: string, lastName: string) => Promise<void>;
+  /** A Google id_token in, a session out — the same envelope password login answers with. */
+  googleSignIn: (credential: string) => Promise<void>;
   signOut: () => void;
 }
 
@@ -53,6 +55,14 @@ export const useSession = create<SessionState>((set) => ({
     const response = await api<Session>('/shifter/v1/auth/user/register', {
       body: { login, password, first_name: firstName, last_name: lastName },
     });
+
+    setSession(response);
+    set({ session: response });
+  },
+
+  googleSignIn: async (credential) => {
+    // Like the web: Google vouches for the person, so no second factor stands in the way here.
+    const response = await api<Session>('/shifter/v1/auth/google', { body: { credential } });
 
     setSession(response);
     set({ session: response });

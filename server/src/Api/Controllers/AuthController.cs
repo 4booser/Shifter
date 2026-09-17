@@ -207,7 +207,20 @@ public class AuthController : Controller
     [AllowAnonymous]
     [Route("google/config")]
     public IActionResult GoogleConfig([FromServices] IConfiguration configuration)
-        => Ok(new { client_id = configuration["Google:ClientId"] });
+    {
+        // Without the web id the handler refuses every token, so the phones hide their button too.
+        string? web = Blank(configuration["Google:ClientId"]);
+
+        return Ok(new
+        {
+            client_id = configuration["Google:ClientId"],
+            ios_client_id = web is null ? null : Blank(configuration["Google:IosClientId"]),
+            android_client_id = web is null ? null : Blank(configuration["Google:AndroidClientId"]),
+        });
+    }
+
+    private static string? Blank(string? value)
+        => string.IsNullOrWhiteSpace(value) ? null : value;
 
     [HttpGet]
     [Route("goal")]

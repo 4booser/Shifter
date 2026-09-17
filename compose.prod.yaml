@@ -84,6 +84,10 @@ services:
       # variable is unset, and an empty environment variable overrides
       # appsettings.json rather than deferring to it — which silently turns off
       # the sign-in button. The id is public and ships in the image.
+      # The phone apps' ids are optional and come from the host environment;
+      # an unset one only hides the button on that platform.
+      Google__IosClientId: ${GOOGLE_IOS_CLIENT_ID:-}
+      Google__AndroidClientId: ${GOOGLE_ANDROID_CLIENT_ID:-}
     depends_on:
       db:
         condition: service_healthy

@@ -132,7 +132,9 @@ CREATE DATABASE tokens  OWNER shifter_user;
 | `SHIFTER_JWT_KEY` | ключ подписи токенов, минимум 32 байта | да |
 | `ConnectionStrings__Shifter` | основная база | да вне разработки |
 | `ConnectionStrings__Tokens` | база refresh-токенов | да вне разработки |
-| `Google__ClientId` | OAuth-клиент; пусто — кнопка Google скрыта | нет |
+| `Google__ClientId` | OAuth-клиент веба; пусто — кнопка Google скрыта везде | нет |
+| `Google__IosClientId` | OAuth-клиент iOS-приложения; пусто — кнопки Google на iPhone нет | нет |
+| `Google__AndroidClientId` | OAuth-клиент Android-приложения; пусто — кнопки Google на Android нет | нет |
 | `Cors__AllowedOrigins__0` | origin для SPA с другого домена | нет |
 | `POSTGRES_PASSWORD` | пароль роли в compose | нет, по умолчанию `0000` |
 
@@ -971,7 +973,7 @@ curl -sI --resolve shifter.ink:443:45.76.251.81 https://shifter.ink/   # в об
 | кнопки нет вовсе | `/shifter/v1/auth/google/config` вернул пустой `client_id` — значит, `Google__ClientId` пришёл в контейнер пустым и перекрыл `appsettings.json` |
 | кнопка есть, в консоли браузера ошибка про origin | origin не добавлен в Authorized JavaScript origins либо страница открыта по http |
 | `403 Google sign-in is not configured` | сервер видит пустой client id — то же, что и в первой строке |
-| `401 Google sign-in could not be verified` | токен выписан для другого client id: в Console и в `appsettings.json` разные приложения |
+| `401 Google sign-in could not be verified` | токен выписан для другого client id: в Console и в `appsettings.json` разные приложения, либо токен с телефона, а `Google__IosClientId` / `Google__AndroidClientId` на сервере не заданы |
 
 ---
 

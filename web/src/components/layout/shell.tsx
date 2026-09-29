@@ -126,27 +126,32 @@ export function Shell({ children }: { children: React.ReactNode }) {
       <LiveTitle />
 
       {/* Above the chrome and not dismissable, because the one thing this account must never do is let somebody spend… */}
+      <div className="scene" aria-hidden="true" />
+
       {face?.is_demo === true && (
-        <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 bg-(--warn-soft) px-3 py-1.5 text-center text-[0.82rem] text-warn-read">
-          <span>
-            <b>{t('This is an example.')}</b>{' '}
-            {t('The work in it is invented, and the account disappears in two days.')}
-          </span>
-          <button
-            type="button"
-            className="font-semibold underline underline-offset-2"
-            onClick={logout}
-          >
-            {t('Leave the example')}
-          </button>
+        <div className="px-3 pt-2 sm:px-5">
+          <div className="glass-pill mx-auto flex max-w-[1440px] flex-wrap items-center justify-center gap-x-3 gap-y-1 px-4 py-1.5 text-center text-[0.8rem] text-warn-read">
+            <span>
+              <b>{t('This is an example.')}</b>{' '}
+              {t('The work in it is invented, and the account disappears in two days.')}
+            </span>
+            <button
+              type="button"
+              className="font-semibold underline underline-offset-2"
+              onClick={logout}
+            >
+              {t('Leave the example')}
+            </button>
+          </div>
         </div>
       )}
 
-      <header className="app-chrome sticky top-0 z-40 border-b border-border bg-(--surface)/85 backdrop-blur-md">
-        <div className="mx-auto flex h-14 max-w-[1440px] items-center gap-1 px-3 sm:px-5">
+      {/* The chrome floats: a glass capsule over the room, nothing solid behind it. */}
+      <header className="app-chrome sticky top-0 z-40 px-3 pt-2 sm:px-5">
+        <div className="glass-pill glass-over-orb mx-auto flex h-12 max-w-[1440px] items-center gap-1 px-2.5">
           <Link href="/dashboard" className="mr-2 flex items-center gap-2 font-bold tracking-tight">
             <span
-              className="grid h-7 w-7 place-items-center rounded-lg text-[0.95rem]"
+              className="grid h-8 w-8 place-items-center rounded-full text-[0.95rem]"
               style={{ background: 'var(--accent)', color: 'var(--accent-ink)' }}
             >
               S
@@ -250,7 +255,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
-      <main className="mx-auto max-w-[1440px] px-3 pb-24 pt-4 sm:px-5 md:pb-8">{children}</main>
+      <main className="mx-auto max-w-[1440px] px-3 pb-24 pt-3 sm:px-5 md:pb-8">{children}</main>
 
       <CommandPalette />
       <ShiftDoneOverlay />
@@ -261,7 +266,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
       <RevealObserver />
 
       {/* Narrow screens: the five destinations as a thumb-height tab bar. */}
-      <nav className="fixed inset-x-0 bottom-0 z-40 flex border-t border-border bg-(--surface)/92 backdrop-blur-md md:hidden">
+      <nav className="glass fixed inset-x-2 bottom-2 z-40 flex md:hidden">
         {NAV.map((item) => {
           const active = pathname.startsWith(item.href);
 

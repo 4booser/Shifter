@@ -2749,6 +2749,14 @@ const RU: Dictionary = {
   'Which shift brings the money, and what an hour of it is worth.': 'Какая смена приносит деньги и сколько стоит её час.',
   'Travel': 'Дорога',
   'Food on shift': 'Еда на смене',
+  'up to': 'до',
+  'above': 'выше',
+  'Colour steps': 'Ступени цвета',
+  'days recorded': 'дн. с записью',
+  'weeks': 'недель',
+  'hollow cell — a day without a record': 'пустая клетка — день без записи',
+  'Each cell is a day; the colour is the day’s figure': 'Каждая клетка — день; цвет — его сумма',
+  'colour appears after eight different days': 'цвет появится после восьми разных дней',
 };
 
 export default RU;

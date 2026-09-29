@@ -59,18 +59,13 @@ public sealed class GoalCelebrator
 
             if (!Crossed(goal, earned)) continue;
 
-            // The list above is a no-tracking read; stamping it would satisfy
-            // nobody but this stack frame. Re-read tracked, re-check the stamp
-            // in case a parallel save beat us to the same cheer.
             var tracked = await _query.GetGoalAsync(userId, goal.Id, ct);
 
             if (tracked is null || tracked.CelebratedOn == from) continue;
 
             tracked.CelebratedOn = from;
             await _command.UpdateGoalAsync(tracked, ct);
-
-            // The trophy row: CelebratedOn above remembers only the latest
-            // period; this is the shelf's material and is append-only.
+            
             await _command.AddGoalCheerAsync(new GoalCheer
             {
                 UserId = userId,
@@ -85,9 +80,6 @@ public sealed class GoalCelebrator
                 userId,
                 language => language switch
                 {
-                    // A goal is a sum of money and was pushed without a
-                    // currency mark, spelled by whatever culture the process
-                    // ran under.
                     "ru" => ("Цель достигнута 🎉", $"{Figures.Money(goal.Amount)} за {RuPeriod(goal.Period)} — есть!"),
                     "uk" => ("Мета досягнута 🎉", $"{Figures.Money(goal.Amount)} за {UkPeriod(goal.Period)} — є!"),
                     _ => ("Goal reached 🎉", $"{Figures.Money(goal.Amount)} for the {label} — done!"),

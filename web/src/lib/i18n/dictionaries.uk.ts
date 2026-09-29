@@ -2730,6 +2730,14 @@ const UK: Dictionary = {
   'Which shift brings the money, and what an hour of it is worth.': 'Яка зміна приносить гроші та скільки коштує її година.',
   'Travel': 'Дорога',
   'Food on shift': 'Їжа на зміні',
+  'up to': 'до',
+  'above': 'вище',
+  'Colour steps': 'Сходинки кольору',
+  'days recorded': 'дн. із записом',
+  'weeks': 'тижнів',
+  'hollow cell — a day without a record': 'порожня клітинка — день без запису',
+  'Each cell is a day; the colour is the day’s figure': 'Кожна клітинка — день; колір — його сума',
+  'colour appears after eight different days': 'колір з’явиться після восьми різних днів',
 };
 
 

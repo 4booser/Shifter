@@ -60,23 +60,14 @@ public partial class DayHandler : IDayHandler
             throw new ValidationException("Range start must not be after its end.");
 
         Day[] days = await _shifterQuery.GetDaysInRangeAsync(userId, from, to, ct);
-
-        // Two reckonings need to see outside the range they report on.
-        //
-        // Overtime is a weekly threshold and the calendar is read a month at a
-        // time, so a week straddling the first of the month reached it in
-        // neither month and the money disappeared. A salary is earned over a
-        // whole month, so a ten-day range has to know how much of that month
-        // was worked before it can say what those ten days were worth.
-        //
-        // Nothing is counted from these days directly; they are context.
+        
         Day[] around = await _shifterQuery.GetDaysInRangeAsync(
             userId, from.AddDays(-35), to.AddDays(35), ct);
 
         Payout[] payouts = await _shifterQuery.GetPayoutsAsync(userId, from, to, ct);
         Event[] events = await _shifterQuery.GetEventsInRangeAsync(userId, from, to, ct);
 
-        // Locations first: the day view needs them for tip-out and meals, and
+        //Locations first: the day view needs them for tip-out and meals, and
         // every total below is derived from the days once they are built.
         Location[] places = await _shifterQuery.GetLocationsAsync(userId, true, ct);
         Dictionary<int, Location> byId = places.ToDictionary(place => place.Id);

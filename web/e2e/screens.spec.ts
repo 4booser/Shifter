@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-import { apiPut, createShiftTemplate, registerUser, signIn, todayKey } from './helpers';
+import { apiPut, createShiftTemplate, registerUser, signIn } from './helpers';
 
 /** The screens, looked at. */
 const SCREENS = [
@@ -23,7 +23,18 @@ test.skip(
   'screenshot baselines are darwin; the soft screens job opts in via SCREENS=1',
 );
 
+/** The day every shot is taken on. */
+const MONTH = '2026-09';
+const DAY = `${MONTH}-16`;
+
 test.describe('screens', () => {
+  // The seed used to follow the real calendar, so a shot changed shape with the
+  // date: on the first of a month its worked days were still ahead, the year
+  // held one column, and the page came out ten thousand pixels tall.
+  test.beforeEach(async ({ page }) => {
+    await page.clock.setFixedTime(new Date(`${DAY}T12:00:00+03:00`));
+  });
+
   for (const theme of ['light', 'dark'] as const) {
     for (const screen of SCREENS) {
       test(`${screen.name} in ${theme}`, async ({ page }) => {
@@ -31,15 +42,13 @@ test.describe('screens', () => {
         const shift = await createShiftTemplate(user.token);
 
         /* A believable month, not an empty one: three worked days with tips and one planned ahead, so every screen has… */
-        const month = todayKey().slice(0, 7);
-
         for (const [day, worked] of [
           ['05', true],
           ['06', true],
           ['07', true],
           ['26', false],
         ] as const) {
-          await apiPut(user.token, `/days/${month}-${day}`, {
+          await apiPut(user.token, `/days/${MONTH}-${day}`, {
             shifts: [
               {
                 shift_id: shift,
@@ -92,8 +101,7 @@ test.describe('screens', () => {
       const user = await registerUser();
       const shift = await createShiftTemplate(user.token);
 
-      // Today, not a fixed August day: the calendar opens on the month it is in and has no query parameter to argue…
-      const day = todayKey();
+      const day = DAY;
 
       await apiPut(user.token, `/days/${day}`, {
         shifts: [

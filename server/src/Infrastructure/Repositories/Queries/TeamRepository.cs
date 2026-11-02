@@ -246,6 +246,12 @@ public class TeamRepository : ITeamRepository
 
             _db.CoverOffers.RemoveRange(others);
 
+            // Moved by hand, for the delete below leaves no entity to count: a
+            // screen holding the day would put the shift back with its next save.
+            await _db.Days
+                .Where(day => _db.DayShifts.Any(entry => entry.DayId == day.Id && entry.Id == id))
+                .ExecuteUpdateAsync(set => set.SetProperty(day => day.Version, day => day.Version + 1), ct);
+
             await _db.DayShifts.Where(entry => entry.Id == id).ExecuteDeleteAsync(ct);
         }
 

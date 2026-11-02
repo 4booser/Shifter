@@ -3,6 +3,7 @@
 import { useMemo, useRef, useState } from 'react';
 
 import { readSession } from '@/lib/api/http';
+import { hoursOn } from '@/lib/calendar/shift-hours';
 import { useCalendar, placeShifts } from '@/lib/store/calendar';
 import { useI18n } from '@/lib/i18n';
 import { useSettings } from '@/lib/settings/store';
@@ -50,7 +51,11 @@ export function PhotoImportModal({ open, onClose }: { open: boolean; onClose: ()
   };
 
   const matchTemplate = (row: ParsedRow): number | null =>
-    active.find((item) => item.start_time === row.start && item.end_time === row.end)?.id ??
+    active.find((item) => {
+      const hours = hoursOn(item, row.date);
+
+      return hours.start_time === row.start && hours.end_time === row.end;
+    })?.id ??
     active.find((item) => item.name.toLowerCase() === row.name.toLowerCase())?.id ??
     null;
 

@@ -127,6 +127,219 @@ public class DayShiftEditTests
         Assert.All(keep, entry => Assert.Equal(100m, entry.SalaryAmount));
     }
 
+    // ==== A save that never saw the close ====
+
+    private static readonly DateTime Closed = new(2026, 11, 3, 0, 1, 0, DateTimeKind.Utc);
+
+    /// <summary>What the close job leaves behind on a 09:00 to 17:00 shift.</summary>
+    private static DayShift ClosedByTheServer()
+    {
+        DayShift placed = DayShift.From(Template(100m), worked: true);
+
+        placed.ActualStart = new TimeOnly(9, 0);
+        placed.ActualEnd = new TimeOnly(17, 0);
+        placed.AutoClosedAtUtc = Closed;
+
+        return placed;
+    }
+
+    /// <summary>What a client sends when it last looked before the close.</summary>
+    private static DayShift Unseen(bool worked)
+        => DayShift.From(Template(100m), worked);
+
+    [Fact]
+    public void AStalePlannedSaveCannotUndoTheClose()
+    {
+        DayShift placed = ClosedByTheServer();
+
+        DayShiftEdit.ApplyOnto(placed, Unseen(worked: false));
+
+        Assert.True(placed.Worked);
+        Assert.Equal(new TimeOnly(9, 0), placed.ActualStart);
+        Assert.Equal(new TimeOnly(17, 0), placed.ActualEnd);
+        Assert.Equal(Closed, placed.AutoClosedAtUtc);
+    }
+
+    [Fact]
+    public void TheRestOfAStaleSaveStillGoesThrough()
+    {
+        DayShift placed = ClosedByTheServer();
+        DayShift stale = Unseen(worked: false);
+
+        stale.Revenue = 9_000m;
+        stale.Guests = 40;
+        stale.BreakMinutes = 30;
+        stale.Zone = ShiftZone.Bar;
+
+        DayShiftEdit.ApplyOnto(placed, stale);
+
+        Assert.Equal(9_000m, placed.Revenue);
+        Assert.Equal(40, placed.Guests);
+        Assert.Equal(30, placed.BreakMinutes);
+        Assert.Equal(ShiftZone.Bar, placed.Zone);
+    }
+
+    [Fact]
+    public void AStaleAskForCoverDoesNotLandOnAShiftAlreadyWorked()
+    {
+        DayShift placed = ClosedByTheServer();
+        DayShift stale = Unseen(worked: false);
+
+        stale.NeedsCover = true;
+
+        DayShiftEdit.ApplyOnto(placed, stale);
+
+        Assert.False(placed.NeedsCover);
+    }
+
+    [Fact]
+    public void AStaleWorkedSaveBringsTheRealTimesOfALiveClock()
+    {
+        DayShift placed = ClosedByTheServer();
+        DayShift finishing = Unseen(worked: true);
+
+        finishing.ActualStart = new TimeOnly(9, 20);
+        finishing.ActualEnd = new TimeOnly(18, 5);
+
+        DayShiftEdit.ApplyOnto(placed, finishing);
+
+        Assert.True(placed.Worked);
+        Assert.Equal(new TimeOnly(9, 20), placed.ActualStart);
+        Assert.Equal(new TimeOnly(18, 5), placed.ActualEnd);
+        Assert.Equal(Closed, placed.AutoClosedAtUtc);
+    }
+
+    [Fact]
+    public void AStaleWorkedSaveWithNoTimesKeepsTheOnesTheCloseWrote()
+    {
+        DayShift placed = ClosedByTheServer();
+
+        DayShiftEdit.ApplyOnto(placed, Unseen(worked: true));
+
+        Assert.Equal(new TimeOnly(9, 0), placed.ActualStart);
+        Assert.Equal(new TimeOnly(17, 0), placed.ActualEnd);
+    }
+
+    [Fact]
+    public void AStaleWorkedSaveWithOneTimeKeepsTheOtherTheCloseWrote()
+    {
+        DayShift placed = ClosedByTheServer();
+        DayShift finishing = Unseen(worked: true);
+
+        finishing.ActualEnd = new TimeOnly(18, 5);
+
+        DayShiftEdit.ApplyOnto(placed, finishing);
+
+        Assert.Equal(new TimeOnly(9, 0), placed.ActualStart);
+        Assert.Equal(new TimeOnly(18, 5), placed.ActualEnd);
+    }
+
+    [Fact]
+    public void AStaleSaveOnAShiftToldToStayPlannedLeavesItPlanned()
+    {
+        // Stamped by a Discard, so the stamp is there and nothing was closed.
+        DayShift placed = DayShift.From(Template(100m), worked: false);
+
+        placed.AutoClosedAtUtc = Closed;
+
+        DayShiftEdit.ApplyOnto(placed, Unseen(worked: false));
+
+        Assert.False(placed.Worked);
+        Assert.Null(placed.ActualStart);
+        Assert.Equal(Closed, placed.AutoClosedAtUtc);
+    }
+
+    [Fact]
+    public void AClientThatSawTheCloseCanFlipItBackAndTheStampStays()
+    {
+        DayShift placed = ClosedByTheServer();
+        DayShift seen = DayShift.From(Template(100m), worked: false);
+
+        seen.AutoClosedAtUtc = Closed.AddHours(1);
+
+        DayShiftEdit.ApplyOnto(placed, seen);
+
+        Assert.False(placed.Worked);
+        Assert.Null(placed.ActualStart);
+        Assert.Null(placed.ActualEnd);
+
+        // The first word stands, which is what keeps the job from closing it
+        // again, and a later echo does not rewrite when that was.
+        Assert.Equal(Closed, placed.AutoClosedAtUtc);
+    }
+
+    [Fact]
+    public void AnEchoOnAnUnclosedShiftStampsIt()
+    {
+        // This is the Discard: planned, no edges, and the job told to stay out.
+        DayShift placed = DayShift.From(Template(100m), worked: false);
+
+        placed.ActualStart = new TimeOnly(9, 10);
+
+        DayShift discard = DayShift.From(Template(100m), worked: false);
+
+        discard.AutoClosedAtUtc = Closed;
+
+        DayShiftEdit.ApplyOnto(placed, discard);
+
+        Assert.False(placed.Worked);
+        Assert.Null(placed.ActualStart);
+        Assert.Equal(Closed, placed.AutoClosedAtUtc);
+    }
+
+    [Fact]
+    public void AnOrdinarySaveOnAnUntouchedShiftIsNotStale()
+    {
+        DayShift placed = DayShift.From(Template(100m), worked: true);
+
+        placed.ActualStart = new TimeOnly(9, 10);
+        placed.ActualEnd = new TimeOnly(17, 10);
+
+        DayShiftEdit.ApplyOnto(placed, DayShift.From(Template(100m), worked: false));
+
+        Assert.False(placed.Worked);
+        Assert.Null(placed.ActualStart);
+        Assert.Null(placed.AutoClosedAtUtc);
+    }
+
+    [Fact]
+    public void WhatASaveWouldLeaveIsWorkedOutWithoutTouchingTheRow()
+    {
+        DayShift placed = ClosedByTheServer();
+
+        placed.StartTime = new TimeOnly(10, 0);
+        placed.EndTime = new TimeOnly(15, 0);
+
+        // A save that never saw the close leaves its edges where they are.
+        DayShift after = DayShiftEdit.AfterSave(placed, Unseen(worked: false));
+
+        Assert.True(after.Worked);
+        Assert.Equal(new TimeOnly(10, 0), after.StartTime);
+        Assert.Equal(new TimeOnly(15, 0), after.EndTime);
+        Assert.Equal(new TimeOnly(9, 0), after.ActualStart);
+        Assert.Equal(new TimeOnly(17, 0), after.ActualEnd);
+
+        // One that answers it clears them.
+        DayShift seen = Unseen(worked: false);
+
+        seen.AutoClosedAtUtc = Closed;
+
+        DayShift answered = DayShiftEdit.AfterSave(placed, seen);
+
+        Assert.False(answered.Worked);
+        Assert.Null(answered.ActualEnd);
+
+        // A look ahead, not the save: the row is as it was.
+        Assert.True(placed.Worked);
+        Assert.Equal(new TimeOnly(9, 0), placed.ActualStart);
+        Assert.Equal(new TimeOnly(17, 0), placed.ActualEnd);
+        Assert.Equal(Closed, placed.AutoClosedAtUtc);
+    }
+
+    [Fact]
+    public void TheCloseStampIsAccountedForRatherThanLeftOverAsATerm()
+        => Assert.Contains(DayShiftEdit.Editable, property => property.Name == nameof(DayShift.AutoClosedAtUtc));
+
     [Fact]
     public void TheTermsItRefusesToTouchAreNamed()
     {

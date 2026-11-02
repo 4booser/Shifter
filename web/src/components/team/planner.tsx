@@ -14,6 +14,7 @@ import { useDialogKeys } from '@/lib/a11y';
 import { apiErrorMessage } from '@/lib/api/http';
 import { WhoRead, plannerApi as whoApi } from '@/lib/api/team';
 import { keysBetween, shiftDays, todayKey, weekBounds } from '@/lib/calendar/calendar-date';
+import { hoursOn } from '@/lib/calendar/shift-hours';
 import { stagger } from '@/lib/fx';
 import { useI18n } from '@/lib/i18n';
 import { pushToast } from '@/lib/toast';
@@ -361,16 +362,19 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
             type="button"
             className="btn btn-sm"
             disabled={busy}
-            onClick={() =>
+            onClick={() => {
+              const first = templates.find((item) => !item.archived);
+              const hours = first === undefined ? undefined : hoursOn(first, days[0]);
+
               setFilling({
                 date: days[0],
-                title: templates.find((item) => !item.archived)?.name ?? '',
-                start: templates.find((item) => !item.archived)?.start_time ?? '18:00',
-                end: templates.find((item) => !item.archived)?.end_time ?? '02:00',
+                title: first?.name ?? '',
+                start: hours?.start_time ?? '18:00',
+                end: hours?.end_time ?? '02:00',
                 role: '',
                 count: 2,
-              })
-            }
+              });
+            }}
           >
             <Icon name="users" size={13} />
             {t('Hand out a shift')}
@@ -528,8 +532,8 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
                               date: day,
                               id: null,
                               title: editing?.title ?? templates[0]?.name ?? '',
-                              start: editing?.start ?? templates[0]?.start_time ?? '11:00',
-                              end: editing?.end ?? templates[0]?.end_time ?? '22:00',
+                              start: editing?.start ?? (templates[0] === undefined ? '11:00' : hoursOn(templates[0], day).start_time),
+                              end: editing?.end ?? (templates[0] === undefined ? '22:00' : hoursOn(templates[0], day).end_time),
                               // The station carries over from the last cell: a manager filling a Friday is filling one row of the same…
                               role: editing?.role ?? '',
                             })
@@ -731,7 +735,12 @@ export function PlannerBoardView({ teamId }: { teamId: number }) {
                     type="button"
                     className="btn btn-quiet btn-sm"
                     onClick={() =>
-                      setEditing({ ...editing, title: template.name, start: template.start_time, end: template.end_time })
+                      setEditing({
+                        ...editing,
+                        title: template.name,
+                        start: hoursOn(template, editing.date).start_time,
+                        end: hoursOn(template, editing.date).end_time,
+                      })
                     }
                   >
                     {template.symbol ?? '•'} {template.name}

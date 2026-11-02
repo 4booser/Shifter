@@ -12,6 +12,8 @@
  *  - hashed build assets: cache-first (their names ARE their versions);
  *  - pages and API GETs: network-first, cache as the fallback for the
  *    basement where half of every shift is worked;
+ *  - a read sent no-store: straight through, never answered from here. It is
+ *    about to decide a write, and failing is what tells that write to wait;
  *  - anything that is not GET: straight through, never cached — the offline
  *    QUEUE owns writes, and a cache pretending a PUT happened would be the
  *    silent merge this app refuses everywhere else.
@@ -86,6 +88,10 @@ self.addEventListener('fetch', (event) => {
   // Auth is never cached: a token response replayed offline is a lie about
   // being signed in, and refresh must fail honestly.
   if (url.pathname.startsWith('/shifter/v1/auth/')) return;
+
+  // The server's word or nothing: an old copy answered offline would pass for
+  // it, and a clock would write a whole day on top.
+  if (request.cache === 'no-store') return;
 
   const isApi = url.pathname.startsWith('/shifter/v1/');
   const isPage = request.mode === 'navigate';

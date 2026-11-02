@@ -30,12 +30,15 @@ import {
   SalesPosition,
   ShiftTemplate,
   WorkLocation,
+  fineOf,
   toSavePayload,
 } from '../calendar/models';
+import { replayEdits } from '../calendar/day-draft';
 import { schemeColourFor } from '../calendar/scheme';
+import { hoursOn, workedByDefault } from '../calendar/shift-hours';
 import { ColourScheme } from '../settings/settings';
 import { useSettings } from '../settings/store';
-import { offlineQueue } from './offline';
+import { PendingDay, offlineQueue } from './offline';
 
 export type SummaryPeriod = 'month' | 'previous' | 'week' | 'all';
 
@@ -50,6 +53,8 @@ export const SUMMARY_PERIODS: { value: SummaryPeriod; label: string }[] = [
 export const ALL_TIME = { from: '2000-01-01', to: '2099-12-31' };
 
 export type PaintScope = 'day' | 'week' | 'month';
+
+export type DayStatus = 'saving' | 'queued' | 'failed';
 
 export interface UndoStep {
   label: string;
@@ -76,7 +81,10 @@ interface CalendarState {
   colourBrush: string | null;
   paintScope: PaintScope;
   error: string | null;
+  /** Whether anything is on its way to the server. */
   saving: boolean;
+  /** Where a date's saves stand, for a panel to say so beside its fields. A date with nothing to report is absent. */
+  dayStatus: ReadonlyMap<string, DayStatus>;
   /** Newest last; capped, and cleared of redo by any fresh change. */
   undoStack: UndoStep[];
   redoStack: UndoStep[];
@@ -86,7 +94,21 @@ interface CalendarState {
   multiSelected: ReadonlySet<string>;
   pendingOffline: number;
   /** A save refused because another device edited the day first. */
-  conflict: { date: string; mine: DaySave } | null;
+  conflict: DayConflict | null;
+  /** Counted up when a panel's edits are given up, so it starts over from the day. */
+  draftsDropped: number;
+}
+
+/** Two sides of one day, put to the person. */
+interface DayConflict {
+  date: string;
+  mine: DaySave;
+  /** The queued copy the answer also settles. */
+  queuedAt?: number;
+  /** The version the other side stood at when the person was asked, which is all the answer can speak for. */
+  askedOn?: number;
+  /** For a save refused over a queued copy, the day it was typed on: what it says beyond the copy is what differs from this. */
+  typedOn?: DaySave;
 }
 
 /** The calendar's state and every write against it. */
@@ -110,12 +132,14 @@ export const useCalendar = create<CalendarState>(() => ({
   paintScope: 'day',
   error: null,
   saving: false,
+  dayStatus: new Map(),
   undoStack: [],
   redoStack: [],
   undoVisible: false,
   multiSelected: new Set(),
   pendingOffline: 0,
   conflict: null,
+  draftsDropped: 0,
 }));
 
 const set = useCalendar.setState;
@@ -183,15 +207,101 @@ export async function loadGrid(): Promise<void> {
   const { from, to } = gridRange();
 
   try {
-    const response = await calendarApi.days(from, to);
+    const [response, queued] = await Promise.all([calendarApi.days(from, to), offlineQueue.all()]);
 
-    set({
-      days: new Map(response.days.map((day) => [day.date, day])),
-      events: response.events,
+    set((state) => {
+      const days = new Map(response.days.map((day) => [day.date, day]));
+
+      // The clock watches these two whatever month is on screen.
+      for (const key of clockKeys()) {
+        const held = state.days.get(key);
+
+        if ((key < from || key > to) && held !== undefined) days.set(key, held);
+      }
+
+      for (const [key, held] of state.days) {
+        const read = days.get(key);
+
+        if (lanes.has(key) || (read !== undefined && behind(read, held))) days.set(key, held);
+      }
+
+      for (const { date } of queued) {
+        const day = date >= from && date <= to ? withQueued(date, days.get(date), queued) : undefined;
+
+        if (day !== undefined) days.set(date, day);
+      }
+
+      return { days, events: response.events };
     });
   } catch (error) {
     set({ error: apiErrorMessage(error) });
   }
+}
+
+/** Whether a read was overtaken by what the store already holds. A read can leave before a save and answer after it, and taking it in would send the next save on a version the server has moved past. */
+function behind(read: CalendarDayData, held: CalendarDayData | undefined): boolean {
+  return (read.version ?? 0) < (held?.version ?? 0);
+}
+
+/** The two dates a shift running now can belong to. */
+function clockKeys(): [string, string] {
+  const today = todayKey();
+
+  return [shiftDays(today, -1), today];
+}
+
+/** Reads the clock's two days into the store, on any page and in any month. False where the server could not be asked. */
+export async function loadClockDays(): Promise<boolean> {
+  const [from, to] = clockKeys();
+
+  try {
+    const [{ days }, queued] = await Promise.all([calendarApi.days(from, to, { fresh: true }), offlineQueue.all()]);
+    let moved = false;
+
+    set((state) => {
+      const next = new Map(state.days);
+
+      for (const read of days) {
+        const day = withQueued(read.date, read, queued) as CalendarDayData;
+        const held = next.get(day.date);
+
+        // A date with a save on the wire is about to be answered by something
+        // newer than this read, and a lower version already has been.
+        if (lanes.has(day.date) || behind(day, held)) continue;
+        if (JSON.stringify(day) === JSON.stringify(held)) continue;
+
+        next.set(day.date, day);
+        moved = true;
+      }
+
+      return moved ? { days: next } : state;
+    });
+
+    if (moved) void loadSummary();
+
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** One date as the server has it right now, and apart from it whatever the server has yet to hear. Throws where it cannot be asked. */
+async function readDay(key: string): Promise<{ day: CalendarDayData | undefined; pending: PendingDay | undefined }> {
+  const [{ days }, queued] = await Promise.all([calendarApi.days(key, key, { fresh: true }), offlineQueue.all()]);
+
+  return { day: days.find((item) => item.date === key), pending: queued.find((item) => item.date === key) };
+}
+
+/** Lets a read into the store, unless the store already knows better. */
+function takeIn(day: CalendarDayData): void {
+  set((state) => {
+    const held = state.days.get(day.date);
+
+    if (lanes.has(day.date) || behind(day, held)) return state;
+    if (JSON.stringify(day) === JSON.stringify(held)) return state;
+
+    return { days: new Map(state.days).set(day.date, day) };
+  });
 }
 
 export async function loadSummary(): Promise<void> {
@@ -430,6 +540,8 @@ export async function redo(): Promise<void> {
 
 // ==== Writes ====
 
+const isConflict = (error: unknown): boolean => error instanceof HttpError && error.status === 409;
+
 function isOffline(error: unknown): boolean {
   if (typeof navigator !== 'undefined' && !navigator.onLine) return true;
 
@@ -438,69 +550,500 @@ function isOffline(error: unknown): boolean {
   return error instanceof TypeError;
 }
 
-export async function saveDay(key: string, request: DaySave): Promise<void> {
-  const rollback = get().days;
+export interface SaveOptions {
+  /** False for a write the app made by itself: there is nothing of the person's to take back. */
+  undoable?: boolean;
+  /** A 409 reported rather than put to the person, for a write that answers it by reading the day again. */
+  quietConflict?: boolean;
+  /** The read this save was built on, where that is fresher than the day in the store. */
+  builtOn?: CalendarDayData;
+}
 
-  remember('Edited a day', [key]);
+/** Where a save ended up. */
+export type SaveOutcome = 'landed' | 'queued' | 'conflict' | 'failed';
+
+/** One date's saves: at most one on the wire, and only the newest behind it, since each is the whole day. */
+interface Lane {
+  waiting: DaySave | null;
+  /** The day as the store held it when the waiting save joined, which is what it was built on. */
+  waitingOn: CalendarDayData | undefined;
+  /** Whether the save at the head was built on a read of its own, so that what waits behind it never saw it. */
+  readItsOwn: boolean;
+  /** What to put back if a save is refused: the last the server agreed to. */
+  rollback: CalendarDayData | undefined;
+  /** The queued copy this lane's saves were built on, by when it was queued. */
+  carries: number | undefined;
+  drained: Promise<SaveOutcome>;
+}
+
+const lanes = new Map<string, Lane>();
+
+/** Lanes opened so far, so a read can tell whether a save slipped past it. */
+let opened = 0;
+
+function statusOf(key: string, status: DayStatus | null): void {
+  set((state) => {
+    const next = new Map(state.dayStatus);
+
+    if (status === null) next.delete(key);
+    else next.set(key, status);
+
+    return { dayStatus: next };
+  });
+}
+
+/** Resolves once nothing is left to send for a date. Whoever builds a day from the store waits here first, or it would be built from what a save is about to replace. */
+export function daySettled(key: string): Promise<unknown> {
+  return lanes.get(key)?.drained ?? Promise.resolve();
+}
+
+/** Puts a date back on what the server last agreed to. */
+function rollBack(key: string, day: CalendarDayData | undefined): void {
+  set((state) => {
+    const next = new Map(state.days);
+
+    if (day === undefined) next.delete(key);
+    else next.set(key, day);
+
+    return { days: next };
+  });
+}
+
+/** Saves for one date run one after another, never side by side: two at once would carry the same version, and the second would come back a 409 the person did nothing to earn. */
+export function saveDay(key: string, request: DaySave, options: SaveOptions = {}): Promise<SaveOutcome> {
+  const running = lanes.get(key);
+
+  if (running !== undefined) {
+    // Each save is the whole day, so the newest says everything the one it
+    // replaces would have.
+    running.waiting = request;
+    running.waitingOn = get().days.get(key);
+
+    return running.drained;
+  }
+
+  if (options.undoable !== false) remember('Edited a day', [key]);
+
+  const base = options.builtOn ?? get().days.get(key);
+  const lane: Lane = {
+    waiting: request,
+    waitingOn: undefined,
+    readItsOwn: 'builtOn' in options,
+    rollback: base,
+    carries: base?.queued_at,
+    drained: Promise.resolve('landed'),
+  };
+
+  lanes.set(key, lane);
+  opened += 1;
+  statusOf(key, 'saving');
   set({ saving: true, error: null });
 
-  try {
-    const day = await calendarApi.saveDay(key, request);
+  lane.drained = drain(key, lane, options.quietConflict === true);
 
-    set((state) => ({ saving: false, days: new Map(state.days).set(key, day) }));
-    void loadSummary();
-  } catch (error) {
-    set({ saving: false });
+  return lane.drained;
+}
 
-    // Another device got there first.
-    if (error instanceof HttpError && error.status === 409) {
-      await loadGrid();
-      set({ conflict: { date: key, mine: request } });
+async function drain(key: string, lane: Lane, quietConflict: boolean): Promise<SaveOutcome> {
+  const first = lane.waiting;
+  let landed = false;
 
-      return;
-    }
+  // What became of the save that opened the lane, the one its caller is waiting
+  // to hear about. A newer day going out behind it does not carry what it said.
+  let outcome: SaveOutcome | undefined;
 
-    // A connection failure is not the user's mistake, and their day is not
-    // theirs to lose: it goes to the queue and the cell keeps what they typed.
-    if (isOffline(error)) {
-      const queued = await offlineQueue.put({ date: key, body: request, queuedAt: Date.now() });
+  while (lane.waiting !== null) {
+    const request = lane.waiting;
+    const readItsOwn = lane.readItsOwn;
 
-      if (queued) {
-        set((state) => ({ pendingOffline: state.pendingOffline + 1 }));
+    lane.waiting = null;
+    lane.readItsOwn = false;
 
-        return;
+    try {
+      const day = await calendarApi.saveDay(key, request);
+
+      landed = true;
+      outcome ??= 'landed';
+      lane.rollback = day;
+      set((state) => ({ days: new Map(state.days).set(key, day) }));
+
+      // Written against the version this save has just replaced. One sent
+      // without a version asked for last-write-wins and keeps it.
+      const next = lane.waiting as DaySave | null;
+
+      if (next !== null && next.version !== undefined && day.version !== undefined) {
+        lane.waiting = readItsOwn ? overLanded(next, lane.waitingOn, day) : { ...next, version: day.version };
+      }
+    } catch (error) {
+      // Refused for what it said, which is no verdict on the newer day behind
+      // it. That one goes out and answers for itself; only a save with nothing
+      // behind it ends the lane as failed. A 409 or a dead network would only
+      // repeat, and have paths of their own for the newest.
+      if (lane.waiting !== null && !isConflict(error) && !isOffline(error)) {
+        outcome ??= 'failed';
+
+        continue;
       }
 
-      // The browser refused to hold it — private browsing does. Say so and
-      // put the cell back, rather than leave the day looking saved.
-      set({ days: rollback, error: apiErrorMessage(error) });
+      const newest = lane.waiting ?? request;
 
-      return;
+      // Closed before anything below waits on the network, so a save that
+      // arrives meanwhile opens a lane of its own instead of going unsent.
+      finish(key);
+
+      const ended = await refused(key, lane, newest, error, quietConflict && !landed && newest === request);
+
+      if (landed) void loadSummary();
+
+      return outcome ?? (newest === first ? ended : 'failed');
+    }
+  }
+
+  statusOf(key, null);
+  finish(key);
+
+  // A queued copy this save was built on has now been said; sent later it would
+  // only come back a 409 and hold up everything behind it. One it was not built
+  // on still holds something nothing else does.
+  if (get().pendingOffline > 0) {
+    const queued = (await offlineQueue.all()).find((item) => item.date === key);
+
+    if (queued?.queuedAt === lane.carries) await offlineQueue.remove(key);
+    else if (queued !== undefined) statusOf(key, 'queued');
+
+    set({ pendingOffline: (await offlineQueue.all()).length });
+  }
+
+  void loadSummary();
+
+  return outcome ?? 'landed';
+}
+
+/** A save made while a write from a read of its own was out: it never saw that write, and on the new version it would undo it. Only what it changed goes over the answer. Where both changed one thing it keeps its old version, to be refused and put to the person. */
+function overLanded(waiting: DaySave, builtOn: CalendarDayData | undefined, landed: CalendarDayData): DaySave {
+  const { day, contested } = replayEdits(waiting, toSavePayload(builtOn), toSavePayload(landed));
+
+  return { ...day, version: contested ? waiting.version : landed.version };
+}
+
+function finish(key: string): void {
+  lanes.delete(key);
+  set({ saving: lanes.size > 0 });
+}
+
+/** What goes in the queue for a save that could not go out. A copy already there holds what nothing else does: a save built on it has said all that. One it was not built on goes under it: what the save itself changed is the newest word, whichever way the copy had that field, and the copy keeps what only it holds. */
+function queueEntry(key: string, body: DaySave, lane: Lane, held: PendingDay | undefined): PendingDay {
+  const queuedAt = Date.now();
+
+  if (held === undefined) return { date: key, body, queuedAt, base: toSavePayload(lane.rollback) };
+  if (held.queuedAt === lane.carries) return { date: key, body, queuedAt, base: held.base };
+
+  // Laid over the copy and over what it was edited on alike, so that what the
+  // save changed stops counting as the copy's edit. It was typed over the day
+  // as the store had it, so a field it only carried across says nothing.
+  const built = toSavePayload(lane.rollback);
+  const { day, contested } = replayEdits(
+    replayEdits(body, built, held.body).day,
+    replayEdits(body, built, held.base ?? toSavePayload(undefined)).day,
+    body,
+  );
+
+  return { date: key, body: { ...day, version: contested ? held.body.version : body.version }, queuedAt, base: held.base };
+}
+
+async function refused(
+  key: string,
+  lane: Lane,
+  newest: DaySave,
+  error: unknown,
+  quietConflict: boolean,
+): Promise<SaveOutcome> {
+  // Another device got there first.
+  if (isConflict(error)) {
+    if (quietConflict) {
+      rollBack(key, lane.rollback);
+      statusOf(key, null);
+
+      return 'conflict';
     }
 
-    set({ days: rollback, error: apiErrorMessage(error) });
+    // Said before the load, which leaves a date under a conflict as the server
+    // has it: that is the side the person is being shown.
+    statusOf(key, null);
+    set({ conflict: { date: key, mine: newest, queuedAt: lane.carries, typedOn: toSavePayload(lane.rollback) } });
+    await loadGrid();
+    set((state) =>
+      state.conflict?.date === key
+        ? { conflict: { ...state.conflict, askedOn: state.days.get(key)?.version } }
+        : state,
+    );
+
+    return 'conflict';
+  }
+
+  // A connection failure is not the user's mistake, and their day is not
+  // theirs to lose: it goes to the queue and the cell keeps what they typed.
+  if (isOffline(error)) {
+    const pending = queueEntry(key, newest, lane, (await offlineQueue.all()).find((item) => item.date === key));
+
+    if (await offlineQueue.put(pending)) {
+      statusOf(key, 'queued');
+      // On the store too: each later save is built from there and sent whole,
+      // and landing or queueing one that lacks this would lose it. Not under a
+      // question still open on this date, though, where the store is the other
+      // side as the person is being shown it. The question takes this instead,
+      // or answering it would answer with what this save has just replaced.
+      set((state) =>
+        state.conflict?.date === key
+          ? { conflict: { ...state.conflict, mine: pending.body, queuedAt: pending.queuedAt, typedOn: undefined } }
+          : {
+              days: new Map(state.days).set(key, {
+                ...layOver(key, state.days.get(key), pending.body),
+                queued_at: pending.queuedAt,
+              }),
+            },
+      );
+      // Counted from the queue, which holds one entry per date however many
+      // times a date was saved into it.
+      set({ pendingOffline: (await offlineQueue.all()).length });
+
+      return 'queued';
+    }
+
+    // The browser refused to hold it — private browsing does. Say so and
+    // put the cell back, rather than leave the day looking saved.
+  }
+
+  rollBack(key, lane.rollback);
+  statusOf(key, 'failed');
+  set({ error: apiErrorMessage(error) });
+
+  return 'failed';
+}
+
+export interface RewriteOptions {
+  undoable?: boolean;
+  /** Decides from the server's word or not at all: where it cannot be asked the write waits, instead of acting on the held copy. */
+  freshOnly?: boolean;
+}
+
+/** What became of rewriting a day: `left` where the change decided against writing, `unread` where nothing could be read to change. */
+export type RewriteOutcome = SaveOutcome | 'left' | 'unread';
+
+/**
+ * Reads a day, changes it, writes it back on the version it read, for the
+ * writes the app makes by itself: the store's copy may be hours old, and a day
+ * is always sent whole. `change` answers false to leave the day as it is. It is
+ * given `day` as the server said it, which is what decides whether the shift is
+ * still there to write on, and `built`, the same with whatever is queued replayed
+ * in, which is what the payload came from. A day that moved between the read and
+ * the write is read once more rather than given up on.
+ */
+export async function rewriteDay(
+  key: string,
+  change: (payload: DaySave, day: CalendarDayData | undefined, built: CalendarDayData | undefined) => boolean,
+  { undoable = false, freshOnly = false }: RewriteOptions = {},
+): Promise<RewriteOutcome> {
+  for (let attempt = 0; ; attempt += 1) {
+    let day: CalendarDayData | undefined;
+    let pending: PendingDay | undefined;
+
+    try {
+      let before: number;
+
+      // Asked after the read too: a save that opened meanwhile makes what was
+      // read out of date, even one already answered, and if it is still out
+      // its version would carry this write straight over it.
+      do {
+        await daySettled(key);
+        before = opened;
+        ({ day, pending } = await readDay(key));
+      } while (lanes.has(key) || opened !== before);
+    } catch (error) {
+      day = get().days.get(key);
+      pending = undefined;
+
+      if (freshOnly) return 'unread';
+
+      // Nothing to build on, and a blank day sent whole wipes the real one.
+      if (day === undefined) {
+        set({ error: apiErrorMessage(error) });
+
+        return 'unread';
+      }
+    }
+
+    // A queued edit rides along only where it takes nothing from this read. One
+    // that would is the person's to settle, and waits in the queue to be asked.
+    const queued = pending === undefined ? undefined : laidOver(key, day, pending);
+    const rides = queued !== undefined && !queued.contested;
+    const built = rides ? queued.day : day;
+    const payload = rides ? queued.edits : toSavePayload(day);
+
+    if (!change(payload, day, built)) {
+      const shown = queued?.day ?? day;
+
+      if (shown !== undefined) takeIn(shown);
+
+      return 'left';
+    }
+
+    const outcome = await saveDay(
+      key,
+      { ...payload, version: day?.version ?? 0 },
+      { undoable, builtOn: built, quietConflict: freshOnly || attempt === 0 },
+    );
+
+    if (outcome !== 'conflict' || attempt > 0) return outcome;
   }
 }
 
-/** Sends everything waiting, oldest first; stops at the first failure. */
+/** Sends everything waiting, oldest first. A date that cannot go holds up no other; only a dead network ends the run. */
 export async function flushOffline(): Promise<void> {
   const pending = await offlineQueue.all();
-
   let sent = 0;
 
-  for (const entry of [...pending].sort((a, b) => a.queuedAt - b.queuedAt)) {
-    try {
-      await calendarApi.saveDay(entry.date, entry.body);
-      await offlineQueue.remove(entry.date);
-      sent += 1;
-    } catch {
-      break;
-    }
+  // A save that lands looks here before it tidies the queue up.
+  set({ pendingOffline: pending.length });
+
+  for (const { date } of [...pending].sort((a, b) => a.queuedAt - b.queuedAt)) {
+    const outcome = await sendQueuedDay(date);
+
+    if (outcome === 'landed') sent += 1;
+    if (outcome === 'queued' || outcome === 'unread') break;
   }
 
-  set({ pendingOffline: pending.length - sent });
+  const left = await offlineQueue.all();
 
-  if (sent > 0) reload();
+  for (const { date } of left) {
+    if (!get().dayStatus.has(date) && get().conflict?.date !== date) statusOf(date, 'queued');
+  }
+
+  set({ pendingOffline: left.length });
+
+  // Each save that landed has already asked for the money.
+  if (sent > 0) void loadGrid();
+}
+
+/** Sends one date's queued copy down its lane, so nothing typed meanwhile goes out beside it. */
+async function sendQueuedDay(date: string): Promise<RewriteOutcome> {
+  await daySettled(date);
+
+  const entry = (await offlineQueue.all()).find((item) => item.date === date);
+
+  // Said already by a save built on it, or about to be.
+  if (entry === undefined || lanes.has(date)) return 'left';
+
+  const outcome = await saveDay(date, entry.body, {
+    undoable: false,
+    quietConflict: true,
+    builtOn: { ...(get().days.get(date) ?? blankDay(date)), queued_at: entry.queuedAt },
+  });
+
+  return outcome === 'conflict' ? replayQueuedDay(date) : outcome;
+}
+
+/** A queued copy whose version has gone: what it changed goes over the day as it stands. Where both sides changed one thing the person is asked, as they are for a save of their own. */
+async function replayQueuedDay(date: string): Promise<RewriteOutcome> {
+  let read: Awaited<ReturnType<typeof readDay>>;
+
+  try {
+    read = await readDay(date);
+  } catch {
+    return 'unread';
+  }
+
+  if (read.pending === undefined) return 'left';
+
+  const { edits, contested } = laidOver(date, read.day, read.pending);
+
+  if (!contested) {
+    return rewriteDay(date, (_payload, _day, built) => built?.queued_at !== undefined, { freshOnly: true });
+  }
+
+  // One at a time: the next date's turn comes once this one is answered. It
+  // stays queued until then, since the answer may never come from this tab.
+  if (get().conflict === null) {
+    rollBack(date, read.day);
+    statusOf(date, null);
+    set({
+      conflict: {
+        date,
+        mine: { ...edits, version: read.pending.body.version },
+        queuedAt: read.pending.queuedAt,
+        askedOn: read.day?.version ?? 0,
+      },
+    });
+  }
+
+  return 'left';
+}
+
+/** Takes a queued copy out once nothing is left in it to go. */
+async function dropQueuedDay(date: string): Promise<void> {
+  await offlineQueue.remove(date);
+  set({ pendingOffline: (await offlineQueue.all()).length });
+}
+
+/** The person kept the other side of a queued copy. What both sides changed goes that way and no more: the rest of the copy has no quarrel with anybody, and for a finish it is the only record left, the clock having stopped. A day that cannot be read leaves it waiting, to be asked about again. */
+async function yieldQueuedDay(date: string): Promise<void> {
+  let read: Awaited<ReturnType<typeof readDay>>;
+
+  try {
+    read = await readDay(date);
+  } catch {
+    statusOf(date, 'queued');
+
+    return;
+  }
+
+  const { day, pending } = read;
+
+  if (pending === undefined) return;
+
+  const now = toSavePayload(day);
+  const { day: edits, moved } = replayEdits(pending.body, baseOf(pending, day, now), now, true);
+
+  if (!moved) {
+    await dropQueuedDay(date);
+
+    return;
+  }
+
+  await offlineQueue.put({ ...pending, body: { ...edits, version: day?.version ?? 0 }, base: now });
+}
+
+/** The person kept their side of a queued copy. The answer may have stood open while the day moved on, and it speaks for what both sides changed and no more: the copy goes over the day as it stands, that going its way. A day that cannot be read sends what the person was shown, on the version it was shown against, so that a move since is refused instead of overwritten. */
+async function insistQueuedDay({ date, mine, queuedAt, askedOn, typedOn }: DayConflict): Promise<void> {
+  let read: Awaited<ReturnType<typeof readDay>>;
+
+  try {
+    await daySettled(date);
+    read = await readDay(date);
+  } catch {
+    await saveDay(
+      date,
+      { ...mine, version: askedOn ?? mine.version },
+      { builtOn: { ...(get().days.get(date) ?? blankDay(date)), queued_at: queuedAt } },
+    );
+
+    return;
+  }
+
+  const { day, pending } = read;
+
+  // Said already, and nothing was typed on top of it.
+  if (pending === undefined && typedOn === undefined) return;
+
+  const now = toSavePayload(day);
+  const queued = pending === undefined ? now : replayEdits(pending.body, baseOf(pending, day, now), now).day;
+  const edits = typedOn === undefined ? queued : replayEdits(mine, typedOn, queued).day;
+
+  await saveDay(
+    date,
+    { ...edits, version: day?.version ?? 0 },
+    { builtOn: { ...(day ?? blankDay(date)), queued_at: pending?.queuedAt ?? queuedAt } },
+  );
 }
 
 /** Applies a template across a set of dates in one request. */
@@ -539,8 +1082,22 @@ export async function applyToDates(keys: string[], template: ShiftTemplate): Pro
   });
 
   try {
-    await calendarApi.bulk(keys, template.id, mode);
-    set({ saving: false });
+    const painted = await calendarApi.bulk(keys, template.id, mode);
+
+    // The stroke moved the version, and the read below takes a moment. Only the
+    // version: these days come back without the names of what else is on them.
+    // A tip typed in that moment would be refused over this person's own paint.
+    set((state) => {
+      const next = new Map(state.days);
+
+      for (const { date, version } of painted) {
+        const held = next.get(date);
+
+        if (held !== undefined) next.set(date, { ...held, version });
+      }
+
+      return { days: next, saving: false };
+    });
     reload();
   } catch (error) {
     set({ saving: false, days: rollback, error: apiErrorMessage(error) });
@@ -758,10 +1315,11 @@ export async function placeShifts(entries: { date: string; templateId: number }[
 
   for (const entry of fresh) {
     const payload = toSavePayload(get().days.get(entry.date));
+    const template = get().templates.find((item) => item.id === entry.templateId);
 
     payload.shifts.push({
       shift_id: entry.templateId,
-      worked: entry.date <= todayKey(),
+      worked: template === undefined ? entry.date <= todayKey() : workedByDefault(template, entry.date, Date.now()),
       needs_cover: false,
     });
 
@@ -990,22 +1548,53 @@ export const catalogueActions = {
     void loadSummary();
   },
 
-  /** Conflict, resolved их way: keep what the map already reloaded. */
-  dropConflict() {
-    set({ conflict: null });
+  /** Conflict, resolved их way: keep what the map already reloaded. A queued copy gives up only what was contested. */
+  async dropConflict() {
+    const { conflict } = get();
+
+    set((state) => ({ conflict: null, draftsDropped: state.draftsDropped + 1 }));
+
+    if (conflict?.queuedAt === undefined) return;
+
+    await yieldQueuedDay(conflict.date);
+    await flushOffline();
   },
 
-  /** Conflict, resolved my way: rewrite mine over the version just seen. */
-  async overwriteConflict() {
-    const { conflict, days } = get();
+  /** Conflict, put down unanswered. A queued copy is the only place its edit lives, so it stays and is asked about again on the next flush. A panel's draft has nowhere to wait. */
+  async leaveConflict() {
+    const { conflict } = get();
 
     if (conflict === null) return;
 
-    const theirs = days.get(conflict.date);
+    if (conflict.queuedAt === undefined) {
+      await catalogueActions.dropConflict();
+
+      return;
+    }
+
+    set((state) => ({ conflict: null, draftsDropped: state.draftsDropped + 1 }));
+    statusOf(conflict.date, 'queued');
+    await loadGrid();
+  },
+
+  /** Conflict, resolved my way: rewrite mine over the version the person was asked about, so a move since is refused and asked again rather than overwritten. A queued copy goes over a fresh read instead. */
+  async overwriteConflict() {
+    const { conflict } = get();
+
+    if (conflict === null) return;
+
+    const { date, mine, queuedAt, askedOn } = conflict;
 
     set({ conflict: null });
 
-    await saveDay(conflict.date, { ...conflict.mine, version: theirs?.version ?? 0 });
+    if (queuedAt === undefined) {
+      await saveDay(date, { ...mine, version: askedOn ?? mine.version });
+
+      return;
+    }
+
+    await insistQueuedDay(conflict);
+    await flushOffline();
   },
 
   /** Wipes the whole payment ledger. The asking-out-loud happens in the UI. */
@@ -1040,27 +1629,113 @@ function blankDay(date: string): CalendarDayData {
   };
 }
 
+/** A day as it will read once a save lands, for saying so ahead of the server. */
+function layOver(key: string, day: CalendarDayData | undefined, body: DaySave): CalendarDayData {
+  const { templates, positions } = get();
+  const base = day ?? blankDay(key);
+  const fine = body.deductions ?? 0;
+
+  return {
+    ...base,
+    shifts: body.shifts.flatMap((item) => {
+      const template = templates.find((entry) => entry.id === item.shift_id);
+      const entry =
+        base.shifts.find((held) => held.shift_id === item.shift_id) ??
+        (template === undefined ? undefined : placeholderFor(template, key));
+
+      if (entry === undefined) return [];
+
+      // A press still on its way is this save's to say now, whichever way it went.
+      return [{ ...entry, ...item, break_minutes: item.break_minutes ?? entry.break_minutes, cover_asked: undefined }];
+    }),
+    sales: body.sales.map((item) => {
+      const position = positions.find((entry) => entry.id === item.sales_id);
+
+      return {
+        sales_id: item.sales_id,
+        name: position?.name ?? '',
+        unit_price: position?.price ?? 0,
+        percentage: position?.percentage ?? 0,
+        earned: 0,
+        ...base.sales.find((held) => held.sales_id === item.sales_id),
+        quantity: item.quantity,
+      };
+    }),
+    tips: body.tips,
+    tips_cash: body.tips_cash,
+    tip_pool: body.tip_pool,
+    // The meal money stays as it was: only the fine is the save's to change.
+    deductions: base.deductions - (fineOf(base) ?? 0) + fine,
+    fine,
+    deduction_reason: body.deduction_reason ?? null,
+    note: body.note,
+    colour: body.colour,
+  };
+}
+
+/** A day read, with what is queued for it replayed over it. */
+interface LaidOver {
+  day: CalendarDayData;
+  /** The same as a payload: `day` drops a shift placed on a template not loaded yet. */
+  edits: DaySave;
+  contested: boolean;
+}
+
+/** What a queued copy was edited on. For one queued before bases were kept: on its own version nothing moved under it, and on another all it can vouch for is the fields it filled in. */
+function baseOf(pending: PendingDay, day: CalendarDayData | undefined, now: DaySave): DaySave {
+  return pending.base ?? (pending.body.version === day?.version ? now : toSavePayload(undefined));
+}
+
+function laidOver(key: string, day: CalendarDayData | undefined, pending: PendingDay): LaidOver {
+  const now = toSavePayload(day);
+  const { day: edits, contested } = replayEdits(pending.body, baseOf(pending, day, now), now);
+  const laid = layOver(key, day, edits);
+
+  return {
+    day: {
+      ...laid,
+      // Left on the copy's own version, so whatever is built on this is refused
+      // and the person asked, instead of carried over what the other side said.
+      version: contested ? (pending.body.version ?? laid.version) : laid.version,
+      queued_at: pending.queuedAt,
+    },
+    edits,
+    contested,
+  };
+}
+
+/** A day for showing, with what is still queued for it put back: the server has not heard it, and a day read without it would be sent whole without it. Never for deciding on: the read itself says what the day is. */
+function withQueued(key: string, day: CalendarDayData | undefined, queued: PendingDay[]): CalendarDayData | undefined {
+  const pending = queued.find((item) => item.date === key);
+
+  // Put to the person already: what the conflict shows as theirs stays theirs
+  // until they answer.
+  return pending === undefined || get().conflict?.date === key ? day : laidOver(key, day, pending).day;
+}
+
 /** A stand-in entry while the save is in flight. */
 function placeholderFor(template: ShiftTemplate, key: string): DayShiftEntry {
+  const { start_time, end_time, hours } = hoursOn(template, key);
+
   return {
     shift_id: template.id,
     name: template.name,
     symbol: template.symbol,
-    start_time: template.start_time,
-    end_time: template.end_time,
+    start_time,
+    end_time,
     revenue: null,
     guests: null,
     zone: 'unset' as const,
     revenue_percent: template.revenue_percent,
     colour: template.effective_colour,
-    hours: template.hours,
+    hours,
     earned: 0,
-    // Matches the server's rule: a date already past is treated as worked.
-    worked: key <= todayKey(),
+    worked: workedByDefault(template, key, Date.now()),
     needs_cover: false,
     actual_start: null,
     actual_end: null,
     break_minutes: template.break_minutes,
+    auto_closed: false,
   };
 }
 
@@ -1095,7 +1770,7 @@ export async function importDays(
           : [{ shift_id: template.id, worked: true, needs_cover: false }],
       tips: row.tips ?? existing?.tips ?? null,
       tips_cash: row.tipsCash ?? existing?.tips_cash ?? null,
-      deductions: row.deductions ?? existing?.deductions ?? null,
+      deductions: row.deductions ?? fineOf(existing),
       note: row.note ?? existing?.note ?? null,
     };
 

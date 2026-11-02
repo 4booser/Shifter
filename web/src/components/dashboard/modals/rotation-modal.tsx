@@ -3,6 +3,7 @@
 import { useState } from 'react';
 
 import { formatDayLabel, rotationKeys, todayKey } from '@/lib/calendar/calendar-date';
+import { hoursLabel } from '@/lib/calendar/shift-hours';
 import { useI18n } from '@/lib/i18n';
 import { pluralWord } from '@/lib/i18n/plural';
 import { applyToDates, useCalendar } from '@/lib/store/calendar';
@@ -55,7 +56,7 @@ export function RotationModal({ open, onClose }: { open: boolean; onClose: () =>
               </option>
               {templates.map((template) => (
                 <option key={template.id} value={template.id}>
-                  {template.name} · {template.start_time}–{template.end_time}
+                  {template.name} · {hoursLabel(template, t)}
                 </option>
               ))}
             </select>

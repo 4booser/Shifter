@@ -26,6 +26,38 @@ public sealed class QueryBudgetTests(Api api)
         return int.Parse(response.Headers.GetValues(QueryCountMiddleware.Answer).Single());
     }
 
+    /// <summary>Measures one save, returns the count and the version it left the day on.</summary>
+    private static async Task<(int Queries, int Version)> CountSaveAsync(
+        HttpClient client, string date, int shift, int sale, decimal tips, int? version)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Put, $"/shifter/v1/days/{date}")
+        {
+            Content = JsonContent.Create(new
+            {
+                shifts = new[] { new { shift_id = shift, worked = true } },
+                sales = new[] { new { sales_id = sale, quantity = 2 } },
+                tips,
+                tips_cash = (decimal?)null,
+                deductions = 0m,
+                deduction_reason = (string?)null,
+                note = (string?)null,
+                version,
+            }),
+        };
+
+        request.Headers.Add(QueryCountMiddleware.Ask, "1");
+
+        var response = await client.SendAsync(request);
+
+        response.EnsureSuccessStatusCode();
+
+        var saved = System.Text.Json.JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+
+        return (
+            int.Parse(response.Headers.GetValues(QueryCountMiddleware.Answer).Single()),
+            saved.RootElement.GetProperty("version").GetInt32());
+    }
+
     [Fact]
     public async Task The_counter_counts_itself_before_counting_anything_else()
     {
@@ -96,6 +128,67 @@ public sealed class QueryBudgetTests(Api api)
         // lands in the hundreds, not at eleven.
         Assert.InRange(month, 1, 15);
         Assert.InRange(everything, 1, 15);
+    }
+
+    [Fact]
+    public async Task A_save_costs_the_same_however_many_goals_are_watching()
+    {
+        var (client, _) = await api.SignInAsync("savebudget");
+
+        var shift = await client.PostAsJsonAsync("/shifter/v1/shifts", new
+        {
+            name = "Смена",
+            symbol = (string?)null,
+            location_id = (int?)null,
+            start_time = "10:00",
+            end_time = "18:00",
+            salary_period = "hour",
+            salary_amount = 150m,
+            break_minutes = 0,
+        });
+
+        shift.EnsureSuccessStatusCode();
+
+        var shiftId = System.Text.Json.JsonDocument.Parse(
+            await shift.Content.ReadAsStringAsync()).RootElement.GetProperty("id").GetInt32();
+
+        var sale = await client.PostAsJsonAsync(
+            "/shifter/v1/sales", new { name = "Вино", price = 300m, percentage = 10m });
+
+        sale.EnsureSuccessStatusCode();
+
+        var saleId = System.Text.Json.JsonDocument.Parse(
+            await sale.Content.ReadAsStringAsync()).RootElement.GetProperty("id").GetInt32();
+
+        // A busy month around the day being typed into, so that a goal priced
+        // inside the request would have all of it to read.
+        for (var day = 1; day <= 20; day++)
+            await CountSaveAsync(client, $"2026-06-{day:00}", shiftId, saleId, 200m, null);
+
+        var (first, version) = await CountSaveAsync(client, "2026-06-25", shiftId, saleId, 200m, null);
+        var (plain, unwatched) = await CountSaveAsync(client, "2026-06-25", shiftId, saleId, 210m, version);
+
+        foreach (var period in new[] { "day", "week", "month" })
+        {
+            (await client.PutAsJsonAsync("/shifter/v1/goals", new
+            {
+                period,
+                amount = 9_999_999m,
+                anchor = (DateOnly?)null,
+                note = (string?)null,
+            })).EnsureSuccessStatusCode();
+        }
+
+        var (watched, _) = await CountSaveAsync(client, "2026-06-25", shiftId, saleId, 220m, unwatched);
+
+        // Tight on purpose, unlike the ceilings around it. The version, the
+        // templates, the positions, the day, the write and its audit line: a
+        // tip is typed with somebody waiting, and the check this guards against
+        // coming back cost twenty more. A day's first save pays one more, for
+        // asking whether there is a fresh audit line to fold into.
+        Assert.InRange(first, 1, 7);
+        Assert.InRange(plain, 1, 6);
+        Assert.Equal(plain, watched);
     }
 
     [Fact]

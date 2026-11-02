@@ -30,6 +30,7 @@ const day = {
       hours: 6,
       start_time: '17:00',
       end_time: '23:00',
+      auto_closed: true,
     },
   ],
   sales: [{ sales_id: 3, quantity: 12 }],
@@ -52,6 +53,18 @@ describe('toSavePayload', () => {
     expect(shift.revenue).toBe(8200);
   });
 
+  it('echoes what it last saw of the automatic close', () => {
+    expect(toSavePayload(day).shifts[0].auto_closed).toBe(true);
+  });
+
+  it('carries a lone edge rather than dropping it', () => {
+    const lone = { ...day, shifts: [{ ...day.shifts[0], actual_end: null }] } as CalendarDayData;
+    const [shift] = toSavePayload(lone).shifts;
+
+    expect(shift.actual_start).toBe('17:02');
+    expect(shift.actual_end).toBeNull();
+  });
+
   it('carries what the day itself holds', () => {
     const payload = toSavePayload(day);
 
@@ -61,6 +74,17 @@ describe('toSavePayload', () => {
     expect(payload.note).toBe('busy');
     expect(payload.colour).toBe('#22C55E');
     expect(payload.sales).toEqual([{ sales_id: 3, quantity: 12 }]);
+  });
+
+  it('echoes the fine alone, never the total with the meal money in it', () => {
+    // Sent back as a fine that total is stored as one, and the meal comes off
+    // again on top: each save would cost one more.
+    expect(toSavePayload({ ...day, deductions: 80, fine: 0 }).deductions).toBe(0);
+    expect(toSavePayload({ ...day, deductions: 130, fine: 50 }).deductions).toBe(50);
+  });
+
+  it('falls back on the total for a day kept from before the fine was sent', () => {
+    expect(toSavePayload({ ...day, deductions: 50 }).deductions).toBe(50);
   });
 
   it('gives an empty day an empty payload rather than throwing', () => {

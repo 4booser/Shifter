@@ -10,6 +10,7 @@ import {
   shiftDays,
   todayKey,
 } from '@/lib/calendar/calendar-date';
+import { hoursLabel } from '@/lib/calendar/shift-hours';
 import { useI18n } from '@/lib/i18n';
 import { useSettings } from '@/lib/settings/store';
 import { calendarActions, paintPattern, patternTemplateFor, useCalendar } from '@/lib/store/calendar';
@@ -92,7 +93,7 @@ export function PatternModal({ open, onClose }: { open: boolean; onClose: () => 
                   <option value="">{t('Nothing')}</option>
                   {templates.map((template) => (
                     <option key={template.id} value={template.id}>
-                      {template.name} · {template.start_time}–{template.end_time}
+                      {template.name} · {hoursLabel(template, t)}
                     </option>
                   ))}
                 </select>

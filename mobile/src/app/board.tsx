@@ -17,7 +17,7 @@ import { Loading, Press } from '@/components/motion';
 import { Colors, Palette } from '@/constants/theme';
 import { api, ApiError } from '@/lib/api';
 import { dayLabel, pad, todayKey } from '@/lib/calendar';
-import { ShiftTemplate } from '@/lib/types';
+import { hoursOn, ShiftTemplate } from '@/lib/types';
 import { t } from '@/lib/i18n';
 
 interface Member {
@@ -485,9 +485,11 @@ function FillSheet({
     setDate(days[0]);
 
     if (title === '' && templates.length > 0) {
+      const hours = hoursOn(templates[0], days[0]);
+
       setTitle(templates[0].name);
-      setStart(templates[0].start_time.slice(0, 5));
-      setEnd(templates[0].end_time.slice(0, 5));
+      setStart(hours.start_time.slice(0, 5));
+      setEnd(hours.end_time.slice(0, 5));
     }
     // Opening is the trigger; the last values are deliberately kept.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -620,9 +622,11 @@ function CellEditor({
     // The last station stays: a manager filling a Friday is filling one row
     // of the same station, not seven different ones.
     if (title === '' && templates.length > 0) {
+      const hours = hoursOn(templates[0], editing.date);
+
       setTitle(templates[0].name);
-      setStart(templates[0].start_time.slice(0, 5));
-      setEnd(templates[0].end_time.slice(0, 5));
+      setStart(hours.start_time.slice(0, 5));
+      setEnd(hours.end_time.slice(0, 5));
     }
     // Only when the sheet opens; carrying the last values is the point.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -675,9 +679,11 @@ function CellEditor({
                 key={template.id}
                 style={styles.chip}
                 onPress={() => {
+                  const hours = editing === null ? template : hoursOn(template, editing.date);
+
                   setTitle(template.name);
-                  setStart(template.start_time.slice(0, 5));
-                  setEnd(template.end_time.slice(0, 5));
+                  setStart(hours.start_time.slice(0, 5));
+                  setEnd(hours.end_time.slice(0, 5));
                 }}
               >
                 <Text style={styles.chipText}>

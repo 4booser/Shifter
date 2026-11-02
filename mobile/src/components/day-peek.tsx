@@ -7,7 +7,8 @@ import { Press } from '@/components/motion';
 import { Palette } from '@/constants/theme';
 import { categoryOf, dayOf, fromMinor, payerName } from '@/lib/mono';
 import { useMono } from '@/store/mono';
-import { covers, dayLabel, todayKey } from '@/lib/calendar';
+import { covers, dayLabel } from '@/lib/calendar';
+import { placedWorked } from '@/lib/shift-window';
 import {
   CalendarDayData,
   CalendarEvent,
@@ -142,7 +143,7 @@ export function DayPeek({
       .finally(() => setBusy(null));
   };
 
-  // The same line the server draws for a painted stroke: a day behind us is worked, one ahead is a plan.
+  // The same line the server draws for a painted stroke: a shift already over is worked, one ahead is a plan.
   const addShift = (template: ShiftTemplate) =>
     write(`add-${template.id}`, (payload) => ({
       ...payload,
@@ -150,7 +151,7 @@ export function DayPeek({
         ...payload.shifts,
         {
           shift_id: template.id,
-          worked: date <= todayKey(),
+          worked: placedWorked(template, date),
           needs_cover: false,
           actual_start: null,
           actual_end: null,
@@ -201,6 +202,9 @@ export function DayPeek({
                   {entry.hours.toString().replace('.', ',')} ч
                   {entry.earned > 0 ? ` · ${money(entry.earned)}` : ''}
                 </Text>
+                {entry.worked && entry.auto_closed && (
+                  <Text style={styles.shiftMeta}>{t('закрылась сама, проверьте время')}</Text>
+                )}
               </View>
 
               <Text

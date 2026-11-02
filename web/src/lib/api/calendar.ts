@@ -34,7 +34,12 @@ import {
 const API = '/shifter/v1';
 
 export const calendarApi = {
-  shifts: () => api<ShiftTemplate[]>(`${API}/shifts?archived=true`),
+  // The service worker answers from its cache offline, and that copy can
+  // predate week_hours.
+  shifts: () =>
+    api<ShiftTemplate[]>(`${API}/shifts?archived=true`).then((templates) =>
+      templates.map((template) => ({ ...template, week_hours: template.week_hours ?? [] })),
+    ),
   createShift: (request: ShiftCreate) => api<ShiftTemplate>(`${API}/shifts`, { body: request }),
   updateShift: (id: number, request: ShiftCreate) =>
     api<ShiftTemplate>(`${API}/shifts/${id}`, { method: 'PUT', body: request }),
@@ -49,9 +54,10 @@ export const calendarApi = {
     api<SalesPosition>(`${API}/sales/${id}/archived?value=${archived}`, { method: 'POST' }),
   deleteSales: (id: number) => api<void>(`${API}/sales/${id}`, { method: 'DELETE' }),
 
-  days: (from: string, to: string, base?: string) =>
+  days: (from: string, to: string, { base, fresh }: { base?: string; fresh?: boolean } = {}) =>
     api<DaysResponse>(
       `${API}/days?from=${from}&to=${to}${base !== undefined && base !== '' ? `&base=${base}` : ''}`,
+      { fresh },
     ),
   saveDay: (date: string, request: DaySave) =>
     api<CalendarDayData>(`${API}/days/${date}`, { method: 'PUT', body: request }),

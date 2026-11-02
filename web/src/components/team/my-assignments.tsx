@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { Assignment, plannerApi } from '@/lib/api/team';
 import { apiErrorMessage } from '@/lib/api/http';
+import { hoursOn } from '@/lib/calendar/shift-hours';
 import { fireConfetti } from '@/lib/fx';
 import { useI18n } from '@/lib/i18n';
 import { pushToast } from '@/lib/toast';
@@ -39,7 +40,11 @@ export function MyAssignments({ teamId, onAnswered }: { teamId: number; onAnswer
 
   /** The template whose clock matches the slot, else the first one. */
   const matchFor = (row: Assignment): number | undefined =>
-    (active.find((item) => item.start_time === row.start && item.end_time === row.end) ?? active[0])?.id;
+    (active.find((item) => {
+      const hours = hoursOn(item, row.date);
+
+      return hours.start_time === row.start && hours.end_time === row.end;
+    }) ?? active[0])?.id;
 
   const answer = async (row: Assignment, accept: boolean) => {
     setBusy(row.id);

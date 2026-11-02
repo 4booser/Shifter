@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using Shifter.Application.Common.Exceptions;
+using Shifter.Application.Common.Time;
 using Shifter.Application.Features.business.DTOs;
 using Shifter.Application.Features.business.Services.Interfaces;
 using Shifter.Domain.Entities;
@@ -13,11 +14,16 @@ public partial class ShiftHandler : IShiftHandler
 
     private readonly IShifterCommand _shifterCommand;
     private readonly IShifterQuery _shifterQuery;
+    private readonly AppClock _clock;
 
-    public ShiftHandler(IShifterCommand shifterCommand, IShifterQuery shifterQuery)
+    public ShiftHandler(
+        IShifterCommand shifterCommand,
+        IShifterQuery shifterQuery,
+        AppClock? clock = null)
     {
         _shifterCommand = shifterCommand;
         _shifterQuery = shifterQuery;
+        _clock = clock ?? new AppClock();
     }
 
     public async Task<ShiftDto[]> ListAsync(
@@ -62,10 +68,15 @@ public partial class ShiftHandler : IShiftHandler
         Shift shift = await _shifterQuery.GetShiftAsync(userId, id, ct)
             ?? throw new NotFoundException("Shift does not exist.");
 
-        // Pay is derived from the template, so changing a rate also changes
-        // every day this shift already sits on. Archiving and creating a
-        // replacement is the way to leave history alone.
+        Shift before = shift.HoursCopy();
+
         Apply(request, shift);
+
+        // A placement keeps the terms it was made under, so a new rate only
+        // reaches the shifts placed from here on. Hours are the one exception:
+        // a shift that has not happened yet should run the hours the template
+        // now says, or the plan on the calendar is simply wrong.
+        await _shifterCommand.RetimePlannedAsync(before, shift, _clock.Today, ct);
 
         await _shifterCommand.SaveAsync(ct);
 
@@ -114,13 +125,23 @@ public partial class ShiftHandler : IShiftHandler
 
         // The break has to leave something behind to pay for: a break as long
         // as the shift means nobody was on the clock at all.
-        TimeSpan length = start <= end ? end - start : end - start + TimeSpan.FromDays(1);
+        TimeSpan length = Span(start, end);
 
         if (request.break_minutes < 0)
             throw new ValidationException("Break cannot be negative.");
 
         if (request.break_minutes >= length.TotalMinutes)
             throw new ValidationException("Break must be shorter than the shift.");
+
+        // Against whatever the weekdays will hold after this save, so an older
+        // client lengthening the break cannot leave a short Friday unpaid.
+        List<WeekdayHours>? week = ParseWeekHours(request.week_hours);
+
+        foreach (WeekdayHours entry in week ?? shift.WeekHours)
+        {
+            if (request.break_minutes >= Span(entry.StartTime, entry.EndTime).TotalMinutes)
+                throw new ValidationException("Break must be shorter than the shift on every weekday.");
+        }
 
         shift.Name = request.name.Trim();
         // Trimmed to a couple of graphemes: the badge is a badge, and an emoji
@@ -133,6 +154,12 @@ public partial class ShiftHandler : IShiftHandler
         shift.PaintsDay = request.paints_day;
         shift.StartTime = start;
         shift.EndTime = end;
+
+        // Null is an older client, which knows nothing of either field and
+        // must not wipe them by saving the fields it does know.
+        if (week is not null) shift.WeekHours = week;
+        if (request.auto_clock is bool autoClock) shift.AutoClock = autoClock;
+
         shift.SalaryPeriod = ParsePeriod(request.salary_period);
         shift.SalaryAmount = request.salary_amount;
         shift.RevenuePercent = Share(request.revenue_percent);
@@ -172,8 +199,45 @@ public partial class ShiftHandler : IShiftHandler
         // and the share card cannot each answer it differently.
         shift.Colour ?? shift.Location?.Colour,
         shift.PaintsDay,
-        shift.Archived
+        shift.Archived,
+        shift.WeekHours
+            .Select(entry => new WeekHoursDto(
+                entry.Weekday,
+                entry.StartTime.ToString("HH:mm"),
+                entry.EndTime.ToString("HH:mm")))
+            .ToArray(),
+        shift.AutoClock
     );
+
+    private static TimeSpan Span(TimeOnly start, TimeOnly end)
+        => start <= end ? end - start : end - start + TimeSpan.FromDays(1);
+
+    /// <summary>The weekdays a save named, in order, or null when it named none at all.</summary>
+    private static List<WeekdayHours>? ParseWeekHours(WeekHoursDto[]? entries)
+    {
+        if (entries is null) return null;
+
+        List<WeekdayHours> week = [];
+
+        foreach (WeekHoursDto entry in entries)
+        {
+            if (entry.weekday is < 1 or > 7)
+                throw new ValidationException("weekday must be from 1 to 7.");
+
+            if (week.Any(known => known.Weekday == entry.weekday))
+                throw new ValidationException("A weekday is listed more than once.");
+
+            TimeOnly start = ParseTime(entry.start_time, "start_time");
+            TimeOnly end = ParseTime(entry.end_time, "end_time");
+
+            if (start == end)
+                throw new ValidationException("Start and end time must differ.");
+
+            week.Add(new WeekdayHours { Weekday = entry.weekday, StartTime = start, EndTime = end });
+        }
+
+        return week.OrderBy(entry => entry.Weekday).ToList();
+    }
 
     private static TipSource ParseTipSource(string? value) =>
         value?.Trim().ToLowerInvariant() == "pool" ? TipSource.Pool : TipSource.Personal;

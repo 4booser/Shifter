@@ -11,6 +11,7 @@ import { startLiveShift, useLive } from '@/lib/live/live-shift';
 import { THEME_PRESETS } from '@/lib/settings/settings';
 import { useSettings } from '@/lib/settings/store';
 import { todayKey } from '@/lib/calendar/calendar-date';
+import { hoursLabel } from '@/lib/calendar/shift-hours';
 import { calendarActions, useCalendar } from '@/lib/store/calendar';
 import { useMoney } from '@/lib/settings/money';
 import { Icon } from '@/components/ui/icon';
@@ -174,7 +175,7 @@ export function CommandPalette() {
           id: `start-${template.id}`,
           icon: 'clock',
           label: `${t('Start shift')}: ${template.name}`,
-          hint: `${template.start_time}–${template.end_time}`,
+          hint: hoursLabel(template, t),
           run: () => {
             startLiveShift(template);
             calendarActions.select(todayKey());

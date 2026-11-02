@@ -172,6 +172,8 @@ interface RequestOptions {
   /** Raw string body, sent as-is (the webhook test box needs this). */
   rawBody?: string;
   signal?: AbortSignal;
+  /** Asks the server itself: past the service worker's copy, so offline this throws instead of answering from an old one. */
+  fresh?: boolean;
 }
 
 /** A file over the same authorized channel. */
@@ -209,6 +211,7 @@ export async function api<T>(path: string, options: RequestOptions = {}): Promis
       headers,
       body: options.rawBody ?? (options.body !== undefined ? JSON.stringify(options.body) : undefined),
       signal: options.signal,
+      cache: options.fresh === true ? 'no-store' : undefined,
     });
   };
 

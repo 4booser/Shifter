@@ -7,6 +7,7 @@ import { daysToCsv, downloadCsv } from '@/lib/calendar/csv-export';
 import { averagesFor, change } from '@/lib/calendar/insights';
 import { EventTemplate, SalesPosition, ShiftTemplate, WorkLocation, rateLabel } from '@/lib/calendar/models';
 import { todayKey } from '@/lib/calendar/calendar-date';
+import { hoursLabel } from '@/lib/calendar/shift-hours';
 import { buildIcs, downloadIcs } from '@/lib/export/ics';
 import { Rota, teamApi } from '@/lib/api/team';
 import { useI18n } from '@/lib/i18n';
@@ -197,7 +198,7 @@ export function Sidebar() {
                       {/* Each dot rides with the figure before it, so a
                           wrapped line never opens on a separator. */}
                       <span className="field-hint tabular">
-                        {template.start_time}–{template.end_time}
+                        {hoursLabel(template, t)}
                         {'\u00A0· '}
                         {num(template.hours)} {t('h')}
                         {'\u00A0· '}

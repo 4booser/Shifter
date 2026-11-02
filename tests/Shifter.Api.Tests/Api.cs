@@ -4,12 +4,14 @@ using System.Text.Json;
 
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 using Npgsql;
 
+using Shifter.Application.Features.business.Services;
 using Shifter.Infrastructure.Persistence.DbContexts;
 
 using Xunit;
@@ -19,8 +21,9 @@ namespace Shifter.Api.Tests;
 /// <summary>The real application, over real HTTP, against a real Postgres.</summary>
 public sealed class Api : WebApplicationFactory<Program>, IAsyncLifetime
 {
-    /// <summary>A schema of its own inside the development database.</summary>
-    private const string Schema = "e2e";
+    /// <summary>A schema of its own inside the development database. Dropped on every start, so SHIFTER_API_SCHEMA names another for a run that has to leave this one be.</summary>
+    private static readonly string Schema =
+        Environment.GetEnvironmentVariable("SHIFTER_API_SCHEMA") ?? "e2e";
 
     private static readonly string Base =
         Environment.GetEnvironmentVariable("ConnectionStrings__Shifter")
@@ -49,6 +52,14 @@ public sealed class Api : WebApplicationFactory<Program>, IAsyncLifetime
         // A phone client id, so the config endpoint has one to hand back.
         // Android stays unset on purpose: the same test reads its null.
         builder.UseSetting("Google:IosClientId", "ios-tests.apps.googleusercontent.com");
+
+        // The close job only runs here when a test calls it, at a moment the
+        // test chose. Left ticking on the real clock it would turn the planned
+        // shifts other tests rely on into worked ones, once a minute. Single,
+        // so a change to how it is registered fails here instead of quietly
+        // putting the ticking back.
+        builder.ConfigureTestServices(services => services.Remove(services.Single(
+            entry => !entry.IsKeyedService && entry.ImplementationType == typeof(ShiftCloser))));
     }
 
     public async ValueTask InitializeAsync()
@@ -77,10 +88,10 @@ public sealed class Api : WebApplicationFactory<Program>, IAsyncLifetime
         await base.DisposeAsync();
     }
 
-    /// <summary>A signed-in client with an account of its own.</summary>
-    public async Task<Signed> SignInAsync(string who)
+    /// <summary>A signed-in client with an account of its own, on this host or one a test built from it.</summary>
+    public async Task<Signed> SignInAsync(string who, WebApplicationFactory<Program>? host = null)
     {
-        var client = CreateClient();
+        var client = (host ?? this).CreateClient();
         var login = $"{who}{Random.Shared.Next(100_000, 999_999)}";
 
         var registered = await client.PostAsJsonAsync(
@@ -102,6 +113,21 @@ public sealed class Api : WebApplicationFactory<Program>, IAsyncLifetime
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         return new Signed(client, login);
+    }
+
+    /// <summary>Waits out the goal checks already asked for: they run beside the request now, so a test reading what they did has to let them finish.</summary>
+    public async Task GoalChecksAsync(IServiceProvider? services = null)
+    {
+        var queue = (services ?? Services).GetRequiredService<GoalCheckQueue>();
+        var deadline = DateTime.UtcNow.AddSeconds(30);
+
+        while (queue.Unfinished > 0)
+        {
+            if (DateTime.UtcNow > deadline)
+                throw new TimeoutException($"{queue.Unfinished} goal checks never finished.");
+
+            await Task.Delay(10);
+        }
     }
 
     public sealed record Signed(HttpClient Client, string Login);

@@ -2,7 +2,7 @@ import { eyeShut } from '@/lib/eye';
 import { ActivityState, endActivity, startActivity, updateActivity } from 'shift-activity';
 
 import { lockStore } from '@/lib/lock';
-import { LiveShift, breakSeconds, onBreak, useLive } from '@/store/live';
+import { LiveShift, breakSeconds, liveWindow, onBreak, useLive } from '@/store/live';
 
 /** The running shift, as the lock screen needs to hear about it. */
 
@@ -27,7 +27,13 @@ export function activityState(
     symbol: shift.symbol,
     currency: '₴',
     startedAt: shift.startedAt,
-    endsAt: shift.plannedEnd,
+    // An instant, as the card needs: handed a bare "22:00" it draws nothing at
+    // all, and the close is the end this shift is really heading for. Never
+    // behind the start: the card counts up to a day past this, so one started
+    // after its plan ended would stop counting however long it ran.
+    endsAt: new Date(
+      Math.max(liveWindow(shift).closes.getTime(), new Date(shift.startedAt).getTime()),
+    ).toISOString(),
     breakSeconds: breakSeconds(shift, now),
     onBreak: onBreak(shift),
     // A lock screen is the most public surface this app has: it is visible to anybody who picks the phone up…
@@ -65,9 +71,12 @@ export function watchLiveShift(): () => void {
       return;
     }
 
-    const first = last !== shift.startedAt;
+    // Keyed on the shift, not its start: Фактически can move a running clock,
+    // and that is the same card updated rather than a new one.
+    const key = `${shift.date}:${shift.shiftId}`;
+    const first = last !== key;
 
-    last = shift.startedAt;
+    last = key;
 
     void (first ? showShift(shift) : refreshShift(shift));
   };

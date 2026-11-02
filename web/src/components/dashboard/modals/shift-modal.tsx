@@ -11,9 +11,12 @@ import {
   ShiftTemplate,
   TipSource,
 } from '@/lib/calendar/models';
+import { WEEKDAY_LABELS } from '@/lib/calendar/calendar-date';
+import { WeekRow, flatOf, hasEmptyRow, rowsOf, toggleWeekday } from '@/lib/calendar/shift-hours';
 import { useI18n } from '@/lib/i18n';
 import { catalogueActions, useCalendar } from '@/lib/store/calendar';
 import { Alert, Segmented, SwatchRow } from '@/components/ui/bits';
+import { Icon } from '@/components/ui/icon';
 import { Modal } from '@/components/ui/modal';
 
 const PERIOD_HINTS: Record<SalaryPeriod, string> = {
@@ -40,6 +43,9 @@ export function ShiftModal({
   const [symbol, setSymbol] = useState('');
   const [start, setStart] = useState('09:00');
   const [end, setEnd] = useState('18:00');
+  const [weekRows, setWeekRows] = useState<WeekRow[]>([]);
+  const [weekOpen, setWeekOpen] = useState(false);
+  const [autoClock, setAutoClock] = useState(true);
   const [period, setPeriod] = useState<SalaryPeriod>('hour');
   const [amount, setAmount] = useState<number | null>(null);
   const [breakMinutes, setBreakMinutes] = useState(0);
@@ -65,6 +71,9 @@ export function ShiftModal({
     setSymbol(editing?.symbol ?? '');
     setStart(editing?.start_time ?? '09:00');
     setEnd(editing?.end_time ?? '18:00');
+    setWeekRows(rowsOf(editing?.week_hours ?? []));
+    setWeekOpen((editing?.week_hours.length ?? 0) > 0);
+    setAutoClock(editing?.auto_clock ?? true);
     setPeriod(editing?.salary_period ?? 'hour');
     setAmount(editing?.salary_amount ?? null);
     setBreakMinutes(editing?.break_minutes ?? 0);
@@ -77,11 +86,21 @@ export function ShiftModal({
     setAdvert('');
   }, [open, editing]);
 
+  const changeRow = (index: number, change: Partial<WeekRow>) =>
+    setWeekRows((rows) => rows.map((row, at) => (at === index ? { ...row, ...change } : row)));
+
   /** What the calendar will actually draw, given the place currently chosen. */
   const preview = colour ?? locations.find((place) => place.id === locationId)?.colour ?? null;
 
   const submit = async () => {
     if (name.trim() === '') return;
+
+    if (hasEmptyRow(weekRows)) {
+      setError(t('Pick the days for each set of hours, or remove the row.'));
+      setWeekOpen(true);
+
+      return;
+    }
 
     try {
       await catalogueActions.saveShift(
@@ -90,6 +109,8 @@ export function ShiftModal({
           symbol: symbol === '' ? null : symbol,
           start_time: start,
           end_time: end,
+          week_hours: flatOf(weekRows),
+          auto_clock: autoClock,
           salary_period: period,
           salary_amount: amount,
           break_minutes: breakMinutes,
@@ -263,6 +284,90 @@ export function ShiftModal({
         </div>
 
         <p className="field-hint">{t('An end before the start means the shift runs past midnight.')}</p>
+
+        {/* One shift across the week instead of three that differ by an hour. */}
+        <details
+          className="rounded-(--radius) border border-border p-2.5"
+          open={weekOpen}
+          onToggle={(event) => setWeekOpen(event.currentTarget.open)}
+        >
+          <summary className="cursor-pointer text-[0.86rem] font-semibold">
+            {t('Other hours on some days')}
+          </summary>
+
+          <div className="mt-2 flex flex-col gap-2">
+            {weekRows.map((row, index) => (
+              <div key={index} className="rounded-(--radius) border border-border p-2">
+                <div className="grid grid-cols-7 gap-1">
+                  {WEEKDAY_LABELS.map((label, day) => (
+                    <button
+                      key={label}
+                      type="button"
+                      className={`btn btn-sm !px-0 ${row.weekdays.includes(day + 1) ? 'btn-primary' : 'btn-quiet'}`}
+                      aria-pressed={row.weekdays.includes(day + 1)}
+                      onClick={() => setWeekRows((rows) => toggleWeekday(rows, index, day + 1))}
+                    >
+                      {t(label)}
+                    </button>
+                  ))}
+                </div>
+                <div className="mt-1.5 flex items-center gap-1.5">
+                  <input
+                    type="time"
+                    className="field-input min-w-0 flex-1"
+                    aria-label={t('Starts')}
+                    value={row.start}
+                    onChange={(event) => changeRow(index, { start: event.target.value })}
+                  />
+                  <span className="text-faint">–</span>
+                  <input
+                    type="time"
+                    className="field-input min-w-0 flex-1"
+                    aria-label={t('Ends')}
+                    value={row.end}
+                    onChange={(event) => changeRow(index, { end: event.target.value })}
+                  />
+                  <button
+                    type="button"
+                    className="btn btn-quiet btn-sm btn-danger flex-none"
+                    aria-label={t('Remove')}
+                    onClick={() => setWeekRows((rows) => rows.filter((_, at) => at !== index))}
+                  >
+                    <Icon name="trash" size={13} />
+                  </button>
+                </div>
+              </div>
+            ))}
+
+            <button
+              type="button"
+              className="btn btn-quiet btn-sm self-start"
+              onClick={() => setWeekRows((rows) => [...rows, { weekdays: [], start, end }])}
+            >
+              <Icon name="plus" size={12} />
+              {t('Add hours')}
+            </button>
+
+            <p className="field-hint">{t('Days in no row run the main time above.')}</p>
+          </div>
+        </details>
+
+        <label className="flex cursor-pointer items-start gap-2">
+          <input
+            type="checkbox"
+            className="mt-0.5"
+            checked={autoClock}
+            onChange={(event) => setAutoClock(event.target.checked)}
+          />
+          <span>
+            <span className="block text-[0.88rem] font-medium">
+              {t('Open and close the shift by itself on schedule')}
+            </span>
+            <span className="field-hint">
+              {t('It counts as worked once it is over, with nothing to press. Turn this off to start and finish by hand.')}
+            </span>
+          </span>
+        </label>
 
         <label>
           <span className="field-label">{t('Unpaid break, minutes')}</span>

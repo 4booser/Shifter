@@ -123,12 +123,15 @@ public static class DependencyInjection
         services.AddScoped<Shifter.Application.Features.Money.RateService>();
         services.AddScoped<Shifter.Application.Features.business.Services.DayAuditWriter>();
         services.AddScoped<Shifter.Application.Features.business.Services.GoalCelebrator>();
+        services.AddSingleton<Shifter.Application.Features.business.Services.GoalCheckQueue>();
+        services.AddHostedService<Shifter.Application.Features.business.Services.GoalCheckWorker>();
         services.AddScoped<Shifter.Application.Features.Gigs.GigService>();
         services.Configure<Shifter.Application.Features.Mail.MailOptions>(
             configuration.GetSection(Shifter.Application.Features.Mail.MailOptions.Section));
         services.AddScoped<Shifter.Application.Features.Mail.MailSender>();
         services.AddScoped<Shifter.Application.Features.Auth.Services.PasswordResetService>();
         services.AddHostedService<PushScheduler>();
+        services.AddHostedService<ShiftCloser>();
         services.AddHostedService<Shifter.Application.Features.Mail.MonthlyLetterService>();
         services.AddSingleton<IHasher, Hasher>();
         services.AddScoped<IAuthTokenIssuer, AuthTokenIssuer>();

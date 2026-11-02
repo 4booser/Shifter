@@ -14,6 +14,7 @@ import {
   tint,
 } from '@/lib/types';
 import { t } from '@/lib/i18n';
+import { hoursLabel } from '@/lib/week-rows';
 
 /** What the pencil is loaded with. */
 export type Brush =
@@ -156,7 +157,7 @@ export function PaintPicker({
                 template.colour ?? palette.accent,
                 template.symbol,
                 template.name,
-                `${template.start_time.slice(0, 5)}–${template.end_time.slice(0, 5)} · ${rateLine(template)}`,
+                `${hoursLabel(template, t)} · ${rateLine(template)}`,
                 { kind: 'shift', template },
               ),
             )

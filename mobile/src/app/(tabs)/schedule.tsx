@@ -18,7 +18,7 @@ import { Loading, Press } from '@/components/motion';
 import { Colors, Palette } from '@/constants/theme';
 import { api, ApiError } from '@/lib/api';
 import { dayLabel, pad, todayKey } from '@/lib/calendar';
-import { plural, rateLine, ShiftTemplate } from '@/lib/types';
+import { hoursOn, plural, rateLine, ShiftTemplate } from '@/lib/types';
 import { t } from '@/lib/i18n';
 
 interface Team {
@@ -568,6 +568,10 @@ function TemplateModal({
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState<string | null>(null);
 
+  /** What a template would run on the day this shift falls on. */
+  const hoursFor = (template: ShiftTemplate) =>
+    assignment === null ? template : hoursOn(template, assignment.date);
+
   useEffect(() => {
     setMaking(templates.length === 0);
     setAmount('');
@@ -637,7 +641,7 @@ function TemplateModal({
                 <View style={styles.grow}>
                   <Text style={styles.templateName}>{template.name}</Text>
                   <Text style={styles.templateTime}>
-                    {template.start_time}–{template.end_time} · {rateLine(template)}
+                    {hoursFor(template).start_time}–{hoursFor(template).end_time} · {rateLine(template)}
                   </Text>
                 </View>
               </Press>

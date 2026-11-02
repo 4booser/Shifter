@@ -45,6 +45,7 @@ function shift(overrides: Partial<CalendarDayData['shifts'][number]> = {}) {
     actual_start: null,
     actual_end: null,
     break_minutes: 0,
+    auto_closed: false,
     ...overrides,
   };
 }

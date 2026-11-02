@@ -5,9 +5,9 @@ import { useEffect, useRef, useState } from 'react';
 import { useEscape } from '@/lib/a11y';
 import { useI18n } from '@/lib/i18n';
 import {
-  cancelLiveShift,
   finishLiveShift,
   formatElapsed,
+  liveEntry,
   liveTick,
   breakLeft,
   pauseLiveShift,
@@ -15,10 +15,14 @@ import {
   startTimedBreak,
   useLive,
 } from '@/lib/live/live-shift';
-import { useArmed } from '@/lib/live/arm';
+import { useDiscard } from '@/lib/live/arm';
+import { FORGOTTEN_AFTER, clockOf, liveWindow, planCloses, planEndsClock } from '@/lib/live/auto-clock';
 import { pushToast } from '@/lib/toast';
 import { useCalendar } from '@/lib/store/calendar';
 import { Money } from '@/components/ui/bits';
+
+/** How long past its planned end a shift nobody closes is left before anything is said. */
+const OVERDUE_AFTER = 30 * 60_000;
 
 /** The header's live-shift pill: proof the clock is running from any page. */
 export function LiveBar() {
@@ -28,10 +32,7 @@ export function LiveBar() {
   const [open, setOpen] = useState(false);
   useEscape(open, () => setOpen(false));
   const [, force] = useState(0);
-  const discard = useArmed(() => {
-    cancelLiveShift();
-    setOpen(false);
-  });
+  const discard = useDiscard(() => setOpen(false));
 
   useEffect(() => {
     if (live === null) return;
@@ -59,9 +60,16 @@ export function LiveBar() {
   }, [left, t]);
 
   const overdueNudged = useRef(false);
+  const say = useRef(t);
+
+  say.current = t;
 
   // Half an hour past the planned end deserves one nudge; sixteen hours on
-  // the clock is a forgotten shift, not a worked one — close it at that.
+  // the clock is a forgotten shift, not a worked one — close it at that. A
+  // clock the plan is going to stop needs neither, and a shift planned longer
+  // than sixteen hours is not forgotten until that half hour has gone too. `t`
+  // stays out of the list: it is a new function every render, this bar renders
+  // every second, and the minute would start over before it ever ran out.
   useEffect(() => {
     if (live === null) {
       overdueNudged.current = false;
@@ -73,33 +81,49 @@ export function LiveBar() {
 
     if (template === undefined) return;
 
-    const check = setInterval(() => {
-      const onClock = Date.now() - live.startedAt;
+    const nudge = () => {
+      if (overdueNudged.current) return;
 
-      if (onClock > 16 * 3600_000) {
-        void finishLiveShift(template);
+      overdueNudged.current = true;
+      pushToast({
+        icon: '⏰',
+        title: say.current('Shift over?'),
+        text: say.current('The planned end passed a while ago — finish or keep going.'),
+      });
+    };
+
+    const check = setInterval(() => {
+      const entry = liveEntry(live);
+
+      if (planEndsClock(template, live, entry)) return;
+
+      const closes = planCloses(template, live, entry);
+      const planned = closes > live.startedAt;
+      const overdue = planned && Date.now() > closes + OVERDUE_AFTER;
+
+      if (Date.now() - live.startedAt > FORGOTTEN_AFTER && (overdue || !planned)) {
+        // Nobody pressed this, so it goes the way any close goes: on a fresh
+        // read of the day, and with no overlay for a shift nobody was watching.
+        // A clock the day would not let close keeps running, so somebody is told.
+        void finishLiveShift(template, { byItself: true, atLimit: true }).then((outcome) => {
+          if (outcome === 'wait') nudge();
+          if (outcome !== 'written') return;
+
+          pushToast({
+            icon: '⏰',
+            title: say.current('Shift closed after sixteen hours'),
+            text: `${template.name}: ${say.current('check the times on the day.')}`,
+          });
+        });
 
         return;
       }
 
-      if (overdueNudged.current) return;
-
-      const [hours, minutes] = template.end_time.split(':').map(Number);
-      const plannedEnd = new Date(live.startedAt);
-
-      plannedEnd.setHours(hours, minutes, 0, 0);
-
-      // An end before the start is tomorrow's side of midnight.
-      if (plannedEnd.getTime() <= live.startedAt) plannedEnd.setDate(plannedEnd.getDate() + 1);
-
-      if (Date.now() > plannedEnd.getTime() + 30 * 60_000) {
-        overdueNudged.current = true;
-        pushToast({ icon: '⏰', title: t('Shift over?'), text: t('The planned end passed a while ago — finish or keep going.') });
-      }
+      if (overdue) nudge();
     }, 60_000);
 
     return () => clearInterval(check);
-  }, [live, templates, t]);
+  }, [live, templates]);
 
   if (live === null) return null;
 
@@ -107,6 +131,8 @@ export function LiveBar() {
 
   if (template === undefined) return null;
 
+  const entry = liveEntry(live);
+  const closesAt = planEndsClock(template, live, entry) ? clockOf(liveWindow(template, live, entry).closes) : null;
   const tick = liveTick(template, live, Date.now());
   const share = Math.min(1, tick.progress);
   const radius = 34;
@@ -122,6 +148,7 @@ export function LiveBar() {
       <button
         type="button"
         className={`chip tabular ${live.pausedAt !== null ? 'chip-warn' : 'chip-good'}`}
+        title={closesAt === null ? undefined : `${t('Closes by itself at')} ${closesAt}`}
         onClick={() => setOpen((state) => !state)}
       >
         {live.pausedAt !== null ? '⏸' : <span className="live-dot" />}
@@ -164,6 +191,11 @@ export function LiveBar() {
                 )}
               </div>
             </div>
+            {closesAt !== null && (
+              <p className="field-hint mt-1.5 tabular">
+                {t('Closes by itself at')} {closesAt}
+              </p>
+            )}
             {live.breakMs + (live.pausedAt === null ? 0 : Date.now() - live.pausedAt) > 0 && (
               <p className="field-hint mt-1.5">
                 {t('Breaks')}: {formatElapsed(live.breakMs + (live.pausedAt === null ? 0 : Date.now() - live.pausedAt))}

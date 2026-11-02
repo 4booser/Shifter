@@ -21,10 +21,12 @@ export function ConflictModal() {
   const mineSummary = summarise(conflict.mine);
 
   return (
-    <Modal open title={t('This day was changed on another device')} onClose={() => catalogueActions.dropConflict()}>
+    <Modal open title={t('This day was changed on another device')} onClose={() => catalogueActions.leaveConflict()}>
       <div className="flex flex-col gap-3.5">
         <p className="field-hint">
-          {t('Both versions are here, whole. Nothing is merged — you decide which one is the day.')}
+          {conflict.queuedAt === undefined
+            ? t('Both versions are here, whole. Nothing is merged — you decide which one is the day.')
+            : t('Both sides changed the same thing. Keeping theirs gives up only that: everything else saved offline still goes through.')}
         </p>
 
         <div className="grid gap-3 sm:grid-cols-2">

@@ -47,6 +47,9 @@ public sealed class DayShift
 
     public TimeOnly? ActualEnd { get; set; }
 
+    /// <summary>When the automatic close had its say here, whether it closed the shift or was told to leave it alone.</summary>
+    public DateTime? AutoClosedAtUtc { get; set; }
+
     /// <summary>Clock time between start and end, wrapping past midnight.
     /// The recorded reality wins over the plan when both edges exist.</summary>
     [NotMapped]
@@ -96,20 +99,75 @@ public sealed class DayShift
     public bool IsPeriodSalary =>
         SalaryPeriod is SalaryPeriod.Week or SalaryPeriod.Month;
 
-    /// <summary>Takes the template's terms as they stand right now.</summary>
-    public static DayShift From(Shift shift, bool worked) => new DayShift
+    /// <summary>The break this placement owes under its place's rule, on the hours it stands on now.</summary>
+    // A floor, not an override: a template that already books a longer break
+    // knows something the rule does not.
+    public int BreakUnder(Location? place)
+        => place is { AutoBreakAfterHours: > 0m }
+            && place.AutoBreakMinutes > BreakMinutes
+            && (decimal)Duration.TotalHours > place.AutoBreakAfterHours
+                ? place.AutoBreakMinutes
+                : BreakMinutes;
+
+    /// <summary>The break this placement holds apart from what its place's rule put there.</summary>
+    // The rule's minutes belong to the hours that earned them and go with
+    // those hours. Anything else is somebody's: a paused clock, a break typed
+    // in. A person who took exactly the rule's minutes on hours the rule
+    // covers cannot be told apart from it, and reads as the rule.
+    public int OwnBreak(Location? place)
+        => place is { AutoBreakAfterHours: > 0m }
+            && place.AutoBreakMinutes == BreakMinutes
+            && (decimal)Duration.TotalHours > place.AutoBreakAfterHours
+                ? 0
+                : BreakMinutes;
+
+    /// <summary>Takes the template's terms as they stand right now, at its hours for the date it lands on.</summary>
+    public static DayShift From(Shift shift, bool worked, DateOnly? on = null)
     {
-        ShiftId = shift.Id,
-        Shift = shift,
-        SalaryPeriod = shift.SalaryPeriod,
-        SalaryAmount = shift.SalaryAmount,
-        RevenuePercent = shift.RevenuePercent,
-        TipSource = shift.TipSource,
-        TipPoolPercent = shift.TipPoolPercent,
-        StartTime = shift.StartTime,
-        EndTime = shift.EndTime,
-        BreakMinutes = (int)Math.Round(
-            (shift.Duration - shift.PaidDuration).TotalMinutes),
-        Worked = worked
-    };
+        (TimeOnly start, TimeOnly end) = on is DateOnly date
+            ? shift.HoursOn(date)
+            : (shift.StartTime, shift.EndTime);
+
+        return new DayShift
+        {
+            ShiftId = shift.Id,
+            Shift = shift,
+            SalaryPeriod = shift.SalaryPeriod,
+            SalaryAmount = shift.SalaryAmount,
+            RevenuePercent = shift.RevenuePercent,
+            TipSource = shift.TipSource,
+            TipPoolPercent = shift.TipPoolPercent,
+            StartTime = start,
+            EndTime = end,
+            BreakMinutes = (int)Math.Round(
+                (shift.Duration - shift.PaidDuration).TotalMinutes),
+            Worked = worked
+        };
+    }
+
+    /// <summary>A template painted onto a date, the way a save would have placed it.</summary>
+    public static DayShift Painted(Shift shift, DateOnly date, DateTime now)
+    {
+        DayShift placed = From(shift, PaintedWorked(shift, date, now), date);
+
+        // The house rule, as on any save, or a past date painted in a stroke
+        // would earn more than the same date filled in by hand.
+        placed.BreakMinutes = placed.BreakUnder(shift.Location);
+
+        return placed;
+    }
+
+    /// <summary>Whether a template painted onto a date counts as worked from the start.</summary>
+    private static bool PaintedWorked(Shift shift, DateOnly date, DateTime now)
+    {
+        // A date already behind us is almost certainly worked; one ahead is a
+        // plan. The user can flip either in the panel.
+        if (!shift.AutoClock) return date <= DateOnly.FromDateTime(now);
+
+        // On the automatic clock the close says when it counts, so a shift
+        // painted on today stays a plan until it is over.
+        (TimeOnly start, TimeOnly end) = shift.HoursOn(date);
+
+        return ShiftWindow.Of(date, start, end).Closes <= now;
+    }
 }

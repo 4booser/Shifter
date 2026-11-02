@@ -19,7 +19,8 @@ const shift = (over: Partial<Parameters<typeof earnedSoFar>[0]> = {}) => ({
   name: 'Вечер',
   symbol: '🌙',
   startedAt: '2026-08-29T15:00:00.000Z',
-  plannedEnd: '2026-08-29T23:00:00.000Z',
+  plannedStart: '15:00',
+  plannedEnd: '23:00',
   hourlyRate: 300,
   breaks: [],
   ...over,
@@ -73,6 +74,34 @@ describe('what the lock screen is told', () => {
     expect(state.breakSeconds).toBe(1_800);
     expect(state.onBreak).toBe(false);
     expect(state.earned).toBe(750);
+  });
+
+  it('gives the card an instant to end at, not a bare hour', () => {
+    // The card refuses a date it cannot parse and draws nothing, which is
+    // what a plan's "23:00" used to get it.
+    const ends = activityState(shift({ plannedEnd: '23:00' }), at('18:00'), false).endsAt;
+
+    expect(new Date(ends).getHours()).toBe(23);
+    expect(ends).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+  });
+
+  it('ends where Фактически says the shift ends', () => {
+    const ends = activityState(
+      shift({ plannedEnd: '23:00', actualEnd: '23:40' }),
+      at('18:00'),
+      false,
+    ).endsAt;
+
+    expect(new Date(ends).getMinutes()).toBe(40);
+  });
+
+  it('never ends behind its own start', () => {
+    // Started after the plan ended. The card counts up to a day past this, and
+    // the plan's own close would stop the count partway through the shift.
+    const startedAt = new Date('2026-08-29T18:00:00').toISOString();
+    const late = shift({ startedAt, plannedStart: '09:00', plannedEnd: '17:00' });
+
+    expect(activityState(late, new Date(startedAt).getTime(), false).endsAt).toBe(startedAt);
   });
 
   it('knows a break is running', () => {

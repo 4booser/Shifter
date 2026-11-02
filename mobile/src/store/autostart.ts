@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 
-import { AutoStartRule } from '@/lib/autostart';
+import { AutoStartRule, FiredDays, noteFired, readFired } from '@/lib/autostart';
 
 /** The hours shifts start themselves at, and which fired today. */
 
@@ -14,8 +14,10 @@ const quietly = (work: Promise<unknown>) => {
 
 interface AutoStartState {
   rules: AutoStartRule[];
-  /** { day: 'YYYY-MM-DD', shiftIds: [] } — any other day's record is stale. */
-  fired: { day: string; shiftIds: number[] };
+  /** Which templates started, by the date of the entry they started for. */
+  fired: FiredDays;
+  /** False until storage has answered: before that, nothing here can be trusted to say no. */
+  ready: boolean;
 
   hydrate: () => Promise<void>;
   /** Null start with a null stop removes the rule entirely. */
@@ -27,7 +29,8 @@ interface AutoStartState {
 
 export const useAutoStart = create<AutoStartState>((set, get) => ({
   rules: [],
-  fired: { day: '', shiftIds: [] },
+  fired: {},
+  ready: false,
 
   hydrate: async () => {
     try {
@@ -38,10 +41,12 @@ export const useAutoStart = create<AutoStartState>((set, get) => ({
 
       set({
         rules: rules === null ? [] : (JSON.parse(rules) as AutoStartRule[]),
-        fired: fired === null ? { day: '', shiftIds: [] } : JSON.parse(fired),
+        fired: readFired(fired),
       });
     } catch {
       // Unreadable rules are rules that have to be set again, not a crash.
+    } finally {
+      set({ ready: true });
     }
   },
 
@@ -71,12 +76,7 @@ export const useAutoStart = create<AutoStartState>((set, get) => ({
   },
 
   markFired: (shiftId, day) => {
-    const previous = get().fired;
-    const fired = {
-      day,
-      // A record from another day is stale by definition and dropped whole.
-      shiftIds: previous.day === day ? [...previous.shiftIds, shiftId] : [shiftId],
-    };
+    const fired = noteFired(get().fired, shiftId, day);
 
     set({ fired });
     quietly(AsyncStorage.setItem(FIRED_KEY, JSON.stringify(fired)));

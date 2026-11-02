@@ -118,18 +118,17 @@ jobs:
       # over rows that already exist, a unique index over duplicates, a NOT
       # NULL on a populated table. So: migrate to the previous release, put
       # rows in, then migrate the rest of the way.
+      #
+      # The released code as a whole, not only its migrations: EF refuses to
+      # run a snapshot older than the model it is built into, so swapping the
+      # folder in place failed every branch that carried a migration.
       - name: Migrate to the last released schema
         run: |
           dotnet tool install --global dotnet-ef
-          dotnet restore server/Shifter.csproj
-          git fetch --depth=2 origin main
-          LAST=$(git rev-parse origin/main)
-          git stash push --include-untracked --quiet || true
-          git checkout --quiet "$LAST" -- server/src/Infrastructure/Persistence/Migrations
-          dotnet ef database update --project server/Shifter.csproj --context ShifterDbContext
-          dotnet ef database update --project server/Shifter.csproj --context TokensDbContext
-          git checkout --quiet HEAD -- server/src/Infrastructure/Persistence/Migrations
-          git stash pop --quiet || true
+          git fetch --depth=1 origin main
+          git worktree add --detach ../released FETCH_HEAD
+          dotnet ef database update --project ../released/server/Shifter.csproj --context ShifterDbContext
+          dotnet ef database update --project ../released/server/Shifter.csproj --context TokensDbContext
 
       - name: Put rows in it
         run: PGPASSWORD=ci psql -h localhost -U shifter_user -d shifter -f .github/seed.sql

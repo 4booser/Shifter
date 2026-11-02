@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { forgotten, LiveShift, plannedEndInstant } from '@/store/live';
+import { forgotten, LiveShift, plannedEndFits, plannedEndInstant } from '@/store/live';
 
 const shift = (over: Partial<LiveShift>): LiveShift => ({
   date: '2026-08-29',
@@ -34,5 +34,15 @@ describe('the forgotten timer', () => {
 
     expect(forgotten(shift({}), planned + 3600_000)).toBe(false);
     expect(forgotten(shift({}), planned + 2 * 3600_000 + 60_000)).toBe(true);
+  });
+
+  it('can be closed by the plan where the plan ended after it started', () => {
+    expect(plannedEndFits(shift({}))).toBe(true);
+  });
+
+  it('cannot where it started after the plan ended: 18:00 to 17:00 prices as 23 hours', () => {
+    const started = new Date('2026-08-29T23:30:00').toISOString();
+
+    expect(plannedEndFits(shift({ startedAt: started }))).toBe(false);
   });
 });

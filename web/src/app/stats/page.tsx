@@ -199,7 +199,7 @@ function Stats() {
 
     void calendarApi
       // The base is asked for on this page alone: it is where somebody goes to see a period as one number, and the…
-      .days(from, to, settings.baseCurrency)
+      .days(from, to, { base: settings.baseCurrency })
       .then(setSummary)
       .catch((caught) => setError(apiErrorMessage(caught)));
 

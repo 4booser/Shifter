@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { formatDayLabel, formatDayLabelShort, fromKey, shiftDays, todayKey, weekBounds } from '@/lib/calendar/calendar-date';
+import { SaveState, baselineAfterAnswer, cashWithin, closeOverruled, saveStateOf, withoutEchoes } from '@/lib/calendar/day-draft';
 import { holidaysInRange } from '@/lib/calendar/holidays';
 import {
   CalendarEvent,
@@ -11,14 +12,16 @@ import {
   NOTE_MAX_LENGTH,
   ShiftTemplate,
   ShiftZone,
+  fineOf,
 } from '@/lib/calendar/models';
+import { atLocal, hoursLabel, shiftWindow } from '@/lib/calendar/shift-hours';
 import { api } from '@/lib/api/http';
 import { useI18n } from '@/lib/i18n';
 import { BreakTimer } from '@/components/dashboard/break-timer';
 import { foldBreak } from '@/lib/calendar/break-timer';
 import { useMoney } from '@/lib/settings/money';
 import { useSettings } from '@/lib/settings/store';
-import { startLiveShift, useLive } from '@/lib/live/live-shift';
+import { coverLiveShift, moveLiveShift, startLiveShift, useLive } from '@/lib/live/live-shift';
 import {
   applyToDates,
   calendarActions,
@@ -58,19 +61,52 @@ const ZONES: { value: ShiftZone; label: string }[] = [
 const QUANTITY_STEPS = [1, 3, 5, 10];
 const TIP_STEPS = [50, 100, 200, 500];
 
-/** Editing one day as a draft, so typing does not fire a request per keystroke. */
 /** How long the panel waits after the last change before it saves. */
-const QUIET_BEFORE_SAVE = 4_000;
+const QUIET_BEFORE_SAVE = 500;
+
+/** A field of the day the person may have touched: undefined until they do, so whatever the server says keeps showing through. */
+function useEdit<T>(server: T): [T, (value: T) => void] {
+  const [edit, setEdit] = useState<T | undefined>(undefined);
+
+  // Said back by the server: the edit has done its job.
+  useEffect(() => {
+    if (edit === server) setEdit(undefined);
+  }, [edit, server]);
+
+  return [edit === undefined ? server : edit, setEdit];
+}
 
 export function DayPanel() {
+  const { t } = useI18n();
+  const key = useCalendar((state) => state.selectedDate);
+  const multiSelected = useCalendar((state) => state.multiSelected);
+  const draftsDropped = useCalendar((state) => state.draftsDropped);
+
+  if (multiSelected.size > 1) {
+    return <BulkPanel keys={[...multiSelected].sort()} />;
+  }
+
+  if (key === null) {
+    return (
+      <aside className="card w-full p-4">
+        <p className="field-hint">{t('Pick a day in the calendar.')}</p>
+      </aside>
+    );
+  }
+
+  // A date of its own, so leaving one is a real unmount: the pending edit goes
+  // out with the date it was typed on, and the next date starts from nothing.
+  return <DayEditor key={`${key}:${draftsDropped}`} dayKey={key} />;
+}
+
+/** Editing one day as a draft, so typing does not fire a request per keystroke. */
+function DayEditor({ dayKey: key }: { dayKey: string }) {
   const { t, n, lang, num } = useI18n();
   const { format } = useMoney();
   const settings = useSettings((state) => state.settings);
-  const key = useCalendar((state) => state.selectedDate);
-  const day = useCalendar((state) => (state.selectedDate === null ? undefined : state.days.get(state.selectedDate)));
+  const day = useCalendar((state) => state.days.get(key));
   const templates = useCalendar((state) => state.templates);
   const live = useLive((state) => state.live);
-  const multiSelected = useCalendar((state) => state.multiSelected);
   const allDays = useCalendar((state) => state.days);
 
   const templateOf = (shiftId: number): ShiftTemplate | undefined =>
@@ -85,116 +121,54 @@ export function DayPanel() {
     (total, event) => total + (event.start_date === key ? event.cost : 0),
     0,
   );
-  const saving = useCalendar((state) => state.saving);
+  const dayStatus = useCalendar((state) => state.dayStatus.get(key));
 
+  // Every map below holds only what the person changed, and an entry leaves
+  // once the server says it back. Prefilled from the day, a stale copy would
+  // be sent over whatever the server has since written: its own close of the
+  // shift, a tip added from the clock-out screen.
   const [quantities, setQuantities] = useState<Record<number, number>>({});
   const [worked, setWorked] = useState<Record<number, boolean>>({});
   const [actualStart, setActualStart] = useState<Record<number, string | null>>({});
   const [actualEnd, setActualEnd] = useState<Record<number, string | null>>({});
   const [cover, setCover] = useState<Record<number, boolean>>({});
-  const [tips, setTips] = useState<number | null>(null);
-  const [tipsCash, setTipsCash] = useState<number | null>(null);
-  const [deductions, setDeductions] = useState<number | null>(null);
-  const [deductionReason, setDeductionReason] = useState<DeductionReason | null>(null);
-  const [tipPool, setTipPool] = useState<number | null>(null);
+  const [tips, setTips] = useEdit(day?.tips ?? null);
+  const [tipsCash, setTipsCash] = useEdit(day?.tips_cash ?? null);
+  const [deductions, setDeductions] = useEdit(fineOf(day));
+  const [deductionReason, setDeductionReason] = useEdit<DeductionReason | null>(day?.deduction_reason ?? null);
+  const [tipPool, setTipPool] = useEdit(day?.tip_pool ?? null);
   const [revenue, setRevenue] = useState<Record<number, number | null>>({});
 
   // Minutes a break timer actually counted, added to what the placement already had.
   const [breaks, setBreaks] = useState<Record<number, number>>({});
   const [guests, setGuests] = useState<Record<number, number | null>>({});
   const [zone, setZone] = useState<Record<number, ShiftZone>>({});
-  const [note, setNote] = useState('');
-  const [colour, setColour] = useState<string | null>(null);
+  const [note, setNote] = useEdit(day?.note ?? '');
+  const [colour, setColour] = useEdit(day?.colour ?? null);
   const [eventOpen, setEventOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
 
-  const loadedFor = useRef<string | null>(null);
-
-  // Only a change of date refills the whole draft.
-  useEffect(() => {
-    if (key === loadedFor.current) return;
-
-    loadedFor.current = key;
-
-    const next: Record<number, number> = {};
-
-    for (const entry of day?.sales ?? []) next[entry.sales_id] = entry.quantity;
-
-    const flags: Record<number, boolean> = {};
-    const covers: Record<number, boolean> = {};
-
-    for (const entry of day?.shifts ?? []) {
-      flags[entry.shift_id] = entry.worked;
-      covers[entry.shift_id] = entry.needs_cover;
-    }
-
-    setQuantities(next);
-    setWorked(flags);
-    setCover(covers);
-    setTips(day?.tips ?? null);
-    setTipsCash(day?.tips_cash ?? null);
-    setTipPool(day?.tip_pool ?? null);
-    setRevenue(
-      Object.fromEntries((day?.shifts ?? []).map((entry) => [entry.shift_id, entry.revenue])),
-    );
-    setDeductions(day?.deductions ?? null);
-    setDeductionReason(day?.deduction_reason ?? null);
-    setNote(day?.note ?? '');
-    setColour(day?.colour ?? null);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key, day]);
-
-  // The day can arrive after the panel opened on it — the month still loading,
-  // or a webhook writing while it sits open. Fill only what has no answer yet.
   useEffect(() => {
     if (day === undefined) return;
 
-    setQuantities((current) => {
-      const next = { ...current };
-      let changed = false;
+    const onDay = <T,>(pick: (entry: DayShiftEntry) => T) => (id: number) => {
+      const entry = day.shifts.find((item) => item.shift_id === id);
 
-      for (const entry of day.sales ?? []) {
-        if (entry.sales_id in next) continue;
+      return entry === undefined ? undefined : pick(entry);
+    };
 
-        next[entry.sales_id] = entry.quantity;
-        changed = true;
-      }
-
-      return changed ? next : current;
-    });
-
-    setWorked((current) => {
-      const next = { ...current };
-      let changed = false;
-
-      for (const entry of day.shifts ?? []) {
-        if (entry.shift_id in next) continue;
-
-        next[entry.shift_id] = entry.worked;
-        changed = true;
-      }
-
-      return changed ? next : current;
-    });
-
-    setTips((current) => (current === null && day.tips !== null ? day.tips : current));
-    setTipsCash((current) => (current === null && day.tips_cash !== null ? day.tips_cash : current));
-    setDeductions((current) => (current === null && day.deductions !== null ? day.deductions : current));
-    setNote((current) => (current === '' && (day.note ?? '') !== '' ? (day.note ?? '') : current));
-    setColour((current) => (current === null && day.colour !== null ? day.colour : current));
-  }, [day]);
-
-  if (multiSelected.size > 1) {
-    return <BulkPanel keys={[...multiSelected].sort()} />;
-  }
-
-  if (key === null) {
-    return (
-      <aside className="card w-full p-4">
-        <p className="field-hint">{t('Pick a day in the calendar.')}</p>
-      </aside>
+    setQuantities((edits) =>
+      withoutEchoes(edits, (id) => day.sales.find((entry) => entry.sales_id === id)?.quantity ?? 0),
     );
-  }
+    setWorked((edits) => withoutEchoes(edits, onDay((entry) => entry.worked)));
+    setCover((edits) => withoutEchoes(edits, onDay((entry) => entry.needs_cover)));
+    setActualStart((edits) => withoutEchoes(edits, onDay((entry) => entry.actual_start)));
+    setActualEnd((edits) => withoutEchoes(edits, onDay((entry) => entry.actual_end)));
+    setBreaks((edits) => withoutEchoes(edits, onDay((entry) => entry.break_minutes)));
+    setRevenue((edits) => withoutEchoes(edits, onDay((entry) => entry.revenue)));
+    setGuests((edits) => withoutEchoes(edits, onDay((entry) => entry.guests)));
+    setZone((edits) => withoutEchoes(edits, onDay((entry) => entry.zone)));
+  }, [day]);
 
   const holiday = holidaysInRange(settings.holidayCountry, key, key).get(key)?.name ?? null;
   const belowFloor = day?.below_floor === true;
@@ -212,11 +186,14 @@ export function DayPanel() {
     .map((template) => template?.tip_pool_percent ?? 0)
     .filter((share) => share > 0);
   const pooled = pooledShares.length === 0 ? null : pooledShares.reduce((a, b) => a + b, 0);
-  const draftSales = positions.reduce((total, position) => {
-    const quantity = quantities[position.id] ?? 0;
+  const quantityOf = (id: number): number =>
+    id in quantities ? quantities[id] : (day?.sales.find((entry) => entry.sales_id === id)?.quantity ?? 0);
+  const draftSales = positions.reduce(
+    (total, position) => total + quantityOf(position.id) * position.price * ((position.percentage ?? 0) / 100),
+    0,
+  );
 
-    return total + quantity * position.price * ((position.percentage ?? 0) / 100);
-  }, 0);
+  const cash = cashWithin(tips, tipsCash);
 
   // The break override exists because a break must be recorded when it ends, not when somebody later remembers to…
   /** The day as it currently stands in this panel, ready to send. */
@@ -229,13 +206,25 @@ export function DayPanel() {
         const start =
           entry.shift_id in actualStart ? actualStart[entry.shift_id] : entry.actual_start;
         const end = entry.shift_id in actualEnd ? actualEnd[entry.shift_id] : entry.actual_end;
+        const isWorked = worked[entry.shift_id] ?? entry.worked;
+
+        // Put back to Planned once the server would close it: said out loud,
+        // or the next pass would close it again.
+        const declined =
+          entry.worked &&
+          !isWorked &&
+          templateOf(entry.shift_id)?.auto_clock === true &&
+          atLocal(shiftWindow(key, { ...entry, actual_start: start, actual_end: end }).closes) <= Date.now();
 
         return {
           shift_id: entry.shift_id,
-          worked: worked[entry.shift_id] ?? entry.worked,
-          needs_cover: !(worked[entry.shift_id] ?? entry.worked) && (cover[entry.shift_id] ?? false),
-          actual_start: start !== null && end !== null ? start : null,
-          actual_end: start !== null && end !== null ? end : null,
+          worked: isWorked,
+          needs_cover: !isWorked && (cover[entry.shift_id] ?? entry.needs_cover),
+          // Alone or together: a planned shift keeps an edge set in advance,
+          // and a clock started by hand has only the one.
+          actual_start: start,
+          actual_end: end,
+          auto_closed: entry.auto_closed || declined,
           break_minutes:
             entry.shift_id in breaksNow ? breaksNow[entry.shift_id] : entry.break_minutes,
           revenue: entry.shift_id in revenue ? revenue[entry.shift_id] : entry.revenue,
@@ -243,11 +232,12 @@ export function DayPanel() {
           zone: entry.shift_id in zone ? zone[entry.shift_id] : entry.zone,
         };
       }),
-      sales: Object.entries(quantities)
-        .map(([id, quantity]) => ({ sales_id: Number(id), quantity }))
+      sales: [...new Set([...(day?.sales ?? []).map((entry) => entry.sales_id), ...Object.keys(quantities).map(Number)])]
+        .sort((one, two) => one - two)
+        .map((id) => ({ sales_id: id, quantity: quantityOf(id) }))
         .filter((entry) => entry.quantity > 0),
       tips,
-      tips_cash: tipsCash,
+      tips_cash: cash,
       tip_pool: tipPool,
       deductions,
       // A reason without a fine is noise; the server drops it too.
@@ -274,18 +264,36 @@ export function DayPanel() {
   const sent = useRef<string | null>(null);
   const draft = fingerprint(draftOf());
   const dirty = sent.current !== null && draft !== sent.current;
+  const drafted = useRef(draft);
+  const heard = useRef(day);
+  const [, rebased] = useState(0);
 
-  // The loaded day is the baseline, re-taken whenever a different day arrives
-  // or the server answers with a new version of this one.
+  // Any new word on this day: an answer to a save, or the server closing a
+  // shift, which arrives with the same version. Read before the line below
+  // moves on, so `drafted` is still the draft from before it came.
   useEffect(() => {
-    sent.current = fingerprint(draftOf());
+    const overruled = closeOverruled(heard.current?.shifts, shifts, actualStart, actualEnd);
+    const next = baselineAfterAnswer(sent.current, drafted.current, draft, overruled);
+
+    heard.current = day;
+
+    if (next !== sent.current) {
+      sent.current = next;
+      rebased((count) => count + 1);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key, day?.version]);
+  }, [day]);
+
+  useEffect(() => {
+    drafted.current = draft;
+  });
 
   const flush = useRef<() => void>(() => undefined);
 
+  // Asked afresh rather than read from `dirty`: a save and a blur can land
+  // between two renders, and the second must not send the same day again.
   flush.current = () => {
-    if (dirty) save();
+    if (sent.current !== null && fingerprint(draftOf()) !== sent.current) save();
   };
 
   useEffect(() => {
@@ -312,10 +320,16 @@ export function DayPanel() {
     };
   }, []);
 
+  const saveState = saveStateOf(dayStatus, dirty);
+
   // A column of cards, the same shape as the sidebar opposite it.
   return (
     // The screenshot test needs to find this and only this: the sidebar beside it is an <aside> too, and matching…
-    <aside key={key} data-testid="day-panel" className="flex w-full flex-col gap-4">
+    <aside
+      data-testid="day-panel"
+      className="flex w-full flex-col gap-4"
+      onBlur={() => flush.current()}
+    >
       <section className="card rise p-4">
         {/* Not capitalize: it lifts «сентября» too, and the panel headed
             «Среда, 2 Сентября». The formatter puts the one capital on. */}
@@ -420,6 +434,10 @@ export function DayPanel() {
             {shifts.map((entry) => {
               const isWorked = worked[entry.shift_id] ?? entry.worked;
               const wantsCover = cover[entry.shift_id] ?? entry.needs_cover;
+              const started = entry.shift_id in actualStart ? actualStart[entry.shift_id] : entry.actual_start;
+              const ended = entry.shift_id in actualEnd ? actualEnd[entry.shift_id] : entry.actual_end;
+              const window = shiftWindow(key, { ...entry, actual_start: started, actual_end: ended });
+              const underWay = atLocal(window.opens) <= Date.now() && Date.now() < atLocal(window.closes);
 
               return (
                 <li key={entry.shift_id} className="rounded-(--radius) border border-border p-2">
@@ -558,23 +576,35 @@ export function DayPanel() {
                     </div>
                   )}
 
-                  {isWorked && (
+                  {/* Before the shift as well as after it: a time set in advance is what the shift opens and closes by. */}
+                  {(isWorked || underWay || key === todayKey()) && (
                     <ActualClockRow
                       entry={entry}
-                      start={entry.shift_id in actualStart ? actualStart[entry.shift_id] : entry.actual_start}
-                      end={entry.shift_id in actualEnd ? actualEnd[entry.shift_id] : entry.actual_end}
+                      start={started}
+                      end={ended}
                       onStart={(value) => setActualStart((current) => ({ ...current, [entry.shift_id]: value }))}
                       onEnd={(value) => setActualEnd((current) => ({ ...current, [entry.shift_id]: value }))}
                       onClear={() => {
                         setActualStart((current) => ({ ...current, [entry.shift_id]: null }));
                         setActualEnd((current) => ({ ...current, [entry.shift_id]: null }));
+
+                        // A typed edge reaches a running clock through the
+                        // day; a cleared one has to be told, since no edge at
+                        // all also reads as a start still on its way.
+                        if (live?.shiftId === entry.shift_id && live.date === key) {
+                          moveLiveShift(atLocal(shiftWindow(key, { start_time: entry.start_time, end_time: entry.end_time }).opens));
+                        }
                       }}
                     />
                   )}
 
+                  {isWorked && entry.auto_closed && (
+                    <p className="field-hint mt-1">{t('Closed by itself on schedule. Check the times.')}</p>
+                  )}
+
                   {!isWorked && (
                     <div className="mt-1.5 flex gap-1.5">
-                      {key === todayKey() && live === null && templateOf(entry.shift_id) !== undefined && (
+                      {key === todayKey() && live === null && !wantsCover && templateOf(entry.shift_id) !== undefined && (
                         <button
                           type="button"
                           className="btn btn-primary btn-sm flex-1"
@@ -588,7 +618,12 @@ export function DayPanel() {
                         type="button"
                         className={`btn btn-sm flex-1 ${wantsCover ? 'btn-warn' : 'btn-quiet'}`}
                         title={t('Ask the team to take this shift')}
-                        onClick={() => setCover((current) => ({ ...current, [entry.shift_id]: !wantsCover }))}
+                        onClick={() => {
+                          setCover((current) => ({ ...current, [entry.shift_id]: !wantsCover }));
+
+                          // Handed over, it has no clock left to run.
+                          if (!wantsCover && live?.shiftId === entry.shift_id && live.date === key) coverLiveShift();
+                        }}
                       >
                         <Icon name="swap" size={12} />
                         {t(wantsCover ? 'Cover wanted' : 'Need cover?')}
@@ -614,12 +649,9 @@ export function DayPanel() {
 
           <ul className="flex flex-col gap-1.5">
             {positions.map((position) => {
-              const quantity = quantities[position.id] ?? 0;
+              const quantity = quantityOf(position.id);
               const bump = (delta: number) =>
-                setQuantities((current) => ({
-                  ...current,
-                  [position.id]: Math.max(0, (current[position.id] ?? 0) + delta),
-                }));
+                setQuantities((current) => ({ ...current, [position.id]: Math.max(0, quantity + delta) }));
 
               return (
                 <li
@@ -707,6 +739,9 @@ export function DayPanel() {
         <h3 className="field-label !flex items-center gap-1">
           <Icon name="coins" size={12} />
           {t(pooled === null ? 'Tips' : 'Tip pool today')}
+          <span className="ml-auto">
+            <SaveLine state={saveState} onRetry={() => save()} />
+          </span>
         </h3>
 
         {pooled !== null ? (
@@ -756,7 +791,7 @@ export function DayPanel() {
               key={step}
               type="button"
               className="btn btn-quiet btn-sm flex-1 tabular"
-              onClick={() => setTips((current) => (current ?? 0) + step)}
+              onClick={() => setTips((tips ?? 0) + step)}
             >
               +{step}
             </button>
@@ -780,13 +815,13 @@ export function DayPanel() {
                 inputMode="decimal"
                 min={0}
                 className="field-input"
-                value={tipsCash ?? ''}
+                value={cash ?? ''}
                 placeholder="0"
                 onChange={(event) => setTipsCash(event.target.value === '' ? null : Number(event.target.value))}
               />
             </label>
             <span className="field-hint mt-4">
-              {t('Card')}: <Money value={Math.max(0, (tips ?? 0) - (tipsCash ?? 0))} />
+              {t('Card')}: <Money value={Math.max(0, (tips ?? 0) - (cash ?? 0))} />
             </span>
           </div>
         )}
@@ -817,9 +852,7 @@ export function DayPanel() {
                 type="button"
                 className={`btn btn-sm ${deductionReason === option.value ? 'btn-primary' : 'btn-quiet'}`}
                 aria-pressed={deductionReason === option.value}
-                onClick={() =>
-                  setDeductionReason((current) => (current === option.value ? null : option.value))
-                }
+                onClick={() => setDeductionReason(deductionReason === option.value ? null : option.value)}
               >
                 {t(option.label)}
               </button>
@@ -847,24 +880,11 @@ export function DayPanel() {
         </p>
       </section>
 
-      {/* Where the day stands, instead of something to press. */}
-      <p className="field-hint flex items-center justify-center gap-1.5">
-        {saving ? (
-          <>
-            <Icon name="check" size={13} />
-            {t('Saving…')}
-          </>
-        ) : dirty ? (
-          t('Changes save on their own')
-        ) : (
-          <>
-            <Icon name="check" size={13} className="text-good-read" />
-            {t('Saved')}
-          </>
-        )}
+      {/* Saved figures */}
+      <p className="field-hint flex items-center justify-center gap-1.5" role="status">
+        <SaveLine state={saveState} onRetry={() => save()} />
       </p>
 
-      {/* Saved figures */}
       {day && (
         <dl className="flex flex-col gap-1 border-t border-border pt-3 text-[0.85rem]">
           {day.sales.map((entry) => (
@@ -930,6 +950,38 @@ export function DayPanel() {
   );
 }
 
+/** Where the day stands, instead of something to press. */
+function SaveLine({ state, onRetry }: { state: SaveState; onRetry: () => void }) {
+  const { t } = useI18n();
+
+  if (state === 'failed') {
+    return (
+      <span className="inline-flex items-center gap-1.5 font-normal normal-case text-danger-read">
+        {t('Not saved')}
+        <button type="button" className="underline underline-offset-2" onClick={onRetry}>
+          {t('Try again')}
+        </button>
+      </span>
+    );
+  }
+
+  if (state === 'queued') {
+    return (
+      <span className="inline-flex items-center gap-1 font-normal normal-case text-warn-read">
+        <Icon name="repeat" size={12} />
+        {t('Changes will be sent when the network returns')}
+      </span>
+    );
+  }
+
+  return (
+    <span className="inline-flex items-center gap-1 font-normal normal-case text-muted" title={t('Changes save on their own')}>
+      <Icon name="check" size={12} className={state === 'saved' ? 'text-good-read' : ''} />
+      {t(state === 'saved' ? 'Saved' : 'Saving…')}
+    </span>
+  );
+}
+
 /** The panel's other personality: several days at once. */
 function BulkPanel({ keys }: { keys: string[] }) {
   const [showAllColours, setShowAllColours] = useState(false);
@@ -973,9 +1025,7 @@ function BulkPanel({ keys }: { keys: string[] }) {
             >
               <span>{template.symbol ?? '•'}</span>
               <span className="min-w-0 truncate" title={template.name}>{template.name}</span>
-              <span className="ml-auto text-[0.72rem] text-muted">
-                {template.start_time}–{template.end_time}
-              </span>
+              <span className="ml-auto text-[0.72rem] text-muted">{hoursLabel(template, t)}</span>
             </button>
           ))}
           {active.length === 0 && <p className="field-hint">{t('No shifts yet — create one in the sidebar.')}</p>}
@@ -1106,7 +1156,7 @@ function ActualClockRow({
           {delta > 0 ? '+' : '−'}{Math.abs(Math.round((delta / 60) * 10) / 10)} {t('h')}
         </span>
       )}
-      {(start !== null || entry.actual_start !== null) && (
+      {(start !== null || end !== null) && (
         <button type="button" className="btn btn-quiet btn-sm !px-1.5" title={t('Back to the plan')} onClick={onClear}>
           ↺
         </button>
@@ -1402,6 +1452,7 @@ function DayHistory({ dayKey }: { dayKey: string }) {
     app: t('you'),
     webhook: t('webhook'),
     assignment: t('the rota board'),
+    auto: t('the schedule'),
   };
 
   const shown = entries === null ? [] : all ? entries : entries.slice(0, 4);

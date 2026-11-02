@@ -47,7 +47,7 @@ import {
 } from '@/lib/mono';
 import { recurring } from '@/lib/mono-insights';
 import { cashTipOffers, untilPayday, usualDay } from '@/lib/mono-work';
-import { CalendarDayData, DaysResponse, money, moneyIn } from '@/lib/types';
+import { CalendarDayData, DaysResponse, fineOf, money, moneyIn } from '@/lib/types';
 import { chosenAccount, loadSetup, saveWatching, useMono } from '@/store/mono';
 import { watchForWage } from '@/lib/wage-watch';
 import { useWidgetMoney } from '@/lib/use-widget';
@@ -412,7 +412,7 @@ function Bank() {
           tips_cash: (existing?.tips_cash ?? 0) + amount,
           tip_pool: existing?.tip_pool ?? null,
           tip_out: null,
-          deductions: existing?.deductions ?? null,
+          deductions: fineOf(existing),
           deduction_reason: existing?.deduction_reason ?? null,
           note: existing?.note ?? null,
           colour: existing?.colour ?? null,

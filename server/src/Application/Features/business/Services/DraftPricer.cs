@@ -63,7 +63,7 @@ public sealed class DraftPricer
             {
                 UserId = userId,
                 Date = date,
-                Shifts = [Ghost(template)],
+                Shifts = [Ghost(template, date)],
             })
             .ToArray();
 
@@ -84,7 +84,7 @@ public sealed class DraftPricer
             if (!dates.Contains(day.Date)) continue;
             if ((day.Shifts ?? []).Any(entry => entry.ShiftId == shiftId)) continue;
 
-            day.Shifts = [.. day.Shifts ?? [], Ghost(template)];
+            day.Shifts = [.. day.Shifts ?? [], Ghost(template, day.Date)];
         }
 
         var withGhosts = real.Concat(ghosts).ToArray();
@@ -114,9 +114,9 @@ public sealed class DraftPricer
             Math.Round(basePay + overtimeExtra, 2));
     }
 
-    private static DayShift Ghost(Shift template)
+    private static DayShift Ghost(Shift template, DateOnly date)
     {
-        var ghost = DayShift.From(template, worked: true);
+        var ghost = DayShift.From(template, worked: true, date);
 
         ghost.Shift = template;
 

@@ -102,6 +102,12 @@ public sealed class TakeoutService
                 symbol = shift.Symbol,
                 start = shift.StartTime.ToString("HH:mm"),
                 end = shift.EndTime.ToString("HH:mm"),
+                week_hours = shift.WeekHours.Select(entry => new
+                {
+                    weekday = entry.Weekday,
+                    start = entry.StartTime.ToString("HH:mm"),
+                    end = entry.EndTime.ToString("HH:mm"),
+                }),
                 salary_period = shift.SalaryPeriod.ToString().ToLowerInvariant(),
                 salary_amount = shift.SalaryAmount,
                 revenue_percent = shift.RevenuePercent,

@@ -8,6 +8,8 @@ export interface PendingDay {
   date: string;
   body: DaySave;
   queuedAt: number;
+  /** The day as the server last said it when this was edited, which is how only what changed goes over a day that moved since. A copy queued before this was kept has none. */
+  base?: DaySave;
 }
 
 const DB_NAME = 'shifter-offline';

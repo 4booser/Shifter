@@ -12,6 +12,7 @@ import { useSettings } from '@/lib/settings/store';
 import { flushOffline, loadCatalogues, useCalendar } from '@/lib/store/calendar';
 import { PointerFx, PressRipple, RevealObserver } from '@/lib/fx';
 import { Toasts } from '@/lib/toast';
+import { useAutoClock } from '@/lib/live/use-auto-clock';
 import { useUnlockCheck } from '@/components/achievements/badges';
 import { CommandPalette, PALETTE_OPEN_EVENT } from '@/components/command/palette';
 import { LiveBar } from '@/components/live/live-bar';
@@ -78,6 +79,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
   }, [router, pathname]);
 
   useUnlockCheck(t);
+  useAutoClock(ready);
 
   // Shift templates power the palette and the live bar on every page.
   useEffect(() => {

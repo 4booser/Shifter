@@ -4,11 +4,14 @@ import { t } from '@/lib/i18n';
 
 export const pad = (value: number) => `${value}`.padStart(2, '0');
 
-export const todayKey = (): string => {
-  const now = new Date();
+/** The key of an instant, on the phone's own calendar. */
+export const dayKeyOf = (at: Date): string =>
+  `${at.getFullYear()}-${pad(at.getMonth() + 1)}-${pad(at.getDate())}`;
 
-  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
-};
+export const todayKey = (): string => dayKeyOf(new Date());
+
+/** An instant as the wall clock shows it: "21:40". */
+export const clockOf = (at: Date): string => `${pad(at.getHours())}:${pad(at.getMinutes())}`;
 
 export interface YearMonth {
   year: number;
@@ -111,7 +114,15 @@ export const nextDay = (key: string): string => {
 
   date.setDate(date.getDate() + 1);
 
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+  return dayKeyOf(date);
+};
+
+export const previousDay = (key: string): string => {
+  const date = new Date(`${key}T00:00:00`);
+
+  date.setDate(date.getDate() - 1);
+
+  return dayKeyOf(date);
 };
 
 /** True where the key falls inside an inclusive range. Keys sort as dates. */
@@ -143,6 +154,9 @@ export const monthOnly = ({ year, month }: YearMonth): string => {
 
 /** Monday first, the way a rota is read in this part of the world. */
 export const WEEKDAYS = ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс'];
+
+/** The same seven the way a row of toggles spells them, Monday first. */
+export const WEEK_NAMES = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
 
 /** Which of them a day falls on, 0 = Monday. */
 export const weekdayOf = (key: string): number =>

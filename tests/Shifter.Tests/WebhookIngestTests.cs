@@ -667,6 +667,60 @@ public class WebhookIngestTests
         Assert.Equal(6, placement.PaidDuration.TotalHours);
     }
 
+    /// <summary>The twentieth is a Thursday, and this template runs its Thursdays differently.</summary>
+    private Shift ThursdayRunsLate()
+    {
+        Shift template = Build.Template(7, name: "Evening", start: "17:00", end: "23:00");
+
+        template.WeekHours = [new WeekdayHours
+        {
+            Weekday = 4,
+            StartTime = new TimeOnly(18, 0),
+            EndTime = new TimeOnly(23, 30),
+        }];
+
+        _query.Shifts.Add(template);
+
+        return template;
+    }
+
+    [Fact]
+    public async Task A_delivery_with_no_times_takes_the_hours_of_its_own_weekday()
+    {
+        ThursdayRunsLate();
+        Given(WebhookKind.Hours);
+
+        await Post("""{ "date": "2026-08-20", "shift": "Evening" }""");
+
+        DayShift placement = Assert.Single(_command.Placed).Placement;
+
+        Assert.Equal(new TimeOnly(18, 0), placement.StartTime);
+        Assert.Equal(new TimeOnly(23, 30), placement.EndTime);
+    }
+
+    [Fact]
+    public async Task A_count_of_hours_starts_from_that_weekdays_start()
+    {
+        ThursdayRunsLate();
+        Given(WebhookKind.Hours);
+
+        await Post("""{ "date": "2026-08-20", "shift": "Evening", "hours": 4 }""");
+
+        Assert.Equal(new TimeOnly(18, 0), Assert.Single(_command.Placed).Placement.StartTime);
+    }
+
+    [Fact]
+    public async Task A_lone_start_runs_that_weekdays_length()
+    {
+        ThursdayRunsLate();
+        Given(WebhookKind.Hours);
+
+        await Post("""{ "date": "2026-08-20", "shift": "Evening", "start": "12:00" }""");
+
+        // Five and a half hours, not the six of an ordinary day.
+        Assert.Equal(new TimeOnly(17, 30), Assert.Single(_command.Placed).Placement.EndTime);
+    }
+
     [Fact]
     public async Task Falls_back_to_the_endpoints_default_template()
     {

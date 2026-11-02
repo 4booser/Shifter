@@ -224,6 +224,41 @@ public sealed class DeductionsOverHttpTests(Api api)
     }
 
     [Fact]
+    public async Task A_fine_echoed_back_leaves_the_meal_money_out_of_it()
+    {
+        // The day's total has the place's meal money in it, and a client saving
+        // that figure back had it stored as a fine: four saves took four meals.
+        var (client, _) = await api.SignInAsync("meal-echo");
+        var place = await PlaceAsync(client, "Столовая", meal: 80m);
+        var shift = await ShiftAsync(client, place, 100m);
+
+        var first = await Read(await WorkAsync(client, Day(10), shift, tips: 0m));
+
+        Assert.Equal(80m, first.GetProperty("deductions").GetDecimal());
+        Assert.Equal(0m, first.GetProperty("fine").GetDecimal());
+
+        var earned = first.GetProperty("earned").GetDecimal();
+
+        for (var save = 0; save < 3; save++)
+        {
+            var held = await Read(await client.GetAsync($"/shifter/v1/days?from={Day(10)}&to={Day(10)}"));
+            var day = held.GetProperty("days")[0];
+
+            var again = await Read(await WorkAsync(
+                client, Day(10), shift, tips: 0m, deductions: day.GetProperty("fine").GetDecimal()));
+
+            Assert.Equal(80m, again.GetProperty("deductions").GetDecimal());
+            Assert.Equal(earned, again.GetProperty("earned").GetDecimal());
+        }
+
+        // A real fine shows on both figures, and only one of them goes back.
+        var fined = await Read(await WorkAsync(client, Day(10), shift, tips: 0m, deductions: 50m));
+
+        Assert.Equal(130m, fined.GetProperty("deductions").GetDecimal());
+        Assert.Equal(50m, fined.GetProperty("fine").GetDecimal());
+    }
+
+    [Fact]
     public async Task A_percentage_of_no_tips_is_absent_rather_than_large()
     {
         // A share of nothing is undefined, and rendering it as a number is how

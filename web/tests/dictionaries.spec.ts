@@ -152,6 +152,20 @@ describe('the dictionaries', () => {
 
     expect([...missing].sort()).toEqual([]);
   });
+
+  // Out of reach of the scan above: these arrive as the server's own words
+  // through apiErrorMessage, or through a `t` held in a ref.
+  it.each([
+    'Start and end time must differ.',
+    'Break must be shorter than the shift.',
+    'Break must be shorter than the shift on every weekday.',
+    'A weekday is listed more than once.',
+    'Shift closed after sixteen hours',
+    'Shift closed on schedule',
+  ])('translates «%s» either way', (phrase) => {
+    expect(RU).toHaveProperty([phrase]);
+    expect(UK).toHaveProperty([phrase]);
+  });
 });
 
 function walk(dir: string): string[] {

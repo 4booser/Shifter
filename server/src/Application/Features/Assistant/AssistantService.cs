@@ -159,7 +159,8 @@ public sealed class AssistantService
             shift.actual_start,
             shift.actual_end,
             shift.break_minutes,
-            kind == "revenue" && shift.shift_id == shiftId ? value : shift.revenue)).ToArray();
+            kind == "revenue" && shift.shift_id == shiftId ? value : shift.revenue,
+            auto_closed: shift.auto_closed)).ToArray();
 
         var save = new DaySaveDto(
             shifts,

@@ -12,7 +12,7 @@ public sealed class DayAudit
 
     public DateTime At { get; set; } = DateTime.UtcNow;
 
-    /// <summary>"app", "webhook", "assignment" — whoever held the pen.</summary>
+    /// <summary>"app", "webhook", "assignment", "auto" — whoever held the pen.</summary>
     public required string Source { get; set; }
 
     // The snapshot after the write, small enough to keep forever.

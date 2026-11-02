@@ -114,7 +114,8 @@ public sealed class TelegramBotService : BackgroundService
         }
     }
 
-    private async Task<string?> HandleAsync(long chatId, string text, CancellationToken ct)
+    /// <summary>One message in, one reply out. Public so a test can talk to the bot without Telegram in between.</summary>
+    public async Task<string?> HandleAsync(long chatId, string text, CancellationToken ct)
     {
         var (command, argument) = TelegramCommands.Parse(text);
 
@@ -201,7 +202,7 @@ public sealed class TelegramBotService : BackgroundService
                 return $"Засёк {TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, zone):HH:mm}. Напишите «закончил», когда смена кончится.";
 
             case TelegramCommand.ClockOut:
-                return await ClockOutAsync(scope.ServiceProvider, db, link, zone, today, ct);
+                return await ClockOutAsync(scope.ServiceProvider, db, link, zone, ct);
 
             case TelegramCommand.Pay:
             {
@@ -274,13 +275,17 @@ public sealed class TelegramBotService : BackgroundService
         return $"{label} ({date:dd.MM}):\n" + string.Join('\n', lines);
     }
 
+    /// <summary>The date a clocked shift is filed on. It belongs to the day it started: filed under the day «закончил» arrived, a finish past midnight pays a second placement beside the one the close already recorded.</summary>
+    public static DateOnly ClockInDate(DateTime startedUtc, TimeZoneInfo zone)
+        => DateOnly.FromDateTime(
+            TimeZoneInfo.ConvertTime(new DateTimeOffset(startedUtc, TimeSpan.Zero), zone).DateTime);
+
     /// <summary>«Закончил»: the remembered clock-in and now become the actual edges of the person's one template, merged onto…</summary>
     private async Task<string> ClockOutAsync(
         IServiceProvider services,
         ShifterDbContext db,
         TelegramLink link,
         TimeZoneInfo zone,
-        DateOnly today,
         CancellationToken ct)
     {
         if (link.ClockInAtUtc is not DateTime startedUtc)
@@ -295,7 +300,8 @@ public sealed class TelegramBotService : BackgroundService
             return "У вас не одна смена-шаблон — закройте день в приложении, чтобы выбрать ставку.";
 
         var commands = services.GetRequiredService<IShifterCommand>();
-        var placement = DayShift.From(templates[0], worked: true);
+        var date = ClockInDate(startedUtc, zone);
+        var placement = DayShift.From(templates[0], worked: true, date);
         var startLocal = TimeZoneInfo.ConvertTime(new DateTimeOffset(startedUtc, TimeSpan.Zero), zone);
         var endLocal = TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, zone);
 
@@ -303,7 +309,7 @@ public sealed class TelegramBotService : BackgroundService
         placement.ActualEnd = TimeOnly.FromDateTime(endLocal.DateTime);
         placement.Shift = null;
 
-        var day = await commands.MergeDayShiftAsync(link.UserId, today, placement, ct);
+        var day = await commands.MergeDayShiftAsync(link.UserId, date, placement, new MergeTerms(), ct);
 
         var audit = services.GetRequiredService<Shifter.Application.Features.business.Services.DayAuditWriter>();
 

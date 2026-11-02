@@ -44,7 +44,7 @@ public sealed class GoalCelebrator
 
     public static bool Crossed(Goal goal, decimal earned) => earned >= goal.Amount;
 
-    /// Supplied by the caller because the caller (the day handler) is the one who knows how to price a stretch of…
+    /// Supplied by the caller because the day handler it borrows is the one who knows how to price a stretch of…
     public async Task CheckAsync(
         int userId,
         DateOnly date,

@@ -562,6 +562,7 @@ public sealed class PromisesOverHttpTests(Api api)
         var today = new AppClock().Today;
 
         (await WorkAsync(client, today.ToString("yyyy-MM-dd"), shift)).EnsureSuccessStatusCode();
+        await api.GoalChecksAsync();
 
         var history = await Read(await client.GetAsync("/shifter/v1/goals/history"));
         var cheers = history.GetProperty("cheers").EnumerateArray().ToArray();
@@ -574,6 +575,7 @@ public sealed class PromisesOverHttpTests(Api api)
         // Saving the same day again must not double the trophy: each period
         // is cheered exactly once.
         (await WorkAsync(client, today.ToString("yyyy-MM-dd"), shift)).EnsureSuccessStatusCode();
+        await api.GoalChecksAsync();
 
         history = await Read(await client.GetAsync("/shifter/v1/goals/history"));
 
@@ -594,7 +596,7 @@ public sealed class PromisesOverHttpTests(Api api)
     }
 
     [Fact]
-    public async Task Every_save_leaves_a_line_in_the_days_own_history()
+    public async Task A_save_leaves_a_line_in_the_days_own_history()
     {
         var (client, _) = await api.SignInAsync("audit");
         var place = await PlaceAsync(client, "Бар");
@@ -606,13 +608,14 @@ public sealed class PromisesOverHttpTests(Api api)
         var trail = (await Read(await client.GetAsync($"/shifter/v1/days/{Day(16)}/history")))
             .GetProperty("entries").EnumerateArray().ToArray();
 
-        // Two saves, two lines, newest first, each carrying the snapshot it
-        // left behind — the figures a person can check against the calendar.
-        Assert.Equal(2, trail.Length);
-        Assert.Equal("app", trail[0].GetProperty("source").GetString());
-        Assert.Equal(800m, trail[0].GetProperty("earned").GetDecimal());
-        Assert.Equal(1, trail[0].GetProperty("worked_count").GetInt32());
-        Assert.True(trail[0].GetProperty("at").GetDateTime() >= trail[1].GetProperty("at").GetDateTime());
+        // Two saves in one breath are one line, carrying the snapshot the last
+        // one left behind — the figures a person can check against the
+        // calendar. DayHistoryOverHttpTests holds the fold to its edges.
+        var line = Assert.Single(trail);
+
+        Assert.Equal("app", line.GetProperty("source").GetString());
+        Assert.Equal(800m, line.GetProperty("earned").GetDecimal());
+        Assert.Equal(1, line.GetProperty("worked_count").GetInt32());
     }
 }
 

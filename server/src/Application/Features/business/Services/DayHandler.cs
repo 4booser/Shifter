@@ -21,7 +21,7 @@ public partial class DayHandler : IDayHandler
     private readonly IShifterCommand _shifterCommand;
     private readonly IShifterQuery _shifterQuery;
     private readonly DayAuditWriter? _audit;
-    private readonly GoalCelebrator? _goals;
+    private readonly GoalCheckQueue? _goals;
     private readonly Money.RateService? _rates;
     private readonly Money.MonoRateClient? _market;
     private readonly AppClock _clock;
@@ -32,7 +32,7 @@ public partial class DayHandler : IDayHandler
         IShifterCommand shifterCommand,
         IShifterQuery shifterQuery,
         DayAuditWriter? audit = null,
-        GoalCelebrator? goals = null,
+        GoalCheckQueue? goals = null,
         Money.RateService? rates = null,
         AppClock? clock = null,
         // Optional like the rest: the tests that hand around fakes have no
@@ -293,21 +293,26 @@ public partial class DayHandler : IDayHandler
 
         Day saved = await _shifterCommand.UpsertDayAsync(incoming, ct);
 
-        if (_audit is not null) await _audit.WriteAsync(userId, saved, "app", ct);
+        // Earned money just moved, so a goal may have been crossed. Asked for
+        // here and answered elsewhere: pricing three periods and pushing to
+        // every phone is nothing a typed tip should have to wait for. Before
+        // the audit, because the day is written now even if the caller leaves.
+        _goals?.Enqueue(userId, date);
 
-        // A save is the only moment earned money moves, so it is the only
-        // moment a goal can be crossed.
-        if (_goals is not null)
-            await _goals.CheckAsync(
-                userId, date,
-                async (from, to) => (await ListAsync(userId, from, to, ct)).total_earned, ct);
+        if (_audit is not null) await _audit.WriteAsync(userId, saved, "app", ct);
 
         // Locations carry the tip-out rule, so without them the saved day would
         // come back with a different total than the calendar shows a moment
-        // later when the range reloads.
-        Location[] places = await _shifterQuery.GetLocationsAsync(userId, true, ct);
+        // later when the range reloads. Only the shifts in this request are
+        // left on the day and each came with its place, so there is nothing to
+        // ask the database again.
+        Dictionary<int, Location> places = shifts
+            .Select(entry => entry.Shift?.Location)
+            .OfType<Location>()
+            .DistinctBy(place => place.Id)
+            .ToDictionary(place => place.Id);
 
-        return ToDto(saved, places.ToDictionary(place => place.Id));
+        return ToDto(saved, places);
     }
 
     public async Task<DayDto[]> BulkAsync(
@@ -336,7 +341,7 @@ public partial class DayHandler : IDayHandler
             throw new NotFoundException("Shift does not exist.");
 
         Day[] touched = await _shifterCommand.ApplyShiftAsync(
-            userId, request.dates, shifts[0], add, _clock.Today, ct);
+            userId, request.dates, shifts[0], add, _clock.Now, ct);
 
         Location[] places = await _shifterQuery.GetLocationsAsync(userId, true, ct);
         Dictionary<int, Location> byId = places.ToDictionary(place => place.Id);
@@ -536,37 +541,57 @@ public partial class DayHandler : IDayHandler
         if (shifts.Length != wanted.Length)
             throw new NotFoundException("Some shifts do not exist.");
 
+        // Read only where the placement can change the answer. The plan that
+        // fills in a worked entry's missing edge is the one it sits on, which a
+        // rota can have moved off the template's, and a place's rule weighs the
+        // hours it stands on. Anywhere else a typed tip is spared the query.
+        Day? standing = byShift.Values.Any(entry => entry.worked && OneEdge(entry))
+                || shifts.Any(shift => shift.Location is { AutoBreakAfterHours: > 0m, AutoBreakMinutes: > 0 })
+            ? (await _shifterQuery.GetDaysInRangeAsync(userId, date, date, ct)).FirstOrDefault()
+            : null;
+
         return shifts
             .Select(shift =>
             {
                 DayShiftSaveDto entry = byShift[shift.Id];
-                DayShift placed = DayShift.From(shift, workedById[shift.Id]);
+                DayShift placed = DayShift.From(shift, workedById[shift.Id], date);
+                DayShift? held = standing?.Shifts?.FirstOrDefault(row => row.ShiftId == shift.Id);
 
                 // A shift already worked has nothing left to hand over.
                 placed.NeedsCover = !placed.Worked && entry.needs_cover;
 
-                // The recorded clock, kept only whole: a single honest edge
-                // against a planned one would price an interval nobody worked.
-                if (TimeOnly.TryParse(entry.actual_start, out TimeOnly actualStart)
-                    && TimeOnly.TryParse(entry.actual_end, out TimeOnly actualEnd))
+                placed.ActualStart = ParseEdge(entry.actual_start);
+                placed.ActualEnd = ParseEdge(entry.actual_end);
+
+                // A planned shift keeps a lone edge as sent: Фактически can be
+                // set in advance, a manual start writes its edge straight away
+                // so the other devices know it, and pricing ignores it anyway
+                // because Duration asks for both. Once worked the edge counts,
+                // so it gets a partner rather than an interval nobody recorded.
+                if (placed.Worked && OneEdge(entry))
                 {
-                    placed.ActualStart = actualStart;
-                    placed.ActualEnd = actualEnd;
+                    DayShift plan = held ?? placed;
+
+                    placed.ActualStart ??= plan.StartTime;
+                    placed.ActualEnd ??= plan.EndTime;
                 }
+
+                // Either the client has seen the close and answers it, or it
+                // is telling the job to leave this shift alone.
+                if (entry.auto_closed) placed.AutoClosedAtUtc = _clock.UtcNow;
 
                 if (entry.break_minutes is int breakMinutes && breakMinutes >= 0)
                     placed.BreakMinutes = breakMinutes;
 
-                // The house rule applies itself. It is a floor, not an
-                // override: a template that already books a longer break knows
-                // something the rule does not.
-                if (shift.Location is Location place
-                    && place.AutoBreakAfterHours > 0m
-                    && place.AutoBreakMinutes > placed.BreakMinutes
-                    && (decimal)placed.Duration.TotalHours > place.AutoBreakAfterHours)
-                {
-                    placed.BreakMinutes = place.AutoBreakMinutes;
-                }
+                // The house rule applies itself to a new placement. One already
+                // on the day answers to it only where this save moves its hours,
+                // and those are the placement's own: the template's would take
+                // a break off a delivery or a short rota day the moment a tip
+                // was typed, and reprice an old day along with whatever the
+                // template or the place has become since.
+                placed.BreakMinutes = held is null
+                    ? placed.BreakUnder(shift.Location)
+                    : DayShiftEdit.BreakAfterSave(held, placed, shift.Location);
 
                 // Null stays null: "not counted yet" and "took nothing" are
                 // different answers and only one of them is a zero.
@@ -584,6 +609,12 @@ public partial class DayHandler : IDayHandler
             })
             .ToList();
     }
+
+    private static TimeOnly? ParseEdge(string? value)
+        => TimeOnly.TryParse(value, out TimeOnly edge) ? edge : null;
+
+    private static bool OneEdge(DayShiftSaveDto entry)
+        => (ParseEdge(entry.actual_start) is null) != (ParseEdge(entry.actual_end) is null);
 
     private async Task<List<DaySale>> ResolveSalesAsync(
         DaySaleSaveDto[]? entries,
@@ -1198,7 +1229,8 @@ public partial class DayHandler : IDayHandler
                 entry.NeedsCover,
                 entry.ActualStart?.ToString("HH:mm"),
                 entry.ActualEnd?.ToString("HH:mm"),
-                entry.BreakMinutes))
+                entry.BreakMinutes,
+                entry.AutoClosedAtUtc is not null))
             .ToArray();
 
         decimal salesPay = sales.Sum(entry => entry.earned);
@@ -1228,7 +1260,8 @@ public partial class DayHandler : IDayHandler
             Math.Round(shifts.Where(s => s.worked).Sum(s => s.hours), 2),
             workedPay + salesPay + (day.Tips ?? 0m) - tipOut - deductions,
             plannedPay,
-            day.Version
+            day.Version,
+            day.Deductions ?? 0m
         );
     }
 

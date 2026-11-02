@@ -13,6 +13,9 @@ const shared = (...parts: string[]) =>
  * own code around it» apart even though they share a name.
  */
 export default defineConfig({
+  // tsconfig keeps JSX for Next to compile; a spec that imports a component has
+  // nobody else to do it.
+  oxc: { jsx: { runtime: 'automatic' } },
   resolve: {
     alias: [
       { find: /^@\/lib\/mono\/mono$/, replacement: shared('mono', 'mono') },

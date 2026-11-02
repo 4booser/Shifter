@@ -43,7 +43,13 @@ public sealed class Shift
     
     public required TimeOnly StartTime { get; set; }
     public required TimeOnly EndTime { get; set; }
-    
+
+    /// <summary>Weekdays that run other hours than the two above; any other weekday keeps them.</summary>
+    public List<WeekdayHours> WeekHours { get; set; } = [];
+
+    /// <summary>Whether shifts of this template open and close themselves by the schedule.</summary>
+    public bool AutoClock { get; set; } = true;
+
     public Location? Location { get; set; }
     public List<Break>? Breaks { get; set; }
 
@@ -57,6 +63,25 @@ public sealed class Shift
     public void ToArchive() => Archived = true;
 
     public void Restore() => Archived = false;
+
+    /// <summary>The hours this template runs on a date: that weekday's own where it has them, otherwise the usual ones.</summary>
+    public (TimeOnly Start, TimeOnly End) HoursOn(DateOnly date)
+    {
+        int weekday = date.DayOfWeek == DayOfWeek.Sunday ? 7 : (int)date.DayOfWeek;
+
+        return WeekHours.FirstOrDefault(entry => entry.Weekday == weekday) is WeekdayHours own
+            ? (own.StartTime, own.EndTime)
+            : (StartTime, EndTime);
+    }
+
+    /// <summary>A detached copy of the hours alone, so what they were can still be read once an edit has replaced them.</summary>
+    public Shift HoursCopy() => new Shift
+    {
+        Name = Name,
+        StartTime = StartTime,
+        EndTime = EndTime,
+        WeekHours = [.. WeekHours],
+    };
 
     /// <summary>Clock time between start and end.</summary>
     [NotMapped]

@@ -8,8 +8,7 @@ import { useI18n } from '@/lib/i18n';
 import { SHIFT_DONE_EVENT, ShiftDone, formatElapsed } from '@/lib/live/live-shift';
 import { useMoney } from '@/lib/settings/money';
 import { useSettings } from '@/lib/settings/store';
-import { saveDay, useCalendar } from '@/lib/store/calendar';
-import { toSavePayload } from '@/lib/calendar/models';
+import { rewriteDay, useCalendar } from '@/lib/store/calendar';
 import { CountUp, Money } from '@/components/ui/bits';
 import { Icon } from '@/components/ui/icon';
 
@@ -102,12 +101,17 @@ export function ShiftDoneOverlay() {
 
     if (!Number.isFinite(amount) || amount <= 0) return;
 
-    const day = days.get(done.date);
-    const payload = toSavePayload(day);
+    const saved = await rewriteDay(
+      done.date,
+      (payload) => {
+        payload.tips = (payload.tips ?? 0) + amount;
 
-    payload.tips = (payload.tips ?? 0) + amount;
-    await saveDay(done.date, payload);
-    setTipsSaved(true);
+        return true;
+      },
+      { undoable: true },
+    );
+
+    if (saved === 'landed' || saved === 'queued') setTipsSaved(true);
   };
 
   const share = async () => {

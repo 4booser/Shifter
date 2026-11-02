@@ -3,6 +3,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  AppState,
   FlatList,
   NativeScrollEvent,
   NativeSyntheticEvent,
@@ -33,6 +34,7 @@ import { todayIn, useWidget } from '@/lib/use-widget';
 import { api } from '@/lib/api';
 import {
   addMonths,
+  clockOf,
   currentMonth,
   dayLabel,
   monthsBetween,
@@ -40,6 +42,7 @@ import {
   monthLabel,
   monthOnly,
   nextDay,
+  previousDay,
   runsOf,
   sameWeekdaysIn,
   todayKey,
@@ -57,14 +60,15 @@ import {
   EventTemplate,
   money,
   ShiftTemplate,
-  templateHours,
+  templateHoursOn,
   toSavePayload,
 } from '@/lib/types';
 import { WorkPlace } from '@/lib/places';
-import { forgotten, LiveShift, plannedEndInstant, useLive } from '@/store/live';
+import { forgotten, liveFrom, liveWindow, planEndsClock, plannedEndInstant, useLive } from '@/store/live';
 import { useAutoStart } from '@/store/autostart';
-import { dueAutoStart, dueAutoStop } from '@/lib/autostart';
-import { writeFinishedShift } from '@/lib/live-finish';
+import { dueAutoStart, dueAutoStop, plannedClocks, stopHourFor } from '@/lib/autostart';
+import { closesItself, placedWorked, thrownAway, toldNo } from '@/lib/shift-window';
+import { writeFinishedShift, writeStartedShift } from '@/lib/live-finish';
 import { ApiError } from '@/lib/api';
 import { heldDays, Pending } from '@/lib/outbox';
 import { useOutbox } from '@/store/outbox';
@@ -104,6 +108,7 @@ export default function CalendarScreen() {
   const clearRefused = useOutbox((state) => state.clearRefused);
   const startLive = useLive((state) => state.start);
   const hydrateLive = useLive((state) => state.hydrate);
+  const liveReady = useLive((state) => state.ready);
 
   // Fixed at mount: the pager's index is an offset from here, and an anchor
   // that moved would slide every page sideways under the finger at midnight.
@@ -132,6 +137,8 @@ export default function CalendarScreen() {
   const [applying, setApplying] = useState(false);
   const [undo, setUndo] = useState<Undo | null>(null);
   const [undoing, setUndoing] = useState(false);
+  // A shift that closed itself: said quietly, with the day a tap away.
+  const [closed, setClosed] = useState<{ date: string; name: string } | null>(null);
 
   const month = addMonths(anchor, index - SPAN);
   const today = todayKey();
@@ -307,6 +314,7 @@ export default function CalendarScreen() {
   // The shifts that start themselves, checked on focus and on a slow tick.
   const autoRules = useAutoStart((state) => state.rules);
   const autoFired = useAutoStart((state) => state.fired);
+  const autoReady = useAutoStart((state) => state.ready);
   const hydrateAuto = useAutoStart((state) => state.hydrate);
   const markFired = useAutoStart((state) => state.markFired);
 
@@ -314,47 +322,49 @@ export default function CalendarScreen() {
     void hydrateAuto();
   }, [hydrateAuto]);
 
+  /** A loaded day, whichever month is on screen: the clock runs on today wherever the pager has wandered. */
+  const dayAt = useCallback(
+    (key: string) => months[key.slice(0, 7)]?.days.find((day) => day.date === key),
+    [months],
+  );
+
   useEffect(() => {
     const check = () => {
-      const planned = (byDate.get(today)?.shifts ?? [])
-        .filter((entry) => !entry.worked)
-        .map((entry) => ({ shiftId: entry.shift_id }));
+      // The two things that can say no live on disk, and nobody has read them
+      // yet: starting now could be starting twice.
+      if (!autoReady || !liveReady) return;
 
+      const date = todayKey();
+      const yesterday = previousDay(date);
       const due = dueAutoStart({
         rules: autoRules,
-        planned,
+        planned: plannedClocks([dayAt(date), dayAt(yesterday)], templates),
         liveRunning: useLive.getState().live !== null,
-        firedToday: autoFired.day === today ? autoFired.shiftIds : [],
+        firedToday: autoFired[date] ?? [],
+        firedYesterday: autoFired[yesterday] ?? [],
         now: Date.now(),
-        today,
+        today: date,
       });
 
       if (due === null) return;
 
-      const plan = byDate.get(today)?.shifts.find((entry) => entry.shift_id === due.shiftId);
+      const plan = dayAt(due.date)?.shifts.find((entry) => entry.shift_id === due.shiftId);
       const template = templates.find((entry) => entry.id === due.shiftId);
 
       if (plan === undefined) return;
 
       // Fired before started, so a crash between the two cannot loop the
       // start — the worse failure is starting twice, not missing once.
-      markFired(due.shiftId, today);
+      markFired(due.shiftId, due.date);
 
-      startLive({
-        date: today,
-        shiftId: plan.shift_id,
-        name: plan.name,
-        symbol: plan.symbol,
-        // The chosen hour, not the moment the app opened: an auto-start is a
-        // statement about when work began.
-        startedAt: due.startedAt,
-        hourlyRate:
-          template !== undefined && template.salary_period === 'hour'
-            ? template.salary_amount
-            : null,
-        plannedStart: plan.start_time,
-        plannedEnd: plan.end_time,
-      });
+      // The chosen hour or the opening, not the moment the app opened: an
+      // auto-start is a statement about when work began.
+      const shift = liveFrom(due.date, plan, template, due.startedAt);
+
+      startLive(shift);
+
+      // An hour somebody chose is a start the plan knows nothing about.
+      if (due.ruled) void writeStartedShift(shift).catch(() => undefined);
     };
 
     check();
@@ -362,22 +372,39 @@ export default function CalendarScreen() {
     const tick = setInterval(check, 30_000);
 
     return () => clearInterval(tick);
-  }, [autoRules, autoFired, byDate, today, templates, startLive, markFired]);
+  }, [autoReady, liveReady, autoRules, autoFired, dayAt, templates, startLive, markFired]);
 
-  const startable = useMemo(() => {
-    const plan = byDate.get(today)?.shifts.find((entry) => !entry.worked);
+  // Only when a fresher day arrives, not on the tick: what is loaded here can
+  // be older than an edit just made in the day screen, which followed already.
+  useEffect(() => {
+    const running = useLive.getState().live;
 
-    if (plan === undefined) return null;
+    if (running === null) return;
 
-    // Only an hourly rate ticks up by the second; a day or a month has no per-second meaning, and inventing one…
-    const template = templates.find((entry) => entry.id === plan.shift_id);
-    const rate =
-      template !== undefined && template.salary_period === 'hour'
-        ? template.salary_amount
-        : null;
+    const entry = dayAt(running.date)?.shifts.find((row) => row.shift_id === running.shiftId);
+    const template = templates.find((row) => row.id === running.shiftId);
 
-    return { ...plan, rate };
-  }, [byDate, today, templates]);
+    if (entry === undefined) return;
+
+    // Discarded on another device: there is nothing to record, and no close
+    // coming to end it.
+    if (thrownAway(entry, running.autoClock)) {
+      markFired(running.shiftId, running.date);
+      useLive.getState().clear();
+
+      return;
+    }
+
+    useLive
+      .getState()
+      .follow(entry, template === undefined ? undefined : closesItself(template, entry));
+  }, [dayAt, templates, live?.date, live?.shiftId, markFired]);
+
+  // Not one out for cover: its clock would be stopped unrecorded at the close.
+  const startable = useMemo(
+    () => byDate.get(today)?.shifts.find((entry) => !entry.worked && !entry.needs_cover) ?? null,
+    [byDate, today],
+  );
 
   const onScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const at = Math.round(event.nativeEvent.contentOffset.x / width);
@@ -466,31 +493,77 @@ export default function CalendarScreen() {
     return ensure(indexAt.current, true);
   }, [ensure]);
 
+  // Coming back to the front is when a day is most likely to have moved on
+  // without the phone: the shift may have closed itself in the small hours.
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (next) => {
+      if (next !== 'active') return;
+
+      void refresh();
+      api<ShiftTemplate[]>('/shifter/v1/shifts')
+        .then(setTemplates)
+        .catch(() => undefined);
+    });
+
+    return () => sub.remove();
+  }, [refresh]);
+
   // …and the shifts that close themselves.
+  const closing = useRef(false);
+
   useEffect(() => {
     const check = () => {
       const live = useLive.getState().live;
 
-      if (live === null) return;
+      if (live === null || closing.current) return;
 
       const rule = autoRules.find((entry) => entry.shiftId === live.shiftId);
+      const template = templates.find((entry) => entry.id === live.shiftId);
+      const entry = dayAt(live.date)?.shifts.find((row) => row.shift_id === live.shiftId);
+      // Back on Planned with the close told to keep out: somebody answered it,
+      // perhaps by starting this very clock, and it is theirs to finish now.
+      const closes = closesItself(template, entry) ? liveWindow(live).closes.getTime() : null;
       const due = dueAutoStop({
-        stopAt: rule?.stopAt,
+        stopAt: toldNo(entry) ? null : stopHourFor(rule, template, live.plannedEnd),
         startedMs: new Date(live.startedAt).getTime(),
         plannedEndMs: plannedEndInstant(live).getTime(),
+        closesMs: closes,
         now: Date.now(),
       });
 
       if (due === null) return;
 
-      void writeFinishedShift({ live, endAt: due.endsAt })
-        .then(() => {
-          useLive.getState().clear();
+      closing.current = true;
+
+      void writeFinishedShift({
+        live,
+        endAt: due.endsAt,
+        closing: true,
+        atHour: !due.closing,
+        atLimit: due.atLimit,
+      })
+        .then((outcome) => {
+          const running = useLive.getState().live;
+
+          if (
+            outcome !== 'wait'
+            && running?.date === live.date
+            && running.shiftId === live.shiftId
+          ) {
+            markFired(live.shiftId, live.date);
+            useLive.getState().clear();
+          }
+
+          if (outcome === 'written') setClosed({ date: live.date, name: live.name });
+
           void refresh();
         })
         // A network that is down does not lose the shift: the marker stays,
         // the next tick tries again, and the button still works meanwhile.
-        .catch(() => undefined);
+        .catch(() => undefined)
+        .finally(() => {
+          closing.current = false;
+        });
     };
 
     check();
@@ -498,7 +571,15 @@ export default function CalendarScreen() {
     const tick = setInterval(check, 30_000);
 
     return () => clearInterval(tick);
-  }, [autoRules, refresh]);
+  }, [autoRules, templates, dayAt, refresh, markFired]);
+
+  useEffect(() => {
+    if (closed === null) return;
+
+    const timer = setTimeout(() => setClosed(null), 8_000);
+
+    return () => clearTimeout(timer);
+  }, [closed]);
 
   const writeDay = useCallback(
     async (key: string, payload: DaySave) => {
@@ -507,6 +588,7 @@ export default function CalendarScreen() {
           method: 'PUT',
           path: `/shifter/v1/days/${key}`,
           body: payload,
+          base: toSavePayload(dayAt(key)),
           days: [key],
           label: dayLabel(key),
         },
@@ -514,7 +596,7 @@ export default function CalendarScreen() {
       await refresh();
       buzz.won();
     },
-    [post, refresh],
+    [post, refresh, dayAt],
   );
 
   const apply = async () => {
@@ -597,6 +679,7 @@ export default function CalendarScreen() {
           method: 'PUT',
           path: `/shifter/v1/days/${key}`,
           body: payload,
+          base: toSavePayload(byDate.get(key)),
           days: [key],
           label,
         });
@@ -745,10 +828,10 @@ export default function CalendarScreen() {
     const adds = keys.filter(
       (key) => !(byDate.get(key)?.shifts ?? []).some((entry) => entry.shift_id === brush.template.id),
     );
-    const hours = templateHours(brush.template) * adds.length;
+    const hours = adds.reduce((sum, key) => sum + templateHoursOn(brush.template, key), 0);
     const hourly = brush.template.salary_period === 'hour';
-    // The server files a day behind us as worked and one ahead as a plan.
-    const behind = adds.filter((key) => key <= today).length;
+    // The server files a shift already over as worked and one ahead as a plan.
+    const behind = adds.filter((key) => placedWorked(brush.template, key)).length;
 
     return {
       left: `${adds.length}`,
@@ -1006,7 +1089,11 @@ export default function CalendarScreen() {
             <Text style={styles.liveText}>
               {forgotten(live, Date.now())
                 ? `${t('Смена всё ещё идёт')} — ${t('план кончился в')} ${live.plannedEnd.slice(0, 5)}`
-                : `Смена идёт: ${live.symbol ?? '🕐'} ${live.name} с ${new Date(live.startedAt).toTimeString().slice(0, 5)}`}
+                : `Смена идёт: ${live.symbol ?? '🕐'} ${live.name} с ${new Date(live.startedAt).toTimeString().slice(0, 5)}${
+                    planEndsClock(live)
+                      ? ` · ${t('закроется в')} ${clockOf(liveWindow(live).closes)}`
+                      : ''
+                  }`}
             </Text>
             <Ionicons name="chevron-forward" size={16} color={palette.accent} />
           </Press>
@@ -1017,18 +1104,20 @@ export default function CalendarScreen() {
           <Press
             style={styles.startButton}
             onPress={() => {
-              const shift: LiveShift = {
-                date: today,
-                shiftId: startable.shift_id,
-                name: startable.name,
-                symbol: startable.symbol,
-                startedAt: new Date().toISOString(),
-                hourlyRate: startable.rate,
-                plannedStart: startable.start_time,
-                plannedEnd: startable.end_time,
-              };
+              const shift = liveFrom(
+                today,
+                startable,
+                templates.find((entry) => entry.id === startable.shift_id),
+                new Date().toISOString(),
+              );
 
+              // Fired as well, or finishing it early would leave a planned
+              // shift in its window and the clock would open straight back up.
+              markFired(shift.shiftId, shift.date);
               startLive(shift);
+              void writeStartedShift(shift)
+                .then(refresh)
+                .catch(() => undefined);
               router.push('/live');
             }}
           >
@@ -1046,6 +1135,29 @@ export default function CalendarScreen() {
           </Appear>
         )}
       </ScrollView>
+
+      {brush === null && closed !== null && (
+        <Floating
+          palette={palette}
+          style={[styles.bar, { bottom: insets.bottom + (undo === null ? 88 : 150) }]}
+        >
+          <Press
+            style={styles.closedNote}
+            haptic={false}
+            onPress={() => {
+              const date = closed.date;
+
+              setClosed(null);
+              router.push(`/day/${date}`);
+            }}
+          >
+            <Ionicons name="time-outline" size={19} color={palette.textSecondary} />
+            <Text style={styles.closedText} numberOfLines={2}>
+              {closed.name}: {t('смена закрылась сама, проверьте время')}
+            </Text>
+          </Press>
+        </Floating>
+      )}
 
       {brush === null && undo !== null && (
         <Floating palette={palette} style={[styles.bar, { bottom: insets.bottom + 14 }]}>
@@ -1513,5 +1625,7 @@ const makeStyles = (palette: Palette) =>
       alignItems: 'center',
     },
     barDoneOff: { opacity: 0.4 },
+    closedNote: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 9, paddingHorizontal: 4 },
+    closedText: { flex: 1, color: palette.textSecondary, fontSize: 13, lineHeight: 17 },
     barDoneText: { color: '#fff', fontWeight: '800', fontSize: 14 },
   });

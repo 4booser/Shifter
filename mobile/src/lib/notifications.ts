@@ -6,8 +6,10 @@ import { Platform } from 'react-native';
 import { api } from './api';
 import { todayKey } from './calendar';
 import { t } from './i18n';
+import { writeStartedShift } from './live-finish';
 import { CalendarDayData, DaysResponse, ShiftTemplate } from './types';
-import { useLive } from '../store/live';
+import { useAutoStart } from '../store/autostart';
+import { liveFrom, useLive } from '../store/live';
 
 /** Phone notifications, end to end: ask once, hand the address to the server, and open the screen a tap was… */
 /** The token this phone registered with, for the screen that lets somebody change what it is notified about. */
@@ -106,34 +108,29 @@ async function startTodaysShift(): Promise<boolean> {
   const today = todayKey();
 
   try {
+    await useLive.getState().hydrate();
+
+    // The shift can have opened by itself before the button was pressed, and
+    // that clock's start is the true one. Nothing starts over a running shift.
+    if (useLive.getState().live !== null) return true;
+
     const [days, templates] = await Promise.all([
       api<DaysResponse>(`/shifter/v1/days?from=${today}&to=${today}`),
       api<ShiftTemplate[]>('/shifter/v1/shifts').catch(() => [] as ShiftTemplate[]),
     ]);
 
     const day: CalendarDayData | undefined = days.days[0];
-    const plan = day?.shifts.find((entry) => !entry.worked);
+    const plan = day?.shifts.find((entry) => !entry.worked && !entry.needs_cover);
 
     if (plan === undefined) return false;
 
     const template = templates.find((entry) => entry.id === plan.shift_id);
 
-    useLive.getState().start({
-      date: today,
-      shiftId: plan.shift_id,
-      name: plan.name,
-      symbol: plan.symbol,
-      startedAt: new Date().toISOString(),
-      // Only an hourly rate ticks by the second; anything else would be a
-      // number nobody agreed to.
-      hourlyRate:
-        template !== undefined && template.salary_period === 'hour'
-          ? template.salary_amount
-          : null,
-      plannedStart: plan.start_time,
-      plannedEnd: plan.end_time,
-      breaks: [],
-    });
+    const shift = liveFrom(today, plan, template, new Date().toISOString());
+
+    useAutoStart.getState().markFired(shift.shiftId, shift.date);
+    useLive.getState().start(shift);
+    void writeStartedShift(shift).catch(() => undefined);
 
     return true;
   } catch {

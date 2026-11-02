@@ -27,8 +27,15 @@ public record ShiftDto(
     string? effective_colour,
     /// <summary>Whether a day with this shift paints itself in its colour.</summary>
     bool paints_day,
-    bool archived
+    bool archived,
+    /// <summary>Weekdays that run other hours than the template's own; empty when none do.</summary>
+    WeekHoursDto[] week_hours,
+    /// <summary>Whether its shifts open and close themselves by the schedule.</summary>
+    bool auto_clock
     );
+
+/// <summary>One weekday's own hours. Monday is 1, Sunday is 7; times are "HH:mm".</summary>
+public record WeekHoursDto(int weekday, string start_time, string end_time);
 
 /// <summary>Create and update take the same fields. Times are "HH:mm".</summary>
 public record ShiftCreateDto(
@@ -48,5 +55,9 @@ public record ShiftCreateDto(
     string? tip_source = null,
     decimal? tip_pool_percent = null,
     /// <summary>Whether days carrying this shift take its colour.</summary>
-    bool paints_day = false
+    bool paints_day = false,
+    /// <summary>Null leaves them as they are, which is what an older client sends; empty clears them.</summary>
+    WeekHoursDto[]? week_hours = null,
+    /// <summary>Null leaves it as it is; a new template starts with it on.</summary>
+    bool? auto_clock = null
     );

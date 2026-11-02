@@ -227,7 +227,8 @@ public class WebhookIngestHandler : IWebhookIngestHandler
 
         if (hoursWrite is not null)
         {
-            Day auditedDay = await _shifterCommand.MergeDayShiftAsync(endpoint.UserId, date, hoursWrite.Placement, ct);
+            Day auditedDay = await _shifterCommand.MergeDayShiftAsync(
+                endpoint.UserId, date, hoursWrite.Placement, hoursWrite.Terms, ct);
 
             if (_audit is not null)
                 await _audit.WriteAsync(endpoint.UserId, auditedDay, "webhook", ct);
@@ -247,7 +248,7 @@ public class WebhookIngestHandler : IWebhookIngestHandler
         bool Empty,
         bool Blind);
 
-    private sealed record HoursWrite(DayShift Placement, IngestShiftDto Shift);
+    private sealed record HoursWrite(DayShift Placement, IngestShiftDto Shift, MergeTerms Terms);
 
     private async Task<SalesWrite> PrepareSalesAsync(
         WebhookEndpoint endpoint,
@@ -352,13 +353,20 @@ public class WebhookIngestHandler : IWebhookIngestHandler
 
         Shift template = await ResolveShiftAsync(endpoint, payload.Shift, ct);
 
-        DayShift placement = DayShift.From(template, payload.Worked);
+        DayShift placement = DayShift.From(template, payload.Worked, payload.Date);
 
         // Same reason as the sold positions: From copies the template's terms
         // and then points at the template itself, and that instance came from a
         // read this context may not be tracking. The placement needs the id and
         // the copied terms, nothing more.
         placement.Shift = null;
+
+        // Held before the times below overwrite them: the template's usual
+        // length, as it runs on this date.
+        TimeSpan usual = placement.Duration;
+
+        bool breakStated = payload.BreakMinutes is not null;
+        bool counted = false;
 
         if (payload.BreakMinutes is int rest)
         {
@@ -378,19 +386,24 @@ public class WebhookIngestHandler : IWebhookIngestHandler
             Require(hours <= 24, "A day holds at most 24 hours.");
 
             // A count of hours says how long, never when. The template's start
-            // is the only honest guess at that, and the break is added back on
-            // so the paid time comes out as the sender meant it.
-            placement.StartTime = template.StartTime;
-            placement.EndTime = placement.StartTime
-                .AddHours(hours)
-                .AddMinutes(placement.BreakMinutes);
+            // for that date, already on the placement, is the only honest guess
+            // at that, and the break is added back on so the paid time comes
+            // out as the sender meant it. The house rule's break is settled
+            // first, on that length: taken afterwards, as a save would take it,
+            // it would come out of the hours counted instead of adding to the
+            // shift. The longer shift earns the same rule, so one pass is enough.
+            placement.EndTime = EndOfCount(placement, hours);
+            placement.BreakMinutes = placement.BreakUnder(template.Location);
+            placement.EndTime = EndOfCount(placement, hours);
+
+            counted = true;
         }
         else if (payload.Start is TimeOnly only)
         {
             // Half a pair: the shift started when it says and ran the
             // template's length, which beats refusing a clock-in.
             placement.StartTime = only;
-            placement.EndTime = only.Add(template.Duration);
+            placement.EndTime = only.Add(usual);
         }
 
         TimeSpan paid = placement.Duration - TimeSpan.FromMinutes(placement.BreakMinutes);
@@ -410,8 +423,13 @@ public class WebhookIngestHandler : IWebhookIngestHandler
                 placement.EndTime.ToString("HH:mm"),
                 placement.BreakMinutes,
                 Math.Round(placement.PaidDuration.TotalHours, 2),
-                placement.Worked));
+                placement.Worked),
+            new MergeTerms(BreakStated: breakStated, Counted: counted));
     }
+
+    /// <summary>Where a shift has to end for its paid time to come to this count.</summary>
+    private static TimeOnly EndOfCount(DayShift placement, double hours)
+        => placement.StartTime.AddHours(hours).AddMinutes(placement.BreakMinutes);
 
     /// <summary>One catalogue position and how much of it the delivery sold.</summary>
     private sealed record ResolvedLine(Sales Position, int Quantity)

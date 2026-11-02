@@ -4,6 +4,14 @@ import { t } from '@/lib/i18n';
 import { tenth } from './format';
 /** Mirrors the server DTOs the calendar screens touch. */
 
+/** One weekday's own hours on a template, where they differ from its usual ones. */
+export interface WeekHours {
+  /** ISO: Monday is 1, Sunday is 7. */
+  weekday: number;
+  start_time: string;
+  end_time: string;
+}
+
 export interface ShiftTemplate {
   id: number;
   name: string;
@@ -22,6 +30,10 @@ export interface ShiftTemplate {
   location_id: number | null;
   /** Whether days carrying this shift take its colour. */
   paints_day?: boolean;
+  /** The weekdays that run other hours. Any weekday not listed uses start_time and end_time. */
+  week_hours: WeekHours[];
+  /** Whether the shift opens and closes itself by its hours. */
+  auto_clock: boolean;
   archived: boolean;
 }
 
@@ -64,6 +76,36 @@ export const templateHours = (template: {
   return Math.max(0, minutes - (template.break_minutes ?? 0)) / 60;
 };
 
+/** ISO weekday of a day key, Monday 1 to Sunday 7, whatever zone the phone is in. */
+export const isoWeekday = (key: string): number => {
+  const [year, month, day] = key.split('-').map(Number);
+
+  return new Date(Date.UTC(year, month - 1, day)).getUTCDay() || 7;
+};
+
+/** The hours a template runs on one date: that weekday's own, or its usual ones. */
+export const hoursOn = (
+  template: { start_time: string; end_time: string; week_hours?: WeekHours[] },
+  key: string,
+): { start_time: string; end_time: string } => {
+  const weekday = isoWeekday(key);
+  const { start_time, end_time } =
+    template.week_hours?.find((entry) => entry.weekday === weekday) ?? template;
+
+  return { start_time, end_time };
+};
+
+/** Paid hours a template is worth on one date. */
+export const templateHoursOn = (
+  template: {
+    start_time: string;
+    end_time: string;
+    break_minutes: number;
+    week_hours?: WeekHours[];
+  },
+  key: string,
+): number => templateHours({ ...hoursOn(template, key), break_minutes: template.break_minutes });
+
 /** Where in the venue a shift was worked. */
 export type ShiftZone = 'unset' | 'hall' | 'bar' | 'terrace' | 'banquet' | 'takeaway';
 
@@ -90,6 +132,10 @@ export interface DayShiftEntry {
   zone: ShiftZone;
   /** The agreed share of it, already inside earned. */
   revenue_percent: number | null;
+  /** The automatic close has had its say here: it closed the shift, or it was told to leave it alone. */
+  auto_closed: boolean;
+  /** This phone's own note on a row put on the day here: what it started as. Never sent. */
+  placedAs?: DayShiftEntry;
 }
 
 /** A thing the venue sells and pays a cut for; the day counts how many went. */
@@ -110,7 +156,10 @@ export interface CalendarDayData {
   tips_cash: number | null;
   /** What the room took before the split, where the tips are pooled. */
   tip_pool: number | null;
+  /** Meal withholding plus fines. For showing: what a save echoes is `fine`. */
   deductions: number;
+  /** The fine alone, as stored. Absent on a day kept from before the server sent it. */
+  fine?: number;
   /** Why the day cost money, where it was said. */
   deduction_reason?: DeductionReason | null;
   note: string | null;
@@ -248,6 +297,8 @@ export interface DaySave {
     guests?: number | null;
     /** Where in the venue it was worked. */
     zone?: ShiftZone;
+    /** What this phone last saw of the automatic close, so the server can tell an answer to it from a save that never knew. */
+    auto_closed?: boolean;
   }[];
   sales: { sales_id: number; quantity: number }[];
   tips: number | null;
@@ -343,6 +394,10 @@ export interface WorkDocument {
   state: 'expired' | 'urgent' | 'soon' | 'fine';
 }
 
+/** A day's own fine. `deductions` has the place's meal money in it, and a client cannot take that back out: echoed, it would be stored as a fine and charged again. */
+export const fineOf = (day: CalendarDayData | undefined): number | null =>
+  day?.fine ?? day?.deductions ?? null;
+
 export const toSavePayload = (day: CalendarDayData | undefined): DaySave => ({
   shifts: (day?.shifts ?? []).map((entry) => ({
     shift_id: entry.shift_id,
@@ -355,6 +410,7 @@ export const toSavePayload = (day: CalendarDayData | undefined): DaySave => ({
     // Carried for the same reason the positions below are: the server builds each shift row from the template…
     guests: entry.guests,
     zone: entry.zone,
+    auto_closed: entry.auto_closed ?? false,
   })),
   // Carried through untouched.
   sales: (day?.sales ?? []).map((entry) => ({
@@ -368,7 +424,7 @@ export const toSavePayload = (day: CalendarDayData | undefined): DaySave => ({
       ? null
       : Math.min(day.tips_cash, day.tips ?? 0),
   tip_pool: day?.tip_pool ?? null,
-  deductions: day?.deductions ?? null,
+  deductions: fineOf(day),
   deduction_reason: day?.deduction_reason ?? null,
   note: day?.note ?? null,
   colour: day?.colour ?? null,

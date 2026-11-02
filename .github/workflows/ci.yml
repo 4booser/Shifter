@@ -127,6 +127,8 @@ jobs:
           dotnet tool install --global dotnet-ef
           git fetch --depth=1 origin main
           git worktree add --detach ../released FETCH_HEAD
+          dotnet restore ../released/server/Shifter.csproj
+          dotnet restore server/Shifter.csproj
           dotnet ef database update --project ../released/server/Shifter.csproj --context ShifterDbContext
           dotnet ef database update --project ../released/server/Shifter.csproj --context TokensDbContext
 

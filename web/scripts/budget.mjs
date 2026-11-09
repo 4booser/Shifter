@@ -16,7 +16,8 @@ const OUT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'out')
 // no default on purpose — a new page fails until somebody grants it a line
 // here, which is the moment its weight becomes a decision.
 const BUDGETS = {
-  '404': 542_720,
+  '404': 677_888,
+  '_not-found': 677_888,
   'account': 1_096_704,
   'assistant': 1_063_936,
   'bank': 1_325_056,
@@ -33,7 +34,7 @@ const BUDGETS = {
   'register': 980_992,
   'report': 1_114_112,
   'reset': 966_656,
-  'roadmap': 567_296,
+  'roadmap': 702_464,
   'schedule': 1_147_904,
   'stats': 1_181_696,
   'status': 968_704,

@@ -25,6 +25,7 @@ function day(date: string, earned: number, shifts = 1): CalendarDayData {
       actual_start: null,
       actual_end: null,
       break_minutes: 0,
+      auto_closed: false,
     })),
     sales: [],
     tips: null,

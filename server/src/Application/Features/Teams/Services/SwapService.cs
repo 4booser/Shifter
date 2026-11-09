@@ -139,7 +139,16 @@ public sealed class SwapService
         await _db.SaveChangesAsync(ct);
 
         if (ids.Length > 0)
+        {
+            // Moved first, and by hand: a delete run here leaves no entity for
+            // anything to count, and a screen holding either day would put the
+            // shift back with its next save.
+            await _db.Days
+                .Where(day => _db.DayShifts.Any(entry => entry.DayId == day.Id && ids.Contains(entry.Id)))
+                .ExecuteUpdateAsync(set => set.SetProperty(day => day.Version, day => day.Version + 1), ct);
+
             await _db.DayShifts.Where(entry => ids.Contains(entry.Id)).ExecuteDeleteAsync(ct);
+        }
 
         await _push.NotifyAsync(
             swap.ProposerUserId,

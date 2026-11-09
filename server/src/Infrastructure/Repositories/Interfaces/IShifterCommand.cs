@@ -72,19 +72,32 @@ public interface IShifterCommand
         int userId,
         DateOnly date,
         DayShift placement,
+        MergeTerms terms,
         CancellationToken ct);
 
-    /// <summary>Adds or removes one template across many dates, creating the missing days, in a single save.</summary>
+    /// <summary>Adds or removes one template across many dates, creating the missing days, in a single save. The time is the wall clock where the work happens.</summary>
     Task<Day[]> ApplyShiftAsync(
         int userId,
         DateOnly[] dates,
         Shift shift,
         bool add,
-        DateOnly today,
+        DateTime now,
         CancellationToken ct);
+
+    /// <summary>Brings the placements still waiting on a template onto its new hours. Written by the save that follows, so the template and its days land together.</summary>
+    Task RetimePlannedAsync(Shift before, Shift after, DateOnly today, CancellationToken ct);
 }
 
 /// <summary>One day's worth of an incoming delivery.</summary>
+/// <summary>How far a route's word goes over a shift already on the day. Left at the defaults, the break is the template's usual and Worked is the route's own answer.</summary>
+public readonly record struct MergeTerms(
+    /// <summary>The break is the route's word about this shift, so it may shorten what is held.</summary>
+    bool BreakStated = false,
+    /// <summary>The end was worked out from a count of paid hours, and means nothing apart from that count.</summary>
+    bool Counted = false,
+    /// <summary>The route plans time and has no word on whether it was worked.</summary>
+    bool PlanOnly = false);
+
 public sealed record DaySalesMerge(
     DateOnly Date,
     List<DaySale> Sales,

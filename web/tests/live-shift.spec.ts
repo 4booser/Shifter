@@ -20,6 +20,8 @@ const template = (over: Partial<ShiftTemplate>): ShiftTemplate => ({
   break_minutes: 0,
   hours: 8,
   archived: false,
+  week_hours: [],
+  auto_clock: false,
   ...over,
 });
 
@@ -75,6 +77,7 @@ describe('workedMs', () => {
       start_time: '10:00', end_time: '18:00', salary_period: 'hour' as const,
       salary_amount: 200, revenue_percent: null, tip_source: 'personal' as const,
       tip_pool_percent: null, break_minutes: 0, hours: 8, archived: false,
+      week_hours: [], auto_clock: false,
     };
 
     expect(liveTick(template, paused, 3_600_000).earned).toBeCloseTo(100);

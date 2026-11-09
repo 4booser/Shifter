@@ -262,7 +262,7 @@ public class ShifterCommand : IShifterCommand
         DateOnly[] dates,
         Shift shift,
         bool add,
-        DateOnly today,
+        DateTime now,
         CancellationToken ct)
     {
         Day[] existing = await _db.Days
@@ -290,14 +290,13 @@ public class ShifterCommand : IShifterCommand
 
             day.Shifts ??= [];
 
+            bool changed;
+
             if (add)
             {
-                if (day.Shifts.All(entry => entry.ShiftId != shift.Id))
-                {
-                    // A date already behind us is almost certainly worked; one
-                    // ahead is a plan. The user can flip either in the panel.
-                    day.Shifts.Add(DayShift.From(shift, worked: date <= today));
-                }
+                changed = day.Shifts.All(entry => entry.ShiftId != shift.Id);
+
+                if (changed) day.Shifts.Add(DayShift.Painted(shift, date, now));
             }
             else
             {
@@ -305,9 +304,17 @@ public class ShifterCommand : IShifterCommand
                     .Where(entry => entry.ShiftId == shift.Id)
                     .ToList();
 
+                changed = going.Count > 0;
+
                 _db.DayShifts.RemoveRange(going);
                 day.Shifts.RemoveAll(entry => entry.ShiftId == shift.Id);
             }
+
+            // A person's stroke reaching a day. A screen still holding the old
+            // version saves the day whole, and would take the paint off again
+            // with no 409 to stop it. A stroke that lands on nothing moves
+            // nothing, and a row made here starts at one like any other.
+            if (changed) day.Version++;
 
             touched.Add(day);
         }
@@ -317,6 +324,24 @@ public class ShifterCommand : IShifterCommand
         await _db.SaveChangesAsync(ct);
 
         return touched.ToArray();
+    }
+
+    public async Task RetimePlannedAsync(Shift before, Shift after, DateOnly today, CancellationToken ct)
+    {
+        DayShift[] waiting = await _db.DayShifts
+            .Include(entry => entry.Day)
+            .Where(entry => entry.ShiftId == after.Id
+                && !entry.Worked
+                && entry.Day!.Date >= today)
+            .ToArrayAsync(ct);
+
+        foreach (DayShift entry in waiting)
+        {
+            // Bumped so a panel open on the old hours is asked to reload
+            // rather than saving a day that has moved under it.
+            if (DayShiftEdit.FollowHours(entry, entry.Day!.Date, today, before, after))
+                entry.Day.Version++;
+        }
     }
 
     public async Task<Day> MergeDaySalesAsync(
@@ -358,12 +383,9 @@ public class ShifterCommand : IShifterCommand
                 continue;
             }
 
-            // The price and share come from the catalogue as it stands now,
-            // same as a day saved by hand: the delivery says how many, never
-            // how much.
+            // Same as a day saved by hand: the delivery says how many, never
+            // how much, and a line keeps the price it was first sold at.
             existing.Quantity = entry.Quantity;
-            existing.UnitPrice = entry.UnitPrice;
-            existing.Percentage = entry.Percentage;
         }
 
         if (incoming.Replace)
@@ -378,6 +400,8 @@ public class ShifterCommand : IShifterCommand
             day.Sales.RemoveAll(row => !sent.Contains(row.SalesId));
         }
 
+        BumpIfChanged(day);
+
         await _db.SaveChangesAsync(ct);
 
         return day;
@@ -387,6 +411,7 @@ public class ShifterCommand : IShifterCommand
         int userId,
         DateOnly date,
         DayShift placement,
+        MergeTerms terms,
         CancellationToken ct)
     {
         Day day = await LoadOrStartDayAsync(userId, date, ct);
@@ -396,9 +421,21 @@ public class ShifterCommand : IShifterCommand
         DayShift? existing = day.Shifts
             .FirstOrDefault(entry => entry.ShiftId == placement.ShiftId);
 
+        // The house rule, as on any save. Most routes hand over the template's
+        // own break, so without this a delivery would give back the minutes a
+        // close took, and the next tip typed would take them again.
+        Location? place = await _db.Shifts
+            .AsNoTracking()
+            .Where(shift => shift.Id == placement.ShiftId)
+            .Select(shift => shift.Location)
+            .FirstOrDefaultAsync(ct);
+
         if (existing is null)
         {
+            placement.BreakMinutes = placement.BreakUnder(place);
             day.Shifts.Add(placement);
+
+            BumpIfChanged(day);
 
             await _db.SaveChangesAsync(ct);
 
@@ -408,16 +445,82 @@ public class ShifterCommand : IShifterCommand
         // Corrected in place rather than replaced, so anything hanging off the
         // placement — a cover offer, the crew's view of it — survives a second
         // delivery of the same shift.
+        bool closed = existing.AutoClosedAtUtc is not null;
+
+        // Read off the hours that earned it, before they move.
+        int ownBreak = existing.OwnBreak(place);
+
+        // Edges the close copied from the plan go with the plan they came
+        // from: left behind they outrank the hours just delivered, which would
+        // show on the entry and never reach the pay. Real ones stay, unless
+        // this merge brought real ones of its own.
+        bool endMoves = closed && existing.ActualEnd == existing.EndTime;
+
+        TimeOnly? actualStart = closed && existing.ActualStart == existing.StartTime
+            ? placement.StartTime
+            : existing.ActualStart;
+        TimeOnly? actualEnd = endMoves ? placement.EndTime : existing.ActualEnd;
+
+        // A count says how long and was worked out from the template's start,
+        // so where a real start stays it runs from there, or the pay would be
+        // out by however far the two sit apart.
+        if (terms.Counted && endMoves && actualStart is TimeOnly began)
+            actualEnd = began.Add(placement.Duration);
+
+        // Real edges at both ends are what the pay reads, and a count moves
+        // neither: its end never became the shift's, so its break has no claim.
+        bool edgesHold = !endMoves && actualStart is not null && actualEnd is not null;
+
         existing.SalaryPeriod = placement.SalaryPeriod;
         existing.SalaryAmount = placement.SalaryAmount;
         existing.StartTime = placement.StartTime;
         existing.EndTime = placement.EndTime;
-        existing.BreakMinutes = placement.BreakMinutes;
-        existing.Worked = placement.Worked;
+        existing.ActualStart = placement.ActualStart ?? actualStart;
+        existing.ActualEnd = placement.ActualEnd ?? actualEnd;
+
+        // A template's break says what is usual and no more, so it cannot
+        // shorten a break somebody actually took: that would raise the pay of
+        // a shift for being finished from the bot. One the route delivered is
+        // a statement about this shift and stands, either way, and so does one
+        // a count was worked out on wherever that count sets the end.
+        existing.BreakMinutes = terms.BreakStated || (terms.Counted && !edgesHold)
+            ? placement.BreakMinutes
+            : Math.Max(ownBreak, placement.BreakMinutes);
+        existing.BreakMinutes = existing.BreakUnder(place);
+
+        // A close stands until a person answers it, the rule DayShiftEdit keeps
+        // for saves. Lowered here the pay would go with no word to anyone, and
+        // the stamp would keep the job from ever giving it back. A route that
+        // only plans time has no answer to give either: a shift finished by
+        // hand stays worked when the rota entry for it is accepted afterwards.
+        existing.Worked = placement.Worked || ((closed || terms.PlanOnly) && existing.Worked);
+
+        BumpIfChanged(day);
 
         await _db.SaveChangesAsync(ct);
 
         return day;
+    }
+
+    /// <summary>Moves the version when a merge left the day other than it was read.</summary>
+    // What arrives through a merge is somebody's word about the day, and a
+    // panel holding the old version would bury it with its next save, which
+    // carries the day whole. A new row counts: no row reads as version zero,
+    // so a day opened at zero would stop nobody. A sender repeating itself
+    // changes nothing and moves nothing, or a retry would hand a 409 to a
+    // panel nobody touched. Only the close job stays out of this.
+    private void BumpIfChanged(Day day)
+    {
+        bool changed = _db.ChangeTracker.Entries()
+            .Any(row => row.State != EntityState.Unchanged && row.Entity switch
+            {
+                Day same => same == day,
+                DayShift placed => placed.DayId == day.Id,
+                DaySale sold => sold.DayId == day.Id,
+                _ => false,
+            });
+
+        if (changed) day.Version++;
     }
 
     /// <summary>The day with its contents attached, tracked, created if this is the first thing to land on it.</summary>
@@ -479,10 +582,35 @@ public class ShifterCommand : IShifterCommand
 
         existing.Shifts = kept;
 
-        if (existing.Sales is { Count: > 0 })
-            _db.DaySales.RemoveRange(existing.Sales);
+        // Sales already on the day are corrected where they stand, like the
+        // placements above. A save carries the whole day and the autosave
+        // sends one for every pause in typing a tip, so deleting and inserting
+        // each line again wrote rows for figures that had not moved. Only the
+        // count moves: a line keeps the price it was sold at, or fixing a note
+        // on an old day would reprice it to today's catalogue.
+        List<DaySale> sold = [];
 
-        existing.Sales = incoming.Sales;
+        foreach (DaySale entry in incoming.Sales ?? [])
+        {
+            DaySale? row = existing.Sales?.FirstOrDefault(sale => sale.SalesId == entry.SalesId);
+
+            if (row is null)
+            {
+                sold.Add(entry);
+
+                continue;
+            }
+
+            row.Quantity = entry.Quantity;
+
+            sold.Add(row);
+        }
+
+        List<DaySale> voided = existing.Sales?.Except(sold).ToList() ?? [];
+
+        if (voided.Count > 0) _db.DaySales.RemoveRange(voided);
+
+        existing.Sales = sold;
 
         await _db.SaveChangesAsync(ct);
 

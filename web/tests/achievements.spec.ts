@@ -24,6 +24,7 @@ function day(date: string, hours: number, start = '10:00', worked = true): Calen
         actual_start: null,
         actual_end: null,
         break_minutes: 0,
+        auto_closed: false,
       },
     ],
     sales: [],

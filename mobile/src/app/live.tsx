@@ -8,15 +8,23 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Appear, Press, Roll } from '@/components/motion';
 import { Ring } from '@/components/ring';
 import { Colors, Palette } from '@/constants/theme';
-import { api } from '@/lib/api';
-import { pad } from '@/lib/calendar';
+import { clockOf as clock, pad } from '@/lib/calendar';
 import { stopwatch } from '@/lib/format';
-import { CalendarDayData, DaysResponse, money, toSavePayload } from '@/lib/types';
-import { breakSeconds, forgotten, onBreak, useLive } from '@/store/live';
+import { writeDiscardedShift, writeFinishedShift } from '@/lib/live-finish';
+import { money } from '@/lib/types';
+import { useAutoStart } from '@/store/autostart';
+import {
+  breakSeconds,
+  forgotten,
+  liveWindow,
+  onBreak,
+  planEndsClock,
+  plannedEndFits,
+  plannedEndInstant,
+  useLive,
+} from '@/store/live';
 import { t } from '@/lib/i18n';
 import { buzz } from '@/lib/haptics';
-
-const clock = (date: Date) => `${pad(date.getHours())}:${pad(date.getMinutes())}`;
 
 /** Minutes from midnight, so a shift ending after it still measures forwards. */
 const minutesOf = (time: string) => {
@@ -34,6 +42,7 @@ export default function LiveScreen() {
   const live = useLive((state) => state.live);
   const clear = useLive((state) => state.clear);
   const toggleBreak = useLive((state) => state.toggleBreak);
+  const markFired = useAutoStart((state) => state.markFired);
 
   // A shift is hours long and the phone is on a bar.
   useKeepAwake();
@@ -42,12 +51,21 @@ export default function LiveScreen() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const hoursMarked = useRef(0);
+  const running = useRef(false);
+  const leaving = useRef(false);
 
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 1000);
 
     return () => clearInterval(timer);
   }, []);
+
+  // The clock closing itself with this screen open: there is nothing left to
+  // watch, and the calendar underneath says what happened.
+  useEffect(() => {
+    if (live !== null) running.current = true;
+    else if (running.current && !leaving.current && router.canGoBack()) router.back();
+  }, [live, router]);
 
   const styles = makeStyles(palette);
 
@@ -96,6 +114,14 @@ export default function LiveScreen() {
     if (wholeHours > 0) buzz.won();
   }
 
+  /** A stopped clock stays stopped, whatever the day still says when this screen closes. */
+  const stop = () => {
+    leaving.current = true;
+    markFired(live.shiftId, live.date);
+    clear();
+    router.back();
+  };
+
   // With the button forgotten, "now" is a lie; the plan's own end is the
   // honest stamp. The person can still disagree and edit the day after.
   const finish = async (endAt?: string) => {
@@ -103,34 +129,32 @@ export default function LiveScreen() {
     setError(null);
 
     try {
-      const summary = await api<DaysResponse>(`/shifter/v1/days?from=${live.date}&to=${live.date}`);
-      const day: CalendarDayData | undefined = summary.days[0];
-      const payload = toSavePayload(day);
-      const entry = payload.shifts.find((row) => row.shift_id === live.shiftId);
-      const stamp = {
-        actual_start: clock(started),
-        actual_end: endAt ?? clock(new Date()),
-        worked: true,
-        // Minutes, because that is what the server prices in — and null rather than zero where nobody took one, so the…
-        break_minutes: paused > 30 ? Math.round(paused / 60) : null,
-      };
+      await writeFinishedShift({ live, endAt });
+      buzz.won();
+      stop();
+    } catch {
+      setError(t('Не записалось — попробуйте ещё раз.'));
+      buzz.lost();
+      setBusy(false);
+    }
+  };
 
-      if (entry === undefined) {
-        payload.shifts.push({
-          shift_id: live.shiftId,
-          needs_cover: false,
-          revenue: null,
-          ...stamp,
-        });
-      } else {
-        Object.assign(entry, stamp);
+  // Where the shift closes itself this has to reach the day, or the close
+  // would still mark it worked: better to say so than to pretend it stopped.
+  const discard = async () => {
+    setBusy(true);
+    setError(null);
+
+    try {
+      await writeDiscardedShift(live);
+      stop();
+    } catch {
+      if (live.autoClock !== true) {
+        stop();
+
+        return;
       }
 
-      await api(`/shifter/v1/days/${live.date}`, { method: 'PUT', body: payload });
-      buzz.won();
-      clear();
-      router.back();
-    } catch {
       setError(t('Не записалось — попробуйте ещё раз.'));
       buzz.lost();
       setBusy(false);
@@ -147,7 +171,10 @@ export default function LiveScreen() {
             {live.symbol ?? '🕐'} {live.name}
           </Text>
           <Text style={styles.since}>
-            с {clock(started)} · план до {live.plannedEnd.slice(0, 5)}
+            с {clock(started)} ·{' '}
+            {planEndsClock(live)
+              ? `${t('закроется в')} ${clock(liveWindow(live).closes)}`
+              : `${t('план до')} ${live.plannedEnd.slice(0, 5)}`}
           </Text>
         </View>
       </Appear>
@@ -158,16 +185,20 @@ export default function LiveScreen() {
             <Text style={styles.overdueText}>
               {t('План кончился в')} {live.plannedEnd.slice(0, 5)}. {t('Забыли выключить?')}
             </Text>
-            <Press
-              style={styles.overdueButton}
-              disabled={busy}
-              onPress={() => void finish(live.plannedEnd.slice(0, 5))}
-            >
-              <Text style={styles.overdueButtonText}>{t('Закрыть по плану')}</Text>
-            </Press>
-            <Text style={styles.overdueHint}>
-              {t('Запишутся плановые часы, не таймер. «Закончил» ниже — если правда ещё работаете.')}
-            </Text>
+            {plannedEndFits(live) && (
+              <>
+                <Press
+                  style={styles.overdueButton}
+                  disabled={busy}
+                  onPress={() => void finish(plannedEndInstant(live).toISOString())}
+                >
+                  <Text style={styles.overdueButtonText}>{t('Закрыть по плану')}</Text>
+                </Press>
+                <Text style={styles.overdueHint}>
+                  {t('Запишутся плановые часы, не таймер. «Закончил» ниже — если правда ещё работаете.')}
+                </Text>
+              </>
+            )}
           </View>
         </Appear>
       )}
@@ -266,10 +297,8 @@ export default function LiveScreen() {
         <Press
           style={styles.quiet}
           haptic={false}
-          onPress={() => {
-            clear();
-            router.back();
-          }}
+          disabled={busy}
+          onPress={() => void discard()}
         >
           <Text style={[styles.quietText, { color: palette.danger }]}>{t('Отменить без записи')}</Text>
         </Press>

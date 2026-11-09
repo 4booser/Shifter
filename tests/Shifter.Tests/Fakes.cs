@@ -189,7 +189,7 @@ public sealed class FakeShifterCommand : IShifterCommand
         DateOnly[] dates,
         Shift shift,
         bool add,
-        DateOnly today,
+        DateTime now,
         CancellationToken ct)
     {
         Day[] touched = dates
@@ -197,15 +197,28 @@ public sealed class FakeShifterCommand : IShifterCommand
             {
                 UserId = userId,
                 Date = date,
-                // The same rule the real one follows: behind us is worked,
-                // ahead of us is a plan.
-                Shifts = add ? [DayShift.From(shift, date <= today)] : [],
+                // The same rule the real one follows.
+                Shifts = add ? [DayShift.Painted(shift, date, now)] : [],
             })
             .ToArray();
 
         Saved.AddRange(touched);
 
         return Task.FromResult(touched);
+    }
+
+    public Task RetimePlannedAsync(Shift before, Shift after, DateOnly today, CancellationToken ct)
+    {
+        foreach (Day day in _query?.Days ?? [])
+        {
+            foreach (DayShift entry in (day.Shifts ?? []).Where(row => row.ShiftId == after.Id))
+            {
+                if (DayShiftEdit.FollowHours(entry, day.Date, today, before, after))
+                    day.Version++;
+            }
+        }
+
+        return Task.CompletedTask;
     }
 
     public Task<int> CountSalesUsageAsync(int salesId, CancellationToken ct)
@@ -446,6 +459,7 @@ public sealed class FakeShifterCommand : IShifterCommand
         int userId,
         DateOnly date,
         DayShift placement,
+        MergeTerms terms,
         CancellationToken ct)
     {
         Placed.Add((date, placement));
@@ -474,6 +488,12 @@ public sealed class FakeShifterCommand : IShifterCommand
 
         return day;
     }
+}
+
+/// <summary>A clock stopped at the moment a test needs.</summary>
+public sealed class FixedTime(DateTimeOffset now) : TimeProvider
+{
+    public override DateTimeOffset GetUtcNow() => now;
 }
 
 /// <summary>Builders that keep the arrange blocks down to what a test is about.</summary>

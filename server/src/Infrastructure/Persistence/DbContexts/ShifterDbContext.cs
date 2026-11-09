@@ -89,6 +89,25 @@ public class ShifterDbContext : DbContext
             .HasForeignKey(shift => shift.LocationId)
             .OnDelete(DeleteBehavior.SetNull);
 
+        // Held on the template's own row, so it arrives with every read of it:
+        // templates are loaded in too many places for an Include to be
+        // remembered at each, and a forgotten one would just mean wrong hours.
+        modelBuilder.Entity<Shift>()
+            .OwnsMany(shift => shift.WeekHours, hours => hours.ToJson());
+
+        // On for the templates already there too. The sentinel is what lets a
+        // false through: EF leaves a value matching it to the column's default,
+        // and left at the type's own zero that would be the false being dropped.
+        modelBuilder.Entity<Shift>()
+            .Property(shift => shift.AutoClock)
+            .HasDefaultValue(true)
+            .HasSentinel(true);
+
+        // The close job asks every minute which days fall near today, for
+        // everybody, which no index keyed by user can answer.
+        modelBuilder.Entity<Day>()
+            .HasIndex(day => day.Date);
+
         // A listing belongs to whoever posted it, so it leaves with them.
         // Without this the foreign key is left at NO ACTION and anybody who
         // has ever posted a gig simply cannot delete their account.

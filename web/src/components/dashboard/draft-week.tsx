@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { api } from '@/lib/api/http';
 import { shiftDays, todayKey } from '@/lib/calendar/calendar-date';
+import { hoursOn } from '@/lib/calendar/shift-hours';
 import { useI18n } from '@/lib/i18n';
 import { applyToDates, useCalendar } from '@/lib/store/calendar';
 import { CountUp } from '@/components/ui/motion';
@@ -97,6 +98,9 @@ export function DraftWeek() {
           <div className="grid grid-cols-7 gap-1.5">
             {fortnight.map((key) => {
               const ghost = picked.has(key);
+              // Priced by the server on the hours of each date; a template
+              // that varies shows them, since no one label can say.
+              const own = chosen === undefined || chosen.week_hours.length === 0 ? null : hoursOn(chosen, key);
 
               return (
                 <button
@@ -120,6 +124,11 @@ export function DraftWeek() {
                 >
                   <span>{weekday(key)}</span>
                   <span className="tabular font-semibold">{key.slice(8)}</span>
+                  {own !== null && (
+                    <span className="tabular text-[0.6rem] leading-tight">
+                      {own.start_time}–{own.end_time}
+                    </span>
+                  )}
                 </button>
               );
             })}

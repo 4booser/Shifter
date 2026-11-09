@@ -260,6 +260,8 @@ namespace Shifter.Migrations.ShifterDb
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Date");
+
                     b.HasIndex("UserId", "Date")
                         .IsUnique();
 
@@ -358,6 +360,9 @@ namespace Shifter.Migrations.ShifterDb
 
                     b.Property<TimeOnly?>("ActualStart")
                         .HasColumnType("time without time zone");
+
+                    b.Property<DateTime?>("AutoClosedAtUtc")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("BreakMinutes")
                         .HasColumnType("integer");
@@ -1572,6 +1577,11 @@ namespace Shifter.Migrations.ShifterDb
                     b.Property<bool>("Archived")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("AutoClock")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
                     b.Property<string>("Colour")
                         .HasColumnType("text");
 
@@ -2669,9 +2679,36 @@ namespace Shifter.Migrations.ShifterDb
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.OwnsMany("Shifter.Domain.Entities.WeekdayHours", "WeekHours", b1 =>
+                        {
+                            b1.Property<int>("ShiftId");
+
+                            b1.Property<int>("__synthesizedOrdinal")
+                                .ValueGeneratedOnAdd();
+
+                            b1.Property<TimeOnly>("EndTime");
+
+                            b1.Property<TimeOnly>("StartTime");
+
+                            b1.Property<int>("Weekday");
+
+                            b1.HasKey("ShiftId", "__synthesizedOrdinal");
+
+                            b1.ToTable("Shifts");
+
+                            b1
+                                .ToJson("WeekHours")
+                                .HasColumnType("jsonb");
+
+                            b1.WithOwner()
+                                .HasForeignKey("ShiftId");
+                        });
+
                     b.Navigation("Location");
 
                     b.Navigation("User");
+
+                    b.Navigation("WeekHours");
                 });
 
             modelBuilder.Entity("Shifter.Domain.Entities.ShiftSwap", b =>

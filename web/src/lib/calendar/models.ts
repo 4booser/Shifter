@@ -40,6 +40,18 @@ export interface ShiftTemplate {
   archived: boolean;
   /** Whether a day with this shift paints itself in its colour. */
   paints_day?: boolean;
+  /** Weekdays that run other hours than start_time and end_time; empty when none do. */
+  week_hours: WeekHours[];
+  /** Whether its shifts open and close themselves by the schedule. */
+  auto_clock: boolean;
+}
+
+/** One weekday's own hours on a template. ISO: Monday is 1, Sunday is 7. */
+export interface WeekHours {
+  weekday: number;
+  /** "HH:mm". */
+  start_time: string;
+  end_time: string;
 }
 
 export interface ShiftCreate {
@@ -58,6 +70,10 @@ export interface ShiftCreate {
   break_minutes: number;
   /** Whether days carrying this shift take its colour. */
   paints_day?: boolean;
+  /** Null or absent leaves them as they are; empty clears them. */
+  week_hours?: WeekHours[] | null;
+  /** Null or absent leaves it as it is; a new template starts with it on. */
+  auto_clock?: boolean | null;
 }
 
 export type PayPeriodKind = 'monthly' | 'semimonthly' | 'biweekly' | 'weekly';
@@ -234,11 +250,15 @@ export interface DayShiftEntry {
   worked: boolean;
   /** Asking the team to take this one. */
   needs_cover: boolean;
-  /** "HH:mm" where the recorded clock differs from the plan; both or neither. */
+  /** "HH:mm" where the recorded clock differs from the plan. Either may stand alone on a planned shift. */
   actual_start: string | null;
   actual_end: string | null;
   /** Unpaid minutes inside the shift as placed on this day. */
   break_minutes: number;
+  /** The automatic close has had its say here, whether it closed the shift or was told to leave it alone. */
+  auto_closed: boolean;
+  /** This client's own: cover asked for here, with the save carrying it not answered yet. Apart from `needs_cover` because a queued save is measured against what the store held, and has to find that it changed. Never from the server, never sent back. */
+  cover_asked?: boolean;
 }
 
 /** Something that occupies days without being work. */
@@ -322,8 +342,10 @@ export interface CalendarDayData {
   tip_pool: number | null;
   /** Handed to support staff; already deducted from earned. */
   tip_out: number;
-  /** Meal withholding plus fines; already deducted from earned. */
+  /** Meal withholding plus fines; already deducted from earned. For showing: what a save echoes is `fine`. */
   deductions: number;
+  /** The fine alone, as stored. Absent on a day kept from before the server sent it. */
+  fine?: number;
   /** Why the day cost money, where it was said. */
   deduction_reason?: DeductionReason | null;
   note: string | null;
@@ -337,6 +359,8 @@ export interface CalendarDayData {
   planned: number;
   /** Bumped by the server on every save; echo it in DaySave.version. */
   version?: number;
+  /** This client's own: when the offline save laid over this day was queued. Never from the server, never sent back. */
+  queued_at?: number;
 }
 
 /** The range response: days plus the totals worked out for them. */
@@ -745,6 +769,8 @@ export interface DaySave {
     guests?: number | null;
     /** Where in the venue. Absent leaves whatever was there. */
     zone?: ShiftZone;
+    /** What this client last saw of the automatic close, echoed so a save that never knew cannot undo it. */
+    auto_closed?: boolean;
   }[];
   tips_cash: number | null;
   deductions: number | null;
@@ -831,6 +857,9 @@ export const MARK_COLOURS: { label: string; value: string }[] = [
   { label: 'Ink', value: '#1E293B' },
 ];
 
+/** A day's own fine. `deductions` has the place's meal money in it, and a client cannot take that back out: echoed, it would be stored as a fine and charged again. */
+export const fineOf = (day: CalendarDayData | undefined): number | null => day?.fine ?? day?.deductions ?? null;
+
 /** Turns a stored day back into the payload the save endpoint expects. */
 export function toSavePayload(day: CalendarDayData | undefined): DaySave {
   return {
@@ -846,6 +875,7 @@ export function toSavePayload(day: CalendarDayData | undefined): DaySave {
       // The covers counted and the section worked survive too.
       guests: entry.guests,
       zone: entry.zone,
+      auto_closed: entry.auto_closed,
     })),
     sales: (day?.sales ?? []).map((entry) => ({
       sales_id: entry.sales_id,
@@ -854,7 +884,7 @@ export function toSavePayload(day: CalendarDayData | undefined): DaySave {
     tips: day?.tips ?? null,
     tips_cash: day?.tips_cash ?? null,
     tip_pool: day?.tip_pool ?? null,
-    deductions: day?.deductions ?? null,
+    deductions: fineOf(day),
     deduction_reason: day?.deduction_reason ?? null,
     note: day?.note ?? null,
     colour: day?.colour ?? null,

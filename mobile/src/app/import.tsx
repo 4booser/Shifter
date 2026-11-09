@@ -18,7 +18,7 @@ import { Press } from '@/components/motion';
 import { Colors, Palette } from '@/constants/theme';
 import { api, ApiError, upload } from '@/lib/api';
 import { currentMonth, monthBounds, monthLabel } from '@/lib/calendar';
-import { CalendarDayData, DaysResponse, ShiftTemplate, toSavePayload } from '@/lib/types';
+import { CalendarDayData, DaysResponse, hoursOn, ShiftTemplate, toSavePayload } from '@/lib/types';
 import { t } from '@/lib/i18n';
 
 interface ParsedRow {
@@ -104,7 +104,11 @@ export default function ImportScreen() {
 
   /** Times first, then the name: two bars can share a name, not a shift. */
   const matchTemplate = (row: ParsedRow): number | null =>
-    templates.find((item) => item.start_time === row.start && item.end_time === row.end)?.id ??
+    templates.find((item) => {
+      const hours = hoursOn(item, row.date);
+
+      return hours.start_time === row.start && hours.end_time === row.end;
+    })?.id ??
     templates.find((item) => item.name.toLowerCase() === row.name.toLowerCase())?.id ??
     null;
 

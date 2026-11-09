@@ -37,6 +37,7 @@ const shift = (name: string) => ({
   guests: null,
   zone: 'unset' as const,
   revenue_percent: null,
+  auto_closed: false,
 });
 
 const tx = (over: Partial<MonoStatementItem>): MonoStatementItem => ({

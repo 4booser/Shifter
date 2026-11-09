@@ -942,7 +942,7 @@ public sealed class PlannerService
             ?? throw new NotFoundException("That shift template is not yours.");
 
         // The assignment plans time; the person's own template prices it.
-        var placement = DayShift.From(template, worked: false);
+        var placement = DayShift.From(template, worked: false, entry.Date);
 
         placement.StartTime = entry.StartTime;
         placement.EndTime = entry.EndTime;
@@ -950,7 +950,8 @@ public sealed class PlannerService
         // INSERTed as a brand-new Shift with an existing key.
         placement.Shift = null;
 
-        var mergedDay = await _days.MergeDayShiftAsync(userId, entry.Date, placement, ct);
+        var mergedDay = await _days.MergeDayShiftAsync(
+            userId, entry.Date, placement, new MergeTerms(PlanOnly: true), ct);
 
         await _audit.WriteAsync(userId, mergedDay, "assignment", ct);
 

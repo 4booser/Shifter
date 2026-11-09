@@ -23,6 +23,7 @@ function day(date: string, earned: number): CalendarDayData {
         actual_start: null,
         actual_end: null,
         break_minutes: 0,
+        auto_closed: false,
       },
     ],
     sales: [],

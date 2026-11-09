@@ -13,9 +13,8 @@ import { activeGoalFor } from '@/lib/calendar/stats-math';
 import { stagger } from '@/lib/fx';
 import { useEscape } from '@/lib/a11y';
 import { useI18n } from '@/lib/i18n';
-import { useArmed } from '@/lib/live/arm';
+import { useDiscard } from '@/lib/live/arm';
 import {
-  cancelLiveShift,
   finishLiveShift,
   formatElapsed,
   liveTick,
@@ -662,7 +661,7 @@ function TodayTile({ window, templates }: { window: CalendarDayData[]; templates
   const template = templates.find((item) => item.id === (live?.shiftId ?? planned?.shift_id));
 
   const [, force] = useState(0);
-  const discard = useArmed(cancelLiveShift);
+  const discard = useDiscard();
 
   useEffect(() => {
     if (live === null) return;
@@ -721,7 +720,7 @@ function TodayTile({ window, templates }: { window: CalendarDayData[]; templates
         <span className="field-hint">
           {planned.start_time}–{planned.end_time}
         </span>
-        {template !== undefined && (
+        {template !== undefined && !planned.needs_cover && (
           <button
             type="button"
             className="btn btn-primary btn-sm mt-auto"

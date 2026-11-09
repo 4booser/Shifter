@@ -19,8 +19,17 @@ import { Press } from '@/components/motion';
 import { useAutoStart } from '@/store/autostart';
 import { Colors, Palette } from '@/constants/theme';
 import { api, ApiError } from '@/lib/api';
+import { WEEK_NAMES } from '@/lib/calendar';
 import { EventKind, EventTemplate, money, rateLine, ShiftTemplate } from '@/lib/types';
 import { t } from '@/lib/i18n';
+import {
+  toggleWeekday,
+  toWeekHours,
+  toWeekRows,
+  WeekRow,
+  weekRowsLine,
+  weekRowsProblem,
+} from '@/lib/week-rows';
 import { ColourPicker } from '@/components/colour-picker';
 import { buzz } from '@/lib/haptics';
 
@@ -130,6 +139,7 @@ export default function TemplatesScreen() {
 
         {live.map((template) => {
           const auto = autoRules.find((rule) => rule.shiftId === template.id);
+          const weekLine = weekRowsLine(template.week_hours ?? [], t);
 
           return (
             <View key={template.id} style={styles.cardStack}>
@@ -141,6 +151,7 @@ export default function TemplatesScreen() {
                     {template.start_time.slice(0, 5)}–{template.end_time.slice(0, 5)} ·{' '}
                     {rateLine(template)}
                   </Text>
+                  {weekLine !== '' && <Text style={styles.cardMeta}>{weekLine}</Text>}
                 </View>
                 <Ionicons name="chevron-forward" size={18} color={palette.textSecondary} />
               </Press>
@@ -225,6 +236,11 @@ export default function TemplatesScreen() {
                   </View>
                 )}
               </View>
+
+              {/* A rule has no weekday: a day on hours of its own goes by those. */}
+              {weekLine !== '' && (auto?.at != null || auto?.stopAt != null) && (
+                <Text style={styles.autoHint}>{t('Только в дни с обычными часами')}</Text>
+              )}
             </View>
           );
         })}
@@ -594,6 +610,8 @@ function TemplateEditor({
   const [shiftColour, setShiftColour] = useState<string | null>(null);
   const [paintsDay, setPaintsDay] = useState(false);
   const [placeId, setPlaceId] = useState<number | null>(null);
+  const [weekRows, setWeekRows] = useState<WeekRow[]>([]);
+  const [autoClock, setAutoClock] = useState(true);
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState<string | null>(null);
 
@@ -653,11 +671,21 @@ function TemplateEditor({
     setShiftColour(template?.colour ?? null);
     setPaintsDay(template?.paints_day ?? false);
     setPlaceId(template?.location_id ?? null);
+    setWeekRows(toWeekRows(template?.week_hours ?? []));
+    setAutoClock(template?.auto_clock ?? true);
   }, [editing, template]);
 
   const save = async () => {
     if (name.trim() === '') {
       setFailed(t('У смены должно быть название.'));
+
+      return;
+    }
+
+    const problem = weekRowsProblem(weekRows);
+
+    if (problem !== null) {
+      setFailed(t(problem));
 
       return;
     }
@@ -681,6 +709,9 @@ function TemplateEditor({
       tip_source: pooled ? 'pool' : 'personal',
       tip_pool_percent:
         pooled && poolShare.trim() !== '' ? Number(poolShare.replace(',', '.')) : null,
+      // Always the whole list: an empty one is what clears it.
+      week_hours: toWeekHours(weekRows),
+      auto_clock: autoClock,
     };
 
     try {
@@ -780,6 +811,34 @@ function TemplateEditor({
               />
             </View>
           </View>
+
+          <WeekHoursRows
+            rows={weekRows}
+            start={start}
+            end={end}
+            palette={palette}
+            onChange={setWeekRows}
+          />
+
+          <Press
+            style={styles.toggleRow}
+            onPress={() => {
+              buzz.choose();
+              setAutoClock((was) => !was);
+            }}
+          >
+            <Ionicons
+              name={autoClock ? 'checkbox' : 'square-outline'}
+              size={22}
+              color={autoClock ? palette.accent : palette.textSecondary}
+            />
+            <View style={styles.grow}>
+              <Text style={styles.toggleText}>{t('Открывать и закрывать смену самой по графику')}</Text>
+              <Text style={styles.toggleHint}>
+                {t('Смена начнётся и закончится сама, даже если телефон в шкафчике. Время можно поправить в дне.')}
+              </Text>
+            </View>
+          </Press>
 
           <Text style={styles.fieldLabel}>{t('Платят')}</Text>
           <View style={styles.segmentRow}>
@@ -927,6 +986,109 @@ function TemplateEditor({
   );
 }
 
+/** The weekdays that run other hours: one row per pair of times, and a weekday lives in one row. */
+function WeekHoursRows({
+  rows,
+  start,
+  end,
+  palette,
+  onChange,
+}: {
+  rows: WeekRow[];
+  /** The main time, which a new row starts from and every other day keeps. */
+  start: string;
+  end: string;
+  palette: Palette;
+  onChange: (rows: WeekRow[]) => void;
+}) {
+  const styles = makeStyles(palette);
+
+  const setTime = (at: number, change: Partial<WeekRow>) =>
+    onChange(rows.map((row, index) => (index === at ? { ...row, ...change } : row)));
+
+  const addRow = () => {
+    buzz.choose();
+    onChange([...rows, { days: [], start, end }]);
+  };
+
+  if (rows.length === 0) {
+    return (
+      <Press style={styles.toggleRow} onPress={addRow}>
+        <Ionicons name="calendar-outline" size={21} color={palette.textSecondary} />
+        <View style={styles.grow}>
+          <Text style={styles.toggleText}>{t('Другие часы по дням недели')}</Text>
+          <Text style={styles.toggleHint}>{t('Например, пятница до 23:00, а выходные с 13:00.')}</Text>
+        </View>
+      </Press>
+    );
+  }
+
+  return (
+    <>
+      <Text style={styles.fieldLabel}>{t('Другие часы по дням недели')}</Text>
+
+      {rows.map((row, at) => (
+        <View key={at} style={styles.weekRow}>
+          <View style={styles.weekDays}>
+            {WEEK_NAMES.map((day, index) => {
+              const on = row.days.includes(index + 1);
+
+              return (
+                <Press
+                  key={day}
+                  style={[styles.weekDay, on && styles.weekDayOn]}
+                  haptic={false}
+                  accessibilityLabel={t(day)}
+                  onPress={() => {
+                    buzz.choose();
+                    onChange(toggleWeekday(rows, at, index + 1));
+                  }}
+                >
+                  <Text style={[styles.weekDayText, on && styles.weekDayTextOn]}>{t(day)}</Text>
+                </Press>
+              );
+            })}
+          </View>
+
+          <View style={styles.weekTimes}>
+            <TextInput
+              style={[styles.input, styles.grow]}
+              value={row.start}
+              onChangeText={(value) => setTime(at, { start: value })}
+              placeholder={start}
+              placeholderTextColor={palette.textSecondary}
+            />
+            <TextInput
+              style={[styles.input, styles.grow]}
+              value={row.end}
+              onChangeText={(value) => setTime(at, { end: value })}
+              placeholder={end}
+              placeholderTextColor={palette.textSecondary}
+            />
+            <Press
+              hitSlop={8}
+              accessibilityLabel={t('Удалить')}
+              onPress={() => {
+                buzz.choose();
+                onChange(rows.filter((_, index) => index !== at));
+              }}
+            >
+              <Ionicons name="close-circle" size={22} color={palette.textSecondary} />
+            </Press>
+          </View>
+        </View>
+      ))}
+
+      <Press style={styles.weekAdd} onPress={addRow}>
+        <Ionicons name="add" size={16} color={palette.accent} />
+        <Text style={styles.weekAddText}>{t('Ещё дни')}</Text>
+      </Press>
+
+      <Text style={styles.toggleHint}>{t('Остальные дни')} — {start}–{end}</Text>
+    </>
+  );
+}
+
 const makeStyles = (palette: Palette) =>
   StyleSheet.create({
     screen: { flex: 1, backgroundColor: palette.background },
@@ -962,6 +1124,13 @@ const makeStyles = (palette: Palette) =>
     },
     autoToggle: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 4 },
     autoText: { color: palette.textSecondary, fontSize: 12.5 },
+    autoHint: {
+      color: palette.textSecondary,
+      fontSize: 11.5,
+      paddingHorizontal: 6,
+      paddingBottom: 10,
+      marginTop: -8,
+    },
     autoTimes: { flexDirection: 'row', gap: 4 },
     autoNudge: {
       paddingHorizontal: 8,
@@ -1030,6 +1199,29 @@ const makeStyles = (palette: Palette) =>
     toggleRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 4 },
     toggleText: { color: palette.text, fontSize: 14 },
     toggleHint: { color: palette.textSecondary, fontSize: 12, lineHeight: 16, marginTop: 2 },
+    weekRow: {
+      gap: 8,
+      backgroundColor: palette.backgroundElement,
+      borderColor: palette.border,
+      borderWidth: 1,
+      borderRadius: 14,
+      padding: 10,
+    },
+    weekDays: { flexDirection: 'row', gap: 4 },
+    weekDay: {
+      flex: 1,
+      alignItems: 'center',
+      borderColor: palette.border,
+      borderWidth: 1,
+      borderRadius: 10,
+      paddingVertical: 9,
+    },
+    weekDayOn: { backgroundColor: palette.accent, borderColor: palette.accent },
+    weekDayText: { color: palette.text, fontSize: 12.5, fontWeight: '600' },
+    weekDayTextOn: { color: '#fff' },
+    weekTimes: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    weekAdd: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 4 },
+    weekAddText: { color: palette.accent, fontSize: 13, fontWeight: '600' },
     segment: {
       flex: 1,
       alignItems: 'center',

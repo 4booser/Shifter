@@ -22,6 +22,22 @@ public class TelegramCommandsTests
         => Assert.Equal(expected, TelegramCommands.Parse(text).Command);
 
     [Fact]
+    public void AFinishPastMidnightIsFiledOnTheDayTheShiftStarted()
+    {
+        TimeZoneInfo kyiv = TimeZoneInfo.FindSystemTimeZoneById("Europe/Kyiv");
+
+        // Sunday 13:02 in Kyiv, however late on Monday «закончил» arrives.
+        DateTime started = new(2026, 11, 8, 11, 2, 0, DateTimeKind.Utc);
+
+        Assert.Equal(new DateOnly(2026, 11, 8), TelegramBotService.ClockInDate(started, kyiv));
+
+        // 00:30 on Monday in Kyiv is still Sunday in UTC, and the person's day is the one that counts.
+        Assert.Equal(
+            new DateOnly(2026, 11, 9),
+            TelegramBotService.ClockInDate(new DateTime(2026, 11, 8, 22, 30, 0, DateTimeKind.Utc), kyiv));
+    }
+
+    [Fact]
     public void ASixDigitNumberIsALinkCode()
     {
         var (command, argument) = TelegramCommands.Parse("482913");

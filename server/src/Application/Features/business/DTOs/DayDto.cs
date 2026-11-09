@@ -35,7 +35,9 @@ public record DayShiftDto(
     string? actual_start,
     string? actual_end,
     /// <summary>Unpaid minutes inside the shift, as placed on this day.</summary>
-    int break_minutes
+    int break_minutes,
+    /// <summary>The automatic close has had its say here. Echoed back on save.</summary>
+    bool auto_closed = false
     );
 
 /// <summary>A day as the calendar reads it, with the money already worked out.</summary>
@@ -66,7 +68,9 @@ public record DayDto(
     decimal planned
     ,
     /// <summary>Bumped on every save.</summary>
-    int version = 0);
+    int version = 0,
+    /// <summary>The fine alone, as stored. This is what a save echoes: deductions has the place's meal money in it, and sent back it would be stored as a fine and charged again.</summary>
+    decimal fine = 0m);
 
 /// <summary>A range of days plus its totals.</summary>
 public record DaysDto(
@@ -192,6 +196,7 @@ public record DaySaveDto(
     DaySaleSaveDto[]? sales,
     decimal? tips,
     decimal? tips_cash,
+    /// <summary>The fine: DayDto.fine, never DayDto.deductions.</summary>
     decimal? deductions,
     /// <summary>Absent means unsaid, which is what an older client sends.</summary>
     string? deduction_reason,
@@ -209,7 +214,7 @@ public record DayShiftSaveDto(
     bool worked,
     /// <summary>Asking the team to take this one. Defaulted so older clients keep working.</summary>
     bool needs_cover = false,
-    /// <summary>"HH:mm"; both edges or neither, and only meaningful once worked.</summary>
+    /// <summary>"HH:mm". Either may come alone: a planned shift keeps it as sent, a worked one takes the other edge from the plan.</summary>
     string? actual_start = null,
     string? actual_end = null,
     /// <summary>Overrides the template's unpaid minutes; null keeps them.</summary>
@@ -219,7 +224,9 @@ public record DayShiftSaveDto(
     /// <summary>How many people it served.</summary>
     int? guests = null,
     /// <summary>Where in the venue. Absent leaves whatever was there.</summary>
-    string? zone = null
+    string? zone = null,
+    /// <summary>What the client last saw of the automatic close, so the server can tell an answer to it from a save that never knew.</summary>
+    bool auto_closed = false
     );
 
 /// <summary>One zone's share of the hours and the tips.</summary>

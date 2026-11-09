@@ -10,10 +10,14 @@ name: CI
 # migrations against a database with rows in it, and what the screens look
 # like. Excluding main meant they had not run in six days, and three of them
 # were red when they last did.
+#
+# A branch with a pull request open used to run everything twice, once for the
+# push and once for the proposal, and each pair showed up as two checks.
 on:
   pull_request:
     branches: [main]
   push:
+    branches: [main]
   workflow_dispatch:
 
 # A second push to the same branch cancels the first: the older answer is not
@@ -180,6 +184,87 @@ jobs:
       # run, so this also watches the whole history execute — which the
       # migration guards, being text checks, never do.
       - run: dotnet test tests/Shifter.Api.Tests/Shifter.Api.Tests.csproj --nologo
+
+  # Everything the deploy gates on, run here first. The deploy had checks of
+  # its own that nothing ran before a merge: Next 16 pushed two pages over
+  # the weight budget, every check on the proposal was green, and the first
+  # anybody heard of it was a deploy that refused to ship.
+  deploy-gate:
+    name: What the deploy checks
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: shifter_user
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: shifter
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U shifter_user -d shifter"
+          --health-interval 5s --health-timeout 3s --health-retries 20
+    env:
+      ConnectionStrings__Shifter: "Host=localhost;Port=5432;Database=shifter;Username=shifter_user;Password=ci"
+      ConnectionStrings__Tokens: "Host=localhost;Port=5432;Database=tokens;Username=shifter_user;Password=ci"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Give it a schema
+        run: |
+          dotnet tool install --global dotnet-ef
+          dotnet restore server/Shifter.csproj
+          PGPASSWORD=ci psql -h localhost -U shifter_user -d shifter -c 'CREATE DATABASE tokens;'
+          dotnet ef database update --project server/Shifter.csproj --context ShifterDbContext
+          dotnet ef database update --project server/Shifter.csproj --context TokensDbContext
+
+      - name: Build the site into wwwroot
+        run: npm ci && npm run build
+        working-directory: web
+
+      - name: Front-end weight within budget
+        run: npm run budget
+        working-directory: web
+
+      - name: Serve it as production does
+        env:
+          ASPNETCORE_ENVIRONMENT: Production
+          ASPNETCORE_URLS: http://localhost:5208
+          SHIFTER_JWT_KEY: ci-only-key-thirty-two-characters!!
+        run: |
+          dotnet run --project server/Shifter.csproj -c Release --no-launch-profile &
+          for i in $(seq 1 60); do
+            curl -fsS http://localhost:5208/health >/dev/null 2>&1 && exit 0
+            sleep 2
+          done
+          echo "server never became healthy"; exit 1
+
+      - name: Nobody else's rows
+        run: ./scripts/leak-check.sh http://localhost:5208
+
+      # The screens spec skips itself here; its own job below shoots them.
+      - name: Walk through it
+        run: |
+          npx playwright install --with-deps chromium
+          npm run e2e
+        working-directory: web
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: deploy-gate-traces
+          path: web/test-results
+          retention-days: 7
 
   screens:
     name: The screens, looked at

@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { Page, expect, test } from '@playwright/test';
 
 import { apiPut, createShiftTemplate, registerUser, signIn } from './helpers';
 
@@ -27,7 +27,39 @@ test.skip(
 const MONTH = '2026-09';
 const DAY = `${MONTH}-16`;
 
+/**
+ * Hold still what the pinned clock cannot reach. The browser's day is pinned,
+ * the server's is not: the records card counts sixty days back from the
+ * server's today, so the seed slid out of it a week after the baselines were
+ * taken, and the card vanished from a page nobody had touched. The badge check
+ * fires two and a half seconds after load, so whether its confetti made the
+ * shot came down to how long the page took to settle.
+ */
+async function holdStill(page: Page): Promise<void> {
+  await page.route('**/shifter/v1/health/records', (route) =>
+    route.fulfill({
+      json: [
+        {
+          kind: 'actual_times_unsaid',
+          count: 3,
+          sample: [`${MONTH}-07`, `${MONTH}-06`, `${MONTH}-05`],
+          hurts: 'rest_windows',
+        },
+      ],
+    }),
+  );
+
+  // Every badge either seed can earn, already celebrated.
+  await page.addInitScript(() => {
+    localStorage.setItem('shifter.achievements', JSON.stringify(['first-shift', 'first-money', 'streak-3']));
+  });
+}
+
 test.describe('screens', () => {
+  // The service worker answers API calls itself, and a route never sees what
+  // it answers, so it stays out of these shots.
+  test.use({ serviceWorkers: 'block' });
+
   // The seed used to follow the real calendar, so a shot changed shape with the
   // date: on the first of a month its worked days were still ahead, the year
   // held one column, and the page came out ten thousand pixels tall.
@@ -70,6 +102,7 @@ test.describe('screens', () => {
         }
 
         await signIn(page, user);
+        await holdStill(page);
 
         await page.addInitScript((mode) => {
           localStorage.setItem(
@@ -124,6 +157,7 @@ test.describe('screens', () => {
       });
 
       await signIn(page, user);
+      await holdStill(page);
 
       await page.addInitScript((mode) => {
         localStorage.setItem(

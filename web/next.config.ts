@@ -1,3 +1,5 @@
+import { resolve } from 'node:path';
+
 import type { NextConfig } from 'next';
 
 /**
@@ -19,6 +21,8 @@ const BUILT_ON = new Date().toISOString().slice(0, 10);
 const nextConfig: NextConfig = {
   output: 'export',
   env: { NEXT_PUBLIC_BUILT_ON: BUILT_ON },
+  // Turbopack stops at the project directory, and ../shared sits one above it.
+  turbopack: { root: resolve(__dirname, '..') },
   // dashboard.html rather than dashboard/index.html: the server rewrites
   // extensionless paths to `{path}.html`, which is one rule instead of a
   // directory convention spread over every route.

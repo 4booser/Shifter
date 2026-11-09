@@ -1,7 +1,11 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "allowJs": false,
     "skipLibCheck": true,
     "strict": true,
@@ -10,41 +14,55 @@
     "module": "esnext",
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
-    "types": ["vitest/globals"],
+    "types": [
+      "vitest/globals"
+    ],
     "isolatedModules": true,
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "incremental": true,
-    "plugins": [{ "name": "next" }],
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
     "paths": {
       "@/lib/mono/mono": [
-            "../shared/mono/mono"
+        "../shared/mono/mono"
       ],
       "@/lib/mono/mono-work": [
-            "../shared/mono/mono-work"
+        "../shared/mono/mono-work"
       ],
       "@/lib/mono/mono-insights": [
-            "../shared/mono/mono-insights"
+        "../shared/mono/mono-insights"
       ],
       "@/lib/mono/mono-rules": [
-            "../shared/mono/mono-rules"
+        "../shared/mono/mono-rules"
       ],
       "@/lib/mono/mono-shape": [
-            "../shared/mono/mono-shape"
+        "../shared/mono/mono-shape"
       ],
       "@/lib/mono/spend-viz": [
-            "../shared/mono/spend-viz"
+        "../shared/mono/spend-viz"
       ],
       "@/lib/import/ics": [
-            "../shared/calendar/ics"
+        "../shared/calendar/ics"
       ],
       "@/*": [
-            "./src/*"
+        "./src/*"
       ]
     }
   },
   "include": [
-    "next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts",
-    "../shared/**/*.ts"
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "../shared/**/*.ts",
+    ".next/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules", "out", "scripts"]
+  "exclude": [
+    "node_modules",
+    "out",
+    "scripts"
+  ]
 }

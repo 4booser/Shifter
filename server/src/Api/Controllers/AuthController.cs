@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Shifter.Api.Extensions;
 using Shifter.Application.Common.Exceptions;
-using Shifter.Application.Common.Exceptions;
 using Shifter.Application.Features.Auth.DTOs;
 using Shifter.Application.Features.Auth.Services;
 using Shifter.Application.Features.Auth.Services.Interfaces;

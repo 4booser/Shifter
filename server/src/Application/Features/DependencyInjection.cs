@@ -97,6 +97,7 @@ public static class DependencyInjection
             provider.GetRequiredService<Shifter.Application.Features.Telegram.TelegramBotService>());
         services.AddScoped<Shifter.Application.Features.Teams.Services.PlannerService>();
         services.AddScoped<Shifter.Application.Features.Teams.Services.SwapService>();
+        services.AddScoped<Shifter.Application.Features.Rosters.RosterService>();
         services.Configure<Shifter.Application.Features.Brief.BriefOptions>(
             configuration.GetSection(Shifter.Application.Features.Brief.BriefOptions.Section));
         services.AddScoped<Shifter.Application.Features.Brief.GeminiBriefClient>();

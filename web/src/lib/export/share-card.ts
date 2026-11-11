@@ -369,8 +369,8 @@ export function currentCardTheme(): CardTheme {
   return {
     surface: read('--surface', '#ffffff'),
     text: read('--text', '#101828'),
-    muted: read('--text-muted', '#5b6675'),
-    faint: read('--text-faint', '#8d97a5'),
+    muted: read('--muted', '#5b6675'),
+    faint: read('--faint', '#8d97a5'),
     accent: read('--accent', '#4F46E5'),
     border: read('--border', '#e6eaef'),
   };

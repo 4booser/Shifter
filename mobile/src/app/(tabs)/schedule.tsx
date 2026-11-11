@@ -322,6 +322,19 @@ export default function ScheduleScreen() {
           )}
         </View>
 
+        {/* First on the tab, team or no team: writing a month for people who
+            never signed up has nothing to do with whichever team is below. */}
+        <Press style={styles.rosterEntry} onPress={() => router.push('/roster')}>
+          <Ionicons name="calendar-outline" size={20} color={palette.accent} />
+          <View style={styles.grow}>
+            <Text style={styles.rosterEntryTitle}>{t('График для команды')}</Text>
+            <Text style={styles.rosterEntryHint}>
+              {t('Распишите месяц и отправьте ссылку в чат. Регистрироваться никому не надо.')}
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={palette.textSecondary} />
+        </Press>
+
         {teams === null && <Loading colour={palette.backgroundElement} rows={2} height={150} />}
 
         {teams !== null && teams.length === 0 && (
@@ -836,6 +849,18 @@ const makeStyles = (palette: Palette) =>
       paddingVertical: 7,
     },
     boardButtonText: { color: palette.accent, fontSize: 13, fontWeight: '700' },
+    rosterEntry: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      backgroundColor: palette.backgroundElement,
+      borderColor: palette.border,
+      borderWidth: 1,
+      borderRadius: 18,
+      padding: 14,
+    },
+    rosterEntryTitle: { color: palette.text, fontSize: 15, fontWeight: '700' },
+    rosterEntryHint: { color: palette.textSecondary, fontSize: 12.5, lineHeight: 17, marginTop: 2 },
     grow: { flex: 1 },
     error: { color: palette.danger, fontSize: 13 },
     lead: { color: palette.textSecondary, fontSize: 14, lineHeight: 20 },

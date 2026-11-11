@@ -94,7 +94,7 @@ public sealed class ShiftCloser : BackgroundService
 
         if (candidates.Length == 0) return 0;
 
-        Dictionary<int, string> zones = await ZonesAsync(
+        Dictionary<int, string> zones = await UserZones.OfAsync(
             db, candidates.Select(entry => entry.UserId).Distinct().ToArray(), ct);
 
         TimeZoneInfo ZoneOf(int user) => _clock.ZoneOr(zones.GetValueOrDefault(user));
@@ -230,37 +230,4 @@ public sealed class ShiftCloser : BackgroundService
                         row => row.BreakMinutes == read || row.BreakMinutes < rest ? rest : row.BreakMinutes)
                     .SetProperty(row => row.AutoClosedAtUtc, (DateTime?)now),
                 ct);
-
-    /// <summary>Where each person said they are: the newest phone, else a browser, else the Telegram chat.</summary>
-    private static async Task<Dictionary<int, string>> ZonesAsync(
-        ShifterDbContext db,
-        int[] users,
-        CancellationToken ct)
-    {
-        var phones = await db.DeviceTokens
-            .AsNoTracking()
-            .Where(device => users.Contains(device.UserId))
-            .OrderByDescending(device => device.LastSeenAt)
-            .Select(device => new { device.UserId, device.TimeZone })
-            .ToArrayAsync(ct);
-
-        var browsers = await db.PushSubscriptions
-            .AsNoTracking()
-            .Where(subscription => users.Contains(subscription.UserId))
-            .OrderByDescending(subscription => subscription.CreatedAt)
-            .Select(subscription => new { subscription.UserId, subscription.TimeZone })
-            .ToArrayAsync(ct);
-
-        var chats = await db.TelegramLinks
-            .AsNoTracking()
-            .Where(link => users.Contains(link.UserId))
-            .Select(link => new { link.UserId, link.TimeZone })
-            .ToArrayAsync(ct);
-
-        Dictionary<int, string> zones = [];
-
-        foreach (var row in phones.Concat(browsers).Concat(chats)) zones.TryAdd(row.UserId, row.TimeZone);
-
-        return zones;
-    }
 }

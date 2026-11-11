@@ -124,6 +124,7 @@ export function CommandPalette() {
     const list: Command[] = [
       { id: 'nav-dashboard', icon: 'calendar', label: t('Calendar'), run: go('/dashboard') },
       { id: 'nav-schedule', icon: 'users', label: t('Schedule'), run: go('/schedule') },
+      { id: 'nav-roster', icon: 'users', label: t('Schedule for a team'), run: go('/roster') },
       { id: 'nav-payouts', icon: 'wallet', label: t('Payouts'), run: go('/payouts') },
       { id: 'nav-stats', icon: 'chart', label: t('Statistics'), run: go('/stats') },
       { id: 'nav-wrapped', icon: 'trophy', label: t('Your year'), run: go('/wrapped') },

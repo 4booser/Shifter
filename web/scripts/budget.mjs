@@ -35,6 +35,7 @@ const BUDGETS = {
   'report': 1_114_112,
   'reset': 966_656,
   'roadmap': 702_464,
+  'roster': 823_296,
   'schedule': 1_147_904,
   'stats': 1_181_696,
   'status': 968_704,

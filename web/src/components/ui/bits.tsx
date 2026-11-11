@@ -291,7 +291,7 @@ export function Alert({
       role={kind === 'error' ? 'alert' : 'status'}
       className={`flex items-center gap-2 rounded-(--radius) border px-3 py-2 text-[0.85rem] ${tone}`}
     >
-      <span className="min-w-0 flex-1">{children}</span>
+      <span className="min-w-0 flex-1 [overflow-wrap:anywhere]">{children}</span>
       {onDismiss && (
         // The icon is decorative, so without a label this reads as just
         // "button" — on nearly every error banner in the app.

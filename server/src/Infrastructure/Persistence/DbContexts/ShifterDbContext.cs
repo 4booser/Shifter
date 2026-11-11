@@ -51,6 +51,9 @@ public class ShifterDbContext : DbContext
     public DbSet<Handover> Handovers => Set<Handover>();
     public DbSet<StopItem> StopItems => Set<StopItem>();
     public DbSet<TeamPool> TeamPools => Set<TeamPool>();
+    public DbSet<Roster> Rosters => Set<Roster>();
+    public DbSet<RosterPerson> RosterPeople => Set<RosterPerson>();
+    public DbSet<RosterShift> RosterShifts => Set<RosterShift>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -257,6 +260,57 @@ public class ShifterDbContext : DbContext
         modelBuilder.Entity<GigListing>()
             .HasIndex(listing => listing.ShareSlug)
             .IsUnique();
+
+        // A roster is the owner's, and everything under it goes with it: the
+        // names on it have no account of their own to outlive it in.
+        modelBuilder.Entity<Roster>()
+            .HasOne(roster => roster.User).WithMany()
+            .HasForeignKey(roster => roster.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Roster>()
+            .Property(roster => roster.Title).HasMaxLength(Roster.TitleMax);
+        modelBuilder.Entity<Roster>()
+            .Property(roster => roster.ShareSlug).HasMaxLength(Roster.SlugLength);
+
+        // The link is looked up by slug and must open one roster only. Filtered
+        // because most rosters are never shared.
+        modelBuilder.Entity<Roster>()
+            .HasIndex(roster => roster.ShareSlug)
+            .IsUnique()
+            .HasFilter("\"ShareSlug\" IS NOT NULL");
+
+        modelBuilder.Entity<RosterPerson>()
+            .HasOne(person => person.Roster).WithMany(roster => roster.People)
+            .HasForeignKey(person => person.RosterId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<RosterPerson>()
+            .Property(person => person.Name).HasMaxLength(RosterPerson.NameMax);
+        modelBuilder.Entity<RosterPerson>()
+            .Property(person => person.Position).HasMaxLength(RosterPerson.PositionMax);
+        modelBuilder.Entity<RosterPerson>()
+            .Property(person => person.Colour).HasMaxLength(7);
+
+        modelBuilder.Entity<RosterShift>()
+            .HasOne(shift => shift.Roster).WithMany()
+            .HasForeignKey(shift => shift.RosterId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<RosterShift>()
+            .HasOne(shift => shift.Person).WithMany()
+            .HasForeignKey(shift => shift.RosterPersonId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // One shift per person per day. The cell save upserts on this pair, so
+        // the key is what keeps two devices from stacking a second one.
+        modelBuilder.Entity<RosterShift>()
+            .HasIndex(shift => new { shift.RosterPersonId, shift.Date })
+            .IsUnique();
+
+        // Always read as one roster's month.
+        modelBuilder.Entity<RosterShift>()
+            .HasIndex(shift => new { shift.RosterId, shift.Date });
 
         // Read two ways: everything a crew has pending, and one person's own
         // history. No unique key — a person can ask for July and September.

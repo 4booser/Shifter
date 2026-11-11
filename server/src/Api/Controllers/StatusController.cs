@@ -125,7 +125,7 @@ public class StatusController : ControllerBase
     private static readonly HashSet<string> Screens =
     [
         "calendar", "schedule", "gigs", "payouts", "stats", "report", "assistant",
-        "bank", "account", "team", "day", "templates", "year", "cv", "payslip",
+        "bank", "account", "team", "day", "templates", "year", "cv", "payslip", "roster",
     ];
 
     public record SeenDto(string? screen);

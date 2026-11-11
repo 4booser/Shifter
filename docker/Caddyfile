@@ -2,6 +2,22 @@
 # is all a bare IP can do. Put a hostname there instead and Caddy obtains and
 # renews a Let's Encrypt certificate on its own — no certbot, no cron, no
 # reload. That is the whole reason it is here rather than nginx.
+
+# A request the app could not answer — down for a release, say — is reported
+# by Caddy's own logger rather than by the site's log below, with the whole
+# request in it. So the same filter goes here too; see the log block below.
+{
+	log default {
+		format filter {
+			wrap json
+			fields {
+				request>uri regexp (?i)^/(r|feed|shifter/v1/hooks)/[^?]* /$1/[token]
+				request>headers>Referer delete
+			}
+		}
+	}
+}
+
 {$SITE_ADDRESS} {
 	encode zstd gzip
 
@@ -66,8 +82,20 @@
 	@hashed path /_next/static/*
 	header @hashed Cache-Control "public, max-age=31536000, immutable"
 
+	# The app keeps secrets out of its own log, and that is worth nothing if the
+	# line in front of it writes them down. A roster's slug, a calendar feed token
+	# and a webhook token are each the only key to what they open, and they all
+	# travel in the path. Referer goes too: this page's address, slug and all, is
+	# what a click from a roster to anywhere on this site sends along. Keep this
+	# list the same as Redact in Program.cs.
 	log {
 		output stdout
-		format console
+		format filter {
+			wrap console
+			fields {
+				request>uri regexp (?i)^/(r|feed|shifter/v1/hooks)/[^?]* /$1/[token]
+				request>headers>Referer delete
+			}
+		}
 	}
 }

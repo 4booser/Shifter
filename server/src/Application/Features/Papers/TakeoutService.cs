@@ -40,6 +40,12 @@ public sealed class TakeoutService
             .Where(goal => goal.UserId == userId).OrderBy(goal => goal.Id).ToArrayAsync(ct);
         var positions = await _db.Sales.AsNoTracking()
             .Where(position => position.UserId == userId).OrderBy(position => position.Id).ToArrayAsync(ct);
+        var rosters = await _db.Rosters.AsNoTracking()
+            .Include(roster => roster.People)
+            .Where(roster => roster.UserId == userId).OrderBy(roster => roster.Id).ToArrayAsync(ct);
+        var rosterShifts = (await _db.RosterShifts.AsNoTracking()
+            .Where(shift => shift.Roster!.UserId == userId).OrderBy(shift => shift.Date).ToArrayAsync(ct))
+            .ToLookup(shift => shift.RosterPersonId);
 
         var options = new JsonSerializerOptions
         {
@@ -182,6 +188,24 @@ public sealed class TakeoutService
                 price = position.Price,
                 percentage = position.Percentage,
                 archived = position.Archived,
+            }), options));
+
+            // The link stays behind: it is a key, and an archive gets passed around.
+            await WriteAsync("rosters.json", JsonSerializer.Serialize(rosters.Select(roster => new
+            {
+                title = roster.Title,
+                people = (roster.People ?? []).OrderBy(person => person.Id).Select(person => new
+                {
+                    name = person.Name,
+                    position = person.Position,
+                    colour = person.Colour,
+                    shifts = rosterShifts[person.Id].Select(shift => new
+                    {
+                        date = shift.Date.ToString("yyyy-MM-dd"),
+                        start = shift.StartTime.ToString("HH:mm"),
+                        end = shift.EndTime.ToString("HH:mm"),
+                    }),
+                }),
             }), options));
 
             await WriteAsync("days.csv", "﻿" + sheet);

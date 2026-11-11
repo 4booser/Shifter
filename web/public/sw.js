@@ -14,6 +14,8 @@
  *    basement where half of every shift is worked;
  *  - a read sent no-store: straight through, never answered from here. It is
  *    about to decide a write, and failing is what tells that write to wait;
+ *  - a shared roster at /r/: straight through, so a link turned off is off
+ *    for somebody with this worker too;
  *  - anything that is not GET: straight through, never cached — the offline
  *    QUEUE owns writes, and a cache pretending a PUT happened would be the
  *    silent merge this app refuses everywhere else.
@@ -92,6 +94,11 @@ self.addEventListener('fetch', (event) => {
   // The server's word or nothing: an old copy answered offline would pass for
   // it, and a clock would write a whole day on top.
   if (request.cache === 'no-store') return;
+
+  // A navigation is not sent no-store, and cache.put below does not read the
+  // header the page answers with. Kept here, a roster would go on opening
+  // offline after its owner killed the link.
+  if (url.pathname.startsWith('/r/')) return;
 
   const isApi = url.pathname.startsWith('/shifter/v1/');
   const isPage = request.mode === 'navigate';

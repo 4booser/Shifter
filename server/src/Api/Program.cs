@@ -63,11 +63,12 @@ try
     // the proxy that address is the proxy itself unless this runs first.
     app.UseForwardedHeaders();
 
-    // The path is redacted on the two routes where the path *is* the
-    // credential. A calendar feed token and a webhook token are the only key
-    // to somebody's whole shift history, and they were written to the log of
-    // every request — permanently, in cleartext, to anybody who can read
-    // `docker logs` or whatever ships them onward.
+    // The path is redacted on the routes where the path *is* the credential.
+    // A calendar feed token and a webhook token are the only key to somebody's
+    // whole shift history, and they were written to the log of every request —
+    // permanently, in cleartext, to anybody who can read `docker logs` or
+    // whatever ships them onward. A roster's slug is the same kind of key, to
+    // the names and hours of people who never signed up for anything.
     app.UseSerilogRequestLogging(options =>
         options.GetMessageTemplateProperties = (context, path, elapsed, status) =>
         [
@@ -157,8 +158,11 @@ try
 
     // SPA fallback: deep links such as /dashboard render the Angular shell so
     // they survive a refresh. Paths under shifter/ are excluded so that unknown
-    // API routes still return 404 rather than a page of HTML.
-    app.MapFallbackToFile("{*path:nonfile:regex(^(?!shifter/|g/).*$)}", "index.html");
+    // API routes still return 404 rather than a page of HTML. The public pages
+    // under g/ and r/ are controller routes, which outrank this anyway; they
+    // are excluded so a request those routes refuse is not answered with the
+    // app's shell either.
+    app.MapFallbackToFile("{*path:nonfile:regex(^(?!shifter/|g/|r/).*$)}", "index.html");
 
     app.Run();
 
@@ -178,7 +182,7 @@ finally
 /// <summary>Hides a secret that travels in a path.</summary>
 static string Redact(string path)
 {
-    foreach (string prefix in new[] { "/feed/", "/shifter/v1/hooks/" })
+    foreach (string prefix in new[] { "/feed/", "/shifter/v1/hooks/", "/r/" })
     {
         if (!path.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) continue;
 

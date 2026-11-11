@@ -67,7 +67,15 @@ services:
         # never starts against a schema that is not there yet.
         condition: service_completed_successfully
     healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health || exit 1"]
+      # The same probe as compose.prod.yaml: the image has no curl.
+      test:
+        - CMD
+        - bash
+        - -c
+        - >-
+          exec 3<>/dev/tcp/127.0.0.1/8080
+          && printf 'GET /health HTTP/1.1\r\nHost: localhost:8080\r\nConnection: close\r\n\r\n' >&3
+          && head -n 1 <&3 | grep -q ' 200 '
       interval: 10s
       timeout: 3s
       retries: 5

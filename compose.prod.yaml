@@ -94,7 +94,18 @@ services:
       migrate:
         condition: service_completed_successfully
     healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health || exit 1"]
+      # bash's /dev/tcp rather than curl, which the image no longer carries
+      # (see the Dockerfile): a real request to /health, healthy only on 200.
+      # /health answers 503 while the database is away, so an open port alone
+      # is not enough to pass.
+      test:
+        - CMD
+        - bash
+        - -c
+        - >-
+          exec 3<>/dev/tcp/127.0.0.1/8080
+          && printf 'GET /health HTTP/1.1\r\nHost: localhost:8080\r\nConnection: close\r\n\r\n' >&3
+          && head -n 1 <&3 | grep -q ' 200 '
       interval: 15s
       timeout: 5s
       retries: 5

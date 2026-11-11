@@ -2,6 +2,22 @@
 # is all a bare IP can do. Put a hostname there instead and Caddy obtains and
 # renews a Let's Encrypt certificate on its own — no certbot, no cron, no
 # reload. That is the whole reason it is here rather than nginx.
+
+# A request the app could not answer — down for a release, say — is reported
+# by Caddy's own logger rather than by the site's log below, with the whole
+# request in it. So the same filter goes here too; see the log block below.
+{
+	log default {
+		format filter {
+			wrap json
+			fields {
+				request>uri regexp (?i)^/(r|feed|shifter/v1/hooks)/[^?]* /$1/[token]
+				request>headers>Referer delete
+			}
+		}
+	}
+}
+
 {$SITE_ADDRESS} {
 	encode zstd gzip
 

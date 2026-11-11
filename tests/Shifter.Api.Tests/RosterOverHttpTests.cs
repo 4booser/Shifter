@@ -1011,31 +1011,37 @@ public sealed class RosterOverHttpTests(Api api)
 
         string caddy = File.ReadAllText(Path.Combine(directory!.FullName, "docker/Caddyfile"));
 
-        // The rule as the file writes it, run the way Caddy runs it, so the test
-        // cannot pass on a filter that is there and catches nothing.
-        var rule = System.Text.RegularExpressions.Regex.Match(caddy, @"request>uri regexp (\S+) (\S+)");
+        // The rules as the file writes them, run the way Caddy runs them, so the
+        // test cannot pass on a filter that is there and catches nothing. There
+        // are two: the access log, and Caddy's own logger, which reports a
+        // request the app could not answer with the whole request in it.
+        var rules = System.Text.RegularExpressions.Regex.Matches(caddy, @"request>uri regexp (\S+) (\S+)");
 
-        Assert.True(rule.Success, "The access log has no filter on the request's address.");
+        Assert.Equal(2, rules.Count);
 
-        string Logged(string uri)
-            => System.Text.RegularExpressions.Regex.Replace(uri, rule.Groups[1].Value, rule.Groups[2].Value);
+        foreach (System.Text.RegularExpressions.Match rule in rules)
+        {
+            string Logged(string uri)
+                => System.Text.RegularExpressions.Regex.Replace(uri, rule.Groups[1].Value, rule.Groups[2].Value);
 
-        Assert.Equal("/r/[token]", Logged("/r/abcdefghjkmn"));
-        Assert.Equal("/r/[token]?month=2026-11", Logged("/r/abcdefghjkmn?month=2026-11"));
-        Assert.Equal("/feed/[token]", Logged("/feed/secret.ics"));
-        Assert.Equal("/shifter/v1/hooks/[token]", Logged("/shifter/v1/hooks/telegram/secret"));
+            Assert.Equal("/r/[token]", Logged("/r/abcdefghjkmn"));
+            Assert.Equal("/r/[token]?month=2026-11", Logged("/r/abcdefghjkmn?month=2026-11"));
+            Assert.Equal("/feed/[token]", Logged("/feed/secret.ics"));
+            Assert.Equal("/shifter/v1/hooks/[token]", Logged("/shifter/v1/hooks/telegram/secret"));
 
-        // Routes ignore case, so a link retyped in capitals opens the same thing.
-        Assert.Equal("/R/[token]", Logged("/R/abcdefghjkmn"));
-        Assert.Equal("/Feed/[token]", Logged("/Feed/secret.ics"));
-        Assert.Equal("/SHIFTER/v1/hooks/[token]", Logged("/SHIFTER/v1/hooks/telegram/secret"));
+            // Routes ignore case, so a link retyped in capitals opens the same thing.
+            Assert.Equal("/R/[token]", Logged("/R/abcdefghjkmn"));
+            Assert.Equal("/Feed/[token]", Logged("/Feed/secret.ics"));
+            Assert.Equal("/SHIFTER/v1/hooks/[token]", Logged("/SHIFTER/v1/hooks/telegram/secret"));
 
-        // Everything else is what the log is for.
-        Assert.Equal("/shifter/v1/rosters", Logged("/shifter/v1/rosters"));
-        Assert.Equal("/roster", Logged("/roster"));
+            // Everything else is what the log is for.
+            Assert.Equal("/shifter/v1/rosters", Logged("/shifter/v1/rosters"));
+            Assert.Equal("/roster", Logged("/roster"));
+        }
 
-        // A click from the page to anywhere on this site carries its address along.
-        Assert.Contains("request>headers>Referer delete", caddy);
+        // A click from the page to anywhere on this site carries its address
+        // along, in both logs.
+        Assert.Equal(2, System.Text.RegularExpressions.Regex.Matches(caddy, "request>headers>Referer delete").Count);
     }
 
     [Fact]

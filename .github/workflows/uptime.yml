@@ -10,7 +10,9 @@ on:
 
 jobs:
   probe:
-    runs-on: ubuntu-latest
+    # Pinned like every other job here: ubuntu-latest moves to a new release
+    # on GitHub's schedule, not ours.
+    runs-on: ubuntu-24.04
     steps:
       - name: Probe /health
         run: |

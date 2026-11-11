@@ -26,6 +26,7 @@ import {
   teamApi,
 } from '@/lib/api/team';
 import { MyAssignments } from '@/components/team/my-assignments';
+import { RosterEntry } from '@/components/roster/roster-entry';
 import { PlannerBoardView } from '@/components/team/planner';
 import { useI18n } from '@/lib/i18n';
 import { useReveal } from '@/lib/fx';
@@ -333,7 +334,8 @@ function Schedule() {
   if (!loading && teams.length === 0) {
     return (
       // The shared one.
-      <div ref={revealHost} className="mx-auto max-w-md">
+      <div ref={revealHost} className="mx-auto flex max-w-md flex-col gap-3">
+        <RosterEntry />
         <Empty
           icon="users"
           title={t('No team yet')}
@@ -347,6 +349,8 @@ function Schedule() {
 
   return (
     <div ref={revealHost} className="flex flex-col gap-4">
+      <RosterEntry />
+
       {/* ==== Toolbar ==== */}
       <div className="flex flex-wrap items-center gap-2">
         <h1 className="text-[1.3rem] font-bold tracking-tight">

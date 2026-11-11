@@ -99,6 +99,7 @@ export default function RootLayout() {
             <Stack.Screen name="board" options={{ presentation: 'modal' }} />
             <Stack.Screen name="crew" options={{ presentation: 'modal' }} />
             <Stack.Screen name="costs" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="roster" options={{ presentation: 'modal' }} />
           </Stack.Protected>
           <Stack.Protected guard={session === null}>
             <Stack.Screen name="login" />

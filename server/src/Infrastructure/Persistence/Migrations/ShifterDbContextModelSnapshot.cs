@@ -17,7 +17,7 @@ namespace Shifter.Migrations.ShifterDb
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.11")
+                .HasAnnotation("ProductVersion", "10.0.14")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -1509,6 +1509,108 @@ namespace Shifter.Migrations.ShifterDb
                     b.ToTable("PushSubscriptions");
                 });
 
+            modelBuilder.Entity("Shifter.Domain.Entities.Roster", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ShareSlug")
+                        .HasMaxLength(12)
+                        .HasColumnType("character varying(12)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ShareSlug")
+                        .IsUnique()
+                        .HasFilter("\"ShareSlug\" IS NOT NULL");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Rosters");
+                });
+
+            modelBuilder.Entity("Shifter.Domain.Entities.RosterPerson", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Colour")
+                        .IsRequired()
+                        .HasMaxLength(7)
+                        .HasColumnType("character varying(7)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<string>("Position")
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<int>("RosterId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RosterId");
+
+                    b.ToTable("RosterPeople");
+                });
+
+            modelBuilder.Entity("Shifter.Domain.Entities.RosterShift", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<TimeOnly>("EndTime")
+                        .HasColumnType("time without time zone");
+
+                    b.Property<int>("RosterId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("RosterPersonId")
+                        .HasColumnType("integer");
+
+                    b.Property<TimeOnly>("StartTime")
+                        .HasColumnType("time without time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RosterId", "Date");
+
+                    b.HasIndex("RosterPersonId", "Date")
+                        .IsUnique();
+
+                    b.ToTable("RosterShifts");
+                });
+
             modelBuilder.Entity("Shifter.Domain.Entities.Sales", b =>
                 {
                     b.Property<int>("Id")
@@ -2655,6 +2757,47 @@ namespace Shifter.Migrations.ShifterDb
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Shifter.Domain.Entities.Roster", b =>
+                {
+                    b.HasOne("Shifter.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Shifter.Domain.Entities.RosterPerson", b =>
+                {
+                    b.HasOne("Shifter.Domain.Entities.Roster", "Roster")
+                        .WithMany("People")
+                        .HasForeignKey("RosterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Roster");
+                });
+
+            modelBuilder.Entity("Shifter.Domain.Entities.RosterShift", b =>
+                {
+                    b.HasOne("Shifter.Domain.Entities.Roster", "Roster")
+                        .WithMany()
+                        .HasForeignKey("RosterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Shifter.Domain.Entities.RosterPerson", "Person")
+                        .WithMany()
+                        .HasForeignKey("RosterPersonId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Person");
+
+                    b.Navigation("Roster");
+                });
+
             modelBuilder.Entity("Shifter.Domain.Entities.Sales", b =>
                 {
                     b.HasOne("Shifter.Domain.Entities.User", "User")
@@ -2870,6 +3013,11 @@ namespace Shifter.Migrations.ShifterDb
             modelBuilder.Entity("Shifter.Domain.Entities.GigListing", b =>
                 {
                     b.Navigation("Responses");
+                });
+
+            modelBuilder.Entity("Shifter.Domain.Entities.Roster", b =>
+                {
+                    b.Navigation("People");
                 });
 
             modelBuilder.Entity("Shifter.Domain.Entities.Shift", b =>

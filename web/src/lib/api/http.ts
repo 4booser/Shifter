@@ -174,6 +174,8 @@ interface RequestOptions {
   signal?: AbortSignal;
   /** Asks the server itself: past the service worker's copy, so offline this throws instead of answering from an old one. */
   fresh?: boolean;
+  /** Lets the request outlive the page that made it, for the last save on the way out. Browsers hold such a body to 64 KiB. */
+  keepalive?: boolean;
 }
 
 /** A file over the same authorized channel. */
@@ -212,6 +214,7 @@ export async function api<T>(path: string, options: RequestOptions = {}): Promis
       body: options.rawBody ?? (options.body !== undefined ? JSON.stringify(options.body) : undefined),
       signal: options.signal,
       cache: options.fresh === true ? 'no-store' : undefined,
+      keepalive: options.keepalive,
     });
   };
 

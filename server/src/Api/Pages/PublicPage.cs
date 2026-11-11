@@ -15,6 +15,7 @@ internal static class PublicPage
           *{box-sizing:border-box}
           body{margin:0;background:#f4f2ed;color:#1c1b18;font:16px/1.55 system-ui,sans-serif;padding:2rem 1.25rem}
           main{max-width:34rem;margin:0 auto}
+          main.wide{max-width:88rem}
           h1{font-size:1.6rem;margin:0 0 .25rem;letter-spacing:-.02em}
           .big{font-size:1.15rem;font-weight:700;margin:0 0 1.25rem}
           ul{list-style:none;padding:0;margin:0 0 1.25rem}
@@ -33,7 +34,7 @@ internal static class PublicPage
         """;
 
     /// Ukrainian, as the reader asked.</param> The tab, and nothing else — cards add their own heading.</param>…
-    internal static string Render(bool uk, string title, string head, string body, string? footer = null)
+    internal static string Render(bool uk, string title, string head, string body, string? footer = null, bool wide = false)
         => $"""
             <!doctype html>
             <html lang="{(uk ? "uk" : "ru")}">
@@ -46,7 +47,7 @@ internal static class PublicPage
             {Style}
             </style>
             </head>
-            <body><main>
+            <body><main{(wide ? " class=\"wide\"" : "")}>
             {body}
             <footer>{footer ?? (uk ? "Оголошення з біржі" : "Объявление с биржи")} <a href="/">Shifter</a>.</footer>
             </main></body>

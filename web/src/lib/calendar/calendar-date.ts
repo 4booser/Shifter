@@ -168,11 +168,12 @@ export function keyOf(date: Date): string {
 export function keysBetween(a: string, b: string): string[] {
   const [from, to] = a <= b ? [a, b] : [b, a];
   const cursor = fromKey(from);
-  const last = fromKey(to);
   const keys: string[] = [];
 
-  while (cursor <= last) {
-    keys.push(toKey(cursor));
+  // By key, not by instant: where the clocks change at midnight the cursor
+  // lands on 01:00 and stays there, past the midnight the last day starts at.
+  for (let key = from; key <= to; key = toKey(cursor)) {
+    keys.push(key);
     cursor.setDate(cursor.getDate() + 1);
   }
 

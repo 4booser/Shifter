@@ -767,6 +767,18 @@ dialog.modal[open] {
   animation-delay: calc(var(--i, 0) * 30ms * var(--motion));
 }
 
+/* A word that has said what it came to say, sitting over the page. */
+.fade-away {
+  animation: fade-away calc(0.4s * var(--motion)) ease-out 2.2s forwards;
+}
+
+@keyframes fade-away {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
 @keyframes fade-in {
   from {
     opacity: 0;

@@ -223,6 +223,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
                   <div className="card absolute right-0 z-50 mt-1.5 w-52 overflow-hidden py-1 shadow-(--shadow-lg)">
                     {[
                       { href: '/account', label: 'Account', icon: 'user' },
+                      { href: '/roster', label: 'Schedule for a team', icon: 'users' },
                       { href: '/webhooks', label: 'Webhooks', icon: 'swap' },
                       { href: '/whats-new', label: 'What’s new', icon: 'spark' },
                     ].map((item) => (

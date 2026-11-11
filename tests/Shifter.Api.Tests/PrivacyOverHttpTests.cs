@@ -151,6 +151,39 @@ public sealed class PrivacyOverHttpTests(Api api)
         Assert.False(response.IsSuccessStatusCode);
     }
 
+    /// <summary>The owner is signed in and the reader is nobody: what crosses between them is what the owner typed on the roster, and nothing from the account behind it.</summary>
+    [Fact]
+    public async Task A_shared_roster_shows_nothing_of_the_account_that_wrote_it()
+    {
+        var (owner, login) = await api.SignInAsync("rosterprivacy");
+
+        var roster = await Read(await owner.PostAsJsonAsync("/shifter/v1/rosters", new { title = "Кальянная" }));
+        var id = roster.GetProperty("id").GetInt32();
+
+        var slug = (await Read(await owner.PostAsync($"/shifter/v1/rosters/{id}/share", null)))
+            .GetProperty("share_slug").GetString();
+
+        var page = await api.CreateClient().GetStringAsync($"/r/{slug}");
+
+        Assert.Contains("Кальянная", page);
+        Assert.DoesNotContain(login, page);
+        Assert.DoesNotContain("Тестов", page);
+    }
+
+    [Fact]
+    public async Task A_stranger_cannot_read_a_roster_they_do_not_own()
+    {
+        var (owner, _) = await api.SignInAsync("rosterowner");
+        var (stranger, _) = await api.SignInAsync("rosterstranger");
+
+        var roster = await Read(await owner.PostAsJsonAsync("/shifter/v1/rosters", new { title = "Кальянная" }));
+        var id = roster.GetProperty("id").GetInt32();
+
+        var response = await stranger.GetAsync($"/shifter/v1/rosters/{id}/month/2026-11");
+
+        Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
+    }
+
     [Fact]
     public async Task Somebody_who_shares_still_sees_their_own_figures()
     {

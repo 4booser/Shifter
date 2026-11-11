@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 
 import { api, onAuthLost, Session, sessionStore, setSession } from '@/lib/api';
+import { rosterSavers } from '@/lib/roster-api';
 
 interface SessionState {
   /** null = signed out; undefined = still reading the keychain. */
@@ -73,3 +74,8 @@ export const useSession = create<SessionState>((set) => ({
     set({ session: null });
   },
 }));
+
+// Unsent cells belong to whoever wrote them, and the next to sign in is not them.
+useSession.subscribe(({ session }) => {
+  if (session === null) rosterSavers.forgetAll();
+});

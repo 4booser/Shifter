@@ -40,6 +40,7 @@ if (process.env.NODE_ENV === 'development') {
     { source: '/shifter/:path*', destination: 'http://localhost:5208/shifter/:path*' },
     { source: '/health', destination: 'http://localhost:5208/health' },
     { source: '/feed/:path*', destination: 'http://localhost:5208/feed/:path*' },
+    { source: '/r/:path*', destination: 'http://localhost:5208/r/:path*' },
   ];
 }
 

@@ -118,4 +118,49 @@ public sealed class LeavingOverHttpTests(Api api)
 
         Assert.Equal(HttpStatusCode.NoContent, gone.StatusCode);
     }
+
+    /// <summary>The names on a roster are the owner's data and have no account of their own to stay behind in.</summary>
+    [Fact]
+    public async Task Leaving_takes_a_roster_and_every_name_on_it()
+    {
+        var (client, login) = await api.SignInAsync("leave");
+
+        var roster = await Read(await client.PostAsJsonAsync("/shifter/v1/rosters", new { title = "Кальянная" }));
+        var id = roster.GetProperty("id").GetInt32();
+
+        var person = await Read(await client.PostAsJsonAsync(
+            $"/shifter/v1/rosters/{id}/people",
+            new { name = "Толик", position = "Кальяны", colour = "#1f3a5f" }));
+
+        (await client.PutAsJsonAsync($"/shifter/v1/rosters/{id}/cells", new
+        {
+            set = new[]
+            {
+                new
+                {
+                    person_id = person.GetProperty("id").GetInt32(),
+                    date = "2026-11-02",
+                    start_time = "11:00",
+                    end_time = "22:00",
+                },
+            },
+        })).EnsureSuccessStatusCode();
+
+        var slug = (await Read(await client.PostAsync($"/shifter/v1/rosters/{id}/share", null)))
+            .GetProperty("share_slug").GetString();
+
+        var request = new HttpRequestMessage(HttpMethod.Delete, "/shifter/v1/account")
+        {
+            Content = JsonContent.Create(new
+            {
+                password = "Integration1@x",
+                confirm_login = login,
+            }),
+        };
+
+        var gone = await client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.NoContent, gone.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await api.CreateClient().GetAsync($"/r/{slug}")).StatusCode);
+    }
 }

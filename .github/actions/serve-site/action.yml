@@ -1,0 +1,67 @@
+name: Serve the site
+description: >-
+  Gives the job's database a schema, builds the site into wwwroot and serves
+  it on http://localhost:5208, returning once /health answers.
+
+# What the deploy checks, the screens and the screens refresh each had their
+# own copy of these steps, and the copies had already drifted: one waited for
+# /health and failed when it never came, another waited for /login and went
+# on regardless, so a server that never started showed up as twenty-two
+# failed screenshots instead of one failed start.
+#
+# What it needs from the job, since a composite action can declare neither:
+#   - a postgres:17-alpine service on localhost:5432 with user shifter_user,
+#     password ci and database shifter;
+#   - ConnectionStrings__Shifter and ConnectionStrings__Tokens in the job's
+#     env, pointing at it;
+#   - .NET 10 and Node 24 already set up. Those stay in the jobs because
+#     Dependabot reads action versions from the workflows only: a setup-node
+#     pinned in here would be the one copy nobody ever bumps.
+
+inputs:
+  environment:
+    description: >-
+      ASPNETCORE_ENVIRONMENT for the server. Production is what the deploy
+      ships. The screens run under Development because that is what their
+      baselines were shot against; moving them to Production means refreshing
+      every baseline, which should be done on purpose rather than as a side
+      effect of sharing these steps.
+    required: false
+    default: Production
+
+runs:
+  using: composite
+  steps:
+    # Without this the database has no tables, every registration answers
+    # 500, and not one shot is taken. The screens job once reported success
+    # for exactly that reason.
+    - name: Give it a schema
+      shell: bash
+      run: |
+        dotnet tool install --global dotnet-ef
+        dotnet restore server/Shifter.csproj
+        PGPASSWORD=ci psql -h localhost -U shifter_user -d shifter -c 'CREATE DATABASE tokens;'
+        dotnet ef database update --project server/Shifter.csproj --context ShifterDbContext
+        dotnet ef database update --project server/Shifter.csproj --context TokensDbContext
+
+    - name: Build the site into wwwroot
+      shell: bash
+      working-directory: web
+      run: npm ci && npm run build
+
+    # Release and no launch profile whatever the environment, so the only
+    # thing the input changes is the environment: the profile would also pick
+    # the configuration and the address on the server's behalf.
+    - name: Serve it
+      shell: bash
+      env:
+        ASPNETCORE_ENVIRONMENT: ${{ inputs.environment }}
+        ASPNETCORE_URLS: http://localhost:5208
+        SHIFTER_JWT_KEY: ci-only-key-thirty-two-characters!!
+      run: |
+        dotnet run --project server/Shifter.csproj -c Release --no-launch-profile &
+        for _ in $(seq 1 60); do
+          curl -fsS http://localhost:5208/health >/dev/null 2>&1 && exit 0
+          sleep 2
+        done
+        echo "server never became healthy"; exit 1

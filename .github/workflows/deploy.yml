@@ -7,132 +7,48 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# Nothing by default: every job below asks for exactly what it uses.
+permissions: {}
+
 env:
   REGISTRY: ghcr.io
   IMAGE: ${{ github.repository_owner }}/shifter
 
 jobs:
-  test:
-    name: Test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+  # The same checks a pull request runs, from the same file, called rather
+  # than copied. This used to be two jobs of its own, Test and End-to-end,
+  # which had drifted from CI: the deploy weighed the front end and nothing
+  # before the merge did, so a green pull request produced a red deploy.
+  #
+  # deploying: true leaves out the migrations job, which compares against
+  # origin/main and here would compare this commit with itself, and the
+  # screens, which are for looking at a proposal. Reading the repository is
+  # all any of it needs.
+  checks:
+    name: Checks
+    uses: ./.github/workflows/ci.yml
+    with:
+      deploying: true
+    permissions:
+      contents: read
 
-      - uses: actions/setup-dotnet@v6
-        with:
-          dotnet-version: '10.0.x'
-
-      - run: dotnet test Shifter.sln --configuration Release
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-          cache: npm
-          cache-dependency-path: web/package-lock.json
-
-      - run: npm ci
-        working-directory: web
-
-      # Type errors fail the build later and more expensively; catch them here.
-      - run: npm run lint
-        working-directory: web
-
-      - run: npm test
-        working-directory: web
-
-  e2e:
-    name: End-to-end
-    runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:17-alpine
-        env:
-          POSTGRES_USER: shifter_user
-          POSTGRES_PASSWORD: e2e
-          POSTGRES_DB: shifter
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U shifter_user -d shifter"
-          --health-interval 5s --health-timeout 3s --health-retries 20
-    env:
-      ConnectionStrings__Shifter: "Host=localhost;Port=5432;Database=shifter;Username=shifter_user;Password=e2e"
-      ConnectionStrings__Tokens: "Host=localhost;Port=5432;Database=tokens;Username=shifter_user;Password=e2e"
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-dotnet@v6
-        with:
-          dotnet-version: '10.0.x'
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-          cache: npm
-          cache-dependency-path: web/package-lock.json
-
-      - name: Create the tokens database
-        run: PGPASSWORD=e2e psql -h localhost -U shifter_user -d shifter -c 'CREATE DATABASE tokens;'
-
-      - name: Apply migrations
-        run: |
-          dotnet tool install --global dotnet-ef
-          dotnet restore server/Shifter.csproj
-          dotnet ef database update --project server/Shifter.csproj --context ShifterDbContext
-          dotnet ef database update --project server/Shifter.csproj --context TokensDbContext
-
-      - name: Build the SPA into wwwroot
-        run: npm ci && npm run build
-        working-directory: web
-
-      # Bytes are a budget line, not a surprise: today's weight plus 15%,
-      # page by page. A new page fails until it is granted a line.
-      - name: Front-end weight within budget
-        run: npm run budget
-        working-directory: web
-
-      - name: Start the server
-        env:
-          ASPNETCORE_ENVIRONMENT: Production
-          ASPNETCORE_URLS: http://localhost:5208
-          SHIFTER_JWT_KEY: e2e-only-key-thirty-two-characters!!
-        run: |
-          dotnet run --project server/Shifter.csproj -c Release --no-launch-profile &
-          for i in $(seq 1 60); do
-            curl -fsS http://localhost:5208/health >/dev/null 2>&1 && exit 0
-            sleep 2
-          done
-          echo "server never became healthy"; exit 1
-
-      # Ask for every kind of row as somebody else. Two of the privacy holes
-      # found in review were invisible to reading — the screen looked right and
-      # the extra data was in the response — and the only way to catch that
-      # class is to ask as the wrong person and look at what comes back.
-      - name: Nobody else's rows
-        run: ./scripts/leak-check.sh http://localhost:5208
-
-      - name: Run Playwright
-        run: |
-          npx playwright install --with-deps chromium
-          npm run e2e
-        working-directory: web
-
-      - uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: playwright-traces
-          path: web/test-results
-          retention-days: 7
-
+  # Alongside the checks, not after them. Waiting for the checks before
+  # starting nine minutes of image building made every deploy the sum of the
+  # two. Starting early is safe because nothing built here is live: the images
+  # get their commit tag and nothing else, nothing runs a commit tag until the
+  # deploy job names it, and that job waits for the checks. A failed check
+  # leaves an image in the registry that production never pulls, and that
+  # never gets the checked-<sha> tag a release by hand asks for.
   build:
     name: Build and push
-    needs: [test, e2e]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
       packages: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - uses: docker/setup-buildx-action@v4
 
@@ -154,9 +70,7 @@ jobs:
           push: true
           build-args: |
             BUILD_REF=${{ github.sha }}
-          tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE }}:${{ github.sha }}
-            ${{ env.REGISTRY }}/${{ env.IMAGE }}:latest
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE }}:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -166,16 +80,103 @@ jobs:
           context: .
           target: migrate
           push: true
-          tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE }}-migrate:${{ github.sha }}
-            ${{ env.REGISTRY }}/${{ env.IMAGE }}-migrate:latest
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE }}-migrate:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+  # What happens once a commit has been built and has passed its checks, and
+  # only then: the images are marked as checked, :latest moves, and the deploy
+  # learns whether it should go. All three by pointing tags at the manifests
+  # already pushed. Building again would cost the nine minutes this layout
+  # exists to save, and would be a different image from the one that was
+  # checked.
+  latest:
+    name: Mark checked, move latest
+    needs: [checks, build]
+    runs-on: ubuntu-24.04
+    permissions:
+      # The tip of main, read through the API.
+      contents: read
+      packages: write
+    outputs:
+      ship: ${{ steps.newest.outputs.ship }}
+    steps:
+      # Two pushes close together are checked side by side and finish in
+      # either order. The production group lets one deployment wait and
+      # cancels the one already waiting whenever another arrives, so an
+      # older commit whose checks finished last would cancel the newer
+      # one's waiting deploy and go live in its place, leaving production
+      # behind main and behind :latest. So a pushed commit that is no longer
+      # the tip of main moves neither: the commit that is will. It has to be
+      # decided here, before the deploy job, because a job that is skipped
+      # never joins the group and a job that has joined it can no longer
+      # step back out of the newer one's way.
+      #
+      # Started by hand, the run ships what it was started on, as it always
+      # has; :latest still moves only for the tip of main.
+      - name: Still the newest
+        id: newest
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tip=$(gh api "repos/$GITHUB_REPOSITORY/commits/main" --jq .sha)
+
+          if [ "$tip" = "$GITHUB_SHA" ]; then
+            newest=true
+            ship=true
+          else
+            newest=false
+            echo "::notice::main is at $tip now; :latest is left to that commit's run"
+            if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ]; then
+              ship=true
+            else
+              ship=false
+              echo "::notice::and so is production"
+            fi
+          fi
+
+          echo "newest=$newest" >> "$GITHUB_OUTPUT"
+          echo "ship=$ship" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # A commit tag only says the images were built: "Build and push" runs
+      # alongside the checks, so a commit that fails them still leaves its
+      # images in the registry. checked-<sha> is the registry's record that
+      # this commit passed, written by the only job that knows it, and it is
+      # what scripts/deploy-by-hand.sh asks for before releasing anything.
+      # Every commit that passes gets one, the newest or not.
+      - name: Mark the images checked
+        run: |
+          for image in "$IMAGE" "$IMAGE-migrate"; do
+            docker buildx imagetools create \
+              --tag "$REGISTRY/$image:checked-$GITHUB_SHA" \
+              "$REGISTRY/$image:$GITHUB_SHA"
+          done
+
+      - name: Point latest at this commit
+        if: steps.newest.outputs.newest == 'true'
+        run: |
+          for image in "$IMAGE" "$IMAGE-migrate"; do
+            docker buildx imagetools create \
+              --tag "$REGISTRY/$image:latest" \
+              "$REGISTRY/$image:$GITHUB_SHA"
+          done
+
   deploy:
     name: Deploy
-    needs: build
-    runs-on: ubuntu-latest
+    # Explicitly: the images to pull, the checks that cleared them, and the
+    # job that says whether this commit is still the one to ship. A failed
+    # check skips that job and this one, so neither :latest nor production
+    # is touched. A tag that cannot be written stops this too, so the two
+    # never point at different commits.
+    needs: [checks, build, latest]
+    if: needs.latest.outputs.ship == 'true'
+    runs-on: ubuntu-24.04
     # The server pulls with this run's token, so it needs to be able to read
     # packages — stated here rather than left to whatever the default is.
     permissions:
@@ -186,85 +187,24 @@ jobs:
       group: production
       cancel-in-progress: false
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
-      # Before anything is copied anywhere. The old cleanup ran on the success
-      # path of the release script — after the pull, after the health loop —
-      # which made freeing disk space conditional on having enough disk space
-      # to get there. Once the box filled, every deploy failed at the very
-      # first step, the cleanup was never reached, and it stayed full: 182
-      # images, 52 GB, and a database that aborted mid-checkpoint with the site
-      # behind it. Making room is a precondition for a deploy, not a reward.
+      # Before anything is copied anywhere — see docker/make-room.sh for why.
+      # script_path is read here on the runner and run on the server, so this
+      # works on a box too full to receive a file, and it is the same script
+      # scripts/deploy-by-hand.sh runs when Actions is down.
       - name: Make room
         uses: appleboy/ssh-action@v1.2.5
         env:
-          IMAGE_NAME: ${{ env.IMAGE }}
+          IMAGES: ${{ env.REGISTRY }}/${{ github.repository_owner }}
         with:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
-          envs: IMAGE_NAME
-          script: |
-            set -euo pipefail
-
-            used() { df --output=pcent / | tail -1 | tr -dc '0-9'; }
-
-            echo "disk before: $(used)%"
-
-            # By count, not by age. An age window answers "how old is too
-            # old", which is not the question — the question is "can I still
-            # go back", and the answer has to be yes on a quiet Tuesday and
-            # after six deploys in an afternoon alike. 48h gave neither: a
-            # busy day left nine images and a fortnight of silence left none
-            # to roll back to.
-            #
-            # Newest first by the timestamp, deduplicated — one image usually
-            # carries both its commit tag and :latest, and counting it twice
-            # would keep half as many releases as it says.
-            keep_last() {
-              repo="$1"
-              keep="$2"
-
-              # A space rather than a tab: the timestamp itself contains
-              # spaces, so the id is simply the last field, and nothing here
-              # depends on how docker handles an escape in a format string.
-              docker image ls "$repo" --format '{{.CreatedAt}} {{.ID}}' \
-                | sort -r \
-                | awk '{ print $NF }' \
-                | awk '!seen[$0]++' \
-                | awk -v keep="$keep" 'NR > keep' \
-                | while read -r id; do
-                    # Never the running one: it is referenced, so this fails
-                    # and the image stays. Losing it would be losing the site.
-                    docker image rm "$id" >/dev/null 2>&1 || true
-                  done
-            }
-
-            keep_last "ghcr.io/${IMAGE_NAME}" 4
-            keep_last "ghcr.io/${IMAGE_NAME}-migrate" 4
-
-            # Dangling layers belong to nothing and are always safe.
-            docker image prune -f >/dev/null 2>&1 || true
-
-            # Still tight: keep the running release and one to go back to.
-            if [ "$(used)" -ge 80 ]; then
-              echo "still $(used)% — keeping fewer"
-              keep_last "ghcr.io/${IMAGE_NAME}" 2
-              keep_last "ghcr.io/${IMAGE_NAME}-migrate" 2
-              docker builder prune -af >/dev/null 2>&1 || true
-            fi
-
-            echo "disk after: $(used)%"
-
-            # Refusing here is the point. A deploy that starts without room
-            # does not fail cleanly — it half-copies files, aborts a pull, and
-            # takes the database down with it.
-            if [ "$(used)" -ge 90 ]; then
-              echo "less than 10% free after pruning; refusing to deploy"
-              df -h /
-              du -xh --max-depth=2 / 2>/dev/null | sort -rh | head -10
-              exit 1
-            fi
+          envs: IMAGES
+          script_path: ${{ github.workspace }}/docker/make-room.sh
 
       - name: Ship the compose files
         uses: appleboy/scp-action@v1.0.0
@@ -275,30 +215,55 @@ jobs:
           # The whole docker/ directory rather than a list of files. The list
           # was written by hand, so adding a crontab line for a script without
           # adding the script to the list failed the deploy on chmod — a list
-          # you have to remember is a list somebody forgets.
+          # you have to remember is a list somebody forgets. release.sh rides
+          # along with the rest.
           #
           # .env stays on the server and is never overwritten from here.
+          #
+          # Into a waiting room of this run's own, unpacked into the stack
+          # by the next step under the release lock. scp-action cannot take
+          # the lock, and copying straight into /opt/shifter let these files
+          # land in the middle of a release from scripts/deploy-by-hand.sh,
+          # which then brought up its own images on this commit's compose.
           source: "compose.prod.yaml,docker/"
-          target: /opt/shifter
+          target: /opt/shifter/.incoming/${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Pull and restart
         uses: appleboy/ssh-action@v1.2.5
         env:
           REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REGISTRY_USER: ${{ github.actor }}
+          IMAGES: ${{ env.REGISTRY }}/${{ github.repository_owner }}
+          RELEASE: ${{ github.sha }}
+          STAGED: .incoming/${{ github.run_id }}-${{ github.run_attempt }}
         with:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           # The token is scoped to this run and expires with it, so the
           # server never holds a lasting credential for the registry.
-          envs: REGISTRY_TOKEN,REGISTRY_USER
+          envs: REGISTRY_TOKEN,REGISTRY_USER,IMAGES,RELEASE,STAGED
           script: |
             set -euo pipefail
             cd /opt/shifter
 
+            # The production group above serialises runs of this workflow
+            # and nothing else; scripts/deploy-by-hand.sh releases from a
+            # laptop and takes this same lock. Held from before the login
+            # until after the logout in the trap below, so neither release can
+            # log the other out mid-pull or bring up the other's .env.release.
+            # Five minutes, inside ssh-action's own ten.
+            exec 9>>.release.lock
+            flock -w 300 9 || { echo "another release is still running on this box after five minutes"; exit 1; }
+
+            # The files shipped above, put in place only now that nothing
+            # else can release. Through tar, so each file is replaced rather
+            # than written through, which release.sh's Caddy check expects.
+            tar -cf - -C "$STAGED" compose.prod.yaml docker | tar -xf - -C /opt/shifter
+            rm -rf "$STAGED"
+
             # Images pushed by Actions are private unless someone changes that
-            # by hand, so the pull below needs a login. Doing it here keeps the
+            # by hand, so the pull needs a login. Doing it here keeps the
             # package private without anyone storing a token on the server.
             #
             # The logout is a trap rather than a line at the end: it used to sit
@@ -310,65 +275,9 @@ jobs:
 
             echo "$REGISTRY_TOKEN" | docker login ghcr.io -u "$REGISTRY_USER" --password-stdin
 
-            echo "REGISTRY=${{ env.REGISTRY }}/${{ github.repository_owner }}" > .env.release
-            echo "TAG=${{ github.sha }}" >> .env.release
-
-            # Nightly database dumps: the script ships with every release and
-            # the crontab line is rewritten idempotently, so changing the
-            # schedule or the script is just another deploy. The deploy user's
-            # own crontab, because /etc/cron.d is root's and this user is not.
-            chmod +x docker/backup.sh docker/restore-drill.sh
-            mkdir -p backups "$HOME/.cache"
-            # And a weekly restore drill, because a dump nobody has ever
-            # restored is a hope rather than a backup. It loads the newest one
-            # into a scratch database and compares row counts against the live
-            # one — an empty restore loads perfectly and is worth nothing.
-            ( crontab -l 2>/dev/null | grep -v -e shifter-backup -e shifter-restore-drill || true ; \
-              echo '17 3 * * * /opt/shifter/docker/backup.sh >> /opt/shifter/backups/backup.log 2>&1 # shifter-backup' ; \
-              echo '41 5 * * 1 /opt/shifter/docker/restore-drill.sh >> /opt/shifter/backups/restore-drill.log 2>&1 # shifter-restore-drill' \
-            ) | crontab -
-
-            docker compose -f compose.prod.yaml --env-file .env --env-file .env.release pull
-            docker compose -f compose.prod.yaml --env-file .env --env-file .env.release up -d
-
-            # A single file bind-mounted into a container is bound by inode,
-            # and scp replaces the file rather than writing through it — so the
-            # host gets the new config and the container goes on seeing the old
-            # one. Reloading in place is therefore useless: Caddy re-reads the
-            # same stale bytes and reports the config unchanged, which is how
-            # this went unnoticed. Comparing what the container actually sees
-            # against what was just shipped is the only honest check, and
-            # recreating is what re-resolves the mount.
-            if ! docker compose -f compose.prod.yaml exec -T proxy \
-                 cat /etc/caddy/Caddyfile | cmp -s - docker/Caddyfile; then
-              echo "proxy config changed; recreating"
-              docker compose -f compose.prod.yaml --env-file .env --env-file .env.release \
-                up -d --force-recreate proxy
-            fi
-
-            # Wait for the app to report healthy before calling this a success,
-            # so a broken release fails the run instead of sitting there.
-            for i in $(seq 1 30); do
-              # The word to match is "(healthy)" with its bracket. Matching
-              # 'shifter.*healthy' also matched "(unhealthy)" — the .* spans
-              # the "un" — so a release that started but could not reach the
-              # database was called green on the very first pass, and the only
-              # alarm left was the ten-minute external probe.
-              if docker compose -f compose.prod.yaml ps --format '{{.Service}} {{.Status}}' \
-                 | grep -E '^shifter .*\(healthy\)' >/dev/null; then
-                echo "healthy"
-                # Only what belongs to nothing. Trimming by count happens in
-                # "Make room" at the top of the job, where it can refuse to
-                # deploy; here the release has just succeeded and taking an
-                # image away would only be taking a rollback away.
-                docker image prune -f >/dev/null 2>&1 || true
-                echo "disk: $(df --output=pcent / | tail -1 | tr -dc '0-9')%"
-                exit 0
-              fi
-              sleep 5
-            done
-
-            echo "did not become healthy in time"
-            docker compose -f compose.prod.yaml ps
-            docker compose -f compose.prod.yaml logs --tail 60 shifter
-            exit 1
+            # Everything after the login lives in docker/release.sh, shipped
+            # in the step above, so that scripts/deploy-by-hand.sh runs the
+            # very same release when Actions cannot: backups and the restore
+            # drill in the crontab, pull, up, the Caddy inode check, and the
+            # wait for "(healthy)".
+            bash docker/release.sh "$RELEASE"

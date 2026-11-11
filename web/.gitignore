@@ -1,2 +1,7 @@
 test-results/
 playwright-report/
+
+# Screen baselines are rendered on Linux runners only. A SCREENS=1 run on a
+# laptop must not bring back the darwin pictures that made every local run fail.
+e2e/screens.spec.ts-snapshots/*-darwin.png
+e2e/screens.spec.ts-snapshots/*-win32.png

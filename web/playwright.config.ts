@@ -11,6 +11,13 @@ export default defineConfig({
   workers: 1,
   timeout: 45_000,
   retries: process.env['CI'] ? 1 : 0,
+  /*
+   * Screen baselines are Linux-only, shot on a runner. Anywhere else a missing
+   * one is a failure rather than a picture written into the repository: a
+   * SCREENS=1 run on a laptop would otherwise lay darwin baselines down beside
+   * the Linux ones, and they are the reason every local run used to fail.
+   */
+  ...(process.platform === 'linux' ? {} : { updateSnapshots: 'none' as const }),
   use: {
     baseURL: process.env['E2E_BASE'] ?? 'http://localhost:5208',
     trace: 'retain-on-failure',

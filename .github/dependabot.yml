@@ -23,8 +23,20 @@ updates:
       minor-and-patch:
         update-types: ["minor", "patch"]
 
+  # Every action bump in one pull request rather than one each. They arrive
+  # together anyway — a runtime deprecation moves checkout, setup-node and
+  # upload-artifact in the same week — and each separate one ran the whole of
+  # CI for a one-line change. Majors included: an action's major is usually
+  # its runtime, and that is the one that starts warning first.
+  #
+  # Only the workflows are read from here. The composite action under
+  # .github/actions deliberately uses no other action, so nothing in it can go
+  # stale where this block does not look.
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
       day: monday
+    groups:
+      actions:
+        patterns: ["*"]

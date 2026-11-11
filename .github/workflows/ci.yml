@@ -5,33 +5,67 @@ name: CI
 # that also shipped it — and up to eleven dependency updates a week were merged
 # without once being built. This runs on the proposal instead.
 #
-# And on main as well, since everything here goes straight there: three of
-# these five jobs check things the deploy does not look at at all — the phone,
-# migrations against a database with rows in it, and what the screens look
-# like. Excluding main meant they had not run in six days, and three of them
-# were red when they last did.
+# And on main as well, since everything here goes straight there — but no
+# longer as a run of its own. The deploy calls this file (workflow_call, with
+# deploying: true) and waits for it, so the checks a pull request passes are
+# the checks a release passes, defined once. The deploy used to carry its own
+# copy, the copies drifted, and a pull request that was green everywhere
+# produced a deploy that refused to ship over a weight budget nothing before
+# the merge had looked at.
 #
 # A branch with a pull request open used to run everything twice, once for the
-# push and once for the proposal, and each pair showed up as two checks.
+# push and once for the proposal, and each pair showed up as two checks. There
+# is no push trigger at all now: a pull request runs this, a push to main runs
+# it through the deploy, and anything else can be started by hand.
 on:
   pull_request:
     branches: [main]
-  push:
-    branches: [main]
   workflow_dispatch:
+  workflow_call:
+    inputs:
+      deploying:
+        description: >-
+          Called by the deploy. Leaves out the migrations job, which compares
+          against origin/main and so against this very commit, and the
+          screens, which are a review aid rather than a gate on a release.
+        type: boolean
+        default: false
 
-# A second push to the same branch cancels the first: the older answer is not
-# worth waiting for.
+# Every job here only reads the repository. Stated, so a pull request's token
+# is read-only whatever the repository default says, and so the deploy cannot
+# hand this file more than that by accident.
+permissions:
+  contents: read
+
+# A second push to the same pull request cancels the run for the first: the
+# older answer is not worth waiting for.
+#
+# A deploy's run of this file must neither be cancelled that way nor cancel
+# anything. Two things from GitHub's documentation decide how: a called
+# workflow sees its caller's github context — github.ref is refs/heads/main
+# and github.workflow is "Deploy" there — and a concurrency group is shared by
+# every workflow in the repository, the caller included. So the old group,
+# ci-<ref>, would have put a deploy's checks in the same group as a manual run
+# of CI on main, and with cancel-in-progress either would have cancelled the
+# other; it would also have let one deploy's checks cancel the previous
+# deploy's, failing that deploy. A deploy's checks therefore get a group keyed
+# on the run id, which nothing else can share, and never cancel. A pull
+# request's group is ci-refs/pull/<n>/merge and cannot reach it either way.
 concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  group: ${{ inputs.deploying && format('ci-deploy-{0}', github.run_id) || format('ci-{0}', github.ref) }}
+  cancel-in-progress: ${{ !inputs.deploying }}
 
 jobs:
   build:
     name: Build and test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      # Nothing in this job talks to git after the checkout, so the token is
+      # not left behind for the steps that follow. The same holds for every
+      # job in this file except the migrations one, which fetches main.
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - uses: actions/setup-dotnet@v6
         with:
@@ -39,7 +73,7 @@ jobs:
 
       - run: dotnet test Shifter.sln --configuration Release
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '24'
           cache: npm
@@ -59,17 +93,19 @@ jobs:
       - run: npm run build
         working-directory: web
 
-      # The leak check needs a running API and a database, so it lives in the
-      # end-to-end job of the deploy workflow rather than here. Said out loud
-      # because its absence from this file otherwise looks like an oversight.
+      # The leak check needs a running API and a database, so it lives in
+      # "What the deploy checks" below rather than here. Said out loud because
+      # its absence from this job otherwise looks like an oversight.
 
   mobile:
     name: Mobile typecheck
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '24'
           cache: npm
@@ -90,7 +126,11 @@ jobs:
 
   migrations:
     name: Migrations on a database with rows in it
-    runs-on: ubuntu-latest
+    # On a deploy, origin/main is the commit being deployed, so "the last
+    # released schema" and "this one" are the same and there is nothing to
+    # migrate between. The pull request that brought the migration ran this.
+    if: ${{ !inputs.deploying }}
+    runs-on: ubuntu-24.04
     services:
       postgres:
         image: postgres:17-alpine
@@ -108,7 +148,11 @@ jobs:
       ConnectionStrings__Tokens: "Host=localhost;Port=5432;Database=tokens;Username=shifter_user;Password=ci"
       SHIFTER_JWT_KEY: ci-only-key-thirty-two-characters!!
     steps:
-      - uses: actions/checkout@v4
+      # Credentials kept (the default): the step below fetches main, which
+      # needs them the day the repository is private. Since checkout v6 they
+      # sit in a file under RUNNER_TEMP that .git/config includes, rather than
+      # in .git/config itself.
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-dotnet@v6
         with:
@@ -152,7 +196,7 @@ jobs:
 
   api:
     name: The API answering over HTTP
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     services:
       postgres:
         image: postgres:17-alpine
@@ -169,7 +213,9 @@ jobs:
       # One schema for both contexts, made and remade by the test host itself.
       ConnectionStrings__Shifter: "Host=localhost;Port=5432;Database=shifter;Username=shifter_user;Password=ci"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - uses: actions/setup-dotnet@v6
         with:
@@ -185,13 +231,14 @@ jobs:
       # migration guards, being text checks, never do.
       - run: dotnet test tests/Shifter.Api.Tests/Shifter.Api.Tests.csproj --nologo
 
-  # Everything the deploy gates on, run here first. The deploy had checks of
-  # its own that nothing ran before a merge: Next 16 pushed two pages over
-  # the weight budget, every check on the proposal was green, and the first
-  # anybody heard of it was a deploy that refused to ship.
+  # Everything the deploy gates on beyond building and testing. The deploy had
+  # checks of its own that nothing ran before a merge: Next 16 pushed two pages
+  # over the weight budget, every check on the proposal was green, and the
+  # first anybody heard of it was a deploy that refused to ship. Now the
+  # deploy runs this very job, so the two cannot differ again.
   deploy-gate:
     name: What the deploy checks
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     services:
       postgres:
         image: postgres:17-alpine
@@ -208,58 +255,48 @@ jobs:
       ConnectionStrings__Shifter: "Host=localhost;Port=5432;Database=shifter;Username=shifter_user;Password=ci"
       ConnectionStrings__Tokens: "Host=localhost;Port=5432;Database=tokens;Username=shifter_user;Password=ci"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '10.0.x'
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '24'
           cache: npm
           cache-dependency-path: web/package-lock.json
 
-      - name: Give it a schema
-        run: |
-          dotnet tool install --global dotnet-ef
-          dotnet restore server/Shifter.csproj
-          PGPASSWORD=ci psql -h localhost -U shifter_user -d shifter -c 'CREATE DATABASE tokens;'
-          dotnet ef database update --project server/Shifter.csproj --context ShifterDbContext
-          dotnet ef database update --project server/Shifter.csproj --context TokensDbContext
+      # Schema, the site built into wwwroot, and the server answering /health
+      # in Production, exactly as the screens job below gets them.
+      - uses: ./.github/actions/serve-site
 
-      - name: Build the site into wwwroot
-        run: npm ci && npm run build
-        working-directory: web
-
+      # Bytes are a budget line, not a surprise: today's weight plus 15%,
+      # page by page. A new page fails until it is granted a line.
       - name: Front-end weight within budget
         run: npm run budget
         working-directory: web
 
-      - name: Serve it as production does
-        env:
-          ASPNETCORE_ENVIRONMENT: Production
-          ASPNETCORE_URLS: http://localhost:5208
-          SHIFTER_JWT_KEY: ci-only-key-thirty-two-characters!!
-        run: |
-          dotnet run --project server/Shifter.csproj -c Release --no-launch-profile &
-          for i in $(seq 1 60); do
-            curl -fsS http://localhost:5208/health >/dev/null 2>&1 && exit 0
-            sleep 2
-          done
-          echo "server never became healthy"; exit 1
-
+      # Ask for every kind of row as somebody else. Two of the privacy holes
+      # found in review were invisible to reading — the screen looked right and
+      # the extra data was in the response — and the only way to catch that
+      # class is to ask as the wrong person and look at what comes back.
       - name: Nobody else's rows
         run: ./scripts/leak-check.sh http://localhost:5208
 
       # The screens spec skips itself here; its own job below shoots them.
       - name: Walk through it
         run: |
-          npx playwright install --with-deps chromium
+          ../scripts/install-browser.sh
           npm run e2e
         working-directory: web
 
-      - uses: actions/upload-artifact@v4
+      # Hidden files stay out, as upload-artifact has done by default since
+      # v4.4: the only one Playwright writes is .last-run.json, and nothing
+      # that explains a failure is hidden.
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: deploy-gate-traces
@@ -268,7 +305,10 @@ jobs:
 
   screens:
     name: The screens, looked at
-    runs-on: ubuntu-latest
+    # A review aid for a proposal, compared against baselines a pull request
+    # can refresh. On a deploy the commit has already been looked at.
+    if: ${{ !inputs.deploying }}
+    runs-on: ubuntu-24.04
     services:
       postgres:
         image: postgres:17-alpine
@@ -284,67 +324,53 @@ jobs:
     env:
       ConnectionStrings__Shifter: "Host=localhost;Port=5432;Database=shifter;Username=shifter_user;Password=ci"
       ConnectionStrings__Tokens: "Host=localhost;Port=5432;Database=tokens;Username=shifter_user;Password=ci"
-      Jwt__Key: "ci-screenshots-signing-key-32-chars!!"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '10.0.x'
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
-          node-version: 24
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
 
-      - name: Build the site into wwwroot
-        run: |
-          cd web
-          npm ci
-          npm run build
-
-      # Without this the database has no tables, every registration answers
-      # 500, and not one shot is taken. This job has been reporting success
-      # and uploading the committed baselines untouched — «look at the
-      # pictures on the run» was pointing at pictures from a laptop.
-      - name: Give it a schema
-        run: |
-          dotnet tool install --global dotnet-ef
-          dotnet restore server/Shifter.csproj
-          PGPASSWORD=ci psql -h localhost -U shifter_user -d shifter -c 'CREATE DATABASE tokens;'
-          dotnet ef database update --project server/Shifter.csproj --context ShifterDbContext
-          dotnet ef database update --project server/Shifter.csproj --context TokensDbContext
-
-      - name: Serve the real thing
-        run: |
-          dotnet run --project server/Shifter.csproj --urls http://localhost:5208 &
-          for i in $(seq 1 60); do
-            curl -sf http://localhost:5208/login > /dev/null && break
-            sleep 2
-          done
+      # The same setup as the deploy gate, and as the refresh that writes the
+      # baselines this compares against — so a refresh shoots exactly what
+      # this job looks at.
+      - uses: ./.github/actions/serve-site
+        with:
+          environment: Development
 
       - name: Shoot the screens
-        # A diff is a failure now. It could not be before: the baselines were
-        # darwin-named, Linux renders differently, and --update-snapshots made
-        # every run agree with itself by definition. Linux baselines are
-        # committed beside the darwin ones, so this compares against something.
+        # A diff is a failure. The baselines are Linux-only and are written by
+        # the "Refresh the screens" workflow on a runner like this one, never
+        # by hand: a laptop renders fonts differently and its pictures would
+        # fail here on first sight.
         #
         # Two percent of pixels is the tolerance, which is wide enough for
         # font hinting and narrow enough to catch a section that collapsed.
-        # When it goes red, look at the diff in the artefact below before
-        # reaching for --update-snapshots=all.
+        # When it goes red, look at the diff in the artefact below; if the
+        # change is meant, run "Refresh the screens" on the branch.
         env:
           SCREENS: '1'
         run: |
-          cd web
-          npx playwright install --with-deps chromium
+          ../scripts/install-browser.sh --fonts
           npx playwright test e2e/screens.spec.ts
+        working-directory: web
 
+      # The actual, expected and diff images of every shot that failed. The
+      # committed baselines are no longer uploaded: they are in the branch, and
+      # carrying them out of an artefact by hand is what the refresh workflow
+      # replaced.
       - name: Hang the shots on the run
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: screens
-          path: |
-            web/e2e/screens.spec.ts-snapshots/
-            web/test-results/
+          path: web/test-results/
           if-no-files-found: ignore

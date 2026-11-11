@@ -1,0 +1,233 @@
+name: Refresh the screens
+
+# The screens job compares against Linux baselines, and the only machine that
+# renders them the way that job does is a runner like the one it uses. Until
+# now a refresh meant downloading the job's artefact, unpacking the right
+# pictures into the right folder and committing them by hand. This does it on
+# a runner, for one branch, with the very setup the screens job uses.
+#
+# Started from the Actions tab: pick the branch to refresh in "Use workflow
+# from". The run belongs to that branch rather than to main, and that is the
+# point: a run started from main with the branch only checked out would run
+# the branch's install scripts, build and server with main's cache scope, and
+# what it wrote there the deploy restores when it builds the production
+# image. Run from the branch, every cache it writes stays the branch's own.
+#
+# The branch needs this file and the screens job's setup (.github/actions),
+# so one cut before they landed must merge main first. GitHub offers a
+# workflow_dispatch workflow only once its file is on the default branch, so
+# this cannot run on the branch that brings it in; the first refresh is for a
+# branch cut after it merged.
+#
+# The push at the end is made with GITHUB_TOKEN, and a push made with
+# GITHUB_TOKEN does not start a new CI run of its own. The checks on the pull
+# request will still be the ones for the commit before the refresh, so they
+# need starting again by hand: where GitHub offers "Approve workflows to run"
+# in the pull request's merge box, that is the button; otherwise run CI from
+# the Actions tab on the same branch. Re-running the old run does not do it —
+# it checks the commit it was started for.
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: >-
+          changed rewrites only the shots that no longer match; all rewrites
+          every one, including those inside the two-percent tolerance
+        required: true
+        default: changed
+        type: choice
+        options:
+          - changed
+          - all
+
+# One refresh per branch at a time: a second waits rather than racing the
+# first to the push.
+concurrency:
+  group: screens-refresh-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+# Two jobs, so that no code from the branch ever runs where a token that can
+# write to the repository exists. Shooting runs the branch's npm install
+# scripts, its build, its server and its Playwright, and the branch can be a
+# Dependabot one carrying packages nobody has read yet; main has no branch
+# protection, so a write token within their reach could push straight to it.
+# The shooting job therefore reads only and keeps no credentials; the pushing
+# job writes, and runs nothing but git on the pictures the first one handed
+# over. Turning persistence off inside a single job would not be enough: code
+# that ran earlier, or the server still running in the background, could
+# leave a hook or a credential helper in .git/config for the push to call.
+jobs:
+  shoot:
+    name: Shoot the screens
+    runs-on: ubuntu-24.04
+    outputs:
+      sha: ${{ steps.commit.outputs.sha }}
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: shifter_user
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: shifter
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U shifter_user -d shifter"
+          --health-interval 5s --health-timeout 3s --health-retries 20
+    env:
+      ConnectionStrings__Shifter: "Host=localhost;Port=5432;Database=shifter;Username=shifter_user;Password=ci"
+      ConnectionStrings__Tokens: "Host=localhost;Port=5432;Database=tokens;Username=shifter_user;Password=ci"
+    steps:
+      # main changes through a pull request and nowhere else. A baseline
+      # pushed straight onto it is a change nobody reviewed, and it would land
+      # without the checks ever having looked at it. Checked here, first, so a
+      # wrong name costs seconds rather than the ten minutes of shooting.
+      - name: A branch, and not main
+        env:
+          REF: ${{ github.ref }}
+        run: |
+          case "$REF" in
+            refs/heads/main)
+              echo "refusing to refresh the baselines on main; pick the pull request's branch in \"Use workflow from\""
+              exit 1
+              ;;
+            refs/heads/*) ;;
+            *)
+              echo "refusing to refresh $REF: only a branch can take the commit"
+              exit 1
+              ;;
+          esac
+
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      # The exact commit that was shot, so the push lands on top of it and
+      # nothing else: if the branch moved while this ran, the push is refused
+      # instead of pairing these pictures with code they were not shot from.
+      # Taken before anything from the branch runs.
+      - name: Which commit
+        id: commit
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      # Development, as in the screens job: the same server the baselines are
+      # compared against there.
+      - uses: ./.github/actions/serve-site
+        with:
+          environment: Development
+
+      - name: Shoot the screens afresh
+        env:
+          SCREENS: '1'
+          MODE: ${{ inputs.mode }}
+        run: |
+          ../scripts/install-browser.sh --fonts
+          npx playwright test e2e/screens.spec.ts --update-snapshots="$MODE"
+        working-directory: web
+
+      # Every baseline, changed or not: the push job keeps only the ones git
+      # sees a difference in.
+      - uses: actions/upload-artifact@v7
+        with:
+          name: screens-refreshed
+          path: web/e2e/screens.spec.ts-snapshots/*-linux.png
+          if-no-files-found: error
+          retention-days: 1
+
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: screens-refresh-traces
+          path: web/test-results
+          retention-days: 7
+
+  push:
+    name: Commit what changed
+    needs: shoot
+    runs-on: ubuntu-24.04
+    # Writing to the branch is the whole job, and it is the only job that
+    # can. Nothing in it comes from the branch except files git checks out:
+    # no npm, no dotnet, no action from the repository.
+    permissions:
+      contents: write
+    steps:
+      # Credentials kept (the default), because the last step pushes. Since
+      # checkout v6 they live in a file under RUNNER_TEMP rather than in
+      # .git/config, and no step here runs anything that could read them.
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.shoot.outputs.sha }}
+
+      # Outside the work tree, so nothing in the artefact lands anywhere but
+      # where the step below puts it.
+      - uses: actions/download-artifact@v8
+        with:
+          name: screens-refreshed
+          path: ${{ runner.temp }}/screens-refreshed
+
+      # Only the Linux pictures, and only those that changed: nothing else the
+      # run wrote — traces, test results, the built site — belongs on the
+      # branch, and a picture is copied in by its own name, as a plain file.
+      - name: Commit and push
+        env:
+          REF: ${{ github.ref }}
+          BRANCH: ${{ github.ref_name }}
+          SHOTS: ${{ runner.temp }}/screens-refreshed
+        run: |
+          case "$REF" in
+            refs/heads/main)
+              echo "refusing to push to main"
+              exit 1
+              ;;
+            refs/heads/*) ;;
+            *)
+              echo "refusing to push to $REF"
+              exit 1
+              ;;
+          esac
+
+          dir=web/e2e/screens.spec.ts-snapshots
+          for shot in "$SHOTS"/*-linux.png; do
+            if [ -f "$shot" ] && [ ! -L "$shot" ]; then
+              cp -- "$shot" "$dir/$(basename -- "$shot")"
+            fi
+          done
+
+          git add -- "$dir/*-linux.png"
+
+          if git diff --cached --quiet; then
+            echo "Every baseline on $BRANCH already matches; nothing to commit." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          git diff --cached --name-status
+
+          git -c user.name='github-actions[bot]' \
+              -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
+              commit -m "Linux screen baselines refreshed (run $GITHUB_RUN_ID)"
+
+          # Rejected if somebody pushed to the branch meanwhile; run this again
+          # on top of their commit rather than forcing past it.
+          git push origin "HEAD:refs/heads/$BRANCH"
+
+          {
+            echo "Refreshed baselines pushed to $BRANCH:"
+            echo
+            git diff --name-only HEAD~1 HEAD | sed 's/^/- /'
+            echo
+            echo "That push starts no CI run by itself. Start the checks for it by hand:"
+            echo "approve the waiting runs in the pull request, or run CI on $BRANCH."
+          } >> "$GITHUB_STEP_SUMMARY"

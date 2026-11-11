@@ -134,7 +134,7 @@ jobs:
           SCREENS: '1'
           MODE: ${{ inputs.mode }}
         run: |
-          ../scripts/install-browser.sh
+          ../scripts/install-browser.sh --fonts
           npx playwright test e2e/screens.spec.ts --update-snapshots="$MODE"
         working-directory: web
 

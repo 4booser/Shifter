@@ -359,7 +359,7 @@ jobs:
         env:
           SCREENS: '1'
         run: |
-          ../scripts/install-browser.sh
+          ../scripts/install-browser.sh --fonts
           npx playwright test e2e/screens.spec.ts
         working-directory: web
 

@@ -269,8 +269,11 @@ public sealed class GigService
 
     public async Task<GigDto[]> MyRepliesAsync(int userId, CancellationToken ct)
     {
+        // A reply, its gig and that gig's replies come back round to the reply:
+        // a cycle, which a plain no-tracking query refuses before it runs, and
+        // this list answered 500 to everybody. Identity resolution allows it.
         var rows = await _db.GigResponses
-            .AsNoTracking()
+            .AsNoTrackingWithIdentityResolution()
             .Include(reply => reply.Listing)!
             .ThenInclude(gig => gig!.Responses)
             .Where(reply => reply.UserId == userId)

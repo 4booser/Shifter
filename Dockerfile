@@ -62,12 +62,11 @@ ENTRYPOINT ["sh", "-c", "\
     /bundle-tokens --connection \"$ConnectionStrings__Tokens\""]
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
-# The runtime image ships without wget or curl, so the compose healthcheck had
-# nothing to run and reported the container unhealthy while it was serving
-# traffic perfectly well. A few megabytes buys a probe that tells the truth.
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends curl \
-    && rm -rf /var/lib/apt/lists/*
+# Nothing installed from apt. curl used to be, for the healthcheck alone, and
+# on 11 November that one layer failed the production build: Ubuntu's mirrors
+# did not resolve from GitHub's runners for over an hour, and a cache miss on
+# it held back every release. The healthcheck in compose.prod.yaml asks
+# /health with bash, which the image already has.
 WORKDIR /app
 EXPOSE 8080
 # «Деплой прошёл» and «прод обновился» are different claims; /status telling

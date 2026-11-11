@@ -289,7 +289,7 @@ jobs:
       # The screens spec skips itself here; its own job below shoots them.
       - name: Walk through it
         run: |
-          npx playwright install --with-deps chromium
+          ../scripts/install-browser.sh
           npm run e2e
         working-directory: web
 
@@ -359,7 +359,7 @@ jobs:
         env:
           SCREENS: '1'
         run: |
-          npx playwright install --with-deps chromium
+          ../scripts/install-browser.sh
           npx playwright test e2e/screens.spec.ts
         working-directory: web
 

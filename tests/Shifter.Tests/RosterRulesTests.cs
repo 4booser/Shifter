@@ -1,4 +1,5 @@
 using Shifter.Application.Common.Exceptions;
+using Shifter.Application.Features.business.DTOs;
 using Shifter.Application.Features.Rosters;
 using Shifter.Domain.Entities;
 
@@ -177,7 +178,61 @@ public class RosterRulesTests
             [new RosterCellSetDto(1, "2026-11-02", "11:00", "22:00")],
             [new RosterCellClearDto(1, "2026-11-02")]));
 
-        Assert.Null(Assert.Single(cells).Start);
+        Assert.False(Assert.Single(cells).Filled);
+    }
+
+    [Fact]
+    public void ACellWithNoHoursIsADayWithNoSetTime()
+    {
+        var cells = RosterRules.ReadBatch(new RosterCellsDto(
+            [
+                new RosterCellSetDto(1, "2026-11-02", null, null),
+                new RosterCellSetDto(1, "2026-11-03", "11:00", "22:00") with { start_time = null, end_time = null },
+            ],
+            null));
+
+        Assert.Equal(2, cells.Length);
+        Assert.All(cells, cell =>
+        {
+            Assert.True(cell.Filled);
+            Assert.Null(cell.Start);
+            Assert.Null(cell.End);
+        });
+    }
+
+    [Theory]
+    [InlineData("11:00", null)]
+    [InlineData(null, "22:00")]
+    public void HalfAPairOfHoursIsRefused(string? start, string? end)
+    {
+        var refused = Assert.Throws<ValidationException>(() => RosterRules.ReadBatch(new RosterCellsDto(
+            [new RosterCellSetDto(1, "2026-11-02", start, end)], null)));
+
+        Assert.Equal("start_time and end_time come together.", refused.Message);
+    }
+
+    [Fact]
+    public void AClearAfterANoTimeSetOfTheSameCellEmptiesIt()
+    {
+        var cell = Assert.Single(RosterRules.ReadBatch(new RosterCellsDto(
+            [new RosterCellSetDto(1, "2026-11-02", null, null)],
+            [new RosterCellClearDto(1, "2026-11-02")])));
+
+        Assert.False(cell.Filled);
+    }
+
+    [Fact]
+    public void ANoTimeSetAfterATimedOneOfTheSameCellWins()
+    {
+        var cell = Assert.Single(RosterRules.ReadBatch(new RosterCellsDto(
+            [
+                new RosterCellSetDto(1, "2026-11-02", "11:00", "22:00"),
+                new RosterCellSetDto(1, "2026-11-02", null, null),
+            ],
+            null)));
+
+        Assert.True(cell.Filled);
+        Assert.Null(cell.Start);
     }
 
     [Fact]
@@ -233,5 +288,275 @@ public class RosterRulesTests
         Assert.Throws<ValidationException>(() => RosterRules.ReadBatch(null));
         Assert.Throws<ValidationException>(() => RosterRules.ReadBatch(new RosterCellsDto([null], null)));
         Assert.Throws<ValidationException>(() => RosterRules.ReadBatch(new RosterCellsDto(null, [null])));
+    }
+
+    // ==== Usual hours, positions and usual days ====
+
+    private static WeekHoursDto Day(int weekday, string start = "12:00", string end = "00:00")
+        => new(weekday, start, end);
+
+    private static string Refusal(Action save) => Assert.Throws<ValidationException>(save).Message;
+
+    private static RosterPerson Person(int id = 1) => new() { Id = id, Name = "Толик", Colour = "#4488cc" };
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(8)]
+    public void WeekHoursOutsideOneToSevenAreRefused(int weekday)
+        => Assert.Equal("weekday must be from 1 to 7.", Refusal(() => RosterRules.ReadWeek([Day(weekday)])));
+
+    [Fact]
+    public void AWeekdayListedTwiceIsRefused()
+        => Assert.Equal(
+            "A weekday is listed more than once.",
+            Refusal(() => RosterRules.ReadWeek([Day(5), Day(1), Day(5, "18:00", "04:00")])));
+
+    [Fact]
+    public void WeekHoursThatStartAndEndTogetherAreRefused()
+    {
+        Assert.Equal("Start and end time must differ.", Refusal(() => RosterRules.ReadWeek([Day(1, "12:00", "12:00")])));
+        Assert.Equal("start_time must be HH:mm.", Refusal(() => RosterRules.ReadWeek([Day(1, "25:00")])));
+        Assert.Equal("end_time must be HH:mm.", Refusal(() => RosterRules.ReadWeek([new WeekHoursDto(1, "12:00", null!)])));
+    }
+
+    [Fact]
+    public void WeekHoursComeOutInWeekdayOrder()
+    {
+        var week = RosterRules.ReadWeek([Day(7, "11:00", "19:00"), Day(1), Day(5, "12:00", "02:00")]);
+
+        Assert.Equal([1, 5, 7], week.Select(entry => entry.Weekday));
+        Assert.Equal([1, 5, 7], RosterRules.WeekDto(week).Select(entry => entry.weekday));
+        Assert.Equal("02:00", RosterRules.WeekDto(week)[1].end_time);
+        Assert.Empty(RosterRules.ReadWeek(null));
+    }
+
+    [Fact]
+    public void APositionNameIsTrimmedRequiredAndMeasured()
+    {
+        Assert.Equal("Бар", RosterRules.ReadPositionName("  Бар "));
+        Assert.Equal(new string('я', 40), RosterRules.ReadPositionName($" {new string('я', 40)} "));
+
+        Assert.Equal("Position is required.", Refusal(() => RosterRules.ReadPositionName("   ")));
+        Assert.Equal("Position is required.", Refusal(() => RosterRules.ReadPositionName(null)));
+        Assert.Equal(
+            "Position must be at most 40 characters.",
+            Refusal(() => RosterRules.ReadPositionName(new string('я', RosterPosition.NameMax + 1))));
+
+        Assert.Equal(RosterRules.PositionKey(" бар "), RosterRules.PositionKey("БАР"));
+    }
+
+    [Fact]
+    public void APositionNameWithAControlCharacterIsRefused()
+        => Assert.Equal(
+            "Position holds a character that cannot be shown.",
+            Refusal(() => RosterRules.ReadPositionName("Бар\u0007")));
+
+    [Theory]
+    [InlineData("Venue")]
+    [InlineData("")]
+    [InlineData(null)]
+    [InlineData("inherit")]
+    public void PositionHoursModesAreTheThreeAndNoOther(string? mode)
+    {
+        var position = new RosterPosition { Name = "Бар" };
+
+        Assert.Equal(
+            "hours.mode must be none, own or venue.",
+            Refusal(() => RosterRules.ApplyPositionHours(position, new RosterHoursDto(mode, null, null, null))));
+
+        RosterRules.ApplyPositionHours(position, new RosterHoursDto("own", "18:00", "02:00", null));
+
+        Assert.Equal(RosterHoursMode.Own, position.HoursMode);
+        Assert.Empty(position.WeekHours);
+
+        // Venue and none keep no hours of their own, whatever came with them.
+        RosterRules.ApplyPositionHours(position, new RosterHoursDto("venue", "18:00", "02:00", [Day(5)]));
+
+        Assert.Equal(RosterHoursMode.Venue, position.HoursMode);
+        Assert.Null(position.StartTime);
+        Assert.Empty(position.WeekHours);
+    }
+
+    [Theory]
+    [InlineData("Inherit")]
+    [InlineData("none")]
+    [InlineData("venue")]
+    [InlineData(null)]
+    public void PersonHoursModesAreInheritAndOwn(string? mode)
+        => Assert.Equal(
+            "hours.mode must be inherit or own.",
+            Refusal(() => RosterRules.ApplyPersonHours(Person(), new RosterHoursDto(mode, "09:00", "17:00", null))));
+
+    [Fact]
+    public void OwnHoursWithAMissingTimeSayWhichOne()
+    {
+        Assert.Equal(
+            "start_time must be HH:mm.",
+            Refusal(() => RosterRules.ApplyPersonHours(Person(), new RosterHoursDto("own", null, "17:00", null))));
+        Assert.Equal(
+            "end_time must be HH:mm.",
+            Refusal(() => RosterRules.ApplyPersonHours(Person(), new RosterHoursDto("own", "09:00", null, null))));
+        Assert.Equal(
+            "Start and end time must differ.",
+            Refusal(() => RosterRules.ApplyPositionHours(
+                new RosterPosition { Name = "Бар" }, new RosterHoursDto("own", "09:00", "09:00", null))));
+
+        // A refused save leaves the hours as they were.
+        var person = Person();
+
+        RosterRules.ApplyPersonHours(person, new RosterHoursDto("own", "09:00", "17:00", [Day(6, "10:00", "15:00")]));
+
+        Assert.Throws<ValidationException>(() => RosterRules.ApplyPersonHours(
+            person, new RosterHoursDto("own", "10:00", "18:00", [Day(9)])));
+
+        Assert.Equal(new TimeOnly(9, 0), person.StartTime);
+        Assert.Single(person.WeekHours);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData(new int[0])]
+    public void UsualWeekdaysNeedAtLeastOneAndNoRepeats(int[]? weekdays)
+    {
+        Assert.Equal(
+            "Usual days need at least one weekday.",
+            Refusal(() => RosterRules.ApplyPattern(Person(), new RosterPatternDto("weekdays", weekdays, null, null, null))));
+        Assert.Equal(
+            "A weekday is listed more than once.",
+            Refusal(() => RosterRules.ApplyPattern(Person(), new RosterPatternDto("weekdays", [1, 3, 1], null, null, null))));
+        Assert.Equal(
+            "weekday must be from 1 to 7.",
+            Refusal(() => RosterRules.ApplyPattern(Person(), new RosterPatternDto("weekdays", [0], null, null, null))));
+        Assert.Equal(
+            "pattern.kind must be none, weekdays or cycle.",
+            Refusal(() => RosterRules.ApplyPattern(Person(), new RosterPatternDto("Weekdays", [1], null, null, null))));
+
+        var person = Person();
+
+        RosterRules.ApplyPattern(person, new RosterPatternDto("weekdays", [7, 1, 5], 2, 2, "2026-11-03"));
+
+        Assert.Equal([1, 5, 7], person.PatternWeekdays!);
+        Assert.Null(person.CycleOn);
+        Assert.Null(person.CycleFrom);
+    }
+
+    [Theory]
+    [InlineData(0, 2, false)]
+    [InlineData(29, 2, false)]
+    [InlineData(2, 0, false)]
+    [InlineData(2, 29, false)]
+    [InlineData(null, 2, false)]
+    [InlineData(2, null, false)]
+    [InlineData(1, 28, true)]
+    [InlineData(28, 1, true)]
+    public void ACycleRunsOneToTwentyEightEachWay(int? on, int? off, bool takes)
+    {
+        var person = Person();
+        var pattern = new RosterPatternDto("cycle", [1, 2], on, off, "2026-11-03");
+
+        if (!takes)
+        {
+            Assert.Equal(
+                "A cycle runs 1 to 28 days on and 1 to 28 days off.",
+                Refusal(() => RosterRules.ApplyPattern(person, pattern)));
+
+            return;
+        }
+
+        RosterRules.ApplyPattern(person, pattern);
+
+        Assert.Equal((on, off, new DateOnly(2026, 11, 3)), (person.CycleOn, person.CycleOff, person.CycleFrom));
+        Assert.Null(person.PatternWeekdays);
+    }
+
+    [Theory]
+    [InlineData(null, "from must be yyyy-MM-dd.")]
+    [InlineData("2026-11-31", "from must be yyyy-MM-dd.")]
+    [InlineData("03.11.2026", "from must be yyyy-MM-dd.")]
+    [InlineData("1999-12-31", "That date is outside what a roster can hold.")]
+    [InlineData("2101-01-01", "That date is outside what a roster can hold.")]
+    public void ACycleNeedsADateItCanHold(string? from, string message)
+        => Assert.Equal(
+            message,
+            Refusal(() => RosterRules.ApplyPattern(Person(), new RosterPatternDto("cycle", null, 2, 2, from))));
+
+    [Fact]
+    public void ACycleCountsBackwardsFromItsFirstDay()
+    {
+        // 2/2 from Thursday the 12th: the 10th and 11th were the two days off
+        // before it, the 8th and 9th the two on before those.
+        var person = Person();
+
+        RosterRules.ApplyPattern(person, new RosterPatternDto("cycle", null, 2, 2, "2026-11-12"));
+
+        var worked = Enumerable.Range(1, 16)
+            .Select(day => new DateOnly(2026, 11, day))
+            .Where(date => RosterRules.WorksOn(person, date))
+            .Select(date => date.Day);
+
+        Assert.Equal([1, 4, 5, 8, 9, 12, 13, 16], worked);
+    }
+
+    private static RosterPerson OnFridays()
+    {
+        var person = Person();
+
+        RosterRules.ApplyPattern(person, new RosterPatternDto("weekdays", [5], null, null, null));
+
+        return person;
+    }
+
+    [Fact]
+    public void AMonthAlreadyOverPlansNothing()
+    {
+        var plan = RosterRules.PlanFill(
+            [OnFridays()], [], [], new DateOnly(2026, 10, 1), new DateOnly(2026, 11, 1), new HashSet<(int, DateOnly)>());
+
+        Assert.Empty(plan.Add);
+        Assert.Equal((0, 0), (plan.Kept, plan.Skipped));
+    }
+
+    [Fact]
+    public void TheCurrentMonthIsPlannedFromToday()
+    {
+        // Friday the 13th is today, so it is the first Friday planned; the 6th is gone.
+        var plan = RosterRules.PlanFill(
+            [OnFridays()],
+            [],
+            [],
+            new DateOnly(2026, 11, 1),
+            new DateOnly(2026, 11, 13),
+            new HashSet<(int, DateOnly)> { (1, new DateOnly(2026, 11, 6)) });
+
+        Assert.Equal([13, 20, 27], plan.Add.Select(shift => shift.Date.Day));
+        Assert.All(plan.Add, shift => Assert.Null(shift.StartTime));
+        Assert.Equal(0, plan.Kept);
+        Assert.Equal(new DateOnly(2026, 11, 13), RosterRules.FillsFrom(new DateOnly(2026, 11, 1), new DateOnly(2026, 11, 13)));
+        Assert.Equal(new DateOnly(2026, 12, 1), RosterRules.FillsFrom(new DateOnly(2026, 12, 1), new DateOnly(2026, 11, 13)));
+    }
+
+    [Fact]
+    public void RestampLeavesDaysWithNoTimeAndDaysBeforeToday()
+    {
+        var venue = RosterRules.ReadWeek([Day(1), Day(5, "12:00", "02:00")]);
+        var later = RosterRules.ReadWeek([Day(1, "14:00", "00:00"), Day(5, "12:00", "02:00")]);
+        var people = new[] { Person() };
+
+        var restamps = RosterRules.Restamps(new RosterDefaults(venue, [], people), new RosterDefaults(later, [], people));
+        var restamp = Assert.Single(restamps);
+
+        Assert.Equal((1, 1, new TimeOnly(12, 0), new TimeOnly(0, 0)), (restamp.PersonId, restamp.Weekday, restamp.OldStart, restamp.OldEnd));
+
+        RosterShift Monday(int day, TimeOnly? start, TimeOnly? end)
+            => new() { RosterPersonId = 1, Date = new DateOnly(2026, 11, day), StartTime = start, EndTime = end };
+
+        DateOnly today = new(2026, 11, 13);
+
+        Assert.Null(RosterRules.RestampOf(Monday(16, null, null), restamps, today));
+        Assert.Null(RosterRules.RestampOf(Monday(9, new TimeOnly(12, 0), new TimeOnly(0, 0)), restamps, today));
+        Assert.Null(RosterRules.RestampOf(Monday(16, new TimeOnly(13, 0), new TimeOnly(0, 0)), restamps, today));
+        Assert.Equal(
+            (new TimeOnly(14, 0), new TimeOnly(0, 0)),
+            RosterRules.RestampOf(Monday(16, new TimeOnly(12, 0), new TimeOnly(0, 0)), restamps, today));
     }
 }

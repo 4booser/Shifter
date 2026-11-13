@@ -1587,3 +1587,12 @@ progress {
     display: none;
   }
 }
+
+/* A day the venue is closed, hatched as on the public page so the owner sees the grey day the crew sees. The ink is the theme's own muted, which keeps it as faint on every dark palette. */
+.roster-shut {
+  background-image: repeating-linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--muted) 13%, transparent) 0 3px,
+    transparent 3px 7px
+  );
+}

@@ -23,6 +23,7 @@ export default defineConfig({
       { find: /^@\/lib\/mono-shape$/, replacement: shared('mono', 'mono-shape') },
       { find: /^@\/lib\/spend-viz$/, replacement: shared('mono', 'spend-viz') },
       { find: /^@\/lib\/ics$/, replacement: shared('calendar', 'ics') },
+      { find: /^@\/lib\/roster-rules$/, replacement: shared('roster', 'roster-rules') },
       // The language is read out of the keychain at module load; in node that
       // would pull React Native's Flow source into a parser that cannot read it.
       {

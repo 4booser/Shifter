@@ -10,12 +10,15 @@ export function Empty({
   title,
   children,
   action,
+  after,
 }: {
   icon: string;
   title: string;
   children: React.ReactNode;
   /** The one thing worth doing from here. A link, or a button that does it. */
   action?: { label: string; href?: string; onClick?: () => void };
+  /** A quieter line under the action, for what can wait. */
+  after?: React.ReactNode;
 }) {
   return (
     /* In a block with room, not clinging to the top of one. */
@@ -38,6 +41,8 @@ export function Empty({
             {action.label}
           </button>
         ))}
+
+      {after}
     </div>
     </div>
   );

@@ -1,3 +1,6 @@
+import type { RosterShift } from '@/lib/api/roster';
+import type { Brush } from './brushes';
+
 const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 /** A clock time as a crew writes it: 11, 11:30, 9:30. */
@@ -29,4 +32,23 @@ export function validHours(start: string, end: string): boolean {
 /** Whether a shift ends on the day after it starts, where it still belongs to its start date. */
 export function runsOvernight(start: string, end: string): boolean {
   return validHours(start, end) && end < start;
+}
+
+/** Whether a shift is a day with no set time: they work, and nobody said when. */
+export const isBare = (shift: Pick<RosterShift, 'start_time' | 'end_time'>): boolean =>
+  shift.start_time === null || shift.end_time === null;
+
+/** A shift's hours as a brush, or null for a day with no set time. */
+export const pairOf = (shift: Pick<RosterShift, 'start_time' | 'end_time'>): Brush | null =>
+  shift.start_time === null || shift.end_time === null ? null : { start: shift.start_time, end: shift.end_time };
+
+/** Two cells' worth of hours alike: both no time, or the same pair. */
+export const sameHours = (one: Brush | null, two: Brush | null): boolean =>
+  one === null || two === null ? one === two : one.start === two.start && one.end === two.end;
+
+/** What a cell says: its hours, or null for a day with no set time, which the cell shows as a dot. */
+export function cellText(shift: Pick<RosterShift, 'start_time' | 'end_time'>): string | null {
+  const pair = pairOf(shift);
+
+  return pair === null ? null : compactHours(pair.start, pair.end);
 }

@@ -1559,10 +1559,25 @@ namespace Shifter.Migrations.ShifterDb
                         .HasMaxLength(7)
                         .HasColumnType("character varying(7)");
 
+                    b.Property<DateOnly?>("CycleFrom")
+                        .HasColumnType("date");
+
+                    b.Property<int?>("CycleOff")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("CycleOn")
+                        .HasColumnType("integer");
+
+                    b.Property<TimeOnly?>("EndTime")
+                        .HasColumnType("time without time zone");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(40)
                         .HasColumnType("character varying(40)");
+
+                    b.PrimitiveCollection<int[]>("PatternWeekdays")
+                        .HasColumnType("integer[]");
 
                     b.Property<string>("Position")
                         .HasMaxLength(40)
@@ -1571,11 +1586,60 @@ namespace Shifter.Migrations.ShifterDb
                     b.Property<int>("RosterId")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("RosterPositionId")
+                        .HasColumnType("integer");
+
+                    b.Property<TimeOnly?>("StartTime")
+                        .HasColumnType("time without time zone");
+
                     b.HasKey("Id");
 
                     b.HasIndex("RosterId");
 
-                    b.ToTable("RosterPeople");
+                    b.HasIndex("RosterPositionId");
+
+                    b.ToTable("RosterPeople", t =>
+                        {
+                            t.HasCheckConstraint("CK_RosterPeople_Hours", "(\"StartTime\" IS NULL) = (\"EndTime\" IS NULL)");
+
+                            t.HasCheckConstraint("CK_RosterPeople_Pattern", "(\"CycleOn\" IS NULL) = (\"CycleOff\" IS NULL) AND (\"CycleOn\" IS NULL) = (\"CycleFrom\" IS NULL) AND (\"PatternWeekdays\" IS NULL OR \"CycleOn\" IS NULL)");
+                        });
+                });
+
+            modelBuilder.Entity("Shifter.Domain.Entities.RosterPosition", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<TimeOnly?>("EndTime")
+                        .HasColumnType("time without time zone");
+
+                    b.Property<int>("HoursMode")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<int>("RosterId")
+                        .HasColumnType("integer");
+
+                    b.Property<TimeOnly?>("StartTime")
+                        .HasColumnType("time without time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RosterId", "Name")
+                        .IsUnique();
+
+                    b.ToTable("RosterPositions", t =>
+                        {
+                            t.HasCheckConstraint("CK_RosterPositions_Hours", "(\"StartTime\" IS NULL) = (\"EndTime\" IS NULL) AND (\"HoursMode\" = 1) = (\"StartTime\" IS NOT NULL)");
+                        });
                 });
 
             modelBuilder.Entity("Shifter.Domain.Entities.RosterShift", b =>
@@ -1589,7 +1653,7 @@ namespace Shifter.Migrations.ShifterDb
                     b.Property<DateOnly>("Date")
                         .HasColumnType("date");
 
-                    b.Property<TimeOnly>("EndTime")
+                    b.Property<TimeOnly?>("EndTime")
                         .HasColumnType("time without time zone");
 
                     b.Property<int>("RosterId")
@@ -1598,7 +1662,7 @@ namespace Shifter.Migrations.ShifterDb
                     b.Property<int>("RosterPersonId")
                         .HasColumnType("integer");
 
-                    b.Property<TimeOnly>("StartTime")
+                    b.Property<TimeOnly?>("StartTime")
                         .HasColumnType("time without time zone");
 
                     b.HasKey("Id");
@@ -1608,7 +1672,10 @@ namespace Shifter.Migrations.ShifterDb
                     b.HasIndex("RosterPersonId", "Date")
                         .IsUnique();
 
-                    b.ToTable("RosterShifts");
+                    b.ToTable("RosterShifts", t =>
+                        {
+                            t.HasCheckConstraint("CK_RosterShifts_Hours", "(\"StartTime\" IS NULL) = (\"EndTime\" IS NULL)");
+                        });
                 });
 
             modelBuilder.Entity("Shifter.Domain.Entities.Sales", b =>
@@ -2765,7 +2832,34 @@ namespace Shifter.Migrations.ShifterDb
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.OwnsMany("Shifter.Domain.Entities.WeekdayHours", "VenueHours", b1 =>
+                        {
+                            b1.Property<int>("RosterId");
+
+                            b1.Property<int>("__synthesizedOrdinal")
+                                .ValueGeneratedOnAdd();
+
+                            b1.Property<TimeOnly>("EndTime");
+
+                            b1.Property<TimeOnly>("StartTime");
+
+                            b1.Property<int>("Weekday");
+
+                            b1.HasKey("RosterId", "__synthesizedOrdinal");
+
+                            b1.ToTable("Rosters");
+
+                            b1
+                                .ToJson("VenueHours")
+                                .HasColumnType("jsonb");
+
+                            b1.WithOwner()
+                                .HasForeignKey("RosterId");
+                        });
+
                     b.Navigation("User");
+
+                    b.Navigation("VenueHours");
                 });
 
             modelBuilder.Entity("Shifter.Domain.Entities.RosterPerson", b =>
@@ -2776,7 +2870,79 @@ namespace Shifter.Migrations.ShifterDb
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Shifter.Domain.Entities.RosterPosition", "RosterPosition")
+                        .WithMany()
+                        .HasForeignKey("RosterPositionId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.OwnsMany("Shifter.Domain.Entities.WeekdayHours", "WeekHours", b1 =>
+                        {
+                            b1.Property<int>("RosterPersonId");
+
+                            b1.Property<int>("__synthesizedOrdinal")
+                                .ValueGeneratedOnAdd();
+
+                            b1.Property<TimeOnly>("EndTime");
+
+                            b1.Property<TimeOnly>("StartTime");
+
+                            b1.Property<int>("Weekday");
+
+                            b1.HasKey("RosterPersonId", "__synthesizedOrdinal");
+
+                            b1.ToTable("RosterPeople");
+
+                            b1
+                                .ToJson("WeekHours")
+                                .HasColumnType("jsonb");
+
+                            b1.WithOwner()
+                                .HasForeignKey("RosterPersonId");
+                        });
+
                     b.Navigation("Roster");
+
+                    b.Navigation("RosterPosition");
+
+                    b.Navigation("WeekHours");
+                });
+
+            modelBuilder.Entity("Shifter.Domain.Entities.RosterPosition", b =>
+                {
+                    b.HasOne("Shifter.Domain.Entities.Roster", "Roster")
+                        .WithMany("Positions")
+                        .HasForeignKey("RosterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.OwnsMany("Shifter.Domain.Entities.WeekdayHours", "WeekHours", b1 =>
+                        {
+                            b1.Property<int>("RosterPositionId");
+
+                            b1.Property<int>("__synthesizedOrdinal")
+                                .ValueGeneratedOnAdd();
+
+                            b1.Property<TimeOnly>("EndTime");
+
+                            b1.Property<TimeOnly>("StartTime");
+
+                            b1.Property<int>("Weekday");
+
+                            b1.HasKey("RosterPositionId", "__synthesizedOrdinal");
+
+                            b1.ToTable("RosterPositions");
+
+                            b1
+                                .ToJson("WeekHours")
+                                .HasColumnType("jsonb");
+
+                            b1.WithOwner()
+                                .HasForeignKey("RosterPositionId");
+                        });
+
+                    b.Navigation("Roster");
+
+                    b.Navigation("WeekHours");
                 });
 
             modelBuilder.Entity("Shifter.Domain.Entities.RosterShift", b =>
@@ -3018,6 +3184,8 @@ namespace Shifter.Migrations.ShifterDb
             modelBuilder.Entity("Shifter.Domain.Entities.Roster", b =>
                 {
                     b.Navigation("People");
+
+                    b.Navigation("Positions");
                 });
 
             modelBuilder.Entity("Shifter.Domain.Entities.Shift", b =>

@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { RosterEdit, editKey } from '@/lib/roster/edits';
+import { INHERIT, NO_PATTERN } from '@/lib/roster/people';
 import { SaveQueueOptions, SaveState, createSaveQueue, overallState } from '@/lib/roster/save-queue';
 
 /** A send held open, answered when the test says. */
@@ -536,6 +538,71 @@ describe('a refusal only part of the batch earned', () => {
   });
 });
 
+describe('the order of the line', () => {
+  /** Cells go to the back when set again, as the roster's do; anything else keeps its place. */
+  const roster = () => queueWith({ toBack: (key) => key.startsWith('cell') });
+
+  it('sends in the order things were put, a newer word in the earlier one’s place', async () => {
+    const { queue, send } = queueWith();
+
+    queue.put('a', 'a1');
+    queue.put('b', 'b');
+    queue.put('a', 'a2');
+    await quiet();
+
+    expect(send.mock.calls[0][0]).toEqual(['a2', 'b']);
+  });
+
+  it('sends a newer word on a key that goes to the back behind what was put since', async () => {
+    const { queue, send } = roster();
+
+    queue.put('cell', 'set before');
+    queue.put('person', 'moved');
+    queue.put('cell', 'set after');
+    await quiet();
+
+    expect(send.mock.calls[0][0]).toEqual(['moved', 'set after']);
+  });
+
+  it('puts a failed batch back at the head of the line, ahead of what was put while it was out', async () => {
+    const first = held();
+    const { queue, send } = queueWith();
+
+    send.mockReturnValueOnce(first.promise);
+
+    queue.put('person', 'moved');
+    await quiet();
+
+    queue.put('cell', 'set after');
+    first.reject(BROKEN);
+    await quiet();
+
+    expect(send.mock.calls[1][0]).toEqual(['moved', 'set after']);
+  });
+
+  it('lays out what is pending in the order it is to go, the wire first', async () => {
+    const first = held();
+    const { queue, send } = roster();
+
+    send.mockReturnValueOnce(first.promise);
+
+    queue.put('cell', 'set before');
+    queue.put('person', 'moved');
+    await quiet();
+
+    queue.put('cell', 'set after');
+    queue.put('person', 'moved again');
+
+    // The newer cell keeps its own place behind the move; the newer move takes the older one's.
+    expect(queue.pending()).toEqual(['moved again', 'set after']);
+
+    first.reject(BROKEN);
+    await quiet();
+
+    expect(send.mock.calls[1][0]).toEqual(['moved again', 'set after']);
+  });
+});
+
 describe('what is pending', () => {
   it('counts both the waiting and what is on the wire, the newest word on each key', async () => {
     const first = held();
@@ -696,5 +763,34 @@ describe('flush and settled', () => {
 
     expect(send).not.toHaveBeenCalled();
     expect(queue.state()).toBe('idle');
+  });
+});
+
+describe('the roster’s own edits', () => {
+  it('coalesce a day with no time over hours, and a person’s latest position, hours and days', async () => {
+    const send = vi.fn<(batch: RosterEdit[]) => Promise<void>>().mockResolvedValue(undefined);
+    const queue = createSaveQueue<RosterEdit>({ send });
+    const put = (edit: RosterEdit) => queue.put(editKey(edit), edit);
+    const bare: RosterEdit = { kind: 'set', shift: { person_id: 1, date: '2026-11-02', start_time: null, end_time: null } };
+    const person: RosterEdit = {
+      kind: 'person',
+      id: 1,
+      save: {
+        name: 'Толик',
+        colour: '#6366f1',
+        position_id: 4,
+        hours: { mode: 'own', start_time: '18:00', end_time: '02:00', week_hours: [] },
+        pattern: { kind: 'weekdays', weekdays: [5, 6], on: null, off: null, from: null },
+      },
+    };
+
+    put({ kind: 'set', shift: { person_id: 1, date: '2026-11-02', start_time: '11:00', end_time: '22:00' } });
+    put({ kind: 'person', id: 1, save: { ...person.save, position_id: null, hours: INHERIT, pattern: NO_PATTERN } });
+    put(bare);
+    put(person);
+    await quiet();
+
+    expect(send).toHaveBeenCalledTimes(1);
+    expect(send.mock.calls[0][0]).toEqual([bare, person]);
   });
 });

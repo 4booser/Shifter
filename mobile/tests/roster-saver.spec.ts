@@ -11,6 +11,13 @@ const stamp = (person: number, date: string, start = '11:00', end = '22:00'): Ce
 
 const blank = (person: number, date: string): CellEdit => ({ person_id: person, date, hours: null });
 
+/** A day they work at no set time: filled, with no hours. */
+const bare = (person: number, date: string): CellEdit => ({
+  person_id: person,
+  date,
+  hours: { start_time: null, end_time: null },
+});
+
 describe('saving a roster by itself', () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -84,6 +91,29 @@ describe('saving a roster by itself', () => {
     expect(sent[0].set).toEqual([
       { person_id: 1, date: '2026-11-02', start_time: '12:00', end_time: '20:00' },
     ]);
+  });
+
+  it('takes a day with no time and a timed one on the same cell as one cell, sending the last', async () => {
+    const { saver, sent, land } = rig();
+
+    saver.edit(stamp(1, '2026-11-02', '11:00', '22:00'));
+    saver.edit(bare(1, '2026-11-02'));
+    await vi.advanceTimersByTimeAsync(500);
+
+    expect(sent[0]).toEqual({
+      set: [{ person_id: 1, date: '2026-11-02', start_time: null, end_time: null }],
+      clear: [],
+    });
+
+    await land();
+    saver.edit(bare(1, '2026-11-03'));
+    saver.edit(stamp(1, '2026-11-03', '12:00', '20:00'));
+    await vi.advanceTimersByTimeAsync(500);
+
+    expect(sent[1]).toEqual({
+      set: [{ person_id: 1, date: '2026-11-03', start_time: '12:00', end_time: '20:00' }],
+      clear: [],
+    });
   });
 
   it('sends a cell stamped and cleared as a clear, not as both', async () => {

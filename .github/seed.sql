@@ -48,11 +48,45 @@ FROM "Teams" t, "Users" u
 WHERE t."InviteCode" = 'SEED01';
 
 -- Two listings, because a unique index added to a new column has to survive
--- more than one row.
-INSERT INTO "GigListings" ("OwnerUserId", "Venue", "Title", "City", "Category", "Date", "StartTime", "EndTime", "PayPeriod", "PayAmount", "Slots", "Status", "CreatedAt")
-SELECT "Id", 'Seeded venue', 'Seeded gig', 'Kyiv', 0, DATE '2026-02-01', '18:00', '02:00', 'hour', 900, 1, 0, TIMESTAMPTZ '2026-01-01 10:00:00+00'
+-- more than one row. Each names its own slug: since GigShareSlug shipped, the
+-- seed goes in after it, and the column's default is the empty string, which
+-- two rows cannot share. Twelve characters, like GigListing.NewSlug.
+INSERT INTO "GigListings" ("OwnerUserId", "Venue", "Title", "City", "Category", "Date", "StartTime", "EndTime", "PayPeriod", "PayAmount", "Slots", "Status", "CreatedAt", "ShareSlug")
+SELECT "Id", 'Seeded venue', 'Seeded gig', 'Kyiv', 0, DATE '2026-02-01', '18:00', '02:00', 'hour', 900, 1, 0, TIMESTAMPTZ '2026-01-01 10:00:00+00', 'seedgig00001'
 FROM "Users" WHERE "Login" = 'seed-one';
 
-INSERT INTO "GigListings" ("OwnerUserId", "Venue", "Title", "City", "Category", "Date", "StartTime", "EndTime", "PayPeriod", "PayAmount", "Slots", "Status", "CreatedAt")
-SELECT "Id", 'Seeded venue two', 'Seeded gig two', 'Kyiv', 0, DATE '2026-02-02', '18:00', '02:00', 'hour', 1100, 2, 0, TIMESTAMPTZ '2026-01-01 10:00:00+00'
+INSERT INTO "GigListings" ("OwnerUserId", "Venue", "Title", "City", "Category", "Date", "StartTime", "EndTime", "PayPeriod", "PayAmount", "Slots", "Status", "CreatedAt", "ShareSlug")
+SELECT "Id", 'Seeded venue two', 'Seeded gig two', 'Kyiv', 0, DATE '2026-02-02', '18:00', '02:00', 'hour', 1100, 2, 0, TIMESTAMPTZ '2026-01-01 10:00:00+00', 'seedgig00002'
 FROM "Users" WHERE "Login" = 'seed-two';
+
+-- Two rosters written before positions were rows. On the first, one job in
+-- three spellings, another job, and somebody with none; on the second, the
+-- same word as on the first, which has to stay a position of its own.
+INSERT INTO "Rosters" ("UserId", "Title", "CreatedAtUtc", "UpdatedAtUtc")
+SELECT "Id", 'Seeded roster', TIMESTAMPTZ '2026-01-01 10:00:00+00', TIMESTAMPTZ '2026-01-01 10:00:00+00'
+FROM "Users" WHERE "Login" = 'seed-one';
+
+INSERT INTO "Rosters" ("UserId", "Title", "CreatedAtUtc", "UpdatedAtUtc")
+SELECT "Id", 'Seeded roster two', TIMESTAMPTZ '2026-01-01 10:00:00+00', TIMESTAMPTZ '2026-01-01 10:00:00+00'
+FROM "Users" WHERE "Login" = 'seed-two';
+
+-- One row at a time, so the ids come out in this order and "the first
+-- spelling" means the one written first.
+INSERT INTO "RosterPeople" ("RosterId", "Name", "Position", "Colour")
+SELECT "Id", 'Толик', 'Кальяны', '#4488cc' FROM "Rosters" WHERE "Title" = 'Seeded roster';
+INSERT INTO "RosterPeople" ("RosterId", "Name", "Position", "Colour")
+SELECT "Id", 'Гриша', 'кальяны ', '#4488cc' FROM "Rosters" WHERE "Title" = 'Seeded roster';
+INSERT INTO "RosterPeople" ("RosterId", "Name", "Position", "Colour")
+SELECT "Id", 'Паша', 'КАЛЬЯНЫ', '#4488cc' FROM "Rosters" WHERE "Title" = 'Seeded roster';
+INSERT INTO "RosterPeople" ("RosterId", "Name", "Position", "Colour")
+SELECT "Id", 'Света', 'Бар', '#4488cc' FROM "Rosters" WHERE "Title" = 'Seeded roster';
+INSERT INTO "RosterPeople" ("RosterId", "Name", "Position", "Colour")
+SELECT "Id", 'Женя', NULL, '#4488cc' FROM "Rosters" WHERE "Title" = 'Seeded roster';
+INSERT INTO "RosterPeople" ("RosterId", "Name", "Position", "Colour")
+SELECT "Id", 'Оля', 'Бар', '#4488cc' FROM "Rosters" WHERE "Title" = 'Seeded roster two';
+
+-- Shifts with hours, which have to come through with their hours.
+INSERT INTO "RosterShifts" ("RosterId", "RosterPersonId", "Date", "StartTime", "EndTime")
+SELECT p."RosterId", p."Id", DATE '2026-11-02', '12:00', '00:00'
+FROM "RosterPeople" p JOIN "Rosters" r ON r."Id" = p."RosterId"
+WHERE r."Title" = 'Seeded roster' AND p."Name" IN ('Толик', 'Женя');

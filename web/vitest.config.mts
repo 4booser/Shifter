@@ -25,6 +25,7 @@ export default defineConfig({
       { find: /^@\/lib\/mono\/mono-shape$/, replacement: shared('mono', 'mono-shape') },
       { find: /^@\/lib\/mono\/spend-viz$/, replacement: shared('mono', 'spend-viz') },
       { find: /^@\/lib\/import\/ics$/, replacement: shared('calendar', 'ics') },
+      { find: /^@\/lib\/roster\/rules$/, replacement: shared('roster', 'roster-rules') },
       { find: '@', replacement: path.resolve(import.meta.dirname, 'src') },
     ],
   },

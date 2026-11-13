@@ -1,15 +1,16 @@
 import type { RosterMonth } from '../api/roster';
 import { readableInk } from '../calendar/contrast';
-import { stackedHours } from '../roster/hours';
+import { pairOf, stackedHours } from '../roster/hours';
 import { RosterDay, cellKey, cellsOf } from '../roster/month';
+import { byPosition } from '@/lib/roster/rules';
 import { CardTheme } from './share-card';
 
 export interface RosterCardRow {
   name: string;
   position: string | null;
   colour: string;
-  /** One entry per day: the hours on two lines, or null for a day off. */
-  cells: ([string, string] | null)[];
+  /** One entry per day: the hours on two lines, 'bare' for a day with no set time, or null for a day off. */
+  cells: ([string, string] | 'bare' | null)[];
 }
 
 export interface RosterCardDay {
@@ -18,11 +19,15 @@ export interface RosterCardDay {
   dayOfMonth: number;
   weekend: boolean;
   monday: boolean;
+  /** The venue does not open that day. */
+  closed: boolean;
 }
 
 export interface RosterCardData {
   title: string;
   period: string;
+  /** The venue's week in one line, under the title; null with no opening hours set. */
+  venue: string | null;
   days: RosterCardDay[];
   rows: RosterCardRow[];
   /** "8 человек · 124 смены". */
@@ -52,6 +57,8 @@ const PAD = 40;
 const NAME_W = 176;
 const COLUMN_W = 46;
 const HEADER_H = 96;
+/** The header with a line of opening hours under the title. */
+const HEADER_VENUE_H = 112;
 const DAY_H = 52;
 const ROW_H = 54;
 const FOOTER_H = 56;
@@ -61,9 +68,10 @@ const HOURS_FONT = 15;
 const CHAT_SIDE = 2560;
 
 /** The month's geometry. A column stays wide enough for 11:30 at a size that survives a chat, so a long month makes a wider picture and never smaller text. */
-export function rosterCardLayout(days: number, people: number): RosterCardLayout {
+export function rosterCardLayout(days: number, people: number, venue = false): RosterCardLayout {
+  const header = venue ? HEADER_VENUE_H : HEADER_H;
   const width = PAD * 2 + NAME_W + days * COLUMN_W;
-  const height = HEADER_H + DAY_H + people * ROW_H + FOOTER_H;
+  const height = header + DAY_H + people * ROW_H + FOOTER_H;
 
   return {
     width,
@@ -72,7 +80,7 @@ export function rosterCardLayout(days: number, people: number): RosterCardLayout
     pad: PAD,
     nameWidth: NAME_W,
     columnWidth: COLUMN_W,
-    headerHeight: HEADER_H,
+    headerHeight: header,
     dayHeight: DAY_H,
     rowHeight: ROW_H,
     footerHeight: FOOTER_H,
@@ -85,28 +93,35 @@ export function rosterCardLayout(days: number, people: number): RosterCardLayout
 export function rosterCardData(
   sheet: RosterMonth,
   days: RosterDay[],
-  labels: { period: string; summary: string; weekdays: string[] },
+  labels: { period: string; summary: string; weekdays: string[]; venue: string | null },
 ): RosterCardData {
   const cells = cellsOf(sheet.shifts);
 
   return {
     title: sheet.title,
     period: labels.period,
+    venue: labels.venue,
     summary: labels.summary,
     days: days.map((day) => ({
       weekday: labels.weekdays[day.weekday],
       dayOfMonth: day.dayOfMonth,
       weekend: day.weekend,
       monday: day.weekday === 0,
+      closed: day.closed,
     })),
-    rows: sheet.people.map((person) => ({
+    // In the order every other list of them goes: by position.
+    rows: byPosition(sheet.people, sheet.positions).map((person) => ({
       name: person.name,
       position: person.position,
       colour: person.colour,
       cells: days.map((day) => {
         const shift = cells.get(cellKey(person.id, day.key));
 
-        return shift === undefined ? null : stackedHours(shift.start_time, shift.end_time);
+        if (shift === undefined) return null;
+
+        const pair = pairOf(shift);
+
+        return pair === null ? 'bare' : stackedHours(pair.start, pair.end);
       }),
     })),
   };
@@ -116,7 +131,7 @@ const FONT = 'system-ui, -apple-system, sans-serif';
 
 /** The month as one PNG, sized for a group chat. */
 export function drawRosterCard(data: RosterCardData, theme: CardTheme): Promise<Blob> {
-  const layout = rosterCardLayout(data.days.length, data.rows.length);
+  const layout = rosterCardLayout(data.days.length, data.rows.length, data.venue !== null);
   const { width, height, scale, pad, nameWidth, columnWidth, headerHeight, dayHeight, rowHeight } = layout;
 
   const canvas = document.createElement('canvas');
@@ -163,15 +178,24 @@ export function drawRosterCard(data: RosterCardData, theme: CardTheme): Promise<
   ctx.fillText(data.period, width - pad, 62);
   ctx.textAlign = 'left';
 
+  if (data.venue !== null) {
+    const venueFont = `500 15px ${FONT}`;
+
+    ctx.fillText(clip(data.venue, width - pad * 2, venueFont), pad, 88);
+  }
+
   const gridX = pad + nameWidth;
   const gridY = headerHeight;
   const gridBottom = gridY + dayHeight + data.rows.length * rowHeight;
 
-  // Weekends first, so everything else lands on top of the tint.
+  // Weekends first, so everything else lands on top of the tint. A day the
+  // venue is closed is darker than a weekend, the way the page greys it.
   ctx.fillStyle = theme.border;
-  ctx.globalAlpha = 0.45;
   data.days.forEach((day, index) => {
-    if (day.weekend) ctx.fillRect(gridX + columnWidth * index, gridY, columnWidth, gridBottom - gridY);
+    if (!day.weekend && !day.closed) return;
+
+    ctx.globalAlpha = day.closed ? 0.85 : 0.45;
+    ctx.fillRect(gridX + columnWidth * index, gridY, columnWidth, gridBottom - gridY);
   });
   ctx.globalAlpha = 1;
 
@@ -194,7 +218,7 @@ export function drawRosterCard(data: RosterCardData, theme: CardTheme): Promise<
   data.days.forEach((day, index) => {
     const x = gridX + columnWidth * (index + 0.5);
 
-    ctx.fillStyle = day.weekend ? theme.text : theme.muted;
+    ctx.fillStyle = day.weekend && !day.closed ? theme.text : theme.muted;
     ctx.font = `600 13px ${FONT}`;
     ctx.fillText(day.weekday, x, gridY + 20);
     ctx.font = `700 16px ${FONT}`;
@@ -237,6 +261,16 @@ export function drawRosterCard(data: RosterCardData, theme: CardTheme): Promise<
 
       ctx.fillStyle = row.colour;
       ctx.fillRect(x + 1.5, y + 2, columnWidth - 3, rowHeight - 4);
+
+      // They work and nobody said when: the colour says the first, a dot the second.
+      if (cell === 'bare') {
+        ctx.fillStyle = readableInk(row.colour);
+        ctx.beginPath();
+        ctx.arc(x + columnWidth / 2, y + rowHeight / 2, 4, 0, Math.PI * 2);
+        ctx.fill();
+
+        return;
+      }
 
       // Stacked, because side by side thirty-one of these would need a picture no chat keeps sharp.
       ctx.fillStyle = readableInk(row.colour);

@@ -37,9 +37,32 @@ public class RosterController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>Days with no set time only with bare=1: a build from before them reads a null time and falls over.</summary>
     [HttpGet("{id:int}/month/{month}")]
-    public async Task<ActionResult<RosterMonthDto>> Month(int id, string month, CancellationToken ct)
-        => Ok(await _rosters.MonthAsync(id, UserId(), month, ct));
+    public async Task<ActionResult<RosterMonthDto>> Month(
+        int id, string month, [FromQuery(Name = "bare")] string? bare, CancellationToken ct)
+        => Ok(await _rosters.MonthAsync(id, UserId(), month, bare == "1", ct));
+
+    /// <summary>The venue's open weekdays, the whole list at once.</summary>
+    [HttpPut("{id:int}/venue-hours")]
+    public async Task<ActionResult<RosterVenueSavedDto>> VenueHours(
+        int id, [FromBody] RosterVenueSaveDto? request, CancellationToken ct)
+        => Ok(await _rosters.SaveVenueHoursAsync(id, UserId(), request, ct));
+
+    [HttpPost("{id:int}/positions")]
+    public async Task<ActionResult<RosterPositionDto>> AddPosition(
+        int id, [FromBody] RosterPositionSaveDto? request, CancellationToken ct)
+        => Ok(await _rosters.AddPositionAsync(id, UserId(), request, ct));
+
+    [HttpPut("{id:int}/positions/{positionId:int}")]
+    public async Task<ActionResult<RosterPositionSavedDto>> UpdatePosition(
+        int id, int positionId, [FromBody] RosterPositionSaveDto? request, CancellationToken ct)
+        => Ok(await _rosters.UpdatePositionAsync(id, UserId(), positionId, request, ct));
+
+    /// <summary>The people on it stay, with no position.</summary>
+    [HttpDelete("{id:int}/positions/{positionId:int}")]
+    public async Task<ActionResult<RosterRestampedDto>> DeletePosition(int id, int positionId, CancellationToken ct)
+        => Ok(await _rosters.DeletePositionAsync(id, UserId(), positionId, ct));
 
     [HttpPost("{id:int}/people")]
     public async Task<ActionResult<RosterPersonDto>> AddPerson(
@@ -47,7 +70,7 @@ public class RosterController : ControllerBase
         => Ok(await _rosters.AddPersonAsync(id, UserId(), request, ct));
 
     [HttpPut("{id:int}/people/{personId:int}")]
-    public async Task<ActionResult<RosterPersonDto>> UpdatePerson(
+    public async Task<ActionResult<RosterPersonSavedDto>> UpdatePerson(
         int id, int personId, [FromBody] RosterPersonSaveDto? request, CancellationToken ct)
         => Ok(await _rosters.UpdatePersonAsync(id, UserId(), personId, request, ct));
 
@@ -73,6 +96,18 @@ public class RosterController : ControllerBase
     public async Task<ActionResult<RosterRepeatedDto>> Repeat(
         int id, [FromBody] RosterRepeatDto? request, CancellationToken ct)
         => Ok(await _rosters.RepeatAsync(id, UserId(), request, ct));
+
+    /// <summary>Puts everybody on their usual days, from the owner's today in the month being lived through.</summary>
+    [HttpPost("{id:int}/fill")]
+    public async Task<ActionResult<RosterFilledDto>> Fill(
+        int id, [FromBody] RosterFillDto? request, CancellationToken ct)
+        => Ok(await _rosters.FillAsync(id, UserId(), request, ct));
+
+    /// <summary>Empties a month from the owner's today on, so a fill can start over.</summary>
+    [HttpPost("{id:int}/clear")]
+    public async Task<ActionResult<RosterClearedDto>> Clear(
+        int id, [FromBody] RosterFillDto? request, CancellationToken ct)
+        => Ok(await _rosters.ClearAsync(id, UserId(), request, ct));
 
     /// <summary>Turns the link on, or replaces it, which kills the old one at once.</summary>
     [HttpPost("{id:int}/share")]

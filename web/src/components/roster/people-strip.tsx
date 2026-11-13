@@ -1,19 +1,22 @@
 'use client';
 
-import type { RosterPerson } from '@/lib/api/roster';
+import type { RosterPerson, RosterPosition } from '@/lib/api/roster';
 import { useI18n } from '@/lib/i18n';
+import { byPosition } from '@/lib/roster/rules';
 import { Icon } from '@/components/ui/icon';
 
 /** How many people the strip shows outright. Past this they fold away, or the crew pushes the month it came for off the screen. */
 const PEOPLE_SHOWN = 8;
 
-/** Who is on the roster, and the way to edit them on a screen with no name column to press. */
+/** Who is on the roster, in the order every list of them goes, and the way to edit them on a screen with no name column to press. */
 export function PeopleStrip({
   people,
+  positions = [],
   onPerson,
   onAdd,
 }: {
   people: RosterPerson[];
+  positions?: RosterPosition[];
   onPerson: (person: RosterPerson) => void;
   onAdd: () => void;
 }) {
@@ -21,7 +24,7 @@ export function PeopleStrip({
 
   const strip = (
     <>
-      {people.map((person) => (
+      {byPosition(people, positions).map((person) => (
         <button key={person.id} type="button" className="chip min-h-7 max-w-full hover:bg-surface-2" onClick={() => onPerson(person)}>
           <span className="h-2 w-2 flex-none rounded-full" style={{ background: person.colour }} />
           <span className="min-w-0 truncate">

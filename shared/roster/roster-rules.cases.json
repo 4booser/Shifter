@@ -1,0 +1,692 @@
+{
+  "about": "The roster's rules, one set of cases for the server, the web and the phone. Each reads this file and runs every case in the sections it implements: default_hours, works_on, open_on, venue_line, order and restamp run on all three (the web and the phone share one TypeScript copy, shared/roster/roster-rules.ts, and both test suites run it); fill runs on the server only. Weekdays are ISO, Monday 1 and Sunday 7. Times are HH:mm, an end at or before the start runs past midnight. null hours means no set time. A case that names no positions uses the shared ones.",
+
+  "venues": {
+    "none": [],
+    "bar": [
+      { "weekday": 1, "start_time": "12:00", "end_time": "00:00" },
+      { "weekday": 2, "start_time": "12:00", "end_time": "00:00" },
+      { "weekday": 3, "start_time": "12:00", "end_time": "00:00" },
+      { "weekday": 4, "start_time": "12:00", "end_time": "00:00" },
+      { "weekday": 5, "start_time": "12:00", "end_time": "02:00" },
+      { "weekday": 6, "start_time": "12:00", "end_time": "02:00" }
+    ],
+    "every_day": [
+      { "weekday": 1, "start_time": "11:00", "end_time": "23:00" },
+      { "weekday": 2, "start_time": "11:00", "end_time": "23:00" },
+      { "weekday": 3, "start_time": "11:00", "end_time": "23:00" },
+      { "weekday": 4, "start_time": "11:00", "end_time": "23:00" },
+      { "weekday": 5, "start_time": "11:00", "end_time": "23:00" },
+      { "weekday": 6, "start_time": "11:00", "end_time": "23:00" },
+      { "weekday": 7, "start_time": "11:00", "end_time": "23:00" }
+    ],
+    "each_its_own": [
+      { "weekday": 1, "start_time": "10:00", "end_time": "20:00" },
+      { "weekday": 2, "start_time": "10:00", "end_time": "21:00" },
+      { "weekday": 3, "start_time": "10:00", "end_time": "22:00" },
+      { "weekday": 4, "start_time": "10:00", "end_time": "23:00" },
+      { "weekday": 5, "start_time": "10:00", "end_time": "00:00" },
+      { "weekday": 6, "start_time": "11:00", "end_time": "01:00" },
+      { "weekday": 7, "start_time": "11:00", "end_time": "19:00" }
+    ],
+    "monday_and_wednesday": [
+      { "weekday": 1, "start_time": "10:00", "end_time": "22:00" },
+      { "weekday": 3, "start_time": "10:00", "end_time": "22:00" }
+    ],
+    "saturday_only": [
+      { "weekday": 6, "start_time": "18:00", "end_time": "04:00" }
+    ],
+    "bar_late_friday": [
+      { "weekday": 1, "start_time": "12:00", "end_time": "00:00" },
+      { "weekday": 2, "start_time": "12:00", "end_time": "00:00" },
+      { "weekday": 3, "start_time": "12:00", "end_time": "00:00" },
+      { "weekday": 4, "start_time": "12:00", "end_time": "00:00" },
+      { "weekday": 5, "start_time": "12:00", "end_time": "04:00" },
+      { "weekday": 6, "start_time": "12:00", "end_time": "02:00" }
+    ],
+    "shut_early_week": [
+      { "weekday": 3, "start_time": "12:00", "end_time": "00:00" },
+      { "weekday": 4, "start_time": "12:00", "end_time": "00:00" },
+      { "weekday": 5, "start_time": "12:00", "end_time": "00:00" },
+      { "weekday": 6, "start_time": "12:00", "end_time": "00:00" },
+      { "weekday": 7, "start_time": "12:00", "end_time": "00:00" }
+    ]
+  },
+
+  "positions": [
+    {
+      "id": 1,
+      "name": "Бар",
+      "hours": {
+        "mode": "own",
+        "start_time": "18:00",
+        "end_time": "02:00",
+        "week_hours": [
+          { "weekday": 5, "start_time": "18:00", "end_time": "04:00" },
+          { "weekday": 6, "start_time": "18:00", "end_time": "04:00" }
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "name": "Кальяны",
+      "hours": { "mode": "venue", "start_time": null, "end_time": null, "week_hours": [] }
+    },
+    {
+      "id": 3,
+      "name": "Уборка",
+      "hours": { "mode": "none", "start_time": null, "end_time": null, "week_hours": [] }
+    },
+    {
+      "id": 4,
+      "name": "Кухня",
+      "hours": {
+        "mode": "own",
+        "start_time": "10:00",
+        "end_time": "22:00",
+        "week_hours": [{ "weekday": 7, "start_time": "11:00", "end_time": "20:00" }]
+      }
+    }
+  ],
+
+  "default_hours": [
+    {
+      "name": "nothing set anywhere is no time",
+      "venue": "none", "date": "2026-11-02",
+      "person": { "position_id": null, "hours": { "mode": "inherit", "start_time": null, "end_time": null, "week_hours": [] } },
+      "expect": null
+    },
+    {
+      "name": "no position takes the venue's hours for the weekday",
+      "venue": "bar", "date": "2026-11-02",
+      "person": { "position_id": null, "hours": { "mode": "inherit", "start_time": null, "end_time": null, "week_hours": [] } },
+      "expect": { "start_time": "12:00", "end_time": "00:00" }
+    },
+    {
+      "name": "a Friday takes the Friday hours, past midnight",
+      "venue": "bar", "date": "2026-11-06",
+      "person": { "position_id": null, "hours": { "mode": "inherit", "start_time": null, "end_time": null, "week_hours": [] } },
+      "expect": { "start_time": "12:00", "end_time": "02:00" }
+    },
+    {
+      "name": "a day the venue is closed is no time",
+      "venue": "bar", "date": "2026-11-08",
+      "person": { "position_id": null, "hours": { "mode": "inherit", "start_time": null, "end_time": null, "week_hours": [] } },
+      "expect": null
+    },
+    {
+      "name": "a position on the venue's hours takes them",
+      "venue": "bar", "date": "2026-11-03",
+      "person": { "position_id": 2, "hours": { "mode": "inherit", "start_time": null, "end_time": null, "week_hours": [] } },
+      "expect": { "start_time": "12:00", "end_time": "00:00" }
+    },
+    {
+      "name": "a position on the venue's hours on a closed day is no time",
+      "venue": "bar", "date": "2026-11-08",
+      "person": { "position_id": 2, "hours": { "mode": "inherit", "start_time": null, "end_time": null, "week_hours": [] } },
+      "expect": null
+    },
+    {
+      "name": "a position on the venue's hours with no venue hours set is no time",
+      "venue": "none", "date": "2026-11-02",
+      "person": { "position_id": 2, "hours": { "mode": "inherit", "start_time": null, "end_time": null, "week_hours": [] } },
+      "expect": null
+    },
+    {
+      "name": "a position's own hours beat the venue's",
+      "venue": "bar", "date": "2026-11-02",
+      "person": { "position_id": 1, "hours": { "mode": "inherit", "start_time": null, "end_time": null, "week_hours": [] } },
+      "expect": { "start_time": "18:00", "end_time": "02:00" }
+    },
+    {
+      "name": "a position's own Friday runs its own Friday hours",
+      "venue": "bar", "date": "2026-11-06",
+      "person": { "position_id": 1, "hours": { "mode": "inherit", "start_time": null, "end_time": null, "week_hours": [] } },
+      "expect": { "start_time": "18:00", "end_time": "04:00" }
+    },
+    {
+      "name": "a position's own hours stand on a day the venue is closed",
+      "venue": "bar", "date": "2026-11-08",
+      "person": { "position_id": 1, "hours": { "mode": "inherit", "start_time": null, "end_time": null, "week_hours": [] } },
+      "expect": { "start_time": "18:00", "end_time": "02:00" }
+    },
+    {
+      "name": "Sunday is weekday 7",
+      "venue": "bar", "date": "2026-11-08",
+      "person": { "position_id": 4, "hours": { "mode": "inherit", "start_time": null, "end_time": null, "week_hours": [] } },
+      "expect": { "start_time": "11:00", "end_time": "20:00" }
+    },
+    {
+      "name": "a weekday a position has no entry for runs its usual hours",
+      "venue": "bar", "date": "2026-11-07",
+      "person": { "position_id": 4, "hours": { "mode": "inherit", "start_time": null, "end_time": null, "week_hours": [] } },
+      "expect": { "start_time": "10:00", "end_time": "22:00" }
+    },
+    {
+      "name": "a position with no set time stops there, though the venue is open",
+      "venue": "bar", "date": "2026-11-02",
+      "person": { "position_id": 3, "hours": { "mode": "inherit", "start_time": null, "end_time": null, "week_hours": [] } },
+      "expect": null
+    },
+    {
+      "name": "a position with no set time and no venue hours is no time",
+      "venue": "none", "date": "2026-11-02",
+      "person": { "position_id": 3, "hours": { "mode": "inherit", "start_time": null, "end_time": null, "week_hours": [] } },
+      "expect": null
+    },
+    {
+      "name": "a person's own hours beat the position's",
+      "venue": "bar", "date": "2026-11-02",
+      "person": { "position_id": 1, "hours": { "mode": "own", "start_time": "09:00", "end_time": "17:00", "week_hours": [] } },
+      "expect": { "start_time": "09:00", "end_time": "17:00" }
+    },
+    {
+      "name": "a person's usual hours beat the position's own Friday",
+      "venue": "bar", "date": "2026-11-06",
+      "person": { "position_id": 1, "hours": { "mode": "own", "start_time": "09:00", "end_time": "17:00", "week_hours": [] } },
+      "expect": { "start_time": "09:00", "end_time": "17:00" }
+    },
+    {
+      "name": "a person's own hours beat a position with no set time",
+      "venue": "bar", "date": "2026-11-02",
+      "person": { "position_id": 3, "hours": { "mode": "own", "start_time": "09:00", "end_time": "17:00", "week_hours": [] } },
+      "expect": { "start_time": "09:00", "end_time": "17:00" }
+    },
+    {
+      "name": "a person's own Saturday runs their own Saturday hours",
+      "venue": "bar", "date": "2026-11-07",
+      "person": { "position_id": null, "hours": { "mode": "own", "start_time": "09:00", "end_time": "17:00", "week_hours": [{ "weekday": 6, "start_time": "10:00", "end_time": "15:00" }] } },
+      "expect": { "start_time": "10:00", "end_time": "15:00" }
+    },
+    {
+      "name": "a person's own hours stand on a day the venue is closed",
+      "venue": "bar", "date": "2026-11-08",
+      "person": { "position_id": null, "hours": { "mode": "own", "start_time": "09:00", "end_time": "17:00", "week_hours": [{ "weekday": 6, "start_time": "10:00", "end_time": "15:00" }] } },
+      "expect": { "start_time": "09:00", "end_time": "17:00" }
+    },
+    {
+      "name": "a person's own Sunday entry is read as weekday 7",
+      "venue": "bar", "date": "2026-11-08",
+      "person": { "position_id": 2, "hours": { "mode": "own", "start_time": "09:00", "end_time": "17:00", "week_hours": [{ "weekday": 7, "start_time": "13:00", "end_time": "21:00" }] } },
+      "expect": { "start_time": "13:00", "end_time": "21:00" }
+    },
+    {
+      "name": "an overnight pair of a person's own is kept as written",
+      "venue": "none", "date": "2026-11-03",
+      "person": { "position_id": null, "hours": { "mode": "own", "start_time": "22:00", "end_time": "06:00", "week_hours": [] } },
+      "expect": { "start_time": "22:00", "end_time": "06:00" }
+    },
+    {
+      "name": "a position that is gone counts as none, and the venue's hours apply",
+      "venue": "bar", "date": "2026-11-04",
+      "person": { "position_id": 99, "hours": { "mode": "inherit", "start_time": null, "end_time": null, "week_hours": [] } },
+      "expect": { "start_time": "12:00", "end_time": "00:00" }
+    },
+    {
+      "name": "a position that is gone on a closed day is no time",
+      "venue": "bar", "date": "2026-11-08",
+      "person": { "position_id": 99, "hours": { "mode": "inherit", "start_time": null, "end_time": null, "week_hours": [] } },
+      "expect": null
+    },
+    {
+      "name": "the last day of the year takes its own weekday's hours",
+      "venue": "each_its_own", "date": "2026-12-31",
+      "person": { "position_id": null, "hours": { "mode": "inherit", "start_time": null, "end_time": null, "week_hours": [] } },
+      "expect": { "start_time": "10:00", "end_time": "23:00" }
+    },
+    {
+      "name": "the first Sunday of a new year is weekday 7",
+      "venue": "each_its_own", "date": "2027-01-03",
+      "person": { "position_id": null, "hours": { "mode": "inherit", "start_time": null, "end_time": null, "week_hours": [] } },
+      "expect": { "start_time": "11:00", "end_time": "19:00" }
+    },
+    {
+      "name": "a leap day is a Tuesday like any other",
+      "venue": "each_its_own", "date": "2028-02-29",
+      "person": { "position_id": 2, "hours": { "mode": "inherit", "start_time": null, "end_time": null, "week_hours": [] } },
+      "expect": { "start_time": "10:00", "end_time": "21:00" }
+    },
+    {
+      "name": "a venue open every day has no closed day",
+      "venue": "every_day", "date": "2026-11-08",
+      "person": { "position_id": null, "hours": { "mode": "inherit", "start_time": null, "end_time": null, "week_hours": [] } },
+      "expect": { "start_time": "11:00", "end_time": "23:00" }
+    },
+    {
+      "name": "a venue open on Mondays only is closed on Tuesday",
+      "venue": "monday_and_wednesday", "date": "2026-11-03",
+      "person": { "position_id": 2, "hours": { "mode": "inherit", "start_time": null, "end_time": null, "week_hours": [] } },
+      "expect": null
+    },
+    {
+      "name": "a Saturday that runs past midnight keeps its end",
+      "venue": "saturday_only", "date": "2026-11-07",
+      "person": { "position_id": null, "hours": { "mode": "inherit", "start_time": null, "end_time": null, "week_hours": [] } },
+      "expect": { "start_time": "18:00", "end_time": "04:00" }
+    }
+  ],
+
+  "works_on": [
+    {
+      "name": "no usual days is no day",
+      "pattern": { "kind": "none", "weekdays": [], "on": null, "off": null, "from": null },
+      "month": "2026-11",
+      "expect": []
+    },
+    {
+      "name": "Monday, Wednesday and Friday",
+      "pattern": { "kind": "weekdays", "weekdays": [1, 3, 5], "on": null, "off": null, "from": null },
+      "month": "2026-11",
+      "expect": ["2026-11-02", "2026-11-04", "2026-11-06", "2026-11-09", "2026-11-11", "2026-11-13", "2026-11-16", "2026-11-18", "2026-11-20", "2026-11-23", "2026-11-25", "2026-11-27", "2026-11-30"]
+    },
+    {
+      "name": "Sundays only, Sunday being 7",
+      "pattern": { "kind": "weekdays", "weekdays": [7], "on": null, "off": null, "from": null },
+      "month": "2026-11",
+      "expect": ["2026-11-01", "2026-11-08", "2026-11-15", "2026-11-22", "2026-11-29"]
+    },
+    {
+      "name": "every weekday is every day",
+      "pattern": { "kind": "weekdays", "weekdays": [1, 2, 3, 4, 5, 6, 7], "on": null, "off": null, "from": null },
+      "month": "2027-02",
+      "expect": ["2027-02-01", "2027-02-02", "2027-02-03", "2027-02-04", "2027-02-05", "2027-02-06", "2027-02-07", "2027-02-08", "2027-02-09", "2027-02-10", "2027-02-11", "2027-02-12", "2027-02-13", "2027-02-14", "2027-02-15", "2027-02-16", "2027-02-17", "2027-02-18", "2027-02-19", "2027-02-20", "2027-02-21", "2027-02-22", "2027-02-23", "2027-02-24", "2027-02-25", "2027-02-26", "2027-02-27", "2027-02-28"]
+    },
+    {
+      "name": "two on, two off, from the first of the month",
+      "pattern": { "kind": "cycle", "weekdays": [], "on": 2, "off": 2, "from": "2026-11-01" },
+      "month": "2026-11",
+      "expect": ["2026-11-01", "2026-11-02", "2026-11-05", "2026-11-06", "2026-11-09", "2026-11-10", "2026-11-13", "2026-11-14", "2026-11-17", "2026-11-18", "2026-11-21", "2026-11-22", "2026-11-25", "2026-11-26", "2026-11-29", "2026-11-30"]
+    },
+    {
+      "name": "two on, two off, from a day in the month before",
+      "pattern": { "kind": "cycle", "weekdays": [], "on": 2, "off": 2, "from": "2026-10-30" },
+      "month": "2026-11",
+      "expect": ["2026-11-03", "2026-11-04", "2026-11-07", "2026-11-08", "2026-11-11", "2026-11-12", "2026-11-15", "2026-11-16", "2026-11-19", "2026-11-20", "2026-11-23", "2026-11-24", "2026-11-27", "2026-11-28"]
+    },
+    {
+      "name": "two on, two off, from a day inside the month, the rhythm running both ways from it",
+      "pattern": { "kind": "cycle", "weekdays": [], "on": 2, "off": 2, "from": "2026-11-10" },
+      "month": "2026-11",
+      "expect": ["2026-11-02", "2026-11-03", "2026-11-06", "2026-11-07", "2026-11-10", "2026-11-11", "2026-11-14", "2026-11-15", "2026-11-18", "2026-11-19", "2026-11-22", "2026-11-23", "2026-11-26", "2026-11-27", "2026-11-30"]
+    },
+    {
+      "name": "two on, two off, from a day months after, still in step",
+      "pattern": { "kind": "cycle", "weekdays": [], "on": 2, "off": 2, "from": "2027-03-15" },
+      "month": "2026-11",
+      "expect": ["2026-11-03", "2026-11-04", "2026-11-07", "2026-11-08", "2026-11-11", "2026-11-12", "2026-11-15", "2026-11-16", "2026-11-19", "2026-11-20", "2026-11-23", "2026-11-24", "2026-11-27", "2026-11-28"]
+    },
+    {
+      "name": "five on, two off, from a Monday, is the working week",
+      "pattern": { "kind": "cycle", "weekdays": [], "on": 5, "off": 2, "from": "2026-11-02" },
+      "month": "2026-11",
+      "expect": ["2026-11-02", "2026-11-03", "2026-11-04", "2026-11-05", "2026-11-06", "2026-11-09", "2026-11-10", "2026-11-11", "2026-11-12", "2026-11-13", "2026-11-16", "2026-11-17", "2026-11-18", "2026-11-19", "2026-11-20", "2026-11-23", "2026-11-24", "2026-11-25", "2026-11-26", "2026-11-27", "2026-11-30"]
+    },
+    {
+      "name": "three on, three off, through a short February",
+      "pattern": { "kind": "cycle", "weekdays": [], "on": 3, "off": 3, "from": "2027-01-30" },
+      "month": "2027-02",
+      "expect": ["2027-02-01", "2027-02-05", "2027-02-06", "2027-02-07", "2027-02-11", "2027-02-12", "2027-02-13", "2027-02-17", "2027-02-18", "2027-02-19", "2027-02-23", "2027-02-24", "2027-02-25"]
+    },
+    {
+      "name": "one on, three off, reaches the leap day",
+      "pattern": { "kind": "cycle", "weekdays": [], "on": 1, "off": 3, "from": "2028-02-01" },
+      "month": "2028-02",
+      "expect": ["2028-02-01", "2028-02-05", "2028-02-09", "2028-02-13", "2028-02-17", "2028-02-21", "2028-02-25", "2028-02-29"]
+    },
+    {
+      "name": "a cycle across the turn of the year",
+      "pattern": { "kind": "cycle", "weekdays": [], "on": 3, "off": 2, "from": "2026-12-30" },
+      "month": "2027-01",
+      "expect": ["2027-01-01", "2027-01-04", "2027-01-05", "2027-01-06", "2027-01-09", "2027-01-10", "2027-01-11", "2027-01-14", "2027-01-15", "2027-01-16", "2027-01-19", "2027-01-20", "2027-01-21", "2027-01-24", "2027-01-25", "2027-01-26", "2027-01-29", "2027-01-30", "2027-01-31"]
+    }
+  ],
+
+  "open_on": [
+    { "name": "no venue hours is open every day", "venue": "none", "date": "2026-11-08", "expect": true },
+    { "name": "a listed weekday is open", "venue": "bar", "date": "2026-11-07", "expect": true },
+    { "name": "an unlisted weekday is closed", "venue": "bar", "date": "2026-11-08", "expect": false },
+    { "name": "Sunday listed as 7 is open", "venue": "every_day", "date": "2026-11-01", "expect": true },
+    { "name": "a Tuesday between two open days is closed", "venue": "monday_and_wednesday", "date": "2026-11-03", "expect": false }
+  ],
+
+  "venue_line": [
+    { "name": "no venue hours is no line", "venue": "none", "ru": null, "uk": null },
+    {
+      "name": "neighbouring days with the same hours run together, a closed day says so",
+      "venue": "bar",
+      "ru": "Пн–Чт 12:00–00:00 · Пт–Сб 12:00–02:00 · Вс закрыто",
+      "uk": "Пн–Чт 12:00–00:00 · Пт–Сб 12:00–02:00 · Нд зачинено"
+    },
+    { "name": "the same hours all week are one group", "venue": "every_day", "ru": "Пн–Вс 11:00–23:00", "uk": "Пн–Нд 11:00–23:00" },
+    {
+      "name": "the same hours apart are two groups, not one",
+      "venue": "monday_and_wednesday",
+      "ru": "Пн 10:00–22:00 · Вт закрыто · Ср 10:00–22:00 · Чт–Вс закрыто",
+      "uk": "Пн 10:00–22:00 · Вт зачинено · Ср 10:00–22:00 · Чт–Нд зачинено"
+    },
+    {
+      "name": "one open day between closed ones",
+      "venue": "saturday_only",
+      "ru": "Пн–Пт закрыто · Сб 18:00–04:00 · Вс закрыто",
+      "uk": "Пн–Пт зачинено · Сб 18:00–04:00 · Нд зачинено"
+    },
+    {
+      "name": "every day its own",
+      "venue": "each_its_own",
+      "ru": "Пн 10:00–20:00 · Вт 10:00–21:00 · Ср 10:00–22:00 · Чт 10:00–23:00 · Пт 10:00–00:00 · Сб 11:00–01:00 · Вс 11:00–19:00",
+      "uk": "Пн 10:00–20:00 · Вт 10:00–21:00 · Ср 10:00–22:00 · Чт 10:00–23:00 · Пт 10:00–00:00 · Сб 11:00–01:00 · Нд 11:00–19:00"
+    },
+    { "name": "closed at the start of the week", "venue": "shut_early_week", "ru": "Пн–Вт закрыто · Ср–Вс 12:00–00:00", "uk": "Пн–Вт зачинено · Ср–Нд 12:00–00:00" }
+  ],
+
+  "order": [
+    {
+      "name": "people follow their positions in the positions' order, then those with none, each by id",
+      "people": [
+        { "id": 5, "position_id": 2 }, { "id": 6, "position_id": null }, { "id": 7, "position_id": 1 },
+        { "id": 8, "position_id": 2 }, { "id": 9, "position_id": 4 }, { "id": 10, "position_id": 99 }
+      ],
+      "expect": [7, 5, 8, 9, 6, 10]
+    },
+    {
+      "name": "nobody on a position keeps id order",
+      "people": [{ "id": 3, "position_id": null }, { "id": 1, "position_id": null }, { "id": 2, "position_id": null }],
+      "expect": [1, 2, 3]
+    }
+  ],
+
+  "restamp": [
+    {
+      "name": "a later Friday close moves the Fridays still to come that sat at the old close",
+      "today": "2026-11-13",
+      "before": { "venue": "bar", "people": [{ "id": 1, "position_id": null, "hours": { "mode": "inherit", "start_time": null, "end_time": null, "week_hours": [] } }] },
+      "after": {
+        "venue": "bar_late_friday", "people": [{ "id": 1, "position_id": null, "hours": { "mode": "inherit", "start_time": null, "end_time": null, "week_hours": [] } }]
+      },
+      "shifts": [
+        { "person_id": 1, "date": "2026-11-06", "start_time": "12:00", "end_time": "02:00" },
+        { "person_id": 1, "date": "2026-11-13", "start_time": "12:00", "end_time": "02:00" },
+        { "person_id": 1, "date": "2026-11-20", "start_time": "12:00", "end_time": "02:00" },
+        { "person_id": 1, "date": "2026-11-27", "start_time": "14:00", "end_time": "02:00" },
+        { "person_id": 1, "date": "2026-11-14", "start_time": "12:00", "end_time": "02:00" },
+        { "person_id": 1, "date": "2026-11-16", "start_time": null, "end_time": null }
+      ],
+      "expect": {
+        "restamped": 2,
+        "shifts": [
+          { "person_id": 1, "date": "2026-11-06", "start_time": "12:00", "end_time": "02:00" },
+          { "person_id": 1, "date": "2026-11-13", "start_time": "12:00", "end_time": "04:00" },
+          { "person_id": 1, "date": "2026-11-20", "start_time": "12:00", "end_time": "04:00" },
+          { "person_id": 1, "date": "2026-11-27", "start_time": "14:00", "end_time": "02:00" },
+          { "person_id": 1, "date": "2026-11-14", "start_time": "12:00", "end_time": "02:00" },
+          { "person_id": 1, "date": "2026-11-16", "start_time": null, "end_time": null }
+        ]
+      }
+    },
+    {
+      "name": "a position's new hours move its people, not a weekday it kept, a hand-set day or another position",
+      "today": "2026-11-13",
+      "before": { "venue": "bar", "people": [{ "id": 1, "position_id": 1, "hours": { "mode": "inherit", "start_time": null, "end_time": null, "week_hours": [] } }, { "id": 2, "position_id": 2, "hours": { "mode": "inherit", "start_time": null, "end_time": null, "week_hours": [] } }] },
+      "after": {
+        "venue": "bar", "people": [{ "id": 1, "position_id": 1, "hours": { "mode": "inherit", "start_time": null, "end_time": null, "week_hours": [] } }, { "id": 2, "position_id": 2, "hours": { "mode": "inherit", "start_time": null, "end_time": null, "week_hours": [] } }],
+        "positions": [
+          { "id": 1, "name": "Бар", "hours": { "mode": "own", "start_time": "19:00", "end_time": "03:00", "week_hours": [{ "weekday": 5, "start_time": "18:00", "end_time": "04:00" }, { "weekday": 6, "start_time": "18:00", "end_time": "04:00" }] } },
+          { "id": 2, "name": "Кальяны", "hours": { "mode": "venue", "start_time": null, "end_time": null, "week_hours": [] } },
+          { "id": 3, "name": "Уборка", "hours": { "mode": "none", "start_time": null, "end_time": null, "week_hours": [] } },
+          { "id": 4, "name": "Кухня", "hours": { "mode": "own", "start_time": "10:00", "end_time": "22:00", "week_hours": [{ "weekday": 7, "start_time": "11:00", "end_time": "20:00" }] } }
+        ]
+      },
+      "shifts": [
+        { "person_id": 1, "date": "2026-11-16", "start_time": "18:00", "end_time": "02:00" },
+        { "person_id": 1, "date": "2026-11-20", "start_time": "18:00", "end_time": "04:00" },
+        { "person_id": 1, "date": "2026-11-17", "start_time": "20:00", "end_time": "02:00" },
+        { "person_id": 2, "date": "2026-11-16", "start_time": "12:00", "end_time": "00:00" }
+      ],
+      "expect": {
+        "restamped": 1,
+        "shifts": [
+          { "person_id": 1, "date": "2026-11-16", "start_time": "19:00", "end_time": "03:00" },
+          { "person_id": 1, "date": "2026-11-20", "start_time": "18:00", "end_time": "04:00" },
+          { "person_id": 1, "date": "2026-11-17", "start_time": "20:00", "end_time": "02:00" },
+          { "person_id": 2, "date": "2026-11-16", "start_time": "12:00", "end_time": "00:00" }
+        ]
+      }
+    },
+    {
+      "name": "moving to another position takes its hours, and leaves a closed day and a hand-set day alone",
+      "today": "2026-11-13",
+      "before": { "venue": "bar", "people": [{ "id": 1, "position_id": 2, "hours": { "mode": "inherit", "start_time": null, "end_time": null, "week_hours": [] } }] },
+      "after": {
+        "venue": "bar", "people": [{ "id": 1, "position_id": 1, "hours": { "mode": "inherit", "start_time": null, "end_time": null, "week_hours": [] } }]
+      },
+      "shifts": [
+        { "person_id": 1, "date": "2026-11-16", "start_time": "12:00", "end_time": "00:00" },
+        { "person_id": 1, "date": "2026-11-20", "start_time": "12:00", "end_time": "02:00" },
+        { "person_id": 1, "date": "2026-11-22", "start_time": null, "end_time": null },
+        { "person_id": 1, "date": "2026-11-18", "start_time": "15:00", "end_time": "23:00" }
+      ],
+      "expect": {
+        "restamped": 2,
+        "shifts": [
+          { "person_id": 1, "date": "2026-11-16", "start_time": "18:00", "end_time": "02:00" },
+          { "person_id": 1, "date": "2026-11-20", "start_time": "18:00", "end_time": "04:00" },
+          { "person_id": 1, "date": "2026-11-22", "start_time": null, "end_time": null },
+          { "person_id": 1, "date": "2026-11-18", "start_time": "15:00", "end_time": "23:00" }
+        ]
+      }
+    },
+    {
+      "name": "a position with no set time takes the hours off the days still to come",
+      "today": "2026-11-13",
+      "before": { "venue": "bar", "people": [{ "id": 1, "position_id": 1, "hours": { "mode": "inherit", "start_time": null, "end_time": null, "week_hours": [] } }] },
+      "after": {
+        "venue": "bar", "people": [{ "id": 1, "position_id": 3, "hours": { "mode": "inherit", "start_time": null, "end_time": null, "week_hours": [] } }]
+      },
+      "shifts": [
+        { "person_id": 1, "date": "2026-11-16", "start_time": "18:00", "end_time": "02:00" },
+        { "person_id": 1, "date": "2026-11-21", "start_time": "18:00", "end_time": "04:00" }
+      ],
+      "expect": {
+        "restamped": 2,
+        "shifts": [
+          { "person_id": 1, "date": "2026-11-16", "start_time": null, "end_time": null },
+          { "person_id": 1, "date": "2026-11-21", "start_time": null, "end_time": null }
+        ]
+      }
+    },
+    {
+      "name": "a day with no time stays so when a time appears",
+      "today": "2026-11-13",
+      "before": { "venue": "bar", "people": [{ "id": 1, "position_id": 3, "hours": { "mode": "inherit", "start_time": null, "end_time": null, "week_hours": [] } }] },
+      "after": {
+        "venue": "bar", "people": [{ "id": 1, "position_id": 1, "hours": { "mode": "inherit", "start_time": null, "end_time": null, "week_hours": [] } }]
+      },
+      "shifts": [
+        { "person_id": 1, "date": "2026-11-16", "start_time": null, "end_time": null }
+      ],
+      "expect": {
+        "restamped": 0,
+        "shifts": [
+          { "person_id": 1, "date": "2026-11-16", "start_time": null, "end_time": null }
+        ]
+      }
+    },
+    {
+      "name": "hours of their own move their days from today on, the past stays",
+      "today": "2026-11-13",
+      "before": { "venue": "bar", "people": [{ "id": 1, "position_id": 1, "hours": { "mode": "inherit", "start_time": null, "end_time": null, "week_hours": [] } }] },
+      "after": {
+        "venue": "bar", "people": [{ "id": 1, "position_id": 1, "hours": { "mode": "own", "start_time": "16:00", "end_time": "02:00", "week_hours": [] } }]
+      },
+      "shifts": [
+        { "person_id": 1, "date": "2026-11-09", "start_time": "18:00", "end_time": "02:00" },
+        { "person_id": 1, "date": "2026-11-16", "start_time": "18:00", "end_time": "02:00" },
+        { "person_id": 1, "date": "2026-11-20", "start_time": "18:00", "end_time": "04:00" }
+      ],
+      "expect": {
+        "restamped": 2,
+        "shifts": [
+          { "person_id": 1, "date": "2026-11-09", "start_time": "18:00", "end_time": "02:00" },
+          { "person_id": 1, "date": "2026-11-16", "start_time": "16:00", "end_time": "02:00" },
+          { "person_id": 1, "date": "2026-11-20", "start_time": "16:00", "end_time": "02:00" }
+        ]
+      }
+    },
+    {
+      "name": "nothing changed moves nothing",
+      "today": "2026-11-13",
+      "before": { "venue": "bar", "people": [{ "id": 1, "position_id": 2, "hours": { "mode": "inherit", "start_time": null, "end_time": null, "week_hours": [] } }] },
+      "after": {
+        "venue": "bar", "people": [{ "id": 1, "position_id": 2, "hours": { "mode": "inherit", "start_time": null, "end_time": null, "week_hours": [] } }]
+      },
+      "shifts": [
+        { "person_id": 1, "date": "2026-11-16", "start_time": "12:00", "end_time": "00:00" }
+      ],
+      "expect": {
+        "restamped": 0,
+        "shifts": [
+          { "person_id": 1, "date": "2026-11-16", "start_time": "12:00", "end_time": "00:00" }
+        ]
+      }
+    }
+  ],
+
+  "fill": [
+    {
+      "name": "pattern days take their usual time, and closed days are skipped",
+      "month": "2026-11", "today": "2026-10-20", "venue": "bar",
+      "people": [
+        { "id": 1, "position_id": 2, "hours": { "mode": "inherit", "start_time": null, "end_time": null, "week_hours": [] }, "pattern": { "kind": "weekdays", "weekdays": [5, 6, 7], "on": null, "off": null, "from": null } }
+      ],
+      "existing": [],
+      "expect": {
+        "added": 8, "kept": 0, "skipped": 5,
+        "shifts": [
+          { "person_id": 1, "date": "2026-11-06", "start_time": "12:00", "end_time": "02:00" },
+          { "person_id": 1, "date": "2026-11-07", "start_time": "12:00", "end_time": "02:00" },
+          { "person_id": 1, "date": "2026-11-13", "start_time": "12:00", "end_time": "02:00" },
+          { "person_id": 1, "date": "2026-11-14", "start_time": "12:00", "end_time": "02:00" },
+          { "person_id": 1, "date": "2026-11-20", "start_time": "12:00", "end_time": "02:00" },
+          { "person_id": 1, "date": "2026-11-21", "start_time": "12:00", "end_time": "02:00" },
+          { "person_id": 1, "date": "2026-11-27", "start_time": "12:00", "end_time": "02:00" },
+          { "person_id": 1, "date": "2026-11-28", "start_time": "12:00", "end_time": "02:00" }
+        ]
+      }
+    },
+    {
+      "name": "a filled cell is kept as it is, even on a closed day, and counted as kept",
+      "month": "2026-11", "today": "2026-10-20", "venue": "bar",
+      "people": [
+        { "id": 1, "position_id": 2, "hours": { "mode": "inherit", "start_time": null, "end_time": null, "week_hours": [] }, "pattern": { "kind": "weekdays", "weekdays": [5, 6, 7], "on": null, "off": null, "from": null } }
+      ],
+      "existing": [
+        { "person_id": 1, "date": "2026-11-06", "start_time": "10:00", "end_time": "18:00" },
+        { "person_id": 1, "date": "2026-11-08", "start_time": null, "end_time": null }
+      ],
+      "expect": {
+        "added": 7, "kept": 2, "skipped": 4,
+        "shifts": [
+          { "person_id": 1, "date": "2026-11-07", "start_time": "12:00", "end_time": "02:00" },
+          { "person_id": 1, "date": "2026-11-13", "start_time": "12:00", "end_time": "02:00" },
+          { "person_id": 1, "date": "2026-11-14", "start_time": "12:00", "end_time": "02:00" },
+          { "person_id": 1, "date": "2026-11-20", "start_time": "12:00", "end_time": "02:00" },
+          { "person_id": 1, "date": "2026-11-21", "start_time": "12:00", "end_time": "02:00" },
+          { "person_id": 1, "date": "2026-11-27", "start_time": "12:00", "end_time": "02:00" },
+          { "person_id": 1, "date": "2026-11-28", "start_time": "12:00", "end_time": "02:00" }
+        ]
+      }
+    },
+    {
+      "name": "no usual time anywhere puts them on with no set time, and nothing is closed",
+      "month": "2026-11", "today": "2026-10-20", "venue": "none",
+      "people": [
+        { "id": 5, "position_id": null, "hours": { "mode": "inherit", "start_time": null, "end_time": null, "week_hours": [] }, "pattern": { "kind": "cycle", "weekdays": [], "on": 2, "off": 5, "from": "2026-11-01" } }
+      ],
+      "existing": [],
+      "expect": {
+        "added": 10, "kept": 0, "skipped": 0,
+        "shifts": [
+          { "person_id": 5, "date": "2026-11-01", "start_time": null, "end_time": null },
+          { "person_id": 5, "date": "2026-11-02", "start_time": null, "end_time": null },
+          { "person_id": 5, "date": "2026-11-08", "start_time": null, "end_time": null },
+          { "person_id": 5, "date": "2026-11-09", "start_time": null, "end_time": null },
+          { "person_id": 5, "date": "2026-11-15", "start_time": null, "end_time": null },
+          { "person_id": 5, "date": "2026-11-16", "start_time": null, "end_time": null },
+          { "person_id": 5, "date": "2026-11-22", "start_time": null, "end_time": null },
+          { "person_id": 5, "date": "2026-11-23", "start_time": null, "end_time": null },
+          { "person_id": 5, "date": "2026-11-29", "start_time": null, "end_time": null },
+          { "person_id": 5, "date": "2026-11-30", "start_time": null, "end_time": null }
+        ]
+      }
+    },
+    {
+      "name": "somebody with no usual days is left alone, and shifts come out by date and then person",
+      "month": "2026-11", "today": "2026-10-20", "venue": "bar",
+      "people": [
+        { "id": 2, "position_id": 1, "hours": { "mode": "inherit", "start_time": null, "end_time": null, "week_hours": [] }, "pattern": { "kind": "weekdays", "weekdays": [1], "on": null, "off": null, "from": null } },
+        { "id": 3, "position_id": 3, "hours": { "mode": "inherit", "start_time": null, "end_time": null, "week_hours": [] }, "pattern": { "kind": "weekdays", "weekdays": [1], "on": null, "off": null, "from": null } },
+        { "id": 4, "position_id": 2, "hours": { "mode": "inherit", "start_time": null, "end_time": null, "week_hours": [] }, "pattern": { "kind": "none", "weekdays": [], "on": null, "off": null, "from": null } }
+      ],
+      "existing": [],
+      "expect": {
+        "added": 10, "kept": 0, "skipped": 0,
+        "shifts": [
+          { "person_id": 2, "date": "2026-11-02", "start_time": "18:00", "end_time": "02:00" },
+          { "person_id": 3, "date": "2026-11-02", "start_time": null, "end_time": null },
+          { "person_id": 2, "date": "2026-11-09", "start_time": "18:00", "end_time": "02:00" },
+          { "person_id": 3, "date": "2026-11-09", "start_time": null, "end_time": null },
+          { "person_id": 2, "date": "2026-11-16", "start_time": "18:00", "end_time": "02:00" },
+          { "person_id": 3, "date": "2026-11-16", "start_time": null, "end_time": null },
+          { "person_id": 2, "date": "2026-11-23", "start_time": "18:00", "end_time": "02:00" },
+          { "person_id": 3, "date": "2026-11-23", "start_time": null, "end_time": null },
+          { "person_id": 2, "date": "2026-11-30", "start_time": "18:00", "end_time": "02:00" },
+          { "person_id": 3, "date": "2026-11-30", "start_time": null, "end_time": null }
+        ]
+      }
+    },
+    {
+      "name": "a person's own hours fill a day the position would leave without time",
+      "month": "2026-11", "today": "2026-10-20", "venue": "bar",
+      "people": [
+        { "id": 6, "position_id": 3, "hours": { "mode": "own", "start_time": "09:00", "end_time": "13:00", "week_hours": [{ "weekday": 6, "start_time": "10:00", "end_time": "14:00" }] }, "pattern": { "kind": "weekdays", "weekdays": [6, 7], "on": null, "off": null, "from": null } }
+      ],
+      "existing": [{ "person_id": 6, "date": "2026-11-28", "start_time": "09:00", "end_time": "13:00" }],
+      "expect": {
+        "added": 3, "kept": 1, "skipped": 5,
+        "shifts": [
+          { "person_id": 6, "date": "2026-11-07", "start_time": "10:00", "end_time": "14:00" },
+          { "person_id": 6, "date": "2026-11-14", "start_time": "10:00", "end_time": "14:00" },
+          { "person_id": 6, "date": "2026-11-21", "start_time": "10:00", "end_time": "14:00" }
+        ]
+      }
+    },
+    {
+      "name": "the current month fills from today, and what is behind today is not counted",
+      "month": "2026-11", "today": "2026-11-13", "venue": "bar",
+      "people": [
+        { "id": 1, "position_id": 2, "hours": { "mode": "inherit", "start_time": null, "end_time": null, "week_hours": [] }, "pattern": { "kind": "weekdays", "weekdays": [5, 6, 7], "on": null, "off": null, "from": null } }
+      ],
+      "existing": [{ "person_id": 1, "date": "2026-11-07", "start_time": "12:00", "end_time": "02:00" }],
+      "expect": {
+        "added": 6, "kept": 0, "skipped": 3,
+        "shifts": [
+          { "person_id": 1, "date": "2026-11-13", "start_time": "12:00", "end_time": "02:00" },
+          { "person_id": 1, "date": "2026-11-14", "start_time": "12:00", "end_time": "02:00" },
+          { "person_id": 1, "date": "2026-11-20", "start_time": "12:00", "end_time": "02:00" },
+          { "person_id": 1, "date": "2026-11-21", "start_time": "12:00", "end_time": "02:00" },
+          { "person_id": 1, "date": "2026-11-27", "start_time": "12:00", "end_time": "02:00" },
+          { "person_id": 1, "date": "2026-11-28", "start_time": "12:00", "end_time": "02:00" }
+        ]
+      }
+    },
+    {
+      "name": "a month already over plans nothing",
+      "month": "2026-10", "today": "2026-11-13", "venue": "bar",
+      "people": [
+        { "id": 1, "position_id": 2, "hours": { "mode": "inherit", "start_time": null, "end_time": null, "week_hours": [] }, "pattern": { "kind": "weekdays", "weekdays": [5, 6, 7], "on": null, "off": null, "from": null } }
+      ],
+      "existing": [],
+      "expect": { "added": 0, "kept": 0, "skipped": 0, "shifts": [] }
+    }
+  ]
+}

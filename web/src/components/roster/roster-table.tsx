@@ -2,48 +2,63 @@
 
 import { useMemo } from 'react';
 
-import type { RosterPerson, RosterShift } from '@/lib/api/roster';
+import type { RosterPerson, RosterPosition, RosterShift } from '@/lib/api/roster';
 import { WEEKDAY_LABELS, formatDayLabelShort } from '@/lib/calendar/calendar-date';
 import { readableInk } from '@/lib/calendar/contrast';
 import { useI18n } from '@/lib/i18n';
-import { Brush, sameBrush } from '@/lib/roster/brushes';
-import { compactHours } from '@/lib/roster/hours';
+import { BARE, Brush, Tool, USUAL, sameTool, toggleTool } from '@/lib/roster/brushes';
+import { cellText, compactHours } from '@/lib/roster/hours';
 import { RosterDay, cellKey } from '@/lib/roster/month';
+import type { PositionGroup } from '@/lib/roster/rules';
 import { Icon } from '@/components/ui/icon';
+import { useLongPress } from './long-press';
 
-/** The hour pairs held ready, plus one to make. */
-export function BrushRow({
+/** What a click puts in a cell: the usual time, no time, or one of the hour pairs held ready, plus one to make. */
+export function ToolRow({
   brushes,
-  active,
-  onPick,
+  tool,
+  onTool,
   onMake,
 }: {
   brushes: Brush[];
-  active: Brush | null;
-  onPick: (brush: Brush | null) => void;
+  tool: Tool | null;
+  onTool: (tool: Tool | null) => void;
   onMake: () => void;
 }) {
   const { t } = useI18n();
+
+  const chip = (one: Tool, label: string, tabular = false) => {
+    const chosen = sameTool(tool, one);
+
+    return (
+      <button
+        key={one.kind === 'hours' ? `${one.brush.start}-${one.brush.end}` : one.kind}
+        type="button"
+        className={`chip !text-[0.82rem] ${tabular ? 'tabular' : ''} ${chosen ? 'chip-accent' : 'hover:bg-surface-2'}`}
+        aria-pressed={chosen}
+        onClick={() => onTool(toggleTool(tool, one))}
+      >
+        {label}
+      </button>
+    );
+  };
+
+  const hint =
+    tool === null
+      ? t('Pick hours and click the days. With none picked, a click opens the cell.')
+      : tool.kind === 'usual'
+        ? t('Click a day to put a shift at the usual time, click again to take it off. A day with other hours opens instead.')
+        : tool.kind === 'bare'
+          ? t('Click a day to put a shift with no set time, click again to take it off. A day with hours opens instead.')
+          : t('Click a day to set these hours, click it again to clear them.');
 
   return (
     <div className="flex flex-wrap items-center gap-1.5">
       <span className="field-label !mb-0 mr-1">{t('Brush')}</span>
 
-      {brushes.map((brush) => {
-        const chosen = active !== null && sameBrush(active, brush);
-
-        return (
-          <button
-            key={`${brush.start}-${brush.end}`}
-            type="button"
-            className={`chip tabular !text-[0.82rem] ${chosen ? 'chip-accent' : 'hover:bg-surface-2'}`}
-            aria-pressed={chosen}
-            onClick={() => onPick(chosen ? null : brush)}
-          >
-            {compactHours(brush.start, brush.end)}
-          </button>
-        );
-      })}
+      {chip(USUAL, t('As usual'))}
+      {chip(BARE, t('No set time'))}
+      {brushes.map((brush) => chip({ kind: 'hours', brush }, compactHours(brush.start, brush.end), true))}
 
       <button type="button" className="chip !text-[0.82rem] hover:bg-surface-2" onClick={onMake}>
         <Icon name="plus" size={12} />
@@ -51,27 +66,35 @@ export function BrushRow({
       </button>
 
       <span className="field-hint ml-1">
-        {t(active === null ? 'Pick hours and click the days. With none picked, a click opens the cell.' : 'Click a day to set these hours, click it again to clear them.')}
+        {hint}
+        {tool !== null && ` ${t('Right-click opens a day.')}`}
       </span>
     </div>
   );
 }
 
-/** People by every day of the month. The names stay put while the days scroll under them. */
+/** People by every day of the month, position by position. The names stay put while the days scroll under them. */
 export function RosterTable({
   days,
-  people,
+  groups,
+  labelled,
   cells,
   onCell,
+  onCellMenu,
   onPerson,
 }: {
   days: RosterDay[];
-  people: RosterPerson[];
+  groups: PositionGroup<RosterPerson, RosterPosition>[];
+  /** Whether each group gets a line naming its position: only once the roster has any. */
+  labelled: boolean;
   cells: Map<string, RosterShift>;
   onCell: (personId: number, date: string) => void;
+  /** A right-click or a held finger: open the day whatever the tool. */
+  onCellMenu: (personId: number, date: string) => void;
   onPerson: (person: RosterPerson) => void;
 }) {
   const { t, lang } = useI18n();
+  const hold = useLongPress();
 
   // Once per month and not per cell: a date formatter is slow to build, and
   // this table can hold two thousand of them.
@@ -90,9 +113,10 @@ export function RosterTable({
               <th
                 key={day.key}
                 scope="col"
+                title={day.closed ? t('the venue is closed') : undefined}
                 className={`px-0.5 py-1 text-center text-[0.68rem] font-medium last:pr-3 ${
                   day.weekend ? 'bg-surface-2 text-warn-read' : 'text-faint'
-                } ${day.weekday === 0 ? 'border-l border-border' : ''}`}
+                } ${day.weekday === 0 ? 'border-l border-border' : ''} ${day.closed ? 'opacity-45' : ''}`}
               >
                 <span className="block">{t(WEEKDAY_LABELS[day.weekday])}</span>
                 <span
@@ -107,58 +131,70 @@ export function RosterTable({
             ))}
           </tr>
         </thead>
-        <tbody>
-          {people.map((person) => (
-            <tr key={person.id}>
-              <th
-                scope="row"
-                className="sticky left-0 z-10 max-w-44 border-r border-t border-border bg-surface py-1 pl-2 pr-1 text-left font-normal"
-              >
-                <button
-                  type="button"
-                  className="flex w-full min-w-0 items-center gap-1.5 rounded px-1 py-0.5 text-left hover:bg-surface-2"
-                  title={t('Edit this person')}
-                  onClick={() => onPerson(person)}
+        {groups.map(({ position, people }) => (
+          <tbody key={position?.id ?? 'none'}>
+            {labelled && (
+              <tr>
+                <th
+                  scope="rowgroup"
+                  className="sticky left-0 z-10 max-w-44 truncate border-r border-t border-border bg-surface py-0.5 pl-3 pr-1 text-left text-[0.7rem] font-semibold text-muted"
                 >
-                  <span className="h-2.5 w-2.5 flex-none rounded-full" style={{ background: person.colour }} />
-                  <span className="min-w-0">
-                    <span className="block truncate text-[0.84rem] font-medium">{person.name}</span>
-                    {person.position !== null && (
-                      <span className="block truncate text-[0.7rem] text-muted">{person.position}</span>
-                    )}
-                  </span>
-                </button>
-              </th>
-              {days.map((day, index) => {
-                const shift = cells.get(cellKey(person.id, day.key));
-                const hours = shift === undefined ? null : compactHours(shift.start_time, shift.end_time);
-
-                return (
-                  <td
-                    key={day.key}
-                    className={`border-t border-border p-0.5 last:pr-3 ${
-                      day.isToday ? 'bg-(--accent-soft)' : day.weekend ? 'bg-surface-2' : ''
-                    } ${day.weekday === 0 ? 'border-l' : ''}`}
+                  {position?.name ?? t('No position')}
+                </th>
+                <td colSpan={days.length} className="border-t border-border py-0.5" />
+              </tr>
+            )}
+            {people.map((person) => (
+              <tr key={person.id}>
+                <th
+                  scope="row"
+                  className="sticky left-0 z-10 max-w-44 border-r border-t border-border bg-surface py-1 pl-2 pr-1 text-left font-normal"
+                >
+                  <button
+                    type="button"
+                    className="flex w-full min-w-0 items-center gap-1.5 rounded px-1 py-0.5 text-left hover:bg-surface-2"
+                    title={t('Edit this person')}
+                    onClick={() => onPerson(person)}
                   >
-                    <button
-                      type="button"
-                      aria-label={`${person.name}, ${dates[index]}: ${hours ?? t('day off')}`}
-                      className="block h-9 w-full min-w-8 whitespace-nowrap rounded text-[0.7rem] font-semibold outline-offset-1 hover:outline hover:outline-1 hover:outline-(--accent)"
-                      style={
-                        shift === undefined
-                          ? undefined
-                          : { background: person.colour, color: readableInk(person.colour) }
-                      }
-                      onClick={() => onCell(person.id, day.key)}
+                    <span className="h-2.5 w-2.5 flex-none rounded-full" style={{ background: person.colour }} />
+                    <span className="block min-w-0 truncate text-[0.84rem] font-medium">{person.name}</span>
+                  </button>
+                </th>
+                {days.map((day, index) => {
+                  const shift = cells.get(cellKey(person.id, day.key));
+                  const hours = shift === undefined ? null : cellText(shift);
+                  const said = shift === undefined ? t('day off') : (hours ?? t('no set time'));
+
+                  return (
+                    <td
+                      key={day.key}
+                      className={`border-t border-border p-0.5 last:pr-3 ${
+                        day.isToday ? 'bg-(--accent-soft)' : day.weekend ? 'bg-surface-2' : ''
+                      } ${day.weekday === 0 ? 'border-l' : ''} ${day.closed && shift === undefined ? 'roster-shut' : ''}`}
                     >
-                      {hours}
-                    </button>
-                  </td>
-                );
-              })}
-            </tr>
-          ))}
-        </tbody>
+                      <button
+                        type="button"
+                        aria-label={`${person.name}, ${dates[index]}: ${said}`}
+                        className="block h-9 w-full min-w-8 touch-manipulation select-none whitespace-nowrap rounded text-[0.7rem] font-semibold outline-offset-1 [-webkit-touch-callout:none] hover:outline hover:outline-1 hover:outline-(--accent)"
+                        style={
+                          shift === undefined
+                            ? undefined
+                            : { background: person.colour, color: readableInk(person.colour) }
+                        }
+                        {...hold(
+                          () => onCell(person.id, day.key),
+                          () => onCellMenu(person.id, day.key),
+                        )}
+                      >
+                        {shift === undefined ? null : (hours ?? <span aria-hidden>•</span>)}
+                      </button>
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        ))}
       </table>
     </section>
   );

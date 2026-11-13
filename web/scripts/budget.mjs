@@ -35,7 +35,10 @@ const BUDGETS = {
   'report': 1_114_112,
   'reset': 966_656,
   'roadmap': 702_464,
-  'roster': 823_296,
+  // Positions, opening hours and working days: the settings dialog loads on
+  // demand, but the person form's working days and own hours, the fill menu
+  // and the shared roster rules ride with the page (+40 kB).
+  'roster': 864_256,
   'schedule': 1_147_904,
   'stats': 1_181_696,
   'status': 968_704,

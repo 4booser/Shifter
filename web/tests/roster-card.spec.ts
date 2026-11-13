@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import type { RosterMonth } from '@/lib/api/roster';
+import type { RosterMonth, RosterPerson } from '@/lib/api/roster';
 import { WEEKDAY_LABELS } from '@/lib/calendar/calendar-date';
+import type { WeekHours } from '@/lib/calendar/models';
 import { rosterCardData, rosterCardLayout } from '@/lib/export/roster-card';
 import { rosterDays } from '@/lib/roster/month';
+import { INHERIT, NO_PATTERN } from '@/lib/roster/people';
+import { venueLine } from '@/lib/roster/rules';
 
 /** Well over the widest thing a cell holds: digits run about 0.6 em and a colon less, so «22:30» is under 2.8. */
 const WIDEST_HOURS_IN_EMS = 2.8;
@@ -92,28 +95,37 @@ describe('the card’s geometry', () => {
   });
 });
 
+const person = (id: number, name: string, position: [number, string] | null, colour: string): RosterPerson => ({
+  id,
+  name,
+  position_id: position?.[0] ?? null,
+  position: position?.[1] ?? null,
+  colour,
+  hours: INHERIT,
+  pattern: NO_PATTERN,
+});
+
+/** Open all week but Sunday. */
+const VENUE: WeekHours[] = [1, 2, 3, 4, 5, 6].map((weekday) => ({ weekday, start_time: '12:00', end_time: '00:00' }));
+
 describe('the card’s data', () => {
   const sheet: RosterMonth = {
     id: 1,
     title: 'Бар',
     share_slug: 'abcdefghjkmn',
     month: '2026-11',
-    people: [
-      { id: 1, name: 'Толик', position: 'Кальяны', colour: '#6366f1' },
-      { id: 2, name: 'Гриша', position: null, colour: '#d97706' },
-    ],
+    venue_hours: [],
+    positions: [{ id: 4, name: 'Кальяны', hours: { mode: 'none', start_time: null, end_time: null, week_hours: [] } }],
+    people: [person(1, 'Толик', [4, 'Кальяны'], '#6366f1'), person(2, 'Гриша', null, '#d97706')],
     shifts: [
       { person_id: 1, date: '2026-11-02', start_time: '11:30', end_time: '22:00' },
       { person_id: 2, date: '2026-11-30', start_time: '18:00', end_time: '00:00' },
     ],
   };
 
+  const labels = { period: 'Ноябрь 2026', summary: '2 человека · 2 смены', weekdays: WEEKDAY_LABELS, venue: null };
   const days = rosterDays({ year: 2026, month: 11 }, '2026-11-02');
-  const data = rosterCardData(sheet, days, {
-    period: 'Ноябрь 2026',
-    summary: '2 человека · 2 смены',
-    weekdays: WEEKDAY_LABELS,
-  });
+  const data = rosterCardData(sheet, days, labels);
 
   it('holds one cell per day for every person', () => {
     expect(data.days).toHaveLength(30);
@@ -127,8 +139,59 @@ describe('the card’s data', () => {
   });
 
   it('heads each column with its weekday and date, Monday first', () => {
-    expect(data.days[1]).toEqual({ weekday: 'Mon', dayOfMonth: 2, weekend: false, monday: true });
-    expect(data.days[0]).toEqual({ weekday: 'Sun', dayOfMonth: 1, weekend: true, monday: false });
+    expect(data.days[1]).toEqual({ weekday: 'Mon', dayOfMonth: 2, weekend: false, monday: true, closed: false });
+    expect(data.days[0]).toEqual({ weekday: 'Sun', dayOfMonth: 1, weekend: true, monday: false, closed: false });
+  });
+
+  it('draws a day with no time as a filled cell with no text', () => {
+    const bare = rosterCardData(
+      { ...sheet, shifts: [{ person_id: 2, date: '2026-11-03', start_time: null, end_time: null }] },
+      days,
+      labels,
+    );
+
+    expect(bare.rows[1].cells[2]).toBe('bare');
+    expect(bare.rows[1].cells[1]).toBeNull();
+  });
+
+  it('marks closed days', () => {
+    const shut = rosterCardData({ ...sheet, venue_hours: VENUE }, rosterDays({ year: 2026, month: 11 }, '2026-11-02', VENUE), labels);
+
+    expect(shut.days.filter((day) => day.closed).map((day) => day.dayOfMonth)).toEqual([1, 8, 15, 22, 29]);
+    expect(data.days.some((day) => day.closed)).toBe(false);
+  });
+
+  it('makes room for the opening hours under the title', () => {
+    const plain = rosterCardLayout(30, 8);
+    const venue = rosterCardLayout(30, 8, true);
+    const line = venueLine(VENUE, 'ru');
+
+    expect(venue.headerHeight).toBe(112);
+    expect(venue.height - plain.height).toBe(16);
+    expect(rosterCardData(sheet, days, { ...labels, venue: line }).venue).toBe('Пн–Сб 12:00–00:00 · Вс закрыто');
+  });
+
+  it('keeps its height when there are no opening hours', () => {
+    expect(rosterCardLayout(30, 8).headerHeight).toBe(96);
+    expect(rosterCardLayout(30, 8, false)).toEqual(rosterCardLayout(30, 8));
+    expect(data.venue).toBeNull();
+  });
+
+  it('draws people in position order', () => {
+    const crew = rosterCardData(
+      {
+        ...sheet,
+        people: [person(1, 'Гриша', null, '#d97706'), person(2, 'Толик', [4, 'Кальяны'], '#6366f1'), person(3, 'Паша', null, '#0891b2')],
+      },
+      days,
+      labels,
+    );
+
+    expect(crew.rows.map((row) => [row.name, row.position])).toEqual([
+      ['Толик', 'Кальяны'],
+      ['Гриша', null],
+      ['Паша', null],
+    ]);
   });
 
   it('carries the names, positions and colours and not the link', () => {

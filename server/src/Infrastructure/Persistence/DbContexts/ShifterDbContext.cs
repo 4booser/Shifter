@@ -53,6 +53,7 @@ public class ShifterDbContext : DbContext
     public DbSet<TeamPool> TeamPools => Set<TeamPool>();
     public DbSet<Roster> Rosters => Set<Roster>();
     public DbSet<RosterPerson> RosterPeople => Set<RosterPerson>();
+    public DbSet<RosterPosition> RosterPositions => Set<RosterPosition>();
     public DbSet<RosterShift> RosterShifts => Set<RosterShift>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -291,6 +292,54 @@ public class ShifterDbContext : DbContext
             .Property(person => person.Position).HasMaxLength(RosterPerson.PositionMax);
         modelBuilder.Entity<RosterPerson>()
             .Property(person => person.Colour).HasMaxLength(7);
+
+        // On the roster's own row, like a template's weekdays: every read of a
+        // roster that needs them already reads the roster.
+        modelBuilder.Entity<Roster>()
+            .OwnsMany(roster => roster.VenueHours, hours => hours.ToJson());
+
+        modelBuilder.Entity<RosterPosition>()
+            .HasOne(position => position.Roster).WithMany(roster => roster.Positions)
+            .HasForeignKey(position => position.RosterId)
+            .OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<RosterPosition>()
+            .Property(position => position.Name).HasMaxLength(RosterPosition.NameMax);
+        modelBuilder.Entity<RosterPosition>()
+            .OwnsMany(position => position.WeekHours, hours => hours.ToJson());
+
+        // Exact, so only a backstop: "Бар" and "бар" are one position, and the
+        // service decides that under the roster's defaults lock.
+        modelBuilder.Entity<RosterPosition>()
+            .HasIndex(position => new { position.RosterId, position.Name })
+            .IsUnique();
+        modelBuilder.Entity<RosterPosition>()
+            .ToTable(table => table.HasCheckConstraint(
+                "CK_RosterPositions_Hours",
+                "(\"StartTime\" IS NULL) = (\"EndTime\" IS NULL) AND (\"HoursMode\" = 1) = (\"StartTime\" IS NOT NULL)"));
+
+        // A person outlives their position: deleting "Кухня" leaves the cooks on the roster.
+        modelBuilder.Entity<RosterPerson>()
+            .HasOne(person => person.RosterPosition).WithMany()
+            .HasForeignKey(person => person.RosterPositionId)
+            .OnDelete(DeleteBehavior.SetNull);
+        modelBuilder.Entity<RosterPerson>()
+            .OwnsMany(person => person.WeekHours, hours => hours.ToJson());
+        modelBuilder.Entity<RosterPerson>()
+            .ToTable(table =>
+            {
+                table.HasCheckConstraint(
+                    "CK_RosterPeople_Hours",
+                    "(\"StartTime\" IS NULL) = (\"EndTime\" IS NULL)");
+                table.HasCheckConstraint(
+                    "CK_RosterPeople_Pattern",
+                    "(\"CycleOn\" IS NULL) = (\"CycleOff\" IS NULL) AND (\"CycleOn\" IS NULL) = (\"CycleFrom\" IS NULL) AND (\"PatternWeekdays\" IS NULL OR \"CycleOn\" IS NULL)");
+            });
+
+        // Hours both or neither: neither is a day worked at no set time.
+        modelBuilder.Entity<RosterShift>()
+            .ToTable(table => table.HasCheckConstraint(
+                "CK_RosterShifts_Hours",
+                "(\"StartTime\" IS NULL) = (\"EndTime\" IS NULL)"));
 
         modelBuilder.Entity<RosterShift>()
             .HasOne(shift => shift.Roster).WithMany()

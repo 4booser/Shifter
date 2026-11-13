@@ -6,15 +6,17 @@ import { RosterRefusal, createRosterSaves, watchLeaving } from './saves';
 import { SaveState } from './save-queue';
 
 /** The roster's saves as the page sees them: where they stand, and a queue for each roster. */
-export function useRosterSaves(onRefused: (refusal: RosterRefusal) => void) {
+export function useRosterSaves(onRefused: (refusal: RosterRefusal) => void, onPeopleSaved: (rosterId: number) => void) {
   const [state, setState] = useState<SaveState>('idle');
   const [failure, setFailure] = useState<string | null>(null);
 
-  // Held in a ref: a queue lives far longer than the render that made it.
+  // Held in refs: a queue lives far longer than the render that made it.
   const refused = useRef(onRefused);
+  const peopleSaved = useRef(onPeopleSaved);
 
   useEffect(() => {
     refused.current = onRefused;
+    peopleSaved.current = onPeopleSaved;
   });
 
   const [saves] = useState(() =>
@@ -24,6 +26,7 @@ export function useRosterSaves(onRefused: (refusal: RosterRefusal) => void) {
         setFailure(reason);
       },
       onRefused: (refusal) => refused.current(refusal),
+      onPeopleSaved: (rosterId) => peopleSaved.current(rosterId),
     }),
   );
 

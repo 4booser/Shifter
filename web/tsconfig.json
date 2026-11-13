@@ -47,6 +47,9 @@
       "@/lib/import/ics": [
         "../shared/calendar/ics"
       ],
+      "@/lib/roster/rules": [
+        "../shared/roster/roster-rules"
+      ],
       "@/*": [
         "./src/*"
       ]

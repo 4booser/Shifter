@@ -4,6 +4,8 @@ using System.Text.Json;
 
 using Microsoft.EntityFrameworkCore;
 
+using Shifter.Application.Features.Rosters;
+using Shifter.Domain.Entities;
 using Shifter.Infrastructure.Persistence.DbContexts;
 
 namespace Shifter.Application.Features.Papers;
@@ -42,6 +44,8 @@ public sealed class TakeoutService
             .Where(position => position.UserId == userId).OrderBy(position => position.Id).ToArrayAsync(ct);
         var rosters = await _db.Rosters.AsNoTracking()
             .Include(roster => roster.People)
+            .Include(roster => roster.Positions)
+            .AsSplitQuery()
             .Where(roster => roster.UserId == userId).OrderBy(roster => roster.Id).ToArrayAsync(ct);
         var rosterShifts = (await _db.RosterShifts.AsNoTracking()
             .Where(shift => shift.Roster!.UserId == userId).OrderBy(shift => shift.Date).ToArrayAsync(ct))
@@ -191,19 +195,36 @@ public sealed class TakeoutService
             }), options));
 
             // The link stays behind: it is a key, and an archive gets passed around.
+            // A position goes by its name, as the people on it do.
             await WriteAsync("rosters.json", JsonSerializer.Serialize(rosters.Select(roster => new
             {
                 title = roster.Title,
+                venue_hours = Week(roster.VenueHours),
+                positions = (roster.Positions ?? []).OrderBy(position => position.Id).Select(position => new
+                {
+                    name = position.Name,
+                    hours = new
+                    {
+                        mode = position.HoursMode.ToString().ToLowerInvariant(),
+                        start = position.StartTime?.ToString("HH:mm"),
+                        end = position.EndTime?.ToString("HH:mm"),
+                        week_hours = Week(position.WeekHours),
+                    },
+                }),
                 people = (roster.People ?? []).OrderBy(person => person.Id).Select(person => new
                 {
                     name = person.Name,
-                    position = person.Position,
+                    position = roster.Positions?.FirstOrDefault(position => position.Id == person.RosterPositionId)?.Name,
                     colour = person.Colour,
+                    hours = person.StartTime is TimeOnly start && person.EndTime is TimeOnly end
+                        ? new { start = start.ToString("HH:mm"), end = end.ToString("HH:mm"), week_hours = Week(person.WeekHours) }
+                        : null,
+                    pattern = Pattern(person),
                     shifts = rosterShifts[person.Id].Select(shift => new
                     {
                         date = shift.Date.ToString("yyyy-MM-dd"),
-                        start = shift.StartTime.ToString("HH:mm"),
-                        end = shift.EndTime.ToString("HH:mm"),
+                        start = shift.StartTime?.ToString("HH:mm"),
+                        end = shift.EndTime?.ToString("HH:mm"),
                     }),
                 }),
             }), options));
@@ -220,6 +241,22 @@ public sealed class TakeoutService
 
         return buffer.ToArray();
     }
+
+    /// <summary>Weekdays and their hours with the archive's own keys. A row the release before this one wrote can hold no list at all.</summary>
+    private static object[] Week(List<WeekdayHours>? week)
+        => (week ?? [])
+            .OrderBy(entry => entry.Weekday)
+            .Select(entry => (object)new
+            {
+                weekday = entry.Weekday,
+                start = entry.StartTime.ToString("HH:mm"),
+                end = entry.EndTime.ToString("HH:mm"),
+            })
+            .ToArray();
+
+    /// <summary>Null when they have no usual days.</summary>
+    private static RosterPatternDto? Pattern(RosterPerson person)
+        => RosterRules.PatternDto(person) is { kind: not "none" } pattern ? pattern : null;
 
     private static string Quote(string value)
         => value.Contains(';') || value.Contains('"') || value.Contains('\n')

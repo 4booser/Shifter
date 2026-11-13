@@ -20,6 +20,13 @@ export interface SaveQueueOptions<T> {
    */
   salvage?: (error: unknown, batch: Map<string, T>) => Promise<(key: string, edit: T) => boolean> | null;
   onChange?: (state: SaveState, error: unknown) => void;
+  /**
+   * Keys whose newer word goes to the back of the line, behind whatever was put
+   * since the earlier one. Any other key's newer word takes the earlier one's
+   * place. The line is the order the server hears things in, which matters
+   * when one save changes what another means.
+   */
+  toBack?: (key: string) => boolean;
   quiet?: number;
   limit?: number;
 }
@@ -33,7 +40,7 @@ export interface SaveQueue<T> {
   flush: () => void;
   /** Flushes, then waits until nothing is on the wire. A failed batch is still pending when this resolves. */
   settled: () => Promise<void>;
-  /** Everything not yet known to have landed, the newest word on each key. */
+  /** Everything not yet known to have landed, the newest word on each key, in the order it is to be sent. */
   pending: () => T[];
   state: () => SaveState;
   /** Moves on every put, so a read can tell it was overtaken. */
@@ -48,6 +55,7 @@ export function overallState(states: SaveState[]): SaveState {
 export function createSaveQueue<T>(options: SaveQueueOptions<T>): SaveQueue<T> {
   const quiet = options.quiet ?? QUIET_BEFORE_SAVE;
   const limit = options.limit ?? BATCH_LIMIT;
+  const toBack = options.toBack ?? (() => false);
 
   const waiting = new Map<string, T>();
   let flying = new Map<string, T>();
@@ -105,11 +113,32 @@ export function createSaveQueue<T>(options: SaveQueueOptions<T>): SaveQueue<T> {
     if (!onward()) become('saved');
   };
 
-  /** The batch comes off the wire and back under anything changed since. */
-  const takeBack = (): void => {
+  /**
+   * Everything not yet known to have landed, in the order it is to be sent. The
+   * batch on the wire was put before anything waiting, so it leads; a newer word
+   * on one of its keys takes its place there, or keeps its own at the back.
+   */
+  const line = (): Map<string, T> => {
+    const all = new Map<string, T>();
+
     for (const [key, edit] of flying) {
-      if (!waiting.has(key)) waiting.set(key, edit);
+      if (!(waiting.has(key) && toBack(key))) all.set(key, waiting.get(key) ?? edit);
     }
+
+    for (const [key, edit] of waiting) {
+      if (!all.has(key)) all.set(key, edit);
+    }
+
+    return all;
+  };
+
+  /** The batch comes off the wire and back to the head of the line, under anything changed since. */
+  const takeBack = (): void => {
+    const all = line();
+
+    waiting.clear();
+
+    for (const [key, edit] of all) waiting.set(key, edit);
 
     flying = new Map();
     wire = null;
@@ -174,6 +203,8 @@ export function createSaveQueue<T>(options: SaveQueueOptions<T>): SaveQueue<T> {
 
   return {
     put: (key, edit) => {
+      if (toBack(key)) waiting.delete(key);
+
       waiting.set(key, edit);
       revision += 1;
       changed = true;
@@ -207,7 +238,7 @@ export function createSaveQueue<T>(options: SaveQueueOptions<T>): SaveQueue<T> {
       while (wire !== null) await wire;
     },
 
-    pending: () => [...new Map([...flying, ...waiting]).values()],
+    pending: () => [...line().values()],
 
     state: () => state,
 

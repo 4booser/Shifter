@@ -7,17 +7,22 @@ import { useArmed } from '@/lib/live/arm';
 import { pushToast } from '@/lib/toast';
 import { Icon } from '@/components/ui/icon';
 
-/** The link, and what can be done to it. Both ways of ending it take a second press: the old address is sitting in a group chat and will not come back. */
+/** The link and the picture, the two ways a month reaches the group chat. Both ways of ending the link take a second press: the old address is sitting in a group chat and will not come back. */
 export function ShareBody({
   slug,
   busy,
   onShare,
   onUnshare,
+  onPicture,
+  pictured,
 }: {
   slug: string | null;
   busy: boolean;
   onShare: () => void;
   onUnshare: () => void;
+  onPicture: () => void;
+  /** Whether the month has anything to draw. */
+  pictured: boolean;
 }) {
   const { t } = useI18n();
   const [copied, setCopied] = useState(false);
@@ -84,6 +89,13 @@ export function ShareBody({
           </div>
         </>
       )}
+
+      <div className="border-t border-border pt-3">
+        <button type="button" className="btn btn-sm" disabled={!pictured} onClick={onPicture}>
+          <Icon name="download" size={13} />
+          {t('Download the picture')}
+        </button>
+      </div>
     </div>
   );
 }

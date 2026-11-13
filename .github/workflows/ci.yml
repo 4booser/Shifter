@@ -180,8 +180,11 @@ jobs:
           dotnet ef database update --project ../released/server/Shifter.csproj --context ShifterDbContext
           dotnet ef database update --project ../released/server/Shifter.csproj --context TokensDbContext
 
+      # ON_ERROR_STOP, or a statement that fails is printed and skipped, the
+      # job stays green, and the migration is checked over fewer rows than the
+      # seed says: both listings went in as one for as long as that was so.
       - name: Put rows in it
-        run: PGPASSWORD=ci psql -h localhost -U shifter_user -d shifter -f .github/seed.sql
+        run: PGPASSWORD=ci psql -h localhost -U shifter_user -d shifter -v ON_ERROR_STOP=1 -f .github/seed.sql
 
       - name: Migrate the rest of the way
         run: |
@@ -193,6 +196,31 @@ jobs:
           PGPASSWORD=ci psql -h localhost -U shifter_user -d shifter -tAc \
             'SELECT count(*) FROM "Users";' | grep -qv '^0$' \
             || { echo "the seeded rows did not survive the migration"; exit 1; }
+
+      # Positions used to be free text on each person. The migration that made
+      # them rows has to have turned every word into one, kept the first
+      # spelling, linked everybody back, and dropped nobody and no hours. And
+      # since a rollback runs this migration's Down on production (README,
+      # «Откатиться на предыдущую версию»), the way down and a second way up
+      # are proven here on the same rows.
+      # Only while that migration is the one being added: once it has shipped,
+      # the seed goes in after it and there is no free text left to convert.
+      - name: The roster rows came through as positions, and back
+        run: |
+          if ls ../released/server/src/Infrastructure/Persistence/Migrations/*_RosterPositionsAndVenueHours.cs >/dev/null 2>&1; then
+            echo "RosterPositionsAndVenueHours has shipped; nothing to convert"
+            exit 0
+          fi
+          export PGPASSWORD=ci
+          db() { psql -h localhost -U shifter_user -d shifter -v ON_ERROR_STOP=1 "$@"; }
+          db -f .github/seed-check-roster-positions.sql
+          # A day with no time: the way down has to drop it and nothing else.
+          db -c "INSERT INTO \"RosterShifts\" (\"RosterId\", \"RosterPersonId\", \"Date\", \"StartTime\", \"EndTime\")
+                 SELECT \"RosterId\", \"Id\", DATE '2026-11-03', NULL, NULL FROM \"RosterPeople\" WHERE \"Name\" = 'Света';"
+          dotnet ef database update 20261102152700_TeamRoster --project server/Shifter.csproj --context ShifterDbContext
+          db -f .github/seed-check-roster-down.sql
+          dotnet ef database update --project server/Shifter.csproj --context ShifterDbContext
+          db -f .github/seed-check-roster-positions.sql
 
   api:
     name: The API answering over HTTP
